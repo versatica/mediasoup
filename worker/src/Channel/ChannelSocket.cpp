@@ -151,7 +151,7 @@ namespace Channel
 
 		auto log     = FBS::Log::CreateLogDirect(this->bufferBuilder, msg);
 		auto message = FBS::Message::CreateMessage(
-		  this->bufferBuilder, FBS::Message::Type::LOG, FBS::Message::Body::FBS_Log_Log, log.Union());
+		  this->bufferBuilder, FBS::Message::Type::LOG, FBS::Message::Body::Log, log.Union());
 
 		this->bufferBuilder.FinishSizePrefixed(message);
 		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());

@@ -48475,16 +48475,16 @@ mod root {
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub enum Body {
-                /// The variant of type `FBS.Request.Request` in the union `Body`
+                /// The variant `Request` in the union `Body`
                 Request(::planus::alloc::boxed::Box<super::request::Request>),
 
-                /// The variant of type `FBS.Response.Response` in the union `Body`
+                /// The variant `Response` in the union `Body`
                 Response(::planus::alloc::boxed::Box<super::response::Response>),
 
-                /// The variant of type `FBS.Notification.Notification` in the union `Body`
+                /// The variant `Notification` in the union `Body`
                 Notification(::planus::alloc::boxed::Box<super::notification::Notification>),
 
-                /// The variant of type `FBS.Log.Log` in the union `Body`
+                /// The variant `Log` in the union `Body`
                 Log(::planus::alloc::boxed::Box<super::log::Log>),
             }
 
@@ -49385,18 +49385,23 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub enum Body {
-                /// The variant of type `FBS.Transport.SendRtcpNotification` in the union `Body`
-                SendRtcpNotification(
+                /// The variant `Transport_SendRtcpNotification` in the union `Body`
+                TransportSendRtcpNotification(
                     ::planus::alloc::boxed::Box<super::transport::SendRtcpNotification>,
                 ),
 
-                /// The variant of type `FBS.Transport.SctpStateChangeNotification` in the union `Body`
-                SctpStateChangeNotification(
+                /// The variant `Transport_SctpStateChangeNotification` in the union `Body`
+                TransportSctpStateChangeNotification(
                     ::planus::alloc::boxed::Box<super::transport::SctpStateChangeNotification>,
                 ),
 
-                /// The variant of type `FBS.DataProducer.SendNotification` in the union `Body`
-                SendNotification(
+                /// The variant `Producer_SendNotification` in the union `Body`
+                ProducerSendNotification(
+                    ::planus::alloc::boxed::Box<super::producer::SendNotification>,
+                ),
+
+                /// The variant `DataProducer_SendNotification` in the union `Body`
+                DataProducerSendNotification(
                     ::planus::alloc::boxed::Box<super::data_producer::SendNotification>,
                 ),
 
@@ -49405,91 +49410,100 @@ mod root {
                     ::planus::alloc::boxed::Box<super::transport::TraceNotification>,
                 ),
 
-                /// The variant of type `FBS.WebRtcTransport.IceSelectedTupleChangeNotification` in the union `Body`
-                IceSelectedTupleChangeNotification(
+                /// The variant `WebRtcTransport_IceSelectedTupleChangeNotification` in the union `Body`
+                WebRtcTransportIceSelectedTupleChangeNotification(
                     ::planus::alloc::boxed::Box<
                         super::web_rtc_transport::IceSelectedTupleChangeNotification,
                     >,
                 ),
 
-                /// The variant of type `FBS.WebRtcTransport.IceStateChangeNotification` in the union `Body`
-                IceStateChangeNotification(
+                /// The variant `WebRtcTransport_IceStateChangeNotification` in the union `Body`
+                WebRtcTransportIceStateChangeNotification(
                     ::planus::alloc::boxed::Box<
                         super::web_rtc_transport::IceStateChangeNotification,
                     >,
                 ),
 
-                /// The variant of type `FBS.WebRtcTransport.DtlsStateChangeNotification` in the union `Body`
-                DtlsStateChangeNotification(
+                /// The variant `WebRtcTransport_DtlsStateChangeNotification` in the union `Body`
+                WebRtcTransportDtlsStateChangeNotification(
                     ::planus::alloc::boxed::Box<
                         super::web_rtc_transport::DtlsStateChangeNotification,
                     >,
                 ),
 
-                /// The variant of type `FBS.PlainTransport.TupleNotification` in the union `Body`
-                TupleNotification(
+                /// The variant `PlainTransport_TupleNotification` in the union `Body`
+                PlainTransportTupleNotification(
                     ::planus::alloc::boxed::Box<super::plain_transport::TupleNotification>,
                 ),
 
-                /// The variant of type `FBS.PlainTransport.RtcpTupleNotification` in the union `Body`
-                RtcpTupleNotification(
+                /// The variant `PlainTransport_RtcpTupleNotification` in the union `Body`
+                PlainTransportRtcpTupleNotification(
                     ::planus::alloc::boxed::Box<super::plain_transport::RtcpTupleNotification>,
                 ),
 
-                /// The variant of type `FBS.DirectTransport.RtcpNotification` in the union `Body`
-                RtcpNotification(
+                /// The variant `DirectTransport_RtcpNotification` in the union `Body`
+                DirectTransportRtcpNotification(
                     ::planus::alloc::boxed::Box<super::direct_transport::RtcpNotification>,
                 ),
 
-                /// The variant of type `FBS.Consumer.ScoreNotification` in the union `Body`
-                ScoreNotification(::planus::alloc::boxed::Box<super::consumer::ScoreNotification>),
+                /// The variant `Producer_ScoreNotification` in the union `Body`
+                ProducerScoreNotification(
+                    ::planus::alloc::boxed::Box<super::producer::ScoreNotification>,
+                ),
 
                 /// The variant `Producer_TraceNotification` in the union `Body`
                 ProducerTraceNotification(
                     ::planus::alloc::boxed::Box<super::producer::TraceNotification>,
                 ),
 
-                /// The variant of type `FBS.Producer.VideoOrientationChangeNotification` in the union `Body`
-                VideoOrientationChangeNotification(
+                /// The variant `Producer_VideoOrientationChangeNotification` in the union `Body`
+                ProducerVideoOrientationChangeNotification(
                     ::planus::alloc::boxed::Box<
                         super::producer::VideoOrientationChangeNotification,
                     >,
                 ),
 
-                /// The variant of type `FBS.Consumer.LayersChangeNotification` in the union `Body`
-                LayersChangeNotification(
+                /// The variant `Consumer_LayersChangeNotification` in the union `Body`
+                ConsumerLayersChangeNotification(
                     ::planus::alloc::boxed::Box<super::consumer::LayersChangeNotification>,
                 ),
 
-                /// The variant of type `FBS.Consumer.RtpNotification` in the union `Body`
-                RtpNotification(::planus::alloc::boxed::Box<super::consumer::RtpNotification>),
+                /// The variant `Consumer_RtpNotification` in the union `Body`
+                ConsumerRtpNotification(
+                    ::planus::alloc::boxed::Box<super::consumer::RtpNotification>,
+                ),
+
+                /// The variant `Consumer_ScoreNotification` in the union `Body`
+                ConsumerScoreNotification(
+                    ::planus::alloc::boxed::Box<super::consumer::ScoreNotification>,
+                ),
 
                 /// The variant `Consumer_TraceNotification` in the union `Body`
                 ConsumerTraceNotification(
                     ::planus::alloc::boxed::Box<super::consumer::TraceNotification>,
                 ),
 
-                /// The variant of type `FBS.DataConsumer.MessageNotification` in the union `Body`
-                MessageNotification(
+                /// The variant `DataConsumer_MessageNotification` in the union `Body`
+                DataConsumerMessageNotification(
                     ::planus::alloc::boxed::Box<super::data_consumer::MessageNotification>,
                 ),
 
-                /// The variant of type `FBS.DataConsumer.BufferedAmountLowNotification` in the union `Body`
-                BufferedAmountLowNotification(
+                /// The variant `DataConsumer_BufferedAmountLowNotification` in the union `Body`
+                DataConsumerBufferedAmountLowNotification(
                     ::planus::alloc::boxed::Box<
                         super::data_consumer::BufferedAmountLowNotification,
                     >,
                 ),
 
-                /// The variant of type `FBS.ActiveSpeakerObserver.DominantSpeakerNotification` in the union `Body`
-                DominantSpeakerNotification(
+                /// The variant `ActiveSpeakerObserver_DominantSpeakerNotification` in the union `Body`
+                ActiveSpeakerObserverDominantSpeakerNotification(
                     ::planus::alloc::boxed::Box<
                         super::active_speaker_observer::DominantSpeakerNotification,
                     >,
                 ),
 
-                /// The variant of type `FBS.AudioLevelObserver.VolumesNotification` in the union `Body`
-                VolumesNotification(
+                /// The variant `AudioLevelObserver_VolumesNotification` in the union `Body`
+                AudioLevelObserverVolumesNotification(
                     ::planus::alloc::boxed::Box<super::audio_level_observer::VolumesNotification>,
                 ),
             }
@@ -49502,7 +49516,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_send_rtcp_notification(
+                pub fn create_transport_send_rtcp_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::SendRtcpNotification>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -49510,7 +49524,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_sctp_state_change_notification(
+                pub fn create_transport_sctp_state_change_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::SctpStateChangeNotification>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -49518,11 +49532,19 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_send_notification(
+                pub fn create_producer_send_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::producer::SendNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(3, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_data_producer_send_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_producer::SendNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(3, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(4, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49530,69 +49552,69 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(4, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_ice_selected_tuple_change_notification(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<
-                        super::web_rtc_transport::IceSelectedTupleChangeNotification,
-                    >,
-                ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(5, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_ice_state_change_notification(
+                pub fn create_web_rtc_transport_ice_selected_tuple_change_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
-                        super::web_rtc_transport::IceStateChangeNotification,
+                        super::web_rtc_transport::IceSelectedTupleChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(6, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_dtls_state_change_notification(
+                pub fn create_web_rtc_transport_ice_state_change_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
-                        super::web_rtc_transport::DtlsStateChangeNotification,
+                        super::web_rtc_transport::IceStateChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(7, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_tuple_notification(
+                pub fn create_web_rtc_transport_dtls_state_change_notification(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
+                    value: impl ::planus::WriteAsOffset<
+                        super::web_rtc_transport::DtlsStateChangeNotification,
+                    >,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(8, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_rtcp_tuple_notification(
+                pub fn create_plain_transport_tuple_notification(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(9, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_rtcp_notification(
+                pub fn create_plain_transport_rtcp_tuple_notification(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(10, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_score_notification(
+                pub fn create_direct_transport_rtcp_notification(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                    value: impl ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(11, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_producer_score_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::producer::ScoreNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49600,33 +49622,41 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::producer::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_video_orientation_change_notification(
+                pub fn create_producer_video_orientation_change_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
                         super::producer::VideoOrientationChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_layers_change_notification(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
-                ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(14, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_rtp_notification(
+                pub fn create_consumer_layers_change_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_consumer_rtp_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::RtpNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_consumer_score_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49634,45 +49664,45 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_message_notification(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
-                ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_buffered_amount_low_notification(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<
-                        super::data_consumer::BufferedAmountLowNotification,
-                    >,
-                ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_dominant_speaker_notification(
+                pub fn create_data_consumer_message_notification(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<
-                        super::active_speaker_observer::DominantSpeakerNotification,
-                    >,
+                    value: impl ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
                 }
 
                 #[inline]
-                pub fn create_volumes_notification(
+                pub fn create_data_consumer_buffered_amount_low_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<
+                        super::data_consumer::BufferedAmountLowNotification,
+                    >,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_active_speaker_observer_dominant_speaker_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<
+                        super::active_speaker_observer::DominantSpeakerNotification,
+                    >,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_audio_level_observer_volumes_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
                         super::audio_level_observer::VolumesNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(22, value.prepare(builder).downcast())
                 }
             }
 
@@ -49680,65 +49710,83 @@ mod root {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
                     match self {
-                        Self::SendRtcpNotification(value) => {
-                            Self::create_send_rtcp_notification(builder, value)
+                        Self::TransportSendRtcpNotification(value) => {
+                            Self::create_transport_send_rtcp_notification(builder, value)
                         }
-                        Self::SctpStateChangeNotification(value) => {
-                            Self::create_sctp_state_change_notification(builder, value)
+                        Self::TransportSctpStateChangeNotification(value) => {
+                            Self::create_transport_sctp_state_change_notification(builder, value)
                         }
-                        Self::SendNotification(value) => {
-                            Self::create_send_notification(builder, value)
+                        Self::ProducerSendNotification(value) => {
+                            Self::create_producer_send_notification(builder, value)
+                        }
+                        Self::DataProducerSendNotification(value) => {
+                            Self::create_data_producer_send_notification(builder, value)
                         }
                         Self::TransportTraceNotification(value) => {
                             Self::create_transport_trace_notification(builder, value)
                         }
-                        Self::IceSelectedTupleChangeNotification(value) => {
-                            Self::create_ice_selected_tuple_change_notification(builder, value)
+                        Self::WebRtcTransportIceSelectedTupleChangeNotification(value) => {
+                            Self::create_web_rtc_transport_ice_selected_tuple_change_notification(
+                                builder, value,
+                            )
                         }
-                        Self::IceStateChangeNotification(value) => {
-                            Self::create_ice_state_change_notification(builder, value)
+                        Self::WebRtcTransportIceStateChangeNotification(value) => {
+                            Self::create_web_rtc_transport_ice_state_change_notification(
+                                builder, value,
+                            )
                         }
-                        Self::DtlsStateChangeNotification(value) => {
-                            Self::create_dtls_state_change_notification(builder, value)
+                        Self::WebRtcTransportDtlsStateChangeNotification(value) => {
+                            Self::create_web_rtc_transport_dtls_state_change_notification(
+                                builder, value,
+                            )
                         }
-                        Self::TupleNotification(value) => {
-                            Self::create_tuple_notification(builder, value)
+                        Self::PlainTransportTupleNotification(value) => {
+                            Self::create_plain_transport_tuple_notification(builder, value)
                         }
-                        Self::RtcpTupleNotification(value) => {
-                            Self::create_rtcp_tuple_notification(builder, value)
+                        Self::PlainTransportRtcpTupleNotification(value) => {
+                            Self::create_plain_transport_rtcp_tuple_notification(builder, value)
                         }
-                        Self::RtcpNotification(value) => {
-                            Self::create_rtcp_notification(builder, value)
+                        Self::DirectTransportRtcpNotification(value) => {
+                            Self::create_direct_transport_rtcp_notification(builder, value)
                         }
-                        Self::ScoreNotification(value) => {
-                            Self::create_score_notification(builder, value)
+                        Self::ProducerScoreNotification(value) => {
+                            Self::create_producer_score_notification(builder, value)
                         }
                         Self::ProducerTraceNotification(value) => {
                             Self::create_producer_trace_notification(builder, value)
                         }
-                        Self::VideoOrientationChangeNotification(value) => {
-                            Self::create_video_orientation_change_notification(builder, value)
+                        Self::ProducerVideoOrientationChangeNotification(value) => {
+                            Self::create_producer_video_orientation_change_notification(
+                                builder, value,
+                            )
                         }
-                        Self::LayersChangeNotification(value) => {
-                            Self::create_layers_change_notification(builder, value)
+                        Self::ConsumerLayersChangeNotification(value) => {
+                            Self::create_consumer_layers_change_notification(builder, value)
                         }
-                        Self::RtpNotification(value) => {
-                            Self::create_rtp_notification(builder, value)
+                        Self::ConsumerRtpNotification(value) => {
+                            Self::create_consumer_rtp_notification(builder, value)
+                        }
+                        Self::ConsumerScoreNotification(value) => {
+                            Self::create_consumer_score_notification(builder, value)
                         }
                         Self::ConsumerTraceNotification(value) => {
                             Self::create_consumer_trace_notification(builder, value)
                         }
-                        Self::MessageNotification(value) => {
-                            Self::create_message_notification(builder, value)
+                        Self::DataConsumerMessageNotification(value) => {
+                            Self::create_data_consumer_message_notification(builder, value)
                         }
-                        Self::BufferedAmountLowNotification(value) => {
-                            Self::create_buffered_amount_low_notification(builder, value)
+                        Self::DataConsumerBufferedAmountLowNotification(value) => {
+                            Self::create_data_consumer_buffered_amount_low_notification(
+                                builder, value,
+                            )
                         }
-                        Self::DominantSpeakerNotification(value) => {
-                            Self::create_dominant_speaker_notification(builder, value)
+                        Self::ActiveSpeakerObserverDominantSpeakerNotification(value) => {
+                            Self::create_active_speaker_observer_dominant_speaker_notification(
+                                builder, value,
+                            )
                         }
-                        Self::VolumesNotification(value) => {
-                            Self::create_volumes_notification(builder, value)
+                        Self::AudioLevelObserverVolumesNotification(value) => {
+                            Self::create_audio_level_observer_volumes_notification(builder, value)
                         }
                     }
                 }
@@ -49762,9 +49810,9 @@ mod root {
             pub struct BodyBuilder<T>(T);
 
             impl BodyBuilder<::planus::Uninitialized> {
-                /// Creates an instance of the [`SendRtcpNotification` variant](Body#variant.SendRtcpNotification).
+                /// Creates an instance of the [`Transport_SendRtcpNotification` variant](Body#variant.TransportSendRtcpNotification).
                 #[inline]
-                pub fn send_rtcp_notification<T>(
+                pub fn transport_send_rtcp_notification<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<1, T>>
@@ -49774,9 +49822,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SctpStateChangeNotification` variant](Body#variant.SctpStateChangeNotification).
+                /// Creates an instance of the [`Transport_SctpStateChangeNotification` variant](Body#variant.TransportSctpStateChangeNotification).
                 #[inline]
-                pub fn sctp_state_change_notification<T>(
+                pub fn transport_sctp_state_change_notification<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<2, T>>
@@ -49786,12 +49834,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SendNotification` variant](Body#variant.SendNotification).
+                /// Creates an instance of the [`Producer_SendNotification` variant](Body#variant.ProducerSendNotification).
                 #[inline]
-                pub fn send_notification<T>(
+                pub fn producer_send_notification<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<3, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::producer::SendNotification>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`DataProducer_SendNotification` variant](Body#variant.DataProducerSendNotification).
+                #[inline]
+                pub fn data_producer_send_notification<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<4, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_producer::SendNotification>,
                 {
@@ -49803,19 +49863,19 @@ mod root {
                 pub fn transport_trace_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<4, T>>
+                ) -> BodyBuilder<::planus::Initialized<5, T>>
                 where
                     T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`IceSelectedTupleChangeNotification` variant](Body#variant.IceSelectedTupleChangeNotification).
+                /// Creates an instance of the [`WebRtcTransport_IceSelectedTupleChangeNotification` variant](Body#variant.WebRtcTransportIceSelectedTupleChangeNotification).
                 #[inline]
-                pub fn ice_selected_tuple_change_notification<T>(
+                pub fn web_rtc_transport_ice_selected_tuple_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<5, T>>
+                ) -> BodyBuilder<::planus::Initialized<6, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::web_rtc_transport::IceSelectedTupleChangeNotification,
@@ -49824,12 +49884,12 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`IceStateChangeNotification` variant](Body#variant.IceStateChangeNotification).
+                /// Creates an instance of the [`WebRtcTransport_IceStateChangeNotification` variant](Body#variant.WebRtcTransportIceStateChangeNotification).
                 #[inline]
-                pub fn ice_state_change_notification<T>(
+                pub fn web_rtc_transport_ice_state_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<6, T>>
+                ) -> BodyBuilder<::planus::Initialized<7, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::web_rtc_transport::IceStateChangeNotification,
@@ -49838,12 +49898,12 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`DtlsStateChangeNotification` variant](Body#variant.DtlsStateChangeNotification).
+                /// Creates an instance of the [`WebRtcTransport_DtlsStateChangeNotification` variant](Body#variant.WebRtcTransportDtlsStateChangeNotification).
                 #[inline]
-                pub fn dtls_state_change_notification<T>(
+                pub fn web_rtc_transport_dtls_state_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<7, T>>
+                ) -> BodyBuilder<::planus::Initialized<8, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::web_rtc_transport::DtlsStateChangeNotification,
@@ -49852,50 +49912,50 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`TupleNotification` variant](Body#variant.TupleNotification).
+                /// Creates an instance of the [`PlainTransport_TupleNotification` variant](Body#variant.PlainTransportTupleNotification).
                 #[inline]
-                pub fn tuple_notification<T>(
+                pub fn plain_transport_tuple_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<8, T>>
+                ) -> BodyBuilder<::planus::Initialized<9, T>>
                 where
                     T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`RtcpTupleNotification` variant](Body#variant.RtcpTupleNotification).
+                /// Creates an instance of the [`PlainTransport_RtcpTupleNotification` variant](Body#variant.PlainTransportRtcpTupleNotification).
                 #[inline]
-                pub fn rtcp_tuple_notification<T>(
+                pub fn plain_transport_rtcp_tuple_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<9, T>>
+                ) -> BodyBuilder<::planus::Initialized<10, T>>
                 where
                     T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`RtcpNotification` variant](Body#variant.RtcpNotification).
+                /// Creates an instance of the [`DirectTransport_RtcpNotification` variant](Body#variant.DirectTransportRtcpNotification).
                 #[inline]
-                pub fn rtcp_notification<T>(
+                pub fn direct_transport_rtcp_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<10, T>>
+                ) -> BodyBuilder<::planus::Initialized<11, T>>
                 where
                     T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`ScoreNotification` variant](Body#variant.ScoreNotification).
+                /// Creates an instance of the [`Producer_ScoreNotification` variant](Body#variant.ProducerScoreNotification).
                 #[inline]
-                pub fn score_notification<T>(
+                pub fn producer_score_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<11, T>>
+                ) -> BodyBuilder<::planus::Initialized<12, T>>
                 where
-                    T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                    T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -49905,45 +49965,57 @@ mod root {
                 pub fn producer_trace_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<12, T>>
+                ) -> BodyBuilder<::planus::Initialized<13, T>>
                 where
                     T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`VideoOrientationChangeNotification` variant](Body#variant.VideoOrientationChangeNotification).
+                /// Creates an instance of the [`Producer_VideoOrientationChangeNotification` variant](Body#variant.ProducerVideoOrientationChangeNotification).
                 #[inline]
-                pub fn video_orientation_change_notification<T>(
+                pub fn producer_video_orientation_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<13, T>>
+                ) -> BodyBuilder<::planus::Initialized<14, T>>
                 where
                     T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`LayersChangeNotification` variant](Body#variant.LayersChangeNotification).
+                /// Creates an instance of the [`Consumer_LayersChangeNotification` variant](Body#variant.ConsumerLayersChangeNotification).
                 #[inline]
-                pub fn layers_change_notification<T>(
+                pub fn consumer_layers_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<14, T>>
+                ) -> BodyBuilder<::planus::Initialized<15, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`RtpNotification` variant](Body#variant.RtpNotification).
+                /// Creates an instance of the [`Consumer_RtpNotification` variant](Body#variant.ConsumerRtpNotification).
                 #[inline]
-                pub fn rtp_notification<T>(
+                pub fn consumer_rtp_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<15, T>>
+                ) -> BodyBuilder<::planus::Initialized<16, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`Consumer_ScoreNotification` variant](Body#variant.ConsumerScoreNotification).
+                #[inline]
+                pub fn consumer_score_notification<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<17, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -49953,43 +50025,43 @@ mod root {
                 pub fn consumer_trace_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<16, T>>
+                ) -> BodyBuilder<::planus::Initialized<18, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`MessageNotification` variant](Body#variant.MessageNotification).
+                /// Creates an instance of the [`DataConsumer_MessageNotification` variant](Body#variant.DataConsumerMessageNotification).
                 #[inline]
-                pub fn message_notification<T>(
+                pub fn data_consumer_message_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<17, T>>
+                ) -> BodyBuilder<::planus::Initialized<19, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`BufferedAmountLowNotification` variant](Body#variant.BufferedAmountLowNotification).
+                /// Creates an instance of the [`DataConsumer_BufferedAmountLowNotification` variant](Body#variant.DataConsumerBufferedAmountLowNotification).
                 #[inline]
-                pub fn buffered_amount_low_notification<T>(
+                pub fn data_consumer_buffered_amount_low_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<18, T>>
+                ) -> BodyBuilder<::planus::Initialized<20, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`DominantSpeakerNotification` variant](Body#variant.DominantSpeakerNotification).
+                /// Creates an instance of the [`ActiveSpeakerObserver_DominantSpeakerNotification` variant](Body#variant.ActiveSpeakerObserverDominantSpeakerNotification).
                 #[inline]
-                pub fn dominant_speaker_notification<T>(
+                pub fn active_speaker_observer_dominant_speaker_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<19, T>>
+                ) -> BodyBuilder<::planus::Initialized<21, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::active_speaker_observer::DominantSpeakerNotification,
@@ -49998,12 +50070,12 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`VolumesNotification` variant](Body#variant.VolumesNotification).
+                /// Creates an instance of the [`AudioLevelObserver_VolumesNotification` variant](Body#variant.AudioLevelObserverVolumesNotification).
                 #[inline]
-                pub fn volumes_notification<T>(
+                pub fn audio_level_observer_volumes_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<20, T>>
+                ) -> BodyBuilder<::planus::Initialized<22, T>>
                 where
                     T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
                 {
@@ -50068,7 +50140,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<3, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_producer::SendNotification>,
+                T: ::planus::WriteAsOffset<super::producer::SendNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50078,7 +50150,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<3, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_producer::SendNotification>,
+                T: ::planus::WriteAsOffset<super::producer::SendNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50090,7 +50162,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<4, T>>
             where
-                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::data_producer::SendNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50100,7 +50172,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<4, T>>
             where
-                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::data_producer::SendNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50112,9 +50184,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<5, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50124,9 +50194,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<5, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50138,7 +50206,9 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<6, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
+                T: ::planus::WriteAsOffset<
+                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
+                >,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50148,7 +50218,9 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<6, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
+                T: ::planus::WriteAsOffset<
+                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
+                >,
             {
                 #[inline]
                 fn prepare(
@@ -50160,7 +50232,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<7, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50170,7 +50242,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<7, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50182,7 +50254,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<8, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50192,7 +50264,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<8, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50204,7 +50276,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<9, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50214,7 +50286,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<9, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50226,7 +50298,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<10, T>>
             where
-                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50236,7 +50308,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<10, T>>
             where
-                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50248,7 +50320,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<11, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50258,7 +50330,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<11, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50270,7 +50342,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<12, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50280,7 +50352,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<12, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50292,7 +50364,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<13, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50302,7 +50374,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<13, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50314,7 +50386,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<14, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50324,7 +50396,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<14, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50336,7 +50408,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<15, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50346,7 +50418,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<15, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50358,7 +50430,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<16, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50368,7 +50440,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<16, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50380,7 +50452,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<17, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50390,7 +50462,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<17, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50402,7 +50474,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50412,7 +50484,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50424,9 +50496,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<19, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::active_speaker_observer::DominantSpeakerNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50435,6 +50505,52 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<19, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(20, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<21, T>>
+            where
+                T: ::planus::WriteAsOffset<
+                    super::active_speaker_observer::DominantSpeakerNotification,
+                >,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(21, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<21, T>>
             where
                 T: ::planus::WriteAsOffset<
                     super::active_speaker_observer::DominantSpeakerNotification,
@@ -50448,17 +50564,17 @@ mod root {
                     ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
                 }
             }
-            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<22, T>>
             where
                 T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
-                    ::planus::UnionOffset::new(20, (self.0).0.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(22, (self.0).0.prepare(builder).downcast())
                 }
             }
 
-            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<22, T>>
             where
                 T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
             {
@@ -50474,38 +50590,46 @@ mod root {
             /// Reference to a deserialized [Body].
             #[derive(Copy, Clone, Debug)]
             pub enum BodyRef<'a> {
-                SendRtcpNotification(super::transport::SendRtcpNotificationRef<'a>),
-                SctpStateChangeNotification(super::transport::SctpStateChangeNotificationRef<'a>),
-                SendNotification(super::data_producer::SendNotificationRef<'a>),
+                TransportSendRtcpNotification(super::transport::SendRtcpNotificationRef<'a>),
+                TransportSctpStateChangeNotification(
+                    super::transport::SctpStateChangeNotificationRef<'a>,
+                ),
+                ProducerSendNotification(super::producer::SendNotificationRef<'a>),
+                DataProducerSendNotification(super::data_producer::SendNotificationRef<'a>),
                 TransportTraceNotification(super::transport::TraceNotificationRef<'a>),
-                IceSelectedTupleChangeNotification(
+                WebRtcTransportIceSelectedTupleChangeNotification(
                     super::web_rtc_transport::IceSelectedTupleChangeNotificationRef<'a>,
                 ),
-                IceStateChangeNotification(
+                WebRtcTransportIceStateChangeNotification(
                     super::web_rtc_transport::IceStateChangeNotificationRef<'a>,
                 ),
-                DtlsStateChangeNotification(
+                WebRtcTransportDtlsStateChangeNotification(
                     super::web_rtc_transport::DtlsStateChangeNotificationRef<'a>,
                 ),
-                TupleNotification(super::plain_transport::TupleNotificationRef<'a>),
-                RtcpTupleNotification(super::plain_transport::RtcpTupleNotificationRef<'a>),
-                RtcpNotification(super::direct_transport::RtcpNotificationRef<'a>),
-                ScoreNotification(super::consumer::ScoreNotificationRef<'a>),
+                PlainTransportTupleNotification(super::plain_transport::TupleNotificationRef<'a>),
+                PlainTransportRtcpTupleNotification(
+                    super::plain_transport::RtcpTupleNotificationRef<'a>,
+                ),
+                DirectTransportRtcpNotification(super::direct_transport::RtcpNotificationRef<'a>),
+                ProducerScoreNotification(super::producer::ScoreNotificationRef<'a>),
                 ProducerTraceNotification(super::producer::TraceNotificationRef<'a>),
-                VideoOrientationChangeNotification(
+                ProducerVideoOrientationChangeNotification(
                     super::producer::VideoOrientationChangeNotificationRef<'a>,
                 ),
-                LayersChangeNotification(super::consumer::LayersChangeNotificationRef<'a>),
-                RtpNotification(super::consumer::RtpNotificationRef<'a>),
+                ConsumerLayersChangeNotification(super::consumer::LayersChangeNotificationRef<'a>),
+                ConsumerRtpNotification(super::consumer::RtpNotificationRef<'a>),
+                ConsumerScoreNotification(super::consumer::ScoreNotificationRef<'a>),
                 ConsumerTraceNotification(super::consumer::TraceNotificationRef<'a>),
-                MessageNotification(super::data_consumer::MessageNotificationRef<'a>),
-                BufferedAmountLowNotification(
+                DataConsumerMessageNotification(super::data_consumer::MessageNotificationRef<'a>),
+                DataConsumerBufferedAmountLowNotification(
                     super::data_consumer::BufferedAmountLowNotificationRef<'a>,
                 ),
-                DominantSpeakerNotification(
+                ActiveSpeakerObserverDominantSpeakerNotification(
                     super::active_speaker_observer::DominantSpeakerNotificationRef<'a>,
                 ),
-                VolumesNotification(super::audio_level_observer::VolumesNotificationRef<'a>),
+                AudioLevelObserverVolumesNotification(
+                    super::audio_level_observer::VolumesNotificationRef<'a>,
+                ),
             }
 
             impl<'a> ::core::convert::TryFrom<BodyRef<'a>> for Body {
@@ -50513,20 +50637,28 @@ mod root {
 
                 fn try_from(value: BodyRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(match value {
-                        BodyRef::SendRtcpNotification(value) => {
-                            Self::SendRtcpNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportSendRtcpNotification(value) => {
+                            Self::TransportSendRtcpNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SctpStateChangeNotification(value) => {
-                            Self::SctpStateChangeNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportSctpStateChangeNotification(value) => {
+                            Self::TransportSctpStateChangeNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::ProducerSendNotification(value) => {
+                            Self::ProducerSendNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SendNotification(value) => {
-                            Self::SendNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::DataProducerSendNotification(value) => {
+                            Self::DataProducerSendNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -50537,46 +50669,52 @@ mod root {
                             ))
                         }
 
-                        BodyRef::IceSelectedTupleChangeNotification(value) => {
-                            Self::IceSelectedTupleChangeNotification(
+                        BodyRef::WebRtcTransportIceSelectedTupleChangeNotification(value) => {
+                            Self::WebRtcTransportIceSelectedTupleChangeNotification(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
                             )
                         }
 
-                        BodyRef::IceStateChangeNotification(value) => {
-                            Self::IceStateChangeNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::WebRtcTransportIceStateChangeNotification(value) => {
+                            Self::WebRtcTransportIceStateChangeNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::WebRtcTransportDtlsStateChangeNotification(value) => {
+                            Self::WebRtcTransportDtlsStateChangeNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::PlainTransportTupleNotification(value) => {
+                            Self::PlainTransportTupleNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::DtlsStateChangeNotification(value) => {
-                            Self::DtlsStateChangeNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::PlainTransportRtcpTupleNotification(value) => {
+                            Self::PlainTransportRtcpTupleNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::DirectTransportRtcpNotification(value) => {
+                            Self::DirectTransportRtcpNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::TupleNotification(value) => {
-                            Self::TupleNotification(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::RtcpTupleNotification(value) => {
-                            Self::RtcpTupleNotification(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::RtcpNotification(value) => {
-                            Self::RtcpNotification(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::ScoreNotification(value) => {
-                            Self::ScoreNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::ProducerScoreNotification(value) => {
+                            Self::ProducerScoreNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -50587,22 +50725,30 @@ mod root {
                             ))
                         }
 
-                        BodyRef::VideoOrientationChangeNotification(value) => {
-                            Self::VideoOrientationChangeNotification(
+                        BodyRef::ProducerVideoOrientationChangeNotification(value) => {
+                            Self::ProducerVideoOrientationChangeNotification(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
                             )
                         }
 
-                        BodyRef::LayersChangeNotification(value) => {
-                            Self::LayersChangeNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::ConsumerLayersChangeNotification(value) => {
+                            Self::ConsumerLayersChangeNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::ConsumerRtpNotification(value) => {
+                            Self::ConsumerRtpNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::RtpNotification(value) => {
-                            Self::RtpNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::ConsumerScoreNotification(value) => {
+                            Self::ConsumerScoreNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -50613,28 +50759,34 @@ mod root {
                             ))
                         }
 
-                        BodyRef::MessageNotification(value) => {
-                            Self::MessageNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::DataConsumerMessageNotification(value) => {
+                            Self::DataConsumerMessageNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::BufferedAmountLowNotification(value) => {
-                            Self::BufferedAmountLowNotification(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::DataConsumerBufferedAmountLowNotification(value) => {
+                            Self::DataConsumerBufferedAmountLowNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
 
-                        BodyRef::DominantSpeakerNotification(value) => {
-                            Self::DominantSpeakerNotification(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::ActiveSpeakerObserverDominantSpeakerNotification(value) => {
+                            Self::ActiveSpeakerObserverDominantSpeakerNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
 
-                        BodyRef::VolumesNotification(value) => {
-                            Self::VolumesNotification(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::AudioLevelObserverVolumesNotification(value) => {
+                            Self::AudioLevelObserverVolumesNotification(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
                     })
                 }
@@ -50647,66 +50799,90 @@ mod root {
                     tag: u8,
                 ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
                     match tag {
-                        1 => ::core::result::Result::Ok(Self::SendRtcpNotification(
+                        1 => ::core::result::Result::Ok(Self::TransportSendRtcpNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        2 => ::core::result::Result::Ok(Self::SctpStateChangeNotification(
+                        2 => {
+                            ::core::result::Result::Ok(Self::TransportSctpStateChangeNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        3 => ::core::result::Result::Ok(Self::ProducerSendNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        3 => ::core::result::Result::Ok(Self::SendNotification(
+                        4 => ::core::result::Result::Ok(Self::DataProducerSendNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        4 => ::core::result::Result::Ok(Self::TransportTraceNotification(
+                        5 => ::core::result::Result::Ok(Self::TransportTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        5 => ::core::result::Result::Ok(Self::IceSelectedTupleChangeNotification(
+                        6 => ::core::result::Result::Ok(
+                            Self::WebRtcTransportIceSelectedTupleChangeNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        7 => ::core::result::Result::Ok(
+                            Self::WebRtcTransportIceStateChangeNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        8 => ::core::result::Result::Ok(
+                            Self::WebRtcTransportDtlsStateChangeNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        9 => ::core::result::Result::Ok(Self::PlainTransportTupleNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        6 => ::core::result::Result::Ok(Self::IceStateChangeNotification(
+                        10 => {
+                            ::core::result::Result::Ok(Self::PlainTransportRtcpTupleNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        11 => ::core::result::Result::Ok(Self::DirectTransportRtcpNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        7 => ::core::result::Result::Ok(Self::DtlsStateChangeNotification(
+                        12 => ::core::result::Result::Ok(Self::ProducerScoreNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        8 => ::core::result::Result::Ok(Self::TupleNotification(
+                        13 => ::core::result::Result::Ok(Self::ProducerTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        9 => ::core::result::Result::Ok(Self::RtcpTupleNotification(
+                        14 => ::core::result::Result::Ok(
+                            Self::ProducerVideoOrientationChangeNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        15 => ::core::result::Result::Ok(Self::ConsumerLayersChangeNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        10 => ::core::result::Result::Ok(Self::RtcpNotification(
+                        16 => ::core::result::Result::Ok(Self::ConsumerRtpNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        11 => ::core::result::Result::Ok(Self::ScoreNotification(
+                        17 => ::core::result::Result::Ok(Self::ConsumerScoreNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        12 => ::core::result::Result::Ok(Self::ProducerTraceNotification(
+                        18 => ::core::result::Result::Ok(Self::ConsumerTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        13 => ::core::result::Result::Ok(Self::VideoOrientationChangeNotification(
+                        19 => ::core::result::Result::Ok(Self::DataConsumerMessageNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        14 => ::core::result::Result::Ok(Self::LayersChangeNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        15 => ::core::result::Result::Ok(Self::RtpNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        16 => ::core::result::Result::Ok(Self::ConsumerTraceNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        17 => ::core::result::Result::Ok(Self::MessageNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        18 => ::core::result::Result::Ok(Self::BufferedAmountLowNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        19 => ::core::result::Result::Ok(Self::DominantSpeakerNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        20 => ::core::result::Result::Ok(Self::VolumesNotification(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
+                        20 => ::core::result::Result::Ok(
+                            Self::DataConsumerBufferedAmountLowNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        21 => ::core::result::Result::Ok(
+                            Self::ActiveSpeakerObserverDominantSpeakerNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        22 => {
+                            ::core::result::Result::Ok(Self::AudioLevelObserverVolumesNotification(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
                         _ => ::core::result::Result::Err(
                             ::planus::errors::ErrorKind::UnknownUnionTag { tag },
                         ),
@@ -51589,97 +51765,103 @@ mod root {
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub enum Body {
-                /// The variant of type `FBS.Worker.UpdateSettingsRequest` in the union `Body`
-                UpdateSettingsRequest(
+                /// The variant `Worker_UpdateSettingsRequest` in the union `Body`
+                WorkerUpdateSettingsRequest(
                     ::planus::alloc::boxed::Box<super::worker::UpdateSettingsRequest>,
                 ),
 
-                /// The variant of type `FBS.Worker.CreateWebRtcServerRequest` in the union `Body`
-                CreateWebRtcServerRequest(
+                /// The variant `Worker_CreateWebRtcServerRequest` in the union `Body`
+                WorkerCreateWebRtcServerRequest(
                     ::planus::alloc::boxed::Box<super::worker::CreateWebRtcServerRequest>,
                 ),
 
-                /// The variant of type `FBS.Worker.CloseWebRtcServerRequest` in the union `Body`
-                CloseWebRtcServerRequest(
+                /// The variant `Worker_CloseWebRtcServerRequest` in the union `Body`
+                WorkerCloseWebRtcServerRequest(
                     ::planus::alloc::boxed::Box<super::worker::CloseWebRtcServerRequest>,
                 ),
 
-                /// The variant of type `FBS.Worker.CreateRouterRequest` in the union `Body`
-                CreateRouterRequest(
+                /// The variant `Worker_CreateRouterRequest` in the union `Body`
+                WorkerCreateRouterRequest(
                     ::planus::alloc::boxed::Box<super::worker::CreateRouterRequest>,
                 ),
 
-                /// The variant of type `FBS.Worker.CloseRouterRequest` in the union `Body`
-                CloseRouterRequest(::planus::alloc::boxed::Box<super::worker::CloseRouterRequest>),
+                /// The variant `Worker_CloseRouterRequest` in the union `Body`
+                WorkerCloseRouterRequest(
+                    ::planus::alloc::boxed::Box<super::worker::CloseRouterRequest>,
+                ),
 
-                /// The variant of type `FBS.Router.CreateWebRtcTransportRequest` in the union `Body`
-                CreateWebRtcTransportRequest(
+                /// The variant `Router_CreateWebRtcTransportRequest` in the union `Body`
+                RouterCreateWebRtcTransportRequest(
                     ::planus::alloc::boxed::Box<super::router::CreateWebRtcTransportRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CreatePlainTransportRequest` in the union `Body`
-                CreatePlainTransportRequest(
+                /// The variant `Router_CreatePlainTransportRequest` in the union `Body`
+                RouterCreatePlainTransportRequest(
                     ::planus::alloc::boxed::Box<super::router::CreatePlainTransportRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CreatePipeTransportRequest` in the union `Body`
-                CreatePipeTransportRequest(
+                /// The variant `Router_CreatePipeTransportRequest` in the union `Body`
+                RouterCreatePipeTransportRequest(
                     ::planus::alloc::boxed::Box<super::router::CreatePipeTransportRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CreateDirectTransportRequest` in the union `Body`
-                CreateDirectTransportRequest(
+                /// The variant `Router_CreateDirectTransportRequest` in the union `Body`
+                RouterCreateDirectTransportRequest(
                     ::planus::alloc::boxed::Box<super::router::CreateDirectTransportRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CreateActiveSpeakerObserverRequest` in the union `Body`
-                CreateActiveSpeakerObserverRequest(
+                /// The variant `Router_CreateActiveSpeakerObserverRequest` in the union `Body`
+                RouterCreateActiveSpeakerObserverRequest(
                     ::planus::alloc::boxed::Box<super::router::CreateActiveSpeakerObserverRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CreateAudioLevelObserverRequest` in the union `Body`
-                CreateAudioLevelObserverRequest(
+                /// The variant `Router_CreateAudioLevelObserverRequest` in the union `Body`
+                RouterCreateAudioLevelObserverRequest(
                     ::planus::alloc::boxed::Box<super::router::CreateAudioLevelObserverRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CloseTransportRequest` in the union `Body`
-                CloseTransportRequest(
+                /// The variant `Router_CloseTransportRequest` in the union `Body`
+                RouterCloseTransportRequest(
                     ::planus::alloc::boxed::Box<super::router::CloseTransportRequest>,
                 ),
 
-                /// The variant of type `FBS.Router.CloseRtpObserverRequest` in the union `Body`
-                CloseRtpObserverRequest(
+                /// The variant `Router_CloseRtpObserverRequest` in the union `Body`
+                RouterCloseRtpObserverRequest(
                     ::planus::alloc::boxed::Box<super::router::CloseRtpObserverRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.SetMaxIncomingBitrateRequest` in the union `Body`
-                SetMaxIncomingBitrateRequest(
+                /// The variant `Transport_SetMaxIncomingBitrateRequest` in the union `Body`
+                TransportSetMaxIncomingBitrateRequest(
                     ::planus::alloc::boxed::Box<super::transport::SetMaxIncomingBitrateRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.SetMaxOutgoingBitrateRequest` in the union `Body`
-                SetMaxOutgoingBitrateRequest(
+                /// The variant `Transport_SetMaxOutgoingBitrateRequest` in the union `Body`
+                TransportSetMaxOutgoingBitrateRequest(
                     ::planus::alloc::boxed::Box<super::transport::SetMaxOutgoingBitrateRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.SetMinOutgoingBitrateRequest` in the union `Body`
-                SetMinOutgoingBitrateRequest(
+                /// The variant `Transport_SetMinOutgoingBitrateRequest` in the union `Body`
+                TransportSetMinOutgoingBitrateRequest(
                     ::planus::alloc::boxed::Box<super::transport::SetMinOutgoingBitrateRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.ProduceRequest` in the union `Body`
-                ProduceRequest(::planus::alloc::boxed::Box<super::transport::ProduceRequest>),
+                /// The variant `Transport_ProduceRequest` in the union `Body`
+                TransportProduceRequest(
+                    ::planus::alloc::boxed::Box<super::transport::ProduceRequest>,
+                ),
 
-                /// The variant of type `FBS.Transport.ConsumeRequest` in the union `Body`
-                ConsumeRequest(::planus::alloc::boxed::Box<super::transport::ConsumeRequest>),
+                /// The variant `Transport_ConsumeRequest` in the union `Body`
+                TransportConsumeRequest(
+                    ::planus::alloc::boxed::Box<super::transport::ConsumeRequest>,
+                ),
 
-                /// The variant of type `FBS.Transport.ProduceDataRequest` in the union `Body`
-                ProduceDataRequest(
+                /// The variant `Transport_ProduceDataRequest` in the union `Body`
+                TransportProduceDataRequest(
                     ::planus::alloc::boxed::Box<super::transport::ProduceDataRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.ConsumeDataRequest` in the union `Body`
-                ConsumeDataRequest(
+                /// The variant `Transport_ConsumeDataRequest` in the union `Body`
+                TransportConsumeDataRequest(
                     ::planus::alloc::boxed::Box<super::transport::ConsumeDataRequest>,
                 ),
 
@@ -51688,23 +51870,23 @@ mod root {
                     ::planus::alloc::boxed::Box<super::transport::EnableTraceEventRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.CloseProducerRequest` in the union `Body`
-                CloseProducerRequest(
+                /// The variant `Transport_CloseProducerRequest` in the union `Body`
+                TransportCloseProducerRequest(
                     ::planus::alloc::boxed::Box<super::transport::CloseProducerRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.CloseConsumerRequest` in the union `Body`
-                CloseConsumerRequest(
+                /// The variant `Transport_CloseConsumerRequest` in the union `Body`
+                TransportCloseConsumerRequest(
                     ::planus::alloc::boxed::Box<super::transport::CloseConsumerRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.CloseDataProducerRequest` in the union `Body`
-                CloseDataProducerRequest(
+                /// The variant `Transport_CloseDataProducerRequest` in the union `Body`
+                TransportCloseDataProducerRequest(
                     ::planus::alloc::boxed::Box<super::transport::CloseDataProducerRequest>,
                 ),
 
-                /// The variant of type `FBS.Transport.CloseDataConsumerRequest` in the union `Body`
-                CloseDataConsumerRequest(
+                /// The variant `Transport_CloseDataConsumerRequest` in the union `Body`
+                TransportCloseDataConsumerRequest(
                     ::planus::alloc::boxed::Box<super::transport::CloseDataConsumerRequest>,
                 ),
 
@@ -51728,13 +51910,13 @@ mod root {
                     ::planus::alloc::boxed::Box<super::producer::EnableTraceEventRequest>,
                 ),
 
-                /// The variant of type `FBS.Consumer.SetPreferredLayersRequest` in the union `Body`
-                SetPreferredLayersRequest(
+                /// The variant `Consumer_SetPreferredLayersRequest` in the union `Body`
+                ConsumerSetPreferredLayersRequest(
                     ::planus::alloc::boxed::Box<super::consumer::SetPreferredLayersRequest>,
                 ),
 
-                /// The variant of type `FBS.Consumer.SetPriorityRequest` in the union `Body`
-                SetPriorityRequest(
+                /// The variant `Consumer_SetPriorityRequest` in the union `Body`
+                ConsumerSetPriorityRequest(
                     ::planus::alloc::boxed::Box<super::consumer::SetPriorityRequest>,
                 ),
 
@@ -51743,28 +51925,30 @@ mod root {
                     ::planus::alloc::boxed::Box<super::consumer::EnableTraceEventRequest>,
                 ),
 
-                /// The variant of type `FBS.DataConsumer.SetBufferedAmountLowThresholdRequest` in the union `Body`
-                SetBufferedAmountLowThresholdRequest(
+                /// The variant `DataConsumer_SetBufferedAmountLowThresholdRequest` in the union `Body`
+                DataConsumerSetBufferedAmountLowThresholdRequest(
                     ::planus::alloc::boxed::Box<
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
                     >,
                 ),
 
-                /// The variant of type `FBS.DataConsumer.SendRequest` in the union `Body`
-                SendRequest(::planus::alloc::boxed::Box<super::data_consumer::SendRequest>),
+                /// The variant `DataConsumer_SendRequest` in the union `Body`
+                DataConsumerSendRequest(
+                    ::planus::alloc::boxed::Box<super::data_consumer::SendRequest>,
+                ),
 
-                /// The variant of type `FBS.DataConsumer.SetSubchannelsRequest` in the union `Body`
-                SetSubchannelsRequest(
+                /// The variant `DataConsumer_SetSubchannelsRequest` in the union `Body`
+                DataConsumerSetSubchannelsRequest(
                     ::planus::alloc::boxed::Box<super::data_consumer::SetSubchannelsRequest>,
                 ),
 
-                /// The variant of type `FBS.RtpObserver.AddProducerRequest` in the union `Body`
-                AddProducerRequest(
+                /// The variant `RtpObserver_AddProducerRequest` in the union `Body`
+                RtpObserverAddProducerRequest(
                     ::planus::alloc::boxed::Box<super::rtp_observer::AddProducerRequest>,
                 ),
 
-                /// The variant of type `FBS.RtpObserver.RemoveProducerRequest` in the union `Body`
-                RemoveProducerRequest(
+                /// The variant `RtpObserver_RemoveProducerRequest` in the union `Body`
+                RtpObserverRemoveProducerRequest(
                     ::planus::alloc::boxed::Box<super::rtp_observer::RemoveProducerRequest>,
                 ),
             }
@@ -51777,7 +51961,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_update_settings_request(
+                pub fn create_worker_update_settings_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::UpdateSettingsRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51785,7 +51969,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_web_rtc_server_request(
+                pub fn create_worker_create_web_rtc_server_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::CreateWebRtcServerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51793,7 +51977,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_web_rtc_server_request(
+                pub fn create_worker_close_web_rtc_server_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::CloseWebRtcServerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51801,7 +51985,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_router_request(
+                pub fn create_worker_create_router_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::CreateRouterRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51809,7 +51993,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_router_request(
+                pub fn create_worker_close_router_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::CloseRouterRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51817,7 +52001,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_web_rtc_transport_request(
+                pub fn create_router_create_web_rtc_transport_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CreateWebRtcTransportRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51825,7 +52009,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_plain_transport_request(
+                pub fn create_router_create_plain_transport_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CreatePlainTransportRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51833,7 +52017,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_pipe_transport_request(
+                pub fn create_router_create_pipe_transport_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CreatePipeTransportRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51841,7 +52025,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_direct_transport_request(
+                pub fn create_router_create_direct_transport_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CreateDirectTransportRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51849,7 +52033,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_active_speaker_observer_request(
+                pub fn create_router_create_active_speaker_observer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
                         super::router::CreateActiveSpeakerObserverRequest,
@@ -51859,7 +52043,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_create_audio_level_observer_request(
+                pub fn create_router_create_audio_level_observer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CreateAudioLevelObserverRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51867,7 +52051,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_transport_request(
+                pub fn create_router_close_transport_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CloseTransportRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51875,7 +52059,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_rtp_observer_request(
+                pub fn create_router_close_rtp_observer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::CloseRtpObserverRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51883,7 +52067,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_max_incoming_bitrate_request(
+                pub fn create_transport_set_max_incoming_bitrate_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::SetMaxIncomingBitrateRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51891,7 +52075,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_max_outgoing_bitrate_request(
+                pub fn create_transport_set_max_outgoing_bitrate_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::SetMaxOutgoingBitrateRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51899,7 +52083,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_min_outgoing_bitrate_request(
+                pub fn create_transport_set_min_outgoing_bitrate_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::SetMinOutgoingBitrateRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51907,7 +52091,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_produce_request(
+                pub fn create_transport_produce_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ProduceRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51915,7 +52099,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_consume_request(
+                pub fn create_transport_consume_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ConsumeRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51923,7 +52107,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_produce_data_request(
+                pub fn create_transport_produce_data_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ProduceDataRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51931,7 +52115,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_consume_data_request(
+                pub fn create_transport_consume_data_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ConsumeDataRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51947,7 +52131,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_producer_request(
+                pub fn create_transport_close_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51955,7 +52139,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_consumer_request(
+                pub fn create_transport_close_consumer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseConsumerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51963,7 +52147,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_data_producer_request(
+                pub fn create_transport_close_data_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseDataProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -51971,7 +52155,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_close_data_consumer_request(
+                pub fn create_transport_close_data_consumer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::CloseDataConsumerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52011,7 +52195,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_preferred_layers_request(
+                pub fn create_consumer_set_preferred_layers_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52019,7 +52203,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_priority_request(
+                pub fn create_consumer_set_priority_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52035,7 +52219,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_buffered_amount_low_threshold_request(
+                pub fn create_data_consumer_set_buffered_amount_low_threshold_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
                         super::data_consumer::SetBufferedAmountLowThresholdRequest,
@@ -52045,7 +52229,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_send_request(
+                pub fn create_data_consumer_send_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52053,7 +52237,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_set_subchannels_request(
+                pub fn create_data_consumer_set_subchannels_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52061,7 +52245,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_add_producer_request(
+                pub fn create_rtp_observer_add_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::AddProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52069,7 +52253,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_remove_producer_request(
+                pub fn create_rtp_observer_remove_producer_request(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::rtp_observer::RemoveProducerRequest>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -52081,76 +52265,82 @@ mod root {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
                     match self {
-                        Self::UpdateSettingsRequest(value) => {
-                            Self::create_update_settings_request(builder, value)
+                        Self::WorkerUpdateSettingsRequest(value) => {
+                            Self::create_worker_update_settings_request(builder, value)
                         }
-                        Self::CreateWebRtcServerRequest(value) => {
-                            Self::create_create_web_rtc_server_request(builder, value)
+                        Self::WorkerCreateWebRtcServerRequest(value) => {
+                            Self::create_worker_create_web_rtc_server_request(builder, value)
                         }
-                        Self::CloseWebRtcServerRequest(value) => {
-                            Self::create_close_web_rtc_server_request(builder, value)
+                        Self::WorkerCloseWebRtcServerRequest(value) => {
+                            Self::create_worker_close_web_rtc_server_request(builder, value)
                         }
-                        Self::CreateRouterRequest(value) => {
-                            Self::create_create_router_request(builder, value)
+                        Self::WorkerCreateRouterRequest(value) => {
+                            Self::create_worker_create_router_request(builder, value)
                         }
-                        Self::CloseRouterRequest(value) => {
-                            Self::create_close_router_request(builder, value)
+                        Self::WorkerCloseRouterRequest(value) => {
+                            Self::create_worker_close_router_request(builder, value)
                         }
-                        Self::CreateWebRtcTransportRequest(value) => {
-                            Self::create_create_web_rtc_transport_request(builder, value)
+                        Self::RouterCreateWebRtcTransportRequest(value) => {
+                            Self::create_router_create_web_rtc_transport_request(builder, value)
                         }
-                        Self::CreatePlainTransportRequest(value) => {
-                            Self::create_create_plain_transport_request(builder, value)
+                        Self::RouterCreatePlainTransportRequest(value) => {
+                            Self::create_router_create_plain_transport_request(builder, value)
                         }
-                        Self::CreatePipeTransportRequest(value) => {
-                            Self::create_create_pipe_transport_request(builder, value)
+                        Self::RouterCreatePipeTransportRequest(value) => {
+                            Self::create_router_create_pipe_transport_request(builder, value)
                         }
-                        Self::CreateDirectTransportRequest(value) => {
-                            Self::create_create_direct_transport_request(builder, value)
+                        Self::RouterCreateDirectTransportRequest(value) => {
+                            Self::create_router_create_direct_transport_request(builder, value)
                         }
-                        Self::CreateActiveSpeakerObserverRequest(value) => {
-                            Self::create_create_active_speaker_observer_request(builder, value)
+                        Self::RouterCreateActiveSpeakerObserverRequest(value) => {
+                            Self::create_router_create_active_speaker_observer_request(
+                                builder, value,
+                            )
                         }
-                        Self::CreateAudioLevelObserverRequest(value) => {
-                            Self::create_create_audio_level_observer_request(builder, value)
+                        Self::RouterCreateAudioLevelObserverRequest(value) => {
+                            Self::create_router_create_audio_level_observer_request(builder, value)
                         }
-                        Self::CloseTransportRequest(value) => {
-                            Self::create_close_transport_request(builder, value)
+                        Self::RouterCloseTransportRequest(value) => {
+                            Self::create_router_close_transport_request(builder, value)
                         }
-                        Self::CloseRtpObserverRequest(value) => {
-                            Self::create_close_rtp_observer_request(builder, value)
+                        Self::RouterCloseRtpObserverRequest(value) => {
+                            Self::create_router_close_rtp_observer_request(builder, value)
                         }
-                        Self::SetMaxIncomingBitrateRequest(value) => {
-                            Self::create_set_max_incoming_bitrate_request(builder, value)
+                        Self::TransportSetMaxIncomingBitrateRequest(value) => {
+                            Self::create_transport_set_max_incoming_bitrate_request(builder, value)
                         }
-                        Self::SetMaxOutgoingBitrateRequest(value) => {
-                            Self::create_set_max_outgoing_bitrate_request(builder, value)
+                        Self::TransportSetMaxOutgoingBitrateRequest(value) => {
+                            Self::create_transport_set_max_outgoing_bitrate_request(builder, value)
                         }
-                        Self::SetMinOutgoingBitrateRequest(value) => {
-                            Self::create_set_min_outgoing_bitrate_request(builder, value)
+                        Self::TransportSetMinOutgoingBitrateRequest(value) => {
+                            Self::create_transport_set_min_outgoing_bitrate_request(builder, value)
                         }
-                        Self::ProduceRequest(value) => Self::create_produce_request(builder, value),
-                        Self::ConsumeRequest(value) => Self::create_consume_request(builder, value),
-                        Self::ProduceDataRequest(value) => {
-                            Self::create_produce_data_request(builder, value)
+                        Self::TransportProduceRequest(value) => {
+                            Self::create_transport_produce_request(builder, value)
                         }
-                        Self::ConsumeDataRequest(value) => {
-                            Self::create_consume_data_request(builder, value)
+                        Self::TransportConsumeRequest(value) => {
+                            Self::create_transport_consume_request(builder, value)
+                        }
+                        Self::TransportProduceDataRequest(value) => {
+                            Self::create_transport_produce_data_request(builder, value)
+                        }
+                        Self::TransportConsumeDataRequest(value) => {
+                            Self::create_transport_consume_data_request(builder, value)
                         }
                         Self::TransportEnableTraceEventRequest(value) => {
                             Self::create_transport_enable_trace_event_request(builder, value)
                         }
-                        Self::CloseProducerRequest(value) => {
-                            Self::create_close_producer_request(builder, value)
+                        Self::TransportCloseProducerRequest(value) => {
+                            Self::create_transport_close_producer_request(builder, value)
                         }
-                        Self::CloseConsumerRequest(value) => {
-                            Self::create_close_consumer_request(builder, value)
+                        Self::TransportCloseConsumerRequest(value) => {
+                            Self::create_transport_close_consumer_request(builder, value)
                         }
-                        Self::CloseDataProducerRequest(value) => {
-                            Self::create_close_data_producer_request(builder, value)
+                        Self::TransportCloseDataProducerRequest(value) => {
+                            Self::create_transport_close_data_producer_request(builder, value)
                         }
-                        Self::CloseDataConsumerRequest(value) => {
-                            Self::create_close_data_consumer_request(builder, value)
+                        Self::TransportCloseDataConsumerRequest(value) => {
+                            Self::create_transport_close_data_consumer_request(builder, value)
                         }
                         Self::PlainTransportConnectRequest(value) => {
                             Self::create_plain_transport_connect_request(builder, value)
@@ -52164,27 +52354,31 @@ mod root {
                         Self::ProducerEnableTraceEventRequest(value) => {
                             Self::create_producer_enable_trace_event_request(builder, value)
                         }
-                        Self::SetPreferredLayersRequest(value) => {
-                            Self::create_set_preferred_layers_request(builder, value)
+                        Self::ConsumerSetPreferredLayersRequest(value) => {
+                            Self::create_consumer_set_preferred_layers_request(builder, value)
                         }
-                        Self::SetPriorityRequest(value) => {
-                            Self::create_set_priority_request(builder, value)
+                        Self::ConsumerSetPriorityRequest(value) => {
+                            Self::create_consumer_set_priority_request(builder, value)
                         }
                         Self::ConsumerEnableTraceEventRequest(value) => {
                             Self::create_consumer_enable_trace_event_request(builder, value)
                         }
-                        Self::SetBufferedAmountLowThresholdRequest(value) => {
-                            Self::create_set_buffered_amount_low_threshold_request(builder, value)
+                        Self::DataConsumerSetBufferedAmountLowThresholdRequest(value) => {
+                            Self::create_data_consumer_set_buffered_amount_low_threshold_request(
+                                builder, value,
+                            )
                         }
-                        Self::SendRequest(value) => Self::create_send_request(builder, value),
-                        Self::SetSubchannelsRequest(value) => {
-                            Self::create_set_subchannels_request(builder, value)
+                        Self::DataConsumerSendRequest(value) => {
+                            Self::create_data_consumer_send_request(builder, value)
                         }
-                        Self::AddProducerRequest(value) => {
-                            Self::create_add_producer_request(builder, value)
+                        Self::DataConsumerSetSubchannelsRequest(value) => {
+                            Self::create_data_consumer_set_subchannels_request(builder, value)
                         }
-                        Self::RemoveProducerRequest(value) => {
-                            Self::create_remove_producer_request(builder, value)
+                        Self::RtpObserverAddProducerRequest(value) => {
+                            Self::create_rtp_observer_add_producer_request(builder, value)
+                        }
+                        Self::RtpObserverRemoveProducerRequest(value) => {
+                            Self::create_rtp_observer_remove_producer_request(builder, value)
                         }
                     }
                 }
@@ -52208,9 +52402,9 @@ mod root {
             pub struct BodyBuilder<T>(T);
 
             impl BodyBuilder<::planus::Uninitialized> {
-                /// Creates an instance of the [`UpdateSettingsRequest` variant](Body#variant.UpdateSettingsRequest).
+                /// Creates an instance of the [`Worker_UpdateSettingsRequest` variant](Body#variant.WorkerUpdateSettingsRequest).
                 #[inline]
-                pub fn update_settings_request<T>(
+                pub fn worker_update_settings_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<1, T>>
@@ -52220,9 +52414,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreateWebRtcServerRequest` variant](Body#variant.CreateWebRtcServerRequest).
+                /// Creates an instance of the [`Worker_CreateWebRtcServerRequest` variant](Body#variant.WorkerCreateWebRtcServerRequest).
                 #[inline]
-                pub fn create_web_rtc_server_request<T>(
+                pub fn worker_create_web_rtc_server_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<2, T>>
@@ -52232,9 +52426,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseWebRtcServerRequest` variant](Body#variant.CloseWebRtcServerRequest).
+                /// Creates an instance of the [`Worker_CloseWebRtcServerRequest` variant](Body#variant.WorkerCloseWebRtcServerRequest).
                 #[inline]
-                pub fn close_web_rtc_server_request<T>(
+                pub fn worker_close_web_rtc_server_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<3, T>>
@@ -52244,9 +52438,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreateRouterRequest` variant](Body#variant.CreateRouterRequest).
+                /// Creates an instance of the [`Worker_CreateRouterRequest` variant](Body#variant.WorkerCreateRouterRequest).
                 #[inline]
-                pub fn create_router_request<T>(
+                pub fn worker_create_router_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<4, T>>
@@ -52256,9 +52450,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseRouterRequest` variant](Body#variant.CloseRouterRequest).
+                /// Creates an instance of the [`Worker_CloseRouterRequest` variant](Body#variant.WorkerCloseRouterRequest).
                 #[inline]
-                pub fn close_router_request<T>(
+                pub fn worker_close_router_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<5, T>>
@@ -52268,9 +52462,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreateWebRtcTransportRequest` variant](Body#variant.CreateWebRtcTransportRequest).
+                /// Creates an instance of the [`Router_CreateWebRtcTransportRequest` variant](Body#variant.RouterCreateWebRtcTransportRequest).
                 #[inline]
-                pub fn create_web_rtc_transport_request<T>(
+                pub fn router_create_web_rtc_transport_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<6, T>>
@@ -52280,9 +52474,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreatePlainTransportRequest` variant](Body#variant.CreatePlainTransportRequest).
+                /// Creates an instance of the [`Router_CreatePlainTransportRequest` variant](Body#variant.RouterCreatePlainTransportRequest).
                 #[inline]
-                pub fn create_plain_transport_request<T>(
+                pub fn router_create_plain_transport_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<7, T>>
@@ -52292,9 +52486,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreatePipeTransportRequest` variant](Body#variant.CreatePipeTransportRequest).
+                /// Creates an instance of the [`Router_CreatePipeTransportRequest` variant](Body#variant.RouterCreatePipeTransportRequest).
                 #[inline]
-                pub fn create_pipe_transport_request<T>(
+                pub fn router_create_pipe_transport_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<8, T>>
@@ -52304,9 +52498,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreateDirectTransportRequest` variant](Body#variant.CreateDirectTransportRequest).
+                /// Creates an instance of the [`Router_CreateDirectTransportRequest` variant](Body#variant.RouterCreateDirectTransportRequest).
                 #[inline]
-                pub fn create_direct_transport_request<T>(
+                pub fn router_create_direct_transport_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<9, T>>
@@ -52316,9 +52510,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreateActiveSpeakerObserverRequest` variant](Body#variant.CreateActiveSpeakerObserverRequest).
+                /// Creates an instance of the [`Router_CreateActiveSpeakerObserverRequest` variant](Body#variant.RouterCreateActiveSpeakerObserverRequest).
                 #[inline]
-                pub fn create_active_speaker_observer_request<T>(
+                pub fn router_create_active_speaker_observer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<10, T>>
@@ -52328,9 +52522,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CreateAudioLevelObserverRequest` variant](Body#variant.CreateAudioLevelObserverRequest).
+                /// Creates an instance of the [`Router_CreateAudioLevelObserverRequest` variant](Body#variant.RouterCreateAudioLevelObserverRequest).
                 #[inline]
-                pub fn create_audio_level_observer_request<T>(
+                pub fn router_create_audio_level_observer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<11, T>>
@@ -52340,9 +52534,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseTransportRequest` variant](Body#variant.CloseTransportRequest).
+                /// Creates an instance of the [`Router_CloseTransportRequest` variant](Body#variant.RouterCloseTransportRequest).
                 #[inline]
-                pub fn close_transport_request<T>(
+                pub fn router_close_transport_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<12, T>>
@@ -52352,9 +52546,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseRtpObserverRequest` variant](Body#variant.CloseRtpObserverRequest).
+                /// Creates an instance of the [`Router_CloseRtpObserverRequest` variant](Body#variant.RouterCloseRtpObserverRequest).
                 #[inline]
-                pub fn close_rtp_observer_request<T>(
+                pub fn router_close_rtp_observer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<13, T>>
@@ -52364,9 +52558,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetMaxIncomingBitrateRequest` variant](Body#variant.SetMaxIncomingBitrateRequest).
+                /// Creates an instance of the [`Transport_SetMaxIncomingBitrateRequest` variant](Body#variant.TransportSetMaxIncomingBitrateRequest).
                 #[inline]
-                pub fn set_max_incoming_bitrate_request<T>(
+                pub fn transport_set_max_incoming_bitrate_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<14, T>>
@@ -52376,9 +52570,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetMaxOutgoingBitrateRequest` variant](Body#variant.SetMaxOutgoingBitrateRequest).
+                /// Creates an instance of the [`Transport_SetMaxOutgoingBitrateRequest` variant](Body#variant.TransportSetMaxOutgoingBitrateRequest).
                 #[inline]
-                pub fn set_max_outgoing_bitrate_request<T>(
+                pub fn transport_set_max_outgoing_bitrate_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<15, T>>
@@ -52388,9 +52582,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetMinOutgoingBitrateRequest` variant](Body#variant.SetMinOutgoingBitrateRequest).
+                /// Creates an instance of the [`Transport_SetMinOutgoingBitrateRequest` variant](Body#variant.TransportSetMinOutgoingBitrateRequest).
                 #[inline]
-                pub fn set_min_outgoing_bitrate_request<T>(
+                pub fn transport_set_min_outgoing_bitrate_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<16, T>>
@@ -52400,9 +52594,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`ProduceRequest` variant](Body#variant.ProduceRequest).
+                /// Creates an instance of the [`Transport_ProduceRequest` variant](Body#variant.TransportProduceRequest).
                 #[inline]
-                pub fn produce_request<T>(
+                pub fn transport_produce_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<17, T>>
@@ -52412,9 +52606,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`ConsumeRequest` variant](Body#variant.ConsumeRequest).
+                /// Creates an instance of the [`Transport_ConsumeRequest` variant](Body#variant.TransportConsumeRequest).
                 #[inline]
-                pub fn consume_request<T>(
+                pub fn transport_consume_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<18, T>>
@@ -52424,9 +52618,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`ProduceDataRequest` variant](Body#variant.ProduceDataRequest).
+                /// Creates an instance of the [`Transport_ProduceDataRequest` variant](Body#variant.TransportProduceDataRequest).
                 #[inline]
-                pub fn produce_data_request<T>(
+                pub fn transport_produce_data_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<19, T>>
@@ -52436,9 +52630,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`ConsumeDataRequest` variant](Body#variant.ConsumeDataRequest).
+                /// Creates an instance of the [`Transport_ConsumeDataRequest` variant](Body#variant.TransportConsumeDataRequest).
                 #[inline]
-                pub fn consume_data_request<T>(
+                pub fn transport_consume_data_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<20, T>>
@@ -52460,9 +52654,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseProducerRequest` variant](Body#variant.CloseProducerRequest).
+                /// Creates an instance of the [`Transport_CloseProducerRequest` variant](Body#variant.TransportCloseProducerRequest).
                 #[inline]
-                pub fn close_producer_request<T>(
+                pub fn transport_close_producer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<22, T>>
@@ -52472,9 +52666,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseConsumerRequest` variant](Body#variant.CloseConsumerRequest).
+                /// Creates an instance of the [`Transport_CloseConsumerRequest` variant](Body#variant.TransportCloseConsumerRequest).
                 #[inline]
-                pub fn close_consumer_request<T>(
+                pub fn transport_close_consumer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<23, T>>
@@ -52484,9 +52678,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseDataProducerRequest` variant](Body#variant.CloseDataProducerRequest).
+                /// Creates an instance of the [`Transport_CloseDataProducerRequest` variant](Body#variant.TransportCloseDataProducerRequest).
                 #[inline]
-                pub fn close_data_producer_request<T>(
+                pub fn transport_close_data_producer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<24, T>>
@@ -52496,9 +52690,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`CloseDataConsumerRequest` variant](Body#variant.CloseDataConsumerRequest).
+                /// Creates an instance of the [`Transport_CloseDataConsumerRequest` variant](Body#variant.TransportCloseDataConsumerRequest).
                 #[inline]
-                pub fn close_data_consumer_request<T>(
+                pub fn transport_close_data_consumer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<25, T>>
@@ -52556,9 +52750,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetPreferredLayersRequest` variant](Body#variant.SetPreferredLayersRequest).
+                /// Creates an instance of the [`Consumer_SetPreferredLayersRequest` variant](Body#variant.ConsumerSetPreferredLayersRequest).
                 #[inline]
-                pub fn set_preferred_layers_request<T>(
+                pub fn consumer_set_preferred_layers_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<30, T>>
@@ -52568,9 +52762,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetPriorityRequest` variant](Body#variant.SetPriorityRequest).
+                /// Creates an instance of the [`Consumer_SetPriorityRequest` variant](Body#variant.ConsumerSetPriorityRequest).
                 #[inline]
-                pub fn set_priority_request<T>(
+                pub fn consumer_set_priority_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<31, T>>
@@ -52592,9 +52786,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetBufferedAmountLowThresholdRequest` variant](Body#variant.SetBufferedAmountLowThresholdRequest).
+                /// Creates an instance of the [`DataConsumer_SetBufferedAmountLowThresholdRequest` variant](Body#variant.DataConsumerSetBufferedAmountLowThresholdRequest).
                 #[inline]
-                pub fn set_buffered_amount_low_threshold_request<T>(
+                pub fn data_consumer_set_buffered_amount_low_threshold_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<33, T>>
@@ -52606,18 +52800,21 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SendRequest` variant](Body#variant.SendRequest).
+                /// Creates an instance of the [`DataConsumer_SendRequest` variant](Body#variant.DataConsumerSendRequest).
                 #[inline]
-                pub fn send_request<T>(self, value: T) -> BodyBuilder<::planus::Initialized<34, T>>
+                pub fn data_consumer_send_request<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<34, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::SendRequest>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`SetSubchannelsRequest` variant](Body#variant.SetSubchannelsRequest).
+                /// Creates an instance of the [`DataConsumer_SetSubchannelsRequest` variant](Body#variant.DataConsumerSetSubchannelsRequest).
                 #[inline]
-                pub fn set_subchannels_request<T>(
+                pub fn data_consumer_set_subchannels_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<35, T>>
@@ -52627,9 +52824,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`AddProducerRequest` variant](Body#variant.AddProducerRequest).
+                /// Creates an instance of the [`RtpObserver_AddProducerRequest` variant](Body#variant.RtpObserverAddProducerRequest).
                 #[inline]
-                pub fn add_producer_request<T>(
+                pub fn rtp_observer_add_producer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<36, T>>
@@ -52639,9 +52836,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`RemoveProducerRequest` variant](Body#variant.RemoveProducerRequest).
+                /// Creates an instance of the [`RtpObserver_RemoveProducerRequest` variant](Body#variant.RtpObserverRemoveProducerRequest).
                 #[inline]
-                pub fn remove_producer_request<T>(
+                pub fn rtp_observer_remove_producer_request<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<37, T>>
@@ -53485,49 +53682,69 @@ mod root {
             /// Reference to a deserialized [Body].
             #[derive(Copy, Clone, Debug)]
             pub enum BodyRef<'a> {
-                UpdateSettingsRequest(super::worker::UpdateSettingsRequestRef<'a>),
-                CreateWebRtcServerRequest(super::worker::CreateWebRtcServerRequestRef<'a>),
-                CloseWebRtcServerRequest(super::worker::CloseWebRtcServerRequestRef<'a>),
-                CreateRouterRequest(super::worker::CreateRouterRequestRef<'a>),
-                CloseRouterRequest(super::worker::CloseRouterRequestRef<'a>),
-                CreateWebRtcTransportRequest(super::router::CreateWebRtcTransportRequestRef<'a>),
-                CreatePlainTransportRequest(super::router::CreatePlainTransportRequestRef<'a>),
-                CreatePipeTransportRequest(super::router::CreatePipeTransportRequestRef<'a>),
-                CreateDirectTransportRequest(super::router::CreateDirectTransportRequestRef<'a>),
-                CreateActiveSpeakerObserverRequest(
+                WorkerUpdateSettingsRequest(super::worker::UpdateSettingsRequestRef<'a>),
+                WorkerCreateWebRtcServerRequest(super::worker::CreateWebRtcServerRequestRef<'a>),
+                WorkerCloseWebRtcServerRequest(super::worker::CloseWebRtcServerRequestRef<'a>),
+                WorkerCreateRouterRequest(super::worker::CreateRouterRequestRef<'a>),
+                WorkerCloseRouterRequest(super::worker::CloseRouterRequestRef<'a>),
+                RouterCreateWebRtcTransportRequest(
+                    super::router::CreateWebRtcTransportRequestRef<'a>,
+                ),
+                RouterCreatePlainTransportRequest(
+                    super::router::CreatePlainTransportRequestRef<'a>,
+                ),
+                RouterCreatePipeTransportRequest(super::router::CreatePipeTransportRequestRef<'a>),
+                RouterCreateDirectTransportRequest(
+                    super::router::CreateDirectTransportRequestRef<'a>,
+                ),
+                RouterCreateActiveSpeakerObserverRequest(
                     super::router::CreateActiveSpeakerObserverRequestRef<'a>,
                 ),
-                CreateAudioLevelObserverRequest(
+                RouterCreateAudioLevelObserverRequest(
                     super::router::CreateAudioLevelObserverRequestRef<'a>,
                 ),
-                CloseTransportRequest(super::router::CloseTransportRequestRef<'a>),
-                CloseRtpObserverRequest(super::router::CloseRtpObserverRequestRef<'a>),
-                SetMaxIncomingBitrateRequest(super::transport::SetMaxIncomingBitrateRequestRef<'a>),
-                SetMaxOutgoingBitrateRequest(super::transport::SetMaxOutgoingBitrateRequestRef<'a>),
-                SetMinOutgoingBitrateRequest(super::transport::SetMinOutgoingBitrateRequestRef<'a>),
-                ProduceRequest(super::transport::ProduceRequestRef<'a>),
-                ConsumeRequest(super::transport::ConsumeRequestRef<'a>),
-                ProduceDataRequest(super::transport::ProduceDataRequestRef<'a>),
-                ConsumeDataRequest(super::transport::ConsumeDataRequestRef<'a>),
+                RouterCloseTransportRequest(super::router::CloseTransportRequestRef<'a>),
+                RouterCloseRtpObserverRequest(super::router::CloseRtpObserverRequestRef<'a>),
+                TransportSetMaxIncomingBitrateRequest(
+                    super::transport::SetMaxIncomingBitrateRequestRef<'a>,
+                ),
+                TransportSetMaxOutgoingBitrateRequest(
+                    super::transport::SetMaxOutgoingBitrateRequestRef<'a>,
+                ),
+                TransportSetMinOutgoingBitrateRequest(
+                    super::transport::SetMinOutgoingBitrateRequestRef<'a>,
+                ),
+                TransportProduceRequest(super::transport::ProduceRequestRef<'a>),
+                TransportConsumeRequest(super::transport::ConsumeRequestRef<'a>),
+                TransportProduceDataRequest(super::transport::ProduceDataRequestRef<'a>),
+                TransportConsumeDataRequest(super::transport::ConsumeDataRequestRef<'a>),
                 TransportEnableTraceEventRequest(super::transport::EnableTraceEventRequestRef<'a>),
-                CloseProducerRequest(super::transport::CloseProducerRequestRef<'a>),
-                CloseConsumerRequest(super::transport::CloseConsumerRequestRef<'a>),
-                CloseDataProducerRequest(super::transport::CloseDataProducerRequestRef<'a>),
-                CloseDataConsumerRequest(super::transport::CloseDataConsumerRequestRef<'a>),
+                TransportCloseProducerRequest(super::transport::CloseProducerRequestRef<'a>),
+                TransportCloseConsumerRequest(super::transport::CloseConsumerRequestRef<'a>),
+                TransportCloseDataProducerRequest(
+                    super::transport::CloseDataProducerRequestRef<'a>,
+                ),
+                TransportCloseDataConsumerRequest(
+                    super::transport::CloseDataConsumerRequestRef<'a>,
+                ),
                 PlainTransportConnectRequest(super::plain_transport::ConnectRequestRef<'a>),
                 PipeTransportConnectRequest(super::pipe_transport::ConnectRequestRef<'a>),
                 WebRtcTransportConnectRequest(super::web_rtc_transport::ConnectRequestRef<'a>),
                 ProducerEnableTraceEventRequest(super::producer::EnableTraceEventRequestRef<'a>),
-                SetPreferredLayersRequest(super::consumer::SetPreferredLayersRequestRef<'a>),
-                SetPriorityRequest(super::consumer::SetPriorityRequestRef<'a>),
+                ConsumerSetPreferredLayersRequest(
+                    super::consumer::SetPreferredLayersRequestRef<'a>,
+                ),
+                ConsumerSetPriorityRequest(super::consumer::SetPriorityRequestRef<'a>),
                 ConsumerEnableTraceEventRequest(super::consumer::EnableTraceEventRequestRef<'a>),
-                SetBufferedAmountLowThresholdRequest(
+                DataConsumerSetBufferedAmountLowThresholdRequest(
                     super::data_consumer::SetBufferedAmountLowThresholdRequestRef<'a>,
                 ),
-                SendRequest(super::data_consumer::SendRequestRef<'a>),
-                SetSubchannelsRequest(super::data_consumer::SetSubchannelsRequestRef<'a>),
-                AddProducerRequest(super::rtp_observer::AddProducerRequestRef<'a>),
-                RemoveProducerRequest(super::rtp_observer::RemoveProducerRequestRef<'a>),
+                DataConsumerSendRequest(super::data_consumer::SendRequestRef<'a>),
+                DataConsumerSetSubchannelsRequest(
+                    super::data_consumer::SetSubchannelsRequestRef<'a>,
+                ),
+                RtpObserverAddProducerRequest(super::rtp_observer::AddProducerRequestRef<'a>),
+                RtpObserverRemoveProducerRequest(super::rtp_observer::RemoveProducerRequestRef<'a>),
             }
 
             impl<'a> ::core::convert::TryFrom<BodyRef<'a>> for Body {
@@ -53535,124 +53752,140 @@ mod root {
 
                 fn try_from(value: BodyRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(match value {
-                        BodyRef::UpdateSettingsRequest(value) => {
-                            Self::UpdateSettingsRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerUpdateSettingsRequest(value) => {
+                            Self::WorkerUpdateSettingsRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CreateWebRtcServerRequest(value) => {
-                            Self::CreateWebRtcServerRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerCreateWebRtcServerRequest(value) => {
+                            Self::WorkerCreateWebRtcServerRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CloseWebRtcServerRequest(value) => {
-                            Self::CloseWebRtcServerRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerCloseWebRtcServerRequest(value) => {
+                            Self::WorkerCloseWebRtcServerRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CreateRouterRequest(value) => {
-                            Self::CreateRouterRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerCreateRouterRequest(value) => {
+                            Self::WorkerCreateRouterRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CloseRouterRequest(value) => {
-                            Self::CloseRouterRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerCloseRouterRequest(value) => {
+                            Self::WorkerCloseRouterRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CreateWebRtcTransportRequest(value) => {
-                            Self::CreateWebRtcTransportRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::CreatePlainTransportRequest(value) => {
-                            Self::CreatePlainTransportRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::CreatePipeTransportRequest(value) => {
-                            Self::CreatePipeTransportRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::CreateDirectTransportRequest(value) => {
-                            Self::CreateDirectTransportRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::CreateActiveSpeakerObserverRequest(value) => {
-                            Self::CreateActiveSpeakerObserverRequest(
+                        BodyRef::RouterCreateWebRtcTransportRequest(value) => {
+                            Self::RouterCreateWebRtcTransportRequest(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
                             )
                         }
 
-                        BodyRef::CreateAudioLevelObserverRequest(value) => {
-                            Self::CreateAudioLevelObserverRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::RouterCreatePlainTransportRequest(value) => {
+                            Self::RouterCreatePlainTransportRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::RouterCreatePipeTransportRequest(value) => {
+                            Self::RouterCreatePipeTransportRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::RouterCreateDirectTransportRequest(value) => {
+                            Self::RouterCreateDirectTransportRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::RouterCreateActiveSpeakerObserverRequest(value) => {
+                            Self::RouterCreateActiveSpeakerObserverRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::RouterCreateAudioLevelObserverRequest(value) => {
+                            Self::RouterCreateAudioLevelObserverRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::RouterCloseTransportRequest(value) => {
+                            Self::RouterCloseTransportRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CloseTransportRequest(value) => {
-                            Self::CloseTransportRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::RouterCloseRtpObserverRequest(value) => {
+                            Self::RouterCloseRtpObserverRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CloseRtpObserverRequest(value) => {
-                            Self::CloseRtpObserverRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportSetMaxIncomingBitrateRequest(value) => {
+                            Self::TransportSetMaxIncomingBitrateRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::TransportSetMaxOutgoingBitrateRequest(value) => {
+                            Self::TransportSetMaxOutgoingBitrateRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::TransportSetMinOutgoingBitrateRequest(value) => {
+                            Self::TransportSetMinOutgoingBitrateRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::TransportProduceRequest(value) => {
+                            Self::TransportProduceRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SetMaxIncomingBitrateRequest(value) => {
-                            Self::SetMaxIncomingBitrateRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportConsumeRequest(value) => {
+                            Self::TransportConsumeRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SetMaxOutgoingBitrateRequest(value) => {
-                            Self::SetMaxOutgoingBitrateRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportProduceDataRequest(value) => {
+                            Self::TransportProduceDataRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SetMinOutgoingBitrateRequest(value) => {
-                            Self::SetMinOutgoingBitrateRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::ProduceRequest(value) => {
-                            Self::ProduceRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::ConsumeRequest(value) => {
-                            Self::ConsumeRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::ProduceDataRequest(value) => {
-                            Self::ProduceDataRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::ConsumeDataRequest(value) => {
-                            Self::ConsumeDataRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportConsumeDataRequest(value) => {
+                            Self::TransportConsumeDataRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -53665,28 +53898,32 @@ mod root {
                             )
                         }
 
-                        BodyRef::CloseProducerRequest(value) => {
-                            Self::CloseProducerRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportCloseProducerRequest(value) => {
+                            Self::TransportCloseProducerRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CloseConsumerRequest(value) => {
-                            Self::CloseConsumerRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportCloseConsumerRequest(value) => {
+                            Self::TransportCloseConsumerRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::CloseDataProducerRequest(value) => {
-                            Self::CloseDataProducerRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::TransportCloseDataProducerRequest(value) => {
+                            Self::TransportCloseDataProducerRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
 
-                        BodyRef::CloseDataConsumerRequest(value) => {
-                            Self::CloseDataConsumerRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::TransportCloseDataConsumerRequest(value) => {
+                            Self::TransportCloseDataConsumerRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
 
                         BodyRef::PlainTransportConnectRequest(value) => {
@@ -53713,14 +53950,16 @@ mod root {
                             ))
                         }
 
-                        BodyRef::SetPreferredLayersRequest(value) => {
-                            Self::SetPreferredLayersRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::ConsumerSetPreferredLayersRequest(value) => {
+                            Self::ConsumerSetPreferredLayersRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
 
-                        BodyRef::SetPriorityRequest(value) => {
-                            Self::SetPriorityRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::ConsumerSetPriorityRequest(value) => {
+                            Self::ConsumerSetPriorityRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -53731,36 +53970,40 @@ mod root {
                             ))
                         }
 
-                        BodyRef::SetBufferedAmountLowThresholdRequest(value) => {
-                            Self::SetBufferedAmountLowThresholdRequest(
+                        BodyRef::DataConsumerSetBufferedAmountLowThresholdRequest(value) => {
+                            Self::DataConsumerSetBufferedAmountLowThresholdRequest(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
                             )
                         }
 
-                        BodyRef::SendRequest(value) => {
-                            Self::SendRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::DataConsumerSendRequest(value) => {
+                            Self::DataConsumerSendRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::SetSubchannelsRequest(value) => {
-                            Self::SetSubchannelsRequest(::planus::alloc::boxed::Box::new(
+                        BodyRef::DataConsumerSetSubchannelsRequest(value) => {
+                            Self::DataConsumerSetSubchannelsRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
+                        }
+
+                        BodyRef::RtpObserverAddProducerRequest(value) => {
+                            Self::RtpObserverAddProducerRequest(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::AddProducerRequest(value) => {
-                            Self::AddProducerRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::RemoveProducerRequest(value) => {
-                            Self::RemoveProducerRequest(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
+                        BodyRef::RtpObserverRemoveProducerRequest(value) => {
+                            Self::RtpObserverRemoveProducerRequest(
+                                ::planus::alloc::boxed::Box::new(
+                                    ::core::convert::TryFrom::try_from(value)?,
+                                ),
+                            )
                         }
                     })
                 }
@@ -53773,79 +54016,89 @@ mod root {
                     tag: u8,
                 ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
                     match tag {
-                        1 => ::core::result::Result::Ok(Self::UpdateSettingsRequest(
+                        1 => ::core::result::Result::Ok(Self::WorkerUpdateSettingsRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        2 => ::core::result::Result::Ok(Self::CreateWebRtcServerRequest(
+                        2 => ::core::result::Result::Ok(Self::WorkerCreateWebRtcServerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        3 => ::core::result::Result::Ok(Self::CloseWebRtcServerRequest(
+                        3 => ::core::result::Result::Ok(Self::WorkerCloseWebRtcServerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        4 => ::core::result::Result::Ok(Self::CreateRouterRequest(
+                        4 => ::core::result::Result::Ok(Self::WorkerCreateRouterRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        5 => ::core::result::Result::Ok(Self::CloseRouterRequest(
+                        5 => ::core::result::Result::Ok(Self::WorkerCloseRouterRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        6 => ::core::result::Result::Ok(Self::CreateWebRtcTransportRequest(
+                        6 => ::core::result::Result::Ok(Self::RouterCreateWebRtcTransportRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        7 => ::core::result::Result::Ok(Self::CreatePlainTransportRequest(
+                        7 => ::core::result::Result::Ok(Self::RouterCreatePlainTransportRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        8 => ::core::result::Result::Ok(Self::CreatePipeTransportRequest(
+                        8 => ::core::result::Result::Ok(Self::RouterCreatePipeTransportRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        9 => ::core::result::Result::Ok(Self::CreateDirectTransportRequest(
+                        9 => ::core::result::Result::Ok(Self::RouterCreateDirectTransportRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        10 => ::core::result::Result::Ok(Self::CreateActiveSpeakerObserverRequest(
+                        10 => ::core::result::Result::Ok(
+                            Self::RouterCreateActiveSpeakerObserverRequest(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ),
+                        ),
+                        11 => {
+                            ::core::result::Result::Ok(Self::RouterCreateAudioLevelObserverRequest(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        12 => ::core::result::Result::Ok(Self::RouterCloseTransportRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        11 => ::core::result::Result::Ok(Self::CreateAudioLevelObserverRequest(
+                        13 => ::core::result::Result::Ok(Self::RouterCloseRtpObserverRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        12 => ::core::result::Result::Ok(Self::CloseTransportRequest(
+                        14 => {
+                            ::core::result::Result::Ok(Self::TransportSetMaxIncomingBitrateRequest(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        15 => {
+                            ::core::result::Result::Ok(Self::TransportSetMaxOutgoingBitrateRequest(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        16 => {
+                            ::core::result::Result::Ok(Self::TransportSetMinOutgoingBitrateRequest(
+                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                            ))
+                        }
+                        17 => ::core::result::Result::Ok(Self::TransportProduceRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        13 => ::core::result::Result::Ok(Self::CloseRtpObserverRequest(
+                        18 => ::core::result::Result::Ok(Self::TransportConsumeRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        14 => ::core::result::Result::Ok(Self::SetMaxIncomingBitrateRequest(
+                        19 => ::core::result::Result::Ok(Self::TransportProduceDataRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        15 => ::core::result::Result::Ok(Self::SetMaxOutgoingBitrateRequest(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        16 => ::core::result::Result::Ok(Self::SetMinOutgoingBitrateRequest(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        17 => ::core::result::Result::Ok(Self::ProduceRequest(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        18 => ::core::result::Result::Ok(Self::ConsumeRequest(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        19 => ::core::result::Result::Ok(Self::ProduceDataRequest(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        20 => ::core::result::Result::Ok(Self::ConsumeDataRequest(
+                        20 => ::core::result::Result::Ok(Self::TransportConsumeDataRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         21 => ::core::result::Result::Ok(Self::TransportEnableTraceEventRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        22 => ::core::result::Result::Ok(Self::CloseProducerRequest(
+                        22 => ::core::result::Result::Ok(Self::TransportCloseProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        23 => ::core::result::Result::Ok(Self::CloseConsumerRequest(
+                        23 => ::core::result::Result::Ok(Self::TransportCloseConsumerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        24 => ::core::result::Result::Ok(Self::CloseDataProducerRequest(
+                        24 => ::core::result::Result::Ok(Self::TransportCloseDataProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        25 => ::core::result::Result::Ok(Self::CloseDataConsumerRequest(
+                        25 => ::core::result::Result::Ok(Self::TransportCloseDataConsumerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         26 => ::core::result::Result::Ok(Self::PlainTransportConnectRequest(
@@ -53860,30 +54113,30 @@ mod root {
                         29 => ::core::result::Result::Ok(Self::ProducerEnableTraceEventRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        30 => ::core::result::Result::Ok(Self::SetPreferredLayersRequest(
+                        30 => ::core::result::Result::Ok(Self::ConsumerSetPreferredLayersRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        31 => ::core::result::Result::Ok(Self::SetPriorityRequest(
+                        31 => ::core::result::Result::Ok(Self::ConsumerSetPriorityRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         32 => ::core::result::Result::Ok(Self::ConsumerEnableTraceEventRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        33 => {
-                            ::core::result::Result::Ok(Self::SetBufferedAmountLowThresholdRequest(
+                        33 => ::core::result::Result::Ok(
+                            Self::DataConsumerSetBufferedAmountLowThresholdRequest(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                            ))
-                        }
-                        34 => ::core::result::Result::Ok(Self::SendRequest(
+                            ),
+                        ),
+                        34 => ::core::result::Result::Ok(Self::DataConsumerSendRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        35 => ::core::result::Result::Ok(Self::SetSubchannelsRequest(
+                        35 => ::core::result::Result::Ok(Self::DataConsumerSetSubchannelsRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        36 => ::core::result::Result::Ok(Self::AddProducerRequest(
+                        36 => ::core::result::Result::Ok(Self::RtpObserverAddProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        37 => ::core::result::Result::Ok(Self::RemoveProducerRequest(
+                        37 => ::core::result::Result::Ok(Self::RtpObserverRemoveProducerRequest(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
@@ -54283,145 +54536,145 @@ mod root {
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub enum Body {
-                /// The variant `FBS_Worker_DumpResponse` in the union `Body`
-                FbsWorkerDumpResponse(::planus::alloc::boxed::Box<super::worker::DumpResponse>),
+                /// The variant `Worker_DumpResponse` in the union `Body`
+                WorkerDumpResponse(::planus::alloc::boxed::Box<super::worker::DumpResponse>),
 
-                /// The variant `FBS_Worker_ResourceUsageResponse` in the union `Body`
-                FbsWorkerResourceUsageResponse(
+                /// The variant `Worker_ResourceUsageResponse` in the union `Body`
+                WorkerResourceUsageResponse(
                     ::planus::alloc::boxed::Box<super::worker::ResourceUsageResponse>,
                 ),
 
-                /// The variant `FBS_WebRtcServer_DumpResponse` in the union `Body`
-                FbsWebRtcServerDumpResponse(
+                /// The variant `WebRtcServer_DumpResponse` in the union `Body`
+                WebRtcServerDumpResponse(
                     ::planus::alloc::boxed::Box<super::web_rtc_server::DumpResponse>,
                 ),
 
-                /// The variant `FBS_Router_DumpResponse` in the union `Body`
-                FbsRouterDumpResponse(::planus::alloc::boxed::Box<super::router::DumpResponse>),
+                /// The variant `Router_DumpResponse` in the union `Body`
+                RouterDumpResponse(::planus::alloc::boxed::Box<super::router::DumpResponse>),
 
-                /// The variant `FBS_Transport_ProduceResponse` in the union `Body`
-                FbsTransportProduceResponse(
+                /// The variant `Transport_ProduceResponse` in the union `Body`
+                TransportProduceResponse(
                     ::planus::alloc::boxed::Box<super::transport::ProduceResponse>,
                 ),
 
-                /// The variant `FBS_Transport_ConsumeResponse` in the union `Body`
-                FbsTransportConsumeResponse(
+                /// The variant `Transport_ConsumeResponse` in the union `Body`
+                TransportConsumeResponse(
                     ::planus::alloc::boxed::Box<super::transport::ConsumeResponse>,
                 ),
 
-                /// The variant `FBS_Transport_RestartIceResponse` in the union `Body`
-                FbsTransportRestartIceResponse(
+                /// The variant `Transport_RestartIceResponse` in the union `Body`
+                TransportRestartIceResponse(
                     ::planus::alloc::boxed::Box<super::transport::RestartIceResponse>,
                 ),
 
-                /// The variant `FBS_PlainTransport_ConnectResponse` in the union `Body`
-                FbsPlainTransportConnectResponse(
+                /// The variant `PlainTransport_ConnectResponse` in the union `Body`
+                PlainTransportConnectResponse(
                     ::planus::alloc::boxed::Box<super::plain_transport::ConnectResponse>,
                 ),
 
-                /// The variant `FBS_PlainTransport_DumpResponse` in the union `Body`
-                FbsPlainTransportDumpResponse(
+                /// The variant `PlainTransport_DumpResponse` in the union `Body`
+                PlainTransportDumpResponse(
                     ::planus::alloc::boxed::Box<super::plain_transport::DumpResponse>,
                 ),
 
-                /// The variant `FBS_PlainTransport_GetStatsResponse` in the union `Body`
-                FbsPlainTransportGetStatsResponse(
+                /// The variant `PlainTransport_GetStatsResponse` in the union `Body`
+                PlainTransportGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::plain_transport::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_PipeTransport_ConnectResponse` in the union `Body`
-                FbsPipeTransportConnectResponse(
+                /// The variant `PipeTransport_ConnectResponse` in the union `Body`
+                PipeTransportConnectResponse(
                     ::planus::alloc::boxed::Box<super::pipe_transport::ConnectResponse>,
                 ),
 
-                /// The variant `FBS_PipeTransport_DumpResponse` in the union `Body`
-                FbsPipeTransportDumpResponse(
+                /// The variant `PipeTransport_DumpResponse` in the union `Body`
+                PipeTransportDumpResponse(
                     ::planus::alloc::boxed::Box<super::pipe_transport::DumpResponse>,
                 ),
 
-                /// The variant `FBS_PipeTransport_GetStatsResponse` in the union `Body`
-                FbsPipeTransportGetStatsResponse(
+                /// The variant `PipeTransport_GetStatsResponse` in the union `Body`
+                PipeTransportGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::pipe_transport::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_DirectTransport_DumpResponse` in the union `Body`
-                FbsDirectTransportDumpResponse(
+                /// The variant `DirectTransport_DumpResponse` in the union `Body`
+                DirectTransportDumpResponse(
                     ::planus::alloc::boxed::Box<super::direct_transport::DumpResponse>,
                 ),
 
-                /// The variant `FBS_DirectTransport_GetStatsResponse` in the union `Body`
-                FbsDirectTransportGetStatsResponse(
+                /// The variant `DirectTransport_GetStatsResponse` in the union `Body`
+                DirectTransportGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::direct_transport::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_WebRtcTransport_ConnectResponse` in the union `Body`
-                FbsWebRtcTransportConnectResponse(
+                /// The variant `WebRtcTransport_ConnectResponse` in the union `Body`
+                WebRtcTransportConnectResponse(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::ConnectResponse>,
                 ),
 
-                /// The variant `FBS_WebRtcTransport_DumpResponse` in the union `Body`
-                FbsWebRtcTransportDumpResponse(
+                /// The variant `WebRtcTransport_DumpResponse` in the union `Body`
+                WebRtcTransportDumpResponse(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::DumpResponse>,
                 ),
 
-                /// The variant `FBS_WebRtcTransport_GetStatsResponse` in the union `Body`
-                FbsWebRtcTransportGetStatsResponse(
+                /// The variant `WebRtcTransport_GetStatsResponse` in the union `Body`
+                WebRtcTransportGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::web_rtc_transport::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_Producer_DumpResponse` in the union `Body`
-                FbsProducerDumpResponse(::planus::alloc::boxed::Box<super::producer::DumpResponse>),
+                /// The variant `Producer_DumpResponse` in the union `Body`
+                ProducerDumpResponse(::planus::alloc::boxed::Box<super::producer::DumpResponse>),
 
-                /// The variant `FBS_Producer_GetStatsResponse` in the union `Body`
-                FbsProducerGetStatsResponse(
+                /// The variant `Producer_GetStatsResponse` in the union `Body`
+                ProducerGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::producer::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_Consumer_DumpResponse` in the union `Body`
-                FbsConsumerDumpResponse(::planus::alloc::boxed::Box<super::consumer::DumpResponse>),
+                /// The variant `Consumer_DumpResponse` in the union `Body`
+                ConsumerDumpResponse(::planus::alloc::boxed::Box<super::consumer::DumpResponse>),
 
-                /// The variant `FBS_Consumer_GetStatsResponse` in the union `Body`
-                FbsConsumerGetStatsResponse(
+                /// The variant `Consumer_GetStatsResponse` in the union `Body`
+                ConsumerGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::consumer::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_Consumer_SetPreferredLayersResponse` in the union `Body`
-                FbsConsumerSetPreferredLayersResponse(
+                /// The variant `Consumer_SetPreferredLayersResponse` in the union `Body`
+                ConsumerSetPreferredLayersResponse(
                     ::planus::alloc::boxed::Box<super::consumer::SetPreferredLayersResponse>,
                 ),
 
-                /// The variant `FBS_Consumer_SetPriorityResponse` in the union `Body`
-                FbsConsumerSetPriorityResponse(
+                /// The variant `Consumer_SetPriorityResponse` in the union `Body`
+                ConsumerSetPriorityResponse(
                     ::planus::alloc::boxed::Box<super::consumer::SetPriorityResponse>,
                 ),
 
-                /// The variant `FBS_DataProducer_DumpResponse` in the union `Body`
-                FbsDataProducerDumpResponse(
+                /// The variant `DataProducer_DumpResponse` in the union `Body`
+                DataProducerDumpResponse(
                     ::planus::alloc::boxed::Box<super::data_producer::DumpResponse>,
                 ),
 
-                /// The variant `FBS_DataProducer_GetStatsResponse` in the union `Body`
-                FbsDataProducerGetStatsResponse(
+                /// The variant `DataProducer_GetStatsResponse` in the union `Body`
+                DataProducerGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::data_producer::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_DataConsumer_GetBufferedAmountResponse` in the union `Body`
-                FbsDataConsumerGetBufferedAmountResponse(
+                /// The variant `DataConsumer_GetBufferedAmountResponse` in the union `Body`
+                DataConsumerGetBufferedAmountResponse(
                     ::planus::alloc::boxed::Box<super::data_consumer::GetBufferedAmountResponse>,
                 ),
 
-                /// The variant `FBS_DataConsumer_DumpResponse` in the union `Body`
-                FbsDataConsumerDumpResponse(
+                /// The variant `DataConsumer_DumpResponse` in the union `Body`
+                DataConsumerDumpResponse(
                     ::planus::alloc::boxed::Box<super::data_consumer::DumpResponse>,
                 ),
 
-                /// The variant `FBS_DataConsumer_GetStatsResponse` in the union `Body`
-                FbsDataConsumerGetStatsResponse(
+                /// The variant `DataConsumer_GetStatsResponse` in the union `Body`
+                DataConsumerGetStatsResponse(
                     ::planus::alloc::boxed::Box<super::data_consumer::GetStatsResponse>,
                 ),
 
-                /// The variant `FBS_DataConsumer_SetSubchannelsResponse` in the union `Body`
-                FbsDataConsumerSetSubchannelsResponse(
+                /// The variant `DataConsumer_SetSubchannelsResponse` in the union `Body`
+                DataConsumerSetSubchannelsResponse(
                     ::planus::alloc::boxed::Box<super::data_consumer::SetSubchannelsResponse>,
                 ),
             }
@@ -54434,7 +54687,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_worker_dump_response(
+                pub fn create_worker_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54442,7 +54695,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_worker_resource_usage_response(
+                pub fn create_worker_resource_usage_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::worker::ResourceUsageResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54450,7 +54703,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_web_rtc_server_dump_response(
+                pub fn create_web_rtc_server_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_server::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54458,7 +54711,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_router_dump_response(
+                pub fn create_router_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::router::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54466,7 +54719,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_transport_produce_response(
+                pub fn create_transport_produce_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ProduceResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54474,7 +54727,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_transport_consume_response(
+                pub fn create_transport_consume_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::ConsumeResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54482,7 +54735,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_transport_restart_ice_response(
+                pub fn create_transport_restart_ice_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::RestartIceResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54490,7 +54743,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_plain_transport_connect_response(
+                pub fn create_plain_transport_connect_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::plain_transport::ConnectResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54498,7 +54751,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_plain_transport_dump_response(
+                pub fn create_plain_transport_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::plain_transport::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54506,7 +54759,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_plain_transport_get_stats_response(
+                pub fn create_plain_transport_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::plain_transport::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54514,7 +54767,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_pipe_transport_connect_response(
+                pub fn create_pipe_transport_connect_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::pipe_transport::ConnectResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54522,7 +54775,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_pipe_transport_dump_response(
+                pub fn create_pipe_transport_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::pipe_transport::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54530,7 +54783,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_pipe_transport_get_stats_response(
+                pub fn create_pipe_transport_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::pipe_transport::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54538,7 +54791,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_direct_transport_dump_response(
+                pub fn create_direct_transport_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::direct_transport::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54546,7 +54799,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_direct_transport_get_stats_response(
+                pub fn create_direct_transport_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::direct_transport::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54554,7 +54807,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_web_rtc_transport_connect_response(
+                pub fn create_web_rtc_transport_connect_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::ConnectResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54562,7 +54815,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_web_rtc_transport_dump_response(
+                pub fn create_web_rtc_transport_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54570,7 +54823,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_web_rtc_transport_get_stats_response(
+                pub fn create_web_rtc_transport_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::web_rtc_transport::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54578,7 +54831,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_producer_dump_response(
+                pub fn create_producer_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::producer::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54586,7 +54839,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_producer_get_stats_response(
+                pub fn create_producer_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::producer::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54594,7 +54847,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_consumer_dump_response(
+                pub fn create_consumer_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54602,7 +54855,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_consumer_get_stats_response(
+                pub fn create_consumer_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54610,7 +54863,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_consumer_set_preferred_layers_response(
+                pub fn create_consumer_set_preferred_layers_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPreferredLayersResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54618,7 +54871,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_consumer_set_priority_response(
+                pub fn create_consumer_set_priority_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::SetPriorityResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54626,7 +54879,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_data_producer_dump_response(
+                pub fn create_data_producer_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_producer::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54634,7 +54887,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_data_producer_get_stats_response(
+                pub fn create_data_producer_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_producer::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54642,7 +54895,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_data_consumer_get_buffered_amount_response(
+                pub fn create_data_consumer_get_buffered_amount_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::GetBufferedAmountResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54650,7 +54903,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_data_consumer_dump_response(
+                pub fn create_data_consumer_dump_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::DumpResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54658,7 +54911,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_data_consumer_get_stats_response(
+                pub fn create_data_consumer_get_stats_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::GetStatsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54666,7 +54919,7 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_fbs_data_consumer_set_subchannels_response(
+                pub fn create_data_consumer_set_subchannels_response(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::SetSubchannelsResponse>,
                 ) -> ::planus::UnionOffset<Self> {
@@ -54678,97 +54931,95 @@ mod root {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
                     match self {
-                        Self::FbsWorkerDumpResponse(value) => {
-                            Self::create_fbs_worker_dump_response(builder, value)
+                        Self::WorkerDumpResponse(value) => {
+                            Self::create_worker_dump_response(builder, value)
                         }
-                        Self::FbsWorkerResourceUsageResponse(value) => {
-                            Self::create_fbs_worker_resource_usage_response(builder, value)
+                        Self::WorkerResourceUsageResponse(value) => {
+                            Self::create_worker_resource_usage_response(builder, value)
                         }
-                        Self::FbsWebRtcServerDumpResponse(value) => {
-                            Self::create_fbs_web_rtc_server_dump_response(builder, value)
+                        Self::WebRtcServerDumpResponse(value) => {
+                            Self::create_web_rtc_server_dump_response(builder, value)
                         }
-                        Self::FbsRouterDumpResponse(value) => {
-                            Self::create_fbs_router_dump_response(builder, value)
+                        Self::RouterDumpResponse(value) => {
+                            Self::create_router_dump_response(builder, value)
                         }
-                        Self::FbsTransportProduceResponse(value) => {
-                            Self::create_fbs_transport_produce_response(builder, value)
+                        Self::TransportProduceResponse(value) => {
+                            Self::create_transport_produce_response(builder, value)
                         }
-                        Self::FbsTransportConsumeResponse(value) => {
-                            Self::create_fbs_transport_consume_response(builder, value)
+                        Self::TransportConsumeResponse(value) => {
+                            Self::create_transport_consume_response(builder, value)
                         }
-                        Self::FbsTransportRestartIceResponse(value) => {
-                            Self::create_fbs_transport_restart_ice_response(builder, value)
+                        Self::TransportRestartIceResponse(value) => {
+                            Self::create_transport_restart_ice_response(builder, value)
                         }
-                        Self::FbsPlainTransportConnectResponse(value) => {
-                            Self::create_fbs_plain_transport_connect_response(builder, value)
+                        Self::PlainTransportConnectResponse(value) => {
+                            Self::create_plain_transport_connect_response(builder, value)
                         }
-                        Self::FbsPlainTransportDumpResponse(value) => {
-                            Self::create_fbs_plain_transport_dump_response(builder, value)
+                        Self::PlainTransportDumpResponse(value) => {
+                            Self::create_plain_transport_dump_response(builder, value)
                         }
-                        Self::FbsPlainTransportGetStatsResponse(value) => {
-                            Self::create_fbs_plain_transport_get_stats_response(builder, value)
+                        Self::PlainTransportGetStatsResponse(value) => {
+                            Self::create_plain_transport_get_stats_response(builder, value)
                         }
-                        Self::FbsPipeTransportConnectResponse(value) => {
-                            Self::create_fbs_pipe_transport_connect_response(builder, value)
+                        Self::PipeTransportConnectResponse(value) => {
+                            Self::create_pipe_transport_connect_response(builder, value)
                         }
-                        Self::FbsPipeTransportDumpResponse(value) => {
-                            Self::create_fbs_pipe_transport_dump_response(builder, value)
+                        Self::PipeTransportDumpResponse(value) => {
+                            Self::create_pipe_transport_dump_response(builder, value)
                         }
-                        Self::FbsPipeTransportGetStatsResponse(value) => {
-                            Self::create_fbs_pipe_transport_get_stats_response(builder, value)
+                        Self::PipeTransportGetStatsResponse(value) => {
+                            Self::create_pipe_transport_get_stats_response(builder, value)
                         }
-                        Self::FbsDirectTransportDumpResponse(value) => {
-                            Self::create_fbs_direct_transport_dump_response(builder, value)
+                        Self::DirectTransportDumpResponse(value) => {
+                            Self::create_direct_transport_dump_response(builder, value)
                         }
-                        Self::FbsDirectTransportGetStatsResponse(value) => {
-                            Self::create_fbs_direct_transport_get_stats_response(builder, value)
+                        Self::DirectTransportGetStatsResponse(value) => {
+                            Self::create_direct_transport_get_stats_response(builder, value)
                         }
-                        Self::FbsWebRtcTransportConnectResponse(value) => {
-                            Self::create_fbs_web_rtc_transport_connect_response(builder, value)
+                        Self::WebRtcTransportConnectResponse(value) => {
+                            Self::create_web_rtc_transport_connect_response(builder, value)
                         }
-                        Self::FbsWebRtcTransportDumpResponse(value) => {
-                            Self::create_fbs_web_rtc_transport_dump_response(builder, value)
+                        Self::WebRtcTransportDumpResponse(value) => {
+                            Self::create_web_rtc_transport_dump_response(builder, value)
                         }
-                        Self::FbsWebRtcTransportGetStatsResponse(value) => {
-                            Self::create_fbs_web_rtc_transport_get_stats_response(builder, value)
+                        Self::WebRtcTransportGetStatsResponse(value) => {
+                            Self::create_web_rtc_transport_get_stats_response(builder, value)
                         }
-                        Self::FbsProducerDumpResponse(value) => {
-                            Self::create_fbs_producer_dump_response(builder, value)
+                        Self::ProducerDumpResponse(value) => {
+                            Self::create_producer_dump_response(builder, value)
                         }
-                        Self::FbsProducerGetStatsResponse(value) => {
-                            Self::create_fbs_producer_get_stats_response(builder, value)
+                        Self::ProducerGetStatsResponse(value) => {
+                            Self::create_producer_get_stats_response(builder, value)
                         }
-                        Self::FbsConsumerDumpResponse(value) => {
-                            Self::create_fbs_consumer_dump_response(builder, value)
+                        Self::ConsumerDumpResponse(value) => {
+                            Self::create_consumer_dump_response(builder, value)
                         }
-                        Self::FbsConsumerGetStatsResponse(value) => {
-                            Self::create_fbs_consumer_get_stats_response(builder, value)
+                        Self::ConsumerGetStatsResponse(value) => {
+                            Self::create_consumer_get_stats_response(builder, value)
                         }
-                        Self::FbsConsumerSetPreferredLayersResponse(value) => {
-                            Self::create_fbs_consumer_set_preferred_layers_response(builder, value)
+                        Self::ConsumerSetPreferredLayersResponse(value) => {
+                            Self::create_consumer_set_preferred_layers_response(builder, value)
                         }
-                        Self::FbsConsumerSetPriorityResponse(value) => {
-                            Self::create_fbs_consumer_set_priority_response(builder, value)
+                        Self::ConsumerSetPriorityResponse(value) => {
+                            Self::create_consumer_set_priority_response(builder, value)
                         }
-                        Self::FbsDataProducerDumpResponse(value) => {
-                            Self::create_fbs_data_producer_dump_response(builder, value)
+                        Self::DataProducerDumpResponse(value) => {
+                            Self::create_data_producer_dump_response(builder, value)
                         }
-                        Self::FbsDataProducerGetStatsResponse(value) => {
-                            Self::create_fbs_data_producer_get_stats_response(builder, value)
+                        Self::DataProducerGetStatsResponse(value) => {
+                            Self::create_data_producer_get_stats_response(builder, value)
                         }
-                        Self::FbsDataConsumerGetBufferedAmountResponse(value) => {
-                            Self::create_fbs_data_consumer_get_buffered_amount_response(
-                                builder, value,
-                            )
+                        Self::DataConsumerGetBufferedAmountResponse(value) => {
+                            Self::create_data_consumer_get_buffered_amount_response(builder, value)
                         }
-                        Self::FbsDataConsumerDumpResponse(value) => {
-                            Self::create_fbs_data_consumer_dump_response(builder, value)
+                        Self::DataConsumerDumpResponse(value) => {
+                            Self::create_data_consumer_dump_response(builder, value)
                         }
-                        Self::FbsDataConsumerGetStatsResponse(value) => {
-                            Self::create_fbs_data_consumer_get_stats_response(builder, value)
+                        Self::DataConsumerGetStatsResponse(value) => {
+                            Self::create_data_consumer_get_stats_response(builder, value)
                         }
-                        Self::FbsDataConsumerSetSubchannelsResponse(value) => {
-                            Self::create_fbs_data_consumer_set_subchannels_response(builder, value)
+                        Self::DataConsumerSetSubchannelsResponse(value) => {
+                            Self::create_data_consumer_set_subchannels_response(builder, value)
                         }
                     }
                 }
@@ -54792,9 +55043,9 @@ mod root {
             pub struct BodyBuilder<T>(T);
 
             impl BodyBuilder<::planus::Uninitialized> {
-                /// Creates an instance of the [`FBS_Worker_DumpResponse` variant](Body#variant.FbsWorkerDumpResponse).
+                /// Creates an instance of the [`Worker_DumpResponse` variant](Body#variant.WorkerDumpResponse).
                 #[inline]
-                pub fn fbs_worker_dump_response<T>(
+                pub fn worker_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<1, T>>
@@ -54804,9 +55055,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Worker_ResourceUsageResponse` variant](Body#variant.FbsWorkerResourceUsageResponse).
+                /// Creates an instance of the [`Worker_ResourceUsageResponse` variant](Body#variant.WorkerResourceUsageResponse).
                 #[inline]
-                pub fn fbs_worker_resource_usage_response<T>(
+                pub fn worker_resource_usage_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<2, T>>
@@ -54816,9 +55067,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_WebRtcServer_DumpResponse` variant](Body#variant.FbsWebRtcServerDumpResponse).
+                /// Creates an instance of the [`WebRtcServer_DumpResponse` variant](Body#variant.WebRtcServerDumpResponse).
                 #[inline]
-                pub fn fbs_web_rtc_server_dump_response<T>(
+                pub fn web_rtc_server_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<3, T>>
@@ -54828,9 +55079,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Router_DumpResponse` variant](Body#variant.FbsRouterDumpResponse).
+                /// Creates an instance of the [`Router_DumpResponse` variant](Body#variant.RouterDumpResponse).
                 #[inline]
-                pub fn fbs_router_dump_response<T>(
+                pub fn router_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<4, T>>
@@ -54840,9 +55091,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Transport_ProduceResponse` variant](Body#variant.FbsTransportProduceResponse).
+                /// Creates an instance of the [`Transport_ProduceResponse` variant](Body#variant.TransportProduceResponse).
                 #[inline]
-                pub fn fbs_transport_produce_response<T>(
+                pub fn transport_produce_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<5, T>>
@@ -54852,9 +55103,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Transport_ConsumeResponse` variant](Body#variant.FbsTransportConsumeResponse).
+                /// Creates an instance of the [`Transport_ConsumeResponse` variant](Body#variant.TransportConsumeResponse).
                 #[inline]
-                pub fn fbs_transport_consume_response<T>(
+                pub fn transport_consume_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<6, T>>
@@ -54864,9 +55115,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Transport_RestartIceResponse` variant](Body#variant.FbsTransportRestartIceResponse).
+                /// Creates an instance of the [`Transport_RestartIceResponse` variant](Body#variant.TransportRestartIceResponse).
                 #[inline]
-                pub fn fbs_transport_restart_ice_response<T>(
+                pub fn transport_restart_ice_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<7, T>>
@@ -54876,9 +55127,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_PlainTransport_ConnectResponse` variant](Body#variant.FbsPlainTransportConnectResponse).
+                /// Creates an instance of the [`PlainTransport_ConnectResponse` variant](Body#variant.PlainTransportConnectResponse).
                 #[inline]
-                pub fn fbs_plain_transport_connect_response<T>(
+                pub fn plain_transport_connect_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<8, T>>
@@ -54888,9 +55139,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_PlainTransport_DumpResponse` variant](Body#variant.FbsPlainTransportDumpResponse).
+                /// Creates an instance of the [`PlainTransport_DumpResponse` variant](Body#variant.PlainTransportDumpResponse).
                 #[inline]
-                pub fn fbs_plain_transport_dump_response<T>(
+                pub fn plain_transport_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<9, T>>
@@ -54900,9 +55151,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_PlainTransport_GetStatsResponse` variant](Body#variant.FbsPlainTransportGetStatsResponse).
+                /// Creates an instance of the [`PlainTransport_GetStatsResponse` variant](Body#variant.PlainTransportGetStatsResponse).
                 #[inline]
-                pub fn fbs_plain_transport_get_stats_response<T>(
+                pub fn plain_transport_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<10, T>>
@@ -54912,9 +55163,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_PipeTransport_ConnectResponse` variant](Body#variant.FbsPipeTransportConnectResponse).
+                /// Creates an instance of the [`PipeTransport_ConnectResponse` variant](Body#variant.PipeTransportConnectResponse).
                 #[inline]
-                pub fn fbs_pipe_transport_connect_response<T>(
+                pub fn pipe_transport_connect_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<11, T>>
@@ -54924,9 +55175,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_PipeTransport_DumpResponse` variant](Body#variant.FbsPipeTransportDumpResponse).
+                /// Creates an instance of the [`PipeTransport_DumpResponse` variant](Body#variant.PipeTransportDumpResponse).
                 #[inline]
-                pub fn fbs_pipe_transport_dump_response<T>(
+                pub fn pipe_transport_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<12, T>>
@@ -54936,9 +55187,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_PipeTransport_GetStatsResponse` variant](Body#variant.FbsPipeTransportGetStatsResponse).
+                /// Creates an instance of the [`PipeTransport_GetStatsResponse` variant](Body#variant.PipeTransportGetStatsResponse).
                 #[inline]
-                pub fn fbs_pipe_transport_get_stats_response<T>(
+                pub fn pipe_transport_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<13, T>>
@@ -54948,9 +55199,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DirectTransport_DumpResponse` variant](Body#variant.FbsDirectTransportDumpResponse).
+                /// Creates an instance of the [`DirectTransport_DumpResponse` variant](Body#variant.DirectTransportDumpResponse).
                 #[inline]
-                pub fn fbs_direct_transport_dump_response<T>(
+                pub fn direct_transport_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<14, T>>
@@ -54960,9 +55211,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DirectTransport_GetStatsResponse` variant](Body#variant.FbsDirectTransportGetStatsResponse).
+                /// Creates an instance of the [`DirectTransport_GetStatsResponse` variant](Body#variant.DirectTransportGetStatsResponse).
                 #[inline]
-                pub fn fbs_direct_transport_get_stats_response<T>(
+                pub fn direct_transport_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<15, T>>
@@ -54972,9 +55223,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_WebRtcTransport_ConnectResponse` variant](Body#variant.FbsWebRtcTransportConnectResponse).
+                /// Creates an instance of the [`WebRtcTransport_ConnectResponse` variant](Body#variant.WebRtcTransportConnectResponse).
                 #[inline]
-                pub fn fbs_web_rtc_transport_connect_response<T>(
+                pub fn web_rtc_transport_connect_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<16, T>>
@@ -54984,9 +55235,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_WebRtcTransport_DumpResponse` variant](Body#variant.FbsWebRtcTransportDumpResponse).
+                /// Creates an instance of the [`WebRtcTransport_DumpResponse` variant](Body#variant.WebRtcTransportDumpResponse).
                 #[inline]
-                pub fn fbs_web_rtc_transport_dump_response<T>(
+                pub fn web_rtc_transport_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<17, T>>
@@ -54996,9 +55247,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_WebRtcTransport_GetStatsResponse` variant](Body#variant.FbsWebRtcTransportGetStatsResponse).
+                /// Creates an instance of the [`WebRtcTransport_GetStatsResponse` variant](Body#variant.WebRtcTransportGetStatsResponse).
                 #[inline]
-                pub fn fbs_web_rtc_transport_get_stats_response<T>(
+                pub fn web_rtc_transport_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<18, T>>
@@ -55008,9 +55259,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Producer_DumpResponse` variant](Body#variant.FbsProducerDumpResponse).
+                /// Creates an instance of the [`Producer_DumpResponse` variant](Body#variant.ProducerDumpResponse).
                 #[inline]
-                pub fn fbs_producer_dump_response<T>(
+                pub fn producer_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<19, T>>
@@ -55020,9 +55271,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Producer_GetStatsResponse` variant](Body#variant.FbsProducerGetStatsResponse).
+                /// Creates an instance of the [`Producer_GetStatsResponse` variant](Body#variant.ProducerGetStatsResponse).
                 #[inline]
-                pub fn fbs_producer_get_stats_response<T>(
+                pub fn producer_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<20, T>>
@@ -55032,9 +55283,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Consumer_DumpResponse` variant](Body#variant.FbsConsumerDumpResponse).
+                /// Creates an instance of the [`Consumer_DumpResponse` variant](Body#variant.ConsumerDumpResponse).
                 #[inline]
-                pub fn fbs_consumer_dump_response<T>(
+                pub fn consumer_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<21, T>>
@@ -55044,9 +55295,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Consumer_GetStatsResponse` variant](Body#variant.FbsConsumerGetStatsResponse).
+                /// Creates an instance of the [`Consumer_GetStatsResponse` variant](Body#variant.ConsumerGetStatsResponse).
                 #[inline]
-                pub fn fbs_consumer_get_stats_response<T>(
+                pub fn consumer_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<22, T>>
@@ -55056,9 +55307,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Consumer_SetPreferredLayersResponse` variant](Body#variant.FbsConsumerSetPreferredLayersResponse).
+                /// Creates an instance of the [`Consumer_SetPreferredLayersResponse` variant](Body#variant.ConsumerSetPreferredLayersResponse).
                 #[inline]
-                pub fn fbs_consumer_set_preferred_layers_response<T>(
+                pub fn consumer_set_preferred_layers_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<23, T>>
@@ -55068,9 +55319,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_Consumer_SetPriorityResponse` variant](Body#variant.FbsConsumerSetPriorityResponse).
+                /// Creates an instance of the [`Consumer_SetPriorityResponse` variant](Body#variant.ConsumerSetPriorityResponse).
                 #[inline]
-                pub fn fbs_consumer_set_priority_response<T>(
+                pub fn consumer_set_priority_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<24, T>>
@@ -55080,9 +55331,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DataProducer_DumpResponse` variant](Body#variant.FbsDataProducerDumpResponse).
+                /// Creates an instance of the [`DataProducer_DumpResponse` variant](Body#variant.DataProducerDumpResponse).
                 #[inline]
-                pub fn fbs_data_producer_dump_response<T>(
+                pub fn data_producer_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<25, T>>
@@ -55092,9 +55343,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DataProducer_GetStatsResponse` variant](Body#variant.FbsDataProducerGetStatsResponse).
+                /// Creates an instance of the [`DataProducer_GetStatsResponse` variant](Body#variant.DataProducerGetStatsResponse).
                 #[inline]
-                pub fn fbs_data_producer_get_stats_response<T>(
+                pub fn data_producer_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<26, T>>
@@ -55104,9 +55355,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DataConsumer_GetBufferedAmountResponse` variant](Body#variant.FbsDataConsumerGetBufferedAmountResponse).
+                /// Creates an instance of the [`DataConsumer_GetBufferedAmountResponse` variant](Body#variant.DataConsumerGetBufferedAmountResponse).
                 #[inline]
-                pub fn fbs_data_consumer_get_buffered_amount_response<T>(
+                pub fn data_consumer_get_buffered_amount_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<27, T>>
@@ -55116,9 +55367,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DataConsumer_DumpResponse` variant](Body#variant.FbsDataConsumerDumpResponse).
+                /// Creates an instance of the [`DataConsumer_DumpResponse` variant](Body#variant.DataConsumerDumpResponse).
                 #[inline]
-                pub fn fbs_data_consumer_dump_response<T>(
+                pub fn data_consumer_dump_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<28, T>>
@@ -55128,9 +55379,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DataConsumer_GetStatsResponse` variant](Body#variant.FbsDataConsumerGetStatsResponse).
+                /// Creates an instance of the [`DataConsumer_GetStatsResponse` variant](Body#variant.DataConsumerGetStatsResponse).
                 #[inline]
-                pub fn fbs_data_consumer_get_stats_response<T>(
+                pub fn data_consumer_get_stats_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<29, T>>
@@ -55140,9 +55391,9 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`FBS_DataConsumer_SetSubchannelsResponse` variant](Body#variant.FbsDataConsumerSetSubchannelsResponse).
+                /// Creates an instance of the [`DataConsumer_SetSubchannelsResponse` variant](Body#variant.DataConsumerSetSubchannelsResponse).
                 #[inline]
-                pub fn fbs_data_consumer_set_subchannels_response<T>(
+                pub fn data_consumer_set_subchannels_response<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<30, T>>
@@ -55828,44 +56079,40 @@ mod root {
             /// Reference to a deserialized [Body].
             #[derive(Copy, Clone, Debug)]
             pub enum BodyRef<'a> {
-                FbsWorkerDumpResponse(super::worker::DumpResponseRef<'a>),
-                FbsWorkerResourceUsageResponse(super::worker::ResourceUsageResponseRef<'a>),
-                FbsWebRtcServerDumpResponse(super::web_rtc_server::DumpResponseRef<'a>),
-                FbsRouterDumpResponse(super::router::DumpResponseRef<'a>),
-                FbsTransportProduceResponse(super::transport::ProduceResponseRef<'a>),
-                FbsTransportConsumeResponse(super::transport::ConsumeResponseRef<'a>),
-                FbsTransportRestartIceResponse(super::transport::RestartIceResponseRef<'a>),
-                FbsPlainTransportConnectResponse(super::plain_transport::ConnectResponseRef<'a>),
-                FbsPlainTransportDumpResponse(super::plain_transport::DumpResponseRef<'a>),
-                FbsPlainTransportGetStatsResponse(super::plain_transport::GetStatsResponseRef<'a>),
-                FbsPipeTransportConnectResponse(super::pipe_transport::ConnectResponseRef<'a>),
-                FbsPipeTransportDumpResponse(super::pipe_transport::DumpResponseRef<'a>),
-                FbsPipeTransportGetStatsResponse(super::pipe_transport::GetStatsResponseRef<'a>),
-                FbsDirectTransportDumpResponse(super::direct_transport::DumpResponseRef<'a>),
-                FbsDirectTransportGetStatsResponse(
-                    super::direct_transport::GetStatsResponseRef<'a>,
-                ),
-                FbsWebRtcTransportConnectResponse(super::web_rtc_transport::ConnectResponseRef<'a>),
-                FbsWebRtcTransportDumpResponse(super::web_rtc_transport::DumpResponseRef<'a>),
-                FbsWebRtcTransportGetStatsResponse(
-                    super::web_rtc_transport::GetStatsResponseRef<'a>,
-                ),
-                FbsProducerDumpResponse(super::producer::DumpResponseRef<'a>),
-                FbsProducerGetStatsResponse(super::producer::GetStatsResponseRef<'a>),
-                FbsConsumerDumpResponse(super::consumer::DumpResponseRef<'a>),
-                FbsConsumerGetStatsResponse(super::consumer::GetStatsResponseRef<'a>),
-                FbsConsumerSetPreferredLayersResponse(
+                WorkerDumpResponse(super::worker::DumpResponseRef<'a>),
+                WorkerResourceUsageResponse(super::worker::ResourceUsageResponseRef<'a>),
+                WebRtcServerDumpResponse(super::web_rtc_server::DumpResponseRef<'a>),
+                RouterDumpResponse(super::router::DumpResponseRef<'a>),
+                TransportProduceResponse(super::transport::ProduceResponseRef<'a>),
+                TransportConsumeResponse(super::transport::ConsumeResponseRef<'a>),
+                TransportRestartIceResponse(super::transport::RestartIceResponseRef<'a>),
+                PlainTransportConnectResponse(super::plain_transport::ConnectResponseRef<'a>),
+                PlainTransportDumpResponse(super::plain_transport::DumpResponseRef<'a>),
+                PlainTransportGetStatsResponse(super::plain_transport::GetStatsResponseRef<'a>),
+                PipeTransportConnectResponse(super::pipe_transport::ConnectResponseRef<'a>),
+                PipeTransportDumpResponse(super::pipe_transport::DumpResponseRef<'a>),
+                PipeTransportGetStatsResponse(super::pipe_transport::GetStatsResponseRef<'a>),
+                DirectTransportDumpResponse(super::direct_transport::DumpResponseRef<'a>),
+                DirectTransportGetStatsResponse(super::direct_transport::GetStatsResponseRef<'a>),
+                WebRtcTransportConnectResponse(super::web_rtc_transport::ConnectResponseRef<'a>),
+                WebRtcTransportDumpResponse(super::web_rtc_transport::DumpResponseRef<'a>),
+                WebRtcTransportGetStatsResponse(super::web_rtc_transport::GetStatsResponseRef<'a>),
+                ProducerDumpResponse(super::producer::DumpResponseRef<'a>),
+                ProducerGetStatsResponse(super::producer::GetStatsResponseRef<'a>),
+                ConsumerDumpResponse(super::consumer::DumpResponseRef<'a>),
+                ConsumerGetStatsResponse(super::consumer::GetStatsResponseRef<'a>),
+                ConsumerSetPreferredLayersResponse(
                     super::consumer::SetPreferredLayersResponseRef<'a>,
                 ),
-                FbsConsumerSetPriorityResponse(super::consumer::SetPriorityResponseRef<'a>),
-                FbsDataProducerDumpResponse(super::data_producer::DumpResponseRef<'a>),
-                FbsDataProducerGetStatsResponse(super::data_producer::GetStatsResponseRef<'a>),
-                FbsDataConsumerGetBufferedAmountResponse(
+                ConsumerSetPriorityResponse(super::consumer::SetPriorityResponseRef<'a>),
+                DataProducerDumpResponse(super::data_producer::DumpResponseRef<'a>),
+                DataProducerGetStatsResponse(super::data_producer::GetStatsResponseRef<'a>),
+                DataConsumerGetBufferedAmountResponse(
                     super::data_consumer::GetBufferedAmountResponseRef<'a>,
                 ),
-                FbsDataConsumerDumpResponse(super::data_consumer::DumpResponseRef<'a>),
-                FbsDataConsumerGetStatsResponse(super::data_consumer::GetStatsResponseRef<'a>),
-                FbsDataConsumerSetSubchannelsResponse(
+                DataConsumerDumpResponse(super::data_consumer::DumpResponseRef<'a>),
+                DataConsumerGetStatsResponse(super::data_consumer::GetStatsResponseRef<'a>),
+                DataConsumerSetSubchannelsResponse(
                     super::data_consumer::SetSubchannelsResponseRef<'a>,
                 ),
             }
@@ -55875,198 +56122,186 @@ mod root {
 
                 fn try_from(value: BodyRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(match value {
-                        BodyRef::FbsWorkerDumpResponse(value) => {
-                            Self::FbsWorkerDumpResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerDumpResponse(value) => {
+                            Self::WorkerDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsWorkerResourceUsageResponse(value) => {
-                            Self::FbsWorkerResourceUsageResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::WorkerResourceUsageResponse(value) => {
+                            Self::WorkerResourceUsageResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsWebRtcServerDumpResponse(value) => {
-                            Self::FbsWebRtcServerDumpResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::WebRtcServerDumpResponse(value) => {
+                            Self::WebRtcServerDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsRouterDumpResponse(value) => {
-                            Self::FbsRouterDumpResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::RouterDumpResponse(value) => {
+                            Self::RouterDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsTransportProduceResponse(value) => {
-                            Self::FbsTransportProduceResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportProduceResponse(value) => {
+                            Self::TransportProduceResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsTransportConsumeResponse(value) => {
-                            Self::FbsTransportConsumeResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportConsumeResponse(value) => {
+                            Self::TransportConsumeResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsTransportRestartIceResponse(value) => {
-                            Self::FbsTransportRestartIceResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportRestartIceResponse(value) => {
+                            Self::TransportRestartIceResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsPlainTransportConnectResponse(value) => {
-                            Self::FbsPlainTransportConnectResponse(
+                        BodyRef::PlainTransportConnectResponse(value) => {
+                            Self::PlainTransportConnectResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::PlainTransportDumpResponse(value) => {
+                            Self::PlainTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::PlainTransportGetStatsResponse(value) => {
+                            Self::PlainTransportGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::PipeTransportConnectResponse(value) => {
+                            Self::PipeTransportConnectResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::PipeTransportDumpResponse(value) => {
+                            Self::PipeTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::PipeTransportGetStatsResponse(value) => {
+                            Self::PipeTransportGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::DirectTransportDumpResponse(value) => {
+                            Self::DirectTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::DirectTransportGetStatsResponse(value) => {
+                            Self::DirectTransportGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::WebRtcTransportConnectResponse(value) => {
+                            Self::WebRtcTransportConnectResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::WebRtcTransportDumpResponse(value) => {
+                            Self::WebRtcTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::WebRtcTransportGetStatsResponse(value) => {
+                            Self::WebRtcTransportGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ProducerDumpResponse(value) => {
+                            Self::ProducerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ProducerGetStatsResponse(value) => {
+                            Self::ProducerGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ConsumerDumpResponse(value) => {
+                            Self::ConsumerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ConsumerGetStatsResponse(value) => {
+                            Self::ConsumerGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ConsumerSetPreferredLayersResponse(value) => {
+                            Self::ConsumerSetPreferredLayersResponse(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
                             )
                         }
 
-                        BodyRef::FbsPlainTransportDumpResponse(value) => {
-                            Self::FbsPlainTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::ConsumerSetPriorityResponse(value) => {
+                            Self::ConsumerSetPriorityResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsPlainTransportGetStatsResponse(value) => {
-                            Self::FbsPlainTransportGetStatsResponse(
+                        BodyRef::DataProducerDumpResponse(value) => {
+                            Self::DataProducerDumpResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::DataProducerGetStatsResponse(value) => {
+                            Self::DataProducerGetStatsResponse(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::DataConsumerGetBufferedAmountResponse(value) => {
+                            Self::DataConsumerGetBufferedAmountResponse(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
                             )
                         }
 
-                        BodyRef::FbsPipeTransportConnectResponse(value) => {
-                            Self::FbsPipeTransportConnectResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::DataConsumerDumpResponse(value) => {
+                            Self::DataConsumerDumpResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsPipeTransportDumpResponse(value) => {
-                            Self::FbsPipeTransportDumpResponse(::planus::alloc::boxed::Box::new(
+                        BodyRef::DataConsumerGetStatsResponse(value) => {
+                            Self::DataConsumerGetStatsResponse(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
 
-                        BodyRef::FbsPipeTransportGetStatsResponse(value) => {
-                            Self::FbsPipeTransportGetStatsResponse(
-                                ::planus::alloc::boxed::Box::new(
-                                    ::core::convert::TryFrom::try_from(value)?,
-                                ),
-                            )
-                        }
-
-                        BodyRef::FbsDirectTransportDumpResponse(value) => {
-                            Self::FbsDirectTransportDumpResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsDirectTransportGetStatsResponse(value) => {
-                            Self::FbsDirectTransportGetStatsResponse(
-                                ::planus::alloc::boxed::Box::new(
-                                    ::core::convert::TryFrom::try_from(value)?,
-                                ),
-                            )
-                        }
-
-                        BodyRef::FbsWebRtcTransportConnectResponse(value) => {
-                            Self::FbsWebRtcTransportConnectResponse(
-                                ::planus::alloc::boxed::Box::new(
-                                    ::core::convert::TryFrom::try_from(value)?,
-                                ),
-                            )
-                        }
-
-                        BodyRef::FbsWebRtcTransportDumpResponse(value) => {
-                            Self::FbsWebRtcTransportDumpResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsWebRtcTransportGetStatsResponse(value) => {
-                            Self::FbsWebRtcTransportGetStatsResponse(
-                                ::planus::alloc::boxed::Box::new(
-                                    ::core::convert::TryFrom::try_from(value)?,
-                                ),
-                            )
-                        }
-
-                        BodyRef::FbsProducerDumpResponse(value) => {
-                            Self::FbsProducerDumpResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsProducerGetStatsResponse(value) => {
-                            Self::FbsProducerGetStatsResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsConsumerDumpResponse(value) => {
-                            Self::FbsConsumerDumpResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsConsumerGetStatsResponse(value) => {
-                            Self::FbsConsumerGetStatsResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsConsumerSetPreferredLayersResponse(value) => {
-                            Self::FbsConsumerSetPreferredLayersResponse(
-                                ::planus::alloc::boxed::Box::new(
-                                    ::core::convert::TryFrom::try_from(value)?,
-                                ),
-                            )
-                        }
-
-                        BodyRef::FbsConsumerSetPriorityResponse(value) => {
-                            Self::FbsConsumerSetPriorityResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsDataProducerDumpResponse(value) => {
-                            Self::FbsDataProducerDumpResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsDataProducerGetStatsResponse(value) => {
-                            Self::FbsDataProducerGetStatsResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsDataConsumerGetBufferedAmountResponse(value) => {
-                            Self::FbsDataConsumerGetBufferedAmountResponse(
-                                ::planus::alloc::boxed::Box::new(
-                                    ::core::convert::TryFrom::try_from(value)?,
-                                ),
-                            )
-                        }
-
-                        BodyRef::FbsDataConsumerDumpResponse(value) => {
-                            Self::FbsDataConsumerDumpResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsDataConsumerGetStatsResponse(value) => {
-                            Self::FbsDataConsumerGetStatsResponse(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        BodyRef::FbsDataConsumerSetSubchannelsResponse(value) => {
-                            Self::FbsDataConsumerSetSubchannelsResponse(
+                        BodyRef::DataConsumerSetSubchannelsResponse(value) => {
+                            Self::DataConsumerSetSubchannelsResponse(
                                 ::planus::alloc::boxed::Box::new(
                                     ::core::convert::TryFrom::try_from(value)?,
                                 ),
@@ -56083,102 +56318,98 @@ mod root {
                     tag: u8,
                 ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
                     match tag {
-                        1 => ::core::result::Result::Ok(Self::FbsWorkerDumpResponse(
+                        1 => ::core::result::Result::Ok(Self::WorkerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        2 => ::core::result::Result::Ok(Self::FbsWorkerResourceUsageResponse(
+                        2 => ::core::result::Result::Ok(Self::WorkerResourceUsageResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        3 => ::core::result::Result::Ok(Self::FbsWebRtcServerDumpResponse(
+                        3 => ::core::result::Result::Ok(Self::WebRtcServerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        4 => ::core::result::Result::Ok(Self::FbsRouterDumpResponse(
+                        4 => ::core::result::Result::Ok(Self::RouterDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        5 => ::core::result::Result::Ok(Self::FbsTransportProduceResponse(
+                        5 => ::core::result::Result::Ok(Self::TransportProduceResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        6 => ::core::result::Result::Ok(Self::FbsTransportConsumeResponse(
+                        6 => ::core::result::Result::Ok(Self::TransportConsumeResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        7 => ::core::result::Result::Ok(Self::FbsTransportRestartIceResponse(
+                        7 => ::core::result::Result::Ok(Self::TransportRestartIceResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        8 => ::core::result::Result::Ok(Self::FbsPlainTransportConnectResponse(
+                        8 => ::core::result::Result::Ok(Self::PlainTransportConnectResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        9 => ::core::result::Result::Ok(Self::FbsPlainTransportDumpResponse(
+                        9 => ::core::result::Result::Ok(Self::PlainTransportDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        10 => ::core::result::Result::Ok(Self::FbsPlainTransportGetStatsResponse(
+                        10 => ::core::result::Result::Ok(Self::PlainTransportGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        11 => ::core::result::Result::Ok(Self::FbsPipeTransportConnectResponse(
+                        11 => ::core::result::Result::Ok(Self::PipeTransportConnectResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        12 => ::core::result::Result::Ok(Self::FbsPipeTransportDumpResponse(
+                        12 => ::core::result::Result::Ok(Self::PipeTransportDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        13 => ::core::result::Result::Ok(Self::FbsPipeTransportGetStatsResponse(
+                        13 => ::core::result::Result::Ok(Self::PipeTransportGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        14 => ::core::result::Result::Ok(Self::FbsDirectTransportDumpResponse(
+                        14 => ::core::result::Result::Ok(Self::DirectTransportDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        15 => ::core::result::Result::Ok(Self::FbsDirectTransportGetStatsResponse(
+                        15 => ::core::result::Result::Ok(Self::DirectTransportGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        16 => ::core::result::Result::Ok(Self::FbsWebRtcTransportConnectResponse(
+                        16 => ::core::result::Result::Ok(Self::WebRtcTransportConnectResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        17 => ::core::result::Result::Ok(Self::FbsWebRtcTransportDumpResponse(
+                        17 => ::core::result::Result::Ok(Self::WebRtcTransportDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        18 => ::core::result::Result::Ok(Self::FbsWebRtcTransportGetStatsResponse(
+                        18 => ::core::result::Result::Ok(Self::WebRtcTransportGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        19 => ::core::result::Result::Ok(Self::FbsProducerDumpResponse(
+                        19 => ::core::result::Result::Ok(Self::ProducerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        20 => ::core::result::Result::Ok(Self::FbsProducerGetStatsResponse(
+                        20 => ::core::result::Result::Ok(Self::ProducerGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        21 => ::core::result::Result::Ok(Self::FbsConsumerDumpResponse(
+                        21 => ::core::result::Result::Ok(Self::ConsumerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        22 => ::core::result::Result::Ok(Self::FbsConsumerGetStatsResponse(
+                        22 => ::core::result::Result::Ok(Self::ConsumerGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        23 => {
-                            ::core::result::Result::Ok(Self::FbsConsumerSetPreferredLayersResponse(
+                        23 => ::core::result::Result::Ok(Self::ConsumerSetPreferredLayersResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        24 => ::core::result::Result::Ok(Self::ConsumerSetPriorityResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        25 => ::core::result::Result::Ok(Self::DataProducerDumpResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        26 => ::core::result::Result::Ok(Self::DataProducerGetStatsResponse(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        27 => {
+                            ::core::result::Result::Ok(Self::DataConsumerGetBufferedAmountResponse(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
                         }
-                        24 => ::core::result::Result::Ok(Self::FbsConsumerSetPriorityResponse(
+                        28 => ::core::result::Result::Ok(Self::DataConsumerDumpResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        25 => ::core::result::Result::Ok(Self::FbsDataProducerDumpResponse(
+                        29 => ::core::result::Result::Ok(Self::DataConsumerGetStatsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        26 => ::core::result::Result::Ok(Self::FbsDataProducerGetStatsResponse(
+                        30 => ::core::result::Result::Ok(Self::DataConsumerSetSubchannelsResponse(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        27 => ::core::result::Result::Ok(
-                            Self::FbsDataConsumerGetBufferedAmountResponse(
-                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                            ),
-                        ),
-                        28 => ::core::result::Result::Ok(Self::FbsDataConsumerDumpResponse(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        29 => ::core::result::Result::Ok(Self::FbsDataConsumerGetStatsResponse(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        30 => {
-                            ::core::result::Result::Ok(Self::FbsDataConsumerSetSubchannelsResponse(
-                                ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                            ))
-                        }
                         _ => ::core::result::Result::Err(
                             ::planus::errors::ErrorKind::UnknownUnionTag { tag },
                         ),

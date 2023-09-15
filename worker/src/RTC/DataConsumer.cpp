@@ -151,7 +151,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DataConsumer_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -160,7 +160,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DataConsumer_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::DataConsumer_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -217,8 +217,7 @@ namespace RTC
 				auto responseOffset = FBS::DataConsumer::CreateGetBufferedAmountResponse(
 				  request->GetBufferBuilder(), this->sctpAssociation->GetSctpBufferedAmount());
 
-				request->Accept(
-				  FBS::Response::Body::FBS_DataConsumer_GetBufferedAmountResponse, responseOffset);
+				request->Accept(FBS::Response::Body::DataConsumer_GetBufferedAmountResponse, responseOffset);
 
 				break;
 			}
@@ -248,7 +247,7 @@ namespace RTC
 					this->shared->channelNotifier->Emit(
 					  this->id,
 					  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
-					  FBS::Notification::Body::FBS_DataConsumer_BufferedAmountLowNotification,
+					  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
 					  bufferedAmountLowOffset);
 				}
 				// Force the trigger of 'bufferedamountlow' once there is less or same
@@ -342,7 +341,7 @@ namespace RTC
 				auto responseOffset = FBS::DataConsumer::CreateSetSubchannelsResponseDirect(
 				  request->GetBufferBuilder(), std::addressof(subchannels));
 
-				request->Accept(FBS::Response::Body::FBS_DataConsumer_SetSubchannelsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::DataConsumer_SetSubchannelsResponse, responseOffset);
 
 				break;
 			}
@@ -448,7 +447,7 @@ namespace RTC
 			this->shared->channelNotifier->Emit(
 			  this->id,
 			  FBS::Notification::Event::DATACONSUMER_BUFFERED_AMOUNT_LOW,
-			  FBS::Notification::Body::FBS_DataConsumer_BufferedAmountLowNotification,
+			  FBS::Notification::Body::DataConsumer_BufferedAmountLowNotification,
 			  bufferedAmountLowOffset);
 		}
 	}

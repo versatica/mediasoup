@@ -163,7 +163,7 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 
 		this.#channel.request(
 			Method.WORKER_WEBRTCSERVER_CLOSE,
-			RequestBody.FBS_Worker_CloseWebRtcServerRequest,
+			RequestBody.Worker_CloseWebRtcServerRequest,
 			requestOffset)
 			.catch(() => {});
 

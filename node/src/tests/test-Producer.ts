@@ -706,7 +706,7 @@ test('Producer emits "score"', async () =>
 		builder,
 		builder.createString(videoProducer.id),
 		Event.PRODUCER_SCORE,
-		NotificationBody.FBS_Producer_ScoreNotification,
+		NotificationBody.Producer_ScoreNotification,
 		producerScoreNotification.pack(builder)
 	);
 

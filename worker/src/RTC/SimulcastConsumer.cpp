@@ -203,7 +203,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Consumer_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::Consumer_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -257,7 +257,7 @@ namespace RTC
 				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
 				  request->GetBufferBuilder(), preferredLayersOffset);
 
-				request->Accept(FBS::Response::Body::FBS_Consumer_SetPreferredLayersResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Consumer_SetPreferredLayersResponse, responseOffset);
 
 				// clang-format off
 				if (
@@ -1495,7 +1495,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_SCORE,
-		  FBS::Notification::Body::FBS_Consumer_ScoreNotification,
+		  FBS::Notification::Body::Consumer_ScoreNotification,
 		  notificationOffset);
 	}
 
@@ -1525,7 +1525,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::CONSUMER_LAYERS_CHANGE,
-		  FBS::Notification::Body::FBS_Consumer_LayersChangeNotification,
+		  FBS::Notification::Body::Consumer_LayersChangeNotification,
 		  notificationOffset);
 	}
 

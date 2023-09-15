@@ -243,7 +243,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::PipeTransport_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -252,7 +252,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::PipeTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -424,7 +424,7 @@ namespace RTC
 				auto responseOffset =
 				  FBS::PipeTransport::CreateConnectResponse(request->GetBufferBuilder(), tupleOffset);
 
-				request->Accept(FBS::Response::Body::FBS_PipeTransport_ConnectResponse, responseOffset);
+				request->Accept(FBS::Response::Body::PipeTransport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
 				// and tell the parent class.

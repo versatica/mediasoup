@@ -276,7 +276,7 @@ namespace RTC
 			this->shared->channelNotifier->Emit(
 			  this->id,
 			  FBS::Notification::Event::ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER,
-			  FBS::Notification::Body::FBS_ActiveSpeakerObserver_DominantSpeakerNotification,
+			  FBS::Notification::Body::ActiveSpeakerObserver_DominantSpeakerNotification,
 			  notification);
 		}
 	}

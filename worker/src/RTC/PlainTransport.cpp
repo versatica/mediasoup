@@ -398,7 +398,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PlainTransport_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::PlainTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -407,7 +407,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_PlainTransport_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::PlainTransport_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -721,7 +721,7 @@ namespace RTC
 				auto responseOffset = FBS::PlainTransport::CreateConnectResponse(
 				  request->GetBufferBuilder(), tupleOffset, rtcpTupleOffset, srtpParametersOffset);
 
-				request->Accept(FBS::Response::Body::FBS_PlainTransport_ConnectResponse, responseOffset);
+				request->Accept(FBS::Response::Body::PlainTransport_ConnectResponse, responseOffset);
 
 				// Assume we are connected (there is no much more we can do to know it)
 				// and tell the parent class.
@@ -1191,7 +1191,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
-		  FBS::Notification::Body::FBS_PlainTransport_TupleNotification,
+		  FBS::Notification::Body::PlainTransport_TupleNotification,
 		  notification);
 	}
 
@@ -1204,7 +1204,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
-		  FBS::Notification::Body::FBS_PlainTransport_RtcpTupleNotification,
+		  FBS::Notification::Body::PlainTransport_RtcpTupleNotification,
 		  notification);
 	}
 

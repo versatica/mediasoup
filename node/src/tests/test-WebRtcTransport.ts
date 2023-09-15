@@ -506,7 +506,7 @@ test('WebRtcTransport events succeed', async () =>
 		builder,
 		builder.createString(transport.id),
 		Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE,
-		NotificationBody.FBS_WebRtcTransport_IceStateChangeNotification,
+		NotificationBody.WebRtcTransport_IceStateChangeNotification,
 		iceStateChangeNotification.pack(builder)
 	);
 
@@ -550,7 +550,7 @@ test('WebRtcTransport events succeed', async () =>
 		builder,
 		builder.createString(transport.id),
 		Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
-		NotificationBody.FBS_WebRtcTransport_IceSelectedTupleChangeNotification,
+		NotificationBody.WebRtcTransport_IceSelectedTupleChangeNotification,
 		iceSelectedTupleChangeNotification.pack(builder)
 	);
 
@@ -580,7 +580,7 @@ test('WebRtcTransport events succeed', async () =>
 		builder,
 		builder.createString(transport.id),
 		Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-		NotificationBody.FBS_WebRtcTransport_DtlsStateChangeNotification,
+		NotificationBody.WebRtcTransport_DtlsStateChangeNotification,
 		dtlsStateChangeNotification.pack(builder)
 	);
 

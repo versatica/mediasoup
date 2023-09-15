@@ -13,10 +13,10 @@ enum Type : uint8 {
 }
 
 union Body {
-  FBS.Request.Request,
-  FBS.Response.Response,
-  FBS.Notification.Notification,
-  FBS.Log.Log,
+  Request: FBS.Request.Request,
+  Response: FBS.Response.Response,
+  Notification: FBS.Notification.Notification,
+  Log: FBS.Log.Log,
 }
 
 table Message {

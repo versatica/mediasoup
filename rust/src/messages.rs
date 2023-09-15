@@ -332,7 +332,7 @@ impl RequestFbs for WorkerDumpRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsWorkerDumpResponse(data)) = response else {
+        let Some(response::Body::WorkerDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -390,7 +390,7 @@ impl RequestFbs for WorkerUpdateSettingsRequest {
                     .collect::<Vec<_>>()
             }),
         );
-        let request_body = request::Body::create_update_settings_request(&mut builder, data);
+        let request_body = request::Body::create_worker_update_settings_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -429,7 +429,8 @@ impl RequestFbs for WorkerCreateWebRtcServerRequest {
             self.webrtc_server_id.to_string(),
             self.listen_infos.to_fbs(),
         );
-        let request_body = request::Body::create_create_web_rtc_server_request(&mut builder, data);
+        let request_body =
+            request::Body::create_worker_create_web_rtc_server_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -467,7 +468,8 @@ impl RequestFbs for WebRtcServerCloseRequest {
             &mut builder,
             self.webrtc_server_id.to_string(),
         );
-        let request_body = request::Body::create_close_web_rtc_server_request(&mut builder, data);
+        let request_body =
+            request::Body::create_worker_close_web_rtc_server_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -515,7 +517,7 @@ impl RequestFbs for WebRtcServerDumpRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsWebRtcServerDumpResponse(data)) = response else {
+        let Some(response::Body::WebRtcServerDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -578,7 +580,7 @@ impl RequestFbs for WorkerCreateRouterRequest {
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
         let data = worker::CreateRouterRequest::create(&mut builder, self.router_id.to_string());
-        let request_body = request::Body::create_create_router_request(&mut builder, data);
+        let request_body = request::Body::create_worker_create_router_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -613,7 +615,7 @@ impl RequestFbs for RouterCloseRequest {
         let mut builder = Builder::new();
 
         let data = worker::CloseRouterRequest::create(&mut builder, self.router_id.to_string());
-        let request_body = request::Body::create_close_router_request(&mut builder, data);
+        let request_body = request::Body::create_worker_close_router_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -661,7 +663,7 @@ impl RequestFbs for RouterDumpRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsRouterDumpResponse(data)) = response else {
+        let Some(response::Body::RouterDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -787,7 +789,7 @@ impl RequestFbs for RouterCreateDirectTransportRequest {
             self.data.to_fbs(),
         );
         let request_body =
-            request::Body::create_create_direct_transport_request(&mut builder, data);
+            request::Body::create_router_create_direct_transport_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -936,7 +938,7 @@ impl RequestFbs for RouterCreateWebRtcTransportRequest {
             self.data.to_fbs(),
         );
         let request_body =
-            request::Body::create_create_web_rtc_transport_request(&mut builder, data);
+            request::Body::create_router_create_web_rtc_transport_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -953,7 +955,7 @@ impl RequestFbs for RouterCreateWebRtcTransportRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsWebRtcTransportDumpResponse(data)) = response else {
+        let Some(response::Body::WebRtcTransportDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -1065,7 +1067,8 @@ impl RequestFbs for RouterCreatePlainTransportRequest {
             self.data.transport_id.to_string(),
             self.data.to_fbs(),
         );
-        let request_body = request::Body::create_create_plain_transport_request(&mut builder, data);
+        let request_body =
+            request::Body::create_router_create_plain_transport_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -1082,7 +1085,7 @@ impl RequestFbs for RouterCreatePlainTransportRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsPlainTransportDumpResponse(data)) = response else {
+        let Some(response::Body::PlainTransportDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -1338,7 +1341,7 @@ impl RequestFbs for TransportCloseRequestFbs {
         let mut builder = Builder::new();
         let data =
             router::CloseTransportRequest::create(&mut builder, self.transport_id.to_string());
-        let request_body = request::Body::create_close_transport_request(&mut builder, data);
+        let request_body = request::Body::create_router_close_transport_request(&mut builder, data);
 
         let request = request::Request::create(
             &mut builder,
@@ -1397,7 +1400,7 @@ impl RequestFbs for WebRtcTransportConnectRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsWebRtcTransportConnectResponse(data)) = response else {
+        let Some(response::Body::WebRtcTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -1449,7 +1452,7 @@ impl RequestFbs for PipeTransportConnectRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsPipeTransportConnectResponse(data)) = response else {
+        let Some(response::Body::PipeTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -1506,7 +1509,7 @@ impl RequestFbs for TransportConnectPlainRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsPlainTransportConnectResponse(data)) = response else {
+        let Some(response::Body::PlainTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 
@@ -1537,7 +1540,7 @@ impl RequestFbs for TransportSetMaxIncomingBitrateRequest {
 
         let data = transport::SetMaxIncomingBitrateRequest::create(&mut builder, self.bitrate);
         let request_body =
-            request::Body::create_set_max_incoming_bitrate_request(&mut builder, data);
+            request::Body::create_transport_set_max_incoming_bitrate_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -1573,7 +1576,7 @@ impl RequestFbs for TransportSetMaxOutgoingBitrateRequest {
 
         let data = transport::SetMaxOutgoingBitrateRequest::create(&mut builder, self.bitrate);
         let request_body =
-            request::Body::create_set_max_outgoing_bitrate_request(&mut builder, data);
+            request::Body::create_transport_set_max_outgoing_bitrate_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -1609,7 +1612,7 @@ impl RequestFbs for TransportSetMinOutgoingBitrateRequest {
 
         let data = transport::SetMinOutgoingBitrateRequest::create(&mut builder, self.bitrate);
         let request_body =
-            request::Body::create_set_min_outgoing_bitrate_request(&mut builder, data);
+            request::Body::create_transport_set_min_outgoing_bitrate_request(&mut builder, data);
         let request = request::Request::create(
             &mut builder,
             id,
@@ -1656,7 +1659,7 @@ impl RequestFbs for TransportRestartIceRequest {
     fn convert_response(
         response: Option<response::Body>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::FbsTransportRestartIceResponse(data)) = response else {
+        let Some(response::Body::TransportRestartIceResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
 

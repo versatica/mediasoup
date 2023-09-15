@@ -417,7 +417,7 @@ export class Transport
 
 		this.channel.request(
 			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
-			FbsRequest.Body.FBS_Router_CloseTransportRequest,
+			FbsRequest.Body.Router_CloseTransportRequest,
 			requestOffset,
 			this.internal.routerId
 		).catch(() => {});
@@ -634,7 +634,7 @@ export class Transport
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
-			FbsRequest.Body.FBS_Transport_SetMaxIncomingBitrateRequest,
+			FbsRequest.Body.Transport_SetMaxIncomingBitrateRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -654,7 +654,7 @@ export class Transport
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
-			FbsRequest.Body.FBS_Transport_SetMaxOutgoingBitrateRequest,
+			FbsRequest.Body.Transport_SetMaxOutgoingBitrateRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -674,7 +674,7 @@ export class Transport
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MIN_OUTGOING_BITRATE,
-			FbsRequest.Body.FBS_Transport_SetMinOutgoingBitrateRequest,
+			FbsRequest.Body.Transport_SetMinOutgoingBitrateRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -767,7 +767,7 @@ export class Transport
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_PRODUCE,
-			FbsRequest.Body.FBS_Transport_ProduceRequest,
+			FbsRequest.Body.Transport_ProduceRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -911,7 +911,7 @@ export class Transport
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
-			FbsRequest.Body.FBS_Transport_ConsumeRequest,
+			FbsRequest.Body.Transport_ConsumeRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -1024,7 +1024,7 @@ export class Transport
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_PRODUCE_DATA,
-			FbsRequest.Body.FBS_Transport_ProduceDataRequest,
+			FbsRequest.Body.Transport_ProduceDataRequest,
 			requestOffset,
 			this.internal.transportId
 		);
@@ -1170,7 +1170,7 @@ export class Transport
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
-			FbsRequest.Body.FBS_Transport_ConsumeDataRequest,
+			FbsRequest.Body.Transport_ConsumeDataRequest,
 			requestOffset,
 			this.internal.transportId
 		);

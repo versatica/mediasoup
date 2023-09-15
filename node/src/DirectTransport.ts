@@ -222,7 +222,7 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 
 		this.channel.notify(
 			FbsNotification.Event.TRANSPORT_SEND_RTCP,
-			FbsNotification.Body.FBS_Transport_SendRtcpNotification,
+			FbsNotification.Body.Transport_SendRtcpNotification,
 			notificationOffset,
 			this.internal.transportId
 		);

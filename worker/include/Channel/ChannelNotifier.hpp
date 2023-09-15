@@ -32,7 +32,7 @@ namespace Channel
 			auto message = FBS::Message::CreateMessage(
 			  builder,
 			  FBS::Message::Type::NOTIFICATION,
-			  FBS::Message::Body::FBS_Notification_Notification,
+			  FBS::Message::Body::Notification,
 			  notification.Union());
 
 			builder.FinishSizePrefixed(message);
@@ -49,7 +49,7 @@ namespace Channel
 			auto message = FBS::Message::CreateMessage(
 			  builder,
 			  FBS::Message::Type::NOTIFICATION,
-			  FBS::Message::Body::FBS_Notification_Notification,
+			  FBS::Message::Body::Notification,
 			  notification.Union());
 
 			builder.FinishSizePrefixed(message);

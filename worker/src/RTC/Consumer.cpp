@@ -234,7 +234,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Consumer_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Consumer_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -301,7 +301,7 @@ namespace RTC
 				auto responseOffset =
 				  FBS::Consumer::CreateSetPriorityResponse(request->GetBufferBuilder(), this->priority);
 
-				request->Accept(FBS::Response::Body::FBS_Consumer_SetPriorityResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Consumer_SetPriorityResponse, responseOffset);
 
 				break;
 			}

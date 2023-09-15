@@ -362,7 +362,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Producer_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::Producer_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -371,7 +371,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_Producer_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Producer_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -1415,7 +1415,7 @@ namespace RTC
 					this->shared->channelNotifier->Emit(
 					  this->id,
 					  FBS::Notification::Event::PRODUCER_VIDEO_ORIENTATION_CHANGE,
-					  FBS::Notification::Body::FBS_Producer_VideoOrientationChangeNotification,
+					  FBS::Notification::Body::Producer_VideoOrientationChangeNotification,
 					  notification);
 				}
 			}
@@ -1448,7 +1448,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::PRODUCER_SCORE,
-		  FBS::Notification::Body::FBS_Producer_ScoreNotification,
+		  FBS::Notification::Body::Producer_ScoreNotification,
 		  notification);
 	}
 

@@ -283,7 +283,7 @@ export class Channel extends EnhancedEventEmitter
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
 			MessageType.NOTIFICATION,
-			MessageBody.FBS_Notification_Notification,
+			MessageBody.Notification,
 			notificationOffset
 		);
 
@@ -348,7 +348,7 @@ export class Channel extends EnhancedEventEmitter
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
 			MessageType.REQUEST,
-			MessageBody.FBS_Request_Request,
+			MessageBody.Request,
 			requestOffset
 		);
 

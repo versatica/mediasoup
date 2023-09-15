@@ -379,7 +379,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
-			FbsRequest.Body.FBS_Transport_ConsumeRequest,
+			FbsRequest.Body.Transport_ConsumeRequest,
 			consumeRequestOffset,
 			this.internal.transportId
 		);

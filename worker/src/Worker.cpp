@@ -247,7 +247,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-			request->Accept(FBS::Response::Body::FBS_Worker_DumpResponse, dumpOffset);
+			request->Accept(FBS::Response::Body::Worker_DumpResponse, dumpOffset);
 
 			break;
 		}
@@ -256,7 +256,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			auto resourceUsageOffset = FillBufferResourceUsage(request->GetBufferBuilder());
 
-			request->Accept(FBS::Response::Body::FBS_Worker_ResourceUsageResponse, resourceUsageOffset);
+			request->Accept(FBS::Response::Body::Worker_ResourceUsageResponse, resourceUsageOffset);
 
 			break;
 		}
@@ -272,7 +272,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			try
 			{
-				auto body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
+				const auto body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
 
 				std::string webRtcServerId = body->webRtcServerId()->str();
 
