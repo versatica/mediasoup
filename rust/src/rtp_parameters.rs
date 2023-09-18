@@ -574,6 +574,73 @@ pub enum RtpHeaderExtensionUri {
     Unsupported,
 }
 
+impl RtpHeaderExtensionUri {
+    pub(crate) fn to_fbs(self) -> rtp_parameters::RtpHeaderExtensionUri {
+        match self {
+            RtpHeaderExtensionUri::Mid => rtp_parameters::RtpHeaderExtensionUri::Mid,
+            RtpHeaderExtensionUri::RtpStreamId => {
+                rtp_parameters::RtpHeaderExtensionUri::RtpStreamId
+            }
+            RtpHeaderExtensionUri::RepairRtpStreamId => {
+                rtp_parameters::RtpHeaderExtensionUri::RepairRtpStreamId
+            }
+            RtpHeaderExtensionUri::FrameMarkingDraft07 => {
+                rtp_parameters::RtpHeaderExtensionUri::FrameMarkingDraft07
+            }
+            RtpHeaderExtensionUri::FrameMarking => {
+                rtp_parameters::RtpHeaderExtensionUri::FrameMarking
+            }
+            RtpHeaderExtensionUri::AudioLevel => rtp_parameters::RtpHeaderExtensionUri::AudioLevel,
+            RtpHeaderExtensionUri::VideoOrientation => {
+                rtp_parameters::RtpHeaderExtensionUri::VideoOrientation
+            }
+            RtpHeaderExtensionUri::TimeOffset => rtp_parameters::RtpHeaderExtensionUri::TimeOffset,
+            RtpHeaderExtensionUri::TransportWideCcDraft01 => {
+                rtp_parameters::RtpHeaderExtensionUri::TransportWideCcDraft01
+            }
+            RtpHeaderExtensionUri::AbsSendTime => {
+                rtp_parameters::RtpHeaderExtensionUri::AbsSendTime
+            }
+            RtpHeaderExtensionUri::AbsCaptureTime => {
+                rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime
+            }
+            RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
+        }
+    }
+
+    pub(crate) fn from_fbs(uri: rtp_parameters::RtpHeaderExtensionUri) -> Self {
+        match uri {
+            rtp_parameters::RtpHeaderExtensionUri::Mid => RtpHeaderExtensionUri::Mid,
+            rtp_parameters::RtpHeaderExtensionUri::RtpStreamId => {
+                RtpHeaderExtensionUri::RtpStreamId
+            }
+            rtp_parameters::RtpHeaderExtensionUri::RepairRtpStreamId => {
+                RtpHeaderExtensionUri::RepairRtpStreamId
+            }
+            rtp_parameters::RtpHeaderExtensionUri::FrameMarkingDraft07 => {
+                RtpHeaderExtensionUri::FrameMarkingDraft07
+            }
+            rtp_parameters::RtpHeaderExtensionUri::FrameMarking => {
+                RtpHeaderExtensionUri::FrameMarking
+            }
+            rtp_parameters::RtpHeaderExtensionUri::AudioLevel => RtpHeaderExtensionUri::AudioLevel,
+            rtp_parameters::RtpHeaderExtensionUri::VideoOrientation => {
+                RtpHeaderExtensionUri::VideoOrientation
+            }
+            rtp_parameters::RtpHeaderExtensionUri::TimeOffset => RtpHeaderExtensionUri::TimeOffset,
+            rtp_parameters::RtpHeaderExtensionUri::TransportWideCcDraft01 => {
+                RtpHeaderExtensionUri::TransportWideCcDraft01
+            }
+            rtp_parameters::RtpHeaderExtensionUri::AbsSendTime => {
+                RtpHeaderExtensionUri::AbsSendTime
+            }
+            rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime => {
+                RtpHeaderExtensionUri::AbsCaptureTime
+            }
+        }
+    }
+}
+
 impl FromStr for RtpHeaderExtensionUri {
     type Err = RtpHeaderExtensionUriParseError;
 
@@ -782,7 +849,7 @@ impl RtpParameters {
                 .into_iter()
                 .map(|header_extension_parameters| {
                     Ok(RtpHeaderExtensionParameters {
-                        uri: header_extension_parameters.uri.parse()?,
+                        uri: RtpHeaderExtensionUri::from_fbs(header_extension_parameters.uri),
                         id: u16::from(header_extension_parameters.id),
                         encrypt: header_extension_parameters.encrypt,
                     })
@@ -874,7 +941,7 @@ impl RtpParameters {
                 .into_iter()
                 .map(
                     |header_extension_parameters| rtp_parameters::RtpHeaderExtensionParameters {
-                        uri: header_extension_parameters.uri.as_str().to_string(),
+                        uri: header_extension_parameters.uri.to_fbs(),
                         id: header_extension_parameters.id as u8,
                         encrypt: header_extension_parameters.encrypt,
                         parameters: None,

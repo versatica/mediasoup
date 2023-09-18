@@ -11,6 +11,7 @@ import {
 	RtpCodecParameters as FbsRtpCodecParameters,
 	RtpEncodingParameters as FbsRtpEncodingParameters,
 	RtpHeaderExtensionParameters as FbsRtpHeaderExtensionParameters,
+	RtpHeaderExtensionUri as FbsRtpHeaderExtensionUri,
 	RtpParameters as FbsRtpParameters,
 	Rtx as FbsRtx,
 	Value as FbsValue
@@ -122,7 +123,7 @@ export type RtpHeaderExtension =
 	/*
 	 * The URI of the RTP header extension, as defined in RFC 5285.
 	 */
-	uri: string;
+	uri: RtpHeaderExtensionUri;
 
 	/**
 	 * The preferred numeric identifier that goes in the RTP packet. Must be
@@ -312,6 +313,19 @@ export type RtpEncodingParameters =
 	maxBitrate?: number;
 };
 
+export type RtpHeaderExtensionUri =
+    'urn:ietf:params:rtp-hdrext:sdes:mid' |
+    'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id' |
+    'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id' |
+    'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07' |
+    'urn:ietf:params:rtp-hdrext:framemarking' |
+    'urn:ietf:params:rtp-hdrext:ssrc-audio-level' |
+    'urn:3gpp:video-orientation' |
+    'urn:ietf:params:rtp-hdrext:toffset' |
+    'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01' |
+    'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' |
+    'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
+
 /**
  * Defines a RTP header extension within the RTP parameters. The list of RTP
  * header extensions supported by mediasoup is defined in the
@@ -325,7 +339,7 @@ export type RtpHeaderExtensionParameters =
 	/**
 	 * The URI of the RTP header extension, as defined in RFC 5285.
 	 */
-	uri: string;
+	uri: RtpHeaderExtensionUri;
 
 	/**
 	 * The numeric identifier that goes in the RTP packet. Must be unique.
@@ -409,7 +423,7 @@ export function serializeRtpParameters(
 	// RtpHeaderExtensionParameters.
 	for (const headerExtension of rtpParameters.headerExtensions ?? [])
 	{
-		const uriOffset = builder.createString(headerExtension.uri);
+		const uri = rtpHeaderExtensionUriToFbs(headerExtension.uri);
 		const parameters = serializeParameters(builder, headerExtension.parameters);
 		const parametersOffset =
 			FbsRtpCodecParameters.createParametersVector(builder, parameters);
@@ -417,7 +431,7 @@ export function serializeRtpParameters(
 		headerExtensions.push(
 			FbsRtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(
 				builder,
-				uriOffset,
+				uri,
 				headerExtension.id,
 				Boolean(headerExtension.encrypt),
 				parametersOffset));
@@ -711,11 +725,71 @@ export function parseRtpCodecParameters(data: FbsRtpCodecParameters): RtpCodecPa
 	};
 }
 
+export function rtpHeaderExtensionUriFromFbs(uri: FbsRtpHeaderExtensionUri): RtpHeaderExtensionUri
+{
+	switch (uri)
+	{
+		case FbsRtpHeaderExtensionUri.Mid:
+			return 'urn:ietf:params:rtp-hdrext:sdes:mid';
+		case FbsRtpHeaderExtensionUri.RtpStreamId:
+			return 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id';
+		case FbsRtpHeaderExtensionUri.RepairRtpStreamId:
+			return 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id';
+		case FbsRtpHeaderExtensionUri.FrameMarkingDraft07:
+			return 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07';
+		case FbsRtpHeaderExtensionUri.FrameMarking:
+			return 'urn:ietf:params:rtp-hdrext:framemarking';
+		case FbsRtpHeaderExtensionUri.AudioLevel:
+			return 'urn:ietf:params:rtp-hdrext:ssrc-audio-level';
+		case FbsRtpHeaderExtensionUri.VideoOrientation:
+			return 'urn:3gpp:video-orientation';
+		case FbsRtpHeaderExtensionUri.TimeOffset:
+			return 'urn:ietf:params:rtp-hdrext:toffset';
+		case FbsRtpHeaderExtensionUri.TransportWideCcDraft01:
+			return 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01';
+		case FbsRtpHeaderExtensionUri.AbsSendTime:
+			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time';
+		case FbsRtpHeaderExtensionUri.AbsCaptureTime:
+			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
+	}
+}
+
+export function rtpHeaderExtensionUriToFbs(uri: RtpHeaderExtensionUri): FbsRtpHeaderExtensionUri
+{
+	switch (uri)
+	{
+		case 'urn:ietf:params:rtp-hdrext:sdes:mid':
+			return FbsRtpHeaderExtensionUri.Mid;
+		case 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id':
+			return FbsRtpHeaderExtensionUri.RtpStreamId;
+		case 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id':
+			return FbsRtpHeaderExtensionUri.RepairRtpStreamId;
+		case 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07':
+			return FbsRtpHeaderExtensionUri.FrameMarkingDraft07;
+		case 'urn:ietf:params:rtp-hdrext:framemarking':
+			return FbsRtpHeaderExtensionUri.FrameMarking;
+		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level':
+			return FbsRtpHeaderExtensionUri.AudioLevel;
+		case 'urn:3gpp:video-orientation':
+			return FbsRtpHeaderExtensionUri.VideoOrientation;
+		case 'urn:ietf:params:rtp-hdrext:toffset':
+			return FbsRtpHeaderExtensionUri.TimeOffset;
+		case 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01':
+			return FbsRtpHeaderExtensionUri.TransportWideCcDraft01;
+		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time':
+			return FbsRtpHeaderExtensionUri.AbsSendTime;
+		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time':
+			return FbsRtpHeaderExtensionUri.AbsCaptureTime;
+		default:
+			throw new TypeError(`invalid RTP header extension URI: ${uri}`);
+	}
+}
+
 export function parseRtpHeaderExtensionParameters(
 	data: FbsRtpHeaderExtensionParameters): RtpHeaderExtensionParameters
 {
 	return {
-		uri        : data.uri()!,
+		uri        : rtpHeaderExtensionUriFromFbs(data.uri()),
 		id         : data.id(),
 		encrypt    : data.encrypt(),
 		parameters : parseParameters(data)
