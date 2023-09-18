@@ -229,7 +229,8 @@ struct Handlers {
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
     Trace(TransportTraceEventData),
-    Rtcp,
+    // TODO.
+    // Rtcp,
 }
 
 impl Notification {
@@ -249,6 +250,8 @@ impl Notification {
 
                 Ok(Notification::Trace(trace_notification))
             }
+            /*
+             * TODO.
             notification::Event::DirecttransportRtcp => {
                 let Ok(Some(notification::BodyRef::RtcpNotification(_body))) = notification.body()
                 else {
@@ -257,6 +260,7 @@ impl Notification {
 
                 Ok(Notification::Rtcp)
             }
+            */
             _ => Err(NotificationParseError::InvalidEvent),
         }
     }
@@ -569,10 +573,14 @@ impl DirectTransport {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);
-                        }
-                        Notification::Rtcp => {
-                            // TODO: Implement RTCP notification handler.
-                        }
+                        } /*
+                           * TODO.
+                          Notification::Rtcp => {
+                              handlers.rtcp.call(|callback| {
+                                  callback(notification);
+                              });
+                          }
+                          */
                     },
                     Err(error) => {
                         error!("Failed to parse notification: {}", error);
