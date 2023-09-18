@@ -15,14 +15,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// uri is mandatory.
-		this->uri = data->uri()->str();
-
-		if (this->uri.empty())
-			MS_THROW_TYPE_ERROR("empty uri");
-
 		// Get the type.
-		this->type = RTC::RtpHeaderExtensionUri::GetType(this->uri);
+		this->type = RTC::RtpHeaderExtensionUri::TypeFromFbs(data->uri());
 
 		this->id = data->id();
 
@@ -49,6 +43,6 @@ namespace RTC
 		auto parameters = this->parameters.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpHeaderExtensionParametersDirect(
-		  builder, this->uri.c_str(), this->id, this->encrypt, &parameters);
+		  builder, RTC::RtpHeaderExtensionUri::TypeToFbs(this->type), this->id, this->encrypt, &parameters);
 	}
 } // namespace RTC
