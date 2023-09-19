@@ -2291,6 +2291,7 @@ namespace RTC
 			return;
 		}
 
+		// TODO: Missing trace info (RTP packet dump).
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  FBS::Transport::TraceEventType::PROBATION,
@@ -2300,7 +2301,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::TRANSPORT_TRACE,
-		  FBS::Notification::Body::FBS_Transport_TraceNotification,
+		  FBS::Notification::Body::Transport_TraceNotification,
 		  notification);
 	}
 
@@ -2316,16 +2317,16 @@ namespace RTC
 
 		auto traceInfo = FBS::Transport::CreateBweTraceInfo(
 		  this->shared->channelNotifier->GetBufferBuilder(),
+		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
+		    ? FBS::Transport::BweType::TRANSPORT_CC
+		    : FBS::Transport::BweType::REMB,
 		  bitrates.desiredBitrate,
 		  bitrates.effectiveDesiredBitrate,
 		  bitrates.minBitrate,
 		  bitrates.maxBitrate,
 		  bitrates.startBitrate,
 		  bitrates.maxPaddingBitrate,
-		  bitrates.availableBitrate,
-		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC
-		    ? FBS::Transport::BweType::TRANSPORT_CC
-		    : FBS::Transport::BweType::REMB);
+		  bitrates.availableBitrate);
 
 		auto notification = FBS::Transport::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
@@ -2338,7 +2339,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::TRANSPORT_TRACE,
-		  FBS::Notification::Body::FBS_Transport_TraceNotification,
+		  FBS::Notification::Body::Transport_TraceNotification,
 		  notification);
 	}
 

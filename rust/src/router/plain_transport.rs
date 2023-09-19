@@ -5,7 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
-use crate::fbs::{plain_transport, response};
+use crate::fbs::{notification, plain_transport, response, transport};
 use crate::messages::{PlainTransportData, TransportCloseRequestFbs, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -17,7 +17,7 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
     TransportTraceEventType,
 };
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -340,6 +340,61 @@ enum Notification {
     Trace(TransportTraceEventData),
 }
 
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::PlaintransportTuple => {
+                let Ok(Some(notification::BodyRef::TupleNotification(body))) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                let tuple = TransportTuple::from_fbs(&tuple_fbs);
+
+                Ok(Notification::Tuple { tuple })
+            }
+            notification::Event::PlaintransportRtcpTuple => {
+                let Ok(Some(notification::BodyRef::RtcpTupleNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let rtcp_tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                let rtcp_tuple = TransportTuple::from_fbs(&rtcp_tuple_fbs);
+
+                Ok(Notification::RtcpTuple { rtcp_tuple })
+            }
+            notification::Event::TransportSctpStateChange => {
+                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+
+                Ok(Notification::SctpStateChange { sctp_state })
+            }
+            notification::Event::TransportTrace => {
+                let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
+                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
+}
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
@@ -627,8 +682,8 @@ impl PlainTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Tuple { tuple } => {
                             *data.tuple.lock() = tuple;

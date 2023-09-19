@@ -1033,6 +1033,15 @@ pub enum TraceEventDirection {
     Out,
 }
 
+impl TraceEventDirection {
+    pub(crate) fn from_fbs(event_type: transport::TraceDirection) -> Self {
+        match event_type {
+            transport::TraceDirection::DirectionIn => TraceEventDirection::In,
+            transport::TraceDirection::DirectionOut => TraceEventDirection::Out,
+        }
+    }
+}
+
 /// Container used for sending/receiving messages using `DirectTransport` data producers and data
 /// consumers.
 #[derive(Debug, Clone)]
@@ -1163,6 +1172,15 @@ pub enum BweType {
     Remb,
 }
 
+impl BweType {
+    pub(crate) fn from_fbs(info: transport::BweType) -> Self {
+        match info {
+            transport::BweType::TransportCc => BweType::TransportCc,
+            transport::BweType::Remb => BweType::Remb,
+        }
+    }
+}
+
 /// BWE info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1183,4 +1201,19 @@ pub struct BweTraceInfo {
     max_padding_bitrate: u32,
     /// Available bitrate.
     available_bitrate: u32,
+}
+
+impl BweTraceInfo {
+    pub(crate) fn from_fbs(info: transport::BweTraceInfo) -> Self {
+        Self {
+            r#type: BweType::from_fbs(info.bwe_type),
+            desired_bitrate: info.desired_bitrate,
+            effective_desired_bitrate: info.effective_desired_bitrate,
+            min_bitrate: info.min_bitrate,
+            max_bitrate: info.max_bitrate,
+            start_bitrate: info.start_bitrate,
+            max_padding_bitrate: info.max_padding_bitrate,
+            available_bitrate: info.available_bitrate,
+        }
+    }
 }

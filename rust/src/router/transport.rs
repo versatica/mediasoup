@@ -64,6 +64,25 @@ pub enum TransportTraceEventData {
     },
 }
 
+impl TransportTraceEventData {
+    pub(crate) fn from_fbs(data: transport::TraceNotification) -> Self {
+        match data.type_ {
+            transport::TraceEventType::Probation => unimplemented!(),
+            transport::TraceEventType::Bwe => TransportTraceEventData::Bwe {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(transport::TraceInfo::BweTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    BweTraceInfo::from_fbs(*info)
+                },
+            },
+        }
+    }
+}
+
 /// Valid types for "trace" event.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]

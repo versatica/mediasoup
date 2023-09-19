@@ -8,7 +8,7 @@ use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
-use crate::fbs::{response, web_rtc_transport};
+use crate::fbs::{notification, response, transport, web_rtc_transport};
 use crate::messages::{
     TransportCloseRequestFbs, TransportRestartIceRequest, WebRtcTransportConnectRequest,
     WebRtcTransportData,
@@ -23,7 +23,7 @@ use crate::transport::{
     TransportTraceEventType,
 };
 use crate::webrtc_server::WebRtcServer;
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -406,6 +406,77 @@ enum Notification {
     Trace(TransportTraceEventData),
 }
 
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::WebrtctransportIceStateChange => {
+                let Ok(Some(notification::BodyRef::IceStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let ice_state = IceState::from_fbs(body.ice_state().unwrap());
+
+                Ok(Notification::IceStateChange { ice_state })
+            }
+            notification::Event::WebrtctransportIceSelectedTupleChange => {
+                let Ok(Some(notification::BodyRef::IceSelectedTupleChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let ice_selected_tuple_fbs =
+                    transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                let ice_selected_tuple = TransportTuple::from_fbs(&ice_selected_tuple_fbs);
+
+                Ok(Notification::IceSelectedTupleChange { ice_selected_tuple })
+            }
+            notification::Event::WebrtctransportDtlsStateChange => {
+                let Ok(Some(notification::BodyRef::DtlsStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let dtls_state = DtlsState::from_fbs(body.dtls_state().unwrap());
+
+                Ok(Notification::DtlsStateChange {
+                    dtls_state,
+                    dtls_remote_cert: None,
+                })
+            }
+            notification::Event::TransportSctpStateChange => {
+                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+
+                Ok(Notification::SctpStateChange { sctp_state })
+            }
+            notification::Event::TransportTrace => {
+                let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
+                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
+}
+
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
@@ -706,8 +777,8 @@ impl WebRtcTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::IceStateChange { ice_state } => {
                             *data.ice_state.lock() = ice_state;

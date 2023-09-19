@@ -46225,6 +46225,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct BweTraceInfo {
+                /// The field `bwe_type` in the table `BweTraceInfo`
+                pub bwe_type: self::BweType,
                 /// The field `desired_bitrate` in the table `BweTraceInfo`
                 pub desired_bitrate: u32,
                 /// The field `effective_desired_bitrate` in the table `BweTraceInfo`
@@ -46239,14 +46241,13 @@ mod root {
                 pub max_padding_bitrate: u32,
                 /// The field `available_bitrate` in the table `BweTraceInfo`
                 pub available_bitrate: u32,
-                /// The field `bwe_type` in the table `BweTraceInfo`
-                pub bwe_type: self::BweType,
             }
 
             #[allow(clippy::derivable_impls)]
             impl ::core::default::Default for BweTraceInfo {
                 fn default() -> Self {
                     Self {
+                        bwe_type: self::BweType::TransportCc,
                         desired_bitrate: 0,
                         effective_desired_bitrate: 0,
                         min_bitrate: 0,
@@ -46254,7 +46255,6 @@ mod root {
                         start_bitrate: 0,
                         max_padding_bitrate: 0,
                         available_bitrate: 0,
-                        bwe_type: self::BweType::TransportCc,
                     }
                 }
             }
@@ -46269,6 +46269,7 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_bwe_type: impl ::planus::WriteAsDefault<self::BweType, self::BweType>,
                     field_desired_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_effective_desired_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_min_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
@@ -46276,8 +46277,9 @@ mod root {
                     field_start_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_max_padding_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                     field_available_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
-                    field_bwe_type: impl ::planus::WriteAsDefault<self::BweType, self::BweType>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_bwe_type =
+                        field_bwe_type.prepare(builder, &self::BweType::TransportCc);
                     let prepared_desired_bitrate = field_desired_bitrate.prepare(builder, &0);
                     let prepared_effective_desired_bitrate =
                         field_effective_desired_bitrate.prepare(builder, &0);
@@ -46287,34 +46289,32 @@ mod root {
                     let prepared_max_padding_bitrate =
                         field_max_padding_bitrate.prepare(builder, &0);
                     let prepared_available_bitrate = field_available_bitrate.prepare(builder, &0);
-                    let prepared_bwe_type =
-                        field_bwe_type.prepare(builder, &self::BweType::TransportCc);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<20> =
                         ::core::default::Default::default();
                     if prepared_desired_bitrate.is_some() {
-                        table_writer.write_entry::<u32>(0);
-                    }
-                    if prepared_effective_desired_bitrate.is_some() {
                         table_writer.write_entry::<u32>(1);
                     }
-                    if prepared_min_bitrate.is_some() {
+                    if prepared_effective_desired_bitrate.is_some() {
                         table_writer.write_entry::<u32>(2);
                     }
-                    if prepared_max_bitrate.is_some() {
+                    if prepared_min_bitrate.is_some() {
                         table_writer.write_entry::<u32>(3);
                     }
-                    if prepared_start_bitrate.is_some() {
+                    if prepared_max_bitrate.is_some() {
                         table_writer.write_entry::<u32>(4);
                     }
-                    if prepared_max_padding_bitrate.is_some() {
+                    if prepared_start_bitrate.is_some() {
                         table_writer.write_entry::<u32>(5);
                     }
-                    if prepared_available_bitrate.is_some() {
+                    if prepared_max_padding_bitrate.is_some() {
                         table_writer.write_entry::<u32>(6);
                     }
+                    if prepared_available_bitrate.is_some() {
+                        table_writer.write_entry::<u32>(7);
+                    }
                     if prepared_bwe_type.is_some() {
-                        table_writer.write_entry::<self::BweType>(7);
+                        table_writer.write_entry::<self::BweType>(0);
                     }
 
                     unsafe {
@@ -46398,6 +46398,7 @@ mod root {
                 ) -> ::planus::Offset<BweTraceInfo> {
                     BweTraceInfo::create(
                         builder,
+                        self.bwe_type,
                         self.desired_bitrate,
                         self.effective_desired_bitrate,
                         self.min_bitrate,
@@ -46405,7 +46406,6 @@ mod root {
                         self.start_bitrate,
                         self.max_padding_bitrate,
                         self.available_bitrate,
-                        self.bwe_type,
                     )
                 }
             }
@@ -46418,34 +46418,29 @@ mod root {
             pub struct BweTraceInfoBuilder<State>(State);
 
             impl BweTraceInfoBuilder<()> {
-                /// Setter for the [`desired_bitrate` field](BweTraceInfo#structfield.desired_bitrate).
+                /// Setter for the [`bwe_type` field](BweTraceInfo#structfield.bwe_type).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn desired_bitrate<T0>(self, value: T0) -> BweTraceInfoBuilder<(T0,)>
+                pub fn bwe_type<T0>(self, value: T0) -> BweTraceInfoBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<self::BweType, self::BweType>,
                 {
                     BweTraceInfoBuilder((value,))
                 }
 
-                /// Sets the [`desired_bitrate` field](BweTraceInfo#structfield.desired_bitrate) to the default value.
+                /// Sets the [`bwe_type` field](BweTraceInfo#structfield.bwe_type) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn desired_bitrate_as_default(
-                    self,
-                ) -> BweTraceInfoBuilder<(::planus::DefaultValue,)> {
-                    self.desired_bitrate(::planus::DefaultValue)
+                pub fn bwe_type_as_default(self) -> BweTraceInfoBuilder<(::planus::DefaultValue,)> {
+                    self.bwe_type(::planus::DefaultValue)
                 }
             }
 
             impl<T0> BweTraceInfoBuilder<(T0,)> {
-                /// Setter for the [`effective_desired_bitrate` field](BweTraceInfo#structfield.effective_desired_bitrate).
+                /// Setter for the [`desired_bitrate` field](BweTraceInfo#structfield.desired_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn effective_desired_bitrate<T1>(
-                    self,
-                    value: T1,
-                ) -> BweTraceInfoBuilder<(T0, T1)>
+                pub fn desired_bitrate<T1>(self, value: T1) -> BweTraceInfoBuilder<(T0, T1)>
                 where
                     T1: ::planus::WriteAsDefault<u32, u32>,
                 {
@@ -46453,21 +46448,24 @@ mod root {
                     BweTraceInfoBuilder((v0, value))
                 }
 
-                /// Sets the [`effective_desired_bitrate` field](BweTraceInfo#structfield.effective_desired_bitrate) to the default value.
+                /// Sets the [`desired_bitrate` field](BweTraceInfo#structfield.desired_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn effective_desired_bitrate_as_default(
+                pub fn desired_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, ::planus::DefaultValue)> {
-                    self.effective_desired_bitrate(::planus::DefaultValue)
+                    self.desired_bitrate(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1> BweTraceInfoBuilder<(T0, T1)> {
-                /// Setter for the [`min_bitrate` field](BweTraceInfo#structfield.min_bitrate).
+                /// Setter for the [`effective_desired_bitrate` field](BweTraceInfo#structfield.effective_desired_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn min_bitrate<T2>(self, value: T2) -> BweTraceInfoBuilder<(T0, T1, T2)>
+                pub fn effective_desired_bitrate<T2>(
+                    self,
+                    value: T2,
+                ) -> BweTraceInfoBuilder<(T0, T1, T2)>
                 where
                     T2: ::planus::WriteAsDefault<u32, u32>,
                 {
@@ -46475,21 +46473,21 @@ mod root {
                     BweTraceInfoBuilder((v0, v1, value))
                 }
 
-                /// Sets the [`min_bitrate` field](BweTraceInfo#structfield.min_bitrate) to the default value.
+                /// Sets the [`effective_desired_bitrate` field](BweTraceInfo#structfield.effective_desired_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn min_bitrate_as_default(
+                pub fn effective_desired_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, T1, ::planus::DefaultValue)> {
-                    self.min_bitrate(::planus::DefaultValue)
+                    self.effective_desired_bitrate(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1, T2> BweTraceInfoBuilder<(T0, T1, T2)> {
-                /// Setter for the [`max_bitrate` field](BweTraceInfo#structfield.max_bitrate).
+                /// Setter for the [`min_bitrate` field](BweTraceInfo#structfield.min_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_bitrate<T3>(self, value: T3) -> BweTraceInfoBuilder<(T0, T1, T2, T3)>
+                pub fn min_bitrate<T3>(self, value: T3) -> BweTraceInfoBuilder<(T0, T1, T2, T3)>
                 where
                     T3: ::planus::WriteAsDefault<u32, u32>,
                 {
@@ -46497,24 +46495,21 @@ mod root {
                     BweTraceInfoBuilder((v0, v1, v2, value))
                 }
 
-                /// Sets the [`max_bitrate` field](BweTraceInfo#structfield.max_bitrate) to the default value.
+                /// Sets the [`min_bitrate` field](BweTraceInfo#structfield.min_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_bitrate_as_default(
+                pub fn min_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, ::planus::DefaultValue)> {
-                    self.max_bitrate(::planus::DefaultValue)
+                    self.min_bitrate(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1, T2, T3> BweTraceInfoBuilder<(T0, T1, T2, T3)> {
-                /// Setter for the [`start_bitrate` field](BweTraceInfo#structfield.start_bitrate).
+                /// Setter for the [`max_bitrate` field](BweTraceInfo#structfield.max_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn start_bitrate<T4>(
-                    self,
-                    value: T4,
-                ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4)>
+                pub fn max_bitrate<T4>(self, value: T4) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4)>
                 where
                     T4: ::planus::WriteAsDefault<u32, u32>,
                 {
@@ -46522,21 +46517,21 @@ mod root {
                     BweTraceInfoBuilder((v0, v1, v2, v3, value))
                 }
 
-                /// Sets the [`start_bitrate` field](BweTraceInfo#structfield.start_bitrate) to the default value.
+                /// Sets the [`max_bitrate` field](BweTraceInfo#structfield.max_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn start_bitrate_as_default(
+                pub fn max_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)> {
-                    self.start_bitrate(::planus::DefaultValue)
+                    self.max_bitrate(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1, T2, T3, T4> BweTraceInfoBuilder<(T0, T1, T2, T3, T4)> {
-                /// Setter for the [`max_padding_bitrate` field](BweTraceInfo#structfield.max_padding_bitrate).
+                /// Setter for the [`start_bitrate` field](BweTraceInfo#structfield.start_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_padding_bitrate<T5>(
+                pub fn start_bitrate<T5>(
                     self,
                     value: T5,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5)>
@@ -46547,22 +46542,22 @@ mod root {
                     BweTraceInfoBuilder((v0, v1, v2, v3, v4, value))
                 }
 
-                /// Sets the [`max_padding_bitrate` field](BweTraceInfo#structfield.max_padding_bitrate) to the default value.
+                /// Sets the [`start_bitrate` field](BweTraceInfo#structfield.start_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn max_padding_bitrate_as_default(
+                pub fn start_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, ::planus::DefaultValue)>
                 {
-                    self.max_padding_bitrate(::planus::DefaultValue)
+                    self.start_bitrate(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1, T2, T3, T4, T5> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5)> {
-                /// Setter for the [`available_bitrate` field](BweTraceInfo#structfield.available_bitrate).
+                /// Setter for the [`max_padding_bitrate` field](BweTraceInfo#structfield.max_padding_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn available_bitrate<T6>(
+                pub fn max_padding_bitrate<T6>(
                     self,
                     value: T6,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6)>
@@ -46573,40 +46568,40 @@ mod root {
                     BweTraceInfoBuilder((v0, v1, v2, v3, v4, v5, value))
                 }
 
-                /// Sets the [`available_bitrate` field](BweTraceInfo#structfield.available_bitrate) to the default value.
+                /// Sets the [`max_padding_bitrate` field](BweTraceInfo#structfield.max_padding_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn available_bitrate_as_default(
+                pub fn max_padding_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, ::planus::DefaultValue)>
                 {
-                    self.available_bitrate(::planus::DefaultValue)
+                    self.max_padding_bitrate(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1, T2, T3, T4, T5, T6> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
-                /// Setter for the [`bwe_type` field](BweTraceInfo#structfield.bwe_type).
+                /// Setter for the [`available_bitrate` field](BweTraceInfo#structfield.available_bitrate).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn bwe_type<T7>(
+                pub fn available_bitrate<T7>(
                     self,
                     value: T7,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
                 where
-                    T7: ::planus::WriteAsDefault<self::BweType, self::BweType>,
+                    T7: ::planus::WriteAsDefault<u32, u32>,
                 {
                     let (v0, v1, v2, v3, v4, v5, v6) = self.0;
                     BweTraceInfoBuilder((v0, v1, v2, v3, v4, v5, v6, value))
                 }
 
-                /// Sets the [`bwe_type` field](BweTraceInfo#structfield.bwe_type) to the default value.
+                /// Sets the [`available_bitrate` field](BweTraceInfo#structfield.available_bitrate) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn bwe_type_as_default(
+                pub fn available_bitrate_as_default(
                     self,
                 ) -> BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6, ::planus::DefaultValue)>
                 {
-                    self.bwe_type(::planus::DefaultValue)
+                    self.available_bitrate(::planus::DefaultValue)
                 }
             }
 
@@ -46625,14 +46620,14 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<self::BweType, self::BweType>,
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAsDefault<u32, u32>,
                     T3: ::planus::WriteAsDefault<u32, u32>,
                     T4: ::planus::WriteAsDefault<u32, u32>,
                     T5: ::planus::WriteAsDefault<u32, u32>,
                     T6: ::planus::WriteAsDefault<u32, u32>,
-                    T7: ::planus::WriteAsDefault<self::BweType, self::BweType>,
+                    T7: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAs<::planus::Offset<BweTraceInfo>>
                 for BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
@@ -46648,14 +46643,14 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<self::BweType, self::BweType>,
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAsDefault<u32, u32>,
                     T3: ::planus::WriteAsDefault<u32, u32>,
                     T4: ::planus::WriteAsDefault<u32, u32>,
                     T5: ::planus::WriteAsDefault<u32, u32>,
                     T6: ::planus::WriteAsDefault<u32, u32>,
-                    T7: ::planus::WriteAsDefault<self::BweType, self::BweType>,
+                    T7: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAsOptional<::planus::Offset<BweTraceInfo>>
                 for BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
@@ -46671,14 +46666,14 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<u32, u32>,
+                    T0: ::planus::WriteAsDefault<self::BweType, self::BweType>,
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAsDefault<u32, u32>,
                     T3: ::planus::WriteAsDefault<u32, u32>,
                     T4: ::planus::WriteAsDefault<u32, u32>,
                     T5: ::planus::WriteAsDefault<u32, u32>,
                     T6: ::planus::WriteAsDefault<u32, u32>,
-                    T7: ::planus::WriteAsDefault<self::BweType, self::BweType>,
+                    T7: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAsOffset<BweTraceInfo>
                 for BweTraceInfoBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
@@ -46697,12 +46692,22 @@ mod root {
             pub struct BweTraceInfoRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> BweTraceInfoRef<'a> {
+                /// Getter for the [`bwe_type` field](BweTraceInfo#structfield.bwe_type).
+                #[inline]
+                pub fn bwe_type(&self) -> ::planus::Result<self::BweType> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "BweTraceInfo", "bwe_type")?
+                            .unwrap_or(self::BweType::TransportCc),
+                    )
+                }
+
                 /// Getter for the [`desired_bitrate` field](BweTraceInfo#structfield.desired_bitrate).
                 #[inline]
                 pub fn desired_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(0, "BweTraceInfo", "desired_bitrate")?
+                            .access(1, "BweTraceInfo", "desired_bitrate")?
                             .unwrap_or(0),
                     )
                 }
@@ -46712,7 +46717,7 @@ mod root {
                 pub fn effective_desired_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(1, "BweTraceInfo", "effective_desired_bitrate")?
+                            .access(2, "BweTraceInfo", "effective_desired_bitrate")?
                             .unwrap_or(0),
                     )
                 }
@@ -46722,7 +46727,7 @@ mod root {
                 pub fn min_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(2, "BweTraceInfo", "min_bitrate")?
+                            .access(3, "BweTraceInfo", "min_bitrate")?
                             .unwrap_or(0),
                     )
                 }
@@ -46732,7 +46737,7 @@ mod root {
                 pub fn max_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(3, "BweTraceInfo", "max_bitrate")?
+                            .access(4, "BweTraceInfo", "max_bitrate")?
                             .unwrap_or(0),
                     )
                 }
@@ -46742,7 +46747,7 @@ mod root {
                 pub fn start_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(4, "BweTraceInfo", "start_bitrate")?
+                            .access(5, "BweTraceInfo", "start_bitrate")?
                             .unwrap_or(0),
                     )
                 }
@@ -46752,7 +46757,7 @@ mod root {
                 pub fn max_padding_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(5, "BweTraceInfo", "max_padding_bitrate")?
+                            .access(6, "BweTraceInfo", "max_padding_bitrate")?
                             .unwrap_or(0),
                     )
                 }
@@ -46762,18 +46767,8 @@ mod root {
                 pub fn available_bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(6, "BweTraceInfo", "available_bitrate")?
+                            .access(7, "BweTraceInfo", "available_bitrate")?
                             .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`bwe_type` field](BweTraceInfo#structfield.bwe_type).
-                #[inline]
-                pub fn bwe_type(&self) -> ::planus::Result<self::BweType> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(7, "BweTraceInfo", "bwe_type")?
-                            .unwrap_or(self::BweType::TransportCc),
                     )
                 }
             }
@@ -46781,6 +46776,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for BweTraceInfoRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("BweTraceInfoRef");
+                    f.field("bwe_type", &self.bwe_type());
                     f.field("desired_bitrate", &self.desired_bitrate());
                     f.field(
                         "effective_desired_bitrate",
@@ -46791,7 +46787,6 @@ mod root {
                     f.field("start_bitrate", &self.start_bitrate());
                     f.field("max_padding_bitrate", &self.max_padding_bitrate());
                     f.field("available_bitrate", &self.available_bitrate());
-                    f.field("bwe_type", &self.bwe_type());
                     f.finish()
                 }
             }
@@ -46802,6 +46797,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: BweTraceInfoRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        bwe_type: ::core::convert::TryInto::try_into(value.bwe_type()?)?,
                         desired_bitrate: ::core::convert::TryInto::try_into(
                             value.desired_bitrate()?,
                         )?,
@@ -46817,7 +46813,6 @@ mod root {
                         available_bitrate: ::core::convert::TryInto::try_into(
                             value.available_bitrate()?,
                         )?,
-                        bwe_type: ::core::convert::TryInto::try_into(value.bwe_type()?)?,
                     })
                 }
             }
@@ -49405,8 +49400,10 @@ mod root {
                     ::planus::alloc::boxed::Box<super::data_producer::SendNotification>,
                 ),
 
-                /// The variant of type `FBS.Consumer.TraceNotification` in the union `Body`
-                TraceNotification(::planus::alloc::boxed::Box<super::consumer::TraceNotification>),
+                /// The variant `Transport_TraceNotification` in the union `Body`
+                TransportTraceNotification(
+                    ::planus::alloc::boxed::Box<super::transport::TraceNotification>,
+                ),
 
                 /// The variant of type `FBS.WebRtcTransport.IceSelectedTupleChangeNotification` in the union `Body`
                 IceSelectedTupleChangeNotification(
@@ -49447,6 +49444,11 @@ mod root {
                 /// The variant of type `FBS.Consumer.ScoreNotification` in the union `Body`
                 ScoreNotification(::planus::alloc::boxed::Box<super::consumer::ScoreNotification>),
 
+                /// The variant `Producer_TraceNotification` in the union `Body`
+                ProducerTraceNotification(
+                    ::planus::alloc::boxed::Box<super::producer::TraceNotification>,
+                ),
+
                 /// The variant of type `FBS.Producer.VideoOrientationChangeNotification` in the union `Body`
                 VideoOrientationChangeNotification(
                     ::planus::alloc::boxed::Box<
@@ -49461,6 +49463,11 @@ mod root {
 
                 /// The variant of type `FBS.Consumer.RtpNotification` in the union `Body`
                 RtpNotification(::planus::alloc::boxed::Box<super::consumer::RtpNotification>),
+
+                /// The variant `Consumer_TraceNotification` in the union `Body`
+                ConsumerTraceNotification(
+                    ::planus::alloc::boxed::Box<super::consumer::TraceNotification>,
+                ),
 
                 /// The variant of type `FBS.DataConsumer.MessageNotification` in the union `Body`
                 MessageNotification(
@@ -49519,9 +49526,9 @@ mod root {
                 }
 
                 #[inline]
-                pub fn create_trace_notification(
+                pub fn create_transport_trace_notification(
                     builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                    value: impl ::planus::WriteAsOffset<super::transport::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
                     ::planus::UnionOffset::new(4, value.prepare(builder).downcast())
                 }
@@ -49589,13 +49596,21 @@ mod root {
                 }
 
                 #[inline]
+                pub fn create_producer_trace_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::producer::TraceNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
+                }
+
+                #[inline]
                 pub fn create_video_orientation_change_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<
                         super::producer::VideoOrientationChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49603,7 +49618,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(14, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49611,7 +49626,15 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::RtpNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(14, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_consumer_trace_notification(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49619,7 +49642,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49629,7 +49652,7 @@ mod root {
                         super::data_consumer::BufferedAmountLowNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49639,7 +49662,7 @@ mod root {
                         super::active_speaker_observer::DominantSpeakerNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49649,7 +49672,7 @@ mod root {
                         super::audio_level_observer::VolumesNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
                 }
             }
 
@@ -49666,8 +49689,8 @@ mod root {
                         Self::SendNotification(value) => {
                             Self::create_send_notification(builder, value)
                         }
-                        Self::TraceNotification(value) => {
-                            Self::create_trace_notification(builder, value)
+                        Self::TransportTraceNotification(value) => {
+                            Self::create_transport_trace_notification(builder, value)
                         }
                         Self::IceSelectedTupleChangeNotification(value) => {
                             Self::create_ice_selected_tuple_change_notification(builder, value)
@@ -49690,6 +49713,9 @@ mod root {
                         Self::ScoreNotification(value) => {
                             Self::create_score_notification(builder, value)
                         }
+                        Self::ProducerTraceNotification(value) => {
+                            Self::create_producer_trace_notification(builder, value)
+                        }
                         Self::VideoOrientationChangeNotification(value) => {
                             Self::create_video_orientation_change_notification(builder, value)
                         }
@@ -49698,6 +49724,9 @@ mod root {
                         }
                         Self::RtpNotification(value) => {
                             Self::create_rtp_notification(builder, value)
+                        }
+                        Self::ConsumerTraceNotification(value) => {
+                            Self::create_consumer_trace_notification(builder, value)
                         }
                         Self::MessageNotification(value) => {
                             Self::create_message_notification(builder, value)
@@ -49769,14 +49798,14 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
-                /// Creates an instance of the [`TraceNotification` variant](Body#variant.TraceNotification).
+                /// Creates an instance of the [`Transport_TraceNotification` variant](Body#variant.TransportTraceNotification).
                 #[inline]
-                pub fn trace_notification<T>(
+                pub fn transport_trace_notification<T>(
                     self,
                     value: T,
                 ) -> BodyBuilder<::planus::Initialized<4, T>>
                 where
-                    T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                    T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -49871,12 +49900,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
+                /// Creates an instance of the [`Producer_TraceNotification` variant](Body#variant.ProducerTraceNotification).
+                #[inline]
+                pub fn producer_trace_notification<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<12, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
                 /// Creates an instance of the [`VideoOrientationChangeNotification` variant](Body#variant.VideoOrientationChangeNotification).
                 #[inline]
                 pub fn video_orientation_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<12, T>>
+                ) -> BodyBuilder<::planus::Initialized<13, T>>
                 where
                     T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
                 {
@@ -49888,7 +49929,7 @@ mod root {
                 pub fn layers_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<13, T>>
+                ) -> BodyBuilder<::planus::Initialized<14, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
                 {
@@ -49900,9 +49941,21 @@ mod root {
                 pub fn rtp_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<14, T>>
+                ) -> BodyBuilder<::planus::Initialized<15, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`Consumer_TraceNotification` variant](Body#variant.ConsumerTraceNotification).
+                #[inline]
+                pub fn consumer_trace_notification<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<16, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
                 {
                     BodyBuilder(::planus::Initialized(value))
                 }
@@ -49912,7 +49965,7 @@ mod root {
                 pub fn message_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<15, T>>
+                ) -> BodyBuilder<::planus::Initialized<17, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
                 {
@@ -49924,7 +49977,7 @@ mod root {
                 pub fn buffered_amount_low_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<16, T>>
+                ) -> BodyBuilder<::planus::Initialized<18, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
                 {
@@ -49936,7 +49989,7 @@ mod root {
                 pub fn dominant_speaker_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<17, T>>
+                ) -> BodyBuilder<::planus::Initialized<19, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::active_speaker_observer::DominantSpeakerNotification,
@@ -49950,7 +50003,7 @@ mod root {
                 pub fn volumes_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<18, T>>
+                ) -> BodyBuilder<::planus::Initialized<20, T>>
                 where
                     T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
                 {
@@ -50037,7 +50090,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<4, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50047,7 +50100,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<4, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50217,7 +50270,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<12, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50227,7 +50280,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<12, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50239,7 +50292,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<13, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50249,7 +50302,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<13, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50261,7 +50314,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<14, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50271,7 +50324,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<14, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50283,7 +50336,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<15, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50293,7 +50346,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<15, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50305,7 +50358,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<16, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50315,7 +50368,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<16, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50327,9 +50380,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<17, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::active_speaker_observer::DominantSpeakerNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50338,6 +50389,52 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<17, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(18, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<19, T>>
+            where
+                T: ::planus::WriteAsOffset<
+                    super::active_speaker_observer::DominantSpeakerNotification,
+                >,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(19, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<19, T>>
             where
                 T: ::planus::WriteAsOffset<
                     super::active_speaker_observer::DominantSpeakerNotification,
@@ -50351,17 +50448,17 @@ mod root {
                     ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
                 }
             }
-            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
             where
                 T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
-                    ::planus::UnionOffset::new(18, (self.0).0.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(20, (self.0).0.prepare(builder).downcast())
                 }
             }
 
-            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
             where
                 T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
             {
@@ -50380,7 +50477,7 @@ mod root {
                 SendRtcpNotification(super::transport::SendRtcpNotificationRef<'a>),
                 SctpStateChangeNotification(super::transport::SctpStateChangeNotificationRef<'a>),
                 SendNotification(super::data_producer::SendNotificationRef<'a>),
-                TraceNotification(super::consumer::TraceNotificationRef<'a>),
+                TransportTraceNotification(super::transport::TraceNotificationRef<'a>),
                 IceSelectedTupleChangeNotification(
                     super::web_rtc_transport::IceSelectedTupleChangeNotificationRef<'a>,
                 ),
@@ -50394,11 +50491,13 @@ mod root {
                 RtcpTupleNotification(super::plain_transport::RtcpTupleNotificationRef<'a>),
                 RtcpNotification(super::direct_transport::RtcpNotificationRef<'a>),
                 ScoreNotification(super::consumer::ScoreNotificationRef<'a>),
+                ProducerTraceNotification(super::producer::TraceNotificationRef<'a>),
                 VideoOrientationChangeNotification(
                     super::producer::VideoOrientationChangeNotificationRef<'a>,
                 ),
                 LayersChangeNotification(super::consumer::LayersChangeNotificationRef<'a>),
                 RtpNotification(super::consumer::RtpNotificationRef<'a>),
+                ConsumerTraceNotification(super::consumer::TraceNotificationRef<'a>),
                 MessageNotification(super::data_consumer::MessageNotificationRef<'a>),
                 BufferedAmountLowNotification(
                     super::data_consumer::BufferedAmountLowNotificationRef<'a>,
@@ -50432,8 +50531,8 @@ mod root {
                             ))
                         }
 
-                        BodyRef::TraceNotification(value) => {
-                            Self::TraceNotification(::planus::alloc::boxed::Box::new(
+                        BodyRef::TransportTraceNotification(value) => {
+                            Self::TransportTraceNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -50482,6 +50581,12 @@ mod root {
                             ))
                         }
 
+                        BodyRef::ProducerTraceNotification(value) => {
+                            Self::ProducerTraceNotification(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
                         BodyRef::VideoOrientationChangeNotification(value) => {
                             Self::VideoOrientationChangeNotification(
                                 ::planus::alloc::boxed::Box::new(
@@ -50498,6 +50603,12 @@ mod root {
 
                         BodyRef::RtpNotification(value) => {
                             Self::RtpNotification(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::ConsumerTraceNotification(value) => {
+                            Self::ConsumerTraceNotification(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -50545,7 +50656,7 @@ mod root {
                         3 => ::core::result::Result::Ok(Self::SendNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        4 => ::core::result::Result::Ok(Self::TraceNotification(
+                        4 => ::core::result::Result::Ok(Self::TransportTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         5 => ::core::result::Result::Ok(Self::IceSelectedTupleChangeNotification(
@@ -50569,25 +50680,31 @@ mod root {
                         11 => ::core::result::Result::Ok(Self::ScoreNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        12 => ::core::result::Result::Ok(Self::VideoOrientationChangeNotification(
+                        12 => ::core::result::Result::Ok(Self::ProducerTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        13 => ::core::result::Result::Ok(Self::LayersChangeNotification(
+                        13 => ::core::result::Result::Ok(Self::VideoOrientationChangeNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        14 => ::core::result::Result::Ok(Self::RtpNotification(
+                        14 => ::core::result::Result::Ok(Self::LayersChangeNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        15 => ::core::result::Result::Ok(Self::MessageNotification(
+                        15 => ::core::result::Result::Ok(Self::RtpNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        16 => ::core::result::Result::Ok(Self::BufferedAmountLowNotification(
+                        16 => ::core::result::Result::Ok(Self::ConsumerTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        17 => ::core::result::Result::Ok(Self::DominantSpeakerNotification(
+                        17 => ::core::result::Result::Ok(Self::MessageNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        18 => ::core::result::Result::Ok(Self::VolumesNotification(
+                        18 => ::core::result::Result::Ok(Self::BufferedAmountLowNotification(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        19 => ::core::result::Result::Ok(Self::DominantSpeakerNotification(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        20 => ::core::result::Result::Ok(Self::VolumesNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
                         _ => ::core::result::Result::Err(
