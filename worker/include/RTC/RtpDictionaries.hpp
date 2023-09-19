@@ -128,7 +128,6 @@ namespace RTC
 	public:
 		enum class Type : uint8_t
 		{
-			UNKNOWN                = 0,
 			MID                    = 1,
 			RTP_STREAM_ID          = 2,
 			REPAIRED_RTP_STREAM_ID = 3,
@@ -142,11 +141,9 @@ namespace RTC
 			ABS_CAPTURE_TIME       = 13,
 		};
 
-	private:
-		static absl::flat_hash_map<std::string, Type> string2Type;
-
 	public:
-		static Type GetType(std::string& uri);
+		static RtpHeaderExtensionUri::Type TypeFromFbs(FBS::RtpParameters::RtpHeaderExtensionUri uri);
+		static FBS::RtpParameters::RtpHeaderExtensionUri TypeToFbs(RtpHeaderExtensionUri::Type uri);
 	};
 
 	class RtcpFeedback
@@ -232,7 +229,6 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	public:
-		std::string uri;
 		RtpHeaderExtensionUri::Type type;
 		uint8_t id{ 0u };
 		bool encrypt{ false };

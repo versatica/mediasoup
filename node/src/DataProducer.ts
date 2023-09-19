@@ -254,7 +254,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATAPRODUCER,
-			FbsRequest.Body.FBS_Transport_CloseDataProducerRequest,
+			FbsRequest.Body.Transport_CloseDataProducerRequest,
 			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
@@ -466,7 +466,7 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		this.#channel.notify(
 			FbsNotification.Event.DATAPRODUCER_SEND,
-			FbsNotification.Body.FBS_DataProducer_SendNotification,
+			FbsNotification.Body.DataProducer_SendNotification,
 			notificationOffset,
 			this.#internal.dataProducerId
 		);

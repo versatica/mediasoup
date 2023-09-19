@@ -352,7 +352,7 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
-			FbsRequest.Body.FBS_Transport_CloseProducerRequest,
+			FbsRequest.Body.Transport_CloseProducerRequest,
 			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
@@ -530,7 +530,7 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		this.#channel.notify(
 			FbsNotification.Event.PRODUCER_SEND,
-			FbsNotification.Body.FBS_Producer_SendNotification,
+			FbsNotification.Body.Producer_SendNotification,
 			notificationOffset,
 			this.#internal.producerId
 		);

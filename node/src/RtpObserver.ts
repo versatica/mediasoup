@@ -168,7 +168,7 @@ export class RtpObserver
 
 		this.channel.request(
 			FbsRequest.Method.ROUTER_CLOSE_RTPOBSERVER,
-			FbsRequest.Body.FBS_Router_CloseRtpObserverRequest,
+			FbsRequest.Body.Router_CloseRtpObserverRequest,
 			requestOffset,
 			this.internal.routerId
 		).catch(() => {});
@@ -274,7 +274,7 @@ export class RtpObserver
 
 		await this.channel.request(
 			FbsRequest.Method.RTPOBSERVER_ADD_PRODUCER,
-			FbsRequest.Body.FBS_RtpObserver_AddProducerRequest,
+			FbsRequest.Body.RtpObserver_AddProducerRequest,
 			requestOffset,
 			this.internal.rtpObserverId
 		);
@@ -303,7 +303,7 @@ export class RtpObserver
 
 		await this.channel.request(
 			FbsRequest.Method.RTPOBSERVER_REMOVE_PRODUCER,
-			FbsRequest.Body.FBS_RtpObserver_RemoveProducerRequest,
+			FbsRequest.Body.RtpObserver_RemoveProducerRequest,
 			requestOffset,
 			this.internal.rtpObserverId
 		);

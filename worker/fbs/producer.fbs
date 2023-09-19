@@ -4,76 +4,87 @@ include "rtpStream.fbs";
 namespace FBS.Producer;
 
 table EnableTraceEventRequest {
-  events:[string] (required);
+    events: [string] (required);
 }
 
 table DumpResponse {
-  id:string (required);
-  kind:FBS.RtpParameters.MediaKind;
-  type:string (required);
-  rtp_parameters:FBS.RtpParameters.RtpParameters (required);
-  rtp_mapping:FBS.RtpParameters.RtpMapping (required);
-  rtp_streams:[FBS.RtpStream.Dump];
-  trace_event_types:[string] (required);
-  paused:bool;
+    id: string (required);
+    kind: FBS.RtpParameters.MediaKind;
+    type: string (required);
+    rtp_parameters: FBS.RtpParameters.RtpParameters (required);
+    rtp_mapping: FBS.RtpParameters.RtpMapping (required);
+    rtp_streams: [FBS.RtpStream.Dump];
+    trace_event_types: [string] (required);
+    paused: bool;
 }
 
 table GetStatsResponse {
-  stats:[FBS.RtpStream.Stats];
+    stats: [FBS.RtpStream.Stats];
 }
 
 table SendNotification {
-  data:[uint8] (required);
+    data: [uint8] (required);
 }
 
 // Notifications from Worker.
 
 table Score {
-  ssrc:uint32;
-  rid:string;
-  score:uint8;
+    ssrc: uint32;
+    rid: string;
+    score: uint8;
 }
 
 table ScoreNotification {
-  scores:[Score];
+    scores: [Score];
 }
 
 table VideoOrientationChangeNotification {
-  camera:bool;
-  flip:bool;
-  rotation:uint16;
+    camera: bool;
+    flip: bool;
+    rotation: uint16;
 }
 
-enum TraceType: uint8 { KEYFRAME = 0, FIR, NACK, PLI, RTP,  }
+enum TraceType: uint8 {
+    KEYFRAME = 0,
+    FIR,
+    NACK,
+    PLI,
+    RTP,
+}
+
 // NOTE (windows): IN|OUT are macros defined in windef.h.
-enum TraceDirection: uint8 { DIRECTION_IN = 0, DIRECTION_OUT }
+enum TraceDirection: uint8 {
+    DIRECTION_IN = 0,
+    DIRECTION_OUT
+}
 
 union TraceInfo {
-  KeyFrameTraceInfo,
-  FirTraceInfo,
-  PliTraceInfo,
-  RtpTraceInfo,
+    KeyFrameTraceInfo,
+    FirTraceInfo,
+    PliTraceInfo,
+    RtpTraceInfo,
 }
 
 table KeyFrameTraceInfo {
-  is_rtx:bool;
+    is_rtx: bool;
 }
 
 table FirTraceInfo {
-  ssrc:uint32;
+    ssrc: uint32;
 }
 
 table PliTraceInfo {
-  ssrc:uint32;
+    ssrc: uint32;
 }
 
 table RtpTraceInfo {
-  is_rtx:bool;
+    is_rtx: bool;
 }
 
 table TraceNotification {
-  type: TraceType;
-  timestamp: uint64;
-  direction: TraceDirection;
-  info: TraceInfo;
+    type: TraceType;
+    timestamp: uint64;
+    direction: TraceDirection;
+    info: TraceInfo;
 }
+

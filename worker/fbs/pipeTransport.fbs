@@ -4,30 +4,31 @@ include "srtpParameters.fbs";
 namespace FBS.PipeTransport;
 
 table PipeTransportOptions {
-  base:FBS.Transport.Options (required);
-  listen_info:FBS.Transport.ListenInfo (required);
-  enable_rtx:bool;
-  enable_srtp:bool;
+    base: FBS.Transport.Options (required);
+    listen_info: FBS.Transport.ListenInfo (required);
+    enable_rtx: bool;
+    enable_srtp: bool;
 }
 
 table ConnectRequest {
-  ip:string (required);
-  port:uint16 = null;
-  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
+    ip: string (required);
+    port: uint16 = null;
+    srtp_parameters: FBS.SrtpParameters.SrtpParameters;
 }
 
 table ConnectResponse {
-  tuple:FBS.Transport.Tuple (required);
+    tuple: FBS.Transport.Tuple (required);
 }
 
 table DumpResponse {
-  base:FBS.Transport.Dump (required);
-  tuple:FBS.Transport.Tuple (required);
-  rtx:bool;
-  srtp_parameters:FBS.SrtpParameters.SrtpParameters;
+    base: FBS.Transport.Dump (required);
+    tuple: FBS.Transport.Tuple (required);
+    rtx: bool;
+    srtp_parameters: FBS.SrtpParameters.SrtpParameters;
 }
 
 table GetStatsResponse {
-  base:FBS.Transport.Stats (required);
-  tuple:FBS.Transport.Tuple (required);
+    base: FBS.Transport.Stats (required);
+    tuple: FBS.Transport.Tuple (required);
 }
+

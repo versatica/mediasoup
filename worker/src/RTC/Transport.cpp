@@ -664,7 +664,7 @@ namespace RTC
 				auto responseOffset = FBS::Transport::CreateProduceResponse(
 				  request->GetBufferBuilder(), FBS::RtpParameters::Type(producer->GetType()));
 
-				request->Accept(FBS::Response::Body::FBS_Transport_ProduceResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Transport_ProduceResponse, responseOffset);
 
 				// Check if TransportCongestionControlServer or REMB server must be
 				// created.
@@ -850,7 +850,7 @@ namespace RTC
 				  scoreOffset,
 				  preferredLayersOffset);
 
-				request->Accept(FBS::Response::Body::FBS_Transport_ConsumeResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Transport_ConsumeResponse, responseOffset);
 
 				// Check if Transport Congestion Control client must be created.
 				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
@@ -1097,7 +1097,7 @@ namespace RTC
 
 				auto dumpOffset = dataProducer->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DataProducer_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::DataProducer_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -1183,7 +1183,7 @@ namespace RTC
 
 				auto dumpOffset = dataConsumer->FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DataConsumer_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::DataConsumer_DumpResponse, dumpOffset);
 
 				if (IsConnected())
 				{
@@ -2729,7 +2729,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
 		  sctpStateChangeOffset);
 	}
 
@@ -2755,7 +2755,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
 		  sctpStateChangeOffset);
 	}
 
@@ -2781,7 +2781,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
 		  sctpStateChangeOffset);
 	}
 
@@ -2807,7 +2807,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::TRANSPORT_SCTP_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_Transport_SctpStateChangeNotification,
+		  FBS::Notification::Body::Transport_SctpStateChangeNotification,
 		  sctpStateChangeOffset);
 	}
 

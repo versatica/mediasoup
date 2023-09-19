@@ -128,7 +128,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DataProducer_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::DataProducer_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -137,7 +137,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DataProducer_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::DataProducer_GetStatsResponse, responseOffset);
 
 				break;
 			}

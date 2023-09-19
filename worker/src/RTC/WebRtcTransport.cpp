@@ -397,7 +397,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::WebRtcTransport_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -406,7 +406,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::WebRtcTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -475,7 +475,7 @@ namespace RTC
 				auto responseOffset =
 				  FBS::WebRtcTransport::CreateConnectResponse(request->GetBufferBuilder(), dtlsLocalRole);
 
-				request->Accept(FBS::Response::Body::FBS_WebRtcTransport_ConnectResponse, responseOffset);
+				request->Accept(FBS::Response::Body::WebRtcTransport_ConnectResponse, responseOffset);
 
 				break;
 			}
@@ -498,7 +498,7 @@ namespace RTC
 				  true /* iceLite */
 				);
 
-				request->Accept(FBS::Response::Body::FBS_Transport_RestartIceResponse, responseOffset);
+				request->Accept(FBS::Response::Body::Transport_RestartIceResponse, responseOffset);
 
 				break;
 			}
@@ -1136,7 +1136,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_IceSelectedTupleChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_IceSelectedTupleChangeNotification,
 		  notification);
 	}
 
@@ -1153,7 +1153,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_IceStateChangeNotification,
 		  iceStateChangeOffset);
 
 		// If ready, run the DTLS handler.
@@ -1179,7 +1179,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_IceStateChangeNotification,
 		  iceStateChangeOffset);
 
 		// If ready, run the DTLS handler.
@@ -1206,7 +1206,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_ICE_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_IceStateChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_IceStateChangeNotification,
 		  iceStateChangeOffset);
 
 		// If DTLS was already connected, notify the parent class.
@@ -1229,7 +1229,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
 		  dtlsStateChangeOffset);
 	}
 
@@ -1277,7 +1277,7 @@ namespace RTC
 			this->shared->channelNotifier->Emit(
 			  this->id,
 			  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-			  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+			  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
 			  dtlsStateChangeOffset);
 
 			// Tell the parent class.
@@ -1305,7 +1305,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
 		  dtlsStateChangeOffset);
 	}
 
@@ -1322,7 +1322,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-		  FBS::Notification::Body::FBS_WebRtcTransport_DtlsStateChangeNotification,
+		  FBS::Notification::Body::WebRtcTransport_DtlsStateChangeNotification,
 		  dtlsStateChangeOffset);
 
 		// Tell the parent class.

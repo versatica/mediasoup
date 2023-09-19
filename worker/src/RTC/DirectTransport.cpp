@@ -67,7 +67,7 @@ namespace RTC
 			{
 				auto responseOffset = FillBufferStats(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DirectTransport_GetStatsResponse, responseOffset);
+				request->Accept(FBS::Response::Body::DirectTransport_GetStatsResponse, responseOffset);
 
 				break;
 			}
@@ -76,7 +76,7 @@ namespace RTC
 			{
 				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
 
-				request->Accept(FBS::Response::Body::FBS_DirectTransport_DumpResponse, dumpOffset);
+				request->Accept(FBS::Response::Body::DirectTransport_DumpResponse, dumpOffset);
 
 				break;
 			}
@@ -159,7 +159,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  consumer->id,
 		  FBS::Notification::Event::CONSUMER_RTP,
-		  FBS::Notification::Body::FBS_Consumer_RtpNotification,
+		  FBS::Notification::Body::Consumer_RtpNotification,
 		  notification);
 
 		if (cb)
@@ -186,7 +186,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
-		  FBS::Notification::Body::FBS_DirectTransport_RtcpNotification,
+		  FBS::Notification::Body::DirectTransport_RtcpNotification,
 		  notification);
 
 		// Increase send transmission.
@@ -208,7 +208,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::DIRECTTRANSPORT_RTCP,
-		  FBS::Notification::Body::FBS_DirectTransport_RtcpNotification,
+		  FBS::Notification::Body::DirectTransport_RtcpNotification,
 		  notification);
 	}
 
@@ -226,7 +226,7 @@ namespace RTC
 		this->shared->channelNotifier->Emit(
 		  dataConsumer->id,
 		  FBS::Notification::Event::DATACONSUMER_MESSAGE,
-		  FBS::Notification::Body::FBS_DataConsumer_MessageNotification,
+		  FBS::Notification::Body::DataConsumer_MessageNotification,
 		  notification);
 
 		// Increase send transmission.

@@ -166,10 +166,7 @@ namespace Channel
 	{
 		auto& builder = this->bufferBuilder;
 		auto message  = FBS::Message::CreateMessage(
-      builder,
-      FBS::Message::Type::RESPONSE,
-      FBS::Message::Body::FBS_Response_Response,
-      response.Union());
+      builder, FBS::Message::Type::RESPONSE, FBS::Message::Body::Response, response.Union());
 
 		builder.FinishSizePrefixed(message);
 		this->Send(builder.GetBufferPointer(), builder.GetSize());

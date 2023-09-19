@@ -5,23 +5,24 @@ include "response.fbs";
 
 namespace FBS.Message;
 
-enum Type : uint8 {
-  REQUEST = 0,
-  RESPONSE,
-  NOTIFICATION,
-  LOG,
+enum Type: uint8 {
+    REQUEST = 0,
+    RESPONSE,
+    NOTIFICATION,
+    LOG,
 }
 
 union Body {
-  FBS.Request.Request,
-  FBS.Response.Response,
-  FBS.Notification.Notification,
-  FBS.Log.Log,
+    Request: FBS.Request.Request,
+    Response: FBS.Response.Response,
+    Notification: FBS.Notification.Notification,
+    Log: FBS.Log.Log,
 }
 
 table Message {
-  type:Type;
-  data:Body (required);
+    type: Type;
+    data: Body (required);
 }
 
 root_type Message;
+

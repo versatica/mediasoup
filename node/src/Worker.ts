@@ -656,7 +656,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
-			FbsRequest.Body.FBS_Worker_UpdateSettingsRequest,
+			FbsRequest.Body.Worker_UpdateSettingsRequest,
 			requestOffset
 		);
 	}
@@ -703,7 +703,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 		await this.#channel.request(
 			FbsRequest.Method.WORKER_CREATE_WEBRTCSERVER,
-			FbsRequest.Body.FBS_Worker_CreateWebRtcServerRequest,
+			FbsRequest.Body.Worker_CreateWebRtcServerRequest,
 			createWebRtcServerRequestOffset
 		);
 
@@ -749,7 +749,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			new FbsWorker.CreateRouterRequestT(routerId).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(FbsRequest.Method.WORKER_CREATE_ROUTER,
-			FbsRequest.Body.FBS_Worker_CreateRouterRequest, createRouterRequestOffset);
+			FbsRequest.Body.Worker_CreateRouterRequest, createRouterRequestOffset);
 
 		const data = { rtpCapabilities };
 		const router = new Router<RouterAppData>(

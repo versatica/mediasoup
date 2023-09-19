@@ -1,11 +1,12 @@
 namespace FBS.ActiveSpeakerObserver;
 
 table ActiveSpeakerObserverOptions {
-  interval:uint16;
+    interval: uint16;
 }
 
 // Notifications from Worker.
 
 table DominantSpeakerNotification {
-  producer_id:string (required);
+    producer_id: string (required);
 }
+

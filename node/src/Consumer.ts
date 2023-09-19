@@ -523,7 +523,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER,
-			FbsRequest.Body.FBS_Transport_CloseConsumerRequest,
+			FbsRequest.Body.Transport_CloseConsumerRequest,
 			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
@@ -686,7 +686,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PREFERRED_LAYERS,
-			FbsRequest.Body.FBS_Consumer_SetPreferredLayersRequest,
+			FbsRequest.Body.Consumer_SetPreferredLayersRequest,
 			requestOffset,
 			this.#internal.consumerId
 		);
@@ -734,7 +734,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PRIORITY,
-			FbsRequest.Body.FBS_Consumer_SetPriorityRequest,
+			FbsRequest.Body.Consumer_SetPriorityRequest,
 			requestOffset,
 			this.#internal.consumerId
 		);

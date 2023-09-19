@@ -412,8 +412,9 @@ impl Notification {
     ) -> Result<Self, NotificationParseError> {
         match notification.event().unwrap() {
             notification::Event::WebrtctransportIceStateChange => {
-                let Ok(Some(notification::BodyRef::IceStateChangeNotification(body))) =
-                    notification.body()
+                let Ok(Some(notification::BodyRef::WebRtcTransportIceStateChangeNotification(
+                    body,
+                ))) = notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
                 };
@@ -423,8 +424,9 @@ impl Notification {
                 Ok(Notification::IceStateChange { ice_state })
             }
             notification::Event::WebrtctransportIceSelectedTupleChange => {
-                let Ok(Some(notification::BodyRef::IceSelectedTupleChangeNotification(body))) =
-                    notification.body()
+                let Ok(Some(
+                    notification::BodyRef::WebRtcTransportIceSelectedTupleChangeNotification(body),
+                )) = notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
                 };
@@ -436,8 +438,9 @@ impl Notification {
                 Ok(Notification::IceSelectedTupleChange { ice_selected_tuple })
             }
             notification::Event::WebrtctransportDtlsStateChange => {
-                let Ok(Some(notification::BodyRef::DtlsStateChangeNotification(body))) =
-                    notification.body()
+                let Ok(Some(notification::BodyRef::WebRtcTransportDtlsStateChangeNotification(
+                    body,
+                ))) = notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
                 };
@@ -450,7 +453,7 @@ impl Notification {
                 })
             }
             notification::Event::TransportSctpStateChange => {
-                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
@@ -713,7 +716,7 @@ impl TransportGeneric for WebRtcTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::FbsWebRtcTransportDumpResponse(data) = self.dump_impl().await? {
+        if let response::Body::WebRtcTransportDumpResponse(data) = self.dump_impl().await? {
             Ok(WebRtcTransportDump::from_fbs(*data).expect("Error parsing dump response"))
         } else {
             panic!("Wrong message from worker");
@@ -723,8 +726,7 @@ impl TransportGeneric for WebRtcTransport {
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::FbsWebRtcTransportGetStatsResponse(data) =
-            self.get_stats_impl().await?
+        if let response::Body::WebRtcTransportGetStatsResponse(data) = self.get_stats_impl().await?
         {
             Ok(vec![
                 WebRtcTransportStat::from_fbs(*data).expect("Error parsing dump response")

@@ -176,7 +176,7 @@ namespace RTC
 			this->shared->channelNotifier->Emit(
 			  this->id,
 			  FBS::Notification::Event::AUDIOLEVELOBSERVER_VOLUMES,
-			  FBS::Notification::Body::FBS_AudioLevelObserver_VolumesNotification,
+			  FBS::Notification::Body::AudioLevelObserver_VolumesNotification,
 			  notification);
 		}
 		else if (!this->silence)

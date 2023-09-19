@@ -346,7 +346,8 @@ impl Notification {
     ) -> Result<Self, NotificationParseError> {
         match notification.event().unwrap() {
             notification::Event::PlaintransportTuple => {
-                let Ok(Some(notification::BodyRef::TupleNotification(body))) = notification.body()
+                let Ok(Some(notification::BodyRef::PlainTransportTupleNotification(body))) =
+                    notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
                 };
@@ -357,7 +358,7 @@ impl Notification {
                 Ok(Notification::Tuple { tuple })
             }
             notification::Event::PlaintransportRtcpTuple => {
-                let Ok(Some(notification::BodyRef::RtcpTupleNotification(body))) =
+                let Ok(Some(notification::BodyRef::PlainTransportRtcpTupleNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
@@ -369,7 +370,7 @@ impl Notification {
                 Ok(Notification::RtcpTuple { rtcp_tuple })
             }
             notification::Event::TransportSctpStateChange => {
-                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
@@ -395,6 +396,7 @@ impl Notification {
         }
     }
 }
+
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
@@ -620,7 +622,7 @@ impl TransportGeneric for PlainTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::FbsPlainTransportDumpResponse(data) = self.dump_impl().await? {
+        if let response::Body::PlainTransportDumpResponse(data) = self.dump_impl().await? {
             Ok(PlainTransportDump::from_fbs(*data).expect("Error parsing dump response"))
         } else {
             panic!("Wrong message from worker");
@@ -630,9 +632,7 @@ impl TransportGeneric for PlainTransport {
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::FbsPlainTransportGetStatsResponse(data) =
-            self.get_stats_impl().await?
-        {
+        if let response::Body::PlainTransportGetStatsResponse(data) = self.get_stats_impl().await? {
             Ok(vec![
                 PlainTransportStat::from_fbs(*data).expect("Error parsing dump response")
             ])

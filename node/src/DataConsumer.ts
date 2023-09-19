@@ -317,7 +317,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		this.#channel.request(
 			FbsRequest.Method.TRANSPORT_CLOSE_DATACONSUMER,
-			FbsRequest.Body.FBS_Transport_CloseDataConsumerRequest,
+			FbsRequest.Body.Transport_CloseDataConsumerRequest,
 			requestOffset,
 			this.#internal.transportId
 		).catch(() => {});
@@ -460,7 +460,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
-			FbsRequest.Body.FBS_DataConsumer_SetBufferedAmountLowThresholdRequest,
+			FbsRequest.Body.DataConsumer_SetBufferedAmountLowThresholdRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
 		);
@@ -537,7 +537,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SEND,
-			FbsRequest.Body.FBS_DataConsumer_SendRequest,
+			FbsRequest.Body.DataConsumer_SendRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
 		);
@@ -578,7 +578,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SET_SUBCHANNELS,
-			FbsRequest.Body.FBS_DataConsumer_SetSubchannelsRequest,
+			FbsRequest.Body.DataConsumer_SetSubchannelsRequest,
 			requestOffset,
 			this.#internal.dataConsumerId
 		);

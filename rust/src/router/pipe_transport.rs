@@ -297,7 +297,7 @@ impl Notification {
     ) -> Result<Self, NotificationParseError> {
         match notification.event().unwrap() {
             notification::Event::TransportSctpStateChange => {
-                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
@@ -556,7 +556,7 @@ impl TransportGeneric for PipeTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::FbsPipeTransportDumpResponse(data) = self.dump_impl().await? {
+        if let response::Body::PipeTransportDumpResponse(data) = self.dump_impl().await? {
             Ok(PipeTransportDump::from_fbs(*data).expect("Error parsing dump response"))
         } else {
             panic!("Wrong message from worker");
@@ -566,9 +566,7 @@ impl TransportGeneric for PipeTransport {
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::FbsPipeTransportGetStatsResponse(data) =
-            self.get_stats_impl().await?
-        {
+        if let response::Body::PipeTransportGetStatsResponse(data) = self.get_stats_impl().await? {
             Ok(vec![
                 PipeTransportStat::from_fbs(*data).expect("Error parsing dump response")
             ])

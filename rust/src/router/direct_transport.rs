@@ -505,7 +505,7 @@ impl TransportGeneric for DirectTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::FbsDirectTransportDumpResponse(data) = self.dump_impl().await? {
+        if let response::Body::DirectTransportDumpResponse(data) = self.dump_impl().await? {
             Ok(DirectTransportDump::from_fbs(*data).expect("Error parsing dump response"))
         } else {
             panic!("Wrong message from worker");
@@ -519,8 +519,7 @@ impl TransportGeneric for DirectTransport {
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::FbsDirectTransportGetStatsResponse(data) =
-            self.get_stats_impl().await?
+        if let response::Body::DirectTransportGetStatsResponse(data) = self.get_stats_impl().await?
         {
             Ok(vec![
                 DirectTransportStat::from_fbs(*data).expect("Error parsing dump response")

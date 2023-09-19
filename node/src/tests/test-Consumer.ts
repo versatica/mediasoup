@@ -983,7 +983,7 @@ test('Consumer emits "score"', async () =>
 		builder,
 		builder.createString(audioConsumer.id),
 		Event.CONSUMER_SCORE,
-		NotificationBody.FBS_Consumer_ScoreNotification,
+		NotificationBody.Consumer_ScoreNotification,
 		consumerScoreNotification.pack(builder)
 	);
 
