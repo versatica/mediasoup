@@ -1571,7 +1571,7 @@ mod root {
             /// The table `StringString` in the namespace `FBS.Common`
             ///
             /// Generated from these locations:
-            /// * Table `StringString` in the file `../worker/fbs/common.fbs:4`
+            /// * Table `StringString` in the file `../worker/fbs/common.fbs:3`
             #[derive(
                 Clone,
                 Debug,
@@ -1862,7 +1862,7 @@ mod root {
             /// The table `StringUint8` in the namespace `FBS.Common`
             ///
             /// Generated from these locations:
-            /// * Table `StringUint8` in the file `../worker/fbs/common.fbs:9`
+            /// * Table `StringUint8` in the file `../worker/fbs/common.fbs:8`
             #[derive(
                 Clone,
                 Debug,
@@ -2166,7 +2166,7 @@ mod root {
             /// The table `Uint16String` in the namespace `FBS.Common`
             ///
             /// Generated from these locations:
-            /// * Table `Uint16String` in the file `../worker/fbs/common.fbs:14`
+            /// * Table `Uint16String` in the file `../worker/fbs/common.fbs:13`
             #[derive(
                 Clone,
                 Debug,
@@ -2470,7 +2470,7 @@ mod root {
             /// The table `Uint32String` in the namespace `FBS.Common`
             ///
             /// Generated from these locations:
-            /// * Table `Uint32String` in the file `../worker/fbs/common.fbs:19`
+            /// * Table `Uint32String` in the file `../worker/fbs/common.fbs:18`
             #[derive(
                 Clone,
                 Debug,
@@ -2774,7 +2774,7 @@ mod root {
             /// The table `StringStringArray` in the namespace `FBS.Common`
             ///
             /// Generated from these locations:
-            /// * Table `StringStringArray` in the file `../worker/fbs/common.fbs:24`
+            /// * Table `StringStringArray` in the file `../worker/fbs/common.fbs:23`
             #[derive(
                 Clone,
                 Debug,
@@ -9883,7 +9883,7 @@ mod root {
             /// The enum `TraceDirection` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/consumer.fbs:114`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/consumer.fbs:121`
             #[derive(
                 Copy,
                 Clone,
@@ -10053,7 +10053,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/consumer.fbs:116`
+            /// * Union `TraceInfo` in the file `../worker/fbs/consumer.fbs:126`
             #[derive(
                 Clone,
                 Debug,
@@ -10385,7 +10385,7 @@ mod root {
             /// The table `KeyFrameTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/consumer.fbs:123`
+            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/consumer.fbs:133`
             #[derive(
                 Clone,
                 Debug,
@@ -10667,7 +10667,7 @@ mod root {
             /// The table `FirTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `FirTraceInfo` in the file `../worker/fbs/consumer.fbs:127`
+            /// * Table `FirTraceInfo` in the file `../worker/fbs/consumer.fbs:137`
             #[derive(
                 Clone,
                 Debug,
@@ -10944,7 +10944,7 @@ mod root {
             /// The table `PliTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `PliTraceInfo` in the file `../worker/fbs/consumer.fbs:131`
+            /// * Table `PliTraceInfo` in the file `../worker/fbs/consumer.fbs:141`
             #[derive(
                 Clone,
                 Debug,
@@ -11221,7 +11221,7 @@ mod root {
             /// The table `RtpTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpTraceInfo` in the file `../worker/fbs/consumer.fbs:135`
+            /// * Table `RtpTraceInfo` in the file `../worker/fbs/consumer.fbs:145`
             #[derive(
                 Clone,
                 Debug,
@@ -11498,7 +11498,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/consumer.fbs:139`
+            /// * Table `TraceNotification` in the file `../worker/fbs/consumer.fbs:149`
             #[derive(
                 Clone,
                 Debug,
@@ -11958,7 +11958,7 @@ mod root {
             /// The enum `MediaKind` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Enum `MediaKind` in the file `../worker/fbs/rtpParameters.fbs:4`
+            /// * Enum `MediaKind` in the file `../worker/fbs/rtpParameters.fbs:3`
             #[derive(
                 Copy,
                 Clone,
@@ -12132,7 +12132,7 @@ mod root {
             /// The enum `Type` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Enum `Type` in the file `../worker/fbs/rtpParameters.fbs:5`
+            /// * Enum `Type` in the file `../worker/fbs/rtpParameters.fbs:9`
             #[derive(
                 Copy,
                 Clone,
@@ -12320,7 +12320,7 @@ mod root {
             /// The table `Boolean` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Boolean` in the file `../worker/fbs/rtpParameters.fbs:8`
+            /// * Table `Boolean` in the file `../worker/fbs/rtpParameters.fbs:18`
             #[derive(
                 Clone,
                 Debug,
@@ -12579,7 +12579,7 @@ mod root {
             /// The table `Integer32` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Integer32` in the file `../worker/fbs/rtpParameters.fbs:12`
+            /// * Table `Integer32` in the file `../worker/fbs/rtpParameters.fbs:22`
             #[derive(
                 Clone,
                 Debug,
@@ -12838,7 +12838,7 @@ mod root {
             /// The table `Integer32Array` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Integer32Array` in the file `../worker/fbs/rtpParameters.fbs:16`
+            /// * Table `Integer32Array` in the file `../worker/fbs/rtpParameters.fbs:26`
             #[derive(
                 Clone,
                 Debug,
@@ -13125,7 +13125,7 @@ mod root {
             /// The table `Double` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Double` in the file `../worker/fbs/rtpParameters.fbs:20`
+            /// * Table `Double` in the file `../worker/fbs/rtpParameters.fbs:30`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -13376,7 +13376,7 @@ mod root {
             /// The table `String` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `String` in the file `../worker/fbs/rtpParameters.fbs:24`
+            /// * Table `String` in the file `../worker/fbs/rtpParameters.fbs:34`
             #[derive(
                 Clone,
                 Debug,
@@ -13617,7 +13617,7 @@ mod root {
             /// The union `Value` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Union `Value` in the file `../worker/fbs/rtpParameters.fbs:28`
+            /// * Union `Value` in the file `../worker/fbs/rtpParameters.fbs:38`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -13964,7 +13964,7 @@ mod root {
             /// The table `Parameter` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Parameter` in the file `../worker/fbs/rtpParameters.fbs:36`
+            /// * Table `Parameter` in the file `../worker/fbs/rtpParameters.fbs:46`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -14233,7 +14233,7 @@ mod root {
             /// The table `RtcpFeedback` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtcpFeedback` in the file `../worker/fbs/rtpParameters.fbs:41`
+            /// * Table `RtcpFeedback` in the file `../worker/fbs/rtpParameters.fbs:51`
             #[derive(
                 Clone,
                 Debug,
@@ -14524,7 +14524,7 @@ mod root {
             /// The table `RtpCodecParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpCodecParameters` in the file `../worker/fbs/rtpParameters.fbs:46`
+            /// * Table `RtpCodecParameters` in the file `../worker/fbs/rtpParameters.fbs:56`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -15086,22 +15086,256 @@ mod root {
                 }
             }
 
+            /// The enum `RtpHeaderExtensionUri` in the namespace `FBS.RtpParameters`
+            ///
+            /// Generated from these locations:
+            /// * Enum `RtpHeaderExtensionUri` in the file `../worker/fbs/rtpParameters.fbs:65`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum RtpHeaderExtensionUri {
+                /// The variant `Mid` in the enum `RtpHeaderExtensionUri`
+                Mid = 0,
+
+                /// The variant `RtpStreamId` in the enum `RtpHeaderExtensionUri`
+                RtpStreamId = 1,
+
+                /// The variant `RepairRtpStreamId` in the enum `RtpHeaderExtensionUri`
+                RepairRtpStreamId = 2,
+
+                /// The variant `FrameMarkingDraft07` in the enum `RtpHeaderExtensionUri`
+                FrameMarkingDraft07 = 3,
+
+                /// The variant `FrameMarking` in the enum `RtpHeaderExtensionUri`
+                FrameMarking = 4,
+
+                /// The variant `AudioLevel` in the enum `RtpHeaderExtensionUri`
+                AudioLevel = 5,
+
+                /// The variant `VideoOrientation` in the enum `RtpHeaderExtensionUri`
+                VideoOrientation = 6,
+
+                /// The variant `TimeOffset` in the enum `RtpHeaderExtensionUri`
+                TimeOffset = 7,
+
+                /// The variant `TransportWideCcDraft01` in the enum `RtpHeaderExtensionUri`
+                TransportWideCcDraft01 = 8,
+
+                /// The variant `AbsSendTime` in the enum `RtpHeaderExtensionUri`
+                AbsSendTime = 9,
+
+                /// The variant `AbsCaptureTime` in the enum `RtpHeaderExtensionUri`
+                AbsCaptureTime = 10,
+            }
+
+            impl RtpHeaderExtensionUri {
+                /// Array containing all valid variants of RtpHeaderExtensionUri
+                pub const ENUM_VALUES: [Self; 11] = [
+                    Self::Mid,
+                    Self::RtpStreamId,
+                    Self::RepairRtpStreamId,
+                    Self::FrameMarkingDraft07,
+                    Self::FrameMarking,
+                    Self::AudioLevel,
+                    Self::VideoOrientation,
+                    Self::TimeOffset,
+                    Self::TransportWideCcDraft01,
+                    Self::AbsSendTime,
+                    Self::AbsCaptureTime,
+                ];
+            }
+
+            impl ::core::convert::TryFrom<u8> for RtpHeaderExtensionUri {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(RtpHeaderExtensionUri::Mid),
+                        1 => ::core::result::Result::Ok(RtpHeaderExtensionUri::RtpStreamId),
+                        2 => ::core::result::Result::Ok(RtpHeaderExtensionUri::RepairRtpStreamId),
+                        3 => ::core::result::Result::Ok(RtpHeaderExtensionUri::FrameMarkingDraft07),
+                        4 => ::core::result::Result::Ok(RtpHeaderExtensionUri::FrameMarking),
+                        5 => ::core::result::Result::Ok(RtpHeaderExtensionUri::AudioLevel),
+                        6 => ::core::result::Result::Ok(RtpHeaderExtensionUri::VideoOrientation),
+                        7 => ::core::result::Result::Ok(RtpHeaderExtensionUri::TimeOffset),
+                        8 => ::core::result::Result::Ok(
+                            RtpHeaderExtensionUri::TransportWideCcDraft01,
+                        ),
+                        9 => ::core::result::Result::Ok(RtpHeaderExtensionUri::AbsSendTime),
+                        10 => ::core::result::Result::Ok(RtpHeaderExtensionUri::AbsCaptureTime),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<RtpHeaderExtensionUri> for u8 {
+                #[inline]
+                fn from(value: RtpHeaderExtensionUri) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for RtpHeaderExtensionUri {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<RtpHeaderExtensionUri> for RtpHeaderExtensionUri {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<RtpHeaderExtensionUri> for RtpHeaderExtensionUri {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> RtpHeaderExtensionUri {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<RtpHeaderExtensionUri, RtpHeaderExtensionUri>
+                for RtpHeaderExtensionUri
+            {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &RtpHeaderExtensionUri,
+                ) -> ::core::option::Option<RtpHeaderExtensionUri> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<RtpHeaderExtensionUri> for RtpHeaderExtensionUri {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<RtpHeaderExtensionUri> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for RtpHeaderExtensionUri {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for RtpHeaderExtensionUri {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "RtpHeaderExtensionUri",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<RtpHeaderExtensionUri> for RtpHeaderExtensionUri {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `RtpHeaderExtensionParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpHeaderExtensionParameters` in the file `../worker/fbs/rtpParameters.fbs:55`
+            /// * Table `RtpHeaderExtensionParameters` in the file `../worker/fbs/rtpParameters.fbs:79`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct RtpHeaderExtensionParameters {
                 /// The field `uri` in the table `RtpHeaderExtensionParameters`
-                pub uri: ::planus::alloc::string::String,
+                pub uri: self::RtpHeaderExtensionUri,
                 /// The field `id` in the table `RtpHeaderExtensionParameters`
                 pub id: u8,
                 /// The field `encrypt` in the table `RtpHeaderExtensionParameters`
                 pub encrypt: bool,
                 /// The field `parameters` in the table `RtpHeaderExtensionParameters`
                 pub parameters: ::core::option::Option<::planus::alloc::vec::Vec<self::Parameter>>,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for RtpHeaderExtensionParameters {
+                fn default() -> Self {
+                    Self {
+                        uri: self::RtpHeaderExtensionUri::Mid,
+                        id: 0,
+                        encrypt: false,
+                        parameters: ::core::default::Default::default(),
+                    }
+                }
             }
 
             impl RtpHeaderExtensionParameters {
@@ -15114,26 +15348,32 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_uri: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_uri: impl ::planus::WriteAsDefault<
+                        self::RtpHeaderExtensionUri,
+                        self::RtpHeaderExtensionUri,
+                    >,
                     field_id: impl ::planus::WriteAsDefault<u8, u8>,
                     field_encrypt: impl ::planus::WriteAsDefault<bool, bool>,
                     field_parameters: impl ::planus::WriteAsOptional<
                         ::planus::Offset<[::planus::Offset<self::Parameter>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_uri = field_uri.prepare(builder);
+                    let prepared_uri =
+                        field_uri.prepare(builder, &self::RtpHeaderExtensionUri::Mid);
                     let prepared_id = field_id.prepare(builder, &0);
                     let prepared_encrypt = field_encrypt.prepare(builder, &false);
                     let prepared_parameters = field_parameters.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<12> =
                         ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<str>>(0);
                     if prepared_parameters.is_some() {
                         table_writer
                             .write_entry::<::planus::Offset<[::planus::Offset<self::Parameter>]>>(
                                 3,
                             );
+                    }
+                    if prepared_uri.is_some() {
+                        table_writer.write_entry::<self::RtpHeaderExtensionUri>(0);
                     }
                     if prepared_id.is_some() {
                         table_writer.write_entry::<u8>(1);
@@ -15144,11 +15384,13 @@ mod root {
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_uri);
                             if let ::core::option::Option::Some(prepared_parameters) =
                                 prepared_parameters
                             {
                                 object_writer.write::<_, _, 4>(&prepared_parameters);
+                            }
+                            if let ::core::option::Option::Some(prepared_uri) = prepared_uri {
+                                object_writer.write::<_, _, 1>(&prepared_uri);
                             }
                             if let ::core::option::Option::Some(prepared_id) = prepared_id {
                                 object_writer.write::<_, _, 1>(&prepared_id);
@@ -15200,7 +15442,7 @@ mod root {
                 ) -> ::planus::Offset<RtpHeaderExtensionParameters> {
                     RtpHeaderExtensionParameters::create(
                         builder,
-                        &self.uri,
+                        self.uri,
                         self.id,
                         self.encrypt,
                         &self.parameters,
@@ -15221,9 +15463,22 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn uri<T0>(self, value: T0) -> RtpHeaderExtensionParametersBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::RtpHeaderExtensionUri,
+                        self::RtpHeaderExtensionUri,
+                    >,
                 {
                     RtpHeaderExtensionParametersBuilder((value,))
+                }
+
+                /// Sets the [`uri` field](RtpHeaderExtensionParameters#structfield.uri) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn uri_as_default(
+                    self,
+                ) -> RtpHeaderExtensionParametersBuilder<(::planus::DefaultValue,)>
+                {
+                    self.uri(::planus::DefaultValue)
                 }
             }
 
@@ -15318,7 +15573,10 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::RtpHeaderExtensionUri,
+                        self::RtpHeaderExtensionUri,
+                    >,
                     T1: ::planus::WriteAsDefault<u8, u8>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
                     T3: ::planus::WriteAsOptional<
@@ -15339,7 +15597,10 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::RtpHeaderExtensionUri,
+                        self::RtpHeaderExtensionUri,
+                    >,
                     T1: ::planus::WriteAsDefault<u8, u8>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
                     T3: ::planus::WriteAsOptional<
@@ -15362,7 +15623,10 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
+                    T0: ::planus::WriteAsDefault<
+                        self::RtpHeaderExtensionUri,
+                        self::RtpHeaderExtensionUri,
+                    >,
                     T1: ::planus::WriteAsDefault<u8, u8>,
                     T2: ::planus::WriteAsDefault<bool, bool>,
                     T3: ::planus::WriteAsOptional<
@@ -15388,9 +15652,12 @@ mod root {
             impl<'a> RtpHeaderExtensionParametersRef<'a> {
                 /// Getter for the [`uri` field](RtpHeaderExtensionParameters#structfield.uri).
                 #[inline]
-                pub fn uri(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0
-                        .access_required(0, "RtpHeaderExtensionParameters", "uri")
+                pub fn uri(&self) -> ::planus::Result<self::RtpHeaderExtensionUri> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(0, "RtpHeaderExtensionParameters", "uri")?
+                            .unwrap_or(self::RtpHeaderExtensionUri::Mid),
+                    )
                 }
 
                 /// Getter for the [`id` field](RtpHeaderExtensionParameters#structfield.id).
@@ -15543,7 +15810,7 @@ mod root {
             /// The table `Rtx` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Rtx` in the file `../worker/fbs/rtpParameters.fbs:62`
+            /// * Table `Rtx` in the file `../worker/fbs/rtpParameters.fbs:86`
             #[derive(
                 Clone,
                 Debug,
@@ -15796,7 +16063,7 @@ mod root {
             /// The table `RtpEncodingParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpEncodingParameters` in the file `../worker/fbs/rtpParameters.fbs:66`
+            /// * Table `RtpEncodingParameters` in the file `../worker/fbs/rtpParameters.fbs:90`
             #[derive(
                 Clone,
                 Debug,
@@ -16443,7 +16710,7 @@ mod root {
             /// The table `RtcpParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtcpParameters` in the file `../worker/fbs/rtpParameters.fbs:76`
+            /// * Table `RtcpParameters` in the file `../worker/fbs/rtpParameters.fbs:100`
             #[derive(
                 Clone,
                 Debug,
@@ -16785,7 +17052,7 @@ mod root {
             /// The table `RtpParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpParameters` in the file `../worker/fbs/rtpParameters.fbs:81`
+            /// * Table `RtpParameters` in the file `../worker/fbs/rtpParameters.fbs:105`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -17237,7 +17504,7 @@ mod root {
             /// The table `CodecMapping` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `CodecMapping` in the file `../worker/fbs/rtpParameters.fbs:89`
+            /// * Table `CodecMapping` in the file `../worker/fbs/rtpParameters.fbs:113`
             #[derive(
                 Clone,
                 Debug,
@@ -17573,7 +17840,7 @@ mod root {
             /// The table `EncodingMapping` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `EncodingMapping` in the file `../worker/fbs/rtpParameters.fbs:94`
+            /// * Table `EncodingMapping` in the file `../worker/fbs/rtpParameters.fbs:118`
             #[derive(
                 Clone,
                 Debug,
@@ -18029,7 +18296,7 @@ mod root {
             /// The table `RtpMapping` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpMapping` in the file `../worker/fbs/rtpParameters.fbs:101`
+            /// * Table `RtpMapping` in the file `../worker/fbs/rtpParameters.fbs:125`
             #[derive(
                 Clone,
                 Debug,
@@ -23196,7 +23463,7 @@ mod root {
             /// The table `Params` in the namespace `FBS.RtxStream`
             ///
             /// Generated from these locations:
-            /// * Table `Params` in the file `../worker/fbs/rtxStream.fbs:4`
+            /// * Table `Params` in the file `../worker/fbs/rtxStream.fbs:3`
             #[derive(
                 Clone,
                 Debug,
@@ -23665,7 +23932,7 @@ mod root {
             /// The table `RtxDump` in the namespace `FBS.RtxStream`
             ///
             /// Generated from these locations:
-            /// * Table `RtxDump` in the file `../worker/fbs/rtxStream.fbs:14`
+            /// * Table `RtxDump` in the file `../worker/fbs/rtxStream.fbs:13`
             #[derive(
                 Clone,
                 Debug,
@@ -27873,7 +28140,7 @@ mod root {
             /// The table `NumSctpStreams` in the namespace `FBS.SctpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `NumSctpStreams` in the file `../worker/fbs/sctpParameters.fbs:4`
+            /// * Table `NumSctpStreams` in the file `../worker/fbs/sctpParameters.fbs:3`
             #[derive(
                 Clone,
                 Debug,
@@ -28200,7 +28467,7 @@ mod root {
             /// The table `SctpParameters` in the namespace `FBS.SctpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `SctpParameters` in the file `../worker/fbs/sctpParameters.fbs:9`
+            /// * Table `SctpParameters` in the file `../worker/fbs/sctpParameters.fbs:8`
             #[derive(
                 Clone,
                 Debug,
@@ -28807,7 +29074,7 @@ mod root {
             /// The table `SctpStreamParameters` in the namespace `FBS.SctpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStreamParameters` in the file `../worker/fbs/sctpParameters.fbs:20`
+            /// * Table `SctpStreamParameters` in the file `../worker/fbs/sctpParameters.fbs:19`
             #[derive(
                 Clone,
                 Debug,
@@ -32619,7 +32886,7 @@ mod root {
             /// The table `ListenInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ListenInfo` in the file `../worker/fbs/transport.fbs:12`
+            /// * Table `ListenInfo` in the file `../worker/fbs/transport.fbs:15`
             #[derive(
                 Clone,
                 Debug,
@@ -33133,7 +33400,7 @@ mod root {
             /// The table `RestartIceResponse` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RestartIceResponse` in the file `../worker/fbs/transport.fbs:21`
+            /// * Table `RestartIceResponse` in the file `../worker/fbs/transport.fbs:24`
             #[derive(
                 Clone,
                 Debug,
@@ -33482,7 +33749,7 @@ mod root {
             /// The table `ProduceRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ProduceRequest` in the file `../worker/fbs/transport.fbs:27`
+            /// * Table `ProduceRequest` in the file `../worker/fbs/transport.fbs:30`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -33990,7 +34257,7 @@ mod root {
             /// The table `ProduceResponse` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ProduceResponse` in the file `../worker/fbs/transport.fbs:36`
+            /// * Table `ProduceResponse` in the file `../worker/fbs/transport.fbs:39`
             #[derive(
                 Clone,
                 Debug,
@@ -34291,7 +34558,7 @@ mod root {
             /// The table `ConsumeRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumeRequest` in the file `../worker/fbs/transport.fbs:40`
+            /// * Table `ConsumeRequest` in the file `../worker/fbs/transport.fbs:43`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -34998,7 +35265,7 @@ mod root {
             /// The table `ConsumeResponse` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumeResponse` in the file `../worker/fbs/transport.fbs:52`
+            /// * Table `ConsumeResponse` in the file `../worker/fbs/transport.fbs:55`
             #[derive(
                 Clone,
                 Debug,
@@ -35471,7 +35738,7 @@ mod root {
             /// The table `ProduceDataRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ProduceDataRequest` in the file `../worker/fbs/transport.fbs:59`
+            /// * Table `ProduceDataRequest` in the file `../worker/fbs/transport.fbs:62`
             #[derive(
                 Clone,
                 Debug,
@@ -36019,7 +36286,7 @@ mod root {
             /// The table `ConsumeDataRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumeDataRequest` in the file `../worker/fbs/transport.fbs:68`
+            /// * Table `ConsumeDataRequest` in the file `../worker/fbs/transport.fbs:71`
             #[derive(
                 Clone,
                 Debug,
@@ -36665,7 +36932,7 @@ mod root {
             /// The table `Tuple` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Tuple` in the file `../worker/fbs/transport.fbs:79`
+            /// * Table `Tuple` in the file `../worker/fbs/transport.fbs:82`
             #[derive(
                 Clone,
                 Debug,
@@ -37119,7 +37386,7 @@ mod root {
             /// The table `RtpListener` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RtpListener` in the file `../worker/fbs/transport.fbs:87`
+            /// * Table `RtpListener` in the file `../worker/fbs/transport.fbs:90`
             #[derive(
                 Clone,
                 Debug,
@@ -37482,7 +37749,7 @@ mod root {
             /// The table `SctpListener` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpListener` in the file `../worker/fbs/transport.fbs:93`
+            /// * Table `SctpListener` in the file `../worker/fbs/transport.fbs:96`
             #[derive(
                 Clone,
                 Debug,
@@ -37756,7 +38023,7 @@ mod root {
             /// The table `RecvRtpHeaderExtensions` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `RecvRtpHeaderExtensions` in the file `../worker/fbs/transport.fbs:97`
+            /// * Table `RecvRtpHeaderExtensions` in the file `../worker/fbs/transport.fbs:100`
             #[derive(
                 Clone,
                 Debug,
@@ -38279,7 +38546,7 @@ mod root {
             /// The table `Options` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Options` in the file `../worker/fbs/transport.fbs:105`
+            /// * Table `Options` in the file `../worker/fbs/transport.fbs:108`
             #[derive(
                 Clone,
                 Debug,
@@ -38975,7 +39242,7 @@ mod root {
             /// The enum `TraceEventType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceEventType` in the file `../worker/fbs/transport.fbs:117`
+            /// * Enum `TraceEventType` in the file `../worker/fbs/transport.fbs:121`
             #[derive(
                 Copy,
                 Clone,
@@ -39145,7 +39412,7 @@ mod root {
             /// The table `Dump` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:119`
+            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:126`
             #[derive(
                 Clone,
                 Debug,
@@ -40188,7 +40455,7 @@ mod root {
             /// The table `Stats` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:137`
+            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:144`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -42849,7 +43116,7 @@ mod root {
             /// The table `SetMaxIncomingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:164`
+            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:171`
             #[derive(
                 Clone,
                 Debug,
@@ -43157,7 +43424,7 @@ mod root {
             /// The table `SetMaxOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:168`
+            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:175`
             #[derive(
                 Clone,
                 Debug,
@@ -43465,7 +43732,7 @@ mod root {
             /// The table `SetMinOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:172`
+            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:179`
             #[derive(
                 Clone,
                 Debug,
@@ -43773,7 +44040,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:176`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:183`
             #[derive(
                 Clone,
                 Debug,
@@ -44051,7 +44318,7 @@ mod root {
             /// The table `CloseProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:180`
+            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:187`
             #[derive(
                 Clone,
                 Debug,
@@ -44317,7 +44584,7 @@ mod root {
             /// The table `CloseConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:184`
+            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:191`
             #[derive(
                 Clone,
                 Debug,
@@ -44583,7 +44850,7 @@ mod root {
             /// The table `CloseDataProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:188`
+            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:195`
             #[derive(
                 Clone,
                 Debug,
@@ -44858,7 +45125,7 @@ mod root {
             /// The table `CloseDataConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:192`
+            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:199`
             #[derive(
                 Clone,
                 Debug,
@@ -45133,7 +45400,7 @@ mod root {
             /// The table `SendRtcpNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:198`
+            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:205`
             #[derive(
                 Clone,
                 Debug,
@@ -45398,7 +45665,7 @@ mod root {
             /// The table `SctpStateChangeNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:204`
+            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:211`
             #[derive(
                 Clone,
                 Debug,
@@ -45719,7 +45986,7 @@ mod root {
             /// The enum `TraceDirection` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:209`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:216`
             #[derive(
                 Copy,
                 Clone,
@@ -45889,7 +46156,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:211`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:221`
             #[derive(
                 Clone,
                 Debug,
@@ -46042,7 +46309,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:215`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:225`
             #[derive(
                 Copy,
                 Clone,
@@ -46212,7 +46479,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:217`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:230`
             #[derive(
                 Clone,
                 Debug,
@@ -46890,7 +47157,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:228`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:241`
             #[derive(
                 Clone,
                 Debug,
@@ -47354,7 +47621,7 @@ mod root {
             /// The enum `SctpState` in the namespace `FBS.SctpAssociation`
             ///
             /// Generated from these locations:
-            /// * Enum `SctpState` in the file `../worker/fbs/sctpAssociation.fbs:4`
+            /// * Enum `SctpState` in the file `../worker/fbs/sctpAssociation.fbs:3`
             #[derive(
                 Copy,
                 Clone,
@@ -47547,7 +47814,7 @@ mod root {
             /// The enum `SrtpCryptoSuite` in the namespace `FBS.SrtpParameters`
             ///
             /// Generated from these locations:
-            /// * Enum `SrtpCryptoSuite` in the file `../worker/fbs/srtpParameters.fbs:4`
+            /// * Enum `SrtpCryptoSuite` in the file `../worker/fbs/srtpParameters.fbs:3`
             #[derive(
                 Copy,
                 Clone,
@@ -47730,7 +47997,7 @@ mod root {
             /// The table `SrtpParameters` in the namespace `FBS.SrtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `SrtpParameters` in the file `../worker/fbs/srtpParameters.fbs:11`
+            /// * Table `SrtpParameters` in the file `../worker/fbs/srtpParameters.fbs:10`
             #[derive(
                 Clone,
                 Debug,
@@ -48049,7 +48316,7 @@ mod root {
             /// The table `Log` in the namespace `FBS.Log`
             ///
             /// Generated from these locations:
-            /// * Table `Log` in the file `../worker/fbs/log.fbs:4`
+            /// * Table `Log` in the file `../worker/fbs/log.fbs:3`
             #[derive(
                 Clone,
                 Debug,
@@ -49372,7 +49639,7 @@ mod root {
             /// The union `Body` in the namespace `FBS.Notification`
             ///
             /// Generated from these locations:
-            /// * Union `Body` in the file `../worker/fbs/notification.fbs:49`
+            /// * Union `Body` in the file `../worker/fbs/notification.fbs:50`
             #[derive(
                 Clone,
                 Debug,
@@ -50893,7 +51160,7 @@ mod root {
             /// The table `Notification` in the namespace `FBS.Notification`
             ///
             /// Generated from these locations:
-            /// * Table `Notification` in the file `../worker/fbs/notification.fbs:76`
+            /// * Table `Notification` in the file `../worker/fbs/notification.fbs:78`
             #[derive(
                 Clone,
                 Debug,
@@ -67857,7 +68124,7 @@ mod root {
             /// The enum `TraceDirection` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/producer.fbs:49`
+            /// * Enum `TraceDirection` in the file `../worker/fbs/producer.fbs:56`
             #[derive(
                 Copy,
                 Clone,
@@ -68027,7 +68294,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/producer.fbs:51`
+            /// * Union `TraceInfo` in the file `../worker/fbs/producer.fbs:61`
             #[derive(
                 Clone,
                 Debug,
@@ -68359,7 +68626,7 @@ mod root {
             /// The table `KeyFrameTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/producer.fbs:58`
+            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/producer.fbs:68`
             #[derive(
                 Clone,
                 Debug,
@@ -68641,7 +68908,7 @@ mod root {
             /// The table `FirTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `FirTraceInfo` in the file `../worker/fbs/producer.fbs:62`
+            /// * Table `FirTraceInfo` in the file `../worker/fbs/producer.fbs:72`
             #[derive(
                 Clone,
                 Debug,
@@ -68918,7 +69185,7 @@ mod root {
             /// The table `PliTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `PliTraceInfo` in the file `../worker/fbs/producer.fbs:66`
+            /// * Table `PliTraceInfo` in the file `../worker/fbs/producer.fbs:76`
             #[derive(
                 Clone,
                 Debug,
@@ -69195,7 +69462,7 @@ mod root {
             /// The table `RtpTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpTraceInfo` in the file `../worker/fbs/producer.fbs:70`
+            /// * Table `RtpTraceInfo` in the file `../worker/fbs/producer.fbs:80`
             #[derive(
                 Clone,
                 Debug,
@@ -69472,7 +69739,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/producer.fbs:74`
+            /// * Table `TraceNotification` in the file `../worker/fbs/producer.fbs:84`
             #[derive(
                 Clone,
                 Debug,
@@ -77462,7 +77729,7 @@ mod root {
             /// The enum `IceCandidateTcpType` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceCandidateTcpType` in the file `../worker/fbs/webRtcTransport.fbs:63`
+            /// * Enum `IceCandidateTcpType` in the file `../worker/fbs/webRtcTransport.fbs:66`
             #[derive(
                 Copy,
                 Clone,
@@ -77628,7 +77895,7 @@ mod root {
             /// The enum `IceRole` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceRole` in the file `../worker/fbs/webRtcTransport.fbs:64`
+            /// * Enum `IceRole` in the file `../worker/fbs/webRtcTransport.fbs:70`
             #[derive(
                 Copy,
                 Clone,
@@ -77798,7 +78065,7 @@ mod root {
             /// The enum `IceState` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceState` in the file `../worker/fbs/webRtcTransport.fbs:65`
+            /// * Enum `IceState` in the file `../worker/fbs/webRtcTransport.fbs:75`
             #[derive(
                 Copy,
                 Clone,
@@ -77981,7 +78248,7 @@ mod root {
             /// The table `IceCandidate` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceCandidate` in the file `../worker/fbs/webRtcTransport.fbs:72`
+            /// * Table `IceCandidate` in the file `../worker/fbs/webRtcTransport.fbs:82`
             #[derive(
                 Clone,
                 Debug,
@@ -78552,7 +78819,7 @@ mod root {
             /// The table `ConnectRequest` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectRequest` in the file `../worker/fbs/webRtcTransport.fbs:82`
+            /// * Table `ConnectRequest` in the file `../worker/fbs/webRtcTransport.fbs:92`
             #[derive(
                 Clone,
                 Debug,
@@ -78815,7 +79082,7 @@ mod root {
             /// The table `ConnectResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectResponse` in the file `../worker/fbs/webRtcTransport.fbs:86`
+            /// * Table `ConnectResponse` in the file `../worker/fbs/webRtcTransport.fbs:96`
             #[derive(
                 Clone,
                 Debug,
@@ -79104,7 +79371,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/webRtcTransport.fbs:90`
+            /// * Table `DumpResponse` in the file `../worker/fbs/webRtcTransport.fbs:100`
             #[derive(
                 Clone,
                 Debug,
@@ -79704,7 +79971,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/webRtcTransport.fbs:101`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/webRtcTransport.fbs:111`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -80187,7 +80454,7 @@ mod root {
             /// The table `IceSelectedTupleChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceSelectedTupleChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:111`
+            /// * Table `IceSelectedTupleChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:121`
             #[derive(
                 Clone,
                 Debug,
@@ -80470,7 +80737,7 @@ mod root {
             /// The table `IceStateChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:115`
+            /// * Table `IceStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:125`
             #[derive(
                 Clone,
                 Debug,
@@ -80771,7 +81038,7 @@ mod root {
             /// The table `DtlsStateChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DtlsStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:119`
+            /// * Table `DtlsStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:129`
             #[derive(
                 Clone,
                 Debug,
@@ -81147,7 +81414,7 @@ mod root {
             /// The table `AddProducerRequest` in the namespace `FBS.RtpObserver`
             ///
             /// Generated from these locations:
-            /// * Table `AddProducerRequest` in the file `../worker/fbs/rtpObserver.fbs:4`
+            /// * Table `AddProducerRequest` in the file `../worker/fbs/rtpObserver.fbs:3`
             #[derive(
                 Clone,
                 Debug,
@@ -81406,7 +81673,7 @@ mod root {
             /// The table `RemoveProducerRequest` in the namespace `FBS.RtpObserver`
             ///
             /// Generated from these locations:
-            /// * Table `RemoveProducerRequest` in the file `../worker/fbs/rtpObserver.fbs:8`
+            /// * Table `RemoveProducerRequest` in the file `../worker/fbs/rtpObserver.fbs:7`
             #[derive(
                 Clone,
                 Debug,
