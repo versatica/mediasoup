@@ -297,7 +297,7 @@ impl Notification {
     ) -> Result<Self, NotificationParseError> {
         match notification.event().unwrap() {
             notification::Event::TransportSctpStateChange => {
-                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");

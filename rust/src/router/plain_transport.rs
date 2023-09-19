@@ -346,7 +346,8 @@ impl Notification {
     ) -> Result<Self, NotificationParseError> {
         match notification.event().unwrap() {
             notification::Event::PlaintransportTuple => {
-                let Ok(Some(notification::BodyRef::TupleNotification(body))) = notification.body()
+                let Ok(Some(notification::BodyRef::PlainTransportTupleNotification(body))) =
+                    notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
                 };
@@ -357,7 +358,7 @@ impl Notification {
                 Ok(Notification::Tuple { tuple })
             }
             notification::Event::PlaintransportRtcpTuple => {
-                let Ok(Some(notification::BodyRef::RtcpTupleNotification(body))) =
+                let Ok(Some(notification::BodyRef::PlainTransportRtcpTupleNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
@@ -369,7 +370,7 @@ impl Notification {
                 Ok(Notification::RtcpTuple { rtcp_tuple })
             }
             notification::Event::TransportSctpStateChange => {
-                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
                     notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
