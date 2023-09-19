@@ -17,7 +17,7 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
     TransportTraceEventType,
 };
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -323,6 +323,78 @@ struct Handlers {
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notification {
+    Tuple {
+        tuple: TransportTuple,
+    },
+    #[serde(rename_all = "camelCase")]
+    RtcpTuple {
+        rtcp_tuple: TransportTuple,
+    },
+    #[serde(rename_all = "camelCase")]
+    SctpStateChange {
+        sctp_state: SctpState,
+    },
+    Trace(TransportTraceEventData),
+}
+
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::PlaintransportTuple => {
+                let Ok(Some(notification::BodyRef::TupleNotification(body))) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                let tuple = TransportTuple::from_fbs(&tuple_fbs);
+
+                Ok(Notification::Tuple { tuple })
+            }
+            notification::Event::PlaintransportRtcpTuple => {
+                let Ok(Some(notification::BodyRef::RtcpTupleNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let rtcp_tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                let rtcp_tuple = TransportTuple::from_fbs(&rtcp_tuple_fbs);
+
+                Ok(Notification::RtcpTuple { rtcp_tuple })
+            }
+            notification::Event::TransportSctpStateChange => {
+                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+
+                Ok(Notification::SctpStateChange { sctp_state })
+            }
+            notification::Event::TransportTrace => {
+                let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
+                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
+}
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
@@ -610,69 +682,35 @@ impl PlainTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel.subscribe_to_fbs_notifications(
-                id.into(),
-                move |notification| match notification.event().unwrap() {
-                    notification::Event::PlaintransportTuple => {
-                        let Ok(Some(notification::BodyRef::TupleNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
+                    Ok(notification) => match notification {
+                        Notification::Tuple { tuple } => {
+                            *data.tuple.lock() = tuple;
 
-                        let tuple = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                            handlers.tuple.call_simple(&tuple);
+                        }
+                        Notification::RtcpTuple { rtcp_tuple } => {
+                            data.rtcp_tuple.lock().replace(rtcp_tuple);
 
-                        *data.tuple.lock() = TransportTuple::from_fbs(&tuple);
+                            handlers.rtcp_tuple.call_simple(&rtcp_tuple);
+                        }
+                        Notification::SctpStateChange { sctp_state } => {
+                            data.sctp_state.lock().replace(sctp_state);
 
-                        handlers
-                            .tuple
-                            .call_simple(&TransportTuple::from_fbs(&tuple));
+                            handlers.sctp_state_change.call(|callback| {
+                                callback(sctp_state);
+                            });
+                        }
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call_simple(&trace_event_data);
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                    notification::Event::PlaintransportRtcpTuple => {
-                        let Ok(Some(notification::BodyRef::RtcpTupleNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let tuple = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-
-                        *data.rtcp_tuple.lock() = Some(TransportTuple::from_fbs(&tuple));
-
-                        handlers
-                            .rtcp_tuple
-                            .call_simple(&TransportTuple::from_fbs(&tuple));
-                    }
-                    notification::Event::TransportSctpStateChange => {
-                        let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
-
-                        data.sctp_state.lock().replace(sctp_state);
-                        handlers.sctp_state_change.call(|callback| {
-                            callback(sctp_state);
-                        });
-                    }
-                    notification::Event::TransportTrace => {
-                        let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let trace_event_data =
-                            transport::TraceNotification::try_from(body).unwrap();
-                        handlers
-                            .trace
-                            .call_simple(&TransportTraceEventData::from_fbs(trace_event_data));
-                    }
-                    _ => unimplemented!(),
-                },
-            )
+                }
+            })
         };
 
         let next_mid_for_consumers = AtomicUsize::default();
