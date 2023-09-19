@@ -16,7 +16,9 @@ use crate::transport::{
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
     TransportTraceEventType,
 };
-use crate::worker::{Channel, NotificationError, RequestError, SubscriptionHandler};
+use crate::worker::{
+    Channel, NotificationError, NotificationParseError, RequestError, SubscriptionHandler,
+};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -221,6 +223,47 @@ struct Handlers {
     trace: Bag<Arc<dyn Fn(&TransportTraceEventData) + Send + Sync>, TransportTraceEventData>,
     router_close: BagOnce<Box<dyn FnOnce() + Send>>,
     close: BagOnce<Box<dyn FnOnce() + Send>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notification {
+    Trace(TransportTraceEventData),
+    // TODO.
+    // Rtcp,
+}
+
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::TransportTrace => {
+                let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
+                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            /*
+             * TODO.
+            notification::Event::DirecttransportRtcp => {
+                let Ok(Some(notification::BodyRef::RtcpNotification(_body))) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                Ok(Notification::Rtcp)
+            }
+            */
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
 }
 
 struct Inner {
@@ -524,34 +567,25 @@ impl DirectTransport {
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_fbs_notifications(
-                id.into(),
-                move |notification| match notification.event().unwrap() {
-                    notification::Event::TransportTrace => {
-                        let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let trace_event_data =
-                            transport::TraceNotification::try_from(body).unwrap();
-                        handlers
-                            .trace
-                            .call_simple(&TransportTraceEventData::from_fbs(trace_event_data));
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
+                    Ok(notification) => match notification {
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call_simple(&trace_event_data);
+                        } /*
+                           * TODO.
+                          Notification::Rtcp => {
+                              handlers.rtcp.call(|callback| {
+                                  callback(notification);
+                              });
+                          }
+                          */
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                    notification::Event::DirecttransportRtcp => {
-                        let Ok(Some(notification::BodyRef::DirectTransportRtcpNotification(_body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        // TODO.
-                    }
-                    _ => unimplemented!(),
-                },
-            )
+                }
+            })
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

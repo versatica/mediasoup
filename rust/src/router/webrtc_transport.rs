@@ -23,7 +23,7 @@ use crate::transport::{
     TransportTraceEventType,
 };
 use crate::webrtc_server::WebRtcServer;
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -383,6 +383,100 @@ struct Handlers {
     close: BagOnce<Box<dyn FnOnce() + Send>>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "event", rename_all = "lowercase", content = "data")]
+enum Notification {
+    #[serde(rename_all = "camelCase")]
+    IceStateChange {
+        ice_state: IceState,
+    },
+    #[serde(rename_all = "camelCase")]
+    IceSelectedTupleChange {
+        ice_selected_tuple: TransportTuple,
+    },
+    #[serde(rename_all = "camelCase")]
+    DtlsStateChange {
+        dtls_state: DtlsState,
+        dtls_remote_cert: Option<String>,
+    },
+    #[serde(rename_all = "camelCase")]
+    SctpStateChange {
+        sctp_state: SctpState,
+    },
+    Trace(TransportTraceEventData),
+}
+
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::WebrtctransportIceStateChange => {
+                let Ok(Some(notification::BodyRef::IceStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let ice_state = IceState::from_fbs(body.ice_state().unwrap());
+
+                Ok(Notification::IceStateChange { ice_state })
+            }
+            notification::Event::WebrtctransportIceSelectedTupleChange => {
+                let Ok(Some(notification::BodyRef::IceSelectedTupleChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let ice_selected_tuple_fbs =
+                    transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
+                let ice_selected_tuple = TransportTuple::from_fbs(&ice_selected_tuple_fbs);
+
+                Ok(Notification::IceSelectedTupleChange { ice_selected_tuple })
+            }
+            notification::Event::WebrtctransportDtlsStateChange => {
+                let Ok(Some(notification::BodyRef::DtlsStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let dtls_state = DtlsState::from_fbs(body.dtls_state().unwrap());
+
+                Ok(Notification::DtlsStateChange {
+                    dtls_state,
+                    dtls_remote_cert: None,
+                })
+            }
+            notification::Event::TransportSctpStateChange => {
+                let Ok(Some(notification::BodyRef::SctpStateChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+
+                Ok(Notification::SctpStateChange { sctp_state })
+            }
+            notification::Event::TransportTrace => {
+                let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
+                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
+}
+
 struct Inner {
     id: TransportId,
     next_mid_for_consumers: AtomicUsize,
@@ -682,85 +776,51 @@ impl WebRtcTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel.subscribe_to_fbs_notifications(
-                id.into(),
-                move |notification| match notification.event().unwrap() {
-                    notification::Event::WebrtctransportIceStateChange => {
-                        let Ok(Some(
-                            notification::BodyRef::WebRtcTransportIceStateChangeNotification(body),
-                        )) = notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
+                    Ok(notification) => match notification {
+                        Notification::IceStateChange { ice_state } => {
+                            *data.ice_state.lock() = ice_state;
+                            handlers.ice_state_change.call(|callback| {
+                                callback(ice_state);
+                            });
+                        }
+                        Notification::IceSelectedTupleChange { ice_selected_tuple } => {
+                            data.ice_selected_tuple.lock().replace(ice_selected_tuple);
+                            handlers
+                                .ice_selected_tuple_change
+                                .call_simple(&ice_selected_tuple);
+                        }
+                        Notification::DtlsStateChange {
+                            dtls_state,
+                            dtls_remote_cert,
+                        } => {
+                            *data.dtls_state.lock() = dtls_state;
 
-                        let ice_state = body.ice_state().unwrap();
+                            if let Some(dtls_remote_cert) = dtls_remote_cert {
+                                data.dtls_remote_cert.lock().replace(dtls_remote_cert);
+                            }
 
-                        *data.ice_state.lock() = IceState::from_fbs(ice_state);
-                        handlers.ice_state_change.call(|callback| {
-                            callback(IceState::from_fbs(ice_state));
-                        });
+                            handlers.dtls_state_change.call(|callback| {
+                                callback(dtls_state);
+                            });
+                        }
+                        Notification::SctpStateChange { sctp_state } => {
+                            data.sctp_state.lock().replace(sctp_state);
+
+                            handlers.sctp_state_change.call(|callback| {
+                                callback(sctp_state);
+                            });
+                        }
+                        Notification::Trace(trace_event_data) => {
+                            handlers.trace.call_simple(&trace_event_data);
+                        }
+                    },
+                    Err(error) => {
+                        error!("Failed to parse notification: {}", error);
                     }
-                    notification::Event::WebrtctransportIceSelectedTupleChange => {
-                        let Ok(Some(notification::BodyRef::WebRtcTransportIceSelectedTupleChangeNotification(
-                            body,
-                        ))) = notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let tuple = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-
-                        data.ice_selected_tuple
-                            .lock()
-                            .replace(TransportTuple::from_fbs(&tuple));
-                        handlers
-                            .ice_selected_tuple_change
-                            .call_simple(&TransportTuple::from_fbs(&tuple));
-                    }
-                    notification::Event::WebrtctransportDtlsStateChange => {
-                        let Ok(Some(notification::BodyRef::WebRtcTransportDtlsStateChangeNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let dtls_state = body.dtls_state().unwrap();
-
-                        *data.dtls_state.lock() = DtlsState::from_fbs(dtls_state);
-                        handlers.dtls_state_change.call(|callback| {
-                            callback(DtlsState::from_fbs(dtls_state));
-                        });
-                    }
-                    notification::Event::TransportSctpStateChange => {
-                        let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
-
-                        data.sctp_state.lock().replace(sctp_state);
-                        handlers.sctp_state_change.call(|callback| {
-                            callback(sctp_state);
-                        });
-                    }
-                    notification::Event::TransportTrace => {
-                        let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
-                            notification.body()
-                        else {
-                            panic!("Wrong message from worker: {notification:?}");
-                        };
-
-                        let trace_event_data =
-                            transport::TraceNotification::try_from(body).unwrap();
-                        handlers
-                            .trace
-                            .call_simple(&TransportTraceEventData::from_fbs(trace_event_data));
-                    }
-                    _ => unimplemented!(),
-                },
-            )
+                }
+            })
         };
 
         let next_mid_for_consumers = AtomicUsize::default();

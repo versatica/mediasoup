@@ -49,6 +49,14 @@ pub enum NotificationError {
     ChannelClosed,
 }
 
+/// Flabtuffers notification parse error.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum NotificationParseError {
+    /// Invalid event
+    #[error("Invalid event")]
+    InvalidEvent,
+}
+
 #[allow(clippy::type_complexity)]
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
