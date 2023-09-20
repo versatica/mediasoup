@@ -187,7 +187,7 @@ namespace RTC
 		// Others.
 		RTC::Media::Kind kind;
 		RTC::RtpParameters rtpParameters;
-		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
+		RTC::RtpParameters::Type type;
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::vector<uint8_t> rtpStreamScores;

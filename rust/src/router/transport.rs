@@ -4,8 +4,8 @@ use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, Da
 use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
 use crate::fbs::{response, transport};
 use crate::messages::{
-    TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequestFbs,
-    TransportEnableTraceEventRequest, TransportGetStatsRequestFbs, TransportProduceDataRequest,
+    TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
+    TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
     TransportProduceRequest, TransportSetMaxIncomingBitrateRequest,
     TransportSetMaxOutgoingBitrateRequest, TransportSetMinOutgoingBitrateRequest,
 };
@@ -443,13 +443,13 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     async fn dump_impl(&self) -> Result<response::Body, RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportDumpRequestFbs {})
+            .request_fbs(self.id(), TransportDumpRequest {})
             .await
     }
 
     async fn get_stats_impl(&self) -> Result<response::Body, RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportGetStatsRequestFbs {})
+            .request_fbs(self.id(), TransportGetStatsRequest {})
             .await
     }
 
@@ -548,7 +548,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(
+            .request_fbs(
                 self.id(),
                 TransportProduceRequest {
                     producer_id,

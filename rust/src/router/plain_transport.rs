@@ -6,7 +6,7 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, Da
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
 use crate::fbs::{notification, plain_transport, response, transport};
-use crate::messages::{PlainTransportData, TransportCloseRequestFbs, TransportConnectPlainRequest};
+use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
@@ -433,7 +433,7 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let router_id = self.router.id();
-                let request = TransportCloseRequestFbs {
+                let request = TransportCloseRequest {
                     transport_id: self.id,
                 };
 

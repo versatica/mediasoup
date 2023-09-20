@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
+use crate::fbs::{rtp_stream, rtx_stream};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
     ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerRequestKeyFrameRequest,
@@ -116,7 +117,7 @@ impl ConsumerOptions {
 pub struct RtpStreamParams {
     pub clock_rate: u32,
     pub cname: String,
-    pub encoding_idx: usize,
+    pub encoding_idx: u32,
     pub mime_type: MimeType,
     pub payload_type: u8,
     pub spatial_layers: u8,
@@ -127,10 +128,56 @@ pub struct RtpStreamParams {
     pub use_nack: bool,
     pub use_pli: bool,
     pub rid: Option<String>,
-    pub rtc_ssrc: Option<u32>,
-    pub rtc_payload_type: Option<u8>,
+    pub rtx_ssrc: Option<u32>,
+    pub rtx_payload_type: Option<u8>,
 }
 
+impl RtpStreamParams {
+    pub(crate) fn from_fbs(params: &rtp_stream::Params) -> Self {
+        Self {
+            clock_rate: params.clock_rate,
+            cname: params.cname.clone(),
+            encoding_idx: params.encoding_idx,
+            mime_type: params.mime_type.clone().parse().unwrap(),
+            payload_type: params.payload_type,
+            spatial_layers: params.spatial_layers,
+            ssrc: params.ssrc,
+            temporal_layers: params.temporal_layers,
+            use_dtx: params.use_dtx,
+            use_in_band_fec: params.use_in_band_fec,
+            use_nack: params.use_nack,
+            use_pli: params.use_pli,
+            rid: params.rid.clone(),
+            rtx_ssrc: params.rtx_ssrc,
+            rtx_payload_type: params.rtx_payload_type,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct RtxStreamParams {
+    pub clock_rate: u32,
+    pub cname: String,
+    pub mime_type: MimeType,
+    pub payload_type: u8,
+    pub ssrc: u32,
+    pub rrid: Option<String>,
+}
+
+impl RtxStreamParams {
+    pub(crate) fn from_fbs(params: &rtx_stream::Params) -> Self {
+        Self {
+            clock_rate: params.clock_rate,
+            cname: params.cname.clone(),
+            mime_type: params.mime_type.clone().parse().unwrap(),
+            payload_type: params.payload_type,
+            ssrc: params.ssrc,
+            rrid: params.rrid.clone(),
+        }
+    }
+}
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]

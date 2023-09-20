@@ -39,16 +39,18 @@ namespace RTC
 		// This may throw.
 		this->kind = RTC::Media::Kind(data->kind());
 
-		if (this->kind == RTC::Media::Kind::ALL)
-		{
-			MS_THROW_TYPE_ERROR("invalid empty kind");
-		}
-
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
 
 		// Evaluate type.
-		this->type = RTC::RtpParameters::GetType(this->rtpParameters);
+		auto type = RTC::RtpParameters::GetType(this->rtpParameters);
+
+		if (!type.has_value())
+		{
+			MS_THROW_TYPE_ERROR("invalid RTP parameters");
+		}
+
+		this->type = type.value();
 
 		// Reserve a slot in rtpStreamByEncodingIdx and rtpStreamsScores vectors
 		// for each RTP stream.
@@ -296,27 +298,27 @@ namespace RTC
 		}
 
 		// Add traceEventTypes.
-		std::vector<flatbuffers::Offset<flatbuffers::String>> traceEventTypes;
+		std::vector<FBS::Producer::TraceEventType> traceEventTypes;
 
 		if (this->traceEventTypes.rtp)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("rtp"));
+			traceEventTypes.emplace_back(FBS::Producer::TraceEventType::RTP);
 		}
 		if (this->traceEventTypes.keyframe)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("keyframe"));
+			traceEventTypes.emplace_back(FBS::Producer::TraceEventType::KEYFRAME);
 		}
 		if (this->traceEventTypes.nack)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("nack"));
+			traceEventTypes.emplace_back(FBS::Producer::TraceEventType::NACK);
 		}
 		if (this->traceEventTypes.pli)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("pli"));
+			traceEventTypes.emplace_back(FBS::Producer::TraceEventType::PLI);
 		}
 		if (this->traceEventTypes.fir)
 		{
-			traceEventTypes.emplace_back(builder.CreateString("fir"));
+			traceEventTypes.emplace_back(FBS::Producer::TraceEventType::FIR);
 		}
 
 		return FBS::Producer::CreateDumpResponseDirect(
@@ -324,7 +326,7 @@ namespace RTC
 		  this->id.c_str(),
 		  this->kind == RTC::Media::Kind::AUDIO ? FBS::RtpParameters::MediaKind::AUDIO
 		                                        : FBS::RtpParameters::MediaKind::VIDEO,
-		  RTC::RtpParameters::GetTypeString(this->type).c_str(),
+		  RTC::RtpParameters::TypeToFbs(this->type),
 		  rtpParameters,
 		  rtpMapping,
 		  &rtpStreams,
@@ -454,27 +456,38 @@ namespace RTC
 
 				for (const auto& type : *body->events())
 				{
-					const auto typeStr = type->str();
+					switch (type)
+					{
+						case FBS::Producer::TraceEventType::KEYFRAME:
+						{
+							newTraceEventTypes.keyframe = true;
 
-					if (typeStr == "rtp")
-					{
-						newTraceEventTypes.rtp = true;
-					}
-					else if (typeStr == "keyframe")
-					{
-						newTraceEventTypes.keyframe = true;
-					}
-					else if (typeStr == "nack")
-					{
-						newTraceEventTypes.nack = true;
-					}
-					else if (typeStr == "pli")
-					{
-						newTraceEventTypes.pli = true;
-					}
-					else if (typeStr == "fir")
-					{
-						newTraceEventTypes.fir = true;
+							break;
+						}
+						case FBS::Producer::TraceEventType::FIR:
+						{
+							newTraceEventTypes.fir = true;
+
+							break;
+						}
+						case FBS::Producer::TraceEventType::NACK:
+						{
+							newTraceEventTypes.nack = true;
+
+							break;
+						}
+						case FBS::Producer::TraceEventType::PLI:
+						{
+							newTraceEventTypes.pli = true;
+
+							break;
+						}
+						case FBS::Producer::TraceEventType::RTP:
+						{
+							newTraceEventTypes.rtp = true;
+
+							break;
+						}
 					}
 				}
 
@@ -1463,7 +1476,7 @@ namespace RTC
 
 			auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),
-			  FBS::Producer::TraceType::KEYFRAME,
+			  FBS::Producer::TraceEventType::KEYFRAME,
 			  DepLibUV::GetTimeMs(),
 			  FBS::Producer::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::KeyFrameTraceInfo,
@@ -1478,7 +1491,7 @@ namespace RTC
 
 			auto notification = FBS::Producer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),
-			  FBS::Producer::TraceType::RTP,
+			  FBS::Producer::TraceEventType::RTP,
 			  DepLibUV::GetTimeMs(),
 			  FBS::Producer::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::RtpTraceInfo,
@@ -1502,7 +1515,7 @@ namespace RTC
 
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
-		  FBS::Producer::TraceType::PLI,
+		  FBS::Producer::TraceEventType::PLI,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Producer::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::PliTraceInfo,
@@ -1525,7 +1538,7 @@ namespace RTC
 
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
-		  FBS::Producer::TraceType::FIR,
+		  FBS::Producer::TraceEventType::FIR,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Producer::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::FirTraceInfo,
@@ -1545,7 +1558,7 @@ namespace RTC
 
 		auto notification = FBS::Producer::CreateTraceNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(),
-		  FBS::Producer::TraceType::NACK,
+		  FBS::Producer::TraceEventType::NACK,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Producer::TraceDirection::DIRECTION_OUT);
 

@@ -1,3 +1,4 @@
+use crate::fbs::rtp_parameters;
 use crate::rtp_parameters::{
     MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
     RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
@@ -50,6 +51,59 @@ pub struct RtpMappingEncoding {
 pub struct RtpMapping {
     pub codecs: Vec<RtpMappingCodec>,
     pub encodings: Vec<RtpMappingEncoding>,
+}
+
+impl RtpMapping {
+    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpMapping {
+        rtp_parameters::RtpMapping {
+            codecs: self
+                .codecs
+                .iter()
+                .map(|mapping| rtp_parameters::CodecMapping {
+                    payload_type: mapping.payload_type,
+                    mapped_payload_type: mapping.mapped_payload_type,
+                })
+                .collect(),
+            encodings: self
+                .encodings
+                .iter()
+                .map(|mapping| rtp_parameters::EncodingMapping {
+                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
+                    ssrc: mapping.ssrc,
+                    scalability_mode: Some(mapping.scalability_mode.to_string()),
+                    mapped_ssrc: mapping.mapped_ssrc,
+                })
+                .collect(),
+        }
+    }
+
+    pub(crate) fn from_fbs(mapping: rtp_parameters::RtpMapping) -> Self {
+        Self {
+            codecs: mapping
+                .codecs
+                .iter()
+                .map(|mapping| RtpMappingCodec {
+                    payload_type: mapping.payload_type,
+                    mapped_payload_type: mapping.mapped_payload_type,
+                })
+                .collect(),
+            encodings: mapping
+                .encodings
+                .iter()
+                .map(|mapping| RtpMappingEncoding {
+                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
+                    ssrc: mapping.ssrc,
+                    scalability_mode: mapping
+                        .scalability_mode
+                        .clone()
+                        .unwrap_or(String::from("S1T1"))
+                        .parse()
+                        .unwrap(),
+                    mapped_ssrc: mapping.mapped_ssrc,
+                })
+                .collect(),
+        }
+    }
 }
 
 /// Error caused by invalid RTP parameters.

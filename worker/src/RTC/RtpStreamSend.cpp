@@ -51,11 +51,6 @@ namespace RTC
 
 					break;
 				}
-
-				default:
-				{
-					MS_ABORT("codec mimeType not set");
-				}
 			}
 
 			this->retransmissionBuffer = new RTC::RtpRetransmissionBuffer(

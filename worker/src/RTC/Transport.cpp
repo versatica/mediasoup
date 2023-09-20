@@ -763,13 +763,6 @@ namespace RTC
 
 				switch (type)
 				{
-					case RTC::RtpParameters::Type::NONE:
-					{
-						MS_THROW_TYPE_ERROR("invalid type 'none'");
-
-						break;
-					}
-
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.

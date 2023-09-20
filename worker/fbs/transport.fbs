@@ -32,7 +32,7 @@ table ProduceRequest {
     kind: FBS.RtpParameters.MediaKind;
     rtp_parameters: FBS.RtpParameters.RtpParameters (required);
     rtp_mapping: FBS.RtpParameters.RtpMapping (required);
-    key_frame_request_delay: uint16;
+    key_frame_request_delay: uint32;
     paused: bool = false;
 }
 

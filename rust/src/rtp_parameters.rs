@@ -204,11 +204,27 @@ pub enum MediaKind {
     Video,
 }
 
+impl MediaKind {
+    pub(crate) fn to_fbs(self) -> rtp_parameters::MediaKind {
+        match self {
+            MediaKind::Audio => rtp_parameters::MediaKind::Audio,
+            MediaKind::Video => rtp_parameters::MediaKind::Video,
+        }
+    }
+
+    pub(crate) fn from_fbs(kind: rtp_parameters::MediaKind) -> Self {
+        match kind {
+            rtp_parameters::MediaKind::Audio => MediaKind::Audio,
+            rtp_parameters::MediaKind::Video => MediaKind::Video,
+        }
+    }
+}
+
 /// Error that caused [`MimeType`] parsing error.
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ParseMimeTypeError {
-    /// Invalid input string
-    #[error("Invalid input string")]
+    /// Invalid MIME type input string
+    #[error("Invalid MIME type input string")]
     InvalidInput,
     /// Unknown MIME type
     #[error("Unknown MIME type")]
@@ -817,7 +833,7 @@ impl RtpParameters {
                         .map(|rtcp_feedback| {
                             RtcpFeedback::from_type_parameter(
                                 &rtcp_feedback.type_,
-                                &rtcp_feedback.parameter,
+                                &rtcp_feedback.parameter.unwrap_or_default(),
                             )
                         })
                         .collect::<Result<_, _>>()?;
@@ -867,7 +883,10 @@ impl RtpParameters {
                             .rtx
                             .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
                         dtx: Some(encoding.dtx),
-                        scalability_mode: encoding.scalability_mode.unwrap_or_default().parse()?,
+                        scalability_mode: encoding
+                            .scalability_mode
+                            .unwrap_or(String::from("S1T1"))
+                            .parse()?,
                         max_bitrate: encoding.max_bitrate,
                     })
                 })
@@ -928,7 +947,7 @@ impl RtpParameters {
                                     let (r#type, parameter) = rtcp_feedback.as_type_parameter();
                                     rtp_parameters::RtcpFeedback {
                                         type_: r#type.to_string(),
-                                        parameter: parameter.to_string(),
+                                        parameter: Some(parameter.to_string()),
                                     }
                                 })
                                 .collect(),

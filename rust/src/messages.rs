@@ -12,15 +12,13 @@ use crate::data_structures::{
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{
-    direct_transport, message, pipe_transport, plain_transport, request, response, router,
-    transport, web_rtc_transport, worker,
+    direct_transport, message, pipe_transport, plain_transport, producer, request, response,
+    router, transport, web_rtc_transport, worker,
 };
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
-use crate::producer::{
-    ProducerDump, ProducerId, ProducerStat, ProducerTraceEventType, ProducerType,
-};
+use crate::producer::{ProducerId, ProducerTraceEventType, ProducerType};
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
@@ -39,7 +37,6 @@ use parking_lot::Mutex;
 use planus::Builder;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::net::IpAddr;
@@ -1232,27 +1229,10 @@ request_response!(
     },
 );
 
-request_response!(
-    RouterId,
-    "router.closeTransport",
-    TransportCloseRequest {
-        transport_id: TransportId,
-    },
-    (),
-    Some(()),
-);
-
-request_response!(
-    TransportId,
-    "transport.dump",
-    TransportDumpRequest {},
-    Value,
-);
-
 #[derive(Debug)]
-pub(crate) struct TransportDumpRequestFbs {}
+pub(crate) struct TransportDumpRequest {}
 
-impl RequestFbs for TransportDumpRequestFbs {
+impl RequestFbs for TransportDumpRequest {
     const METHOD: request::Method = request::Method::TransportDump;
     type HandlerId = TransportId;
     type Response = response::Body;
@@ -1284,17 +1264,10 @@ impl RequestFbs for TransportDumpRequestFbs {
         }
     }
 }
-request_response!(
-    TransportId,
-    "transport.getStats",
-    TransportGetStatsRequest {},
-    Value,
-);
-
 #[derive(Debug)]
-pub(crate) struct TransportGetStatsRequestFbs {}
+pub(crate) struct TransportGetStatsRequest {}
 
-impl RequestFbs for TransportGetStatsRequestFbs {
+impl RequestFbs for TransportGetStatsRequest {
     const METHOD: request::Method = request::Method::TransportGetStats;
     type HandlerId = TransportId;
     type Response = response::Body;
@@ -1328,11 +1301,11 @@ impl RequestFbs for TransportGetStatsRequestFbs {
 }
 
 #[derive(Debug)]
-pub(crate) struct TransportCloseRequestFbs {
+pub(crate) struct TransportCloseRequest {
     pub(crate) transport_id: TransportId,
 }
 
-impl RequestFbs for TransportCloseRequestFbs {
+impl RequestFbs for TransportCloseRequest {
     const METHOD: request::Method = request::Method::RouterCloseTransport;
     type HandlerId = RouterId;
     type Response = ();
@@ -1670,21 +1643,64 @@ impl RequestFbs for TransportRestartIceRequest {
         }))
     }
 }
-request_response!(
-    TransportId,
-    "transport.produce",
-    TransportProduceRequest {
-        producer_id: ProducerId,
-        kind: MediaKind,
-        rtp_parameters: RtpParameters,
-        rtp_mapping: RtpMapping,
-        key_frame_request_delay: u32,
-        paused: bool,
-    },
-    TransportProduceResponse {
-        r#type: ProducerType,
-    },
-);
+
+#[derive(Debug)]
+pub(crate) struct TransportProduceRequest {
+    pub(crate) producer_id: ProducerId,
+    pub(crate) kind: MediaKind,
+    pub(crate) rtp_parameters: RtpParameters,
+    pub(crate) rtp_mapping: RtpMapping,
+    pub(crate) key_frame_request_delay: u32,
+    pub(crate) paused: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct TransportProduceResponse {
+    pub(crate) r#type: ProducerType,
+}
+
+impl RequestFbs for TransportProduceRequest {
+    const METHOD: request::Method = request::Method::TransportProduce;
+    type HandlerId = TransportId;
+    type Response = TransportProduceResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data = transport::ProduceRequest::create(
+            &mut builder,
+            self.producer_id.to_string(),
+            self.kind.to_fbs(),
+            Box::new(self.rtp_parameters.into_fbs()),
+            Box::new(self.rtp_mapping.to_fbs()),
+            self.key_frame_request_delay,
+            self.paused,
+        );
+        let request_body = request::Body::create_transport_produce_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::TransportProduceResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(TransportProduceResponse {
+            r#type: ProducerType::from_fbs(data.type_),
+        })
+    }
+}
 
 request_response!(
     TransportId,
@@ -1810,42 +1826,222 @@ impl Notification for TransportSendRtcpNotification {
     }
 }
 
-request_response!(
-    TransportId,
-    "transport.closeProducer",
-    ProducerCloseRequest {
-        producer_id: ProducerId,
-    },
-    (),
-    Some(()),
-);
+#[derive(Debug)]
+pub(crate) struct ProducerCloseRequest {
+    pub(crate) producer_id: ProducerId,
+}
 
-request_response!(
-    ProducerId,
-    "producer.dump",
-    ProducerDumpRequest {},
-    ProducerDump
-);
+impl RequestFbs for ProducerCloseRequest {
+    const METHOD: request::Method = request::Method::TransportCloseProducer;
+    type HandlerId = TransportId;
+    type Response = ();
 
-request_response!(
-    ProducerId,
-    "producer.getStats",
-    ProducerGetStatsRequest {},
-    Vec<ProducerStat>,
-);
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data =
+            transport::CloseProducerRequest::create(&mut builder, self.producer_id.to_string());
+        let request_body =
+            request::Body::create_transport_close_producer_request(&mut builder, data);
 
-request_response!(ProducerId, "producer.pause", ProducerPauseRequest {});
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
 
-request_response!(ProducerId, "producer.resume", ProducerResumeRequest {});
+        builder.finish(message, None).to_vec()
+    }
 
-request_response!(
-    ProducerId,
-    "producer.enableTraceEvent",
-    ProducerEnableTraceEventRequest {
-        types: Vec<ProducerTraceEventType>,
-    },
-);
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
 
+#[derive(Debug)]
+pub(crate) struct ProducerDumpRequest {}
+
+impl RequestFbs for ProducerDumpRequest {
+    const METHOD: request::Method = request::Method::ProducerDump;
+    type HandlerId = ProducerId;
+    type Response = response::Body;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        match response {
+            Some(data) => Ok(data),
+            _ => {
+                panic!("Wrong message from worker: {response:?}");
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct ProducerGetStatsRequest {}
+
+impl RequestFbs for ProducerGetStatsRequest {
+    const METHOD: request::Method = request::Method::ProducerGetStats;
+    type HandlerId = ProducerId;
+    type Response = response::Body;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        match response {
+            Some(data) => Ok(data),
+            _ => {
+                panic!("Wrong message from worker: {response:?}");
+            }
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct ProducerPauseRequest {}
+
+impl RequestFbs for ProducerPauseRequest {
+    const METHOD: request::Method = request::Method::ProducerPause;
+    type HandlerId = ProducerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct ProducerResumeRequest {}
+
+impl RequestFbs for ProducerResumeRequest {
+    const METHOD: request::Method = request::Method::ProducerResume;
+    type HandlerId = ProducerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct ProducerEnableTraceEventRequest {
+    pub(crate) types: Vec<ProducerTraceEventType>,
+}
+
+impl RequestFbs for ProducerEnableTraceEventRequest {
+    const METHOD: request::Method = request::Method::ProducerEnableTraceEvent;
+    type HandlerId = ProducerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = producer::EnableTraceEventRequest {
+            events: self
+                .types
+                .into_iter()
+                .map(ProducerTraceEventType::to_fbs)
+                .collect(),
+        };
+
+        let request_body = request::Body::ProducerEnableTraceEventRequest(Box::new(data));
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+
+    fn default_for_soft_error() -> Option<Self::Response> {
+        None
+    }
+}
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ProducerSendNotification {}

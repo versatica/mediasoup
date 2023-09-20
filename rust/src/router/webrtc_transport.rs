@@ -10,7 +10,7 @@ use crate::data_structures::{
 };
 use crate::fbs::{notification, response, transport, web_rtc_transport};
 use crate::messages::{
-    TransportCloseRequestFbs, TransportRestartIceRequest, WebRtcTransportConnectRequest,
+    TransportCloseRequest, TransportRestartIceRequest, WebRtcTransportConnectRequest,
     WebRtcTransportData,
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
@@ -519,7 +519,7 @@ impl Inner {
             if close_request {
                 let channel = self.channel.clone();
                 let router_id = self.router.id();
-                let request = TransportCloseRequestFbs {
+                let request = TransportCloseRequest {
                     transport_id: self.id,
                 };
 
