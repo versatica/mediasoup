@@ -55,6 +55,7 @@ union Body {
     DataProducer_SendNotification: FBS.DataProducer.SendNotification,
 
     // Notifications from worker.
+    PlainTransport: FBS.PlainTransport.NotificationWrapper,
     Transport_TraceNotification: FBS.Transport.TraceNotification,
     WebRtcTransport_IceSelectedTupleChangeNotification: FBS.WebRtcTransport.IceSelectedTupleChangeNotification,
     WebRtcTransport_IceStateChangeNotification: FBS.WebRtcTransport.IceStateChangeNotification,

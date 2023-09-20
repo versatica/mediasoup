@@ -5,7 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
-use crate::fbs::{notification, plain_transport, response, transport};
+use crate::fbs::{notification, plain_transport, response};
 use crate::messages::{PlainTransportData, TransportCloseRequestFbs, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -342,57 +342,29 @@ enum Notification {
 
 impl Notification {
     pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
+        notification: plain_transport::Notification,
     ) -> Result<Self, NotificationParseError> {
-        match notification.event().unwrap() {
-            notification::Event::PlaintransportTuple => {
-                let Ok(Some(notification::BodyRef::PlainTransportTupleNotification(body))) =
-                    notification.body()
-                else {
-                    panic!("Wrong message from worker: {notification:?}");
-                };
-
-                let tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-                let tuple = TransportTuple::from_fbs(&tuple_fbs);
+        match notification {
+            plain_transport::Notification::Tuple(notification) => {
+                let tuple = TransportTuple::from_fbs(&notification.tuple);
 
                 Ok(Notification::Tuple { tuple })
             }
-            notification::Event::PlaintransportRtcpTuple => {
-                let Ok(Some(notification::BodyRef::PlainTransportRtcpTupleNotification(body))) =
-                    notification.body()
-                else {
-                    panic!("Wrong message from worker: {notification:?}");
-                };
-
-                let rtcp_tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-                let rtcp_tuple = TransportTuple::from_fbs(&rtcp_tuple_fbs);
+            plain_transport::Notification::RtcpTuple(notification) => {
+                let rtcp_tuple = TransportTuple::from_fbs(&notification.tuple);
 
                 Ok(Notification::RtcpTuple { rtcp_tuple })
             }
-            notification::Event::TransportSctpStateChange => {
-                let Ok(Some(notification::BodyRef::TransportSctpStateChangeNotification(body))) =
-                    notification.body()
-                else {
-                    panic!("Wrong message from worker: {notification:?}");
-                };
-
-                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+            plain_transport::Notification::SctpStateChange(notification) => {
+                let sctp_state = SctpState::from_fbs(&notification.sctp_state);
 
                 Ok(Notification::SctpStateChange { sctp_state })
             }
-            notification::Event::TransportTrace => {
-                let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
-                    notification.body()
-                else {
-                    panic!("Wrong message from worker: {notification:?}");
-                };
-
-                let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
-                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+            plain_transport::Notification::Trace(notification) => {
+                let trace_notification = TransportTraceEventData::from_fbs(*notification);
 
                 Ok(Notification::Trace(trace_notification))
             }
-            _ => Err(NotificationParseError::InvalidEvent),
         }
     }
 }
@@ -683,6 +655,19 @@ impl PlainTransport {
             let data = Arc::clone(&data);
 
             channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                let Ok(Some(notification::BodyRef::PlainTransport(notification_wrapper))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                // Get the Notification instance.
+                let notification = notification_wrapper
+                    .notification()
+                    .unwrap()
+                    .try_into()
+                    .unwrap();
+
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Tuple { tuple } => {

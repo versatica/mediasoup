@@ -46,6 +46,17 @@ table GetStatsResponse {
 
 // Notifications from Worker.
 
+union Notification {
+   Tuple: TupleNotification,
+   RtcpTuple: RtcpTupleNotification,
+   SctpStateChange: FBS.Transport.SctpStateChangeNotification,
+   Trace: FBS.Transport.TraceNotification,
+}
+
+table NotificationWrapper {
+    notification: FBS.PlainTransport.Notification (required);
+}
+
 table TupleNotification {
     tuple: FBS.Transport.Tuple (required);
 }
