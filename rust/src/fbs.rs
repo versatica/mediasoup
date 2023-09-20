@@ -49672,6 +49672,11 @@ mod root {
                     ::planus::alloc::boxed::Box<super::data_producer::SendNotification>,
                 ),
 
+                /// The variant `PlainTransport` in the union `Body`
+                PlainTransport(
+                    ::planus::alloc::boxed::Box<super::plain_transport::NotificationWrapper>,
+                ),
+
                 /// The variant `Transport_TraceNotification` in the union `Body`
                 TransportTraceNotification(
                     ::planus::alloc::boxed::Box<super::transport::TraceNotification>,
@@ -49815,11 +49820,19 @@ mod root {
                 }
 
                 #[inline]
+                pub fn create_plain_transport(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::plain_transport::NotificationWrapper>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(5, value.prepare(builder).downcast())
+                }
+
+                #[inline]
                 pub fn create_transport_trace_notification(
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::transport::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(5, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(6, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49829,7 +49842,7 @@ mod root {
                         super::web_rtc_transport::IceSelectedTupleChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(6, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(7, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49839,7 +49852,7 @@ mod root {
                         super::web_rtc_transport::IceStateChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(7, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(8, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49849,7 +49862,7 @@ mod root {
                         super::web_rtc_transport::DtlsStateChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(8, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(9, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49857,7 +49870,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(9, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(10, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49865,7 +49878,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(10, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(11, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49873,7 +49886,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(11, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49881,7 +49894,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::producer::ScoreNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(12, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49889,7 +49902,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::producer::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(13, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(14, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49899,7 +49912,7 @@ mod root {
                         super::producer::VideoOrientationChangeNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(14, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49907,7 +49920,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(15, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49915,7 +49928,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::RtpNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(16, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49923,7 +49936,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(17, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49931,7 +49944,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::consumer::TraceNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(18, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49939,7 +49952,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     value: impl ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(19, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49949,7 +49962,7 @@ mod root {
                         super::data_consumer::BufferedAmountLowNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(20, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49959,7 +49972,7 @@ mod root {
                         super::active_speaker_observer::DominantSpeakerNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(21, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(22, value.prepare(builder).downcast())
                 }
 
                 #[inline]
@@ -49969,7 +49982,7 @@ mod root {
                         super::audio_level_observer::VolumesNotification,
                     >,
                 ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(22, value.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(23, value.prepare(builder).downcast())
                 }
             }
 
@@ -49989,6 +50002,7 @@ mod root {
                         Self::DataProducerSendNotification(value) => {
                             Self::create_data_producer_send_notification(builder, value)
                         }
+                        Self::PlainTransport(value) => Self::create_plain_transport(builder, value),
                         Self::TransportTraceNotification(value) => {
                             Self::create_transport_trace_notification(builder, value)
                         }
@@ -50125,12 +50139,24 @@ mod root {
                     BodyBuilder(::planus::Initialized(value))
                 }
 
+                /// Creates an instance of the [`PlainTransport` variant](Body#variant.PlainTransport).
+                #[inline]
+                pub fn plain_transport<T>(
+                    self,
+                    value: T,
+                ) -> BodyBuilder<::planus::Initialized<5, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::plain_transport::NotificationWrapper>,
+                {
+                    BodyBuilder(::planus::Initialized(value))
+                }
+
                 /// Creates an instance of the [`Transport_TraceNotification` variant](Body#variant.TransportTraceNotification).
                 #[inline]
                 pub fn transport_trace_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<5, T>>
+                ) -> BodyBuilder<::planus::Initialized<6, T>>
                 where
                     T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
                 {
@@ -50142,7 +50168,7 @@ mod root {
                 pub fn web_rtc_transport_ice_selected_tuple_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<6, T>>
+                ) -> BodyBuilder<::planus::Initialized<7, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::web_rtc_transport::IceSelectedTupleChangeNotification,
@@ -50156,7 +50182,7 @@ mod root {
                 pub fn web_rtc_transport_ice_state_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<7, T>>
+                ) -> BodyBuilder<::planus::Initialized<8, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::web_rtc_transport::IceStateChangeNotification,
@@ -50170,7 +50196,7 @@ mod root {
                 pub fn web_rtc_transport_dtls_state_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<8, T>>
+                ) -> BodyBuilder<::planus::Initialized<9, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::web_rtc_transport::DtlsStateChangeNotification,
@@ -50184,7 +50210,7 @@ mod root {
                 pub fn plain_transport_tuple_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<9, T>>
+                ) -> BodyBuilder<::planus::Initialized<10, T>>
                 where
                     T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
                 {
@@ -50196,7 +50222,7 @@ mod root {
                 pub fn plain_transport_rtcp_tuple_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<10, T>>
+                ) -> BodyBuilder<::planus::Initialized<11, T>>
                 where
                     T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
                 {
@@ -50208,7 +50234,7 @@ mod root {
                 pub fn direct_transport_rtcp_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<11, T>>
+                ) -> BodyBuilder<::planus::Initialized<12, T>>
                 where
                     T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
                 {
@@ -50220,7 +50246,7 @@ mod root {
                 pub fn producer_score_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<12, T>>
+                ) -> BodyBuilder<::planus::Initialized<13, T>>
                 where
                     T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
                 {
@@ -50232,7 +50258,7 @@ mod root {
                 pub fn producer_trace_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<13, T>>
+                ) -> BodyBuilder<::planus::Initialized<14, T>>
                 where
                     T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
                 {
@@ -50244,7 +50270,7 @@ mod root {
                 pub fn producer_video_orientation_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<14, T>>
+                ) -> BodyBuilder<::planus::Initialized<15, T>>
                 where
                     T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
                 {
@@ -50256,7 +50282,7 @@ mod root {
                 pub fn consumer_layers_change_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<15, T>>
+                ) -> BodyBuilder<::planus::Initialized<16, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
                 {
@@ -50268,7 +50294,7 @@ mod root {
                 pub fn consumer_rtp_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<16, T>>
+                ) -> BodyBuilder<::planus::Initialized<17, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
                 {
@@ -50280,7 +50306,7 @@ mod root {
                 pub fn consumer_score_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<17, T>>
+                ) -> BodyBuilder<::planus::Initialized<18, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
                 {
@@ -50292,7 +50318,7 @@ mod root {
                 pub fn consumer_trace_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<18, T>>
+                ) -> BodyBuilder<::planus::Initialized<19, T>>
                 where
                     T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
                 {
@@ -50304,7 +50330,7 @@ mod root {
                 pub fn data_consumer_message_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<19, T>>
+                ) -> BodyBuilder<::planus::Initialized<20, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
                 {
@@ -50316,7 +50342,7 @@ mod root {
                 pub fn data_consumer_buffered_amount_low_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<20, T>>
+                ) -> BodyBuilder<::planus::Initialized<21, T>>
                 where
                     T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
                 {
@@ -50328,7 +50354,7 @@ mod root {
                 pub fn active_speaker_observer_dominant_speaker_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<21, T>>
+                ) -> BodyBuilder<::planus::Initialized<22, T>>
                 where
                     T: ::planus::WriteAsOffset<
                         super::active_speaker_observer::DominantSpeakerNotification,
@@ -50342,7 +50368,7 @@ mod root {
                 pub fn audio_level_observer_volumes_notification<T>(
                     self,
                     value: T,
-                ) -> BodyBuilder<::planus::Initialized<22, T>>
+                ) -> BodyBuilder<::planus::Initialized<23, T>>
                 where
                     T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
                 {
@@ -50451,7 +50477,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<5, T>>
             where
-                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::NotificationWrapper>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50461,7 +50487,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<5, T>>
             where
-                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::NotificationWrapper>,
             {
                 #[inline]
                 fn prepare(
@@ -50473,9 +50499,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<6, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50485,9 +50509,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<6, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50499,7 +50521,9 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<7, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
+                T: ::planus::WriteAsOffset<
+                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
+                >,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50509,7 +50533,9 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<7, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
+                T: ::planus::WriteAsOffset<
+                    super::web_rtc_transport::IceSelectedTupleChangeNotification,
+                >,
             {
                 #[inline]
                 fn prepare(
@@ -50521,7 +50547,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<8, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50531,7 +50557,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<8, T>>
             where
-                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::IceStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50543,7 +50569,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<9, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50553,7 +50579,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<9, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
+                T: ::planus::WriteAsOffset<super::web_rtc_transport::DtlsStateChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50565,7 +50591,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<10, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50575,7 +50601,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<10, T>>
             where
-                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::TupleNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50587,7 +50613,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<11, T>>
             where
-                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50597,7 +50623,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<11, T>>
             where
-                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
+                T: ::planus::WriteAsOffset<super::plain_transport::RtcpTupleNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50609,7 +50635,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<12, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
+                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50619,7 +50645,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<12, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
+                T: ::planus::WriteAsOffset<super::direct_transport::RtcpNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50631,7 +50657,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<13, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50641,7 +50667,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<13, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::producer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50653,7 +50679,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<14, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50663,7 +50689,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<14, T>>
             where
-                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50675,7 +50701,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<15, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50685,7 +50711,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<15, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
+                T: ::planus::WriteAsOffset<super::producer::VideoOrientationChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50697,7 +50723,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<16, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50707,7 +50733,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<16, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::LayersChangeNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50719,7 +50745,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<17, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50729,7 +50755,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<17, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::RtpNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50741,7 +50767,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50751,7 +50777,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<18, T>>
             where
-                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::ScoreNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50763,7 +50789,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<19, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50773,7 +50799,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<19, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
+                T: ::planus::WriteAsOffset<super::consumer::TraceNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50785,7 +50811,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50795,7 +50821,7 @@ mod root {
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<20, T>>
             where
-                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+                T: ::planus::WriteAsOffset<super::data_consumer::MessageNotification>,
             {
                 #[inline]
                 fn prepare(
@@ -50807,9 +50833,7 @@ mod root {
             }
             impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<21, T>>
             where
-                T: ::planus::WriteAsOffset<
-                    super::active_speaker_observer::DominantSpeakerNotification,
-                >,
+                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
@@ -50818,6 +50842,30 @@ mod root {
             }
 
             impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<21, T>>
+            where
+                T: ::planus::WriteAsOffset<super::data_consumer::BufferedAmountLowNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Body>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<22, T>>
+            where
+                T: ::planus::WriteAsOffset<
+                    super::active_speaker_observer::DominantSpeakerNotification,
+                >,
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
+                    ::planus::UnionOffset::new(22, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<22, T>>
             where
                 T: ::planus::WriteAsOffset<
                     super::active_speaker_observer::DominantSpeakerNotification,
@@ -50831,17 +50879,17 @@ mod root {
                     ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
                 }
             }
-            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<22, T>>
+            impl<T> ::planus::WriteAsUnion<Body> for BodyBuilder<::planus::Initialized<23, T>>
             where
                 T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Body> {
-                    ::planus::UnionOffset::new(22, (self.0).0.prepare(builder).downcast())
+                    ::planus::UnionOffset::new(23, (self.0).0.prepare(builder).downcast())
                 }
             }
 
-            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<22, T>>
+            impl<T> ::planus::WriteAsOptionalUnion<Body> for BodyBuilder<::planus::Initialized<23, T>>
             where
                 T: ::planus::WriteAsOffset<super::audio_level_observer::VolumesNotification>,
             {
@@ -50863,6 +50911,7 @@ mod root {
                 ),
                 ProducerSendNotification(super::producer::SendNotificationRef<'a>),
                 DataProducerSendNotification(super::data_producer::SendNotificationRef<'a>),
+                PlainTransport(super::plain_transport::NotificationWrapperRef<'a>),
                 TransportTraceNotification(super::transport::TraceNotificationRef<'a>),
                 WebRtcTransportIceSelectedTupleChangeNotification(
                     super::web_rtc_transport::IceSelectedTupleChangeNotificationRef<'a>,
@@ -50926,6 +50975,12 @@ mod root {
 
                         BodyRef::DataProducerSendNotification(value) => {
                             Self::DataProducerSendNotification(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        BodyRef::PlainTransport(value) => {
+                            Self::PlainTransport(::planus::alloc::boxed::Box::new(
                                 ::core::convert::TryFrom::try_from(value)?,
                             ))
                         }
@@ -51080,72 +51135,75 @@ mod root {
                         4 => ::core::result::Result::Ok(Self::DataProducerSendNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        5 => ::core::result::Result::Ok(Self::TransportTraceNotification(
+                        5 => ::core::result::Result::Ok(Self::PlainTransport(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        6 => ::core::result::Result::Ok(
+                        6 => ::core::result::Result::Ok(Self::TransportTraceNotification(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        7 => ::core::result::Result::Ok(
                             Self::WebRtcTransportIceSelectedTupleChangeNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ),
                         ),
-                        7 => ::core::result::Result::Ok(
+                        8 => ::core::result::Result::Ok(
                             Self::WebRtcTransportIceStateChangeNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ),
                         ),
-                        8 => ::core::result::Result::Ok(
+                        9 => ::core::result::Result::Ok(
                             Self::WebRtcTransportDtlsStateChangeNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ),
                         ),
-                        9 => ::core::result::Result::Ok(Self::PlainTransportTupleNotification(
+                        10 => ::core::result::Result::Ok(Self::PlainTransportTupleNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        10 => {
+                        11 => {
                             ::core::result::Result::Ok(Self::PlainTransportRtcpTupleNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
                         }
-                        11 => ::core::result::Result::Ok(Self::DirectTransportRtcpNotification(
+                        12 => ::core::result::Result::Ok(Self::DirectTransportRtcpNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        12 => ::core::result::Result::Ok(Self::ProducerScoreNotification(
+                        13 => ::core::result::Result::Ok(Self::ProducerScoreNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        13 => ::core::result::Result::Ok(Self::ProducerTraceNotification(
+                        14 => ::core::result::Result::Ok(Self::ProducerTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        14 => ::core::result::Result::Ok(
+                        15 => ::core::result::Result::Ok(
                             Self::ProducerVideoOrientationChangeNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ),
                         ),
-                        15 => ::core::result::Result::Ok(Self::ConsumerLayersChangeNotification(
+                        16 => ::core::result::Result::Ok(Self::ConsumerLayersChangeNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        16 => ::core::result::Result::Ok(Self::ConsumerRtpNotification(
+                        17 => ::core::result::Result::Ok(Self::ConsumerRtpNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        17 => ::core::result::Result::Ok(Self::ConsumerScoreNotification(
+                        18 => ::core::result::Result::Ok(Self::ConsumerScoreNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        18 => ::core::result::Result::Ok(Self::ConsumerTraceNotification(
+                        19 => ::core::result::Result::Ok(Self::ConsumerTraceNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        19 => ::core::result::Result::Ok(Self::DataConsumerMessageNotification(
+                        20 => ::core::result::Result::Ok(Self::DataConsumerMessageNotification(
                             ::planus::TableRead::from_buffer(buffer, field_offset)?,
                         )),
-                        20 => ::core::result::Result::Ok(
+                        21 => ::core::result::Result::Ok(
                             Self::DataConsumerBufferedAmountLowNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ),
                         ),
-                        21 => ::core::result::Result::Ok(
+                        22 => ::core::result::Result::Ok(
                             Self::ActiveSpeakerObserverDominantSpeakerNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ),
                         ),
-                        22 => {
+                        23 => {
                             ::core::result::Result::Ok(Self::AudioLevelObserverVolumesNotification(
                                 ::planus::TableRead::from_buffer(buffer, field_offset)?,
                             ))
@@ -51160,7 +51218,7 @@ mod root {
             /// The table `Notification` in the namespace `FBS.Notification`
             ///
             /// Generated from these locations:
-            /// * Table `Notification` in the file `../worker/fbs/notification.fbs:78`
+            /// * Table `Notification` in the file `../worker/fbs/notification.fbs:79`
             #[derive(
                 Clone,
                 Debug,
@@ -74436,10 +74494,607 @@ mod root {
                 }
             }
 
+            /// The union `Notification` in the namespace `FBS.PlainTransport`
+            ///
+            /// Generated from these locations:
+            /// * Union `Notification` in the file `../worker/fbs/plainTransport.fbs:49`
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub enum Notification {
+                /// The variant `Tuple` in the union `Notification`
+                Tuple(::planus::alloc::boxed::Box<self::TupleNotification>),
+
+                /// The variant `RtcpTuple` in the union `Notification`
+                RtcpTuple(::planus::alloc::boxed::Box<self::RtcpTupleNotification>),
+
+                /// The variant `SctpStateChange` in the union `Notification`
+                SctpStateChange(
+                    ::planus::alloc::boxed::Box<super::transport::SctpStateChangeNotification>,
+                ),
+
+                /// The variant `Trace` in the union `Notification`
+                Trace(::planus::alloc::boxed::Box<super::transport::TraceNotification>),
+            }
+
+            impl Notification {
+                /// Creates a [NotificationBuilder] for serializing an instance of this table.
+                #[inline]
+                pub fn builder() -> NotificationBuilder<::planus::Uninitialized> {
+                    NotificationBuilder(::planus::Uninitialized)
+                }
+
+                #[inline]
+                pub fn create_tuple(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<self::TupleNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(1, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_rtcp_tuple(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<self::RtcpTupleNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(2, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_sctp_state_change(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::transport::SctpStateChangeNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(3, value.prepare(builder).downcast())
+                }
+
+                #[inline]
+                pub fn create_trace(
+                    builder: &mut ::planus::Builder,
+                    value: impl ::planus::WriteAsOffset<super::transport::TraceNotification>,
+                ) -> ::planus::UnionOffset<Self> {
+                    ::planus::UnionOffset::new(4, value.prepare(builder).downcast())
+                }
+            }
+
+            impl ::planus::WriteAsUnion<Notification> for Notification {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
+                    match self {
+                        Self::Tuple(value) => Self::create_tuple(builder, value),
+                        Self::RtcpTuple(value) => Self::create_rtcp_tuple(builder, value),
+                        Self::SctpStateChange(value) => {
+                            Self::create_sctp_state_change(builder, value)
+                        }
+                        Self::Trace(value) => Self::create_trace(builder, value),
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptionalUnion<Notification> for Notification {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Self>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+
+            /// Builder for serializing an instance of the [Notification] type.
+            ///
+            /// Can be created using the [Notification::builder] method.
+            #[derive(Debug)]
+            #[must_use]
+            pub struct NotificationBuilder<T>(T);
+
+            impl NotificationBuilder<::planus::Uninitialized> {
+                /// Creates an instance of the [`Tuple` variant](Notification#variant.Tuple).
+                #[inline]
+                pub fn tuple<T>(self, value: T) -> NotificationBuilder<::planus::Initialized<1, T>>
+                where
+                    T: ::planus::WriteAsOffset<self::TupleNotification>,
+                {
+                    NotificationBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`RtcpTuple` variant](Notification#variant.RtcpTuple).
+                #[inline]
+                pub fn rtcp_tuple<T>(
+                    self,
+                    value: T,
+                ) -> NotificationBuilder<::planus::Initialized<2, T>>
+                where
+                    T: ::planus::WriteAsOffset<self::RtcpTupleNotification>,
+                {
+                    NotificationBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`SctpStateChange` variant](Notification#variant.SctpStateChange).
+                #[inline]
+                pub fn sctp_state_change<T>(
+                    self,
+                    value: T,
+                ) -> NotificationBuilder<::planus::Initialized<3, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::transport::SctpStateChangeNotification>,
+                {
+                    NotificationBuilder(::planus::Initialized(value))
+                }
+
+                /// Creates an instance of the [`Trace` variant](Notification#variant.Trace).
+                #[inline]
+                pub fn trace<T>(self, value: T) -> NotificationBuilder<::planus::Initialized<4, T>>
+                where
+                    T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+                {
+                    NotificationBuilder(::planus::Initialized(value))
+                }
+            }
+
+            impl<const N: u8, T> NotificationBuilder<::planus::Initialized<N, T>> {
+                /// Finish writing the builder to get an [UnionOffset](::planus::UnionOffset) to a serialized [Notification].
+                #[inline]
+                pub fn finish(
+                    self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::UnionOffset<Notification>
+                where
+                    Self: ::planus::WriteAsUnion<Notification>,
+                {
+                    ::planus::WriteAsUnion::prepare(&self, builder)
+                }
+            }
+
+            impl<T> ::planus::WriteAsUnion<Notification> for NotificationBuilder<::planus::Initialized<1, T>>
+            where
+                T: ::planus::WriteAsOffset<self::TupleNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::UnionOffset<Notification> {
+                    ::planus::UnionOffset::new(1, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Notification>
+                for NotificationBuilder<::planus::Initialized<1, T>>
+            where
+                T: ::planus::WriteAsOffset<self::TupleNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Notification>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Notification> for NotificationBuilder<::planus::Initialized<2, T>>
+            where
+                T: ::planus::WriteAsOffset<self::RtcpTupleNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::UnionOffset<Notification> {
+                    ::planus::UnionOffset::new(2, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Notification>
+                for NotificationBuilder<::planus::Initialized<2, T>>
+            where
+                T: ::planus::WriteAsOffset<self::RtcpTupleNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Notification>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Notification> for NotificationBuilder<::planus::Initialized<3, T>>
+            where
+                T: ::planus::WriteAsOffset<super::transport::SctpStateChangeNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::UnionOffset<Notification> {
+                    ::planus::UnionOffset::new(3, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Notification>
+                for NotificationBuilder<::planus::Initialized<3, T>>
+            where
+                T: ::planus::WriteAsOffset<super::transport::SctpStateChangeNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Notification>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+            impl<T> ::planus::WriteAsUnion<Notification> for NotificationBuilder<::planus::Initialized<4, T>>
+            where
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::UnionOffset<Notification> {
+                    ::planus::UnionOffset::new(4, (self.0).0.prepare(builder).downcast())
+                }
+            }
+
+            impl<T> ::planus::WriteAsOptionalUnion<Notification>
+                for NotificationBuilder<::planus::Initialized<4, T>>
+            where
+                T: ::planus::WriteAsOffset<super::transport::TraceNotification>,
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::UnionOffset<Notification>> {
+                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
+                }
+            }
+
+            /// Reference to a deserialized [Notification].
+            #[derive(Copy, Clone, Debug)]
+            pub enum NotificationRef<'a> {
+                Tuple(self::TupleNotificationRef<'a>),
+                RtcpTuple(self::RtcpTupleNotificationRef<'a>),
+                SctpStateChange(super::transport::SctpStateChangeNotificationRef<'a>),
+                Trace(super::transport::TraceNotificationRef<'a>),
+            }
+
+            impl<'a> ::core::convert::TryFrom<NotificationRef<'a>> for Notification {
+                type Error = ::planus::Error;
+
+                fn try_from(value: NotificationRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(match value {
+                        NotificationRef::Tuple(value) => {
+                            Self::Tuple(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        NotificationRef::RtcpTuple(value) => {
+                            Self::RtcpTuple(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        NotificationRef::SctpStateChange(value) => {
+                            Self::SctpStateChange(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+
+                        NotificationRef::Trace(value) => {
+                            Self::Trace(::planus::alloc::boxed::Box::new(
+                                ::core::convert::TryFrom::try_from(value)?,
+                            ))
+                        }
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableReadUnion<'a> for NotificationRef<'a> {
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    field_offset: usize,
+                    tag: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    match tag {
+                        1 => ::core::result::Result::Ok(Self::Tuple(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        2 => ::core::result::Result::Ok(Self::RtcpTuple(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        3 => ::core::result::Result::Ok(Self::SctpStateChange(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        4 => ::core::result::Result::Ok(Self::Trace(
+                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
+                        )),
+                        _ => ::core::result::Result::Err(
+                            ::planus::errors::ErrorKind::UnknownUnionTag { tag },
+                        ),
+                    }
+                }
+            }
+
+            /// The table `NotificationWrapper` in the namespace `FBS.PlainTransport`
+            ///
+            /// Generated from these locations:
+            /// * Table `NotificationWrapper` in the file `../worker/fbs/plainTransport.fbs:56`
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct NotificationWrapper {
+                /// The field `notification` in the table `NotificationWrapper`
+                pub notification: self::Notification,
+            }
+
+            impl NotificationWrapper {
+                /// Creates a [NotificationWrapperBuilder] for serializing an instance of this table.
+                #[inline]
+                pub fn builder() -> NotificationWrapperBuilder<()> {
+                    NotificationWrapperBuilder(())
+                }
+
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_notification: impl ::planus::WriteAsUnion<self::Notification>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_notification = field_notification.prepare(builder);
+
+                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
+                        ::core::default::Default::default();
+                    table_writer.write_entry::<::planus::Offset<self::Notification>>(1);
+                    table_writer.write_entry::<u8>(0);
+
+                    unsafe {
+                        table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_notification.offset());
+                            object_writer.write::<_, _, 1>(&prepared_notification.tag());
+                        });
+                    }
+                    builder.current_offset()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<NotificationWrapper>> for NotificationWrapper {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<NotificationWrapper> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<NotificationWrapper>> for NotificationWrapper {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<NotificationWrapper>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<NotificationWrapper> for NotificationWrapper {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<NotificationWrapper> {
+                    NotificationWrapper::create(builder, &self.notification)
+                }
+            }
+
+            /// Builder for serializing an instance of the [NotificationWrapper] type.
+            ///
+            /// Can be created using the [NotificationWrapper::builder] method.
+            #[derive(Debug)]
+            #[must_use]
+            pub struct NotificationWrapperBuilder<State>(State);
+
+            impl NotificationWrapperBuilder<()> {
+                /// Setter for the [`notification` field](NotificationWrapper#structfield.notification).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn notification<T0>(self, value: T0) -> NotificationWrapperBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAsUnion<self::Notification>,
+                {
+                    NotificationWrapperBuilder((value,))
+                }
+            }
+
+            impl<T0> NotificationWrapperBuilder<(T0,)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [NotificationWrapper].
+                #[inline]
+                pub fn finish(
+                    self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<NotificationWrapper>
+                where
+                    Self: ::planus::WriteAsOffset<NotificationWrapper>,
+                {
+                    ::planus::WriteAsOffset::prepare(&self, builder)
+                }
+            }
+
+            impl<T0: ::planus::WriteAsUnion<self::Notification>>
+                ::planus::WriteAs<::planus::Offset<NotificationWrapper>>
+                for NotificationWrapperBuilder<(T0,)>
+            {
+                type Prepared = ::planus::Offset<NotificationWrapper>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<NotificationWrapper> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl<T0: ::planus::WriteAsUnion<self::Notification>>
+                ::planus::WriteAsOptional<::planus::Offset<NotificationWrapper>>
+                for NotificationWrapperBuilder<(T0,)>
+            {
+                type Prepared = ::planus::Offset<NotificationWrapper>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<NotificationWrapper>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl<T0: ::planus::WriteAsUnion<self::Notification>>
+                ::planus::WriteAsOffset<NotificationWrapper> for NotificationWrapperBuilder<(T0,)>
+            {
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::planus::Offset<NotificationWrapper> {
+                    let (v0,) = &self.0;
+                    NotificationWrapper::create(builder, v0)
+                }
+            }
+
+            /// Reference to a deserialized [NotificationWrapper].
+            #[derive(Copy, Clone)]
+            pub struct NotificationWrapperRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> NotificationWrapperRef<'a> {
+                /// Getter for the [`notification` field](NotificationWrapper#structfield.notification).
+                #[inline]
+                pub fn notification(&self) -> ::planus::Result<self::NotificationRef<'a>> {
+                    self.0
+                        .access_union_required(0, "NotificationWrapper", "notification")
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for NotificationWrapperRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("NotificationWrapperRef");
+                    f.field("notification", &self.notification());
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<NotificationWrapperRef<'a>> for NotificationWrapper {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: NotificationWrapperRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        notification: ::core::convert::TryInto::try_into(value.notification()?)?,
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for NotificationWrapperRef<'a> {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for NotificationWrapperRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[NotificationWrapperRef]",
+                            "get",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<NotificationWrapper>> for NotificationWrapper {
+                type Value = ::planus::Offset<NotificationWrapper>;
+                const STRIDE: usize = 4;
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<NotificationWrapper>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for NotificationWrapperRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "[NotificationWrapperRef]",
+                            "read_as_root",
+                            0,
+                        )
+                    })
+                }
+            }
+
             /// The table `TupleNotification` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `TupleNotification` in the file `../worker/fbs/plainTransport.fbs:49`
+            /// * Table `TupleNotification` in the file `../worker/fbs/plainTransport.fbs:60`
             #[derive(
                 Clone,
                 Debug,
@@ -74699,7 +75354,7 @@ mod root {
             /// The table `RtcpTupleNotification` in the namespace `FBS.PlainTransport`
             ///
             /// Generated from these locations:
-            /// * Table `RtcpTupleNotification` in the file `../worker/fbs/plainTransport.fbs:53`
+            /// * Table `RtcpTupleNotification` in the file `../worker/fbs/plainTransport.fbs:64`
             #[derive(
                 Clone,
                 Debug,

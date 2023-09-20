@@ -1188,11 +1188,17 @@ namespace RTC
 		auto notification = FBS::PlainTransport::CreateTupleNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(), tuple);
 
+		auto notificationWrapper = FBS::PlainTransport::CreateNotificationWrapper(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::PlainTransport::Notification::Tuple,
+		  notification.Union());
+
 		this->shared->channelNotifier->Emit(
 		  this->id,
+		  // NOTE: Not used, we are using the Body Type instead.
 		  FBS::Notification::Event::PLAINTRANSPORT_TUPLE,
-		  FBS::Notification::Body::PlainTransport_TupleNotification,
-		  notification);
+		  FBS::Notification::Body::PlainTransport,
+		  notificationWrapper);
 	}
 
 	inline void PlainTransport::EmitRtcpTuple() const
@@ -1201,11 +1207,16 @@ namespace RTC
 		auto notification = FBS::PlainTransport::CreateRtcpTupleNotification(
 		  this->shared->channelNotifier->GetBufferBuilder(), rtcpTuple);
 
+		auto notificationWrapper = FBS::PlainTransport::CreateNotificationWrapper(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::PlainTransport::Notification::RtcpTuple,
+		  notification.Union());
+
 		this->shared->channelNotifier->Emit(
 		  this->id,
 		  FBS::Notification::Event::PLAINTRANSPORT_RTCP_TUPLE,
 		  FBS::Notification::Body::PlainTransport_RtcpTupleNotification,
-		  notification);
+		  notificationWrapper);
 	}
 
 	inline void PlainTransport::OnUdpSocketPacketReceived(
