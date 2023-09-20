@@ -11,6 +11,11 @@
 * `Worker`: Make DTLS fragment stay within MTU size range ([PR #1156](https://github.com/versatica/mediasoup/pull/1156), based on [PR #1143](https://github.com/versatica/mediasoup/pull/1143) by @vpnts-se).
 
 
+### 3.12.13
+
+* Bump up Meson from 1.1.0 to 1.2.1 (fixes Xcode 15 build issues) ([PR #1163](https://github.com/versatica/mediasoup/pull/1163) by @arcinston).
+
+
 ### 3.12.12
 
 * Support C++20 ([PR #1150](https://github.com/versatica/mediasoup/pull/1150) by @o-u-p).
