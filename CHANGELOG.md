@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.12.13
+
+* Bump up Meson from 1.1.0 to 1.2.1 (fixes Xcode 15 build issues) ([PR #1163](https://github.com/versatica/mediasoup/pull/1163) by @arcinston).
+
+
 ### 3.12.12
 
 * Support C++20 ([PR #1150](https://github.com/versatica/mediasoup/pull/1150) by @o-u-p).
