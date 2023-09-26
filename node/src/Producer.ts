@@ -629,7 +629,7 @@ export function producerTypeFromFbs(type: FbsRtpParameters.Type): ProducerType
 		case FbsRtpParameters.Type.SVC:
 			return 'svc';
 		default:
-			throw new TypeError(`invalid ProducerType: ${type}`);
+			throw new TypeError(`invalid FbsRtpParameters.Type: ${type}`);
 	}
 }
 
