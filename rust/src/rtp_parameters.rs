@@ -1292,6 +1292,44 @@ pub struct RtpEncodingParameters {
     pub max_bitrate: Option<u32>,
 }
 
+impl RtpEncodingParameters {
+    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpEncodingParameters {
+        rtp_parameters::RtpEncodingParameters {
+            ssrc: self.ssrc,
+            rid: self.rid.clone(),
+            codec_payload_type: self.codec_payload_type,
+            rtx: self
+                .rtx
+                .map(|rtx| Box::new(rtp_parameters::Rtx { ssrc: rtx.ssrc })),
+            dtx: self.dtx.unwrap_or_default(),
+            scalability_mode: if self.scalability_mode.is_none() {
+                None
+            } else {
+                Some(self.scalability_mode.as_str().to_string())
+            },
+            max_bitrate: self.max_bitrate,
+        }
+    }
+
+    pub(crate) fn from_fbs(encoding_parameters: rtp_parameters::RtpEncodingParameters) -> Self {
+        Self {
+            ssrc: encoding_parameters.ssrc,
+            rid: encoding_parameters.rid.clone(),
+            codec_payload_type: encoding_parameters.codec_payload_type,
+            rtx: encoding_parameters
+                .rtx
+                .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
+            dtx: Some(encoding_parameters.dtx),
+            scalability_mode: encoding_parameters
+                .scalability_mode
+                .unwrap_or(String::from("S1T1"))
+                .parse()
+                .unwrap(),
+            max_bitrate: encoding_parameters.max_bitrate,
+        }
+    }
+}
+
 /// Defines a RTP header extension within the RTP parameters. The list of RTP
 /// header extensions supported by mediasoup is defined in the `supported_rtp_capabilities.rs` file.
 ///

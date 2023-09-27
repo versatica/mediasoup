@@ -15,6 +15,7 @@ import { parseRtpStreamStats, RtpStreamSendStats } from './RtpStream';
 import { AppData } from './types';
 import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
+import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsConsumer from './fbs/consumer';
@@ -789,9 +790,24 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 			throw new TypeError('every type must be a string');
 		}
 
+		// Convert event types.
+		const fbsEventTypes: FbsConsumer.TraceEventType[] = [];
+
+		for (const eventType of types)
+		{
+			try
+			{
+				fbsEventTypes.push(consumerTraceEventTypeToFbs(eventType));
+			}
+			catch (error)
+			{
+				// Ignore invalid event types.
+			}
+		}
+
 		/* Build Request. */
 		const requestOffset = new FbsConsumer.EnableTraceEventRequestT(
-			types
+			fbsEventTypes
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
@@ -973,26 +989,47 @@ export function parseTraceEventData(
 	}
 
 	return {
-		type      : fbstraceType2String(trace.type()),
+		type      : consumerTraceEventTypeFromFbs(trace.type()),
 		timestamp : Number(trace.timestamp()),
-		direction : trace.direction() === FbsConsumer.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+		direction : trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};
 }
 
-function fbstraceType2String(traceType: FbsConsumer.TraceType): ConsumerTraceEventType
+function consumerTraceEventTypeToFbs(eventType: ConsumerTraceEventType)
+	: FbsConsumer.TraceEventType
+{
+	switch (eventType)
+	{
+		case 'keyframe':
+			return FbsConsumer.TraceEventType.KEYFRAME;
+		case 'fir':
+			return FbsConsumer.TraceEventType.FIR;
+		case 'nack':
+			return FbsConsumer.TraceEventType.NACK;
+		case 'pli':
+			return FbsConsumer.TraceEventType.PLI;
+		case 'rtp':
+			return FbsConsumer.TraceEventType.RTP;
+		default:
+			throw new TypeError(`invalid eventType: ${eventType}`);
+	}
+}
+
+function consumerTraceEventTypeFromFbs(traceType: FbsConsumer.TraceEventType)
+	: ConsumerTraceEventType
 {
 	switch (traceType)
 	{
-		case FbsConsumer.TraceType.KEYFRAME:
+		case FbsConsumer.TraceEventType.KEYFRAME:
 			return 'keyframe';
-		case FbsConsumer.TraceType.FIR:
+		case FbsConsumer.TraceEventType.FIR:
 			return 'fir';
-		case FbsConsumer.TraceType.NACK:
+		case FbsConsumer.TraceEventType.NACK:
 			return 'nack';
-		case FbsConsumer.TraceType.PLI:
+		case FbsConsumer.TraceEventType.PLI:
 			return 'pli';
-		case FbsConsumer.TraceType.RTP:
+		case FbsConsumer.TraceEventType.RTP:
 			return 'rtp';
 		default:
 			throw new TypeError(`invalid TraceType: ${traceType}`);
@@ -1083,7 +1120,7 @@ function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumer
 		consumableRtpEncodings : data.consumableRtpEncodingsLength() > 0 ?
 			utils.parseVector(data, 'consumableRtpEncodings', parseRtpEncodingParameters) :
 			undefined,
-		traceEventTypes            : utils.parseVector(data, 'traceEventTypes'),
+		traceEventTypes            : utils.parseVector(data, 'traceEventTypes', consumerTraceEventTypeFromFbs),
 		supportedCodecPayloadTypes : utils.parseVector(data, 'supportedCodecPayloadTypes'),
 		paused                     : data.paused(),
 		producerPaused             : data.producerPaused(),
@@ -1091,10 +1128,10 @@ function parseBaseConsumerDump(data: FbsConsumer.BaseConsumerDump): BaseConsumer
 	};
 }
 
-function parseSimpleConsumerDump(data: FbsConsumer.SimpleConsumerDump): SimpleConsumerDump
+function parseSimpleConsumerDump(data: FbsConsumer.ConsumerDump): SimpleConsumerDump
 {
 	const base = parseBaseConsumerDump(data.base()!);
-	const rtpStream = parseRtpStream(data.rtpStream()!);
+	const rtpStream = parseRtpStream(data.rtpStreams(0)!);
 
 	return {
 		...base,
@@ -1104,27 +1141,27 @@ function parseSimpleConsumerDump(data: FbsConsumer.SimpleConsumerDump): SimpleCo
 }
 
 function parseSimulcastConsumerDump(
-	data: FbsConsumer.SimulcastConsumerDump
+	data: FbsConsumer.ConsumerDump
 ) : SimulcastConsumerDump
 {
 	const base = parseBaseConsumerDump(data.base()!);
-	const rtpStream = parseRtpStream(data.rtpStream()!);
+	const rtpStream = parseRtpStream(data.rtpStreams(0)!);
 
 	return {
 		...base,
 		type                   : 'simulcast',
 		rtpStream,
-		preferredSpatialLayer  : data.preferredSpatialLayer(),
-		targetSpatialLayer     : data.targetSpatialLayer(),
-		currentSpatialLayer    : data.currentSpatialLayer(),
-		preferredTemporalLayer : data.preferredTemporalLayer(),
-		targetTemporalLayer    : data.targetTemporalLayer(),
-		currentTemporalLayer   : data.currentTemporalLayer()
+		preferredSpatialLayer  : data.preferredSpatialLayer()!,
+		targetSpatialLayer     : data.targetSpatialLayer()!,
+		currentSpatialLayer    : data.currentSpatialLayer()!,
+		preferredTemporalLayer : data.preferredTemporalLayer()!,
+		targetTemporalLayer    : data.targetTemporalLayer()!,
+		currentTemporalLayer   : data.currentTemporalLayer()!
 	};
 }
 
 function parseSvcConsumerDump(
-	data: FbsConsumer.SvcConsumerDump
+	data: FbsConsumer.ConsumerDump
 ) : SvcConsumerDump
 {
 	const dump = parseSimulcastConsumerDump(data);
@@ -1135,7 +1172,7 @@ function parseSvcConsumerDump(
 }
 
 function parsePipeConsumerDump(
-	data: FbsConsumer.PipeConsumerDump
+	data: FbsConsumer.ConsumerDump
 ) : PipeConsumerDump
 {
 	const base = parseBaseConsumerDump(data.base()!);
@@ -1150,11 +1187,13 @@ function parsePipeConsumerDump(
 
 function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 {
-	switch (data.type())
+	const type = data.data()!.base()!.type();
+
+	switch (type)
 	{
 		case FbsRtpParametersType.SIMPLE:
 		{
-			const dump = new FbsConsumer.SimpleConsumerDump();
+			const dump = new FbsConsumer.ConsumerDump();
 
 			data.data(dump);
 
@@ -1163,7 +1202,7 @@ function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 
 		case FbsRtpParametersType.SIMULCAST:
 		{
-			const dump = new FbsConsumer.SimulcastConsumerDump();
+			const dump = new FbsConsumer.ConsumerDump();
 
 			data.data(dump);
 
@@ -1172,7 +1211,7 @@ function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 
 		case FbsRtpParametersType.SVC:
 		{
-			const dump = new FbsConsumer.SvcConsumerDump();
+			const dump = new FbsConsumer.ConsumerDump();
 
 			data.data(dump);
 
@@ -1181,7 +1220,7 @@ function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 
 		case FbsRtpParametersType.PIPE:
 		{
-			const dump = new FbsConsumer.PipeConsumerDump();
+			const dump = new FbsConsumer.ConsumerDump();
 
 			data.data(dump);
 
@@ -1190,7 +1229,7 @@ function parseConsumerDumpResponse(data: FbsConsumer.DumpResponse): ConsumerDump
 
 		default:
 		{
-			throw new TypeError(`invalid Consumer type: ${data.type()}`);
+			throw new TypeError(`invalid Consumer type: ${type}`);
 		}
 	}
 }

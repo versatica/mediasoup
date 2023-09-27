@@ -3066,6 +3066,176 @@ mod root {
                     })
                 }
             }
+
+            /// The enum `TraceDirection` in the namespace `FBS.Common`
+            ///
+            /// Generated from these locations:
+            /// * Enum `TraceDirection` in the file `../worker/fbs/common.fbs:29`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum TraceDirection {
+                /// The variant `DIRECTION_IN` in the enum `TraceDirection`
+                DirectionIn = 0,
+
+                /// The variant `DIRECTION_OUT` in the enum `TraceDirection`
+                DirectionOut = 1,
+            }
+
+            impl TraceDirection {
+                /// Array containing all valid variants of TraceDirection
+                pub const ENUM_VALUES: [Self; 2] = [Self::DirectionIn, Self::DirectionOut];
+            }
+
+            impl ::core::convert::TryFrom<u8> for TraceDirection {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(TraceDirection::DirectionIn),
+                        1 => ::core::result::Result::Ok(TraceDirection::DirectionOut),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<TraceDirection> for u8 {
+                #[inline]
+                fn from(value: TraceDirection) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for TraceDirection {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<TraceDirection> for TraceDirection {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<TraceDirection> for TraceDirection {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceDirection {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<TraceDirection, TraceDirection> for TraceDirection {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &TraceDirection,
+                ) -> ::core::option::Option<TraceDirection> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<TraceDirection> for TraceDirection {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<TraceDirection> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for TraceDirection {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for TraceDirection {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "TraceDirection",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<TraceDirection> for TraceDirection {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
         }
         /// The namespace `FBS.Consumer`
         ///
@@ -3075,7 +3245,7 @@ mod root {
             /// The table `ConsumerLayers` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumerLayers` in the file `../worker/fbs/consumer.fbs:6`
+            /// * Table `ConsumerLayers` in the file `../worker/fbs/consumer.fbs:7`
             #[derive(
                 Clone,
                 Debug,
@@ -3089,9 +3259,9 @@ mod root {
             )]
             pub struct ConsumerLayers {
                 /// The field `spatial_layer` in the table `ConsumerLayers`
-                pub spatial_layer: i16,
+                pub spatial_layer: u8,
                 /// The field `temporal_layer` in the table `ConsumerLayers`
-                pub temporal_layer: ::core::option::Option<i16>,
+                pub temporal_layer: ::core::option::Option<u8>,
             }
 
             #[allow(clippy::derivable_impls)]
@@ -3114,8 +3284,8 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_temporal_layer: impl ::planus::WriteAsOptional<i16>,
+                    field_spatial_layer: impl ::planus::WriteAsDefault<u8, u8>,
+                    field_temporal_layer: impl ::planus::WriteAsOptional<u8>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_spatial_layer = field_spatial_layer.prepare(builder, &0);
                     let prepared_temporal_layer = field_temporal_layer.prepare(builder);
@@ -3123,10 +3293,10 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
                     if prepared_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(0);
+                        table_writer.write_entry::<u8>(0);
                     }
                     if prepared_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(1);
+                        table_writer.write_entry::<u8>(1);
                     }
 
                     unsafe {
@@ -3134,12 +3304,12 @@ mod root {
                             if let ::core::option::Option::Some(prepared_spatial_layer) =
                                 prepared_spatial_layer
                             {
-                                object_writer.write::<_, _, 2>(&prepared_spatial_layer);
+                                object_writer.write::<_, _, 1>(&prepared_spatial_layer);
                             }
                             if let ::core::option::Option::Some(prepared_temporal_layer) =
                                 prepared_temporal_layer
                             {
-                                object_writer.write::<_, _, 2>(&prepared_temporal_layer);
+                                object_writer.write::<_, _, 1>(&prepared_temporal_layer);
                             }
                         });
                     }
@@ -3194,7 +3364,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn spatial_layer<T0>(self, value: T0) -> ConsumerLayersBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsDefault<i16, i16>,
+                    T0: ::planus::WriteAsDefault<u8, u8>,
                 {
                     ConsumerLayersBuilder((value,))
                 }
@@ -3215,7 +3385,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn temporal_layer<T1>(self, value: T1) -> ConsumerLayersBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptional<i16>,
+                    T1: ::planus::WriteAsOptional<u8>,
                 {
                     let (v0,) = self.0;
                     ConsumerLayersBuilder((v0, value))
@@ -3243,7 +3413,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<i16, i16>, T1: ::planus::WriteAsOptional<i16>>
+            impl<T0: ::planus::WriteAsDefault<u8, u8>, T1: ::planus::WriteAsOptional<u8>>
                 ::planus::WriteAs<::planus::Offset<ConsumerLayers>>
                 for ConsumerLayersBuilder<(T0, T1)>
             {
@@ -3258,7 +3428,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<i16, i16>, T1: ::planus::WriteAsOptional<i16>>
+            impl<T0: ::planus::WriteAsDefault<u8, u8>, T1: ::planus::WriteAsOptional<u8>>
                 ::planus::WriteAsOptional<::planus::Offset<ConsumerLayers>>
                 for ConsumerLayersBuilder<(T0, T1)>
             {
@@ -3273,7 +3443,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<i16, i16>, T1: ::planus::WriteAsOptional<i16>>
+            impl<T0: ::planus::WriteAsDefault<u8, u8>, T1: ::planus::WriteAsOptional<u8>>
                 ::planus::WriteAsOffset<ConsumerLayers> for ConsumerLayersBuilder<(T0, T1)>
             {
                 #[inline]
@@ -3293,7 +3463,7 @@ mod root {
             impl<'a> ConsumerLayersRef<'a> {
                 /// Getter for the [`spatial_layer` field](ConsumerLayers#structfield.spatial_layer).
                 #[inline]
-                pub fn spatial_layer(&self) -> ::planus::Result<i16> {
+                pub fn spatial_layer(&self) -> ::planus::Result<u8> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(0, "ConsumerLayers", "spatial_layer")?
@@ -3303,7 +3473,7 @@ mod root {
 
                 /// Getter for the [`temporal_layer` field](ConsumerLayers#structfield.temporal_layer).
                 #[inline]
-                pub fn temporal_layer(&self) -> ::planus::Result<::core::option::Option<i16>> {
+                pub fn temporal_layer(&self) -> ::planus::Result<::core::option::Option<u8>> {
                     self.0.access(1, "ConsumerLayers", "temporal_layer")
                 }
             }
@@ -3414,7 +3584,7 @@ mod root {
             /// The table `ConsumerScore` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumerScore` in the file `../worker/fbs/consumer.fbs:11`
+            /// * Table `ConsumerScore` in the file `../worker/fbs/consumer.fbs:12`
             #[derive(
                 Clone,
                 Debug,
@@ -3432,18 +3602,7 @@ mod root {
                 /// The field `producer_score` in the table `ConsumerScore`
                 pub producer_score: u8,
                 /// The field `producer_scores` in the table `ConsumerScore`
-                pub producer_scores: ::core::option::Option<::planus::alloc::vec::Vec<u8>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ConsumerScore {
-                fn default() -> Self {
-                    Self {
-                        score: 0,
-                        producer_score: 0,
-                        producer_scores: ::core::default::Default::default(),
-                    }
-                }
+                pub producer_scores: ::planus::alloc::vec::Vec<u8>,
             }
 
             impl ConsumerScore {
@@ -3458,7 +3617,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_score: impl ::planus::WriteAsDefault<u8, u8>,
                     field_producer_score: impl ::planus::WriteAsDefault<u8, u8>,
-                    field_producer_scores: impl ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
+                    field_producer_scores: impl ::planus::WriteAs<::planus::Offset<[u8]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_score = field_score.prepare(builder, &0);
                     let prepared_producer_score = field_producer_score.prepare(builder, &0);
@@ -3466,9 +3625,7 @@ mod root {
 
                     let mut table_writer: ::planus::table_writer::TableWriter<10> =
                         ::core::default::Default::default();
-                    if prepared_producer_scores.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[u8]>>(2);
-                    }
+                    table_writer.write_entry::<::planus::Offset<[u8]>>(2);
                     if prepared_score.is_some() {
                         table_writer.write_entry::<u8>(0);
                     }
@@ -3478,11 +3635,7 @@ mod root {
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_producer_scores) =
-                                prepared_producer_scores
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_producer_scores);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_producer_scores);
                             if let ::core::option::Option::Some(prepared_score) = prepared_score {
                                 object_writer.write::<_, _, 1>(&prepared_score);
                             }
@@ -3590,17 +3743,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn producer_scores<T2>(self, value: T2) -> ConsumerScoreBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
+                    T2: ::planus::WriteAs<::planus::Offset<[u8]>>,
                 {
                     let (v0, v1) = self.0;
                     ConsumerScoreBuilder((v0, v1, value))
-                }
-
-                /// Sets the [`producer_scores` field](ConsumerScore#structfield.producer_scores) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn producer_scores_as_null(self) -> ConsumerScoreBuilder<(T0, T1, ())> {
-                    self.producer_scores(())
                 }
             }
 
@@ -3621,7 +3767,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<u8, u8>,
                     T1: ::planus::WriteAsDefault<u8, u8>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
+                    T2: ::planus::WriteAs<::planus::Offset<[u8]>>,
                 > ::planus::WriteAs<::planus::Offset<ConsumerScore>>
                 for ConsumerScoreBuilder<(T0, T1, T2)>
             {
@@ -3639,7 +3785,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<u8, u8>,
                     T1: ::planus::WriteAsDefault<u8, u8>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
+                    T2: ::planus::WriteAs<::planus::Offset<[u8]>>,
                 > ::planus::WriteAsOptional<::planus::Offset<ConsumerScore>>
                 for ConsumerScoreBuilder<(T0, T1, T2)>
             {
@@ -3657,7 +3803,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<u8, u8>,
                     T1: ::planus::WriteAsDefault<u8, u8>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
+                    T2: ::planus::WriteAs<::planus::Offset<[u8]>>,
                 > ::planus::WriteAsOffset<ConsumerScore> for ConsumerScoreBuilder<(T0, T1, T2)>
             {
                 #[inline]
@@ -3695,10 +3841,9 @@ mod root {
 
                 /// Getter for the [`producer_scores` field](ConsumerScore#structfield.producer_scores).
                 #[inline]
-                pub fn producer_scores(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a [u8]>> {
-                    self.0.access(2, "ConsumerScore", "producer_scores")
+                pub fn producer_scores(&self) -> ::planus::Result<&'a [u8]> {
+                    self.0
+                        .access_required(2, "ConsumerScore", "producer_scores")
                 }
             }
 
@@ -3707,11 +3852,7 @@ mod root {
                     let mut f = f.debug_struct("ConsumerScoreRef");
                     f.field("score", &self.score());
                     f.field("producer_score", &self.producer_score());
-                    if let ::core::option::Option::Some(field_producer_scores) =
-                        self.producer_scores().transpose()
-                    {
-                        f.field("producer_scores", &field_producer_scores);
-                    }
+                    f.field("producer_scores", &self.producer_scores());
                     f.finish()
                 }
             }
@@ -3726,7 +3867,7 @@ mod root {
                         producer_score: ::core::convert::TryInto::try_into(
                             value.producer_score()?,
                         )?,
-                        producer_scores: value.producer_scores()?.map(|v| v.to_vec()),
+                        producer_scores: value.producer_scores()?.to_vec(),
                     })
                 }
             }
@@ -3804,7 +3945,7 @@ mod root {
             /// The table `SetPreferredLayersRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPreferredLayersRequest` in the file `../worker/fbs/consumer.fbs:17`
+            /// * Table `SetPreferredLayersRequest` in the file `../worker/fbs/consumer.fbs:18`
             #[derive(
                 Clone,
                 Debug,
@@ -4090,7 +4231,7 @@ mod root {
             /// The table `SetPreferredLayersResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPreferredLayersResponse` in the file `../worker/fbs/consumer.fbs:21`
+            /// * Table `SetPreferredLayersResponse` in the file `../worker/fbs/consumer.fbs:22`
             #[derive(
                 Clone,
                 Debug,
@@ -4407,7 +4548,7 @@ mod root {
             /// The table `SetPriorityRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPriorityRequest` in the file `../worker/fbs/consumer.fbs:25`
+            /// * Table `SetPriorityRequest` in the file `../worker/fbs/consumer.fbs:26`
             #[derive(
                 Clone,
                 Debug,
@@ -4691,7 +4832,7 @@ mod root {
             /// The table `SetPriorityResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPriorityResponse` in the file `../worker/fbs/consumer.fbs:29`
+            /// * Table `SetPriorityResponse` in the file `../worker/fbs/consumer.fbs:30`
             #[derive(
                 Clone,
                 Debug,
@@ -4979,7 +5120,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/consumer.fbs:33`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/consumer.fbs:34`
             #[derive(
                 Clone,
                 Debug,
@@ -4993,7 +5134,7 @@ mod root {
             )]
             pub struct EnableTraceEventRequest {
                 /// The field `events` in the table `EnableTraceEventRequest`
-                pub events: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub events: ::planus::alloc::vec::Vec<self::TraceEventType>,
             }
 
             impl EnableTraceEventRequest {
@@ -5006,13 +5147,13 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_events: impl ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    field_events: impl ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_events = field_events.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<str>]>>(0);
+                    table_writer.write_entry::<::planus::Offset<[self::TraceEventType]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -5073,7 +5214,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn events<T0>(self, value: T0) -> EnableTraceEventRequestBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 {
                     EnableTraceEventRequestBuilder((value,))
                 }
@@ -5093,7 +5234,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAs<::planus::Offset<EnableTraceEventRequest>>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -5108,7 +5249,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAsOptional<::planus::Offset<EnableTraceEventRequest>>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -5124,7 +5265,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAsOffset<EnableTraceEventRequest>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -5148,7 +5289,13 @@ mod root {
                 pub fn events(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
+                    ::planus::Vector<
+                        'a,
+                        ::core::result::Result<
+                            self::TraceEventType,
+                            ::planus::errors::UnknownEnumTag,
+                        >,
+                    >,
                 > {
                     self.0
                         .access_required(0, "EnableTraceEventRequest", "events")
@@ -5248,358 +5395,16 @@ mod root {
                 }
             }
 
-            /// The union `DumpData` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Union `DumpData` in the file `../worker/fbs/consumer.fbs:37`
-            #[derive(
-                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
-            )]
-            pub enum DumpData {
-                /// The variant of type `SimpleConsumerDump` in the union `DumpData`
-                SimpleConsumerDump(::planus::alloc::boxed::Box<self::SimpleConsumerDump>),
-
-                /// The variant of type `SimulcastConsumerDump` in the union `DumpData`
-                SimulcastConsumerDump(::planus::alloc::boxed::Box<self::SimulcastConsumerDump>),
-
-                /// The variant of type `SvcConsumerDump` in the union `DumpData`
-                SvcConsumerDump(::planus::alloc::boxed::Box<self::SvcConsumerDump>),
-
-                /// The variant of type `PipeConsumerDump` in the union `DumpData`
-                PipeConsumerDump(::planus::alloc::boxed::Box<self::PipeConsumerDump>),
-            }
-
-            impl DumpData {
-                /// Creates a [DumpDataBuilder] for serializing an instance of this table.
-                #[inline]
-                pub fn builder() -> DumpDataBuilder<::planus::Uninitialized> {
-                    DumpDataBuilder(::planus::Uninitialized)
-                }
-
-                #[inline]
-                pub fn create_simple_consumer_dump(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<self::SimpleConsumerDump>,
-                ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(1, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_simulcast_consumer_dump(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<self::SimulcastConsumerDump>,
-                ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(2, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_svc_consumer_dump(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<self::SvcConsumerDump>,
-                ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(3, value.prepare(builder).downcast())
-                }
-
-                #[inline]
-                pub fn create_pipe_consumer_dump(
-                    builder: &mut ::planus::Builder,
-                    value: impl ::planus::WriteAsOffset<self::PipeConsumerDump>,
-                ) -> ::planus::UnionOffset<Self> {
-                    ::planus::UnionOffset::new(4, value.prepare(builder).downcast())
-                }
-            }
-
-            impl ::planus::WriteAsUnion<DumpData> for DumpData {
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::UnionOffset<Self> {
-                    match self {
-                        Self::SimpleConsumerDump(value) => {
-                            Self::create_simple_consumer_dump(builder, value)
-                        }
-                        Self::SimulcastConsumerDump(value) => {
-                            Self::create_simulcast_consumer_dump(builder, value)
-                        }
-                        Self::SvcConsumerDump(value) => {
-                            Self::create_svc_consumer_dump(builder, value)
-                        }
-                        Self::PipeConsumerDump(value) => {
-                            Self::create_pipe_consumer_dump(builder, value)
-                        }
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptionalUnion<DumpData> for DumpData {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::UnionOffset<Self>> {
-                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
-                }
-            }
-
-            /// Builder for serializing an instance of the [DumpData] type.
-            ///
-            /// Can be created using the [DumpData::builder] method.
-            #[derive(Debug)]
-            #[must_use]
-            pub struct DumpDataBuilder<T>(T);
-
-            impl DumpDataBuilder<::planus::Uninitialized> {
-                /// Creates an instance of the [`SimpleConsumerDump` variant](DumpData#variant.SimpleConsumerDump).
-                #[inline]
-                pub fn simple_consumer_dump<T>(
-                    self,
-                    value: T,
-                ) -> DumpDataBuilder<::planus::Initialized<1, T>>
-                where
-                    T: ::planus::WriteAsOffset<self::SimpleConsumerDump>,
-                {
-                    DumpDataBuilder(::planus::Initialized(value))
-                }
-
-                /// Creates an instance of the [`SimulcastConsumerDump` variant](DumpData#variant.SimulcastConsumerDump).
-                #[inline]
-                pub fn simulcast_consumer_dump<T>(
-                    self,
-                    value: T,
-                ) -> DumpDataBuilder<::planus::Initialized<2, T>>
-                where
-                    T: ::planus::WriteAsOffset<self::SimulcastConsumerDump>,
-                {
-                    DumpDataBuilder(::planus::Initialized(value))
-                }
-
-                /// Creates an instance of the [`SvcConsumerDump` variant](DumpData#variant.SvcConsumerDump).
-                #[inline]
-                pub fn svc_consumer_dump<T>(
-                    self,
-                    value: T,
-                ) -> DumpDataBuilder<::planus::Initialized<3, T>>
-                where
-                    T: ::planus::WriteAsOffset<self::SvcConsumerDump>,
-                {
-                    DumpDataBuilder(::planus::Initialized(value))
-                }
-
-                /// Creates an instance of the [`PipeConsumerDump` variant](DumpData#variant.PipeConsumerDump).
-                #[inline]
-                pub fn pipe_consumer_dump<T>(
-                    self,
-                    value: T,
-                ) -> DumpDataBuilder<::planus::Initialized<4, T>>
-                where
-                    T: ::planus::WriteAsOffset<self::PipeConsumerDump>,
-                {
-                    DumpDataBuilder(::planus::Initialized(value))
-                }
-            }
-
-            impl<const N: u8, T> DumpDataBuilder<::planus::Initialized<N, T>> {
-                /// Finish writing the builder to get an [UnionOffset](::planus::UnionOffset) to a serialized [DumpData].
-                #[inline]
-                pub fn finish(
-                    self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::UnionOffset<DumpData>
-                where
-                    Self: ::planus::WriteAsUnion<DumpData>,
-                {
-                    ::planus::WriteAsUnion::prepare(&self, builder)
-                }
-            }
-
-            impl<T> ::planus::WriteAsUnion<DumpData> for DumpDataBuilder<::planus::Initialized<1, T>>
-            where
-                T: ::planus::WriteAsOffset<self::SimpleConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::UnionOffset<DumpData> {
-                    ::planus::UnionOffset::new(1, (self.0).0.prepare(builder).downcast())
-                }
-            }
-
-            impl<T> ::planus::WriteAsOptionalUnion<DumpData> for DumpDataBuilder<::planus::Initialized<1, T>>
-            where
-                T: ::planus::WriteAsOffset<self::SimpleConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::UnionOffset<DumpData>> {
-                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
-                }
-            }
-            impl<T> ::planus::WriteAsUnion<DumpData> for DumpDataBuilder<::planus::Initialized<2, T>>
-            where
-                T: ::planus::WriteAsOffset<self::SimulcastConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::UnionOffset<DumpData> {
-                    ::planus::UnionOffset::new(2, (self.0).0.prepare(builder).downcast())
-                }
-            }
-
-            impl<T> ::planus::WriteAsOptionalUnion<DumpData> for DumpDataBuilder<::planus::Initialized<2, T>>
-            where
-                T: ::planus::WriteAsOffset<self::SimulcastConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::UnionOffset<DumpData>> {
-                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
-                }
-            }
-            impl<T> ::planus::WriteAsUnion<DumpData> for DumpDataBuilder<::planus::Initialized<3, T>>
-            where
-                T: ::planus::WriteAsOffset<self::SvcConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::UnionOffset<DumpData> {
-                    ::planus::UnionOffset::new(3, (self.0).0.prepare(builder).downcast())
-                }
-            }
-
-            impl<T> ::planus::WriteAsOptionalUnion<DumpData> for DumpDataBuilder<::planus::Initialized<3, T>>
-            where
-                T: ::planus::WriteAsOffset<self::SvcConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::UnionOffset<DumpData>> {
-                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
-                }
-            }
-            impl<T> ::planus::WriteAsUnion<DumpData> for DumpDataBuilder<::planus::Initialized<4, T>>
-            where
-                T: ::planus::WriteAsOffset<self::PipeConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::UnionOffset<DumpData> {
-                    ::planus::UnionOffset::new(4, (self.0).0.prepare(builder).downcast())
-                }
-            }
-
-            impl<T> ::planus::WriteAsOptionalUnion<DumpData> for DumpDataBuilder<::planus::Initialized<4, T>>
-            where
-                T: ::planus::WriteAsOffset<self::PipeConsumerDump>,
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::UnionOffset<DumpData>> {
-                    ::core::option::Option::Some(::planus::WriteAsUnion::prepare(self, builder))
-                }
-            }
-
-            /// Reference to a deserialized [DumpData].
-            #[derive(Copy, Clone, Debug)]
-            pub enum DumpDataRef<'a> {
-                SimpleConsumerDump(self::SimpleConsumerDumpRef<'a>),
-                SimulcastConsumerDump(self::SimulcastConsumerDumpRef<'a>),
-                SvcConsumerDump(self::SvcConsumerDumpRef<'a>),
-                PipeConsumerDump(self::PipeConsumerDumpRef<'a>),
-            }
-
-            impl<'a> ::core::convert::TryFrom<DumpDataRef<'a>> for DumpData {
-                type Error = ::planus::Error;
-
-                fn try_from(value: DumpDataRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(match value {
-                        DumpDataRef::SimpleConsumerDump(value) => {
-                            Self::SimpleConsumerDump(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        DumpDataRef::SimulcastConsumerDump(value) => {
-                            Self::SimulcastConsumerDump(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        DumpDataRef::SvcConsumerDump(value) => {
-                            Self::SvcConsumerDump(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-
-                        DumpDataRef::PipeConsumerDump(value) => {
-                            Self::PipeConsumerDump(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryFrom::try_from(value)?,
-                            ))
-                        }
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableReadUnion<'a> for DumpDataRef<'a> {
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    field_offset: usize,
-                    tag: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    match tag {
-                        1 => ::core::result::Result::Ok(Self::SimpleConsumerDump(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        2 => ::core::result::Result::Ok(Self::SimulcastConsumerDump(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        3 => ::core::result::Result::Ok(Self::SvcConsumerDump(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        4 => ::core::result::Result::Ok(Self::PipeConsumerDump(
-                            ::planus::TableRead::from_buffer(buffer, field_offset)?,
-                        )),
-                        _ => ::core::result::Result::Err(
-                            ::planus::errors::ErrorKind::UnknownUnionTag { tag },
-                        ),
-                    }
-                }
-            }
-
             /// The table `DumpResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/consumer.fbs:44`
+            /// * Table `DumpResponse` in the file `../worker/fbs/consumer.fbs:38`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct DumpResponse {
                 /// The field `data` in the table `DumpResponse`
-                pub data: ::core::option::Option<self::DumpData>,
-                /// The field `type` in the table `DumpResponse`
-                pub type_: super::rtp_parameters::Type,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for DumpResponse {
-                fn default() -> Self {
-                    Self {
-                        data: ::core::default::Default::default(),
-                        type_: super::rtp_parameters::Type::Simple,
-                    }
-                }
+                pub data: ::planus::alloc::boxed::Box<self::ConsumerDump>,
             }
 
             impl DumpResponse {
@@ -5612,39 +5417,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_data: impl ::planus::WriteAsOptionalUnion<self::DumpData>,
-                    field_type_: impl ::planus::WriteAsDefault<
-                        super::rtp_parameters::Type,
-                        super::rtp_parameters::Type,
-                    >,
+                    field_data: impl ::planus::WriteAs<::planus::Offset<self::ConsumerDump>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_data = field_data.prepare(builder);
-                    let prepared_type_ =
-                        field_type_.prepare(builder, &super::rtp_parameters::Type::Simple);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<10> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_data.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::DumpData>>(1);
-                    }
-                    if prepared_data.is_some() {
-                        table_writer.write_entry::<u8>(0);
-                    }
-                    if prepared_type_.is_some() {
-                        table_writer.write_entry::<super::rtp_parameters::Type>(2);
-                    }
+                    table_writer.write_entry::<::planus::Offset<self::ConsumerDump>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_data) = prepared_data {
-                                object_writer.write::<_, _, 4>(&prepared_data.offset());
-                            }
-                            if let ::core::option::Option::Some(prepared_data) = prepared_data {
-                                object_writer.write::<_, _, 1>(&prepared_data.tag());
-                            }
-                            if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
-                                object_writer.write::<_, _, 1>(&prepared_type_);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_data);
                         });
                     }
                     builder.current_offset()
@@ -5681,7 +5464,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<DumpResponse> {
-                    DumpResponse::create(builder, &self.data, self.type_)
+                    DumpResponse::create(builder, &self.data)
                 }
             }
 
@@ -5698,43 +5481,13 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn data<T0>(self, value: T0) -> DumpResponseBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptionalUnion<self::DumpData>,
+                    T0: ::planus::WriteAs<::planus::Offset<self::ConsumerDump>>,
                 {
                     DumpResponseBuilder((value,))
-                }
-
-                /// Sets the [`data` field](DumpResponse#structfield.data) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn data_as_null(self) -> DumpResponseBuilder<((),)> {
-                    self.data(())
                 }
             }
 
             impl<T0> DumpResponseBuilder<(T0,)> {
-                /// Setter for the [`type` field](DumpResponse#structfield.type_).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn type_<T1>(self, value: T1) -> DumpResponseBuilder<(T0, T1)>
-                where
-                    T1: ::planus::WriteAsDefault<
-                        super::rtp_parameters::Type,
-                        super::rtp_parameters::Type,
-                    >,
-                {
-                    let (v0,) = self.0;
-                    DumpResponseBuilder((v0, value))
-                }
-
-                /// Sets the [`type` field](DumpResponse#structfield.type_) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn type_as_default(self) -> DumpResponseBuilder<(T0, ::planus::DefaultValue)> {
-                    self.type_(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1> DumpResponseBuilder<(T0, T1)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [DumpResponse].
                 #[inline]
                 pub fn finish(
@@ -5748,14 +5501,8 @@ mod root {
                 }
             }
 
-            impl<
-                    T0: ::planus::WriteAsOptionalUnion<self::DumpData>,
-                    T1: ::planus::WriteAsDefault<
-                        super::rtp_parameters::Type,
-                        super::rtp_parameters::Type,
-                    >,
-                > ::planus::WriteAs<::planus::Offset<DumpResponse>>
-                for DumpResponseBuilder<(T0, T1)>
+            impl<T0: ::planus::WriteAs<::planus::Offset<self::ConsumerDump>>>
+                ::planus::WriteAs<::planus::Offset<DumpResponse>> for DumpResponseBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<DumpResponse>;
 
@@ -5768,14 +5515,9 @@ mod root {
                 }
             }
 
-            impl<
-                    T0: ::planus::WriteAsOptionalUnion<self::DumpData>,
-                    T1: ::planus::WriteAsDefault<
-                        super::rtp_parameters::Type,
-                        super::rtp_parameters::Type,
-                    >,
-                > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
-                for DumpResponseBuilder<(T0, T1)>
+            impl<T0: ::planus::WriteAs<::planus::Offset<self::ConsumerDump>>>
+                ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
+                for DumpResponseBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<DumpResponse>;
 
@@ -5788,21 +5530,16 @@ mod root {
                 }
             }
 
-            impl<
-                    T0: ::planus::WriteAsOptionalUnion<self::DumpData>,
-                    T1: ::planus::WriteAsDefault<
-                        super::rtp_parameters::Type,
-                        super::rtp_parameters::Type,
-                    >,
-                > ::planus::WriteAsOffset<DumpResponse> for DumpResponseBuilder<(T0, T1)>
+            impl<T0: ::planus::WriteAs<::planus::Offset<self::ConsumerDump>>>
+                ::planus::WriteAsOffset<DumpResponse> for DumpResponseBuilder<(T0,)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<DumpResponse> {
-                    let (v0, v1) = &self.0;
-                    DumpResponse::create(builder, v0, v1)
+                    let (v0,) = &self.0;
+                    DumpResponse::create(builder, v0)
                 }
             }
 
@@ -5813,31 +5550,15 @@ mod root {
             impl<'a> DumpResponseRef<'a> {
                 /// Getter for the [`data` field](DumpResponse#structfield.data).
                 #[inline]
-                pub fn data(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::DumpDataRef<'a>>>
-                {
-                    self.0.access_union(0, "DumpResponse", "data")
-                }
-
-                /// Getter for the [`type` field](DumpResponse#structfield.type_).
-                #[inline]
-                pub fn type_(&self) -> ::planus::Result<super::rtp_parameters::Type> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "DumpResponse", "type_")?
-                            .unwrap_or(super::rtp_parameters::Type::Simple),
-                    )
+                pub fn data(&self) -> ::planus::Result<self::ConsumerDumpRef<'a>> {
+                    self.0.access_required(0, "DumpResponse", "data")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for DumpResponseRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("DumpResponseRef");
-                    if let ::core::option::Option::Some(field_data) = self.data().transpose() {
-                        f.field("data", &field_data);
-                    }
-                    f.field("type_", &self.type_());
+                    f.field("data", &self.data());
                     f.finish()
                 }
             }
@@ -5848,12 +5569,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: DumpResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        data: if let ::core::option::Option::Some(data) = value.data()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(data)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
-                        type_: ::core::convert::TryInto::try_into(value.type_()?)?,
+                        data: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
+                            value.data()?,
+                        )?),
                     })
                 }
             }
@@ -5928,16 +5646,201 @@ mod root {
                 }
             }
 
+            /// The enum `TraceEventType` in the namespace `FBS.Consumer`
+            ///
+            /// Generated from these locations:
+            /// * Enum `TraceEventType` in the file `../worker/fbs/consumer.fbs:42`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum TraceEventType {
+                /// The variant `KEYFRAME` in the enum `TraceEventType`
+                Keyframe = 0,
+
+                /// The variant `FIR` in the enum `TraceEventType`
+                Fir = 1,
+
+                /// The variant `NACK` in the enum `TraceEventType`
+                Nack = 2,
+
+                /// The variant `PLI` in the enum `TraceEventType`
+                Pli = 3,
+
+                /// The variant `RTP` in the enum `TraceEventType`
+                Rtp = 4,
+            }
+
+            impl TraceEventType {
+                /// Array containing all valid variants of TraceEventType
+                pub const ENUM_VALUES: [Self; 5] =
+                    [Self::Keyframe, Self::Fir, Self::Nack, Self::Pli, Self::Rtp];
+            }
+
+            impl ::core::convert::TryFrom<u8> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(TraceEventType::Keyframe),
+                        1 => ::core::result::Result::Ok(TraceEventType::Fir),
+                        2 => ::core::result::Result::Ok(TraceEventType::Nack),
+                        3 => ::core::result::Result::Ok(TraceEventType::Pli),
+                        4 => ::core::result::Result::Ok(TraceEventType::Rtp),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<TraceEventType> for u8 {
+                #[inline]
+                fn from(value: TraceEventType) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for TraceEventType {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<TraceEventType> for TraceEventType {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceEventType {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<TraceEventType, TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &TraceEventType,
+                ) -> ::core::option::Option<TraceEventType> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<TraceEventType> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for TraceEventType {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "TraceEventType",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<TraceEventType> for TraceEventType {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `BaseConsumerDump` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `BaseConsumerDump` in the file `../worker/fbs/consumer.fbs:49`
+            /// * Table `BaseConsumerDump` in the file `../worker/fbs/consumer.fbs:50`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct BaseConsumerDump {
                 /// The field `id` in the table `BaseConsumerDump`
                 pub id: ::planus::alloc::string::String,
+                /// The field `type` in the table `BaseConsumerDump`
+                pub type_: super::rtp_parameters::Type,
                 /// The field `producer_id` in the table `BaseConsumerDump`
                 pub producer_id: ::planus::alloc::string::String,
                 /// The field `kind` in the table `BaseConsumerDump`
@@ -5946,14 +5849,12 @@ mod root {
                 pub rtp_parameters:
                     ::planus::alloc::boxed::Box<super::rtp_parameters::RtpParameters>,
                 /// The field `consumable_rtp_encodings` in the table `BaseConsumerDump`
-                pub consumable_rtp_encodings: ::core::option::Option<
+                pub consumable_rtp_encodings:
                     ::planus::alloc::vec::Vec<super::rtp_parameters::RtpEncodingParameters>,
-                >,
                 /// The field `supported_codec_payload_types` in the table `BaseConsumerDump`
-                pub supported_codec_payload_types:
-                    ::core::option::Option<::planus::alloc::vec::Vec<u8>>,
+                pub supported_codec_payload_types: ::planus::alloc::vec::Vec<u8>,
                 /// The field `trace_event_types` in the table `BaseConsumerDump`
-                pub trace_event_types: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub trace_event_types: ::planus::alloc::vec::Vec<self::TraceEventType>,
                 /// The field `paused` in the table `BaseConsumerDump`
                 pub paused: bool,
                 /// The field `producer_paused` in the table `BaseConsumerDump`
@@ -5973,6 +5874,10 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_id: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                     field_producer_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_kind: impl ::planus::WriteAsDefault<
                         super::rtp_parameters::MediaKind,
@@ -5981,22 +5886,22 @@ mod root {
                     field_rtp_parameters: impl ::planus::WriteAs<
                         ::planus::Offset<super::rtp_parameters::RtpParameters>,
                     >,
-                    field_consumable_rtp_encodings: impl ::planus::WriteAsOptional<
+                    field_consumable_rtp_encodings: impl ::planus::WriteAs<
                         ::planus::Offset<
                             [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
                         >,
                     >,
-                    field_supported_codec_payload_types: impl ::planus::WriteAsOptional<
-                        ::planus::Offset<[u8]>,
-                    >,
+                    field_supported_codec_payload_types: impl ::planus::WriteAs<::planus::Offset<[u8]>>,
                     field_trace_event_types: impl ::planus::WriteAs<
-                        ::planus::Offset<[::planus::Offset<str>]>,
+                        ::planus::Offset<[self::TraceEventType]>,
                     >,
                     field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                     field_producer_paused: impl ::planus::WriteAsDefault<bool, bool>,
                     field_priority: impl ::planus::WriteAsDefault<u8, u8>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder);
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &super::rtp_parameters::Type::Simple);
                     let prepared_producer_id = field_producer_id.prepare(builder);
                     let prepared_kind =
                         field_kind.prepare(builder, &super::rtp_parameters::MediaKind::Audio);
@@ -6010,32 +5915,31 @@ mod root {
                     let prepared_producer_paused = field_producer_paused.prepare(builder, &false);
                     let prepared_priority = field_priority.prepare(builder, &0);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<24> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<26> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(1);
+                    table_writer.write_entry::<::planus::Offset<str>>(2);
                     table_writer
-                        .write_entry::<::planus::Offset<super::rtp_parameters::RtpParameters>>(3);
-                    if prepared_consumable_rtp_encodings.is_some() {
-                        table_writer.write_entry::<::planus::Offset<
-                            [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
-                        >>(4);
+                        .write_entry::<::planus::Offset<super::rtp_parameters::RtpParameters>>(4);
+                    table_writer.write_entry::<::planus::Offset<
+                        [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
+                    >>(5);
+                    table_writer.write_entry::<::planus::Offset<[u8]>>(6);
+                    table_writer.write_entry::<::planus::Offset<[self::TraceEventType]>>(7);
+                    if prepared_type_.is_some() {
+                        table_writer.write_entry::<super::rtp_parameters::Type>(1);
                     }
-                    if prepared_supported_codec_payload_types.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[u8]>>(5);
-                    }
-                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<str>]>>(6);
                     if prepared_kind.is_some() {
-                        table_writer.write_entry::<super::rtp_parameters::MediaKind>(2);
+                        table_writer.write_entry::<super::rtp_parameters::MediaKind>(3);
                     }
                     if prepared_paused.is_some() {
-                        table_writer.write_entry::<bool>(7);
-                    }
-                    if prepared_producer_paused.is_some() {
                         table_writer.write_entry::<bool>(8);
                     }
+                    if prepared_producer_paused.is_some() {
+                        table_writer.write_entry::<bool>(9);
+                    }
                     if prepared_priority.is_some() {
-                        table_writer.write_entry::<u8>(9);
+                        table_writer.write_entry::<u8>(10);
                     }
 
                     unsafe {
@@ -6043,19 +5947,12 @@ mod root {
                             object_writer.write::<_, _, 4>(&prepared_id);
                             object_writer.write::<_, _, 4>(&prepared_producer_id);
                             object_writer.write::<_, _, 4>(&prepared_rtp_parameters);
-                            if let ::core::option::Option::Some(prepared_consumable_rtp_encodings) =
-                                prepared_consumable_rtp_encodings
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_consumable_rtp_encodings);
-                            }
-                            if let ::core::option::Option::Some(
-                                prepared_supported_codec_payload_types,
-                            ) = prepared_supported_codec_payload_types
-                            {
-                                object_writer
-                                    .write::<_, _, 4>(&prepared_supported_codec_payload_types);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_consumable_rtp_encodings);
+                            object_writer.write::<_, _, 4>(&prepared_supported_codec_payload_types);
                             object_writer.write::<_, _, 4>(&prepared_trace_event_types);
+                            if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
+                                object_writer.write::<_, _, 1>(&prepared_type_);
+                            }
                             if let ::core::option::Option::Some(prepared_kind) = prepared_kind {
                                 object_writer.write::<_, _, 1>(&prepared_kind);
                             }
@@ -6111,6 +6008,7 @@ mod root {
                     BaseConsumerDump::create(
                         builder,
                         &self.id,
+                        self.type_,
                         &self.producer_id,
                         self.kind,
                         &self.rtp_parameters,
@@ -6144,31 +6042,56 @@ mod root {
             }
 
             impl<T0> BaseConsumerDumpBuilder<(T0,)> {
-                /// Setter for the [`producer_id` field](BaseConsumerDump#structfield.producer_id).
+                /// Setter for the [`type` field](BaseConsumerDump#structfield.type_).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn producer_id<T1>(self, value: T1) -> BaseConsumerDumpBuilder<(T0, T1)>
+                pub fn type_<T1>(self, value: T1) -> BaseConsumerDumpBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                 {
                     let (v0,) = self.0;
                     BaseConsumerDumpBuilder((v0, value))
                 }
+
+                /// Sets the [`type` field](BaseConsumerDump#structfield.type_) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn type_as_default(
+                    self,
+                ) -> BaseConsumerDumpBuilder<(T0, ::planus::DefaultValue)> {
+                    self.type_(::planus::DefaultValue)
+                }
             }
 
             impl<T0, T1> BaseConsumerDumpBuilder<(T0, T1)> {
+                /// Setter for the [`producer_id` field](BaseConsumerDump#structfield.producer_id).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn producer_id<T2>(self, value: T2) -> BaseConsumerDumpBuilder<(T0, T1, T2)>
+                where
+                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                {
+                    let (v0, v1) = self.0;
+                    BaseConsumerDumpBuilder((v0, v1, value))
+                }
+            }
+
+            impl<T0, T1, T2> BaseConsumerDumpBuilder<(T0, T1, T2)> {
                 /// Setter for the [`kind` field](BaseConsumerDump#structfield.kind).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn kind<T2>(self, value: T2) -> BaseConsumerDumpBuilder<(T0, T1, T2)>
+                pub fn kind<T3>(self, value: T3) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3)>
                 where
-                    T2: ::planus::WriteAsDefault<
+                    T3: ::planus::WriteAsDefault<
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
                 {
-                    let (v0, v1) = self.0;
-                    BaseConsumerDumpBuilder((v0, v1, value))
+                    let (v0, v1, v2) = self.0;
+                    BaseConsumerDumpBuilder((v0, v1, v2, value))
                 }
 
                 /// Sets the [`kind` field](BaseConsumerDump#structfield.kind) to the default value.
@@ -6176,91 +6099,57 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn kind_as_default(
                     self,
-                ) -> BaseConsumerDumpBuilder<(T0, T1, ::planus::DefaultValue)> {
+                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, ::planus::DefaultValue)> {
                     self.kind(::planus::DefaultValue)
                 }
             }
 
-            impl<T0, T1, T2> BaseConsumerDumpBuilder<(T0, T1, T2)> {
+            impl<T0, T1, T2, T3> BaseConsumerDumpBuilder<(T0, T1, T2, T3)> {
                 /// Setter for the [`rtp_parameters` field](BaseConsumerDump#structfield.rtp_parameters).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn rtp_parameters<T3>(
-                    self,
-                    value: T3,
-                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3)>
-                where
-                    T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
-                {
-                    let (v0, v1, v2) = self.0;
-                    BaseConsumerDumpBuilder((v0, v1, v2, value))
-                }
-            }
-
-            impl<T0, T1, T2, T3> BaseConsumerDumpBuilder<(T0, T1, T2, T3)> {
-                /// Setter for the [`consumable_rtp_encodings` field](BaseConsumerDump#structfield.consumable_rtp_encodings).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn consumable_rtp_encodings<T4>(
+                pub fn rtp_parameters<T4>(
                     self,
                     value: T4,
                 ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAsOptional<
+                    T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
+                {
+                    let (v0, v1, v2, v3) = self.0;
+                    BaseConsumerDumpBuilder((v0, v1, v2, v3, value))
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4)> {
+                /// Setter for the [`consumable_rtp_encodings` field](BaseConsumerDump#structfield.consumable_rtp_encodings).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn consumable_rtp_encodings<T5>(
+                    self,
+                    value: T5,
+                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)>
+                where
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<
                             [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
                         >,
                     >,
                 {
-                    let (v0, v1, v2, v3) = self.0;
-                    BaseConsumerDumpBuilder((v0, v1, v2, v3, value))
-                }
-
-                /// Sets the [`consumable_rtp_encodings` field](BaseConsumerDump#structfield.consumable_rtp_encodings) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn consumable_rtp_encodings_as_null(
-                    self,
-                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, ())> {
-                    self.consumable_rtp_encodings(())
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4)> {
-                /// Setter for the [`supported_codec_payload_types` field](BaseConsumerDump#structfield.supported_codec_payload_types).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn supported_codec_payload_types<T5>(
-                    self,
-                    value: T5,
-                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)>
-                where
-                    T5: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
-                {
                     let (v0, v1, v2, v3, v4) = self.0;
                     BaseConsumerDumpBuilder((v0, v1, v2, v3, v4, value))
-                }
-
-                /// Sets the [`supported_codec_payload_types` field](BaseConsumerDump#structfield.supported_codec_payload_types) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn supported_codec_payload_types_as_null(
-                    self,
-                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, ())> {
-                    self.supported_codec_payload_types(())
                 }
             }
 
             impl<T0, T1, T2, T3, T4, T5> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)> {
-                /// Setter for the [`trace_event_types` field](BaseConsumerDump#structfield.trace_event_types).
+                /// Setter for the [`supported_codec_payload_types` field](BaseConsumerDump#structfield.supported_codec_payload_types).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn trace_event_types<T6>(
+                pub fn supported_codec_payload_types<T6>(
                     self,
                     value: T6,
                 ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)>
                 where
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T6: ::planus::WriteAs<::planus::Offset<[u8]>>,
                 {
                     let (v0, v1, v2, v3, v4, v5) = self.0;
                     BaseConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, value))
@@ -6268,36 +6157,26 @@ mod root {
             }
 
             impl<T0, T1, T2, T3, T4, T5, T6> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
-                /// Setter for the [`paused` field](BaseConsumerDump#structfield.paused).
+                /// Setter for the [`trace_event_types` field](BaseConsumerDump#structfield.trace_event_types).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn paused<T7>(
+                pub fn trace_event_types<T7>(
                     self,
                     value: T7,
                 ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
                 where
-                    T7: ::planus::WriteAsDefault<bool, bool>,
+                    T7: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 {
                     let (v0, v1, v2, v3, v4, v5, v6) = self.0;
                     BaseConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, value))
                 }
-
-                /// Sets the [`paused` field](BaseConsumerDump#structfield.paused) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn paused_as_default(
-                    self,
-                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, ::planus::DefaultValue)>
-                {
-                    self.paused(::planus::DefaultValue)
-                }
             }
 
             impl<T0, T1, T2, T3, T4, T5, T6, T7> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)> {
-                /// Setter for the [`producer_paused` field](BaseConsumerDump#structfield.producer_paused).
+                /// Setter for the [`paused` field](BaseConsumerDump#structfield.paused).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn producer_paused<T8>(
+                pub fn paused<T8>(
                     self,
                     value: T8,
                 ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
@@ -6308,32 +6187,70 @@ mod root {
                     BaseConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, value))
                 }
 
-                /// Sets the [`producer_paused` field](BaseConsumerDump#structfield.producer_paused) to the default value.
+                /// Sets the [`paused` field](BaseConsumerDump#structfield.paused) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn producer_paused_as_default(
+                pub fn paused_as_default(
                     self,
                 ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, ::planus::DefaultValue)>
                 {
-                    self.producer_paused(::planus::DefaultValue)
+                    self.paused(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1, T2, T3, T4, T5, T6, T7, T8>
                 BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
             {
-                /// Setter for the [`priority` field](BaseConsumerDump#structfield.priority).
+                /// Setter for the [`producer_paused` field](BaseConsumerDump#structfield.producer_paused).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn priority<T9>(
+                pub fn producer_paused<T9>(
                     self,
                     value: T9,
                 ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
                 where
-                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<bool, bool>,
                 {
                     let (v0, v1, v2, v3, v4, v5, v6, v7, v8) = self.0;
                     BaseConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, value))
+                }
+
+                /// Sets the [`producer_paused` field](BaseConsumerDump#structfield.producer_paused) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn producer_paused_as_default(
+                    self,
+                ) -> BaseConsumerDumpBuilder<(
+                    T0,
+                    T1,
+                    T2,
+                    T3,
+                    T4,
+                    T5,
+                    T6,
+                    T7,
+                    T8,
+                    ::planus::DefaultValue,
+                )> {
+                    self.producer_paused(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
+                BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
+            {
+                /// Setter for the [`priority` field](BaseConsumerDump#structfield.priority).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn priority<T10>(
+                    self,
+                    value: T10,
+                ) -> BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
+                where
+                    T10: ::planus::WriteAsDefault<u8, u8>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) = self.0;
+                    BaseConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, value))
                 }
 
                 /// Sets the [`priority` field](BaseConsumerDump#structfield.priority) to the default value.
@@ -6351,14 +6268,15 @@ mod root {
                     T6,
                     T7,
                     T8,
+                    T9,
                     ::planus::DefaultValue,
                 )> {
                     self.priority(::planus::DefaultValue)
                 }
             }
 
-            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9>
-                BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+                BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
             {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [BaseConsumerDump].
                 #[inline]
@@ -6375,24 +6293,28 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                    T2: ::planus::WriteAsDefault<
+                    T1: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
+                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
-                    T4: ::planus::WriteAsOptional<
+                    T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<
                             [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
                         >,
                     >,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
-                    T7: ::planus::WriteAsDefault<bool, bool>,
+                    T6: ::planus::WriteAs<::planus::Offset<[u8]>>,
+                    T7: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                     T8: ::planus::WriteAsDefault<bool, bool>,
-                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<bool, bool>,
+                    T10: ::planus::WriteAsDefault<u8, u8>,
                 > ::planus::WriteAs<::planus::Offset<BaseConsumerDump>>
-                for BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
+                for BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
             {
                 type Prepared = ::planus::Offset<BaseConsumerDump>;
 
@@ -6407,24 +6329,28 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                    T2: ::planus::WriteAsDefault<
+                    T1: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
+                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
-                    T4: ::planus::WriteAsOptional<
+                    T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<
                             [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
                         >,
                     >,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
-                    T7: ::planus::WriteAsDefault<bool, bool>,
+                    T6: ::planus::WriteAs<::planus::Offset<[u8]>>,
+                    T7: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                     T8: ::planus::WriteAsDefault<bool, bool>,
-                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<bool, bool>,
+                    T10: ::planus::WriteAsDefault<u8, u8>,
                 > ::planus::WriteAsOptional<::planus::Offset<BaseConsumerDump>>
-                for BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
+                for BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
             {
                 type Prepared = ::planus::Offset<BaseConsumerDump>;
 
@@ -6439,32 +6365,36 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
-                    T2: ::planus::WriteAsDefault<
+                    T1: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
+                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T3: ::planus::WriteAsDefault<
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
-                    T4: ::planus::WriteAsOptional<
+                    T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<
                             [::planus::Offset<super::rtp_parameters::RtpEncodingParameters>],
                         >,
                     >,
-                    T5: ::planus::WriteAsOptional<::planus::Offset<[u8]>>,
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
-                    T7: ::planus::WriteAsDefault<bool, bool>,
+                    T6: ::planus::WriteAs<::planus::Offset<[u8]>>,
+                    T7: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                     T8: ::planus::WriteAsDefault<bool, bool>,
-                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<bool, bool>,
+                    T10: ::planus::WriteAsDefault<u8, u8>,
                 > ::planus::WriteAsOffset<BaseConsumerDump>
-                for BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
+                for BaseConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<BaseConsumerDump> {
-                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) = &self.0;
-                    BaseConsumerDump::create(builder, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9)
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10) = &self.0;
+                    BaseConsumerDump::create(builder, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10)
                 }
             }
 
@@ -6479,10 +6409,20 @@ mod root {
                     self.0.access_required(0, "BaseConsumerDump", "id")
                 }
 
+                /// Getter for the [`type` field](BaseConsumerDump#structfield.type_).
+                #[inline]
+                pub fn type_(&self) -> ::planus::Result<super::rtp_parameters::Type> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(1, "BaseConsumerDump", "type_")?
+                            .unwrap_or(super::rtp_parameters::Type::Simple),
+                    )
+                }
+
                 /// Getter for the [`producer_id` field](BaseConsumerDump#structfield.producer_id).
                 #[inline]
                 pub fn producer_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(1, "BaseConsumerDump", "producer_id")
+                    self.0.access_required(2, "BaseConsumerDump", "producer_id")
                 }
 
                 /// Getter for the [`kind` field](BaseConsumerDump#structfield.kind).
@@ -6490,7 +6430,7 @@ mod root {
                 pub fn kind(&self) -> ::planus::Result<super::rtp_parameters::MediaKind> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(2, "BaseConsumerDump", "kind")?
+                            .access(3, "BaseConsumerDump", "kind")?
                             .unwrap_or(super::rtp_parameters::MediaKind::Audio),
                     )
                 }
@@ -6501,7 +6441,7 @@ mod root {
                     &self,
                 ) -> ::planus::Result<super::rtp_parameters::RtpParametersRef<'a>> {
                     self.0
-                        .access_required(3, "BaseConsumerDump", "rtp_parameters")
+                        .access_required(4, "BaseConsumerDump", "rtp_parameters")
                 }
 
                 /// Getter for the [`consumable_rtp_encodings` field](BaseConsumerDump#structfield.consumable_rtp_encodings).
@@ -6509,24 +6449,20 @@ mod root {
                 pub fn consumable_rtp_encodings(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<
-                            'a,
-                            ::planus::Result<super::rtp_parameters::RtpEncodingParametersRef<'a>>,
-                        >,
+                    ::planus::Vector<
+                        'a,
+                        ::planus::Result<super::rtp_parameters::RtpEncodingParametersRef<'a>>,
                     >,
                 > {
                     self.0
-                        .access(4, "BaseConsumerDump", "consumable_rtp_encodings")
+                        .access_required(5, "BaseConsumerDump", "consumable_rtp_encodings")
                 }
 
                 /// Getter for the [`supported_codec_payload_types` field](BaseConsumerDump#structfield.supported_codec_payload_types).
                 #[inline]
-                pub fn supported_codec_payload_types(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<&'a [u8]>> {
+                pub fn supported_codec_payload_types(&self) -> ::planus::Result<&'a [u8]> {
                     self.0
-                        .access(5, "BaseConsumerDump", "supported_codec_payload_types")
+                        .access_required(6, "BaseConsumerDump", "supported_codec_payload_types")
                 }
 
                 /// Getter for the [`trace_event_types` field](BaseConsumerDump#structfield.trace_event_types).
@@ -6534,10 +6470,16 @@ mod root {
                 pub fn trace_event_types(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
+                    ::planus::Vector<
+                        'a,
+                        ::core::result::Result<
+                            self::TraceEventType,
+                            ::planus::errors::UnknownEnumTag,
+                        >,
+                    >,
                 > {
                     self.0
-                        .access_required(6, "BaseConsumerDump", "trace_event_types")
+                        .access_required(7, "BaseConsumerDump", "trace_event_types")
                 }
 
                 /// Getter for the [`paused` field](BaseConsumerDump#structfield.paused).
@@ -6545,7 +6487,7 @@ mod root {
                 pub fn paused(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(7, "BaseConsumerDump", "paused")?
+                            .access(8, "BaseConsumerDump", "paused")?
                             .unwrap_or(false),
                     )
                 }
@@ -6555,7 +6497,7 @@ mod root {
                 pub fn producer_paused(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(8, "BaseConsumerDump", "producer_paused")?
+                            .access(9, "BaseConsumerDump", "producer_paused")?
                             .unwrap_or(false),
                     )
                 }
@@ -6565,7 +6507,7 @@ mod root {
                 pub fn priority(&self) -> ::planus::Result<u8> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(9, "BaseConsumerDump", "priority")?
+                            .access(10, "BaseConsumerDump", "priority")?
                             .unwrap_or(0),
                     )
                 }
@@ -6575,22 +6517,15 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("BaseConsumerDumpRef");
                     f.field("id", &self.id());
+                    f.field("type_", &self.type_());
                     f.field("producer_id", &self.producer_id());
                     f.field("kind", &self.kind());
                     f.field("rtp_parameters", &self.rtp_parameters());
-                    if let ::core::option::Option::Some(field_consumable_rtp_encodings) =
-                        self.consumable_rtp_encodings().transpose()
-                    {
-                        f.field("consumable_rtp_encodings", &field_consumable_rtp_encodings);
-                    }
-                    if let ::core::option::Option::Some(field_supported_codec_payload_types) =
-                        self.supported_codec_payload_types().transpose()
-                    {
-                        f.field(
-                            "supported_codec_payload_types",
-                            &field_supported_codec_payload_types,
-                        );
-                    }
+                    f.field("consumable_rtp_encodings", &self.consumable_rtp_encodings());
+                    f.field(
+                        "supported_codec_payload_types",
+                        &self.supported_codec_payload_types(),
+                    );
                     f.field("trace_event_types", &self.trace_event_types());
                     f.field("paused", &self.paused());
                     f.field("producer_paused", &self.producer_paused());
@@ -6606,22 +6541,18 @@ mod root {
                 fn try_from(value: BaseConsumerDumpRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         id: ::core::convert::TryInto::try_into(value.id()?)?,
+                        type_: ::core::convert::TryInto::try_into(value.type_()?)?,
                         producer_id: ::core::convert::TryInto::try_into(value.producer_id()?)?,
                         kind: ::core::convert::TryInto::try_into(value.kind()?)?,
                         rtp_parameters: ::planus::alloc::boxed::Box::new(
                             ::core::convert::TryInto::try_into(value.rtp_parameters()?)?,
                         ),
-                        consumable_rtp_encodings: if let ::core::option::Option::Some(
-                            consumable_rtp_encodings,
-                        ) = value.consumable_rtp_encodings()?
-                        {
-                            ::core::option::Option::Some(consumable_rtp_encodings.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        consumable_rtp_encodings: value
+                            .consumable_rtp_encodings()?
+                            .to_vec_result()?,
                         supported_codec_payload_types: value
                             .supported_codec_payload_types()?
-                            .map(|v| v.to_vec()),
+                            .to_vec(),
                         trace_event_types: value.trace_event_types()?.to_vec_result()?,
                         paused: ::core::convert::TryInto::try_into(value.paused()?)?,
                         producer_paused: ::core::convert::TryInto::try_into(
@@ -6702,1597 +6633,37 @@ mod root {
                 }
             }
 
-            /// The table `SimpleConsumerDump` in the namespace `FBS.Consumer`
+            /// The table `ConsumerDump` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SimpleConsumerDump` in the file `../worker/fbs/consumer.fbs:62`
+            /// * Table `ConsumerDump` in the file `../worker/fbs/consumer.fbs:64`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
-            pub struct SimpleConsumerDump {
-                /// The field `base` in the table `SimpleConsumerDump`
+            pub struct ConsumerDump {
+                /// The field `base` in the table `ConsumerDump`
                 pub base: ::planus::alloc::boxed::Box<self::BaseConsumerDump>,
-                /// The field `rtp_stream` in the table `SimpleConsumerDump`
-                pub rtp_stream: ::planus::alloc::boxed::Box<super::rtp_stream::Dump>,
-            }
-
-            impl SimpleConsumerDump {
-                /// Creates a [SimpleConsumerDumpBuilder] for serializing an instance of this table.
-                #[inline]
-                pub fn builder() -> SimpleConsumerDumpBuilder<()> {
-                    SimpleConsumerDumpBuilder(())
-                }
-
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_base: impl ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    field_rtp_stream: impl ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_base = field_base.prepare(builder);
-                    let prepared_rtp_stream = field_rtp_stream.prepare(builder);
-
-                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
-                        ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<self::BaseConsumerDump>>(0);
-                    table_writer.write_entry::<::planus::Offset<super::rtp_stream::Dump>>(1);
-
-                    unsafe {
-                        table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_base);
-                            object_writer.write::<_, _, 4>(&prepared_rtp_stream);
-                        });
-                    }
-                    builder.current_offset()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<SimpleConsumerDump>> for SimpleConsumerDump {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimpleConsumerDump> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<SimpleConsumerDump>> for SimpleConsumerDump {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SimpleConsumerDump>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<SimpleConsumerDump> for SimpleConsumerDump {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimpleConsumerDump> {
-                    SimpleConsumerDump::create(builder, &self.base, &self.rtp_stream)
-                }
-            }
-
-            /// Builder for serializing an instance of the [SimpleConsumerDump] type.
-            ///
-            /// Can be created using the [SimpleConsumerDump::builder] method.
-            #[derive(Debug)]
-            #[must_use]
-            pub struct SimpleConsumerDumpBuilder<State>(State);
-
-            impl SimpleConsumerDumpBuilder<()> {
-                /// Setter for the [`base` field](SimpleConsumerDump#structfield.base).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn base<T0>(self, value: T0) -> SimpleConsumerDumpBuilder<(T0,)>
-                where
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                {
-                    SimpleConsumerDumpBuilder((value,))
-                }
-            }
-
-            impl<T0> SimpleConsumerDumpBuilder<(T0,)> {
-                /// Setter for the [`rtp_stream` field](SimpleConsumerDump#structfield.rtp_stream).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn rtp_stream<T1>(self, value: T1) -> SimpleConsumerDumpBuilder<(T0, T1)>
-                where
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                {
-                    let (v0,) = self.0;
-                    SimpleConsumerDumpBuilder((v0, value))
-                }
-            }
-
-            impl<T0, T1> SimpleConsumerDumpBuilder<(T0, T1)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SimpleConsumerDump].
-                #[inline]
-                pub fn finish(
-                    self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimpleConsumerDump>
-                where
-                    Self: ::planus::WriteAsOffset<SimpleConsumerDump>,
-                {
-                    ::planus::WriteAsOffset::prepare(&self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                > ::planus::WriteAs<::planus::Offset<SimpleConsumerDump>>
-                for SimpleConsumerDumpBuilder<(T0, T1)>
-            {
-                type Prepared = ::planus::Offset<SimpleConsumerDump>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimpleConsumerDump> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                > ::planus::WriteAsOptional<::planus::Offset<SimpleConsumerDump>>
-                for SimpleConsumerDumpBuilder<(T0, T1)>
-            {
-                type Prepared = ::planus::Offset<SimpleConsumerDump>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SimpleConsumerDump>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                > ::planus::WriteAsOffset<SimpleConsumerDump>
-                for SimpleConsumerDumpBuilder<(T0, T1)>
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimpleConsumerDump> {
-                    let (v0, v1) = &self.0;
-                    SimpleConsumerDump::create(builder, v0, v1)
-                }
-            }
-
-            /// Reference to a deserialized [SimpleConsumerDump].
-            #[derive(Copy, Clone)]
-            pub struct SimpleConsumerDumpRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> SimpleConsumerDumpRef<'a> {
-                /// Getter for the [`base` field](SimpleConsumerDump#structfield.base).
-                #[inline]
-                pub fn base(&self) -> ::planus::Result<self::BaseConsumerDumpRef<'a>> {
-                    self.0.access_required(0, "SimpleConsumerDump", "base")
-                }
-
-                /// Getter for the [`rtp_stream` field](SimpleConsumerDump#structfield.rtp_stream).
-                #[inline]
-                pub fn rtp_stream(&self) -> ::planus::Result<super::rtp_stream::DumpRef<'a>> {
-                    self.0
-                        .access_required(1, "SimpleConsumerDump", "rtp_stream")
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for SimpleConsumerDumpRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("SimpleConsumerDumpRef");
-                    f.field("base", &self.base());
-                    f.field("rtp_stream", &self.rtp_stream());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<SimpleConsumerDumpRef<'a>> for SimpleConsumerDump {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: SimpleConsumerDumpRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        base: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
-                            value.base()?,
-                        )?),
-                        rtp_stream: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.rtp_stream()?)?,
-                        ),
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for SimpleConsumerDumpRef<'a> {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for SimpleConsumerDumpRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[SimpleConsumerDumpRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<SimpleConsumerDump>> for SimpleConsumerDump {
-                type Value = ::planus::Offset<SimpleConsumerDump>;
-                const STRIDE: usize = 4;
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<SimpleConsumerDump>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for SimpleConsumerDumpRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[SimpleConsumerDumpRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
-            /// The table `SimulcastConsumerDump` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Table `SimulcastConsumerDump` in the file `../worker/fbs/consumer.fbs:67`
-            #[derive(
-                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
-            )]
-            pub struct SimulcastConsumerDump {
-                /// The field `base` in the table `SimulcastConsumerDump`
-                pub base: ::planus::alloc::boxed::Box<self::BaseConsumerDump>,
-                /// The field `rtp_stream` in the table `SimulcastConsumerDump`
-                pub rtp_stream: ::planus::alloc::boxed::Box<super::rtp_stream::Dump>,
-                /// The field `preferred_spatial_layer` in the table `SimulcastConsumerDump`
-                pub preferred_spatial_layer: i16,
-                /// The field `target_spatial_layer` in the table `SimulcastConsumerDump`
-                pub target_spatial_layer: i16,
-                /// The field `current_spatial_layer` in the table `SimulcastConsumerDump`
-                pub current_spatial_layer: i16,
-                /// The field `preferred_temporal_layer` in the table `SimulcastConsumerDump`
-                pub preferred_temporal_layer: i16,
-                /// The field `target_temporal_layer` in the table `SimulcastConsumerDump`
-                pub target_temporal_layer: i16,
-                /// The field `current_temporal_layer` in the table `SimulcastConsumerDump`
-                pub current_temporal_layer: i16,
-            }
-
-            impl SimulcastConsumerDump {
-                /// Creates a [SimulcastConsumerDumpBuilder] for serializing an instance of this table.
-                #[inline]
-                pub fn builder() -> SimulcastConsumerDumpBuilder<()> {
-                    SimulcastConsumerDumpBuilder(())
-                }
-
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_base: impl ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    field_rtp_stream: impl ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    field_preferred_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_target_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_current_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_preferred_temporal_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_target_temporal_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_current_temporal_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_base = field_base.prepare(builder);
-                    let prepared_rtp_stream = field_rtp_stream.prepare(builder);
-                    let prepared_preferred_spatial_layer =
-                        field_preferred_spatial_layer.prepare(builder, &0);
-                    let prepared_target_spatial_layer =
-                        field_target_spatial_layer.prepare(builder, &0);
-                    let prepared_current_spatial_layer =
-                        field_current_spatial_layer.prepare(builder, &0);
-                    let prepared_preferred_temporal_layer =
-                        field_preferred_temporal_layer.prepare(builder, &0);
-                    let prepared_target_temporal_layer =
-                        field_target_temporal_layer.prepare(builder, &0);
-                    let prepared_current_temporal_layer =
-                        field_current_temporal_layer.prepare(builder, &0);
-
-                    let mut table_writer: ::planus::table_writer::TableWriter<20> =
-                        ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<self::BaseConsumerDump>>(0);
-                    table_writer.write_entry::<::planus::Offset<super::rtp_stream::Dump>>(1);
-                    if prepared_preferred_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(2);
-                    }
-                    if prepared_target_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(3);
-                    }
-                    if prepared_current_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(4);
-                    }
-                    if prepared_preferred_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(5);
-                    }
-                    if prepared_target_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(6);
-                    }
-                    if prepared_current_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(7);
-                    }
-
-                    unsafe {
-                        table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_base);
-                            object_writer.write::<_, _, 4>(&prepared_rtp_stream);
-                            if let ::core::option::Option::Some(prepared_preferred_spatial_layer) =
-                                prepared_preferred_spatial_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_preferred_spatial_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_target_spatial_layer) =
-                                prepared_target_spatial_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_target_spatial_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_current_spatial_layer) =
-                                prepared_current_spatial_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_current_spatial_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_preferred_temporal_layer) =
-                                prepared_preferred_temporal_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_preferred_temporal_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_target_temporal_layer) =
-                                prepared_target_temporal_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_target_temporal_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_current_temporal_layer) =
-                                prepared_current_temporal_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_current_temporal_layer);
-                            }
-                        });
-                    }
-                    builder.current_offset()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<SimulcastConsumerDump>> for SimulcastConsumerDump {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimulcastConsumerDump> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<SimulcastConsumerDump>> for SimulcastConsumerDump {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SimulcastConsumerDump>>
-                {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<SimulcastConsumerDump> for SimulcastConsumerDump {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimulcastConsumerDump> {
-                    SimulcastConsumerDump::create(
-                        builder,
-                        &self.base,
-                        &self.rtp_stream,
-                        self.preferred_spatial_layer,
-                        self.target_spatial_layer,
-                        self.current_spatial_layer,
-                        self.preferred_temporal_layer,
-                        self.target_temporal_layer,
-                        self.current_temporal_layer,
-                    )
-                }
-            }
-
-            /// Builder for serializing an instance of the [SimulcastConsumerDump] type.
-            ///
-            /// Can be created using the [SimulcastConsumerDump::builder] method.
-            #[derive(Debug)]
-            #[must_use]
-            pub struct SimulcastConsumerDumpBuilder<State>(State);
-
-            impl SimulcastConsumerDumpBuilder<()> {
-                /// Setter for the [`base` field](SimulcastConsumerDump#structfield.base).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn base<T0>(self, value: T0) -> SimulcastConsumerDumpBuilder<(T0,)>
-                where
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                {
-                    SimulcastConsumerDumpBuilder((value,))
-                }
-            }
-
-            impl<T0> SimulcastConsumerDumpBuilder<(T0,)> {
-                /// Setter for the [`rtp_stream` field](SimulcastConsumerDump#structfield.rtp_stream).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn rtp_stream<T1>(self, value: T1) -> SimulcastConsumerDumpBuilder<(T0, T1)>
-                where
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                {
-                    let (v0,) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, value))
-                }
-            }
-
-            impl<T0, T1> SimulcastConsumerDumpBuilder<(T0, T1)> {
-                /// Setter for the [`preferred_spatial_layer` field](SimulcastConsumerDump#structfield.preferred_spatial_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_spatial_layer<T2>(
-                    self,
-                    value: T2,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2)>
-                where
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, v1, value))
-                }
-
-                /// Sets the [`preferred_spatial_layer` field](SimulcastConsumerDump#structfield.preferred_spatial_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_spatial_layer_as_default(
-                    self,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, ::planus::DefaultValue)>
-                {
-                    self.preferred_spatial_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2> SimulcastConsumerDumpBuilder<(T0, T1, T2)> {
-                /// Setter for the [`target_spatial_layer` field](SimulcastConsumerDump#structfield.target_spatial_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_spatial_layer<T3>(
-                    self,
-                    value: T3,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3)>
-                where
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, v1, v2, value))
-                }
-
-                /// Sets the [`target_spatial_layer` field](SimulcastConsumerDump#structfield.target_spatial_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_spatial_layer_as_default(
-                    self,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, ::planus::DefaultValue)>
-                {
-                    self.target_spatial_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3)> {
-                /// Setter for the [`current_spatial_layer` field](SimulcastConsumerDump#structfield.current_spatial_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_spatial_layer<T4>(
-                    self,
-                    value: T4,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4)>
-                where
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, v1, v2, v3, value))
-                }
-
-                /// Sets the [`current_spatial_layer` field](SimulcastConsumerDump#structfield.current_spatial_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_spatial_layer_as_default(
-                    self,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)>
-                {
-                    self.current_spatial_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4)> {
-                /// Setter for the [`preferred_temporal_layer` field](SimulcastConsumerDump#structfield.preferred_temporal_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_temporal_layer<T5>(
-                    self,
-                    value: T5,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)>
-                where
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3, v4) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, v1, v2, v3, v4, value))
-                }
-
-                /// Sets the [`preferred_temporal_layer` field](SimulcastConsumerDump#structfield.preferred_temporal_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_temporal_layer_as_default(
-                    self,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, ::planus::DefaultValue)>
-                {
-                    self.preferred_temporal_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4, T5> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)> {
-                /// Setter for the [`target_temporal_layer` field](SimulcastConsumerDump#structfield.target_temporal_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_temporal_layer<T6>(
-                    self,
-                    value: T6,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)>
-                where
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3, v4, v5) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, value))
-                }
-
-                /// Sets the [`target_temporal_layer` field](SimulcastConsumerDump#structfield.target_temporal_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_temporal_layer_as_default(
-                    self,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, ::planus::DefaultValue)>
-                {
-                    self.target_temporal_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4, T5, T6> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
-                /// Setter for the [`current_temporal_layer` field](SimulcastConsumerDump#structfield.current_temporal_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_temporal_layer<T7>(
-                    self,
-                    value: T7,
-                ) -> SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-                where
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3, v4, v5, v6) = self.0;
-                    SimulcastConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, value))
-                }
-
-                /// Sets the [`current_temporal_layer` field](SimulcastConsumerDump#structfield.current_temporal_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_temporal_layer_as_default(
-                    self,
-                ) -> SimulcastConsumerDumpBuilder<(
-                    T0,
-                    T1,
-                    T2,
-                    T3,
-                    T4,
-                    T5,
-                    T6,
-                    ::planus::DefaultValue,
-                )> {
-                    self.current_temporal_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4, T5, T6, T7>
-                SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SimulcastConsumerDump].
-                #[inline]
-                pub fn finish(
-                    self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimulcastConsumerDump>
-                where
-                    Self: ::planus::WriteAsOffset<SimulcastConsumerDump>,
-                {
-                    ::planus::WriteAsOffset::prepare(&self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                > ::planus::WriteAs<::planus::Offset<SimulcastConsumerDump>>
-                for SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                type Prepared = ::planus::Offset<SimulcastConsumerDump>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimulcastConsumerDump> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                > ::planus::WriteAsOptional<::planus::Offset<SimulcastConsumerDump>>
-                for SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                type Prepared = ::planus::Offset<SimulcastConsumerDump>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SimulcastConsumerDump>>
-                {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                > ::planus::WriteAsOffset<SimulcastConsumerDump>
-                for SimulcastConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SimulcastConsumerDump> {
-                    let (v0, v1, v2, v3, v4, v5, v6, v7) = &self.0;
-                    SimulcastConsumerDump::create(builder, v0, v1, v2, v3, v4, v5, v6, v7)
-                }
-            }
-
-            /// Reference to a deserialized [SimulcastConsumerDump].
-            #[derive(Copy, Clone)]
-            pub struct SimulcastConsumerDumpRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> SimulcastConsumerDumpRef<'a> {
-                /// Getter for the [`base` field](SimulcastConsumerDump#structfield.base).
-                #[inline]
-                pub fn base(&self) -> ::planus::Result<self::BaseConsumerDumpRef<'a>> {
-                    self.0.access_required(0, "SimulcastConsumerDump", "base")
-                }
-
-                /// Getter for the [`rtp_stream` field](SimulcastConsumerDump#structfield.rtp_stream).
-                #[inline]
-                pub fn rtp_stream(&self) -> ::planus::Result<super::rtp_stream::DumpRef<'a>> {
-                    self.0
-                        .access_required(1, "SimulcastConsumerDump", "rtp_stream")
-                }
-
-                /// Getter for the [`preferred_spatial_layer` field](SimulcastConsumerDump#structfield.preferred_spatial_layer).
-                #[inline]
-                pub fn preferred_spatial_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "SimulcastConsumerDump", "preferred_spatial_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`target_spatial_layer` field](SimulcastConsumerDump#structfield.target_spatial_layer).
-                #[inline]
-                pub fn target_spatial_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(3, "SimulcastConsumerDump", "target_spatial_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`current_spatial_layer` field](SimulcastConsumerDump#structfield.current_spatial_layer).
-                #[inline]
-                pub fn current_spatial_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(4, "SimulcastConsumerDump", "current_spatial_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`preferred_temporal_layer` field](SimulcastConsumerDump#structfield.preferred_temporal_layer).
-                #[inline]
-                pub fn preferred_temporal_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(5, "SimulcastConsumerDump", "preferred_temporal_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`target_temporal_layer` field](SimulcastConsumerDump#structfield.target_temporal_layer).
-                #[inline]
-                pub fn target_temporal_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(6, "SimulcastConsumerDump", "target_temporal_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`current_temporal_layer` field](SimulcastConsumerDump#structfield.current_temporal_layer).
-                #[inline]
-                pub fn current_temporal_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(7, "SimulcastConsumerDump", "current_temporal_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for SimulcastConsumerDumpRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("SimulcastConsumerDumpRef");
-                    f.field("base", &self.base());
-                    f.field("rtp_stream", &self.rtp_stream());
-                    f.field("preferred_spatial_layer", &self.preferred_spatial_layer());
-                    f.field("target_spatial_layer", &self.target_spatial_layer());
-                    f.field("current_spatial_layer", &self.current_spatial_layer());
-                    f.field("preferred_temporal_layer", &self.preferred_temporal_layer());
-                    f.field("target_temporal_layer", &self.target_temporal_layer());
-                    f.field("current_temporal_layer", &self.current_temporal_layer());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<SimulcastConsumerDumpRef<'a>> for SimulcastConsumerDump {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: SimulcastConsumerDumpRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        base: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
-                            value.base()?,
-                        )?),
-                        rtp_stream: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.rtp_stream()?)?,
-                        ),
-                        preferred_spatial_layer: ::core::convert::TryInto::try_into(
-                            value.preferred_spatial_layer()?,
-                        )?,
-                        target_spatial_layer: ::core::convert::TryInto::try_into(
-                            value.target_spatial_layer()?,
-                        )?,
-                        current_spatial_layer: ::core::convert::TryInto::try_into(
-                            value.current_spatial_layer()?,
-                        )?,
-                        preferred_temporal_layer: ::core::convert::TryInto::try_into(
-                            value.preferred_temporal_layer()?,
-                        )?,
-                        target_temporal_layer: ::core::convert::TryInto::try_into(
-                            value.target_temporal_layer()?,
-                        )?,
-                        current_temporal_layer: ::core::convert::TryInto::try_into(
-                            value.current_temporal_layer()?,
-                        )?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for SimulcastConsumerDumpRef<'a> {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for SimulcastConsumerDumpRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[SimulcastConsumerDumpRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<SimulcastConsumerDump>> for SimulcastConsumerDump {
-                type Value = ::planus::Offset<SimulcastConsumerDump>;
-                const STRIDE: usize = 4;
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<SimulcastConsumerDump>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for SimulcastConsumerDumpRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[SimulcastConsumerDumpRef]",
-                            "read_as_root",
-                            0,
-                        )
-                    })
-                }
-            }
-
-            /// The table `SvcConsumerDump` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Table `SvcConsumerDump` in the file `../worker/fbs/consumer.fbs:78`
-            #[derive(
-                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
-            )]
-            pub struct SvcConsumerDump {
-                /// The field `base` in the table `SvcConsumerDump`
-                pub base: ::planus::alloc::boxed::Box<self::BaseConsumerDump>,
-                /// The field `rtp_stream` in the table `SvcConsumerDump`
-                pub rtp_stream: ::planus::alloc::boxed::Box<super::rtp_stream::Dump>,
-                /// The field `preferred_spatial_layer` in the table `SvcConsumerDump`
-                pub preferred_spatial_layer: i16,
-                /// The field `target_spatial_layer` in the table `SvcConsumerDump`
-                pub target_spatial_layer: i16,
-                /// The field `current_spatial_layer` in the table `SvcConsumerDump`
-                pub current_spatial_layer: i16,
-                /// The field `preferred_temporal_layer` in the table `SvcConsumerDump`
-                pub preferred_temporal_layer: i16,
-                /// The field `target_temporal_layer` in the table `SvcConsumerDump`
-                pub target_temporal_layer: i16,
-                /// The field `current_temporal_layer` in the table `SvcConsumerDump`
-                pub current_temporal_layer: i16,
-            }
-
-            impl SvcConsumerDump {
-                /// Creates a [SvcConsumerDumpBuilder] for serializing an instance of this table.
-                #[inline]
-                pub fn builder() -> SvcConsumerDumpBuilder<()> {
-                    SvcConsumerDumpBuilder(())
-                }
-
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_base: impl ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    field_rtp_stream: impl ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    field_preferred_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_target_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_current_spatial_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_preferred_temporal_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_target_temporal_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                    field_current_temporal_layer: impl ::planus::WriteAsDefault<i16, i16>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_base = field_base.prepare(builder);
-                    let prepared_rtp_stream = field_rtp_stream.prepare(builder);
-                    let prepared_preferred_spatial_layer =
-                        field_preferred_spatial_layer.prepare(builder, &0);
-                    let prepared_target_spatial_layer =
-                        field_target_spatial_layer.prepare(builder, &0);
-                    let prepared_current_spatial_layer =
-                        field_current_spatial_layer.prepare(builder, &0);
-                    let prepared_preferred_temporal_layer =
-                        field_preferred_temporal_layer.prepare(builder, &0);
-                    let prepared_target_temporal_layer =
-                        field_target_temporal_layer.prepare(builder, &0);
-                    let prepared_current_temporal_layer =
-                        field_current_temporal_layer.prepare(builder, &0);
-
-                    let mut table_writer: ::planus::table_writer::TableWriter<20> =
-                        ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<self::BaseConsumerDump>>(0);
-                    table_writer.write_entry::<::planus::Offset<super::rtp_stream::Dump>>(1);
-                    if prepared_preferred_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(2);
-                    }
-                    if prepared_target_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(3);
-                    }
-                    if prepared_current_spatial_layer.is_some() {
-                        table_writer.write_entry::<i16>(4);
-                    }
-                    if prepared_preferred_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(5);
-                    }
-                    if prepared_target_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(6);
-                    }
-                    if prepared_current_temporal_layer.is_some() {
-                        table_writer.write_entry::<i16>(7);
-                    }
-
-                    unsafe {
-                        table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_base);
-                            object_writer.write::<_, _, 4>(&prepared_rtp_stream);
-                            if let ::core::option::Option::Some(prepared_preferred_spatial_layer) =
-                                prepared_preferred_spatial_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_preferred_spatial_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_target_spatial_layer) =
-                                prepared_target_spatial_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_target_spatial_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_current_spatial_layer) =
-                                prepared_current_spatial_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_current_spatial_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_preferred_temporal_layer) =
-                                prepared_preferred_temporal_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_preferred_temporal_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_target_temporal_layer) =
-                                prepared_target_temporal_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_target_temporal_layer);
-                            }
-                            if let ::core::option::Option::Some(prepared_current_temporal_layer) =
-                                prepared_current_temporal_layer
-                            {
-                                object_writer.write::<_, _, 2>(&prepared_current_temporal_layer);
-                            }
-                        });
-                    }
-                    builder.current_offset()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<SvcConsumerDump>> for SvcConsumerDump {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SvcConsumerDump> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<SvcConsumerDump>> for SvcConsumerDump {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SvcConsumerDump>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<SvcConsumerDump> for SvcConsumerDump {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SvcConsumerDump> {
-                    SvcConsumerDump::create(
-                        builder,
-                        &self.base,
-                        &self.rtp_stream,
-                        self.preferred_spatial_layer,
-                        self.target_spatial_layer,
-                        self.current_spatial_layer,
-                        self.preferred_temporal_layer,
-                        self.target_temporal_layer,
-                        self.current_temporal_layer,
-                    )
-                }
-            }
-
-            /// Builder for serializing an instance of the [SvcConsumerDump] type.
-            ///
-            /// Can be created using the [SvcConsumerDump::builder] method.
-            #[derive(Debug)]
-            #[must_use]
-            pub struct SvcConsumerDumpBuilder<State>(State);
-
-            impl SvcConsumerDumpBuilder<()> {
-                /// Setter for the [`base` field](SvcConsumerDump#structfield.base).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn base<T0>(self, value: T0) -> SvcConsumerDumpBuilder<(T0,)>
-                where
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                {
-                    SvcConsumerDumpBuilder((value,))
-                }
-            }
-
-            impl<T0> SvcConsumerDumpBuilder<(T0,)> {
-                /// Setter for the [`rtp_stream` field](SvcConsumerDump#structfield.rtp_stream).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn rtp_stream<T1>(self, value: T1) -> SvcConsumerDumpBuilder<(T0, T1)>
-                where
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                {
-                    let (v0,) = self.0;
-                    SvcConsumerDumpBuilder((v0, value))
-                }
-            }
-
-            impl<T0, T1> SvcConsumerDumpBuilder<(T0, T1)> {
-                /// Setter for the [`preferred_spatial_layer` field](SvcConsumerDump#structfield.preferred_spatial_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_spatial_layer<T2>(
-                    self,
-                    value: T2,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2)>
-                where
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1) = self.0;
-                    SvcConsumerDumpBuilder((v0, v1, value))
-                }
-
-                /// Sets the [`preferred_spatial_layer` field](SvcConsumerDump#structfield.preferred_spatial_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_spatial_layer_as_default(
-                    self,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, ::planus::DefaultValue)> {
-                    self.preferred_spatial_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2> SvcConsumerDumpBuilder<(T0, T1, T2)> {
-                /// Setter for the [`target_spatial_layer` field](SvcConsumerDump#structfield.target_spatial_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_spatial_layer<T3>(
-                    self,
-                    value: T3,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3)>
-                where
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2) = self.0;
-                    SvcConsumerDumpBuilder((v0, v1, v2, value))
-                }
-
-                /// Sets the [`target_spatial_layer` field](SvcConsumerDump#structfield.target_spatial_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_spatial_layer_as_default(
-                    self,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, ::planus::DefaultValue)> {
-                    self.target_spatial_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3> SvcConsumerDumpBuilder<(T0, T1, T2, T3)> {
-                /// Setter for the [`current_spatial_layer` field](SvcConsumerDump#structfield.current_spatial_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_spatial_layer<T4>(
-                    self,
-                    value: T4,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4)>
-                where
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3) = self.0;
-                    SvcConsumerDumpBuilder((v0, v1, v2, v3, value))
-                }
-
-                /// Sets the [`current_spatial_layer` field](SvcConsumerDump#structfield.current_spatial_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_spatial_layer_as_default(
-                    self,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)>
-                {
-                    self.current_spatial_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4)> {
-                /// Setter for the [`preferred_temporal_layer` field](SvcConsumerDump#structfield.preferred_temporal_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_temporal_layer<T5>(
-                    self,
-                    value: T5,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)>
-                where
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3, v4) = self.0;
-                    SvcConsumerDumpBuilder((v0, v1, v2, v3, v4, value))
-                }
-
-                /// Sets the [`preferred_temporal_layer` field](SvcConsumerDump#structfield.preferred_temporal_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn preferred_temporal_layer_as_default(
-                    self,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, ::planus::DefaultValue)>
-                {
-                    self.preferred_temporal_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4, T5> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)> {
-                /// Setter for the [`target_temporal_layer` field](SvcConsumerDump#structfield.target_temporal_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_temporal_layer<T6>(
-                    self,
-                    value: T6,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)>
-                where
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3, v4, v5) = self.0;
-                    SvcConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, value))
-                }
-
-                /// Sets the [`target_temporal_layer` field](SvcConsumerDump#structfield.target_temporal_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn target_temporal_layer_as_default(
-                    self,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, ::planus::DefaultValue)>
-                {
-                    self.target_temporal_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4, T5, T6> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
-                /// Setter for the [`current_temporal_layer` field](SvcConsumerDump#structfield.current_temporal_layer).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_temporal_layer<T7>(
-                    self,
-                    value: T7,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-                where
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                {
-                    let (v0, v1, v2, v3, v4, v5, v6) = self.0;
-                    SvcConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, value))
-                }
-
-                /// Sets the [`current_temporal_layer` field](SvcConsumerDump#structfield.current_temporal_layer) to the default value.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn current_temporal_layer_as_default(
-                    self,
-                ) -> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, ::planus::DefaultValue)>
-                {
-                    self.current_temporal_layer(::planus::DefaultValue)
-                }
-            }
-
-            impl<T0, T1, T2, T3, T4, T5, T6, T7> SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [SvcConsumerDump].
-                #[inline]
-                pub fn finish(
-                    self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SvcConsumerDump>
-                where
-                    Self: ::planus::WriteAsOffset<SvcConsumerDump>,
-                {
-                    ::planus::WriteAsOffset::prepare(&self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                > ::planus::WriteAs<::planus::Offset<SvcConsumerDump>>
-                for SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                type Prepared = ::planus::Offset<SvcConsumerDump>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SvcConsumerDump> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                > ::planus::WriteAsOptional<::planus::Offset<SvcConsumerDump>>
-                for SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                type Prepared = ::planus::Offset<SvcConsumerDump>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<SvcConsumerDump>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl<
-                    T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
-                    T1: ::planus::WriteAs<::planus::Offset<super::rtp_stream::Dump>>,
-                    T2: ::planus::WriteAsDefault<i16, i16>,
-                    T3: ::planus::WriteAsDefault<i16, i16>,
-                    T4: ::planus::WriteAsDefault<i16, i16>,
-                    T5: ::planus::WriteAsDefault<i16, i16>,
-                    T6: ::planus::WriteAsDefault<i16, i16>,
-                    T7: ::planus::WriteAsDefault<i16, i16>,
-                > ::planus::WriteAsOffset<SvcConsumerDump>
-                for SvcConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
-            {
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<SvcConsumerDump> {
-                    let (v0, v1, v2, v3, v4, v5, v6, v7) = &self.0;
-                    SvcConsumerDump::create(builder, v0, v1, v2, v3, v4, v5, v6, v7)
-                }
-            }
-
-            /// Reference to a deserialized [SvcConsumerDump].
-            #[derive(Copy, Clone)]
-            pub struct SvcConsumerDumpRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> SvcConsumerDumpRef<'a> {
-                /// Getter for the [`base` field](SvcConsumerDump#structfield.base).
-                #[inline]
-                pub fn base(&self) -> ::planus::Result<self::BaseConsumerDumpRef<'a>> {
-                    self.0.access_required(0, "SvcConsumerDump", "base")
-                }
-
-                /// Getter for the [`rtp_stream` field](SvcConsumerDump#structfield.rtp_stream).
-                #[inline]
-                pub fn rtp_stream(&self) -> ::planus::Result<super::rtp_stream::DumpRef<'a>> {
-                    self.0.access_required(1, "SvcConsumerDump", "rtp_stream")
-                }
-
-                /// Getter for the [`preferred_spatial_layer` field](SvcConsumerDump#structfield.preferred_spatial_layer).
-                #[inline]
-                pub fn preferred_spatial_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(2, "SvcConsumerDump", "preferred_spatial_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`target_spatial_layer` field](SvcConsumerDump#structfield.target_spatial_layer).
-                #[inline]
-                pub fn target_spatial_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(3, "SvcConsumerDump", "target_spatial_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`current_spatial_layer` field](SvcConsumerDump#structfield.current_spatial_layer).
-                #[inline]
-                pub fn current_spatial_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(4, "SvcConsumerDump", "current_spatial_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`preferred_temporal_layer` field](SvcConsumerDump#structfield.preferred_temporal_layer).
-                #[inline]
-                pub fn preferred_temporal_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(5, "SvcConsumerDump", "preferred_temporal_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`target_temporal_layer` field](SvcConsumerDump#structfield.target_temporal_layer).
-                #[inline]
-                pub fn target_temporal_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(6, "SvcConsumerDump", "target_temporal_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-
-                /// Getter for the [`current_temporal_layer` field](SvcConsumerDump#structfield.current_temporal_layer).
-                #[inline]
-                pub fn current_temporal_layer(&self) -> ::planus::Result<i16> {
-                    ::core::result::Result::Ok(
-                        self.0
-                            .access(7, "SvcConsumerDump", "current_temporal_layer")?
-                            .unwrap_or(0),
-                    )
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for SvcConsumerDumpRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("SvcConsumerDumpRef");
-                    f.field("base", &self.base());
-                    f.field("rtp_stream", &self.rtp_stream());
-                    f.field("preferred_spatial_layer", &self.preferred_spatial_layer());
-                    f.field("target_spatial_layer", &self.target_spatial_layer());
-                    f.field("current_spatial_layer", &self.current_spatial_layer());
-                    f.field("preferred_temporal_layer", &self.preferred_temporal_layer());
-                    f.field("target_temporal_layer", &self.target_temporal_layer());
-                    f.field("current_temporal_layer", &self.current_temporal_layer());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<SvcConsumerDumpRef<'a>> for SvcConsumerDump {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: SvcConsumerDumpRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        base: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
-                            value.base()?,
-                        )?),
-                        rtp_stream: ::planus::alloc::boxed::Box::new(
-                            ::core::convert::TryInto::try_into(value.rtp_stream()?)?,
-                        ),
-                        preferred_spatial_layer: ::core::convert::TryInto::try_into(
-                            value.preferred_spatial_layer()?,
-                        )?,
-                        target_spatial_layer: ::core::convert::TryInto::try_into(
-                            value.target_spatial_layer()?,
-                        )?,
-                        current_spatial_layer: ::core::convert::TryInto::try_into(
-                            value.current_spatial_layer()?,
-                        )?,
-                        preferred_temporal_layer: ::core::convert::TryInto::try_into(
-                            value.preferred_temporal_layer()?,
-                        )?,
-                        target_temporal_layer: ::core::convert::TryInto::try_into(
-                            value.target_temporal_layer()?,
-                        )?,
-                        current_temporal_layer: ::core::convert::TryInto::try_into(
-                            value.current_temporal_layer()?,
-                        )?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for SvcConsumerDumpRef<'a> {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for SvcConsumerDumpRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[SvcConsumerDumpRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<SvcConsumerDump>> for SvcConsumerDump {
-                type Value = ::planus::Offset<SvcConsumerDump>;
-                const STRIDE: usize = 4;
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<SvcConsumerDump>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for SvcConsumerDumpRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[SvcConsumerDumpRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
-            /// The table `PipeConsumerDump` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Table `PipeConsumerDump` in the file `../worker/fbs/consumer.fbs:89`
-            #[derive(
-                Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
-            )]
-            pub struct PipeConsumerDump {
-                /// The field `base` in the table `PipeConsumerDump`
-                pub base: ::planus::alloc::boxed::Box<self::BaseConsumerDump>,
-                /// The field `rtp_streams` in the table `PipeConsumerDump`
+                /// The field `rtp_streams` in the table `ConsumerDump`
                 pub rtp_streams: ::planus::alloc::vec::Vec<super::rtp_stream::Dump>,
+                /// The field `preferred_spatial_layer` in the table `ConsumerDump`
+                pub preferred_spatial_layer: ::core::option::Option<i16>,
+                /// The field `target_spatial_layer` in the table `ConsumerDump`
+                pub target_spatial_layer: ::core::option::Option<i16>,
+                /// The field `current_spatial_layer` in the table `ConsumerDump`
+                pub current_spatial_layer: ::core::option::Option<i16>,
+                /// The field `preferred_temporal_layer` in the table `ConsumerDump`
+                pub preferred_temporal_layer: ::core::option::Option<i16>,
+                /// The field `target_temporal_layer` in the table `ConsumerDump`
+                pub target_temporal_layer: ::core::option::Option<i16>,
+                /// The field `current_temporal_layer` in the table `ConsumerDump`
+                pub current_temporal_layer: ::core::option::Option<i16>,
             }
 
-            impl PipeConsumerDump {
-                /// Creates a [PipeConsumerDumpBuilder] for serializing an instance of this table.
+            impl ConsumerDump {
+                /// Creates a [ConsumerDumpBuilder] for serializing an instance of this table.
                 #[inline]
-                pub fn builder() -> PipeConsumerDumpBuilder<()> {
-                    PipeConsumerDumpBuilder(())
+                pub fn builder() -> ConsumerDumpBuilder<()> {
+                    ConsumerDumpBuilder(())
                 }
 
                 #[allow(clippy::too_many_arguments)]
@@ -8302,102 +6673,323 @@ mod root {
                     field_rtp_streams: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
+                    field_preferred_spatial_layer: impl ::planus::WriteAsOptional<i16>,
+                    field_target_spatial_layer: impl ::planus::WriteAsOptional<i16>,
+                    field_current_spatial_layer: impl ::planus::WriteAsOptional<i16>,
+                    field_preferred_temporal_layer: impl ::planus::WriteAsOptional<i16>,
+                    field_target_temporal_layer: impl ::planus::WriteAsOptional<i16>,
+                    field_current_temporal_layer: impl ::planus::WriteAsOptional<i16>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
                     let prepared_rtp_streams = field_rtp_streams.prepare(builder);
+                    let prepared_preferred_spatial_layer =
+                        field_preferred_spatial_layer.prepare(builder);
+                    let prepared_target_spatial_layer = field_target_spatial_layer.prepare(builder);
+                    let prepared_current_spatial_layer =
+                        field_current_spatial_layer.prepare(builder);
+                    let prepared_preferred_temporal_layer =
+                        field_preferred_temporal_layer.prepare(builder);
+                    let prepared_target_temporal_layer =
+                        field_target_temporal_layer.prepare(builder);
+                    let prepared_current_temporal_layer =
+                        field_current_temporal_layer.prepare(builder);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<20> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<self::BaseConsumerDump>>(0);
                     table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>>(1);
+                    if prepared_preferred_spatial_layer.is_some() {
+                        table_writer.write_entry::<i16>(2);
+                    }
+                    if prepared_target_spatial_layer.is_some() {
+                        table_writer.write_entry::<i16>(3);
+                    }
+                    if prepared_current_spatial_layer.is_some() {
+                        table_writer.write_entry::<i16>(4);
+                    }
+                    if prepared_preferred_temporal_layer.is_some() {
+                        table_writer.write_entry::<i16>(5);
+                    }
+                    if prepared_target_temporal_layer.is_some() {
+                        table_writer.write_entry::<i16>(6);
+                    }
+                    if prepared_current_temporal_layer.is_some() {
+                        table_writer.write_entry::<i16>(7);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_base);
                             object_writer.write::<_, _, 4>(&prepared_rtp_streams);
+                            if let ::core::option::Option::Some(prepared_preferred_spatial_layer) =
+                                prepared_preferred_spatial_layer
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_preferred_spatial_layer);
+                            }
+                            if let ::core::option::Option::Some(prepared_target_spatial_layer) =
+                                prepared_target_spatial_layer
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_target_spatial_layer);
+                            }
+                            if let ::core::option::Option::Some(prepared_current_spatial_layer) =
+                                prepared_current_spatial_layer
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_current_spatial_layer);
+                            }
+                            if let ::core::option::Option::Some(prepared_preferred_temporal_layer) =
+                                prepared_preferred_temporal_layer
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_preferred_temporal_layer);
+                            }
+                            if let ::core::option::Option::Some(prepared_target_temporal_layer) =
+                                prepared_target_temporal_layer
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_target_temporal_layer);
+                            }
+                            if let ::core::option::Option::Some(prepared_current_temporal_layer) =
+                                prepared_current_temporal_layer
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_current_temporal_layer);
+                            }
                         });
                     }
                     builder.current_offset()
                 }
             }
 
-            impl ::planus::WriteAs<::planus::Offset<PipeConsumerDump>> for PipeConsumerDump {
+            impl ::planus::WriteAs<::planus::Offset<ConsumerDump>> for ConsumerDump {
                 type Prepared = ::planus::Offset<Self>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<PipeConsumerDump> {
+                ) -> ::planus::Offset<ConsumerDump> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
 
-            impl ::planus::WriteAsOptional<::planus::Offset<PipeConsumerDump>> for PipeConsumerDump {
+            impl ::planus::WriteAsOptional<::planus::Offset<ConsumerDump>> for ConsumerDump {
                 type Prepared = ::planus::Offset<Self>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<PipeConsumerDump>> {
+                ) -> ::core::option::Option<::planus::Offset<ConsumerDump>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
 
-            impl ::planus::WriteAsOffset<PipeConsumerDump> for PipeConsumerDump {
+            impl ::planus::WriteAsOffset<ConsumerDump> for ConsumerDump {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<PipeConsumerDump> {
-                    PipeConsumerDump::create(builder, &self.base, &self.rtp_streams)
+                ) -> ::planus::Offset<ConsumerDump> {
+                    ConsumerDump::create(
+                        builder,
+                        &self.base,
+                        &self.rtp_streams,
+                        self.preferred_spatial_layer,
+                        self.target_spatial_layer,
+                        self.current_spatial_layer,
+                        self.preferred_temporal_layer,
+                        self.target_temporal_layer,
+                        self.current_temporal_layer,
+                    )
                 }
             }
 
-            /// Builder for serializing an instance of the [PipeConsumerDump] type.
+            /// Builder for serializing an instance of the [ConsumerDump] type.
             ///
-            /// Can be created using the [PipeConsumerDump::builder] method.
+            /// Can be created using the [ConsumerDump::builder] method.
             #[derive(Debug)]
             #[must_use]
-            pub struct PipeConsumerDumpBuilder<State>(State);
+            pub struct ConsumerDumpBuilder<State>(State);
 
-            impl PipeConsumerDumpBuilder<()> {
-                /// Setter for the [`base` field](PipeConsumerDump#structfield.base).
+            impl ConsumerDumpBuilder<()> {
+                /// Setter for the [`base` field](ConsumerDump#structfield.base).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn base<T0>(self, value: T0) -> PipeConsumerDumpBuilder<(T0,)>
+                pub fn base<T0>(self, value: T0) -> ConsumerDumpBuilder<(T0,)>
                 where
                     T0: ::planus::WriteAs<::planus::Offset<self::BaseConsumerDump>>,
                 {
-                    PipeConsumerDumpBuilder((value,))
+                    ConsumerDumpBuilder((value,))
                 }
             }
 
-            impl<T0> PipeConsumerDumpBuilder<(T0,)> {
-                /// Setter for the [`rtp_streams` field](PipeConsumerDump#structfield.rtp_streams).
+            impl<T0> ConsumerDumpBuilder<(T0,)> {
+                /// Setter for the [`rtp_streams` field](ConsumerDump#structfield.rtp_streams).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn rtp_streams<T1>(self, value: T1) -> PipeConsumerDumpBuilder<(T0, T1)>
+                pub fn rtp_streams<T1>(self, value: T1) -> ConsumerDumpBuilder<(T0, T1)>
                 where
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
                 {
                     let (v0,) = self.0;
-                    PipeConsumerDumpBuilder((v0, value))
+                    ConsumerDumpBuilder((v0, value))
                 }
             }
 
-            impl<T0, T1> PipeConsumerDumpBuilder<(T0, T1)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [PipeConsumerDump].
+            impl<T0, T1> ConsumerDumpBuilder<(T0, T1)> {
+                /// Setter for the [`preferred_spatial_layer` field](ConsumerDump#structfield.preferred_spatial_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn preferred_spatial_layer<T2>(
+                    self,
+                    value: T2,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2)>
+                where
+                    T2: ::planus::WriteAsOptional<i16>,
+                {
+                    let (v0, v1) = self.0;
+                    ConsumerDumpBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`preferred_spatial_layer` field](ConsumerDump#structfield.preferred_spatial_layer) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn preferred_spatial_layer_as_null(self) -> ConsumerDumpBuilder<(T0, T1, ())> {
+                    self.preferred_spatial_layer(())
+                }
+            }
+
+            impl<T0, T1, T2> ConsumerDumpBuilder<(T0, T1, T2)> {
+                /// Setter for the [`target_spatial_layer` field](ConsumerDump#structfield.target_spatial_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn target_spatial_layer<T3>(
+                    self,
+                    value: T3,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3)>
+                where
+                    T3: ::planus::WriteAsOptional<i16>,
+                {
+                    let (v0, v1, v2) = self.0;
+                    ConsumerDumpBuilder((v0, v1, v2, value))
+                }
+
+                /// Sets the [`target_spatial_layer` field](ConsumerDump#structfield.target_spatial_layer) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn target_spatial_layer_as_null(self) -> ConsumerDumpBuilder<(T0, T1, T2, ())> {
+                    self.target_spatial_layer(())
+                }
+            }
+
+            impl<T0, T1, T2, T3> ConsumerDumpBuilder<(T0, T1, T2, T3)> {
+                /// Setter for the [`current_spatial_layer` field](ConsumerDump#structfield.current_spatial_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn current_spatial_layer<T4>(
+                    self,
+                    value: T4,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4)>
+                where
+                    T4: ::planus::WriteAsOptional<i16>,
+                {
+                    let (v0, v1, v2, v3) = self.0;
+                    ConsumerDumpBuilder((v0, v1, v2, v3, value))
+                }
+
+                /// Sets the [`current_spatial_layer` field](ConsumerDump#structfield.current_spatial_layer) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn current_spatial_layer_as_null(
+                    self,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, ())> {
+                    self.current_spatial_layer(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4> ConsumerDumpBuilder<(T0, T1, T2, T3, T4)> {
+                /// Setter for the [`preferred_temporal_layer` field](ConsumerDump#structfield.preferred_temporal_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn preferred_temporal_layer<T5>(
+                    self,
+                    value: T5,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)>
+                where
+                    T5: ::planus::WriteAsOptional<i16>,
+                {
+                    let (v0, v1, v2, v3, v4) = self.0;
+                    ConsumerDumpBuilder((v0, v1, v2, v3, v4, value))
+                }
+
+                /// Sets the [`preferred_temporal_layer` field](ConsumerDump#structfield.preferred_temporal_layer) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn preferred_temporal_layer_as_null(
+                    self,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, ())> {
+                    self.preferred_temporal_layer(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5)> {
+                /// Setter for the [`target_temporal_layer` field](ConsumerDump#structfield.target_temporal_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn target_temporal_layer<T6>(
+                    self,
+                    value: T6,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)>
+                where
+                    T6: ::planus::WriteAsOptional<i16>,
+                {
+                    let (v0, v1, v2, v3, v4, v5) = self.0;
+                    ConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, value))
+                }
+
+                /// Sets the [`target_temporal_layer` field](ConsumerDump#structfield.target_temporal_layer) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn target_temporal_layer_as_null(
+                    self,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, ())> {
+                    self.target_temporal_layer(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
+                /// Setter for the [`current_temporal_layer` field](ConsumerDump#structfield.current_temporal_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn current_temporal_layer<T7>(
+                    self,
+                    value: T7,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
+                where
+                    T7: ::planus::WriteAsOptional<i16>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6) = self.0;
+                    ConsumerDumpBuilder((v0, v1, v2, v3, v4, v5, v6, value))
+                }
+
+                /// Sets the [`current_temporal_layer` field](ConsumerDump#structfield.current_temporal_layer) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn current_temporal_layer_as_null(
+                    self,
+                ) -> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, ())> {
+                    self.current_temporal_layer(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7> ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)> {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [ConsumerDump].
                 #[inline]
                 pub fn finish(
                     self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<PipeConsumerDump>
+                ) -> ::planus::Offset<ConsumerDump>
                 where
-                    Self: ::planus::WriteAsOffset<PipeConsumerDump>,
+                    Self: ::planus::WriteAsOffset<ConsumerDump>,
                 {
                     ::planus::WriteAsOffset::prepare(&self, builder)
                 }
@@ -8408,16 +7000,22 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
-                > ::planus::WriteAs<::planus::Offset<PipeConsumerDump>>
-                for PipeConsumerDumpBuilder<(T0, T1)>
+                    T2: ::planus::WriteAsOptional<i16>,
+                    T3: ::planus::WriteAsOptional<i16>,
+                    T4: ::planus::WriteAsOptional<i16>,
+                    T5: ::planus::WriteAsOptional<i16>,
+                    T6: ::planus::WriteAsOptional<i16>,
+                    T7: ::planus::WriteAsOptional<i16>,
+                > ::planus::WriteAs<::planus::Offset<ConsumerDump>>
+                for ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
-                type Prepared = ::planus::Offset<PipeConsumerDump>;
+                type Prepared = ::planus::Offset<ConsumerDump>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<PipeConsumerDump> {
+                ) -> ::planus::Offset<ConsumerDump> {
                     ::planus::WriteAsOffset::prepare(self, builder)
                 }
             }
@@ -8427,16 +7025,22 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
-                > ::planus::WriteAsOptional<::planus::Offset<PipeConsumerDump>>
-                for PipeConsumerDumpBuilder<(T0, T1)>
+                    T2: ::planus::WriteAsOptional<i16>,
+                    T3: ::planus::WriteAsOptional<i16>,
+                    T4: ::planus::WriteAsOptional<i16>,
+                    T5: ::planus::WriteAsOptional<i16>,
+                    T6: ::planus::WriteAsOptional<i16>,
+                    T7: ::planus::WriteAsOptional<i16>,
+                > ::planus::WriteAsOptional<::planus::Offset<ConsumerDump>>
+                for ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
-                type Prepared = ::planus::Offset<PipeConsumerDump>;
+                type Prepared = ::planus::Offset<ConsumerDump>;
 
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<PipeConsumerDump>> {
+                ) -> ::core::option::Option<::planus::Offset<ConsumerDump>> {
                     ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
                 }
             }
@@ -8446,64 +7050,209 @@ mod root {
                     T1: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
-                > ::planus::WriteAsOffset<PipeConsumerDump> for PipeConsumerDumpBuilder<(T0, T1)>
+                    T2: ::planus::WriteAsOptional<i16>,
+                    T3: ::planus::WriteAsOptional<i16>,
+                    T4: ::planus::WriteAsOptional<i16>,
+                    T5: ::planus::WriteAsOptional<i16>,
+                    T6: ::planus::WriteAsOptional<i16>,
+                    T7: ::planus::WriteAsOptional<i16>,
+                > ::planus::WriteAsOffset<ConsumerDump>
+                for ConsumerDumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
-                ) -> ::planus::Offset<PipeConsumerDump> {
-                    let (v0, v1) = &self.0;
-                    PipeConsumerDump::create(builder, v0, v1)
+                ) -> ::planus::Offset<ConsumerDump> {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7) = &self.0;
+                    ConsumerDump::create(builder, v0, v1, v2, v3, v4, v5, v6, v7)
                 }
             }
 
-            /// Reference to a deserialized [PipeConsumerDump].
+            /// Reference to a deserialized [ConsumerDump].
             #[derive(Copy, Clone)]
-            pub struct PipeConsumerDumpRef<'a>(::planus::table_reader::Table<'a>);
+            pub struct ConsumerDumpRef<'a>(::planus::table_reader::Table<'a>);
 
-            impl<'a> PipeConsumerDumpRef<'a> {
-                /// Getter for the [`base` field](PipeConsumerDump#structfield.base).
+            impl<'a> ConsumerDumpRef<'a> {
+                /// Getter for the [`base` field](ConsumerDump#structfield.base).
                 #[inline]
                 pub fn base(&self) -> ::planus::Result<self::BaseConsumerDumpRef<'a>> {
-                    self.0.access_required(0, "PipeConsumerDump", "base")
+                    self.0.access_required(0, "ConsumerDump", "base")
                 }
 
-                /// Getter for the [`rtp_streams` field](PipeConsumerDump#structfield.rtp_streams).
+                /// Getter for the [`rtp_streams` field](ConsumerDump#structfield.rtp_streams).
                 #[inline]
                 pub fn rtp_streams(
                     &self,
                 ) -> ::planus::Result<
                     ::planus::Vector<'a, ::planus::Result<super::rtp_stream::DumpRef<'a>>>,
                 > {
-                    self.0.access_required(1, "PipeConsumerDump", "rtp_streams")
+                    self.0.access_required(1, "ConsumerDump", "rtp_streams")
+                }
+
+                /// Getter for the [`preferred_spatial_layer` field](ConsumerDump#structfield.preferred_spatial_layer).
+                #[inline]
+                pub fn preferred_spatial_layer(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<i16>> {
+                    self.0.access(2, "ConsumerDump", "preferred_spatial_layer")
+                }
+
+                /// Getter for the [`target_spatial_layer` field](ConsumerDump#structfield.target_spatial_layer).
+                #[inline]
+                pub fn target_spatial_layer(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<i16>> {
+                    self.0.access(3, "ConsumerDump", "target_spatial_layer")
+                }
+
+                /// Getter for the [`current_spatial_layer` field](ConsumerDump#structfield.current_spatial_layer).
+                #[inline]
+                pub fn current_spatial_layer(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<i16>> {
+                    self.0.access(4, "ConsumerDump", "current_spatial_layer")
+                }
+
+                /// Getter for the [`preferred_temporal_layer` field](ConsumerDump#structfield.preferred_temporal_layer).
+                #[inline]
+                pub fn preferred_temporal_layer(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<i16>> {
+                    self.0.access(5, "ConsumerDump", "preferred_temporal_layer")
+                }
+
+                /// Getter for the [`target_temporal_layer` field](ConsumerDump#structfield.target_temporal_layer).
+                #[inline]
+                pub fn target_temporal_layer(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<i16>> {
+                    self.0.access(6, "ConsumerDump", "target_temporal_layer")
+                }
+
+                /// Getter for the [`current_temporal_layer` field](ConsumerDump#structfield.current_temporal_layer).
+                #[inline]
+                pub fn current_temporal_layer(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<i16>> {
+                    self.0.access(7, "ConsumerDump", "current_temporal_layer")
                 }
             }
 
-            impl<'a> ::core::fmt::Debug for PipeConsumerDumpRef<'a> {
+            impl<'a> ::core::fmt::Debug for ConsumerDumpRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("PipeConsumerDumpRef");
+                    let mut f = f.debug_struct("ConsumerDumpRef");
                     f.field("base", &self.base());
                     f.field("rtp_streams", &self.rtp_streams());
+                    if let ::core::option::Option::Some(field_preferred_spatial_layer) =
+                        self.preferred_spatial_layer().transpose()
+                    {
+                        f.field("preferred_spatial_layer", &field_preferred_spatial_layer);
+                    }
+                    if let ::core::option::Option::Some(field_target_spatial_layer) =
+                        self.target_spatial_layer().transpose()
+                    {
+                        f.field("target_spatial_layer", &field_target_spatial_layer);
+                    }
+                    if let ::core::option::Option::Some(field_current_spatial_layer) =
+                        self.current_spatial_layer().transpose()
+                    {
+                        f.field("current_spatial_layer", &field_current_spatial_layer);
+                    }
+                    if let ::core::option::Option::Some(field_preferred_temporal_layer) =
+                        self.preferred_temporal_layer().transpose()
+                    {
+                        f.field("preferred_temporal_layer", &field_preferred_temporal_layer);
+                    }
+                    if let ::core::option::Option::Some(field_target_temporal_layer) =
+                        self.target_temporal_layer().transpose()
+                    {
+                        f.field("target_temporal_layer", &field_target_temporal_layer);
+                    }
+                    if let ::core::option::Option::Some(field_current_temporal_layer) =
+                        self.current_temporal_layer().transpose()
+                    {
+                        f.field("current_temporal_layer", &field_current_temporal_layer);
+                    }
                     f.finish()
                 }
             }
 
-            impl<'a> ::core::convert::TryFrom<PipeConsumerDumpRef<'a>> for PipeConsumerDump {
+            impl<'a> ::core::convert::TryFrom<ConsumerDumpRef<'a>> for ConsumerDump {
                 type Error = ::planus::Error;
 
                 #[allow(unreachable_code)]
-                fn try_from(value: PipeConsumerDumpRef<'a>) -> ::planus::Result<Self> {
+                fn try_from(value: ConsumerDumpRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         base: ::planus::alloc::boxed::Box::new(::core::convert::TryInto::try_into(
                             value.base()?,
                         )?),
                         rtp_streams: value.rtp_streams()?.to_vec_result()?,
+                        preferred_spatial_layer: if let ::core::option::Option::Some(
+                            preferred_spatial_layer,
+                        ) = value.preferred_spatial_layer()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                preferred_spatial_layer,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        target_spatial_layer: if let ::core::option::Option::Some(
+                            target_spatial_layer,
+                        ) = value.target_spatial_layer()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                target_spatial_layer,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        current_spatial_layer: if let ::core::option::Option::Some(
+                            current_spatial_layer,
+                        ) = value.current_spatial_layer()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                current_spatial_layer,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        preferred_temporal_layer: if let ::core::option::Option::Some(
+                            preferred_temporal_layer,
+                        ) = value.preferred_temporal_layer()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                preferred_temporal_layer,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        target_temporal_layer: if let ::core::option::Option::Some(
+                            target_temporal_layer,
+                        ) = value.target_temporal_layer()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                target_temporal_layer,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        current_temporal_layer: if let ::core::option::Option::Some(
+                            current_temporal_layer,
+                        ) = value.current_temporal_layer()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                current_temporal_layer,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
 
-            impl<'a> ::planus::TableRead<'a> for PipeConsumerDumpRef<'a> {
+            impl<'a> ::planus::TableRead<'a> for ConsumerDumpRef<'a> {
                 #[inline]
                 fn from_buffer(
                     buffer: ::planus::SliceWithStartOffset<'a>,
@@ -8515,7 +7264,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::VectorReadInner<'a> for PipeConsumerDumpRef<'a> {
+            impl<'a> ::planus::VectorReadInner<'a> for ConsumerDumpRef<'a> {
                 type Error = ::planus::Error;
                 const STRIDE: usize = 4;
 
@@ -8525,7 +7274,7 @@ mod root {
                 ) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
                         error_kind.with_error_location(
-                            "[PipeConsumerDumpRef]",
+                            "[ConsumerDumpRef]",
                             "get",
                             buffer.offset_from_start,
                         )
@@ -8533,8 +7282,8 @@ mod root {
                 }
             }
 
-            impl ::planus::VectorWrite<::planus::Offset<PipeConsumerDump>> for PipeConsumerDump {
-                type Value = ::planus::Offset<PipeConsumerDump>;
+            impl ::planus::VectorWrite<::planus::Offset<ConsumerDump>> for ConsumerDump {
+                type Value = ::planus::Offset<ConsumerDump>;
                 const STRIDE: usize = 4;
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
@@ -8543,7 +7292,7 @@ mod root {
 
                 #[inline]
                 unsafe fn write_values(
-                    values: &[::planus::Offset<PipeConsumerDump>],
+                    values: &[::planus::Offset<ConsumerDump>],
                     bytes: *mut ::core::mem::MaybeUninit<u8>,
                     buffer_position: u32,
                 ) {
@@ -8558,7 +7307,7 @@ mod root {
                 }
             }
 
-            impl<'a> ::planus::ReadAsRoot<'a> for PipeConsumerDumpRef<'a> {
+            impl<'a> ::planus::ReadAsRoot<'a> for ConsumerDumpRef<'a> {
                 fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
                     ::planus::TableRead::from_buffer(
                         ::planus::SliceWithStartOffset {
@@ -8568,7 +7317,7 @@ mod root {
                         0,
                     )
                     .map_err(|error_kind| {
-                        error_kind.with_error_location("[PipeConsumerDumpRef]", "read_as_root", 0)
+                        error_kind.with_error_location("[ConsumerDumpRef]", "read_as_root", 0)
                     })
                 }
             }
@@ -8576,23 +7325,13 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/consumer.fbs:94`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/consumer.fbs:75`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct GetStatsResponse {
                 /// The field `stats` in the table `GetStatsResponse`
-                pub stats:
-                    ::core::option::Option<::planus::alloc::vec::Vec<super::rtp_stream::Stats>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for GetStatsResponse {
-                fn default() -> Self {
-                    Self {
-                        stats: ::core::default::Default::default(),
-                    }
-                }
+                pub stats: ::planus::alloc::vec::Vec<super::rtp_stream::Stats>,
             }
 
             impl GetStatsResponse {
@@ -8605,7 +7344,7 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_stats: impl ::planus::WriteAsOptional<
+                    field_stats: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -8613,15 +7352,11 @@ mod root {
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_stats.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_stats) = prepared_stats {
-                                object_writer.write::<_, _, 4>(&prepared_stats);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_stats);
                         });
                     }
                     builder.current_offset()
@@ -8675,18 +7410,11 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn stats<T0>(self, value: T0) -> GetStatsResponseBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 {
                     GetStatsResponseBuilder((value,))
-                }
-
-                /// Sets the [`stats` field](GetStatsResponse#structfield.stats) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn stats_as_null(self) -> GetStatsResponseBuilder<((),)> {
-                    self.stats(())
                 }
             }
 
@@ -8705,7 +7433,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 > ::planus::WriteAs<::planus::Offset<GetStatsResponse>>
@@ -8723,7 +7451,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 > ::planus::WriteAsOptional<::planus::Offset<GetStatsResponse>>
@@ -8741,7 +7469,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 > ::planus::WriteAsOffset<GetStatsResponse> for GetStatsResponseBuilder<(T0,)>
@@ -8766,20 +7494,16 @@ mod root {
                 pub fn stats(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<super::rtp_stream::StatsRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::rtp_stream::StatsRef<'a>>>,
                 > {
-                    self.0.access(0, "GetStatsResponse", "stats")
+                    self.0.access_required(0, "GetStatsResponse", "stats")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for GetStatsResponseRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("GetStatsResponseRef");
-                    if let ::core::option::Option::Some(field_stats) = self.stats().transpose() {
-                        f.field("stats", &field_stats);
-                    }
+                    f.field("stats", &self.stats());
                     f.finish()
                 }
             }
@@ -8790,11 +7514,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: GetStatsResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        stats: if let ::core::option::Option::Some(stats) = value.stats()? {
-                            ::core::option::Option::Some(stats.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        stats: value.stats()?.to_vec_result()?,
                     })
                 }
             }
@@ -8872,7 +7592,7 @@ mod root {
             /// The table `LayersChangeNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `LayersChangeNotification` in the file `../worker/fbs/consumer.fbs:100`
+            /// * Table `LayersChangeNotification` in the file `../worker/fbs/consumer.fbs:81`
             #[derive(
                 Clone,
                 Debug,
@@ -8886,8 +7606,7 @@ mod root {
             )]
             pub struct LayersChangeNotification {
                 /// The field `layers` in the table `LayersChangeNotification`
-                pub layers:
-                    ::core::option::Option<::planus::alloc::boxed::Box<self::ConsumerLayers>>,
+                pub layers: ::planus::alloc::boxed::Box<self::ConsumerLayers>,
             }
 
             #[allow(clippy::derivable_impls)]
@@ -8909,21 +7628,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_layers: impl ::planus::WriteAsOptional<::planus::Offset<self::ConsumerLayers>>,
+                    field_layers: impl ::planus::WriteAs<::planus::Offset<self::ConsumerLayers>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_layers = field_layers.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_layers.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::ConsumerLayers>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<self::ConsumerLayers>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_layers) = prepared_layers {
-                                object_writer.write::<_, _, 4>(&prepared_layers);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_layers);
                         });
                     }
                     builder.current_offset()
@@ -8980,16 +7695,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn layers<T0>(self, value: T0) -> LayersChangeNotificationBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<self::ConsumerLayers>>,
+                    T0: ::planus::WriteAs<::planus::Offset<self::ConsumerLayers>>,
                 {
                     LayersChangeNotificationBuilder((value,))
-                }
-
-                /// Sets the [`layers` field](LayersChangeNotification#structfield.layers) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn layers_as_null(self) -> LayersChangeNotificationBuilder<((),)> {
-                    self.layers(())
                 }
             }
 
@@ -9007,7 +7715,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<self::ConsumerLayers>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<self::ConsumerLayers>>>
                 ::planus::WriteAs<::planus::Offset<LayersChangeNotification>>
                 for LayersChangeNotificationBuilder<(T0,)>
             {
@@ -9022,7 +7730,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<self::ConsumerLayers>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<self::ConsumerLayers>>>
                 ::planus::WriteAsOptional<::planus::Offset<LayersChangeNotification>>
                 for LayersChangeNotificationBuilder<(T0,)>
             {
@@ -9038,7 +7746,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<self::ConsumerLayers>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<self::ConsumerLayers>>>
                 ::planus::WriteAsOffset<LayersChangeNotification>
                 for LayersChangeNotificationBuilder<(T0,)>
             {
@@ -9059,20 +7767,16 @@ mod root {
             impl<'a> LayersChangeNotificationRef<'a> {
                 /// Getter for the [`layers` field](LayersChangeNotification#structfield.layers).
                 #[inline]
-                pub fn layers(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::ConsumerLayersRef<'a>>>
-                {
-                    self.0.access(0, "LayersChangeNotification", "layers")
+                pub fn layers(&self) -> ::planus::Result<self::ConsumerLayersRef<'a>> {
+                    self.0
+                        .access_required(0, "LayersChangeNotification", "layers")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for LayersChangeNotificationRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("LayersChangeNotificationRef");
-                    if let ::core::option::Option::Some(field_layers) = self.layers().transpose() {
-                        f.field("layers", &field_layers);
-                    }
+                    f.field("layers", &self.layers());
                     f.finish()
                 }
             }
@@ -9083,13 +7787,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: LayersChangeNotificationRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        layers: if let ::core::option::Option::Some(layers) = value.layers()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(layers)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        layers: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.layers()?)?,
+                        ),
                     })
                 }
             }
@@ -9173,7 +7873,7 @@ mod root {
             /// The table `RtpNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpNotification` in the file `../worker/fbs/consumer.fbs:104`
+            /// * Table `RtpNotification` in the file `../worker/fbs/consumer.fbs:85`
             #[derive(
                 Clone,
                 Debug,
@@ -9431,7 +8131,7 @@ mod root {
             /// The table `ScoreNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ScoreNotification` in the file `../worker/fbs/consumer.fbs:108`
+            /// * Table `ScoreNotification` in the file `../worker/fbs/consumer.fbs:89`
             #[derive(
                 Clone,
                 Debug,
@@ -9446,15 +8146,6 @@ mod root {
             pub struct ScoreNotification {
                 /// The field `score` in the table `ScoreNotification`
                 pub score: ::planus::alloc::boxed::Box<self::ConsumerScore>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ScoreNotification {
-                fn default() -> Self {
-                    Self {
-                        score: ::core::default::Default::default(),
-                    }
-                }
             }
 
             impl ScoreNotification {
@@ -9697,363 +8388,10 @@ mod root {
                 }
             }
 
-            /// The enum `TraceType` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceType` in the file `../worker/fbs/consumer.fbs:112`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceType {
-                /// The variant `KEYFRAME` in the enum `TraceType`
-                Keyframe = 0,
-
-                /// The variant `FIR` in the enum `TraceType`
-                Fir = 1,
-
-                /// The variant `NACK` in the enum `TraceType`
-                Nack = 2,
-
-                /// The variant `PLI` in the enum `TraceType`
-                Pli = 3,
-
-                /// The variant `RTP` in the enum `TraceType`
-                Rtp = 4,
-            }
-
-            impl TraceType {
-                /// Array containing all valid variants of TraceType
-                pub const ENUM_VALUES: [Self; 5] =
-                    [Self::Keyframe, Self::Fir, Self::Nack, Self::Pli, Self::Rtp];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceType {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceType::Keyframe),
-                        1 => ::core::result::Result::Ok(TraceType::Fir),
-                        2 => ::core::result::Result::Ok(TraceType::Nack),
-                        3 => ::core::result::Result::Ok(TraceType::Pli),
-                        4 => ::core::result::Result::Ok(TraceType::Rtp),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceType> for u8 {
-                #[inline]
-                fn from(value: TraceType) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceType {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceType> for TraceType {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceType {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceType, TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceType,
-                ) -> ::core::option::Option<TraceType> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceType> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceType {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceType {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceType",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceType> for TraceType {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
-            /// The enum `TraceDirection` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/consumer.fbs:121`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceDirection {
-                /// The variant `DIRECTION_IN` in the enum `TraceDirection`
-                DirectionIn = 0,
-
-                /// The variant `DIRECTION_OUT` in the enum `TraceDirection`
-                DirectionOut = 1,
-            }
-
-            impl TraceDirection {
-                /// Array containing all valid variants of TraceDirection
-                pub const ENUM_VALUES: [Self; 2] = [Self::DirectionIn, Self::DirectionOut];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceDirection {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceDirection::DirectionIn),
-                        1 => ::core::result::Result::Ok(TraceDirection::DirectionOut),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceDirection> for u8 {
-                #[inline]
-                fn from(value: TraceDirection) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceDirection {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceDirection> for TraceDirection {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceDirection {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceDirection, TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceDirection,
-                ) -> ::core::option::Option<TraceDirection> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceDirection> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceDirection {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceDirection {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceDirection",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceDirection> for TraceDirection {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
             /// The union `TraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/consumer.fbs:126`
+            /// * Union `TraceInfo` in the file `../worker/fbs/consumer.fbs:93`
             #[derive(
                 Clone,
                 Debug,
@@ -10385,7 +8723,7 @@ mod root {
             /// The table `KeyFrameTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/consumer.fbs:133`
+            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/consumer.fbs:100`
             #[derive(
                 Clone,
                 Debug,
@@ -10667,7 +9005,7 @@ mod root {
             /// The table `FirTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `FirTraceInfo` in the file `../worker/fbs/consumer.fbs:137`
+            /// * Table `FirTraceInfo` in the file `../worker/fbs/consumer.fbs:104`
             #[derive(
                 Clone,
                 Debug,
@@ -10944,7 +9282,7 @@ mod root {
             /// The table `PliTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `PliTraceInfo` in the file `../worker/fbs/consumer.fbs:141`
+            /// * Table `PliTraceInfo` in the file `../worker/fbs/consumer.fbs:108`
             #[derive(
                 Clone,
                 Debug,
@@ -11221,7 +9559,7 @@ mod root {
             /// The table `RtpTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpTraceInfo` in the file `../worker/fbs/consumer.fbs:145`
+            /// * Table `RtpTraceInfo` in the file `../worker/fbs/consumer.fbs:112`
             #[derive(
                 Clone,
                 Debug,
@@ -11498,7 +9836,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/consumer.fbs:149`
+            /// * Table `TraceNotification` in the file `../worker/fbs/consumer.fbs:116`
             #[derive(
                 Clone,
                 Debug,
@@ -11512,11 +9850,11 @@ mod root {
             )]
             pub struct TraceNotification {
                 /// The field `type` in the table `TraceNotification`
-                pub type_: self::TraceType,
+                pub type_: self::TraceEventType,
                 /// The field `timestamp` in the table `TraceNotification`
                 pub timestamp: u64,
                 /// The field `direction` in the table `TraceNotification`
-                pub direction: self::TraceDirection,
+                pub direction: super::common::TraceDirection,
                 /// The field `info` in the table `TraceNotification`
                 pub info: ::core::option::Option<self::TraceInfo>,
             }
@@ -11525,9 +9863,9 @@ mod root {
             impl ::core::default::Default for TraceNotification {
                 fn default() -> Self {
                     Self {
-                        type_: self::TraceType::Keyframe,
+                        type_: self::TraceEventType::Keyframe,
                         timestamp: 0,
-                        direction: self::TraceDirection::DirectionIn,
+                        direction: super::common::TraceDirection::DirectionIn,
                         info: ::core::default::Default::default(),
                     }
                 }
@@ -11543,18 +9881,22 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_type_: impl ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        self::TraceEventType,
+                        self::TraceEventType,
+                    >,
                     field_timestamp: impl ::planus::WriteAsDefault<u64, u64>,
                     field_direction: impl ::planus::WriteAsDefault<
-                        self::TraceDirection,
-                        self::TraceDirection,
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
                     >,
                     field_info: impl ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_type_ = field_type_.prepare(builder, &self::TraceType::Keyframe);
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &self::TraceEventType::Keyframe);
                     let prepared_timestamp = field_timestamp.prepare(builder, &0);
-                    let prepared_direction =
-                        field_direction.prepare(builder, &self::TraceDirection::DirectionIn);
+                    let prepared_direction = field_direction
+                        .prepare(builder, &super::common::TraceDirection::DirectionIn);
                     let prepared_info = field_info.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<14> =
@@ -11566,10 +9908,10 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<self::TraceInfo>>(4);
                     }
                     if prepared_type_.is_some() {
-                        table_writer.write_entry::<self::TraceType>(0);
+                        table_writer.write_entry::<self::TraceEventType>(0);
                     }
                     if prepared_direction.is_some() {
-                        table_writer.write_entry::<self::TraceDirection>(2);
+                        table_writer.write_entry::<super::common::TraceDirection>(2);
                     }
                     if prepared_info.is_some() {
                         table_writer.write_entry::<u8>(3);
@@ -11655,7 +9997,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn type_<T0>(self, value: T0) -> TraceNotificationBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                 {
                     TraceNotificationBuilder((value,))
                 }
@@ -11698,7 +10040,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn direction<T2>(self, value: T2) -> TraceNotificationBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                 {
                     let (v0, v1) = self.0;
                     TraceNotificationBuilder((v0, v1, value))
@@ -11749,9 +10094,12 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAs<::planus::Offset<TraceNotification>>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -11768,9 +10116,12 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAsOptional<::planus::Offset<TraceNotification>>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -11787,9 +10138,12 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAsOffset<TraceNotification>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -11811,11 +10165,11 @@ mod root {
             impl<'a> TraceNotificationRef<'a> {
                 /// Getter for the [`type` field](TraceNotification#structfield.type_).
                 #[inline]
-                pub fn type_(&self) -> ::planus::Result<self::TraceType> {
+                pub fn type_(&self) -> ::planus::Result<self::TraceEventType> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(0, "TraceNotification", "type_")?
-                            .unwrap_or(self::TraceType::Keyframe),
+                            .unwrap_or(self::TraceEventType::Keyframe),
                     )
                 }
 
@@ -11831,11 +10185,11 @@ mod root {
 
                 /// Getter for the [`direction` field](TraceNotification#structfield.direction).
                 #[inline]
-                pub fn direction(&self) -> ::planus::Result<self::TraceDirection> {
+                pub fn direction(&self) -> ::planus::Result<super::common::TraceDirection> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "TraceNotification", "direction")?
-                            .unwrap_or(self::TraceDirection::DirectionIn),
+                            .unwrap_or(super::common::TraceDirection::DirectionIn),
                     )
                 }
 
@@ -35210,25 +33564,11 @@ mod root {
                 /// The field `producer_paused` in the table `ConsumeResponse`
                 pub producer_paused: bool,
                 /// The field `score` in the table `ConsumeResponse`
-                pub score: ::core::option::Option<
-                    ::planus::alloc::boxed::Box<super::consumer::ConsumerScore>,
-                >,
+                pub score: ::planus::alloc::boxed::Box<super::consumer::ConsumerScore>,
                 /// The field `preferred_layers` in the table `ConsumeResponse`
                 pub preferred_layers: ::core::option::Option<
                     ::planus::alloc::boxed::Box<super::consumer::ConsumerLayers>,
                 >,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ConsumeResponse {
-                fn default() -> Self {
-                    Self {
-                        paused: false,
-                        producer_paused: false,
-                        score: ::core::default::Default::default(),
-                        preferred_layers: ::core::default::Default::default(),
-                    }
-                }
             }
 
             impl ConsumeResponse {
@@ -35243,7 +33583,7 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                     field_producer_paused: impl ::planus::WriteAsDefault<bool, bool>,
-                    field_score: impl ::planus::WriteAsOptional<
+                    field_score: impl ::planus::WriteAs<
                         ::planus::Offset<super::consumer::ConsumerScore>,
                     >,
                     field_preferred_layers: impl ::planus::WriteAsOptional<
@@ -35257,10 +33597,7 @@ mod root {
 
                     let mut table_writer: ::planus::table_writer::TableWriter<12> =
                         ::core::default::Default::default();
-                    if prepared_score.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<super::consumer::ConsumerScore>>(2);
-                    }
+                    table_writer.write_entry::<::planus::Offset<super::consumer::ConsumerScore>>(2);
                     if prepared_preferred_layers.is_some() {
                         table_writer
                             .write_entry::<::planus::Offset<super::consumer::ConsumerLayers>>(3);
@@ -35274,9 +33611,7 @@ mod root {
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_score) = prepared_score {
-                                object_writer.write::<_, _, 4>(&prepared_score);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_score);
                             if let ::core::option::Option::Some(prepared_preferred_layers) =
                                 prepared_preferred_layers
                             {
@@ -35392,17 +33727,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn score<T2>(self, value: T2) -> ConsumeResponseBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerScore>>,
+                    T2: ::planus::WriteAs<::planus::Offset<super::consumer::ConsumerScore>>,
                 {
                     let (v0, v1) = self.0;
                     ConsumeResponseBuilder((v0, v1, value))
-                }
-
-                /// Sets the [`score` field](ConsumeResponse#structfield.score) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn score_as_null(self) -> ConsumeResponseBuilder<(T0, T1, ())> {
-                    self.score(())
                 }
             }
 
@@ -35448,7 +33776,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<bool, bool>,
                     T1: ::planus::WriteAsDefault<bool, bool>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerScore>>,
+                    T2: ::planus::WriteAs<::planus::Offset<super::consumer::ConsumerScore>>,
                     T3: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerLayers>>,
                 > ::planus::WriteAs<::planus::Offset<ConsumeResponse>>
                 for ConsumeResponseBuilder<(T0, T1, T2, T3)>
@@ -35467,7 +33795,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<bool, bool>,
                     T1: ::planus::WriteAsDefault<bool, bool>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerScore>>,
+                    T2: ::planus::WriteAs<::planus::Offset<super::consumer::ConsumerScore>>,
                     T3: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerLayers>>,
                 > ::planus::WriteAsOptional<::planus::Offset<ConsumeResponse>>
                 for ConsumeResponseBuilder<(T0, T1, T2, T3)>
@@ -35486,7 +33814,7 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<bool, bool>,
                     T1: ::planus::WriteAsDefault<bool, bool>,
-                    T2: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerScore>>,
+                    T2: ::planus::WriteAs<::planus::Offset<super::consumer::ConsumerScore>>,
                     T3: ::planus::WriteAsOptional<::planus::Offset<super::consumer::ConsumerLayers>>,
                 > ::planus::WriteAsOffset<ConsumeResponse>
                 for ConsumeResponseBuilder<(T0, T1, T2, T3)>
@@ -35528,11 +33856,8 @@ mod root {
 
                 /// Getter for the [`score` field](ConsumeResponse#structfield.score).
                 #[inline]
-                pub fn score(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<super::consumer::ConsumerScoreRef<'a>>>
-                {
-                    self.0.access(2, "ConsumeResponse", "score")
+                pub fn score(&self) -> ::planus::Result<super::consumer::ConsumerScoreRef<'a>> {
+                    self.0.access_required(2, "ConsumeResponse", "score")
                 }
 
                 /// Getter for the [`preferred_layers` field](ConsumeResponse#structfield.preferred_layers).
@@ -35550,9 +33875,7 @@ mod root {
                     let mut f = f.debug_struct("ConsumeResponseRef");
                     f.field("paused", &self.paused());
                     f.field("producer_paused", &self.producer_paused());
-                    if let ::core::option::Option::Some(field_score) = self.score().transpose() {
-                        f.field("score", &field_score);
-                    }
+                    f.field("score", &self.score());
                     if let ::core::option::Option::Some(field_preferred_layers) =
                         self.preferred_layers().transpose()
                     {
@@ -35572,13 +33895,9 @@ mod root {
                         producer_paused: ::core::convert::TryInto::try_into(
                             value.producer_paused()?,
                         )?,
-                        score: if let ::core::option::Option::Some(score) = value.score()? {
-                            ::core::option::Option::Some(::planus::alloc::boxed::Box::new(
-                                ::core::convert::TryInto::try_into(score)?,
-                            ))
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        score: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.score()?)?,
+                        ),
                         preferred_layers: if let ::core::option::Option::Some(preferred_layers) =
                             value.preferred_layers()?
                         {
@@ -45910,180 +44229,10 @@ mod root {
                 }
             }
 
-            /// The enum `TraceDirection` in the namespace `FBS.Transport`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/transport.fbs:216`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceDirection {
-                /// The variant `DIRECTION_IN` in the enum `TraceDirection`
-                DirectionIn = 0,
-
-                /// The variant `DIRECTION_OUT` in the enum `TraceDirection`
-                DirectionOut = 1,
-            }
-
-            impl TraceDirection {
-                /// Array containing all valid variants of TraceDirection
-                pub const ENUM_VALUES: [Self; 2] = [Self::DirectionIn, Self::DirectionOut];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceDirection {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceDirection::DirectionIn),
-                        1 => ::core::result::Result::Ok(TraceDirection::DirectionOut),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceDirection> for u8 {
-                #[inline]
-                fn from(value: TraceDirection) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceDirection {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceDirection> for TraceDirection {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceDirection {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceDirection, TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceDirection,
-                ) -> ::core::option::Option<TraceDirection> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceDirection> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceDirection {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceDirection {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceDirection",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceDirection> for TraceDirection {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:221`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:215`
             #[derive(
                 Clone,
                 Debug,
@@ -46236,7 +44385,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:225`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:219`
             #[derive(
                 Copy,
                 Clone,
@@ -46406,7 +44555,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:230`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:224`
             #[derive(
                 Clone,
                 Debug,
@@ -47084,7 +45233,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:241`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:235`
             #[derive(
                 Clone,
                 Debug,
@@ -47102,7 +45251,7 @@ mod root {
                 /// The field `timestamp` in the table `TraceNotification`
                 pub timestamp: u64,
                 /// The field `direction` in the table `TraceNotification`
-                pub direction: self::TraceDirection,
+                pub direction: super::common::TraceDirection,
                 /// The field `info` in the table `TraceNotification`
                 pub info: ::core::option::Option<self::TraceInfo>,
             }
@@ -47113,7 +45262,7 @@ mod root {
                     Self {
                         type_: self::TraceEventType::Probation,
                         timestamp: 0,
-                        direction: self::TraceDirection::DirectionIn,
+                        direction: super::common::TraceDirection::DirectionIn,
                         info: ::core::default::Default::default(),
                     }
                 }
@@ -47135,16 +45284,16 @@ mod root {
                     >,
                     field_timestamp: impl ::planus::WriteAsDefault<u64, u64>,
                     field_direction: impl ::planus::WriteAsDefault<
-                        self::TraceDirection,
-                        self::TraceDirection,
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
                     >,
                     field_info: impl ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_type_ =
                         field_type_.prepare(builder, &self::TraceEventType::Probation);
                     let prepared_timestamp = field_timestamp.prepare(builder, &0);
-                    let prepared_direction =
-                        field_direction.prepare(builder, &self::TraceDirection::DirectionIn);
+                    let prepared_direction = field_direction
+                        .prepare(builder, &super::common::TraceDirection::DirectionIn);
                     let prepared_info = field_info.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<14> =
@@ -47159,7 +45308,7 @@ mod root {
                         table_writer.write_entry::<self::TraceEventType>(0);
                     }
                     if prepared_direction.is_some() {
-                        table_writer.write_entry::<self::TraceDirection>(2);
+                        table_writer.write_entry::<super::common::TraceDirection>(2);
                     }
                     if prepared_info.is_some() {
                         table_writer.write_entry::<u8>(3);
@@ -47288,7 +45437,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn direction<T2>(self, value: T2) -> TraceNotificationBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                 {
                     let (v0, v1) = self.0;
                     TraceNotificationBuilder((v0, v1, value))
@@ -47341,7 +45493,10 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAs<::planus::Offset<TraceNotification>>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -47360,7 +45515,10 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAsOptional<::planus::Offset<TraceNotification>>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -47379,7 +45537,10 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAsOffset<TraceNotification>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -47421,11 +45582,11 @@ mod root {
 
                 /// Getter for the [`direction` field](TraceNotification#structfield.direction).
                 #[inline]
-                pub fn direction(&self) -> ::planus::Result<self::TraceDirection> {
+                pub fn direction(&self) -> ::planus::Result<super::common::TraceDirection> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "TraceNotification", "direction")?
-                            .unwrap_or(self::TraceDirection::DirectionIn),
+                            .unwrap_or(super::common::TraceDirection::DirectionIn),
                     )
                 }
 

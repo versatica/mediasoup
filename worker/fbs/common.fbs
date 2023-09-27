@@ -25,3 +25,9 @@ table StringStringArray {
     values: [string] (required);
 }
 
+// NOTE (windows): IN|OUT are macros defined in windef.h.
+enum TraceDirection: uint8 {
+    DIRECTION_IN = 0,
+    DIRECTION_OUT
+}
+

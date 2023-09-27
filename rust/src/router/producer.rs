@@ -306,6 +306,7 @@ impl ProducerStat {
         }
     }
 }
+
 /// 'trace' event data.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]

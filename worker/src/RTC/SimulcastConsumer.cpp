@@ -1,4 +1,3 @@
-
 #define MS_CLASS "RTC::SimulcastConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
@@ -132,12 +131,13 @@ namespace RTC
 		// Call the parent method.
 		auto base = RTC::Consumer::FillBuffer(builder);
 		// Add rtpStream.
-		auto rtpStream = this->rtpStream->FillBuffer(builder);
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+		rtpStreams.emplace_back(this->rtpStream->FillBuffer(builder));
 
-		auto simulcastConsumerDump = FBS::Consumer::CreateSimulcastConsumerDump(
+		auto dump = FBS::Consumer::CreateConsumerDumpDirect(
 		  builder,
 		  base,
-		  rtpStream,
+		  &rtpStreams,
 		  this->preferredSpatialLayer,
 		  this->targetSpatialLayer,
 		  this->currentSpatialLayer,
@@ -145,11 +145,7 @@ namespace RTC
 		  this->targetTemporalLayer,
 		  this->encodingContext->GetCurrentTemporalLayer());
 
-		return FBS::Consumer::CreateDumpResponse(
-		  builder,
-		  FBS::Consumer::DumpData::SimulcastConsumerDump,
-		  simulcastConsumerDump.Union(),
-		  FBS::RtpParameters::Type(this->type));
+		return FBS::Consumer::CreateDumpResponse(builder, dump);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> SimulcastConsumer::FillBufferStats(

@@ -38,6 +38,7 @@ import {
 	SctpStreamParameters
 } from './SctpParameters';
 import { AppData } from './types';
+import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsConsumer from './fbs/consumer';
@@ -1497,7 +1498,7 @@ export function parseTransportTraceEventData(
 			return {
 				type      : 'bwe',
 				timestamp : Number(trace.timestamp()),
-				direction : trace.direction() === FbsTransport.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+				direction : trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
 				info      : parseBweTraceInfo(info!)
 			};
 		}
@@ -1507,7 +1508,7 @@ export function parseTransportTraceEventData(
 			return {
 				type      : 'probation',
 				timestamp : Number(trace.timestamp()),
-				direction : trace.direction() === FbsTransport.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+				direction : trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
 				info      : {}
 			};
 		}
