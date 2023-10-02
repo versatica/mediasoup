@@ -3,7 +3,7 @@ mod tests;
 
 use crate::consumer::{RtpStreamParams, RtxStreamParams};
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
-use crate::fbs::{producer, response, rtp_parameters, rtp_stream};
+use crate::fbs::{notification, producer, response, rtp_parameters, rtp_stream};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
@@ -12,7 +12,9 @@ pub use crate::ortc::RtpMapping;
 use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, NotificationError, RequestError, SubscriptionHandler};
+use crate::worker::{
+    Channel, NotificationError, NotificationParseError, RequestError, SubscriptionHandler,
+};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
@@ -192,6 +194,17 @@ pub struct ProducerScore {
     pub score: u8,
 }
 
+impl ProducerScore {
+    pub(crate) fn from_fbs(producer_score: &producer::Score) -> Self {
+        Self {
+            encoding_idx: producer_score.encoding_idx,
+            ssrc: producer_score.ssrc,
+            rid: producer_score.rid.clone(),
+            score: producer_score.score,
+        }
+    }
+}
+
 /// Rotation angle
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
@@ -216,6 +229,24 @@ pub struct ProducerVideoOrientation {
     pub flip: bool,
     /// Rotation degrees.
     pub rotation: Rotation,
+}
+
+impl ProducerVideoOrientation {
+    pub(crate) fn from_fbs(
+        video_orientation: producer::VideoOrientationChangeNotification,
+    ) -> Self {
+        Self {
+            camera: video_orientation.camera,
+            flip: video_orientation.flip,
+            rotation: match video_orientation.rotation {
+                0 => Rotation::None,
+                90 => Rotation::Clockwise,
+                180 => Rotation::Rotate180,
+                270 => Rotation::CounterClockwise,
+                _ => Rotation::None,
+            },
+        }
+    }
 }
 
 /// Bitrate  by layer.
@@ -356,6 +387,65 @@ pub enum ProducerTraceEventData {
     },
 }
 
+impl ProducerTraceEventData {
+    pub(crate) fn from_fbs(data: producer::TraceNotification) -> Self {
+        match data.type_ {
+            producer::TraceEventType::Rtp => ProducerTraceEventData::Rtp {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(producer::TraceInfo::RtpTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                    }
+                },
+            },
+            producer::TraceEventType::Keyframe => ProducerTraceEventData::KeyFrame {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(producer::TraceInfo::KeyFrameTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                    }
+                },
+            },
+            producer::TraceEventType::Nack => ProducerTraceEventData::Nack {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+            },
+            producer::TraceEventType::Pli => ProducerTraceEventData::Pli {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(producer::TraceInfo::PliTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    SsrcTraceInfo { ssrc: info.ssrc }
+                },
+            },
+            producer::TraceEventType::Fir => ProducerTraceEventData::Fir {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(producer::TraceInfo::FirTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    SsrcTraceInfo { ssrc: info.ssrc }
+                },
+            },
+        }
+    }
+}
+
 /// Types of consumer trace events.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -400,6 +490,59 @@ enum Notification {
     Score(Vec<ProducerScore>),
     VideoOrientationChange(ProducerVideoOrientation),
     Trace(ProducerTraceEventData),
+}
+
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::ProducerScore => {
+                let Ok(Some(notification::BodyRef::ProducerScoreNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let scores_fbs: Vec<_> = body
+                    .scores()
+                    .unwrap()
+                    .iter()
+                    .map(|score| producer::Score::try_from(score.unwrap()).unwrap())
+                    .collect();
+                let scores = scores_fbs.iter().map(ProducerScore::from_fbs).collect();
+
+                Ok(Notification::Score(scores))
+            }
+            notification::Event::ProducerVideoOrientationChange => {
+                let Ok(Some(notification::BodyRef::ProducerVideoOrientationChangeNotification(
+                    body,
+                ))) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let video_orientation_fbs =
+                    producer::VideoOrientationChangeNotification::try_from(body).unwrap();
+                let video_orientation = ProducerVideoOrientation::from_fbs(video_orientation_fbs);
+
+                Ok(Notification::VideoOrientationChange(video_orientation))
+            }
+            notification::Event::ProducerTrace => {
+                let Ok(Some(notification::BodyRef::ProducerTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = producer::TraceNotification::try_from(body).unwrap();
+                let trace_notification = ProducerTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -579,8 +722,8 @@ impl Producer {
             let handlers = Arc::clone(&handlers);
             let score = Arc::clone(&score);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Score(scores) => {
                             *score.lock() = scores.clone();

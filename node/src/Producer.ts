@@ -7,6 +7,7 @@ import { Event, Notification } from './fbs/notification';
 import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
 import { AppData } from './types';
 import * as utils from './utils';
+import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsNotification from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
@@ -742,7 +743,7 @@ function parseTraceEventData(
 	return {
 		type      : producerTraceEventTypeFromFbs(trace.type()),
 		timestamp : Number(trace.timestamp()),
-		direction : trace.direction() === FbsProducer.TraceDirection.DIRECTION_IN ? 'in' : 'out',
+		direction : trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};
 }

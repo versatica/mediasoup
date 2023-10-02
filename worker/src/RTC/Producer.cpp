@@ -1450,6 +1450,7 @@ namespace RTC
 
 			scores.emplace_back(FBS::Producer::CreateScoreDirect(
 			  this->shared->channelNotifier->GetBufferBuilder(),
+			  rtpStream->GetEncodingIdx(),
 			  rtpStream->GetSsrc(),
 			  !rtpStream->GetRid().empty() ? rtpStream->GetRid().c_str() : nullptr,
 			  rtpStream->GetScore()));
@@ -1478,7 +1479,7 @@ namespace RTC
 			  this->shared->channelNotifier->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::KEYFRAME,
 			  DepLibUV::GetTimeMs(),
-			  FBS::Producer::TraceDirection::DIRECTION_IN,
+			  FBS::Common::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::KeyFrameTraceInfo,
 			  traceInfo.Union());
 
@@ -1493,7 +1494,7 @@ namespace RTC
 			  this->shared->channelNotifier->GetBufferBuilder(),
 			  FBS::Producer::TraceEventType::RTP,
 			  DepLibUV::GetTimeMs(),
-			  FBS::Producer::TraceDirection::DIRECTION_IN,
+			  FBS::Common::TraceDirection::DIRECTION_IN,
 			  FBS::Producer::TraceInfo::RtpTraceInfo,
 			  traceInfo.Union());
 
@@ -1517,7 +1518,7 @@ namespace RTC
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::PLI,
 		  DepLibUV::GetTimeMs(),
-		  FBS::Producer::TraceDirection::DIRECTION_OUT,
+		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::PliTraceInfo,
 		  traceInfo.Union());
 
@@ -1540,7 +1541,7 @@ namespace RTC
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::FIR,
 		  DepLibUV::GetTimeMs(),
-		  FBS::Producer::TraceDirection::DIRECTION_OUT,
+		  FBS::Common::TraceDirection::DIRECTION_OUT,
 		  FBS::Producer::TraceInfo::FirTraceInfo,
 		  traceInfo.Union());
 
@@ -1560,7 +1561,7 @@ namespace RTC
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  FBS::Producer::TraceEventType::NACK,
 		  DepLibUV::GetTimeMs(),
-		  FBS::Producer::TraceDirection::DIRECTION_OUT);
+		  FBS::Common::TraceDirection::DIRECTION_OUT);
 
 		EmitTraceEvent(notification);
 	}
