@@ -1319,7 +1319,12 @@ impl RtpEncodingParameters {
             rtx: encoding_parameters
                 .rtx
                 .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
-            dtx: Some(encoding_parameters.dtx),
+            dtx: {
+                match encoding_parameters.dtx {
+                    true => Some(true),
+                    false => None,
+                }
+            },
             scalability_mode: encoding_parameters
                 .scalability_mode
                 .unwrap_or(String::from("S1T1"))

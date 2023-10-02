@@ -966,7 +966,7 @@ fn dump_succeeds() {
                 vec![RtpEncodingParameters {
                     codec_payload_type: Some(100),
                     rtx: None,
-                    dtx: Some(false),
+                    dtx: None,
                     scalability_mode: ScalabilityMode::None,
                     ssrc: audio_consumer
                         .rtp_parameters()
@@ -991,7 +991,7 @@ fn dump_succeeds() {
                         codec_payload_type: None,
                         rtx: None,
                         max_bitrate: None,
-                        dtx: Some(false),
+                        dtx: None,
                         scalability_mode: ScalabilityMode::None,
                     })
                     .collect::<Vec<_>>()
@@ -1089,7 +1089,7 @@ fn dump_succeeds() {
                         .get(0)
                         .unwrap()
                         .rtx,
-                    dtx: Some(false),
+                    dtx: None,
                     scalability_mode: "L4T1".parse().unwrap(),
                     rid: None,
                     max_bitrate: None,
@@ -1108,7 +1108,7 @@ fn dump_succeeds() {
                         codec_payload_type: None,
                         rtx: None,
                         max_bitrate: None,
-                        dtx: Some(false),
+                        dtx: None,
                         scalability_mode: ScalabilityMode::None,
                     })
                     .collect::<Vec<_>>()

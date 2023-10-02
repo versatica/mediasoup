@@ -639,6 +639,7 @@ impl Notification {
         }
     }
 }
+
 #[derive(Default)]
 #[allow(clippy::type_complexity)]
 struct Handlers {
