@@ -1,3 +1,4 @@
+include "common.fbs";
 include "rtpParameters.fbs";
 include "rtpStream.fbs";
 
@@ -37,25 +38,20 @@ table SendNotification {
 // Notifications from Worker.
 
 table Score {
+    encoding_idx: uint32;
     ssrc: uint32;
     rid: string;
     score: uint8;
 }
 
 table ScoreNotification {
-    scores: [Score];
+    scores: [Score] (required);
 }
 
 table VideoOrientationChangeNotification {
     camera: bool;
     flip: bool;
     rotation: uint16;
-}
-
-// NOTE (windows): IN|OUT are macros defined in windef.h.
-enum TraceDirection: uint8 {
-    DIRECTION_IN = 0,
-    DIRECTION_OUT
 }
 
 union TraceInfo {
@@ -84,7 +80,7 @@ table RtpTraceInfo {
 table TraceNotification {
     type: TraceEventType;
     timestamp: uint64;
-    direction: TraceDirection;
+    direction: FBS.Common.TraceDirection;
     info: TraceInfo;
 }
 

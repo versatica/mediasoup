@@ -63532,7 +63532,7 @@ mod root {
             /// The enum `TraceEventType` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceEventType` in the file `../worker/fbs/producer.fbs:6`
+            /// * Enum `TraceEventType` in the file `../worker/fbs/producer.fbs:7`
             #[derive(
                 Copy,
                 Clone,
@@ -63715,7 +63715,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/producer.fbs:14`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/producer.fbs:15`
             #[derive(
                 Clone,
                 Debug,
@@ -63993,7 +63993,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/producer.fbs:18`
+            /// * Table `DumpResponse` in the file `../worker/fbs/producer.fbs:19`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -64598,7 +64598,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/producer.fbs:29`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/producer.fbs:30`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -64865,7 +64865,7 @@ mod root {
             /// The table `SendNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `SendNotification` in the file `../worker/fbs/producer.fbs:33`
+            /// * Table `SendNotification` in the file `../worker/fbs/producer.fbs:34`
             #[derive(
                 Clone,
                 Debug,
@@ -65123,7 +65123,7 @@ mod root {
             /// The table `Score` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `Score` in the file `../worker/fbs/producer.fbs:39`
+            /// * Table `Score` in the file `../worker/fbs/producer.fbs:40`
             #[derive(
                 Clone,
                 Debug,
@@ -65136,6 +65136,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct Score {
+                /// The field `encoding_idx` in the table `Score`
+                pub encoding_idx: u32,
                 /// The field `ssrc` in the table `Score`
                 pub ssrc: u32,
                 /// The field `rid` in the table `Score`
@@ -65148,6 +65150,7 @@ mod root {
             impl ::core::default::Default for Score {
                 fn default() -> Self {
                     Self {
+                        encoding_idx: 0,
                         ssrc: 0,
                         rid: ::core::default::Default::default(),
                         score: 0,
@@ -65165,28 +65168,38 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_encoding_idx: impl ::planus::WriteAsDefault<u32, u32>,
                     field_ssrc: impl ::planus::WriteAsDefault<u32, u32>,
                     field_rid: impl ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                     field_score: impl ::planus::WriteAsDefault<u8, u8>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_encoding_idx = field_encoding_idx.prepare(builder, &0);
                     let prepared_ssrc = field_ssrc.prepare(builder, &0);
                     let prepared_rid = field_rid.prepare(builder);
                     let prepared_score = field_score.prepare(builder, &0);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<10> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<12> =
                         ::core::default::Default::default();
-                    if prepared_ssrc.is_some() {
+                    if prepared_encoding_idx.is_some() {
                         table_writer.write_entry::<u32>(0);
                     }
+                    if prepared_ssrc.is_some() {
+                        table_writer.write_entry::<u32>(1);
+                    }
                     if prepared_rid.is_some() {
-                        table_writer.write_entry::<::planus::Offset<str>>(1);
+                        table_writer.write_entry::<::planus::Offset<str>>(2);
                     }
                     if prepared_score.is_some() {
-                        table_writer.write_entry::<u8>(2);
+                        table_writer.write_entry::<u8>(3);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
+                            if let ::core::option::Option::Some(prepared_encoding_idx) =
+                                prepared_encoding_idx
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_encoding_idx);
+                            }
                             if let ::core::option::Option::Some(prepared_ssrc) = prepared_ssrc {
                                 object_writer.write::<_, _, 4>(&prepared_ssrc);
                             }
@@ -65226,7 +65239,7 @@ mod root {
             impl ::planus::WriteAsOffset<Score> for Score {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Score> {
-                    Score::create(builder, self.ssrc, &self.rid, self.score)
+                    Score::create(builder, self.encoding_idx, self.ssrc, &self.rid, self.score)
                 }
             }
 
@@ -65238,65 +65251,87 @@ mod root {
             pub struct ScoreBuilder<State>(State);
 
             impl ScoreBuilder<()> {
-                /// Setter for the [`ssrc` field](Score#structfield.ssrc).
+                /// Setter for the [`encoding_idx` field](Score#structfield.encoding_idx).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn ssrc<T0>(self, value: T0) -> ScoreBuilder<(T0,)>
+                pub fn encoding_idx<T0>(self, value: T0) -> ScoreBuilder<(T0,)>
                 where
                     T0: ::planus::WriteAsDefault<u32, u32>,
                 {
                     ScoreBuilder((value,))
                 }
 
-                /// Sets the [`ssrc` field](Score#structfield.ssrc) to the default value.
+                /// Sets the [`encoding_idx` field](Score#structfield.encoding_idx) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn ssrc_as_default(self) -> ScoreBuilder<(::planus::DefaultValue,)> {
-                    self.ssrc(::planus::DefaultValue)
+                pub fn encoding_idx_as_default(self) -> ScoreBuilder<(::planus::DefaultValue,)> {
+                    self.encoding_idx(::planus::DefaultValue)
                 }
             }
 
             impl<T0> ScoreBuilder<(T0,)> {
-                /// Setter for the [`rid` field](Score#structfield.rid).
+                /// Setter for the [`ssrc` field](Score#structfield.ssrc).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn rid<T1>(self, value: T1) -> ScoreBuilder<(T0, T1)>
+                pub fn ssrc<T1>(self, value: T1) -> ScoreBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T1: ::planus::WriteAsDefault<u32, u32>,
                 {
                     let (v0,) = self.0;
                     ScoreBuilder((v0, value))
                 }
 
-                /// Sets the [`rid` field](Score#structfield.rid) to null.
+                /// Sets the [`ssrc` field](Score#structfield.ssrc) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn rid_as_null(self) -> ScoreBuilder<(T0, ())> {
-                    self.rid(())
+                pub fn ssrc_as_default(self) -> ScoreBuilder<(T0, ::planus::DefaultValue)> {
+                    self.ssrc(::planus::DefaultValue)
                 }
             }
 
             impl<T0, T1> ScoreBuilder<(T0, T1)> {
-                /// Setter for the [`score` field](Score#structfield.score).
+                /// Setter for the [`rid` field](Score#structfield.rid).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn score<T2>(self, value: T2) -> ScoreBuilder<(T0, T1, T2)>
+                pub fn rid<T2>(self, value: T2) -> ScoreBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsDefault<u8, u8>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                 {
                     let (v0, v1) = self.0;
                     ScoreBuilder((v0, v1, value))
                 }
 
-                /// Sets the [`score` field](Score#structfield.score) to the default value.
+                /// Sets the [`rid` field](Score#structfield.rid) to null.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn score_as_default(self) -> ScoreBuilder<(T0, T1, ::planus::DefaultValue)> {
-                    self.score(::planus::DefaultValue)
+                pub fn rid_as_null(self) -> ScoreBuilder<(T0, T1, ())> {
+                    self.rid(())
                 }
             }
 
             impl<T0, T1, T2> ScoreBuilder<(T0, T1, T2)> {
+                /// Setter for the [`score` field](Score#structfield.score).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn score<T3>(self, value: T3) -> ScoreBuilder<(T0, T1, T2, T3)>
+                where
+                    T3: ::planus::WriteAsDefault<u8, u8>,
+                {
+                    let (v0, v1, v2) = self.0;
+                    ScoreBuilder((v0, v1, v2, value))
+                }
+
+                /// Sets the [`score` field](Score#structfield.score) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn score_as_default(
+                    self,
+                ) -> ScoreBuilder<(T0, T1, T2, ::planus::DefaultValue)> {
+                    self.score(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3> ScoreBuilder<(T0, T1, T2, T3)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [Score].
                 #[inline]
                 pub fn finish(self, builder: &mut ::planus::Builder) -> ::planus::Offset<Score>
@@ -65309,9 +65344,10 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAsDefault<u32, u32>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
-                    T2: ::planus::WriteAsDefault<u8, u8>,
-                > ::planus::WriteAs<::planus::Offset<Score>> for ScoreBuilder<(T0, T1, T2)>
+                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T3: ::planus::WriteAsDefault<u8, u8>,
+                > ::planus::WriteAs<::planus::Offset<Score>> for ScoreBuilder<(T0, T1, T2, T3)>
             {
                 type Prepared = ::planus::Offset<Score>;
 
@@ -65323,10 +65359,11 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAsDefault<u32, u32>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
-                    T2: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T3: ::planus::WriteAsDefault<u8, u8>,
                 > ::planus::WriteAsOptional<::planus::Offset<Score>>
-                for ScoreBuilder<(T0, T1, T2)>
+                for ScoreBuilder<(T0, T1, T2, T3)>
             {
                 type Prepared = ::planus::Offset<Score>;
 
@@ -65341,14 +65378,15 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAsDefault<u32, u32>,
-                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
-                    T2: ::planus::WriteAsDefault<u8, u8>,
-                > ::planus::WriteAsOffset<Score> for ScoreBuilder<(T0, T1, T2)>
+                    T1: ::planus::WriteAsDefault<u32, u32>,
+                    T2: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T3: ::planus::WriteAsDefault<u8, u8>,
+                > ::planus::WriteAsOffset<Score> for ScoreBuilder<(T0, T1, T2, T3)>
             {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Score> {
-                    let (v0, v1, v2) = &self.0;
-                    Score::create(builder, v0, v1, v2)
+                    let (v0, v1, v2, v3) = &self.0;
+                    Score::create(builder, v0, v1, v2, v3)
                 }
             }
 
@@ -65357,10 +65395,18 @@ mod root {
             pub struct ScoreRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> ScoreRef<'a> {
+                /// Getter for the [`encoding_idx` field](Score#structfield.encoding_idx).
+                #[inline]
+                pub fn encoding_idx(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(
+                        self.0.access(0, "Score", "encoding_idx")?.unwrap_or(0),
+                    )
+                }
+
                 /// Getter for the [`ssrc` field](Score#structfield.ssrc).
                 #[inline]
                 pub fn ssrc(&self) -> ::planus::Result<u32> {
-                    ::core::result::Result::Ok(self.0.access(0, "Score", "ssrc")?.unwrap_or(0))
+                    ::core::result::Result::Ok(self.0.access(1, "Score", "ssrc")?.unwrap_or(0))
                 }
 
                 /// Getter for the [`rid` field](Score#structfield.rid).
@@ -65369,19 +65415,20 @@ mod root {
                     &self,
                 ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
                 {
-                    self.0.access(1, "Score", "rid")
+                    self.0.access(2, "Score", "rid")
                 }
 
                 /// Getter for the [`score` field](Score#structfield.score).
                 #[inline]
                 pub fn score(&self) -> ::planus::Result<u8> {
-                    ::core::result::Result::Ok(self.0.access(2, "Score", "score")?.unwrap_or(0))
+                    ::core::result::Result::Ok(self.0.access(3, "Score", "score")?.unwrap_or(0))
                 }
             }
 
             impl<'a> ::core::fmt::Debug for ScoreRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ScoreRef");
+                    f.field("encoding_idx", &self.encoding_idx());
                     f.field("ssrc", &self.ssrc());
                     if let ::core::option::Option::Some(field_rid) = self.rid().transpose() {
                         f.field("rid", &field_rid);
@@ -65397,6 +65444,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: ScoreRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        encoding_idx: ::core::convert::TryInto::try_into(value.encoding_idx()?)?,
                         ssrc: ::core::convert::TryInto::try_into(value.ssrc()?)?,
                         rid: if let ::core::option::Option::Some(rid) = value.rid()? {
                             ::core::option::Option::Some(::core::convert::TryInto::try_into(rid)?)
@@ -65481,7 +65529,7 @@ mod root {
             /// The table `ScoreNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `ScoreNotification` in the file `../worker/fbs/producer.fbs:45`
+            /// * Table `ScoreNotification` in the file `../worker/fbs/producer.fbs:47`
             #[derive(
                 Clone,
                 Debug,
@@ -65495,16 +65543,7 @@ mod root {
             )]
             pub struct ScoreNotification {
                 /// The field `scores` in the table `ScoreNotification`
-                pub scores: ::core::option::Option<::planus::alloc::vec::Vec<self::Score>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for ScoreNotification {
-                fn default() -> Self {
-                    Self {
-                        scores: ::core::default::Default::default(),
-                    }
-                }
+                pub scores: ::planus::alloc::vec::Vec<self::Score>,
             }
 
             impl ScoreNotification {
@@ -65517,7 +65556,7 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_scores: impl ::planus::WriteAsOptional<
+                    field_scores: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::Score>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -65525,16 +65564,12 @@ mod root {
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_scores.is_some() {
-                        table_writer
-                            .write_entry::<::planus::Offset<[::planus::Offset<self::Score>]>>(0);
-                    }
+                    table_writer
+                        .write_entry::<::planus::Offset<[::planus::Offset<self::Score>]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_scores) = prepared_scores {
-                                object_writer.write::<_, _, 4>(&prepared_scores);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_scores);
                         });
                     }
                     builder.current_offset()
@@ -65588,18 +65623,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn scores<T0>(self, value: T0) -> ScoreNotificationBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<
-                        ::planus::Offset<[::planus::Offset<self::Score>]>,
-                    >,
+                    T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Score>]>>,
                 {
                     ScoreNotificationBuilder((value,))
-                }
-
-                /// Sets the [`scores` field](ScoreNotification#structfield.scores) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn scores_as_null(self) -> ScoreNotificationBuilder<((),)> {
-                    self.scores(())
                 }
             }
 
@@ -65617,9 +65643,8 @@ mod root {
                 }
             }
 
-            impl<
-                    T0: ::planus::WriteAsOptional<::planus::Offset<[::planus::Offset<self::Score>]>>,
-                > ::planus::WriteAs<::planus::Offset<ScoreNotification>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Score>]>>>
+                ::planus::WriteAs<::planus::Offset<ScoreNotification>>
                 for ScoreNotificationBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<ScoreNotification>;
@@ -65633,9 +65658,8 @@ mod root {
                 }
             }
 
-            impl<
-                    T0: ::planus::WriteAsOptional<::planus::Offset<[::planus::Offset<self::Score>]>>,
-                > ::planus::WriteAsOptional<::planus::Offset<ScoreNotification>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Score>]>>>
+                ::planus::WriteAsOptional<::planus::Offset<ScoreNotification>>
                 for ScoreNotificationBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<ScoreNotification>;
@@ -65649,9 +65673,8 @@ mod root {
                 }
             }
 
-            impl<
-                    T0: ::planus::WriteAsOptional<::planus::Offset<[::planus::Offset<self::Score>]>>,
-                > ::planus::WriteAsOffset<ScoreNotification> for ScoreNotificationBuilder<(T0,)>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::Score>]>>>
+                ::planus::WriteAsOffset<ScoreNotification> for ScoreNotificationBuilder<(T0,)>
             {
                 #[inline]
                 fn prepare(
@@ -65672,21 +65695,16 @@ mod root {
                 #[inline]
                 pub fn scores(
                     &self,
-                ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::ScoreRef<'a>>>,
-                    >,
-                > {
-                    self.0.access(0, "ScoreNotification", "scores")
+                ) -> ::planus::Result<::planus::Vector<'a, ::planus::Result<self::ScoreRef<'a>>>>
+                {
+                    self.0.access_required(0, "ScoreNotification", "scores")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for ScoreNotificationRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("ScoreNotificationRef");
-                    if let ::core::option::Option::Some(field_scores) = self.scores().transpose() {
-                        f.field("scores", &field_scores);
-                    }
+                    f.field("scores", &self.scores());
                     f.finish()
                 }
             }
@@ -65697,11 +65715,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: ScoreNotificationRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        scores: if let ::core::option::Option::Some(scores) = value.scores()? {
-                            ::core::option::Option::Some(scores.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        scores: value.scores()?.to_vec_result()?,
                     })
                 }
             }
@@ -65779,7 +65793,7 @@ mod root {
             /// The table `VideoOrientationChangeNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `VideoOrientationChangeNotification` in the file `../worker/fbs/producer.fbs:49`
+            /// * Table `VideoOrientationChangeNotification` in the file `../worker/fbs/producer.fbs:51`
             #[derive(
                 Clone,
                 Debug,
@@ -66199,180 +66213,10 @@ mod root {
                 }
             }
 
-            /// The enum `TraceDirection` in the namespace `FBS.Producer`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceDirection` in the file `../worker/fbs/producer.fbs:56`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceDirection {
-                /// The variant `DIRECTION_IN` in the enum `TraceDirection`
-                DirectionIn = 0,
-
-                /// The variant `DIRECTION_OUT` in the enum `TraceDirection`
-                DirectionOut = 1,
-            }
-
-            impl TraceDirection {
-                /// Array containing all valid variants of TraceDirection
-                pub const ENUM_VALUES: [Self; 2] = [Self::DirectionIn, Self::DirectionOut];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceDirection {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceDirection::DirectionIn),
-                        1 => ::core::result::Result::Ok(TraceDirection::DirectionOut),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceDirection> for u8 {
-                #[inline]
-                fn from(value: TraceDirection) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceDirection {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceDirection> for TraceDirection {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceDirection {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceDirection, TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceDirection,
-                ) -> ::core::option::Option<TraceDirection> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceDirection> for TraceDirection {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceDirection> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceDirection {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceDirection {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceDirection",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceDirection> for TraceDirection {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
-                }
-            }
-
             /// The union `TraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/producer.fbs:61`
+            /// * Union `TraceInfo` in the file `../worker/fbs/producer.fbs:57`
             #[derive(
                 Clone,
                 Debug,
@@ -66704,7 +66548,7 @@ mod root {
             /// The table `KeyFrameTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/producer.fbs:68`
+            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/producer.fbs:64`
             #[derive(
                 Clone,
                 Debug,
@@ -66986,7 +66830,7 @@ mod root {
             /// The table `FirTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `FirTraceInfo` in the file `../worker/fbs/producer.fbs:72`
+            /// * Table `FirTraceInfo` in the file `../worker/fbs/producer.fbs:68`
             #[derive(
                 Clone,
                 Debug,
@@ -67263,7 +67107,7 @@ mod root {
             /// The table `PliTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `PliTraceInfo` in the file `../worker/fbs/producer.fbs:76`
+            /// * Table `PliTraceInfo` in the file `../worker/fbs/producer.fbs:72`
             #[derive(
                 Clone,
                 Debug,
@@ -67540,7 +67384,7 @@ mod root {
             /// The table `RtpTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpTraceInfo` in the file `../worker/fbs/producer.fbs:80`
+            /// * Table `RtpTraceInfo` in the file `../worker/fbs/producer.fbs:76`
             #[derive(
                 Clone,
                 Debug,
@@ -67817,7 +67661,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/producer.fbs:84`
+            /// * Table `TraceNotification` in the file `../worker/fbs/producer.fbs:80`
             #[derive(
                 Clone,
                 Debug,
@@ -67835,7 +67679,7 @@ mod root {
                 /// The field `timestamp` in the table `TraceNotification`
                 pub timestamp: u64,
                 /// The field `direction` in the table `TraceNotification`
-                pub direction: self::TraceDirection,
+                pub direction: super::common::TraceDirection,
                 /// The field `info` in the table `TraceNotification`
                 pub info: ::core::option::Option<self::TraceInfo>,
             }
@@ -67846,7 +67690,7 @@ mod root {
                     Self {
                         type_: self::TraceEventType::Keyframe,
                         timestamp: 0,
-                        direction: self::TraceDirection::DirectionIn,
+                        direction: super::common::TraceDirection::DirectionIn,
                         info: ::core::default::Default::default(),
                     }
                 }
@@ -67868,16 +67712,16 @@ mod root {
                     >,
                     field_timestamp: impl ::planus::WriteAsDefault<u64, u64>,
                     field_direction: impl ::planus::WriteAsDefault<
-                        self::TraceDirection,
-                        self::TraceDirection,
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
                     >,
                     field_info: impl ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_type_ =
                         field_type_.prepare(builder, &self::TraceEventType::Keyframe);
                     let prepared_timestamp = field_timestamp.prepare(builder, &0);
-                    let prepared_direction =
-                        field_direction.prepare(builder, &self::TraceDirection::DirectionIn);
+                    let prepared_direction = field_direction
+                        .prepare(builder, &super::common::TraceDirection::DirectionIn);
                     let prepared_info = field_info.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<14> =
@@ -67892,7 +67736,7 @@ mod root {
                         table_writer.write_entry::<self::TraceEventType>(0);
                     }
                     if prepared_direction.is_some() {
-                        table_writer.write_entry::<self::TraceDirection>(2);
+                        table_writer.write_entry::<super::common::TraceDirection>(2);
                     }
                     if prepared_info.is_some() {
                         table_writer.write_entry::<u8>(3);
@@ -68021,7 +67865,10 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn direction<T2>(self, value: T2) -> TraceNotificationBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                 {
                     let (v0, v1) = self.0;
                     TraceNotificationBuilder((v0, v1, value))
@@ -68074,7 +67921,10 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAs<::planus::Offset<TraceNotification>>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -68093,7 +67943,10 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAsOptional<::planus::Offset<TraceNotification>>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -68112,7 +67965,10 @@ mod root {
             impl<
                     T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
-                    T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
+                    T2: ::planus::WriteAsDefault<
+                        super::common::TraceDirection,
+                        super::common::TraceDirection,
+                    >,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 > ::planus::WriteAsOffset<TraceNotification>
                 for TraceNotificationBuilder<(T0, T1, T2, T3)>
@@ -68154,11 +68010,11 @@ mod root {
 
                 /// Getter for the [`direction` field](TraceNotification#structfield.direction).
                 #[inline]
-                pub fn direction(&self) -> ::planus::Result<self::TraceDirection> {
+                pub fn direction(&self) -> ::planus::Result<super::common::TraceDirection> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "TraceNotification", "direction")?
-                            .unwrap_or(self::TraceDirection::DirectionIn),
+                            .unwrap_or(super::common::TraceDirection::DirectionIn),
                     )
                 }
 
