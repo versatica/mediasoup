@@ -509,7 +509,7 @@ export class Producer<ProducerAppData extends AppData = AppData>
 			}
 			catch (error)
 			{
-				// Ignore invalid event types.
+				logger.warn('enableTraceEvent() | [error:${error}]');
 			}
 		}
 

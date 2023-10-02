@@ -630,7 +630,6 @@ fn produce_already_used_mid_ssrc() {
                     parameters.encodings = vec![RtpEncodingParameters {
                         ssrc: Some(22222222),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 6667 }),
-                        dtx: Some(false),
                         ..RtpEncodingParameters::default()
                     }];
                     parameters
@@ -705,7 +704,7 @@ fn dump_succeeds() {
                     rid: None,
                     codec_payload_type: Some(0),
                     rtx: None,
-                    dtx: Some(false),
+                    dtx: None,
                     scalability_mode: ScalabilityMode::None,
                     max_bitrate: None
                 }],
@@ -742,7 +741,7 @@ fn dump_succeeds() {
                         rid: None,
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
-                        dtx: Some(false),
+                        dtx: None,
                         scalability_mode: "L1T3".parse().unwrap(),
                         max_bitrate: None
                     },
@@ -751,7 +750,7 @@ fn dump_succeeds() {
                         rid: None,
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
-                        dtx: Some(false),
+                        dtx: None,
                         scalability_mode: ScalabilityMode::None,
                         max_bitrate: None
                     },
@@ -760,7 +759,7 @@ fn dump_succeeds() {
                         rid: None,
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
-                        dtx: Some(false),
+                        dtx: None,
                         scalability_mode: ScalabilityMode::None,
                         max_bitrate: None
                     },
@@ -769,7 +768,7 @@ fn dump_succeeds() {
                         rid: None,
                         codec_payload_type: Some(112),
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
-                        dtx: Some(false),
+                        dtx: None,
                         scalability_mode: ScalabilityMode::None,
                         max_bitrate: None
                     },
