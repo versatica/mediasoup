@@ -55,7 +55,7 @@ table ConsumeRequest {
 table ConsumeResponse {
     paused: bool;
     producer_paused: bool;
-    score: FBS.Consumer.ConsumerScore;
+    score: FBS.Consumer.ConsumerScore (required);
     preferred_layers: FBS.Consumer.ConsumerLayers;
 }
 
@@ -212,12 +212,6 @@ table SctpStateChangeNotification {
     sctp_state: FBS.SctpAssociation.SctpState;
 }
 
-// NOTE (windows): IN|OUT are macros defined in windef.h.
-enum TraceDirection: uint8 {
-    DIRECTION_IN = 0,
-    DIRECTION_OUT
-}
-
 union TraceInfo {
     BweTraceInfo,
 }
@@ -241,7 +235,7 @@ table BweTraceInfo {
 table TraceNotification {
     type: TraceEventType;
     timestamp: uint64;
-    direction: TraceDirection;
+    direction: FBS.Common.TraceDirection;
     info: TraceInfo;
 }
 

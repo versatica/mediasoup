@@ -109,12 +109,13 @@ namespace RTC
 		// Call the parent method.
 		auto base = RTC::Consumer::FillBuffer(builder);
 		// Add rtpStream.
-		auto rtpStream = this->rtpStream->FillBuffer(builder);
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+		rtpStreams.emplace_back(this->rtpStream->FillBuffer(builder));
 
-		auto svcConsumerDump = FBS::Consumer::CreateSvcConsumerDump(
+		auto dump = FBS::Consumer::CreateConsumerDumpDirect(
 		  builder,
 		  base,
-		  rtpStream,
+		  &rtpStreams,
 		  this->preferredSpatialLayer,
 		  this->encodingContext->GetTargetSpatialLayer(),
 		  this->encodingContext->GetCurrentSpatialLayer(),
@@ -122,11 +123,7 @@ namespace RTC
 		  this->encodingContext->GetTargetTemporalLayer(),
 		  this->encodingContext->GetCurrentTemporalLayer());
 
-		return FBS::Consumer::CreateDumpResponse(
-		  builder,
-		  FBS::Consumer::DumpData::SvcConsumerDump,
-		  svcConsumerDump.Union(),
-		  FBS::RtpParameters::Type(this->type));
+		return FBS::Consumer::CreateDumpResponse(builder, dump);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> SvcConsumer::FillBufferStats(

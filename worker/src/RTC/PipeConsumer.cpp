@@ -1,11 +1,12 @@
+#include "FBS/consumer_generated.h"
 #define MS_CLASS "RTC::PipeConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/PipeConsumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/PipeConsumer.hpp"
 
 namespace RTC
 {
@@ -72,13 +73,9 @@ namespace RTC
 			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
 
-		auto pipeConsumerDump = FBS::Consumer::CreatePipeConsumerDumpDirect(builder, base, &rtpStreams);
+		auto dump = FBS::Consumer::CreateConsumerDumpDirect(builder, base, &rtpStreams);
 
-		return FBS::Consumer::CreateDumpResponse(
-		  builder,
-		  FBS::Consumer::DumpData::PipeConsumerDump,
-		  pipeConsumerDump.Union(),
-		  FBS::RtpParameters::Type(this->type));
+		return FBS::Consumer::CreateDumpResponse(builder, dump);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> PipeConsumer::FillBufferStats(
@@ -136,9 +133,12 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_SET_PREFERRED_LAYERS:
 			{
-				// Do nothing.
+				// Accept with empty preferred layers object.
 
-				request->Accept();
+				auto responseOffset =
+				  FBS::Consumer::CreateSetPreferredLayersResponse(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::Consumer_SetPreferredLayersResponse, responseOffset);
 
 				break;
 			}

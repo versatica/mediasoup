@@ -1,8 +1,7 @@
 use crate::active_speaker_observer::ActiveSpeakerObserverOptions;
 use crate::audio_level_observer::AudioLevelObserverOptions;
 use crate::consumer::{
-    ConsumerDump, ConsumerId, ConsumerLayers, ConsumerScore, ConsumerStats, ConsumerTraceEventType,
-    ConsumerType,
+    ConsumerId, ConsumerLayers, ConsumerScore, ConsumerTraceEventType, ConsumerType,
 };
 use crate::data_consumer::{DataConsumerDump, DataConsumerId, DataConsumerStat, DataConsumerType};
 use crate::data_producer::{DataProducerDump, DataProducerId, DataProducerStat, DataProducerType};
@@ -12,8 +11,8 @@ use crate::data_structures::{
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{
-    direct_transport, message, pipe_transport, plain_transport, producer, request, response,
-    router, transport, web_rtc_transport, worker,
+    consumer, direct_transport, message, pipe_transport, plain_transport, producer, request,
+    response, router, transport, web_rtc_transport, worker,
 };
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
@@ -1702,27 +1701,80 @@ impl RequestFbs for TransportProduceRequest {
     }
 }
 
-request_response!(
-    TransportId,
-    "transport.consume",
-    TransportConsumeRequest {
-        consumer_id: ConsumerId,
-        producer_id: ProducerId,
-        kind: MediaKind,
-        rtp_parameters: RtpParameters,
-        r#type: ConsumerType,
-        consumable_rtp_encodings: Vec<RtpEncodingParameters>,
-        paused: bool,
-        preferred_layers: Option<ConsumerLayers>,
-        ignore_dtx: bool,
-    },
-    TransportConsumeResponse {
-        paused: bool,
-        producer_paused: bool,
-        score: ConsumerScore,
-        preferred_layers: Option<ConsumerLayers>,
-    },
-);
+#[derive(Debug)]
+pub(crate) struct TransportConsumeRequest {
+    pub(crate) consumer_id: ConsumerId,
+    pub(crate) producer_id: ProducerId,
+    pub(crate) kind: MediaKind,
+    pub(crate) rtp_parameters: RtpParameters,
+    pub(crate) r#type: ConsumerType,
+    pub(crate) consumable_rtp_encodings: Vec<RtpEncodingParameters>,
+    pub(crate) paused: bool,
+    pub(crate) preferred_layers: Option<ConsumerLayers>,
+    pub(crate) ignore_dtx: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct TransportConsumeResponse {
+    pub(crate) paused: bool,
+    pub(crate) producer_paused: bool,
+    pub(crate) score: ConsumerScore,
+    pub(crate) preferred_layers: Option<ConsumerLayers>,
+}
+
+impl RequestFbs for TransportConsumeRequest {
+    const METHOD: request::Method = request::Method::TransportConsume;
+    type HandlerId = TransportId;
+    type Response = TransportConsumeResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data = transport::ConsumeRequest::create(
+            &mut builder,
+            self.consumer_id.to_string(),
+            self.producer_id.to_string(),
+            self.kind.to_fbs(),
+            Box::new(self.rtp_parameters.into_fbs()),
+            self.r#type.to_fbs(),
+            self.consumable_rtp_encodings
+                .iter()
+                .map(RtpEncodingParameters::to_fbs)
+                .collect::<Vec<_>>(),
+            self.paused,
+            self.preferred_layers.map(ConsumerLayers::to_fbs),
+            self.ignore_dtx,
+        );
+        let request_body = request::Body::create_transport_consume_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::TransportConsumeResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(TransportConsumeResponse {
+            paused: data.paused,
+            producer_paused: data.producer_paused,
+            score: ConsumerScore::from_fbs(*data.score),
+            preferred_layers: data
+                .preferred_layers
+                .map(|preferred_layers| ConsumerLayers::from_fbs(*preferred_layers)),
+        })
+    }
+}
 
 request_response!(
     TransportId,
@@ -2042,6 +2094,7 @@ impl RequestFbs for ProducerEnableTraceEventRequest {
         None
     }
 }
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ProducerSendNotification {}
@@ -2054,64 +2107,346 @@ impl Notification for ProducerSendNotification {
     }
 }
 
-request_response!(
-    TransportId,
-    "transport.closeConsumer",
-    ConsumerCloseRequest {
-        consumer_id: ConsumerId,
-    },
-    (),
-    Some(()),
-);
+#[derive(Debug)]
+pub(crate) struct ConsumerCloseRequest {
+    pub(crate) consumer_id: ConsumerId,
+}
 
-request_response!(
-    ConsumerId,
-    "consumer.dump",
-    ConsumerDumpRequest {},
-    ConsumerDump,
-);
+impl RequestFbs for ConsumerCloseRequest {
+    const METHOD: request::Method = request::Method::TransportCloseConsumer;
+    type HandlerId = TransportId;
+    type Response = ();
 
-request_response!(
-    ConsumerId,
-    "consumer.getStats",
-    ConsumerGetStatsRequest {},
-    ConsumerStats,
-);
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data =
+            transport::CloseConsumerRequest::create(&mut builder, self.consumer_id.to_string());
+        let request_body =
+            request::Body::create_transport_close_consumer_request(&mut builder, data);
 
-request_response!(ConsumerId, "consumer.pause", ConsumerPauseRequest {},);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
 
-request_response!(ConsumerId, "consumer.resume", ConsumerResumeRequest {},);
+        builder.finish(message, None).to_vec()
+    }
 
-request_response!(
-    ConsumerId,
-    "consumer.setPreferredLayers",
-    ConsumerSetPreferredLayersRequest {
-        #[serde(flatten)]
-        data: ConsumerLayers,
-    },
-    Option<ConsumerLayers>,
-);
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
 
-request_response!(
-    ConsumerId,
-    "consumer.setPriority",
-    ConsumerSetPriorityRequest { priority: u8 },
-    ConsumerSetPriorityResponse { priority: u8 },
-);
+#[derive(Debug)]
+pub(crate) struct ConsumerDumpRequest {}
 
-request_response!(
-    ConsumerId,
-    "consumer.requestKeyFrame",
-    ConsumerRequestKeyFrameRequest {},
-);
+impl RequestFbs for ConsumerDumpRequest {
+    const METHOD: request::Method = request::Method::ConsumerDump;
+    type HandlerId = ConsumerId;
+    type Response = response::Body;
 
-request_response!(
-    ConsumerId,
-    "consumer.enableTraceEvent",
-    ConsumerEnableTraceEventRequest {
-        types: Vec<ConsumerTraceEventType>,
-    },
-);
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        match response {
+            Some(data) => Ok(data),
+            _ => {
+                panic!("Wrong message from worker: {response:?}");
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct ConsumerGetStatsRequest {}
+
+impl RequestFbs for ConsumerGetStatsRequest {
+    const METHOD: request::Method = request::Method::ConsumerGetStats;
+    type HandlerId = ConsumerId;
+    type Response = response::Body;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        match response {
+            Some(data) => Ok(data),
+            _ => {
+                panic!("Wrong message from worker: {response:?}");
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct ConsumerPauseRequest {}
+
+impl RequestFbs for ConsumerPauseRequest {
+    const METHOD: request::Method = request::Method::ConsumerPause;
+    type HandlerId = ConsumerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct ConsumerResumeRequest {}
+
+impl RequestFbs for ConsumerResumeRequest {
+    const METHOD: request::Method = request::Method::ConsumerResume;
+    type HandlerId = ConsumerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct ConsumerSetPreferredLayersRequest {
+    pub(crate) data: ConsumerLayers,
+}
+
+impl RequestFbs for ConsumerSetPreferredLayersRequest {
+    const METHOD: request::Method = request::Method::ConsumerSetPreferredLayers;
+    type HandlerId = ConsumerId;
+    type Response = Option<ConsumerLayers>;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = consumer::SetPreferredLayersRequest::create(
+            &mut builder,
+            ConsumerLayers::to_fbs(self.data),
+        );
+        let request_body =
+            request::Body::create_consumer_set_preferred_layers_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::ConsumerSetPreferredLayersResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        match data.preferred_layers {
+            Some(preferred_layers) => Ok(Some(ConsumerLayers::from_fbs(*preferred_layers))),
+            None => Ok(None),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct ConsumerSetPriorityRequest {
+    pub(crate) priority: u8,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct ConsumerSetPriorityResponse {
+    pub(crate) priority: u8,
+}
+
+impl RequestFbs for ConsumerSetPriorityRequest {
+    const METHOD: request::Method = request::Method::ConsumerSetPriority;
+    type HandlerId = ConsumerId;
+    type Response = ConsumerSetPriorityResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = consumer::SetPriorityRequest::create(&mut builder, self.priority);
+        let request_body = request::Body::create_consumer_set_priority_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::ConsumerSetPriorityResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(ConsumerSetPriorityResponse {
+            priority: data.priority,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct ConsumerRequestKeyFrameRequest {}
+
+impl RequestFbs for ConsumerRequestKeyFrameRequest {
+    const METHOD: request::Method = request::Method::ConsumerRequestKeyFrame;
+    type HandlerId = ConsumerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct ConsumerEnableTraceEventRequest {
+    pub(crate) types: Vec<ConsumerTraceEventType>,
+}
+
+impl RequestFbs for ConsumerEnableTraceEventRequest {
+    const METHOD: request::Method = request::Method::ConsumerEnableTraceEvent;
+    type HandlerId = ConsumerId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = consumer::EnableTraceEventRequest {
+            events: self
+                .types
+                .into_iter()
+                .map(ConsumerTraceEventType::to_fbs)
+                .collect(),
+        };
+
+        let request_body = request::Body::ConsumerEnableTraceEventRequest(Box::new(data));
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+
+    fn default_for_soft_error() -> Option<Self::Response> {
+        None
+    }
+}
 
 request_response!(
     TransportId,

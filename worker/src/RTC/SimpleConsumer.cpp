@@ -1,11 +1,12 @@
+#include "FBS/consumer_generated.h"
 #define MS_CLASS "RTC::SimpleConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SimpleConsumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/SimpleConsumer.hpp"
 
 namespace RTC
 {
@@ -72,15 +73,12 @@ namespace RTC
 		// Call the parent method.
 		auto base = RTC::Consumer::FillBuffer(builder);
 		// Add rtpStream.
-		auto rtpStream = this->rtpStream->FillBuffer(builder);
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+		rtpStreams.emplace_back(this->rtpStream->FillBuffer(builder));
 
-		auto simpleConsumerDump = FBS::Consumer::CreateSimpleConsumerDump(builder, base, rtpStream);
+		auto dump = FBS::Consumer::CreateConsumerDumpDirect(builder, base, &rtpStreams);
 
-		return FBS::Consumer::CreateDumpResponse(
-		  builder,
-		  FBS::Consumer::DumpData::SimpleConsumerDump,
-		  simpleConsumerDump.Union(),
-		  FBS::RtpParameters::Type(this->type));
+		return FBS::Consumer::CreateDumpResponse(builder, dump);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> SimpleConsumer::FillBufferStats(
@@ -145,9 +143,12 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_SET_PREFERRED_LAYERS:
 			{
-				// Do nothing.
+				// Accept with empty preferred layers object.
 
-				request->Accept();
+				auto responseOffset =
+				  FBS::Consumer::CreateSetPreferredLayersResponse(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::Consumer_SetPreferredLayersResponse, responseOffset);
 
 				break;
 			}

@@ -2,23 +2,25 @@
 mod tests;
 
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
-use crate::fbs::{rtp_stream, rtx_stream};
+use crate::fbs::{consumer, notification, response, rtp_parameters, rtp_stream, rtx_stream};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
     ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerRequestKeyFrameRequest,
     ConsumerResumeRequest, ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType, WeakProducer};
-use crate::rtp_parameters::{MediaKind, MimeType, RtpCapabilities, RtpParameters};
-use crate::scalability_modes::ScalabilityMode;
+use crate::rtp_parameters::{
+    MediaKind, MimeType, RtpCapabilities, RtpEncodingParameters, RtpParameters,
+};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -39,6 +41,22 @@ pub struct ConsumerLayers {
     pub temporal_layer: Option<u8>,
 }
 
+impl ConsumerLayers {
+    pub(crate) fn to_fbs(self) -> consumer::ConsumerLayers {
+        consumer::ConsumerLayers {
+            spatial_layer: self.spatial_layer,
+            temporal_layer: self.temporal_layer,
+        }
+    }
+
+    pub(crate) fn from_fbs(consumer_layers: consumer::ConsumerLayers) -> Self {
+        Self {
+            spatial_layer: consumer_layers.spatial_layer,
+            temporal_layer: consumer_layers.temporal_layer,
+        }
+    }
+}
+
 /// Score of consumer and corresponding producer.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -52,6 +70,16 @@ pub struct ConsumerScore {
     /// The scores of all RTP streams in the producer ordered by encoding (just useful when the
     /// producer uses simulcast).
     pub producer_scores: Vec<u8>,
+}
+
+impl ConsumerScore {
+    pub(crate) fn from_fbs(consumer_score: consumer::ConsumerScore) -> Self {
+        Self {
+            score: consumer_score.score,
+            producer_score: consumer_score.producer_score,
+            producer_scores: consumer_score.producer_scores.into_iter().collect(),
+        }
+    }
 }
 
 /// [`Consumer`] options.
@@ -187,29 +215,20 @@ pub struct RtpStream {
     pub score: u8,
 }
 
+impl RtpStream {
+    pub(crate) fn from_fbs(dump: rtp_stream::Dump) -> Self {
+        Self {
+            params: RtpStreamParams::from_fbs(&dump.params),
+            score: dump.score,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct RtpRtxParameters {
     pub ssrc: Option<u32>,
-}
-
-#[derive(Debug, Clone, PartialOrd, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-#[doc(hidden)]
-pub struct ConsumableRtpEncoding {
-    pub ssrc: Option<u32>,
-    pub rid: Option<String>,
-    pub codec_payload_type: Option<u8>,
-    pub rtx: Option<RtpRtxParameters>,
-    pub max_bitrate: Option<u32>,
-    pub max_framerate: Option<f64>,
-    pub dtx: Option<bool>,
-    #[serde(default, skip_serializing_if = "ScalabilityMode::is_none")]
-    pub scalability_mode: ScalabilityMode,
-    pub spatial_layers: Option<u8>,
-    pub temporal_layers: Option<u8>,
-    pub ksvc: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -225,10 +244,10 @@ pub struct ConsumerDump {
     pub producer_paused: bool,
     pub rtp_parameters: RtpParameters,
     pub supported_codec_payload_types: Vec<u8>,
-    pub trace_event_types: String,
+    pub trace_event_types: Vec<ConsumerTraceEventType>,
     pub r#type: ConsumerType,
-    pub consumable_rtp_encodings: Vec<ConsumableRtpEncoding>,
-    pub rtp_stream: RtpStream,
+    pub consumable_rtp_encodings: Vec<RtpEncodingParameters>,
+    pub rtp_streams: Vec<RtpStream>,
     /// Essentially `Option<u8>` or `Option<-1>`
     pub preferred_spatial_layer: Option<i16>,
     /// Essentially `Option<u8>` or `Option<-1>`
@@ -241,6 +260,47 @@ pub struct ConsumerDump {
     pub target_temporal_layer: Option<i16>,
     /// Essentially `Option<u8>` or `Option<-1>`
     pub current_temporal_layer: Option<i16>,
+}
+
+impl ConsumerDump {
+    pub(crate) fn from_fbs(dump: consumer::DumpResponse) -> Result<Self, Box<dyn Error>> {
+        let dump = dump.data;
+
+        Ok(Self {
+            id: dump.base.id.parse()?,
+            kind: MediaKind::from_fbs(dump.base.kind),
+            paused: dump.base.paused,
+            priority: dump.base.priority,
+            producer_id: dump.base.producer_id.parse()?,
+            producer_paused: dump.base.producer_paused,
+            rtp_parameters: RtpParameters::from_fbs(*dump.base.rtp_parameters).unwrap(),
+            supported_codec_payload_types: dump.base.supported_codec_payload_types,
+            trace_event_types: dump
+                .base
+                .trace_event_types
+                .iter()
+                .map(ConsumerTraceEventType::from_fbs)
+                .collect(),
+            r#type: ConsumerType::from_fbs(dump.base.type_),
+            consumable_rtp_encodings: dump
+                .base
+                .consumable_rtp_encodings
+                .into_iter()
+                .map(RtpEncodingParameters::from_fbs)
+                .collect(),
+            rtp_streams: dump
+                .rtp_streams
+                .into_iter()
+                .map(RtpStream::from_fbs)
+                .collect(),
+            preferred_spatial_layer: dump.preferred_spatial_layer,
+            target_spatial_layer: dump.target_spatial_layer,
+            current_spatial_layer: dump.current_spatial_layer,
+            preferred_temporal_layer: dump.preferred_temporal_layer,
+            target_temporal_layer: dump.target_temporal_layer,
+            current_temporal_layer: dump.current_temporal_layer,
+        })
+    }
 }
 
 /// Consumer type.
@@ -268,6 +328,26 @@ impl From<ProducerType> for ConsumerType {
     }
 }
 
+impl ConsumerType {
+    pub(crate) fn to_fbs(self) -> rtp_parameters::Type {
+        match self {
+            ConsumerType::Simple => rtp_parameters::Type::Simple,
+            ConsumerType::Simulcast => rtp_parameters::Type::Simulcast,
+            ConsumerType::Svc => rtp_parameters::Type::Svc,
+            ConsumerType::Pipe => rtp_parameters::Type::Pipe,
+        }
+    }
+
+    pub(crate) fn from_fbs(r#type: rtp_parameters::Type) -> ConsumerType {
+        match r#type {
+            rtp_parameters::Type::Simple => ConsumerType::Simple,
+            rtp_parameters::Type::Simulcast => ConsumerType::Simulcast,
+            rtp_parameters::Type::Svc => ConsumerType::Svc,
+            rtp_parameters::Type::Pipe => ConsumerType::Pipe,
+        }
+    }
+}
+
 /// RTC statistics of the consumer alone.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -281,20 +361,54 @@ pub struct ConsumerStat {
     pub rtx_ssrc: Option<u32>,
     pub kind: MediaKind,
     pub mime_type: MimeType,
-    pub packets_lost: u32,
+    pub packets_lost: u64,
     pub fraction_lost: u8,
-    pub packets_discarded: usize,
-    pub packets_retransmitted: usize,
-    pub packets_repaired: usize,
-    pub nack_count: usize,
-    pub nack_packet_count: usize,
-    pub pli_count: usize,
-    pub fir_count: usize,
+    pub packets_discarded: u64,
+    pub packets_retransmitted: u64,
+    pub packets_repaired: u64,
+    pub nack_count: u64,
+    pub nack_packet_count: u64,
+    pub pli_count: u64,
+    pub fir_count: u64,
     pub score: u8,
-    pub packet_count: usize,
-    pub byte_count: usize,
+    pub packet_count: u64,
+    pub byte_count: u64,
     pub bitrate: u32,
     pub round_trip_time: Option<f32>,
+}
+
+impl ConsumerStat {
+    pub(crate) fn from_fbs(stats: &rtp_stream::Stats) -> Self {
+        let rtp_stream::StatsData::SendStats(ref stats) = stats.data else {
+            panic!("Wrong message from worker");
+        };
+
+        let rtp_stream::StatsData::BaseStats(ref base) = stats.base.data else {
+            panic!("Wrong message from worker");
+        };
+
+        Self {
+            timestamp: base.timestamp,
+            ssrc: base.ssrc,
+            rtx_ssrc: base.rtx_ssrc,
+            kind: MediaKind::from_fbs(base.kind),
+            mime_type: base.mime_type.to_string().parse().unwrap(),
+            packets_lost: base.packets_lost,
+            fraction_lost: base.fraction_lost,
+            packets_discarded: base.packets_discarded,
+            packets_retransmitted: base.packets_retransmitted,
+            packets_repaired: base.packets_repaired,
+            nack_count: base.nack_count,
+            nack_packet_count: base.nack_packet_count,
+            pli_count: base.pli_count,
+            fir_count: base.fir_count,
+            score: base.score,
+            packet_count: stats.packet_count,
+            byte_count: stats.byte_count,
+            bitrate: stats.bitrate,
+            round_trip_time: Some(base.round_trip_time),
+        }
+    }
 }
 
 /// RTC statistics of the consumer, may or may not include producer statistics.
@@ -367,6 +481,65 @@ pub enum ConsumerTraceEventData {
     },
 }
 
+impl ConsumerTraceEventData {
+    pub(crate) fn from_fbs(data: consumer::TraceNotification) -> Self {
+        match data.type_ {
+            consumer::TraceEventType::Rtp => ConsumerTraceEventData::Rtp {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(consumer::TraceInfo::RtpTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                    }
+                },
+            },
+            consumer::TraceEventType::Keyframe => ConsumerTraceEventData::KeyFrame {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(consumer::TraceInfo::KeyFrameTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                    }
+                },
+            },
+            consumer::TraceEventType::Nack => ConsumerTraceEventData::Nack {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+            },
+            consumer::TraceEventType::Pli => ConsumerTraceEventData::Pli {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(consumer::TraceInfo::PliTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    SsrcTraceInfo { ssrc: info.ssrc }
+                },
+            },
+            consumer::TraceEventType::Fir => ConsumerTraceEventData::Fir {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(consumer::TraceInfo::FirTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    SsrcTraceInfo { ssrc: info.ssrc }
+                },
+            },
+        }
+    }
+}
+
 /// Types of consumer trace events.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -383,6 +556,27 @@ pub enum ConsumerTraceEventType {
     Fir,
 }
 
+impl ConsumerTraceEventType {
+    pub(crate) fn to_fbs(self) -> consumer::TraceEventType {
+        match self {
+            ConsumerTraceEventType::Rtp => consumer::TraceEventType::Rtp,
+            ConsumerTraceEventType::KeyFrame => consumer::TraceEventType::Keyframe,
+            ConsumerTraceEventType::Nack => consumer::TraceEventType::Nack,
+            ConsumerTraceEventType::Pli => consumer::TraceEventType::Pli,
+            ConsumerTraceEventType::Fir => consumer::TraceEventType::Fir,
+        }
+    }
+
+    pub(crate) fn from_fbs(event_type: &consumer::TraceEventType) -> Self {
+        match event_type {
+            consumer::TraceEventType::Rtp => ConsumerTraceEventType::Rtp,
+            consumer::TraceEventType::Keyframe => ConsumerTraceEventType::KeyFrame,
+            consumer::TraceEventType::Nack => ConsumerTraceEventType::Nack,
+            consumer::TraceEventType::Pli => ConsumerTraceEventType::Pli,
+            consumer::TraceEventType::Fir => ConsumerTraceEventType::Fir,
+        }
+    }
+}
 #[derive(Debug, Deserialize)]
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
@@ -394,6 +588,56 @@ enum Notification {
     Score(ConsumerScore),
     LayersChange(Option<ConsumerLayers>),
     Trace(ConsumerTraceEventData),
+}
+
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::ConsumerProducerClose => Ok(Notification::ProducerClose),
+            notification::Event::ConsumerProducerPause => Ok(Notification::ProducerPause),
+            notification::Event::ConsumerProducerResume => Ok(Notification::ProducerResume),
+            notification::Event::ConsumerScore => {
+                let Ok(Some(notification::BodyRef::ConsumerScoreNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let score_fbs = consumer::ConsumerScore::try_from(body.score().unwrap()).unwrap();
+                let score = ConsumerScore::from_fbs(score_fbs);
+
+                Ok(Notification::Score(score))
+            }
+            notification::Event::ConsumerLayersChange => {
+                let Ok(Some(notification::BodyRef::ConsumerLayersChangeNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let layers_fbs =
+                    consumer::ConsumerLayers::try_from(body.layers().unwrap()).unwrap();
+                let layers = ConsumerLayers::from_fbs(layers_fbs);
+
+                Ok(Notification::LayersChange(Some(layers)))
+            }
+            notification::Event::ConsumerTrace => {
+                let Ok(Some(notification::BodyRef::ConsumerTraceNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let trace_notification_fbs = consumer::TraceNotification::try_from(body).unwrap();
+                let trace_notification = ConsumerTraceEventData::from_fbs(trace_notification_fbs);
+
+                Ok(Notification::Trace(trace_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -463,7 +707,7 @@ impl Inner {
                 self.executor
                     .spawn(async move {
                         if weak_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request(transport_id, request).await {
+                            if let Err(error) = channel.request_fbs(transport_id, request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
@@ -539,8 +783,8 @@ impl Consumer {
             let current_layers = Arc::clone(&current_layers);
             let inner_weak = Arc::clone(&inner_weak);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::ProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
@@ -746,10 +990,17 @@ impl Consumer {
     pub async fn dump(&self) -> Result<ConsumerDump, RequestError> {
         debug!("dump()");
 
-        self.inner
+        let response = self
+            .inner
             .channel
-            .request(self.id(), ConsumerDumpRequest {})
-            .await
+            .request_fbs(self.id(), ConsumerDumpRequest {})
+            .await?;
+
+        if let response::Body::ConsumerDumpResponse(data) = response {
+            Ok(ConsumerDump::from_fbs(*data).expect("Error parsing dump response"))
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Returns current RTC statistics of the consumer.
@@ -759,10 +1010,30 @@ impl Consumer {
     pub async fn get_stats(&self) -> Result<ConsumerStats, RequestError> {
         debug!("get_stats()");
 
-        self.inner
+        let response = self
+            .inner
             .channel
-            .request(self.id(), ConsumerGetStatsRequest {})
-            .await
+            .request_fbs(self.id(), ConsumerGetStatsRequest {})
+            .await;
+
+        if let Ok(response::Body::ConsumerGetStatsResponse(data)) = response {
+            match data.stats.len() {
+                0 => panic!("Empty stats response from worker"),
+                1 => {
+                    let consumer_stat = ConsumerStat::from_fbs(&data.stats[0]);
+
+                    Ok(ConsumerStats::JustConsumer((consumer_stat,)))
+                }
+                _ => {
+                    let consumer_stat = ConsumerStat::from_fbs(&data.stats[0]);
+                    let producer_stat = ProducerStat::from_fbs(&data.stats[1]);
+
+                    Ok(ConsumerStats::WithProducer((consumer_stat, producer_stat)))
+                }
+            }
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Pauses the consumer (no RTP is sent to the consuming endpoint).
@@ -771,7 +1042,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(self.id(), ConsumerPauseRequest {})
+            .request_fbs(self.id(), ConsumerPauseRequest {})
             .await?;
 
         let mut paused = self.inner.paused.lock();
@@ -791,7 +1062,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(self.id(), ConsumerResumeRequest {})
+            .request_fbs(self.id(), ConsumerResumeRequest {})
             .await?;
 
         let mut paused = self.inner.paused.lock();
@@ -816,7 +1087,7 @@ impl Consumer {
         let consumer_layers = self
             .inner
             .channel
-            .request(
+            .request_fbs(
                 self.id(),
                 ConsumerSetPreferredLayersRequest {
                     data: consumer_layers,
@@ -838,7 +1109,7 @@ impl Consumer {
         let result = self
             .inner
             .channel
-            .request(self.id(), ConsumerSetPriorityRequest { priority })
+            .request_fbs(self.id(), ConsumerSetPriorityRequest { priority })
             .await?;
 
         *self.inner.priority.lock() = result.priority;
@@ -855,7 +1126,7 @@ impl Consumer {
         let result = self
             .inner
             .channel
-            .request(self.id(), ConsumerSetPriorityRequest { priority })
+            .request_fbs(self.id(), ConsumerSetPriorityRequest { priority })
             .await?;
 
         *self.inner.priority.lock() = result.priority;
@@ -869,7 +1140,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(self.id(), ConsumerRequestKeyFrameRequest {})
+            .request_fbs(self.id(), ConsumerRequestKeyFrameRequest {})
             .await
     }
 
@@ -882,7 +1153,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request(self.id(), ConsumerEnableTraceEventRequest { types })
+            .request_fbs(self.id(), ConsumerEnableTraceEventRequest { types })
             .await
     }
 

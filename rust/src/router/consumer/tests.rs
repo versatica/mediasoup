@@ -146,7 +146,6 @@ fn producer_close_event() {
 }
 
 #[test]
-#[ignore]
 fn transport_close_event() {
     future::block_on(async move {
         let (router, transport_1, transport_2) = init().await;

@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::{sctp_association, transport, web_rtc_transport};
+use crate::fbs::{common, sctp_association, transport, web_rtc_transport};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -1034,10 +1034,10 @@ pub enum TraceEventDirection {
 }
 
 impl TraceEventDirection {
-    pub(crate) fn from_fbs(event_type: transport::TraceDirection) -> Self {
+    pub(crate) fn from_fbs(event_type: common::TraceDirection) -> Self {
         match event_type {
-            transport::TraceDirection::DirectionIn => TraceEventDirection::In,
-            transport::TraceDirection::DirectionOut => TraceEventDirection::Out,
+            common::TraceDirection::DirectionIn => TraceEventDirection::In,
+            common::TraceDirection::DirectionOut => TraceEventDirection::Out,
         }
     }
 }
@@ -1117,6 +1117,8 @@ pub enum OwnedWebRtcMessage {
     EmptyBinary,
 }
 
+/**
+ * TODO. Implement FBS conversion.
 /// RTP packet info in trace event.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1153,12 +1155,22 @@ pub struct RtpPacketTraceInfo {
     #[serde(default)]
     pub is_rtx: bool,
 }
+*/
+
+/// RTP packet info in trace event.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RtpPacketTraceInfo {
+    /// Whether this is an RTX packet.
+    #[serde(default)]
+    pub is_rtx: bool,
+}
 
 /// SSRC info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 pub struct SsrcTraceInfo {
     /// RTP stream SSRC.
-    ssrc: u32,
+    pub ssrc: u32,
 }
 
 /// Bandwidth estimation type.
