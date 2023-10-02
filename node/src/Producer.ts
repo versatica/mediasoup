@@ -498,9 +498,24 @@ export class Producer<ProducerAppData extends AppData = AppData>
 			throw new TypeError('every type must be a string');
 		}
 
+		// Convert event types.
+		const fbsEventTypes: FbsProducer.TraceEventType[] = [];
+
+		for (const eventType of types)
+		{
+			try
+			{
+				fbsEventTypes.push(producerTraceEventTypeToFbs(eventType));
+			}
+			catch (error)
+			{
+				logger.warn('enableTraceEvent() | [error:${error}]');
+			}
+		}
+
 		/* Build Request. */
 		const requestOffset = new FbsProducer.EnableTraceEventRequestT(
-			types
+			fbsEventTypes
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
@@ -603,6 +618,74 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	}
 }
 
+export function producerTypeFromFbs(type: FbsRtpParameters.Type): ProducerType
+{
+	switch (type)
+	{
+		case FbsRtpParameters.Type.SIMPLE:
+			return 'simple';
+		case FbsRtpParameters.Type.SIMULCAST:
+			return 'simulcast';
+		case FbsRtpParameters.Type.SVC:
+			return 'svc';
+		default:
+			throw new TypeError(`invalid FbsRtpParameters.Type: ${type}`);
+	}
+}
+
+export function producerTypeToFbs(type: ProducerType): FbsRtpParameters.Type
+{
+	switch (type)
+	{
+		case 'simple':
+			return FbsRtpParameters.Type.SIMPLE;
+
+		case 'simulcast':
+			return FbsRtpParameters.Type.SIMULCAST;
+
+		case 'svc':
+			return FbsRtpParameters.Type.SVC;
+	}
+}
+
+function producerTraceEventTypeToFbs(eventType: ProducerTraceEventType)
+	: FbsProducer.TraceEventType
+{
+	switch (eventType)
+	{
+		case 'keyframe':
+			return FbsProducer.TraceEventType.KEYFRAME;
+		case 'fir':
+			return FbsProducer.TraceEventType.FIR;
+		case 'nack':
+			return FbsProducer.TraceEventType.NACK;
+		case 'pli':
+			return FbsProducer.TraceEventType.PLI;
+		case 'rtp':
+			return FbsProducer.TraceEventType.RTP;
+		default:
+			throw new TypeError(`invalid eventType: ${eventType}`);
+	}
+}
+
+function producerTraceEventTypeFromFbs(eventType: FbsProducer.TraceEventType)
+	: ProducerTraceEventType
+{
+	switch (eventType)
+	{
+		case FbsProducer.TraceEventType.KEYFRAME:
+			return 'keyframe';
+		case FbsProducer.TraceEventType.FIR:
+			return 'fir';
+		case FbsProducer.TraceEventType.NACK:
+			return 'nack';
+		case FbsProducer.TraceEventType.PLI:
+			return 'pli';
+		case FbsProducer.TraceEventType.RTP:
+			return 'rtp';
+	}
+}
+
 export function parseProducerDump(
 	data: FbsProducer.DumpResponse
 ): ProducerDump
@@ -610,7 +693,7 @@ export function parseProducerDump(
 	return {
 		id            : data.id()!,
 		kind          : data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
-		type          : data.type()! as ProducerType,
+		type          : producerTypeFromFbs(data.type()),
 		rtpParameters : parseRtpParameters(data.rtpParameters()!),
 		// NOTE: optional values are represented with null instead of undefined.
 		// TODO: Make flatbuffers TS return undefined instead of null.
@@ -620,7 +703,7 @@ export function parseProducerDump(
 		rtpStreams    : data.rtpStreamsLength() > 0 ?
 			utils.parseVector(data, 'rtpStreams', (rtpStream: any) => rtpStream.unpack()) :
 			undefined,
-		traceEventTypes : utils.parseVector(data, 'traceEventTypes'),
+		traceEventTypes : utils.parseVector<ProducerTraceEventType>(data, 'traceEventTypes', producerTraceEventTypeFromFbs),
 		paused          : data.paused()
 	};
 }
@@ -657,28 +740,9 @@ function parseTraceEventData(
 	}
 
 	return {
-		type      : fbstraceType2String(trace.type()),
+		type      : producerTraceEventTypeFromFbs(trace.type()),
 		timestamp : Number(trace.timestamp()),
 		direction : trace.direction() === FbsProducer.TraceDirection.DIRECTION_IN ? 'in' : 'out',
 		info      : info ? info.unpack() : undefined
 	};
-}
-
-function fbstraceType2String(traceType: FbsProducer.TraceType): ProducerTraceEventType
-{
-	switch (traceType)
-	{
-		case FbsProducer.TraceType.KEYFRAME:
-			return 'keyframe';
-		case FbsProducer.TraceType.FIR:
-			return 'fir';
-		case FbsProducer.TraceType.NACK:
-			return 'nack';
-		case FbsProducer.TraceType.PLI:
-			return 'pli';
-		case FbsProducer.TraceType.RTP:
-			return 'rtp';
-		default:
-			throw new TypeError(`invalid TraceType: ${traceType}`);
-	}
 }

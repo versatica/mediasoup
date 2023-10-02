@@ -15,19 +15,9 @@ namespace RTC
 	public:
 		enum class Kind : uint8_t
 		{
-			ALL = 0,
 			AUDIO,
 			VIDEO
 		};
-
-	public:
-		static Kind GetKind(std::string& str);
-		static Kind GetKind(std::string&& str);
-		static const std::string& GetString(Kind kind);
-
-	private:
-		static absl::flat_hash_map<std::string, Kind> string2Kind;
-		static absl::flat_hash_map<Kind, std::string> kind2String;
 	};
 
 	class RtpCodecMimeType
@@ -35,7 +25,6 @@ namespace RTC
 	public:
 		enum class Type : uint8_t
 		{
-			UNSET = 0,
 			AUDIO,
 			VIDEO
 		};
@@ -43,7 +32,6 @@ namespace RTC
 	public:
 		enum class Subtype : uint16_t
 		{
-			UNSET = 0,
 			// Audio codecs:
 			OPUS = 100,
 			// Multi-channel Opus.
@@ -116,8 +104,8 @@ namespace RTC
 		}
 
 	public:
-		Type type{ Type::UNSET };
-		Subtype subtype{ Subtype::UNSET };
+		Type type;
+		Subtype subtype;
 
 	private:
 		std::string mimeType;
@@ -212,7 +200,7 @@ namespace RTC
 		uint32_t maxBitrate{ 0u };
 		double maxFramerate{ 0 };
 		bool dtx{ false };
-		std::string scalabilityMode;
+		std::string scalabilityMode{ "S1T1" };
 		uint8_t spatialLayers{ 1u };
 		uint8_t temporalLayers{ 1u };
 		bool ksvc{ false };
@@ -254,7 +242,6 @@ namespace RTC
 	public:
 		enum class Type : uint8_t
 		{
-			NONE = 0,
 			SIMPLE,
 			SIMULCAST,
 			SVC,
@@ -262,13 +249,11 @@ namespace RTC
 		};
 
 	public:
-		static Type GetType(const RtpParameters& rtpParameters);
-		static Type GetType(std::string& str);
-		static Type GetType(std::string&& str);
+		static std::optional<Type> GetType(const RtpParameters& rtpParameters);
 		static std::string& GetTypeString(Type type);
+		static FBS::RtpParameters::Type TypeToFbs(Type type);
 
 	private:
-		static absl::flat_hash_map<std::string, Type> string2Type;
 		static absl::flat_hash_map<Type, std::string> type2String;
 
 	public:

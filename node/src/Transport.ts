@@ -10,7 +10,7 @@ import { WebRtcTransportData } from './WebRtcTransport';
 import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
-import { Producer, ProducerOptions } from './Producer';
+import { Producer, ProducerOptions, producerTypeFromFbs, producerTypeToFbs } from './Producer';
 import { Consumer, ConsumerLayers, ConsumerOptions, ConsumerType } from './Consumer';
 import {
 	DataProducer,
@@ -45,6 +45,7 @@ import * as FbsDataConsumer from './fbs/data-consumer';
 import * as FbsDataProducer from './fbs/data-producer';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRouter from './fbs/router';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
 
 export type TransportListenInfo =
@@ -783,7 +784,7 @@ export class Transport
 		{
 			kind,
 			rtpParameters,
-			type : utils.getProducerType(status.type),
+			type : producerTypeFromFbs(status.type),
 			consumableRtpParameters
 		};
 
@@ -1612,7 +1613,7 @@ function createConsumeRequest({
 	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
 	ConsumeRequest.addType(
 		builder,
-		utils.getRtpParametersType(producer.type, pipe)
+		pipe ? FbsRtpParameters.Type.PIPE : producerTypeToFbs(producer.type)
 	);
 
 	if (consumableRtpEncodingsOffset)

@@ -54,12 +54,15 @@ namespace RTC
 		MS_TRACE();
 
 		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		const auto mediaKind = this->params.mimeType.type == RTC::RtpCodecMimeType::Type::AUDIO
+		                         ? FBS::RtpParameters::MediaKind::AUDIO
+		                         : FBS::RtpParameters::MediaKind::VIDEO;
 
 		auto baseStats = FBS::RtpStream::CreateBaseStatsDirect(
 		  builder,
 		  nowMs,
 		  this->params.ssrc,
-		  FBS::RtpParameters::MediaKind(this->params.mimeType.type),
+		  mediaKind,
 		  this->params.mimeType.ToString().c_str(),
 		  this->packetsLost,
 		  this->fractionLost,

@@ -23,6 +23,6 @@ namespace RTC
 		MS_TRACE();
 
 		return FBS::RtpParameters::CreateRtcpFeedbackDirect(
-		  builder, this->type.c_str(), this->parameter.length() > 0 ? this->parameter.c_str() : nullptr);
+		  builder, this->type.c_str(), this->parameter.empty() ? nullptr : this->parameter.c_str());
 	}
 } // namespace RTC

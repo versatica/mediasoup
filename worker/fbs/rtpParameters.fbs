@@ -1,13 +1,11 @@
 namespace FBS.RtpParameters;
 
 enum MediaKind: uint8 {
-    ALL = 0,
     AUDIO,
     VIDEO
 }
 
 enum Type: uint8 {
-    NONE = 0,
     SIMPLE,
     SIMULCAST,
     SVC,
@@ -49,8 +47,9 @@ table Parameter {
 }
 
 table RtcpFeedback {
+    // TODO: Create a specifc type.
     type: string (required);
-    parameter: string (required);
+    parameter: string;
 }
 
 table RtpCodecParameters {

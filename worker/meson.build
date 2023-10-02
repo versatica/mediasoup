@@ -123,7 +123,6 @@ common_sources = [
   'src/RTC/Codecs/VP8.cpp',
   'src/RTC/Codecs/VP9.cpp',
   'src/RTC/Codecs/Opus.cpp',
-  'src/RTC/RtpDictionaries/Media.cpp',
   'src/RTC/RtpDictionaries/Parameters.cpp',
   'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
   'src/RTC/RtpDictionaries/RtcpParameters.cpp',

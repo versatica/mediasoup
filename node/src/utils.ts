@@ -56,32 +56,6 @@ export function getRtpParametersType(
 
 		case 'svc':
 			return FbsRtpParametersType.SVC;
-
-		default:
-			return FbsRtpParametersType.NONE;
-	}
-}
-
-/**
- * Get the flatbuffers Producer type for a given RtpParameter type.
- */
-export function getProducerType(
-	rtpParameterType: FbsRtpParametersType
-): ProducerType
-{
-	switch (rtpParameterType)
-	{
-		case FbsRtpParametersType.SIMPLE:
-			return 'simple';
-
-		case FbsRtpParametersType.SIMULCAST:
-			return 'simulcast';
-
-		case FbsRtpParametersType.SVC:
-			return 'svc';
-
-		default:
-			throw new TypeError('invalid RtpParameter type');
 	}
 }
 

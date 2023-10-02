@@ -11,30 +11,21 @@ namespace RTC
 {
 	/* Class variables. */
 
-	// clang-format off
-	absl::flat_hash_map<std::string, RtpParameters::Type> RtpParameters::string2Type =
-	{
-		{ "none",      RtpParameters::Type::NONE      },
-		{ "simple",    RtpParameters::Type::SIMPLE    },
-		{ "simulcast", RtpParameters::Type::SIMULCAST },
-		{ "svc",       RtpParameters::Type::SVC       },
-		{ "pipe",      RtpParameters::Type::PIPE      }
-	};
-	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String =
-	{
-		{ RtpParameters::Type::NONE,      "none"      },
-		{ RtpParameters::Type::SIMPLE,    "simple"    },
+	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String = {
+		{ RtpParameters::Type::SIMPLE, "simple" },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
-		{ RtpParameters::Type::SVC,       "svc"       },
-		{ RtpParameters::Type::PIPE,      "pipe"      }
+		{ RtpParameters::Type::SVC, "svc" },
+		{ RtpParameters::Type::PIPE, "pipe" }
 	};
 	// clang-format on
 
 	/* Class methods. */
 
-	RtpParameters::Type RtpParameters::GetType(const RtpParameters& rtpParameters)
+	std::optional<RtpParameters::Type> RtpParameters::GetType(const RtpParameters& rtpParameters)
 	{
 		MS_TRACE();
+
+		std::optional<RtpParameters::Type> type;
 
 		if (rtpParameters.encodings.size() == 1)
 		{
@@ -46,53 +37,25 @@ namespace RTC
 			{
 				if (RTC::Codecs::Tools::IsValidTypeForCodec(RtpParameters::Type::SVC, mediaCodec->mimeType))
 				{
-					return RtpParameters::Type::SVC;
+					type.emplace(RtpParameters::Type::SVC);
 				}
 				else if (RTC::Codecs::Tools::IsValidTypeForCodec(
 				           RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
 				{
-					return RtpParameters::Type::SIMULCAST;
-				}
-				else
-				{
-					return RtpParameters::Type::NONE;
+					type.emplace(RtpParameters::Type::SIMULCAST);
 				}
 			}
 			else
 			{
-				return RtpParameters::Type::SIMPLE;
+				type.emplace(RtpParameters::Type::SIMPLE);
 			}
 		}
 		else if (rtpParameters.encodings.size() > 1)
 		{
-			return RtpParameters::Type::SIMULCAST;
+			type.emplace(RtpParameters::Type::SIMULCAST);
 		}
 
-		return RtpParameters::Type::NONE;
-	}
-
-	RtpParameters::Type RtpParameters::GetType(std::string& str)
-	{
-		MS_TRACE();
-
-		auto it = RtpParameters::string2Type.find(str);
-
-		if (it == RtpParameters::string2Type.end())
-			MS_THROW_TYPE_ERROR("invalid RtpParameters type [type:%s]", str.c_str());
-
-		return it->second;
-	}
-
-	RtpParameters::Type RtpParameters::GetType(std::string&& str)
-	{
-		MS_TRACE();
-
-		auto it = RtpParameters::string2Type.find(str);
-
-		if (it == RtpParameters::string2Type.end())
-			MS_THROW_TYPE_ERROR("invalid RtpParameters type [type:%s]", str.c_str());
-
-		return it->second;
+		return type;
 	}
 
 	std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
@@ -100,6 +63,23 @@ namespace RTC
 		MS_TRACE();
 
 		return RtpParameters::type2String.at(type);
+	}
+
+	FBS::RtpParameters::Type RtpParameters::TypeToFbs(RtpParameters::Type type)
+	{
+		MS_TRACE();
+
+		switch (type)
+		{
+			case Type::SIMPLE:
+				return FBS::RtpParameters::Type::SIMPLE;
+			case Type::SIMULCAST:
+				return FBS::RtpParameters::Type::SIMULCAST;
+			case Type::SVC:
+				return FBS::RtpParameters::Type::SVC;
+			case Type::PIPE:
+				return FBS::RtpParameters::Type::PIPE;
+		}
 	}
 
 	/* Instance methods. */

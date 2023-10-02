@@ -89,6 +89,6 @@ namespace RTC
 		                            : flatbuffers::nullopt,
 		  this->hasRtx ? this->rtx.FillBuffer(builder) : 0u,
 		  this->dtx,
-		  this->scalabilityMode.size() > 0 ? this->scalabilityMode.c_str() : nullptr);
+		  this->scalabilityMode.c_str());
 	}
 } // namespace RTC

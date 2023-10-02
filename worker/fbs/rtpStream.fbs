@@ -30,7 +30,7 @@ table Dump {
 
 table BitrateByLayer {
     layer: string (required);
-    bitrate: uint64;
+    bitrate: uint32;
 }
 
 union StatsData {
@@ -40,7 +40,7 @@ union StatsData {
 }
 
 table Stats {
-    data: StatsData;
+    data: StatsData (required);
 }
 
 table BaseStats {
@@ -49,7 +49,7 @@ table BaseStats {
     kind: FBS.RtpParameters.MediaKind;
     mime_type: string (required);
     packets_lost: uint64;
-    fraction_lost: uint64;
+    fraction_lost: uint8;
     packets_discarded: uint64;
     packets_retransmitted: uint64;
     packets_repaired: uint64;
@@ -69,14 +69,14 @@ table RecvStats {
     jitter: uint32;
     packet_count: uint64;
     byte_count: uint64;
-    bitrate: uint64;
-    bitrate_by_layer: [BitrateByLayer];
+    bitrate: uint32;
+    bitrate_by_layer: [BitrateByLayer] (required);
 }
 
 table SendStats {
     base: Stats (required);
     packet_count: uint64;
     byte_count: uint64;
-    bitrate: uint64;
+    bitrate: uint32;
 }
 

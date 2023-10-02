@@ -5597,7 +5597,7 @@ mod root {
                 fn default() -> Self {
                     Self {
                         data: ::core::default::Default::default(),
-                        type_: super::rtp_parameters::Type::None,
+                        type_: super::rtp_parameters::Type::Simple,
                     }
                 }
             }
@@ -5620,7 +5620,7 @@ mod root {
                 ) -> ::planus::Offset<Self> {
                     let prepared_data = field_data.prepare(builder);
                     let prepared_type_ =
-                        field_type_.prepare(builder, &super::rtp_parameters::Type::None);
+                        field_type_.prepare(builder, &super::rtp_parameters::Type::Simple);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<10> =
                         ::core::default::Default::default();
@@ -5826,7 +5826,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "DumpResponse", "type_")?
-                            .unwrap_or(super::rtp_parameters::Type::None),
+                            .unwrap_or(super::rtp_parameters::Type::Simple),
                     )
                 }
             }
@@ -5999,7 +5999,7 @@ mod root {
                     let prepared_id = field_id.prepare(builder);
                     let prepared_producer_id = field_producer_id.prepare(builder);
                     let prepared_kind =
-                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
+                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::Audio);
                     let prepared_rtp_parameters = field_rtp_parameters.prepare(builder);
                     let prepared_consumable_rtp_encodings =
                         field_consumable_rtp_encodings.prepare(builder);
@@ -6491,7 +6491,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "BaseConsumerDump", "kind")?
-                            .unwrap_or(super::rtp_parameters::MediaKind::All),
+                            .unwrap_or(super::rtp_parameters::MediaKind::Audio),
                     )
                 }
 
@@ -11973,19 +11973,16 @@ mod root {
             )]
             #[repr(u8)]
             pub enum MediaKind {
-                /// The variant `ALL` in the enum `MediaKind`
-                All = 0,
-
                 /// The variant `AUDIO` in the enum `MediaKind`
-                Audio = 1,
+                Audio = 0,
 
                 /// The variant `VIDEO` in the enum `MediaKind`
-                Video = 2,
+                Video = 1,
             }
 
             impl MediaKind {
                 /// Array containing all valid variants of MediaKind
-                pub const ENUM_VALUES: [Self; 3] = [Self::All, Self::Audio, Self::Video];
+                pub const ENUM_VALUES: [Self; 2] = [Self::Audio, Self::Video];
             }
 
             impl ::core::convert::TryFrom<u8> for MediaKind {
@@ -11997,9 +11994,8 @@ mod root {
                 {
                     #[allow(clippy::match_single_binding)]
                     match value {
-                        0 => ::core::result::Result::Ok(MediaKind::All),
-                        1 => ::core::result::Result::Ok(MediaKind::Audio),
-                        2 => ::core::result::Result::Ok(MediaKind::Video),
+                        0 => ::core::result::Result::Ok(MediaKind::Audio),
+                        1 => ::core::result::Result::Ok(MediaKind::Video),
 
                         _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
                             tag: value as i128,
@@ -12132,7 +12128,7 @@ mod root {
             /// The enum `Type` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Enum `Type` in the file `../worker/fbs/rtpParameters.fbs:9`
+            /// * Enum `Type` in the file `../worker/fbs/rtpParameters.fbs:8`
             #[derive(
                 Copy,
                 Clone,
@@ -12147,31 +12143,23 @@ mod root {
             )]
             #[repr(u8)]
             pub enum Type {
-                /// The variant `NONE` in the enum `Type`
-                None = 0,
-
                 /// The variant `SIMPLE` in the enum `Type`
-                Simple = 1,
+                Simple = 0,
 
                 /// The variant `SIMULCAST` in the enum `Type`
-                Simulcast = 2,
+                Simulcast = 1,
 
                 /// The variant `SVC` in the enum `Type`
-                Svc = 3,
+                Svc = 2,
 
                 /// The variant `PIPE` in the enum `Type`
-                Pipe = 4,
+                Pipe = 3,
             }
 
             impl Type {
                 /// Array containing all valid variants of Type
-                pub const ENUM_VALUES: [Self; 5] = [
-                    Self::None,
-                    Self::Simple,
-                    Self::Simulcast,
-                    Self::Svc,
-                    Self::Pipe,
-                ];
+                pub const ENUM_VALUES: [Self; 4] =
+                    [Self::Simple, Self::Simulcast, Self::Svc, Self::Pipe];
             }
 
             impl ::core::convert::TryFrom<u8> for Type {
@@ -12183,11 +12171,10 @@ mod root {
                 {
                     #[allow(clippy::match_single_binding)]
                     match value {
-                        0 => ::core::result::Result::Ok(Type::None),
-                        1 => ::core::result::Result::Ok(Type::Simple),
-                        2 => ::core::result::Result::Ok(Type::Simulcast),
-                        3 => ::core::result::Result::Ok(Type::Svc),
-                        4 => ::core::result::Result::Ok(Type::Pipe),
+                        0 => ::core::result::Result::Ok(Type::Simple),
+                        1 => ::core::result::Result::Ok(Type::Simulcast),
+                        2 => ::core::result::Result::Ok(Type::Svc),
+                        3 => ::core::result::Result::Ok(Type::Pipe),
 
                         _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
                             tag: value as i128,
@@ -12320,7 +12307,7 @@ mod root {
             /// The table `Boolean` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Boolean` in the file `../worker/fbs/rtpParameters.fbs:18`
+            /// * Table `Boolean` in the file `../worker/fbs/rtpParameters.fbs:16`
             #[derive(
                 Clone,
                 Debug,
@@ -12579,7 +12566,7 @@ mod root {
             /// The table `Integer32` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Integer32` in the file `../worker/fbs/rtpParameters.fbs:22`
+            /// * Table `Integer32` in the file `../worker/fbs/rtpParameters.fbs:20`
             #[derive(
                 Clone,
                 Debug,
@@ -12838,7 +12825,7 @@ mod root {
             /// The table `Integer32Array` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Integer32Array` in the file `../worker/fbs/rtpParameters.fbs:26`
+            /// * Table `Integer32Array` in the file `../worker/fbs/rtpParameters.fbs:24`
             #[derive(
                 Clone,
                 Debug,
@@ -13125,7 +13112,7 @@ mod root {
             /// The table `Double` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Double` in the file `../worker/fbs/rtpParameters.fbs:30`
+            /// * Table `Double` in the file `../worker/fbs/rtpParameters.fbs:28`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -13376,7 +13363,7 @@ mod root {
             /// The table `String` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `String` in the file `../worker/fbs/rtpParameters.fbs:34`
+            /// * Table `String` in the file `../worker/fbs/rtpParameters.fbs:32`
             #[derive(
                 Clone,
                 Debug,
@@ -13617,7 +13604,7 @@ mod root {
             /// The union `Value` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Union `Value` in the file `../worker/fbs/rtpParameters.fbs:38`
+            /// * Union `Value` in the file `../worker/fbs/rtpParameters.fbs:36`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -13964,7 +13951,7 @@ mod root {
             /// The table `Parameter` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Parameter` in the file `../worker/fbs/rtpParameters.fbs:46`
+            /// * Table `Parameter` in the file `../worker/fbs/rtpParameters.fbs:44`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -14233,7 +14220,7 @@ mod root {
             /// The table `RtcpFeedback` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtcpFeedback` in the file `../worker/fbs/rtpParameters.fbs:51`
+            /// * Table `RtcpFeedback` in the file `../worker/fbs/rtpParameters.fbs:49`
             #[derive(
                 Clone,
                 Debug,
@@ -14249,7 +14236,7 @@ mod root {
                 /// The field `type` in the table `RtcpFeedback`
                 pub type_: ::planus::alloc::string::String,
                 /// The field `parameter` in the table `RtcpFeedback`
-                pub parameter: ::planus::alloc::string::String,
+                pub parameter: ::core::option::Option<::planus::alloc::string::String>,
             }
 
             impl RtcpFeedback {
@@ -14263,7 +14250,9 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_type_: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_parameter: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_parameter: impl ::planus::WriteAsOptional<
+                        ::planus::Offset<::core::primitive::str>,
+                    >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_type_ = field_type_.prepare(builder);
                     let prepared_parameter = field_parameter.prepare(builder);
@@ -14271,12 +14260,18 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(1);
+                    if prepared_parameter.is_some() {
+                        table_writer.write_entry::<::planus::Offset<str>>(1);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_type_);
-                            object_writer.write::<_, _, 4>(&prepared_parameter);
+                            if let ::core::option::Option::Some(prepared_parameter) =
+                                prepared_parameter
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_parameter);
+                            }
                         });
                     }
                     builder.current_offset()
@@ -14342,10 +14337,17 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn parameter<T1>(self, value: T1) -> RtcpFeedbackBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                 {
                     let (v0,) = self.0;
                     RtcpFeedbackBuilder((v0, value))
+                }
+
+                /// Sets the [`parameter` field](RtcpFeedback#structfield.parameter) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn parameter_as_null(self) -> RtcpFeedbackBuilder<(T0, ())> {
+                    self.parameter(())
                 }
             }
 
@@ -14365,7 +14367,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                 > ::planus::WriteAs<::planus::Offset<RtcpFeedback>>
                 for RtcpFeedbackBuilder<(T0, T1)>
             {
@@ -14382,7 +14384,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                 > ::planus::WriteAsOptional<::planus::Offset<RtcpFeedback>>
                 for RtcpFeedbackBuilder<(T0, T1)>
             {
@@ -14399,7 +14401,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAs<::planus::Offset<str>>,
+                    T1: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
                 > ::planus::WriteAsOffset<RtcpFeedback> for RtcpFeedbackBuilder<(T0, T1)>
             {
                 #[inline]
@@ -14425,8 +14427,11 @@ mod root {
 
                 /// Getter for the [`parameter` field](RtcpFeedback#structfield.parameter).
                 #[inline]
-                pub fn parameter(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(1, "RtcpFeedback", "parameter")
+                pub fn parameter(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                {
+                    self.0.access(1, "RtcpFeedback", "parameter")
                 }
             }
 
@@ -14434,7 +14439,11 @@ mod root {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("RtcpFeedbackRef");
                     f.field("type_", &self.type_());
-                    f.field("parameter", &self.parameter());
+                    if let ::core::option::Option::Some(field_parameter) =
+                        self.parameter().transpose()
+                    {
+                        f.field("parameter", &field_parameter);
+                    }
                     f.finish()
                 }
             }
@@ -14446,7 +14455,15 @@ mod root {
                 fn try_from(value: RtcpFeedbackRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
                         type_: ::core::convert::TryInto::try_into(value.type_()?)?,
-                        parameter: ::core::convert::TryInto::try_into(value.parameter()?)?,
+                        parameter: if let ::core::option::Option::Some(parameter) =
+                            value.parameter()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                parameter,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
                     })
                 }
             }
@@ -14524,7 +14541,7 @@ mod root {
             /// The table `RtpCodecParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpCodecParameters` in the file `../worker/fbs/rtpParameters.fbs:56`
+            /// * Table `RtpCodecParameters` in the file `../worker/fbs/rtpParameters.fbs:55`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -15089,7 +15106,7 @@ mod root {
             /// The enum `RtpHeaderExtensionUri` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Enum `RtpHeaderExtensionUri` in the file `../worker/fbs/rtpParameters.fbs:65`
+            /// * Enum `RtpHeaderExtensionUri` in the file `../worker/fbs/rtpParameters.fbs:64`
             #[derive(
                 Copy,
                 Clone,
@@ -15311,7 +15328,7 @@ mod root {
             /// The table `RtpHeaderExtensionParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpHeaderExtensionParameters` in the file `../worker/fbs/rtpParameters.fbs:79`
+            /// * Table `RtpHeaderExtensionParameters` in the file `../worker/fbs/rtpParameters.fbs:78`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -15810,7 +15827,7 @@ mod root {
             /// The table `Rtx` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `Rtx` in the file `../worker/fbs/rtpParameters.fbs:86`
+            /// * Table `Rtx` in the file `../worker/fbs/rtpParameters.fbs:85`
             #[derive(
                 Clone,
                 Debug,
@@ -16063,7 +16080,7 @@ mod root {
             /// The table `RtpEncodingParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpEncodingParameters` in the file `../worker/fbs/rtpParameters.fbs:90`
+            /// * Table `RtpEncodingParameters` in the file `../worker/fbs/rtpParameters.fbs:89`
             #[derive(
                 Clone,
                 Debug,
@@ -16710,7 +16727,7 @@ mod root {
             /// The table `RtcpParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtcpParameters` in the file `../worker/fbs/rtpParameters.fbs:100`
+            /// * Table `RtcpParameters` in the file `../worker/fbs/rtpParameters.fbs:99`
             #[derive(
                 Clone,
                 Debug,
@@ -17052,7 +17069,7 @@ mod root {
             /// The table `RtpParameters` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpParameters` in the file `../worker/fbs/rtpParameters.fbs:105`
+            /// * Table `RtpParameters` in the file `../worker/fbs/rtpParameters.fbs:104`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -17504,7 +17521,7 @@ mod root {
             /// The table `CodecMapping` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `CodecMapping` in the file `../worker/fbs/rtpParameters.fbs:113`
+            /// * Table `CodecMapping` in the file `../worker/fbs/rtpParameters.fbs:112`
             #[derive(
                 Clone,
                 Debug,
@@ -17840,7 +17857,7 @@ mod root {
             /// The table `EncodingMapping` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `EncodingMapping` in the file `../worker/fbs/rtpParameters.fbs:118`
+            /// * Table `EncodingMapping` in the file `../worker/fbs/rtpParameters.fbs:117`
             #[derive(
                 Clone,
                 Debug,
@@ -18296,7 +18313,7 @@ mod root {
             /// The table `RtpMapping` in the namespace `FBS.RtpParameters`
             ///
             /// Generated from these locations:
-            /// * Table `RtpMapping` in the file `../worker/fbs/rtpParameters.fbs:125`
+            /// * Table `RtpMapping` in the file `../worker/fbs/rtpParameters.fbs:124`
             #[derive(
                 Clone,
                 Debug,
@@ -20179,7 +20196,7 @@ mod root {
                 /// The field `layer` in the table `BitrateByLayer`
                 pub layer: ::planus::alloc::string::String,
                 /// The field `bitrate` in the table `BitrateByLayer`
-                pub bitrate: u64,
+                pub bitrate: u32,
             }
 
             impl BitrateByLayer {
@@ -20193,25 +20210,25 @@ mod root {
                 pub fn create(
                     builder: &mut ::planus::Builder,
                     field_layer: impl ::planus::WriteAs<::planus::Offset<str>>,
-                    field_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_layer = field_layer.prepare(builder);
                     let prepared_bitrate = field_bitrate.prepare(builder, &0);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
-                    if prepared_bitrate.is_some() {
-                        table_writer.write_entry::<u64>(1);
-                    }
                     table_writer.write_entry::<::planus::Offset<str>>(0);
+                    if prepared_bitrate.is_some() {
+                        table_writer.write_entry::<u32>(1);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_layer);
                             if let ::core::option::Option::Some(prepared_bitrate) = prepared_bitrate
                             {
-                                object_writer.write::<_, _, 8>(&prepared_bitrate);
+                                object_writer.write::<_, _, 4>(&prepared_bitrate);
                             }
-                            object_writer.write::<_, _, 4>(&prepared_layer);
                         });
                     }
                     builder.current_offset()
@@ -20277,7 +20294,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn bitrate<T1>(self, value: T1) -> BitrateByLayerBuilder<(T0, T1)>
                 where
-                    T1: ::planus::WriteAsDefault<u64, u64>,
+                    T1: ::planus::WriteAsDefault<u32, u32>,
                 {
                     let (v0,) = self.0;
                     BitrateByLayerBuilder((v0, value))
@@ -20309,7 +20326,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsDefault<u64, u64>,
+                    T1: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAs<::planus::Offset<BitrateByLayer>>
                 for BitrateByLayerBuilder<(T0, T1)>
             {
@@ -20326,7 +20343,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsDefault<u64, u64>,
+                    T1: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAsOptional<::planus::Offset<BitrateByLayer>>
                 for BitrateByLayerBuilder<(T0, T1)>
             {
@@ -20343,7 +20360,7 @@ mod root {
 
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<str>>,
-                    T1: ::planus::WriteAsDefault<u64, u64>,
+                    T1: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAsOffset<BitrateByLayer> for BitrateByLayerBuilder<(T0, T1)>
             {
                 #[inline]
@@ -20369,7 +20386,7 @@ mod root {
 
                 /// Getter for the [`bitrate` field](BitrateByLayer#structfield.bitrate).
                 #[inline]
-                pub fn bitrate(&self) -> ::planus::Result<u64> {
+                pub fn bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(1, "BitrateByLayer", "bitrate")?.unwrap_or(0),
                     )
@@ -20739,16 +20756,7 @@ mod root {
             )]
             pub struct Stats {
                 /// The field `data` in the table `Stats`
-                pub data: ::core::option::Option<self::StatsData>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for Stats {
-                fn default() -> Self {
-                    Self {
-                        data: ::core::default::Default::default(),
-                    }
-                }
+                pub data: self::StatsData,
             }
 
             impl Stats {
@@ -20761,27 +20769,19 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_data: impl ::planus::WriteAsOptionalUnion<self::StatsData>,
+                    field_data: impl ::planus::WriteAsUnion<self::StatsData>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_data = field_data.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
-                    if prepared_data.is_some() {
-                        table_writer.write_entry::<::planus::Offset<self::StatsData>>(1);
-                    }
-                    if prepared_data.is_some() {
-                        table_writer.write_entry::<u8>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<self::StatsData>>(1);
+                    table_writer.write_entry::<u8>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_data) = prepared_data {
-                                object_writer.write::<_, _, 4>(&prepared_data.offset());
-                            }
-                            if let ::core::option::Option::Some(prepared_data) = prepared_data {
-                                object_writer.write::<_, _, 1>(&prepared_data.tag());
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_data.offset());
+                            object_writer.write::<_, _, 1>(&prepared_data.tag());
                         });
                     }
                     builder.current_offset()
@@ -20829,16 +20829,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn data<T0>(self, value: T0) -> StatsBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptionalUnion<self::StatsData>,
+                    T0: ::planus::WriteAsUnion<self::StatsData>,
                 {
                     StatsBuilder((value,))
-                }
-
-                /// Sets the [`data` field](Stats#structfield.data) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn data_as_null(self) -> StatsBuilder<((),)> {
-                    self.data(())
                 }
             }
 
@@ -20853,7 +20846,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptionalUnion<self::StatsData>>
+            impl<T0: ::planus::WriteAsUnion<self::StatsData>>
                 ::planus::WriteAs<::planus::Offset<Stats>> for StatsBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<Stats>;
@@ -20864,7 +20857,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptionalUnion<self::StatsData>>
+            impl<T0: ::planus::WriteAsUnion<self::StatsData>>
                 ::planus::WriteAsOptional<::planus::Offset<Stats>> for StatsBuilder<(T0,)>
             {
                 type Prepared = ::planus::Offset<Stats>;
@@ -20878,7 +20871,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptionalUnion<self::StatsData>> ::planus::WriteAsOffset<Stats>
+            impl<T0: ::planus::WriteAsUnion<self::StatsData>> ::planus::WriteAsOffset<Stats>
                 for StatsBuilder<(T0,)>
             {
                 #[inline]
@@ -20895,20 +20888,15 @@ mod root {
             impl<'a> StatsRef<'a> {
                 /// Getter for the [`data` field](Stats#structfield.data).
                 #[inline]
-                pub fn data(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<self::StatsDataRef<'a>>>
-                {
-                    self.0.access_union(0, "Stats", "data")
+                pub fn data(&self) -> ::planus::Result<self::StatsDataRef<'a>> {
+                    self.0.access_union_required(0, "Stats", "data")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for StatsRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("StatsRef");
-                    if let ::core::option::Option::Some(field_data) = self.data().transpose() {
-                        f.field("data", &field_data);
-                    }
+                    f.field("data", &self.data());
                     f.finish()
                 }
             }
@@ -20919,11 +20907,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: StatsRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        data: if let ::core::option::Option::Some(data) = value.data()? {
-                            ::core::option::Option::Some(::core::convert::TryInto::try_into(data)?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        data: ::core::convert::TryInto::try_into(value.data()?)?,
                     })
                 }
             }
@@ -21017,7 +21001,7 @@ mod root {
                 /// The field `packets_lost` in the table `BaseStats`
                 pub packets_lost: u64,
                 /// The field `fraction_lost` in the table `BaseStats`
-                pub fraction_lost: u64,
+                pub fraction_lost: u8,
                 /// The field `packets_discarded` in the table `BaseStats`
                 pub packets_discarded: u64,
                 /// The field `packets_retransmitted` in the table `BaseStats`
@@ -21062,7 +21046,7 @@ mod root {
                     >,
                     field_mime_type: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_packets_lost: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_fraction_lost: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_fraction_lost: impl ::planus::WriteAsDefault<u8, u8>,
                     field_packets_discarded: impl ::planus::WriteAsDefault<u64, u64>,
                     field_packets_retransmitted: impl ::planus::WriteAsDefault<u64, u64>,
                     field_packets_repaired: impl ::planus::WriteAsDefault<u64, u64>,
@@ -21079,7 +21063,7 @@ mod root {
                     let prepared_timestamp = field_timestamp.prepare(builder, &0);
                     let prepared_ssrc = field_ssrc.prepare(builder, &0);
                     let prepared_kind =
-                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
+                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::Audio);
                     let prepared_mime_type = field_mime_type.prepare(builder);
                     let prepared_packets_lost = field_packets_lost.prepare(builder, &0);
                     let prepared_fraction_lost = field_fraction_lost.prepare(builder, &0);
@@ -21105,9 +21089,6 @@ mod root {
                     }
                     if prepared_packets_lost.is_some() {
                         table_writer.write_entry::<u64>(4);
-                    }
-                    if prepared_fraction_lost.is_some() {
-                        table_writer.write_entry::<u64>(5);
                     }
                     if prepared_packets_discarded.is_some() {
                         table_writer.write_entry::<u64>(6);
@@ -21149,6 +21130,9 @@ mod root {
                     if prepared_kind.is_some() {
                         table_writer.write_entry::<super::rtp_parameters::MediaKind>(2);
                     }
+                    if prepared_fraction_lost.is_some() {
+                        table_writer.write_entry::<u8>(5);
+                    }
                     if prepared_score.is_some() {
                         table_writer.write_entry::<u8>(13);
                     }
@@ -21164,11 +21148,6 @@ mod root {
                                 prepared_packets_lost
                             {
                                 object_writer.write::<_, _, 8>(&prepared_packets_lost);
-                            }
-                            if let ::core::option::Option::Some(prepared_fraction_lost) =
-                                prepared_fraction_lost
-                            {
-                                object_writer.write::<_, _, 8>(&prepared_fraction_lost);
                             }
                             if let ::core::option::Option::Some(prepared_packets_discarded) =
                                 prepared_packets_discarded
@@ -21229,6 +21208,11 @@ mod root {
                             }
                             if let ::core::option::Option::Some(prepared_kind) = prepared_kind {
                                 object_writer.write::<_, _, 1>(&prepared_kind);
+                            }
+                            if let ::core::option::Option::Some(prepared_fraction_lost) =
+                                prepared_fraction_lost
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_fraction_lost);
                             }
                             if let ::core::option::Option::Some(prepared_score) = prepared_score {
                                 object_writer.write::<_, _, 1>(&prepared_score);
@@ -21400,7 +21384,7 @@ mod root {
                     value: T5,
                 ) -> BaseStatsBuilder<(T0, T1, T2, T3, T4, T5)>
                 where
-                    T5: ::planus::WriteAsDefault<u64, u64>,
+                    T5: ::planus::WriteAsDefault<u8, u8>,
                 {
                     let (v0, v1, v2, v3, v4) = self.0;
                     BaseStatsBuilder((v0, v1, v2, v3, v4, value))
@@ -22053,7 +22037,7 @@ mod root {
                     >,
                     T3: ::planus::WriteAs<::planus::Offset<str>>,
                     T4: ::planus::WriteAsDefault<u64, u64>,
-                    T5: ::planus::WriteAsDefault<u64, u64>,
+                    T5: ::planus::WriteAsDefault<u8, u8>,
                     T6: ::planus::WriteAsDefault<u64, u64>,
                     T7: ::planus::WriteAsDefault<u64, u64>,
                     T8: ::planus::WriteAsDefault<u64, u64>,
@@ -22105,7 +22089,7 @@ mod root {
                     >,
                     T3: ::planus::WriteAs<::planus::Offset<str>>,
                     T4: ::planus::WriteAsDefault<u64, u64>,
-                    T5: ::planus::WriteAsDefault<u64, u64>,
+                    T5: ::planus::WriteAsDefault<u8, u8>,
                     T6: ::planus::WriteAsDefault<u64, u64>,
                     T7: ::planus::WriteAsDefault<u64, u64>,
                     T8: ::planus::WriteAsDefault<u64, u64>,
@@ -22160,7 +22144,7 @@ mod root {
                     >,
                     T3: ::planus::WriteAs<::planus::Offset<str>>,
                     T4: ::planus::WriteAsDefault<u64, u64>,
-                    T5: ::planus::WriteAsDefault<u64, u64>,
+                    T5: ::planus::WriteAsDefault<u8, u8>,
                     T6: ::planus::WriteAsDefault<u64, u64>,
                     T7: ::planus::WriteAsDefault<u64, u64>,
                     T8: ::planus::WriteAsDefault<u64, u64>,
@@ -22249,7 +22233,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "BaseStats", "kind")?
-                            .unwrap_or(super::rtp_parameters::MediaKind::All),
+                            .unwrap_or(super::rtp_parameters::MediaKind::Audio),
                     )
                 }
 
@@ -22269,7 +22253,7 @@ mod root {
 
                 /// Getter for the [`fraction_lost` field](BaseStats#structfield.fraction_lost).
                 #[inline]
-                pub fn fraction_lost(&self) -> ::planus::Result<u64> {
+                pub fn fraction_lost(&self) -> ::planus::Result<u8> {
                     ::core::result::Result::Ok(
                         self.0.access(5, "BaseStats", "fraction_lost")?.unwrap_or(0),
                     )
@@ -22553,24 +22537,9 @@ mod root {
                 /// The field `byte_count` in the table `RecvStats`
                 pub byte_count: u64,
                 /// The field `bitrate` in the table `RecvStats`
-                pub bitrate: u64,
+                pub bitrate: u32,
                 /// The field `bitrate_by_layer` in the table `RecvStats`
-                pub bitrate_by_layer:
-                    ::core::option::Option<::planus::alloc::vec::Vec<self::BitrateByLayer>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for RecvStats {
-                fn default() -> Self {
-                    Self {
-                        base: ::core::default::Default::default(),
-                        jitter: 0,
-                        packet_count: 0,
-                        byte_count: 0,
-                        bitrate: 0,
-                        bitrate_by_layer: ::core::default::Default::default(),
-                    }
-                }
+                pub bitrate_by_layer: ::planus::alloc::vec::Vec<self::BitrateByLayer>,
             }
 
             impl RecvStats {
@@ -22587,8 +22556,8 @@ mod root {
                     field_jitter: impl ::planus::WriteAsDefault<u32, u32>,
                     field_packet_count: impl ::planus::WriteAsDefault<u64, u64>,
                     field_byte_count: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_bitrate_by_layer: impl ::planus::WriteAsOptional<
+                    field_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_bitrate_by_layer: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -22607,16 +22576,17 @@ mod root {
                     if prepared_byte_count.is_some() {
                         table_writer.write_entry::<u64>(3);
                     }
-                    if prepared_bitrate.is_some() {
-                        table_writer.write_entry::<u64>(4);
-                    }
                     table_writer.write_entry::<::planus::Offset<self::Stats>>(0);
                     if prepared_jitter.is_some() {
                         table_writer.write_entry::<u32>(1);
                     }
-                    if prepared_bitrate_by_layer.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>>(5);
+                    if prepared_bitrate.is_some() {
+                        table_writer.write_entry::<u32>(4);
                     }
+                    table_writer
+                        .write_entry::<::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>>(
+                            5,
+                        );
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -22630,19 +22600,15 @@ mod root {
                             {
                                 object_writer.write::<_, _, 8>(&prepared_byte_count);
                             }
-                            if let ::core::option::Option::Some(prepared_bitrate) = prepared_bitrate
-                            {
-                                object_writer.write::<_, _, 8>(&prepared_bitrate);
-                            }
                             object_writer.write::<_, _, 4>(&prepared_base);
                             if let ::core::option::Option::Some(prepared_jitter) = prepared_jitter {
                                 object_writer.write::<_, _, 4>(&prepared_jitter);
                             }
-                            if let ::core::option::Option::Some(prepared_bitrate_by_layer) =
-                                prepared_bitrate_by_layer
+                            if let ::core::option::Option::Some(prepared_bitrate) = prepared_bitrate
                             {
-                                object_writer.write::<_, _, 4>(&prepared_bitrate_by_layer);
+                                object_writer.write::<_, _, 4>(&prepared_bitrate);
                             }
+                            object_writer.write::<_, _, 4>(&prepared_bitrate_by_layer);
                         });
                     }
                     builder.current_offset()
@@ -22774,7 +22740,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn bitrate<T4>(self, value: T4) -> RecvStatsBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAsDefault<u64, u64>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     RecvStatsBuilder((v0, v1, v2, v3, value))
@@ -22799,21 +22765,12 @@ mod root {
                     value: T5,
                 ) -> RecvStatsBuilder<(T0, T1, T2, T3, T4, T5)>
                 where
-                    T5: ::planus::WriteAsOptional<
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>,
                     >,
                 {
                     let (v0, v1, v2, v3, v4) = self.0;
                     RecvStatsBuilder((v0, v1, v2, v3, v4, value))
-                }
-
-                /// Sets the [`bitrate_by_layer` field](RecvStats#structfield.bitrate_by_layer) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn bitrate_by_layer_as_null(
-                    self,
-                ) -> RecvStatsBuilder<(T0, T1, T2, T3, T4, ())> {
-                    self.bitrate_by_layer(())
                 }
             }
 
@@ -22833,10 +22790,8 @@ mod root {
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAsDefault<u64, u64>,
                     T3: ::planus::WriteAsDefault<u64, u64>,
-                    T4: ::planus::WriteAsDefault<u64, u64>,
-                    T5: ::planus::WriteAsOptional<
-                        ::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>,
-                    >,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                    T5: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>>,
                 > ::planus::WriteAs<::planus::Offset<RecvStats>>
                 for RecvStatsBuilder<(T0, T1, T2, T3, T4, T5)>
             {
@@ -22853,10 +22808,8 @@ mod root {
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAsDefault<u64, u64>,
                     T3: ::planus::WriteAsDefault<u64, u64>,
-                    T4: ::planus::WriteAsDefault<u64, u64>,
-                    T5: ::planus::WriteAsOptional<
-                        ::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>,
-                    >,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                    T5: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>>,
                 > ::planus::WriteAsOptional<::planus::Offset<RecvStats>>
                 for RecvStatsBuilder<(T0, T1, T2, T3, T4, T5)>
             {
@@ -22876,10 +22829,8 @@ mod root {
                     T1: ::planus::WriteAsDefault<u32, u32>,
                     T2: ::planus::WriteAsDefault<u64, u64>,
                     T3: ::planus::WriteAsDefault<u64, u64>,
-                    T4: ::planus::WriteAsDefault<u64, u64>,
-                    T5: ::planus::WriteAsOptional<
-                        ::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>,
-                    >,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                    T5: ::planus::WriteAs<::planus::Offset<[::planus::Offset<self::BitrateByLayer>]>>,
                 > ::planus::WriteAsOffset<RecvStats>
                 for RecvStatsBuilder<(T0, T1, T2, T3, T4, T5)>
             {
@@ -22927,7 +22878,7 @@ mod root {
 
                 /// Getter for the [`bitrate` field](RecvStats#structfield.bitrate).
                 #[inline]
-                pub fn bitrate(&self) -> ::planus::Result<u64> {
+                pub fn bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(4, "RecvStats", "bitrate")?.unwrap_or(0),
                     )
@@ -22938,11 +22889,9 @@ mod root {
                 pub fn bitrate_by_layer(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<self::BitrateByLayerRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<self::BitrateByLayerRef<'a>>>,
                 > {
-                    self.0.access(5, "RecvStats", "bitrate_by_layer")
+                    self.0.access_required(5, "RecvStats", "bitrate_by_layer")
                 }
             }
 
@@ -22954,11 +22903,7 @@ mod root {
                     f.field("packet_count", &self.packet_count());
                     f.field("byte_count", &self.byte_count());
                     f.field("bitrate", &self.bitrate());
-                    if let ::core::option::Option::Some(field_bitrate_by_layer) =
-                        self.bitrate_by_layer().transpose()
-                    {
-                        f.field("bitrate_by_layer", &field_bitrate_by_layer);
-                    }
+                    f.field("bitrate_by_layer", &self.bitrate_by_layer());
                     f.finish()
                 }
             }
@@ -22976,13 +22921,7 @@ mod root {
                         packet_count: ::core::convert::TryInto::try_into(value.packet_count()?)?,
                         byte_count: ::core::convert::TryInto::try_into(value.byte_count()?)?,
                         bitrate: ::core::convert::TryInto::try_into(value.bitrate()?)?,
-                        bitrate_by_layer: if let ::core::option::Option::Some(bitrate_by_layer) =
-                            value.bitrate_by_layer()?
-                        {
-                            ::core::option::Option::Some(bitrate_by_layer.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        bitrate_by_layer: value.bitrate_by_layer()?.to_vec_result()?,
                     })
                 }
             }
@@ -23072,19 +23011,7 @@ mod root {
                 /// The field `byte_count` in the table `SendStats`
                 pub byte_count: u64,
                 /// The field `bitrate` in the table `SendStats`
-                pub bitrate: u64,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for SendStats {
-                fn default() -> Self {
-                    Self {
-                        base: ::core::default::Default::default(),
-                        packet_count: 0,
-                        byte_count: 0,
-                        bitrate: 0,
-                    }
-                }
+                pub bitrate: u32,
             }
 
             impl SendStats {
@@ -23100,7 +23027,7 @@ mod root {
                     field_base: impl ::planus::WriteAs<::planus::Offset<self::Stats>>,
                     field_packet_count: impl ::planus::WriteAsDefault<u64, u64>,
                     field_byte_count: impl ::planus::WriteAsDefault<u64, u64>,
-                    field_bitrate: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_bitrate: impl ::planus::WriteAsDefault<u32, u32>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
                     let prepared_packet_count = field_packet_count.prepare(builder, &0);
@@ -23115,10 +23042,10 @@ mod root {
                     if prepared_byte_count.is_some() {
                         table_writer.write_entry::<u64>(2);
                     }
-                    if prepared_bitrate.is_some() {
-                        table_writer.write_entry::<u64>(3);
-                    }
                     table_writer.write_entry::<::planus::Offset<self::Stats>>(0);
+                    if prepared_bitrate.is_some() {
+                        table_writer.write_entry::<u32>(3);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -23132,11 +23059,11 @@ mod root {
                             {
                                 object_writer.write::<_, _, 8>(&prepared_byte_count);
                             }
+                            object_writer.write::<_, _, 4>(&prepared_base);
                             if let ::core::option::Option::Some(prepared_bitrate) = prepared_bitrate
                             {
-                                object_writer.write::<_, _, 8>(&prepared_bitrate);
+                                object_writer.write::<_, _, 4>(&prepared_bitrate);
                             }
-                            object_writer.write::<_, _, 4>(&prepared_base);
                         });
                     }
                     builder.current_offset()
@@ -23246,7 +23173,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn bitrate<T3>(self, value: T3) -> SendStatsBuilder<(T0, T1, T2, T3)>
                 where
-                    T3: ::planus::WriteAsDefault<u64, u64>,
+                    T3: ::planus::WriteAsDefault<u32, u32>,
                 {
                     let (v0, v1, v2) = self.0;
                     SendStatsBuilder((v0, v1, v2, value))
@@ -23277,7 +23204,7 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<self::Stats>>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<u64, u64>,
-                    T3: ::planus::WriteAsDefault<u64, u64>,
+                    T3: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAs<::planus::Offset<SendStats>>
                 for SendStatsBuilder<(T0, T1, T2, T3)>
             {
@@ -23293,7 +23220,7 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<self::Stats>>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<u64, u64>,
-                    T3: ::planus::WriteAsDefault<u64, u64>,
+                    T3: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAsOptional<::planus::Offset<SendStats>>
                 for SendStatsBuilder<(T0, T1, T2, T3)>
             {
@@ -23312,7 +23239,7 @@ mod root {
                     T0: ::planus::WriteAs<::planus::Offset<self::Stats>>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<u64, u64>,
-                    T3: ::planus::WriteAsDefault<u64, u64>,
+                    T3: ::planus::WriteAsDefault<u32, u32>,
                 > ::planus::WriteAsOffset<SendStats> for SendStatsBuilder<(T0, T1, T2, T3)>
             {
                 #[inline]
@@ -23351,7 +23278,7 @@ mod root {
 
                 /// Getter for the [`bitrate` field](SendStats#structfield.bitrate).
                 #[inline]
-                pub fn bitrate(&self) -> ::planus::Result<u64> {
+                pub fn bitrate(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0.access(3, "SendStats", "bitrate")?.unwrap_or(0),
                     )
@@ -33764,7 +33691,7 @@ mod root {
                 /// The field `rtp_mapping` in the table `ProduceRequest`
                 pub rtp_mapping: ::planus::alloc::boxed::Box<super::rtp_parameters::RtpMapping>,
                 /// The field `key_frame_request_delay` in the table `ProduceRequest`
-                pub key_frame_request_delay: u16,
+                pub key_frame_request_delay: u32,
                 /// The field `paused` in the table `ProduceRequest`
                 pub paused: bool,
             }
@@ -33790,12 +33717,12 @@ mod root {
                     field_rtp_mapping: impl ::planus::WriteAs<
                         ::planus::Offset<super::rtp_parameters::RtpMapping>,
                     >,
-                    field_key_frame_request_delay: impl ::planus::WriteAsDefault<u16, u16>,
+                    field_key_frame_request_delay: impl ::planus::WriteAsDefault<u32, u32>,
                     field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_producer_id = field_producer_id.prepare(builder);
                     let prepared_kind =
-                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
+                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::Audio);
                     let prepared_rtp_parameters = field_rtp_parameters.prepare(builder);
                     let prepared_rtp_mapping = field_rtp_mapping.prepare(builder);
                     let prepared_key_frame_request_delay =
@@ -33810,7 +33737,7 @@ mod root {
                     table_writer
                         .write_entry::<::planus::Offset<super::rtp_parameters::RtpMapping>>(3);
                     if prepared_key_frame_request_delay.is_some() {
-                        table_writer.write_entry::<u16>(4);
+                        table_writer.write_entry::<u32>(4);
                     }
                     if prepared_kind.is_some() {
                         table_writer.write_entry::<super::rtp_parameters::MediaKind>(1);
@@ -33827,7 +33754,7 @@ mod root {
                             if let ::core::option::Option::Some(prepared_key_frame_request_delay) =
                                 prepared_key_frame_request_delay
                             {
-                                object_writer.write::<_, _, 2>(&prepared_key_frame_request_delay);
+                                object_writer.write::<_, _, 4>(&prepared_key_frame_request_delay);
                             }
                             if let ::core::option::Option::Some(prepared_kind) = prepared_kind {
                                 object_writer.write::<_, _, 1>(&prepared_kind);
@@ -33962,7 +33889,7 @@ mod root {
                     value: T4,
                 ) -> ProduceRequestBuilder<(T0, T1, T2, T3, T4)>
                 where
-                    T4: ::planus::WriteAsDefault<u16, u16>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
                 {
                     let (v0, v1, v2, v3) = self.0;
                     ProduceRequestBuilder((v0, v1, v2, v3, value))
@@ -34027,7 +33954,7 @@ mod root {
                     >,
                     T2: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
                     T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpMapping>>,
-                    T4: ::planus::WriteAsDefault<u16, u16>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
                     T5: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAs<::planus::Offset<ProduceRequest>>
                 for ProduceRequestBuilder<(T0, T1, T2, T3, T4, T5)>
@@ -34051,7 +33978,7 @@ mod root {
                     >,
                     T2: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
                     T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpMapping>>,
-                    T4: ::planus::WriteAsDefault<u16, u16>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
                     T5: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAsOptional<::planus::Offset<ProduceRequest>>
                 for ProduceRequestBuilder<(T0, T1, T2, T3, T4, T5)>
@@ -34075,7 +34002,7 @@ mod root {
                     >,
                     T2: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
                     T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpMapping>>,
-                    T4: ::planus::WriteAsDefault<u16, u16>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
                     T5: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAsOffset<ProduceRequest>
                 for ProduceRequestBuilder<(T0, T1, T2, T3, T4, T5)>
@@ -34107,7 +34034,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(1, "ProduceRequest", "kind")?
-                            .unwrap_or(super::rtp_parameters::MediaKind::All),
+                            .unwrap_or(super::rtp_parameters::MediaKind::Audio),
                     )
                 }
 
@@ -34130,7 +34057,7 @@ mod root {
 
                 /// Getter for the [`key_frame_request_delay` field](ProduceRequest#structfield.key_frame_request_delay).
                 #[inline]
-                pub fn key_frame_request_delay(&self) -> ::planus::Result<u16> {
+                pub fn key_frame_request_delay(&self) -> ::planus::Result<u32> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(4, "ProduceRequest", "key_frame_request_delay")?
@@ -34278,7 +34205,7 @@ mod root {
             impl ::core::default::Default for ProduceResponse {
                 fn default() -> Self {
                     Self {
-                        type_: super::rtp_parameters::Type::None,
+                        type_: super::rtp_parameters::Type::Simple,
                     }
                 }
             }
@@ -34299,7 +34226,7 @@ mod root {
                     >,
                 ) -> ::planus::Offset<Self> {
                     let prepared_type_ =
-                        field_type_.prepare(builder, &super::rtp_parameters::Type::None);
+                        field_type_.prepare(builder, &super::rtp_parameters::Type::Simple);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
@@ -34461,7 +34388,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(0, "ProduceResponse", "type_")?
-                            .unwrap_or(super::rtp_parameters::Type::None),
+                            .unwrap_or(super::rtp_parameters::Type::Simple),
                     )
                 }
             }
@@ -34624,10 +34551,10 @@ mod root {
                     let prepared_consumer_id = field_consumer_id.prepare(builder);
                     let prepared_producer_id = field_producer_id.prepare(builder);
                     let prepared_kind =
-                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
+                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::Audio);
                     let prepared_rtp_parameters = field_rtp_parameters.prepare(builder);
                     let prepared_type_ =
-                        field_type_.prepare(builder, &super::rtp_parameters::Type::None);
+                        field_type_.prepare(builder, &super::rtp_parameters::Type::Simple);
                     let prepared_consumable_rtp_encodings =
                         field_consumable_rtp_encodings.prepare(builder);
                     let prepared_paused = field_paused.prepare(builder, &false);
@@ -35074,7 +35001,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(2, "ConsumeRequest", "kind")?
-                            .unwrap_or(super::rtp_parameters::MediaKind::All),
+                            .unwrap_or(super::rtp_parameters::MediaKind::Audio),
                     )
                 }
 
@@ -35093,7 +35020,7 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(4, "ConsumeRequest", "type_")?
-                            .unwrap_or(super::rtp_parameters::Type::None),
+                            .unwrap_or(super::rtp_parameters::Type::Simple),
                     )
                 }
 
@@ -65441,10 +65368,193 @@ mod root {
         /// Generated from these locations:
         /// * File `../worker/fbs/producer.fbs`
         pub mod producer {
+            /// The enum `TraceEventType` in the namespace `FBS.Producer`
+            ///
+            /// Generated from these locations:
+            /// * Enum `TraceEventType` in the file `../worker/fbs/producer.fbs:6`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum TraceEventType {
+                /// The variant `KEYFRAME` in the enum `TraceEventType`
+                Keyframe = 0,
+
+                /// The variant `FIR` in the enum `TraceEventType`
+                Fir = 1,
+
+                /// The variant `NACK` in the enum `TraceEventType`
+                Nack = 2,
+
+                /// The variant `PLI` in the enum `TraceEventType`
+                Pli = 3,
+
+                /// The variant `RTP` in the enum `TraceEventType`
+                Rtp = 4,
+            }
+
+            impl TraceEventType {
+                /// Array containing all valid variants of TraceEventType
+                pub const ENUM_VALUES: [Self; 5] =
+                    [Self::Keyframe, Self::Fir, Self::Nack, Self::Pli, Self::Rtp];
+            }
+
+            impl ::core::convert::TryFrom<u8> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(TraceEventType::Keyframe),
+                        1 => ::core::result::Result::Ok(TraceEventType::Fir),
+                        2 => ::core::result::Result::Ok(TraceEventType::Nack),
+                        3 => ::core::result::Result::Ok(TraceEventType::Pli),
+                        4 => ::core::result::Result::Ok(TraceEventType::Rtp),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<TraceEventType> for u8 {
+                #[inline]
+                fn from(value: TraceEventType) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for TraceEventType {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<TraceEventType> for TraceEventType {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceEventType {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<TraceEventType, TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &TraceEventType,
+                ) -> ::core::option::Option<TraceEventType> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<TraceEventType> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for TraceEventType {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "TraceEventType",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<TraceEventType> for TraceEventType {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/producer.fbs:6`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/producer.fbs:14`
             #[derive(
                 Clone,
                 Debug,
@@ -65458,7 +65568,7 @@ mod root {
             )]
             pub struct EnableTraceEventRequest {
                 /// The field `events` in the table `EnableTraceEventRequest`
-                pub events: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub events: ::planus::alloc::vec::Vec<self::TraceEventType>,
             }
 
             impl EnableTraceEventRequest {
@@ -65471,13 +65581,13 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_events: impl ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    field_events: impl ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_events = field_events.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<str>]>>(0);
+                    table_writer.write_entry::<::planus::Offset<[self::TraceEventType]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
@@ -65538,7 +65648,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn events<T0>(self, value: T0) -> EnableTraceEventRequestBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 {
                     EnableTraceEventRequestBuilder((value,))
                 }
@@ -65558,7 +65668,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAs<::planus::Offset<EnableTraceEventRequest>>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -65573,7 +65683,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAsOptional<::planus::Offset<EnableTraceEventRequest>>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -65589,7 +65699,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>>
                 ::planus::WriteAsOffset<EnableTraceEventRequest>
                 for EnableTraceEventRequestBuilder<(T0,)>
             {
@@ -65613,7 +65723,13 @@ mod root {
                 pub fn events(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
+                    ::planus::Vector<
+                        'a,
+                        ::core::result::Result<
+                            self::TraceEventType,
+                            ::planus::errors::UnknownEnumTag,
+                        >,
+                    >,
                 > {
                     self.0
                         .access_required(0, "EnableTraceEventRequest", "events")
@@ -65716,7 +65832,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/producer.fbs:10`
+            /// * Table `DumpResponse` in the file `../worker/fbs/producer.fbs:18`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -65726,17 +65842,16 @@ mod root {
                 /// The field `kind` in the table `DumpResponse`
                 pub kind: super::rtp_parameters::MediaKind,
                 /// The field `type` in the table `DumpResponse`
-                pub type_: ::planus::alloc::string::String,
+                pub type_: super::rtp_parameters::Type,
                 /// The field `rtp_parameters` in the table `DumpResponse`
                 pub rtp_parameters:
                     ::planus::alloc::boxed::Box<super::rtp_parameters::RtpParameters>,
                 /// The field `rtp_mapping` in the table `DumpResponse`
                 pub rtp_mapping: ::planus::alloc::boxed::Box<super::rtp_parameters::RtpMapping>,
                 /// The field `rtp_streams` in the table `DumpResponse`
-                pub rtp_streams:
-                    ::core::option::Option<::planus::alloc::vec::Vec<super::rtp_stream::Dump>>,
+                pub rtp_streams: ::planus::alloc::vec::Vec<super::rtp_stream::Dump>,
                 /// The field `trace_event_types` in the table `DumpResponse`
-                pub trace_event_types: ::planus::alloc::vec::Vec<::planus::alloc::string::String>,
+                pub trace_event_types: ::planus::alloc::vec::Vec<self::TraceEventType>,
                 /// The field `paused` in the table `DumpResponse`
                 pub paused: bool,
             }
@@ -65756,25 +65871,29 @@ mod root {
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    field_type_: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                     field_rtp_parameters: impl ::planus::WriteAs<
                         ::planus::Offset<super::rtp_parameters::RtpParameters>,
                     >,
                     field_rtp_mapping: impl ::planus::WriteAs<
                         ::planus::Offset<super::rtp_parameters::RtpMapping>,
                     >,
-                    field_rtp_streams: impl ::planus::WriteAsOptional<
+                    field_rtp_streams: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
                     field_trace_event_types: impl ::planus::WriteAs<
-                        ::planus::Offset<[::planus::Offset<str>]>,
+                        ::planus::Offset<[self::TraceEventType]>,
                     >,
                     field_paused: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_id = field_id.prepare(builder);
                     let prepared_kind =
-                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::All);
-                    let prepared_type_ = field_type_.prepare(builder);
+                        field_kind.prepare(builder, &super::rtp_parameters::MediaKind::Audio);
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &super::rtp_parameters::Type::Simple);
                     let prepared_rtp_parameters = field_rtp_parameters.prepare(builder);
                     let prepared_rtp_mapping = field_rtp_mapping.prepare(builder);
                     let prepared_rtp_streams = field_rtp_streams.prepare(builder);
@@ -65784,17 +65903,17 @@ mod root {
                     let mut table_writer: ::planus::table_writer::TableWriter<20> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<str>>(0);
-                    table_writer.write_entry::<::planus::Offset<str>>(2);
                     table_writer
                         .write_entry::<::planus::Offset<super::rtp_parameters::RtpParameters>>(3);
                     table_writer
                         .write_entry::<::planus::Offset<super::rtp_parameters::RtpMapping>>(4);
-                    if prepared_rtp_streams.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>>(5);
-                    }
-                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<str>]>>(6);
+                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>>(5);
+                    table_writer.write_entry::<::planus::Offset<[self::TraceEventType]>>(6);
                     if prepared_kind.is_some() {
                         table_writer.write_entry::<super::rtp_parameters::MediaKind>(1);
+                    }
+                    if prepared_type_.is_some() {
+                        table_writer.write_entry::<super::rtp_parameters::Type>(2);
                     }
                     if prepared_paused.is_some() {
                         table_writer.write_entry::<bool>(7);
@@ -65803,17 +65922,15 @@ mod root {
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_id);
-                            object_writer.write::<_, _, 4>(&prepared_type_);
                             object_writer.write::<_, _, 4>(&prepared_rtp_parameters);
                             object_writer.write::<_, _, 4>(&prepared_rtp_mapping);
-                            if let ::core::option::Option::Some(prepared_rtp_streams) =
-                                prepared_rtp_streams
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_rtp_streams);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_rtp_streams);
                             object_writer.write::<_, _, 4>(&prepared_trace_event_types);
                             if let ::core::option::Option::Some(prepared_kind) = prepared_kind {
                                 object_writer.write::<_, _, 1>(&prepared_kind);
+                            }
+                            if let ::core::option::Option::Some(prepared_type_) = prepared_type_ {
+                                object_writer.write::<_, _, 1>(&prepared_type_);
                             }
                             if let ::core::option::Option::Some(prepared_paused) = prepared_paused {
                                 object_writer.write::<_, _, 1>(&prepared_paused);
@@ -65858,7 +65975,7 @@ mod root {
                         builder,
                         &self.id,
                         self.kind,
-                        &self.type_,
+                        self.type_,
                         &self.rtp_parameters,
                         &self.rtp_mapping,
                         &self.rtp_streams,
@@ -65916,10 +66033,22 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn type_<T2>(self, value: T2) -> DumpResponseBuilder<(T0, T1, T2)>
                 where
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                 {
                     let (v0, v1) = self.0;
                     DumpResponseBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`type` field](DumpResponse#structfield.type_) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn type_as_default(
+                    self,
+                ) -> DumpResponseBuilder<(T0, T1, ::planus::DefaultValue)> {
+                    self.type_(::planus::DefaultValue)
                 }
             }
 
@@ -65958,19 +66087,12 @@ mod root {
                     value: T5,
                 ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5)>
                 where
-                    T5: ::planus::WriteAsOptional<
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
                 {
                     let (v0, v1, v2, v3, v4) = self.0;
                     DumpResponseBuilder((v0, v1, v2, v3, v4, value))
-                }
-
-                /// Sets the [`rtp_streams` field](DumpResponse#structfield.rtp_streams) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn rtp_streams_as_null(self) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, ())> {
-                    self.rtp_streams(())
                 }
             }
 
@@ -65983,7 +66105,7 @@ mod root {
                     value: T6,
                 ) -> DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6)>
                 where
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T6: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                 {
                     let (v0, v1, v2, v3, v4, v5) = self.0;
                     DumpResponseBuilder((v0, v1, v2, v3, v4, v5, value))
@@ -66036,13 +66158,16 @@ mod root {
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                     T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
                     T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpMapping>>,
-                    T5: ::planus::WriteAsOptional<
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T6: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                     T7: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAs<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
@@ -66064,13 +66189,16 @@ mod root {
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                     T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
                     T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpMapping>>,
-                    T5: ::planus::WriteAsOptional<
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T6: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                     T7: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAsOptional<::planus::Offset<DumpResponse>>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
@@ -66092,13 +66220,16 @@ mod root {
                         super::rtp_parameters::MediaKind,
                         super::rtp_parameters::MediaKind,
                     >,
-                    T2: ::planus::WriteAs<::planus::Offset<str>>,
+                    T2: ::planus::WriteAsDefault<
+                        super::rtp_parameters::Type,
+                        super::rtp_parameters::Type,
+                    >,
                     T3: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpParameters>>,
                     T4: ::planus::WriteAs<::planus::Offset<super::rtp_parameters::RtpMapping>>,
-                    T5: ::planus::WriteAsOptional<
+                    T5: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Dump>]>,
                     >,
-                    T6: ::planus::WriteAs<::planus::Offset<[::planus::Offset<str>]>>,
+                    T6: ::planus::WriteAs<::planus::Offset<[self::TraceEventType]>>,
                     T7: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAsOffset<DumpResponse>
                 for DumpResponseBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
@@ -66130,14 +66261,18 @@ mod root {
                     ::core::result::Result::Ok(
                         self.0
                             .access(1, "DumpResponse", "kind")?
-                            .unwrap_or(super::rtp_parameters::MediaKind::All),
+                            .unwrap_or(super::rtp_parameters::MediaKind::Audio),
                     )
                 }
 
                 /// Getter for the [`type` field](DumpResponse#structfield.type_).
                 #[inline]
-                pub fn type_(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(2, "DumpResponse", "type_")
+                pub fn type_(&self) -> ::planus::Result<super::rtp_parameters::Type> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(2, "DumpResponse", "type_")?
+                            .unwrap_or(super::rtp_parameters::Type::Simple),
+                    )
                 }
 
                 /// Getter for the [`rtp_parameters` field](DumpResponse#structfield.rtp_parameters).
@@ -66161,11 +66296,9 @@ mod root {
                 pub fn rtp_streams(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<super::rtp_stream::DumpRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::rtp_stream::DumpRef<'a>>>,
                 > {
-                    self.0.access(5, "DumpResponse", "rtp_streams")
+                    self.0.access_required(5, "DumpResponse", "rtp_streams")
                 }
 
                 /// Getter for the [`trace_event_types` field](DumpResponse#structfield.trace_event_types).
@@ -66173,7 +66306,13 @@ mod root {
                 pub fn trace_event_types(
                     &self,
                 ) -> ::planus::Result<
-                    ::planus::Vector<'a, ::planus::Result<&'a ::core::primitive::str>>,
+                    ::planus::Vector<
+                        'a,
+                        ::core::result::Result<
+                            self::TraceEventType,
+                            ::planus::errors::UnknownEnumTag,
+                        >,
+                    >,
                 > {
                     self.0
                         .access_required(6, "DumpResponse", "trace_event_types")
@@ -66196,11 +66335,7 @@ mod root {
                     f.field("type_", &self.type_());
                     f.field("rtp_parameters", &self.rtp_parameters());
                     f.field("rtp_mapping", &self.rtp_mapping());
-                    if let ::core::option::Option::Some(field_rtp_streams) =
-                        self.rtp_streams().transpose()
-                    {
-                        f.field("rtp_streams", &field_rtp_streams);
-                    }
+                    f.field("rtp_streams", &self.rtp_streams());
                     f.field("trace_event_types", &self.trace_event_types());
                     f.field("paused", &self.paused());
                     f.finish()
@@ -66222,13 +66357,7 @@ mod root {
                         rtp_mapping: ::planus::alloc::boxed::Box::new(
                             ::core::convert::TryInto::try_into(value.rtp_mapping()?)?,
                         ),
-                        rtp_streams: if let ::core::option::Option::Some(rtp_streams) =
-                            value.rtp_streams()?
-                        {
-                            ::core::option::Option::Some(rtp_streams.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        rtp_streams: value.rtp_streams()?.to_vec_result()?,
                         trace_event_types: value.trace_event_types()?.to_vec_result()?,
                         paused: ::core::convert::TryInto::try_into(value.paused()?)?,
                     })
@@ -66308,23 +66437,13 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/producer.fbs:21`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/producer.fbs:29`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
             pub struct GetStatsResponse {
                 /// The field `stats` in the table `GetStatsResponse`
-                pub stats:
-                    ::core::option::Option<::planus::alloc::vec::Vec<super::rtp_stream::Stats>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for GetStatsResponse {
-                fn default() -> Self {
-                    Self {
-                        stats: ::core::default::Default::default(),
-                    }
-                }
+                pub stats: ::planus::alloc::vec::Vec<super::rtp_stream::Stats>,
             }
 
             impl GetStatsResponse {
@@ -66337,7 +66456,7 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_stats: impl ::planus::WriteAsOptional<
+                    field_stats: impl ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 ) -> ::planus::Offset<Self> {
@@ -66345,15 +66464,11 @@ mod root {
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_stats.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_stats) = prepared_stats {
-                                object_writer.write::<_, _, 4>(&prepared_stats);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_stats);
                         });
                     }
                     builder.current_offset()
@@ -66407,18 +66522,11 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn stats<T0>(self, value: T0) -> GetStatsResponseBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 {
                     GetStatsResponseBuilder((value,))
-                }
-
-                /// Sets the [`stats` field](GetStatsResponse#structfield.stats) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn stats_as_null(self) -> GetStatsResponseBuilder<((),)> {
-                    self.stats(())
                 }
             }
 
@@ -66437,7 +66545,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 > ::planus::WriteAs<::planus::Offset<GetStatsResponse>>
@@ -66455,7 +66563,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 > ::planus::WriteAsOptional<::planus::Offset<GetStatsResponse>>
@@ -66473,7 +66581,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsOptional<
+                    T0: ::planus::WriteAs<
                         ::planus::Offset<[::planus::Offset<super::rtp_stream::Stats>]>,
                     >,
                 > ::planus::WriteAsOffset<GetStatsResponse> for GetStatsResponseBuilder<(T0,)>
@@ -66498,20 +66606,16 @@ mod root {
                 pub fn stats(
                     &self,
                 ) -> ::planus::Result<
-                    ::core::option::Option<
-                        ::planus::Vector<'a, ::planus::Result<super::rtp_stream::StatsRef<'a>>>,
-                    >,
+                    ::planus::Vector<'a, ::planus::Result<super::rtp_stream::StatsRef<'a>>>,
                 > {
-                    self.0.access(0, "GetStatsResponse", "stats")
+                    self.0.access_required(0, "GetStatsResponse", "stats")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for GetStatsResponseRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("GetStatsResponseRef");
-                    if let ::core::option::Option::Some(field_stats) = self.stats().transpose() {
-                        f.field("stats", &field_stats);
-                    }
+                    f.field("stats", &self.stats());
                     f.finish()
                 }
             }
@@ -66522,11 +66626,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: GetStatsResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        stats: if let ::core::option::Option::Some(stats) = value.stats()? {
-                            ::core::option::Option::Some(stats.to_vec_result()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        stats: value.stats()?.to_vec_result()?,
                     })
                 }
             }
@@ -66604,7 +66704,7 @@ mod root {
             /// The table `SendNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `SendNotification` in the file `../worker/fbs/producer.fbs:25`
+            /// * Table `SendNotification` in the file `../worker/fbs/producer.fbs:33`
             #[derive(
                 Clone,
                 Debug,
@@ -66862,7 +66962,7 @@ mod root {
             /// The table `Score` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `Score` in the file `../worker/fbs/producer.fbs:31`
+            /// * Table `Score` in the file `../worker/fbs/producer.fbs:39`
             #[derive(
                 Clone,
                 Debug,
@@ -67220,7 +67320,7 @@ mod root {
             /// The table `ScoreNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `ScoreNotification` in the file `../worker/fbs/producer.fbs:37`
+            /// * Table `ScoreNotification` in the file `../worker/fbs/producer.fbs:45`
             #[derive(
                 Clone,
                 Debug,
@@ -67518,7 +67618,7 @@ mod root {
             /// The table `VideoOrientationChangeNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `VideoOrientationChangeNotification` in the file `../worker/fbs/producer.fbs:41`
+            /// * Table `VideoOrientationChangeNotification` in the file `../worker/fbs/producer.fbs:49`
             #[derive(
                 Clone,
                 Debug,
@@ -67935,189 +68035,6 @@ mod root {
                             0,
                         )
                     })
-                }
-            }
-
-            /// The enum `TraceType` in the namespace `FBS.Producer`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceType` in the file `../worker/fbs/producer.fbs:47`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceType {
-                /// The variant `KEYFRAME` in the enum `TraceType`
-                Keyframe = 0,
-
-                /// The variant `FIR` in the enum `TraceType`
-                Fir = 1,
-
-                /// The variant `NACK` in the enum `TraceType`
-                Nack = 2,
-
-                /// The variant `PLI` in the enum `TraceType`
-                Pli = 3,
-
-                /// The variant `RTP` in the enum `TraceType`
-                Rtp = 4,
-            }
-
-            impl TraceType {
-                /// Array containing all valid variants of TraceType
-                pub const ENUM_VALUES: [Self; 5] =
-                    [Self::Keyframe, Self::Fir, Self::Nack, Self::Pli, Self::Rtp];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceType {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceType::Keyframe),
-                        1 => ::core::result::Result::Ok(TraceType::Fir),
-                        2 => ::core::result::Result::Ok(TraceType::Nack),
-                        3 => ::core::result::Result::Ok(TraceType::Pli),
-                        4 => ::core::result::Result::Ok(TraceType::Rtp),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceType> for u8 {
-                #[inline]
-                fn from(value: TraceType) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceType {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceType> for TraceType {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceType {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceType, TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceType,
-                ) -> ::core::option::Option<TraceType> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceType> for TraceType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceType> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceType {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceType {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceType",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceType> for TraceType {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
                 }
             }
 
@@ -69753,7 +69670,7 @@ mod root {
             )]
             pub struct TraceNotification {
                 /// The field `type` in the table `TraceNotification`
-                pub type_: self::TraceType,
+                pub type_: self::TraceEventType,
                 /// The field `timestamp` in the table `TraceNotification`
                 pub timestamp: u64,
                 /// The field `direction` in the table `TraceNotification`
@@ -69766,7 +69683,7 @@ mod root {
             impl ::core::default::Default for TraceNotification {
                 fn default() -> Self {
                     Self {
-                        type_: self::TraceType::Keyframe,
+                        type_: self::TraceEventType::Keyframe,
                         timestamp: 0,
                         direction: self::TraceDirection::DirectionIn,
                         info: ::core::default::Default::default(),
@@ -69784,7 +69701,10 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_type_: impl ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    field_type_: impl ::planus::WriteAsDefault<
+                        self::TraceEventType,
+                        self::TraceEventType,
+                    >,
                     field_timestamp: impl ::planus::WriteAsDefault<u64, u64>,
                     field_direction: impl ::planus::WriteAsDefault<
                         self::TraceDirection,
@@ -69792,7 +69712,8 @@ mod root {
                     >,
                     field_info: impl ::planus::WriteAsOptionalUnion<self::TraceInfo>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_type_ = field_type_.prepare(builder, &self::TraceType::Keyframe);
+                    let prepared_type_ =
+                        field_type_.prepare(builder, &self::TraceEventType::Keyframe);
                     let prepared_timestamp = field_timestamp.prepare(builder, &0);
                     let prepared_direction =
                         field_direction.prepare(builder, &self::TraceDirection::DirectionIn);
@@ -69807,7 +69728,7 @@ mod root {
                         table_writer.write_entry::<::planus::Offset<self::TraceInfo>>(4);
                     }
                     if prepared_type_.is_some() {
-                        table_writer.write_entry::<self::TraceType>(0);
+                        table_writer.write_entry::<self::TraceEventType>(0);
                     }
                     if prepared_direction.is_some() {
                         table_writer.write_entry::<self::TraceDirection>(2);
@@ -69896,7 +69817,7 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn type_<T0>(self, value: T0) -> TraceNotificationBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                 {
                     TraceNotificationBuilder((value,))
                 }
@@ -69990,7 +69911,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
@@ -70009,7 +69930,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
@@ -70028,7 +69949,7 @@ mod root {
             }
 
             impl<
-                    T0: ::planus::WriteAsDefault<self::TraceType, self::TraceType>,
+                    T0: ::planus::WriteAsDefault<self::TraceEventType, self::TraceEventType>,
                     T1: ::planus::WriteAsDefault<u64, u64>,
                     T2: ::planus::WriteAsDefault<self::TraceDirection, self::TraceDirection>,
                     T3: ::planus::WriteAsOptionalUnion<self::TraceInfo>,
@@ -70052,11 +69973,11 @@ mod root {
             impl<'a> TraceNotificationRef<'a> {
                 /// Getter for the [`type` field](TraceNotification#structfield.type_).
                 #[inline]
-                pub fn type_(&self) -> ::planus::Result<self::TraceType> {
+                pub fn type_(&self) -> ::planus::Result<self::TraceEventType> {
                     ::core::result::Result::Ok(
                         self.0
                             .access(0, "TraceNotification", "type_")?
-                            .unwrap_or(self::TraceType::Keyframe),
+                            .unwrap_or(self::TraceEventType::Keyframe),
                     )
                 }
 
