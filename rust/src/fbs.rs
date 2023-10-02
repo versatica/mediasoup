@@ -5117,10 +5117,193 @@ mod root {
                 }
             }
 
+            /// The enum `TraceEventType` in the namespace `FBS.Consumer`
+            ///
+            /// Generated from these locations:
+            /// * Enum `TraceEventType` in the file `../worker/fbs/consumer.fbs:34`
+            #[derive(
+                Copy,
+                Clone,
+                Debug,
+                PartialEq,
+                Eq,
+                PartialOrd,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            #[repr(u8)]
+            pub enum TraceEventType {
+                /// The variant `KEYFRAME` in the enum `TraceEventType`
+                Keyframe = 0,
+
+                /// The variant `FIR` in the enum `TraceEventType`
+                Fir = 1,
+
+                /// The variant `NACK` in the enum `TraceEventType`
+                Nack = 2,
+
+                /// The variant `PLI` in the enum `TraceEventType`
+                Pli = 3,
+
+                /// The variant `RTP` in the enum `TraceEventType`
+                Rtp = 4,
+            }
+
+            impl TraceEventType {
+                /// Array containing all valid variants of TraceEventType
+                pub const ENUM_VALUES: [Self; 5] =
+                    [Self::Keyframe, Self::Fir, Self::Nack, Self::Pli, Self::Rtp];
+            }
+
+            impl ::core::convert::TryFrom<u8> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTagKind;
+                #[inline]
+                fn try_from(
+                    value: u8,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
+                {
+                    #[allow(clippy::match_single_binding)]
+                    match value {
+                        0 => ::core::result::Result::Ok(TraceEventType::Keyframe),
+                        1 => ::core::result::Result::Ok(TraceEventType::Fir),
+                        2 => ::core::result::Result::Ok(TraceEventType::Nack),
+                        3 => ::core::result::Result::Ok(TraceEventType::Pli),
+                        4 => ::core::result::Result::Ok(TraceEventType::Rtp),
+
+                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
+                            tag: value as i128,
+                        }),
+                    }
+                }
+            }
+
+            impl ::core::convert::From<TraceEventType> for u8 {
+                #[inline]
+                fn from(value: TraceEventType) -> Self {
+                    value as u8
+                }
+            }
+
+            impl ::planus::Primitive for TraceEventType {
+                const ALIGNMENT: usize = 1;
+                const SIZE: usize = 1;
+            }
+
+            impl ::planus::WriteAsPrimitive<TraceEventType> for TraceEventType {
+                #[inline]
+                fn write<const N: usize>(
+                    &self,
+                    cursor: ::planus::Cursor<'_, N>,
+                    buffer_position: u32,
+                ) {
+                    (*self as u8).write(cursor, buffer_position);
+                }
+            }
+
+            impl ::planus::WriteAs<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceEventType {
+                    *self
+                }
+            }
+
+            impl ::planus::WriteAsDefault<TraceEventType, TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                    default: &TraceEventType,
+                ) -> ::core::option::Option<TraceEventType> {
+                    if self == default {
+                        ::core::option::Option::None
+                    } else {
+                        ::core::option::Option::Some(*self)
+                    }
+                }
+            }
+
+            impl ::planus::WriteAsOptional<TraceEventType> for TraceEventType {
+                type Prepared = Self;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    _builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<TraceEventType> {
+                    ::core::option::Option::Some(*self)
+                }
+            }
+
+            impl<'buf> ::planus::TableRead<'buf> for TraceEventType {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
+                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
+                }
+            }
+
+            impl<'buf> ::planus::VectorReadInner<'buf> for TraceEventType {
+                type Error = ::planus::errors::UnknownEnumTag;
+                const STRIDE: usize = 1;
+                #[inline]
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'buf>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
+                {
+                    let value = *buffer.buffer.get_unchecked(offset);
+                    let value: ::core::result::Result<Self, _> =
+                        ::core::convert::TryInto::try_into(value);
+                    value.map_err(|error_kind| {
+                        error_kind.with_error_location(
+                            "TraceEventType",
+                            "VectorRead::from_buffer",
+                            buffer.offset_from_start,
+                        )
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<TraceEventType> for TraceEventType {
+                const STRIDE: usize = 1;
+
+                type Value = Self;
+
+                #[inline]
+                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
+                    *self
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[Self],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - i as u32,
+                        );
+                    }
+                }
+            }
+
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/consumer.fbs:34`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/consumer.fbs:42`
             #[derive(
                 Clone,
                 Debug,
@@ -5398,7 +5581,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/consumer.fbs:38`
+            /// * Table `DumpResponse` in the file `../worker/fbs/consumer.fbs:46`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -5643,189 +5826,6 @@ mod root {
                     .map_err(|error_kind| {
                         error_kind.with_error_location("[DumpResponseRef]", "read_as_root", 0)
                     })
-                }
-            }
-
-            /// The enum `TraceEventType` in the namespace `FBS.Consumer`
-            ///
-            /// Generated from these locations:
-            /// * Enum `TraceEventType` in the file `../worker/fbs/consumer.fbs:42`
-            #[derive(
-                Copy,
-                Clone,
-                Debug,
-                PartialEq,
-                Eq,
-                PartialOrd,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            #[repr(u8)]
-            pub enum TraceEventType {
-                /// The variant `KEYFRAME` in the enum `TraceEventType`
-                Keyframe = 0,
-
-                /// The variant `FIR` in the enum `TraceEventType`
-                Fir = 1,
-
-                /// The variant `NACK` in the enum `TraceEventType`
-                Nack = 2,
-
-                /// The variant `PLI` in the enum `TraceEventType`
-                Pli = 3,
-
-                /// The variant `RTP` in the enum `TraceEventType`
-                Rtp = 4,
-            }
-
-            impl TraceEventType {
-                /// Array containing all valid variants of TraceEventType
-                pub const ENUM_VALUES: [Self; 5] =
-                    [Self::Keyframe, Self::Fir, Self::Nack, Self::Pli, Self::Rtp];
-            }
-
-            impl ::core::convert::TryFrom<u8> for TraceEventType {
-                type Error = ::planus::errors::UnknownEnumTagKind;
-                #[inline]
-                fn try_from(
-                    value: u8,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTagKind>
-                {
-                    #[allow(clippy::match_single_binding)]
-                    match value {
-                        0 => ::core::result::Result::Ok(TraceEventType::Keyframe),
-                        1 => ::core::result::Result::Ok(TraceEventType::Fir),
-                        2 => ::core::result::Result::Ok(TraceEventType::Nack),
-                        3 => ::core::result::Result::Ok(TraceEventType::Pli),
-                        4 => ::core::result::Result::Ok(TraceEventType::Rtp),
-
-                        _ => ::core::result::Result::Err(::planus::errors::UnknownEnumTagKind {
-                            tag: value as i128,
-                        }),
-                    }
-                }
-            }
-
-            impl ::core::convert::From<TraceEventType> for u8 {
-                #[inline]
-                fn from(value: TraceEventType) -> Self {
-                    value as u8
-                }
-            }
-
-            impl ::planus::Primitive for TraceEventType {
-                const ALIGNMENT: usize = 1;
-                const SIZE: usize = 1;
-            }
-
-            impl ::planus::WriteAsPrimitive<TraceEventType> for TraceEventType {
-                #[inline]
-                fn write<const N: usize>(
-                    &self,
-                    cursor: ::planus::Cursor<'_, N>,
-                    buffer_position: u32,
-                ) {
-                    (*self as u8).write(cursor, buffer_position);
-                }
-            }
-
-            impl ::planus::WriteAs<TraceEventType> for TraceEventType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> TraceEventType {
-                    *self
-                }
-            }
-
-            impl ::planus::WriteAsDefault<TraceEventType, TraceEventType> for TraceEventType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                    default: &TraceEventType,
-                ) -> ::core::option::Option<TraceEventType> {
-                    if self == default {
-                        ::core::option::Option::None
-                    } else {
-                        ::core::option::Option::Some(*self)
-                    }
-                }
-            }
-
-            impl ::planus::WriteAsOptional<TraceEventType> for TraceEventType {
-                type Prepared = Self;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    _builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<TraceEventType> {
-                    ::core::option::Option::Some(*self)
-                }
-            }
-
-            impl<'buf> ::planus::TableRead<'buf> for TraceEventType {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    let n: u8 = ::planus::TableRead::from_buffer(buffer, offset)?;
-                    ::core::result::Result::Ok(::core::convert::TryInto::try_into(n)?)
-                }
-            }
-
-            impl<'buf> ::planus::VectorReadInner<'buf> for TraceEventType {
-                type Error = ::planus::errors::UnknownEnumTag;
-                const STRIDE: usize = 1;
-                #[inline]
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'buf>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::UnknownEnumTag>
-                {
-                    let value = *buffer.buffer.get_unchecked(offset);
-                    let value: ::core::result::Result<Self, _> =
-                        ::core::convert::TryInto::try_into(value);
-                    value.map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "TraceEventType",
-                            "VectorRead::from_buffer",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<TraceEventType> for TraceEventType {
-                const STRIDE: usize = 1;
-
-                type Value = Self;
-
-                #[inline]
-                fn prepare(&self, _builder: &mut ::planus::Builder) -> Self {
-                    *self
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[Self],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 1];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - i as u32,
-                        );
-                    }
                 }
             }
 
