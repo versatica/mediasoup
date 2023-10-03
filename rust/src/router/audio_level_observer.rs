@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::AppData;
+use crate::fbs::{audio_level_observer, notification};
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
@@ -9,7 +10,7 @@ use crate::messages::{
 use crate::producer::{Producer, ProducerId};
 use crate::router::Router;
 use crate::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions, RtpObserverId};
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -85,6 +86,40 @@ enum Notification {
     Silence,
 }
 
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::AudiolevelobserverVolumes => {
+                let Ok(Some(notification::BodyRef::AudioLevelObserverVolumesNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let volumes_fbs: Vec<_> = body
+                    .volumes()
+                    .unwrap()
+                    .iter()
+                    .map(|volume| audio_level_observer::Volume::try_from(volume.unwrap()).unwrap())
+                    .collect();
+                let volumes = volumes_fbs
+                    .iter()
+                    .map(|volume| VolumeNotification {
+                        producer_id: volume.producer_id.parse().unwrap(),
+                        volume: volume.volume,
+                    })
+                    .collect();
+
+                Ok(Notification::Volumes(volumes))
+            }
+            notification::Event::AudiolevelobserverSilence => Ok(Notification::Silence),
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
+}
+
 struct Inner {
     id: RtpObserverId,
     executor: Arc<Executor<'static>>,
@@ -125,7 +160,7 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
+                        if let Err(error) = channel.request_fbs(router_id, request).await {
                             error!("audio level observer closing failed on drop: {}", error);
                         }
                     })
@@ -186,7 +221,7 @@ impl RtpObserver for AudioLevelObserver {
 
         self.inner
             .channel
-            .request(self.id(), RtpObserverPauseRequest {})
+            .request_fbs(self.id(), RtpObserverPauseRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
@@ -203,7 +238,7 @@ impl RtpObserver for AudioLevelObserver {
 
         self.inner
             .channel
-            .request(self.id(), RtpObserverResumeRequest {})
+            .request_fbs(self.id(), RtpObserverResumeRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(false, Ordering::SeqCst);
@@ -227,7 +262,7 @@ impl RtpObserver for AudioLevelObserver {
         };
         self.inner
             .channel
-            .request(self.id(), RtpObserverAddProducerRequest { producer_id })
+            .request_fbs(self.id(), RtpObserverAddProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.add_producer.call_simple(&producer);
@@ -244,7 +279,7 @@ impl RtpObserver for AudioLevelObserver {
         };
         self.inner
             .channel
-            .request(self.id(), RtpObserverRemoveProducerRequest { producer_id })
+            .request_fbs(self.id(), RtpObserverRemoveProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.remove_producer.call_simple(&producer);
@@ -304,8 +339,8 @@ impl AudioLevelObserver {
             let router = router.clone();
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Volumes(volumes) => {
                             let volumes = volumes

@@ -11,8 +11,9 @@ use crate::data_structures::{
 };
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{
-    consumer, direct_transport, message, pipe_transport, plain_transport, producer, request,
-    response, router, transport, web_rtc_transport, worker,
+    active_speaker_observer, audio_level_observer, consumer, direct_transport, message,
+    pipe_transport, plain_transport, producer, request, response, router, rtp_observer, transport,
+    web_rtc_transport, worker,
 };
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
@@ -1170,6 +1171,12 @@ request_response!(
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateAudioLevelObserverRequest {
+    pub(crate) data: RouterCreateAudioLevelObserverData,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RouterCreateAudioLevelObserverData {
     rtp_observer_id: RtpObserverId,
     max_entries: NonZeroU16,
@@ -1191,14 +1198,53 @@ impl RouterCreateAudioLevelObserverData {
     }
 }
 
-request_response!(
-    RouterId,
-    "router.createAudioLevelObserver",
-    RouterCreateAudioLevelObserverRequest {
-        #[serde(flatten)]
-        data: RouterCreateAudioLevelObserverData,
-    },
-);
+impl RequestFbs for RouterCreateAudioLevelObserverRequest {
+    const METHOD: request::Method = request::Method::RouterCreateAudiolevelobserver;
+    type HandlerId = RouterId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let options = audio_level_observer::AudioLevelObserverOptions::create(
+            &mut builder,
+            u16::from(self.data.max_entries),
+            self.data.threshold,
+            self.data.interval,
+        );
+        let data = router::CreateAudioLevelObserverRequest::create(
+            &mut builder,
+            self.data.rtp_observer_id.to_string(),
+            options,
+        );
+        let request_body =
+            request::Body::create_router_create_audio_level_observer_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RouterCreateActiveSpeakerObserverRequest {
+    pub(crate) data: RouterCreateActiveSpeakerObserverData,
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1219,14 +1265,45 @@ impl RouterCreateActiveSpeakerObserverData {
     }
 }
 
-request_response!(
-    RouterId,
-    "router.createActiveSpeakerObserver",
-    RouterCreateActiveSpeakerObserverRequest {
-        #[serde(flatten)]
-        data: RouterCreateActiveSpeakerObserverData,
-    },
-);
+impl RequestFbs for RouterCreateActiveSpeakerObserverRequest {
+    const METHOD: request::Method = request::Method::RouterCreateActivespeakerobserver;
+    type HandlerId = RouterId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let options = active_speaker_observer::ActiveSpeakerObserverOptions::create(
+            &mut builder,
+            self.data.interval,
+        );
+        let data = router::CreateActiveSpeakerObserverRequest::create(
+            &mut builder,
+            self.data.rtp_observer_id.to_string(),
+            options,
+        );
+        let request_body =
+            request::Body::create_router_create_active_speaker_observer_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
 
 #[derive(Debug)]
 pub(crate) struct TransportDumpRequest {}
@@ -2577,40 +2654,177 @@ impl From<DataConsumerSendRequest> for u32 {
     }
 }
 
-request_response!(
-    RouterId,
-    "router.closeRtpObserver",
-    RtpObserverCloseRequest {
-        rtp_observer_id: RtpObserverId,
-    },
-    (),
-    Some(()),
-);
+#[derive(Debug)]
+pub(crate) struct RtpObserverCloseRequest {
+    pub(crate) rtp_observer_id: RtpObserverId,
+}
 
-request_response!(
-    RtpObserverId,
-    "rtpObserver.pause",
-    RtpObserverPauseRequest {},
-);
+impl RequestFbs for RtpObserverCloseRequest {
+    const METHOD: request::Method = request::Method::RouterCloseRtpobserver;
+    type HandlerId = RouterId;
+    type Response = ();
 
-request_response!(
-    RtpObserverId,
-    "rtpObserver.resume",
-    RtpObserverResumeRequest {},
-);
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data =
+            router::CloseRtpObserverRequest::create(&mut builder, self.rtp_observer_id.to_string());
+        let request_body =
+            request::Body::create_router_close_rtp_observer_request(&mut builder, data);
 
-request_response!(
-    RtpObserverId,
-    "rtpObserver.addProducer",
-    RtpObserverAddProducerRequest {
-        producer_id: ProducerId,
-    },
-);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
 
-request_response!(
-    RtpObserverId,
-    "rtpObserver.removeProducer",
-    RtpObserverRemoveProducerRequest {
-        producer_id: ProducerId,
-    },
-);
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct RtpObserverPauseRequest {}
+
+impl RequestFbs for RtpObserverPauseRequest {
+    const METHOD: request::Method = request::Method::RtpobserverPause;
+    type HandlerId = RtpObserverId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct RtpObserverResumeRequest {}
+
+impl RequestFbs for RtpObserverResumeRequest {
+    const METHOD: request::Method = request::Method::RtpobserverResume;
+    type HandlerId = RtpObserverId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            None::<request::Body>,
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RtpObserverAddProducerRequest {
+    pub(crate) producer_id: ProducerId,
+}
+
+impl RequestFbs for RtpObserverAddProducerRequest {
+    const METHOD: request::Method = request::Method::RtpobserverAddProducer;
+    type HandlerId = RtpObserverId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data =
+            rtp_observer::AddProducerRequest::create(&mut builder, self.producer_id.to_string());
+        let request_body =
+            request::Body::create_rtp_observer_add_producer_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RtpObserverRemoveProducerRequest {
+    pub(crate) producer_id: ProducerId,
+}
+
+impl RequestFbs for RtpObserverRemoveProducerRequest {
+    const METHOD: request::Method = request::Method::RtpobserverRemoveProducer;
+    type HandlerId = RtpObserverId;
+    type Response = ();
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data =
+            rtp_observer::AddProducerRequest::create(&mut builder, self.producer_id.to_string());
+        let request_body =
+            request::Body::create_rtp_observer_add_producer_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        _response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        Ok(())
+    }
+}

@@ -829,7 +829,7 @@ impl Router {
 
         self.inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
                 RouterCreateAudioLevelObserverRequest {
                     data: RouterCreateAudioLevelObserverData::from_options(
@@ -889,7 +889,7 @@ impl Router {
 
         self.inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
                 RouterCreateActiveSpeakerObserverRequest {
                     data: RouterCreateActiveSpeakerObserverData::from_options(

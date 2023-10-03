@@ -61244,8 +61244,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct CreateActiveSpeakerObserverRequest {
-                /// The field `active_speaker_observer_id` in the table `CreateActiveSpeakerObserverRequest`
-                pub active_speaker_observer_id: ::planus::alloc::string::String,
+                /// The field `rtp_observer_id` in the table `CreateActiveSpeakerObserverRequest`
+                pub rtp_observer_id: ::planus::alloc::string::String,
                 /// The field `options` in the table `CreateActiveSpeakerObserverRequest`
                 pub options: ::planus::alloc::boxed::Box<
                     super::active_speaker_observer::ActiveSpeakerObserverOptions,
@@ -61262,15 +61262,14 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_active_speaker_observer_id: impl ::planus::WriteAs<::planus::Offset<str>>,
+                    field_rtp_observer_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                     field_options: impl ::planus::WriteAs<
                         ::planus::Offset<
                             super::active_speaker_observer::ActiveSpeakerObserverOptions,
                         >,
                     >,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_active_speaker_observer_id =
-                        field_active_speaker_observer_id.prepare(builder);
+                    let prepared_rtp_observer_id = field_rtp_observer_id.prepare(builder);
                     let prepared_options = field_options.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
@@ -61282,7 +61281,7 @@ mod root {
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_active_speaker_observer_id);
+                            object_writer.write::<_, _, 4>(&prepared_rtp_observer_id);
                             object_writer.write::<_, _, 4>(&prepared_options);
                         });
                     }
@@ -61329,7 +61328,7 @@ mod root {
                 ) -> ::planus::Offset<CreateActiveSpeakerObserverRequest> {
                     CreateActiveSpeakerObserverRequest::create(
                         builder,
-                        &self.active_speaker_observer_id,
+                        &self.rtp_observer_id,
                         &self.options,
                     )
                 }
@@ -61343,10 +61342,10 @@ mod root {
             pub struct CreateActiveSpeakerObserverRequestBuilder<State>(State);
 
             impl CreateActiveSpeakerObserverRequestBuilder<()> {
-                /// Setter for the [`active_speaker_observer_id` field](CreateActiveSpeakerObserverRequest#structfield.active_speaker_observer_id).
+                /// Setter for the [`rtp_observer_id` field](CreateActiveSpeakerObserverRequest#structfield.rtp_observer_id).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn active_speaker_observer_id<T0>(
+                pub fn rtp_observer_id<T0>(
                     self,
                     value: T0,
                 ) -> CreateActiveSpeakerObserverRequestBuilder<(T0,)>
@@ -61461,15 +61460,13 @@ mod root {
             pub struct CreateActiveSpeakerObserverRequestRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> CreateActiveSpeakerObserverRequestRef<'a> {
-                /// Getter for the [`active_speaker_observer_id` field](CreateActiveSpeakerObserverRequest#structfield.active_speaker_observer_id).
+                /// Getter for the [`rtp_observer_id` field](CreateActiveSpeakerObserverRequest#structfield.rtp_observer_id).
                 #[inline]
-                pub fn active_speaker_observer_id(
-                    &self,
-                ) -> ::planus::Result<&'a ::core::primitive::str> {
+                pub fn rtp_observer_id(&self) -> ::planus::Result<&'a ::core::primitive::str> {
                     self.0.access_required(
                         0,
                         "CreateActiveSpeakerObserverRequest",
-                        "active_speaker_observer_id",
+                        "rtp_observer_id",
                     )
                 }
 
@@ -61488,10 +61485,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for CreateActiveSpeakerObserverRequestRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("CreateActiveSpeakerObserverRequestRef");
-                    f.field(
-                        "active_speaker_observer_id",
-                        &self.active_speaker_observer_id(),
-                    );
+                    f.field("rtp_observer_id", &self.rtp_observer_id());
                     f.field("options", &self.options());
                     f.finish()
                 }
@@ -61507,8 +61501,8 @@ mod root {
                     value: CreateActiveSpeakerObserverRequestRef<'a>,
                 ) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        active_speaker_observer_id: ::core::convert::TryInto::try_into(
-                            value.active_speaker_observer_id()?,
+                        rtp_observer_id: ::core::convert::TryInto::try_into(
+                            value.rtp_observer_id()?,
                         )?,
                         options: ::planus::alloc::boxed::Box::new(
                             ::core::convert::TryInto::try_into(value.options()?)?,

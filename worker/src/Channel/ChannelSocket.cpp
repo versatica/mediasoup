@@ -1,5 +1,5 @@
 #define MS_CLASS "Channel::ChannelSocket"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "Channel/ChannelSocket.hpp"
 #include "DepLibUV.hpp"

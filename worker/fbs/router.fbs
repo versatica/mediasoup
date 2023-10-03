@@ -46,7 +46,7 @@ table CreateAudioLevelObserverRequest {
 }
 
 table CreateActiveSpeakerObserverRequest {
-    active_speaker_observer_id: string (required);
+    rtp_observer_id: string (required);
     options: FBS.ActiveSpeakerObserver.ActiveSpeakerObserverOptions (required);
 }
 
