@@ -339,7 +339,7 @@ namespace RTC
 			case Channel::ChannelRequest::Method::ROUTER_CREATE_ACTIVESPEAKEROBSERVER:
 			{
 				const auto* body = request->data->body_as<FBS::Router::CreateActiveSpeakerObserverRequest>();
-				auto rtpObserverId = body->activeSpeakerObserverId()->str();
+				auto rtpObserverId = body->rtpObserverId()->str();
 
 				// This may throw.
 				CheckNoRtpObserver(rtpObserverId);

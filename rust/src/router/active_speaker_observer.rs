@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::AppData;
+use crate::fbs::notification;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
@@ -9,7 +10,7 @@ use crate::messages::{
 use crate::producer::{Producer, ProducerId};
 use crate::router::Router;
 use crate::rtp_observer::{RtpObserver, RtpObserverAddProducerOptions, RtpObserverId};
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
@@ -74,6 +75,29 @@ enum Notification {
     DominantSpeaker(DominantSpeakerNotification),
 }
 
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::ActivespeakerobserverDominantSpeaker => {
+                let Ok(Some(
+                    notification::BodyRef::ActiveSpeakerObserverDominantSpeakerNotification(body),
+                )) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let dominant_speaker_notification = DominantSpeakerNotification {
+                    producer_id: body.producer_id().unwrap().parse().unwrap(),
+                };
+                Ok(Notification::DominantSpeaker(dominant_speaker_notification))
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
+}
+
 struct Inner {
     id: RtpObserverId,
     executor: Arc<Executor<'static>>,
@@ -114,7 +138,7 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
+                        if let Err(error) = channel.request_fbs(router_id, request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
                     })
@@ -175,7 +199,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request(self.id(), RtpObserverPauseRequest {})
+            .request_fbs(self.id(), RtpObserverPauseRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
@@ -192,7 +216,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request(self.id(), RtpObserverResumeRequest {})
+            .request_fbs(self.id(), RtpObserverResumeRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(false, Ordering::SeqCst);
@@ -216,7 +240,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request(self.id(), RtpObserverAddProducerRequest { producer_id })
+            .request_fbs(self.id(), RtpObserverAddProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.add_producer.call_simple(&producer);
@@ -233,7 +257,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request(self.id(), RtpObserverRemoveProducerRequest { producer_id })
+            .request_fbs(self.id(), RtpObserverRemoveProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.remove_producer.call_simple(&producer);
@@ -293,8 +317,8 @@ impl ActiveSpeakerObserver {
             let router = router.clone();
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::DominantSpeaker(dominant_speaker) => {
                             let DominantSpeakerNotification { producer_id } = dominant_speaker;

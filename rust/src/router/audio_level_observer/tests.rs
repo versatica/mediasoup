@@ -24,7 +24,6 @@ async fn init() -> Worker {
 }
 
 #[test]
-#[ignore]
 fn router_close_event() {
     future::block_on(async move {
         let worker = init().await;

@@ -168,7 +168,12 @@ namespace RTC
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
-			  builder, localIp.c_str(), this->udpSocket->GetLocalPort(), "", 0, FBS::Transport::Protocol::UDP);
+			  builder,
+			  localIp.c_str(),
+			  this->udpSocket->GetLocalPort(),
+			  nullptr,
+			  0,
+			  FBS::Transport::Protocol::UDP);
 		}
 
 		// Add srtpParameters.
