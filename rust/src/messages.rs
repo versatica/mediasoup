@@ -1151,23 +1151,92 @@ impl RouterCreatePipeTransportData {
             is_data_channel: false,
         }
     }
+
+    pub(crate) fn to_fbs(&self) -> pipe_transport::PipeTransportOptions {
+        pipe_transport::PipeTransportOptions {
+            base: Box::new(transport::Options {
+                direct: false,
+                max_message_size: None,
+                initial_available_outgoing_bitrate: None,
+                enable_sctp: self.enable_sctp,
+                num_sctp_streams: Some(Box::new(self.num_sctp_streams.to_fbs())),
+                max_sctp_message_size: self.max_sctp_message_size,
+                sctp_send_buffer_size: self.sctp_send_buffer_size,
+                is_data_channel: self.is_data_channel,
+            }),
+            listen_info: Box::new(self.listen_info.to_fbs()),
+            enable_rtx: self.enable_rtx,
+            enable_srtp: self.enable_srtp,
+        }
+    }
 }
 
-request_response!(
-    RouterId,
-    "router.createPipeTransport",
-    RouterCreatePipeTransportRequest {
-        #[serde(flatten)]
-        data: RouterCreatePipeTransportData,
-    },
-    PipeTransportData {
-        tuple: Mutex<TransportTuple>,
-        sctp_parameters: Option<SctpParameters>,
-        sctp_state: Mutex<Option<SctpState>>,
-        rtx: bool,
-        srtp_parameters: Mutex<Option<SrtpParameters>>,
-    },
-);
+#[derive(Debug)]
+pub(crate) struct RouterCreatePipeTransportRequest {
+    pub(crate) data: RouterCreatePipeTransportData,
+}
+
+impl RequestFbs for RouterCreatePipeTransportRequest {
+    const METHOD: request::Method = request::Method::RouterCreatePipetransport;
+    type HandlerId = RouterId;
+    type Response = PipeTransportData;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+        let data = router::CreatePipeTransportRequest::create(
+            &mut builder,
+            self.data.transport_id.to_string(),
+            self.data.to_fbs(),
+        );
+        let request_body =
+            request::Body::create_router_create_pipe_transport_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::PipeTransportDumpResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(PipeTransportData {
+            tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
+            sctp_parameters: data
+                .base
+                .sctp_parameters
+                .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
+            sctp_state: Mutex::new(
+                data.base
+                    .sctp_state
+                    .map(|state| SctpState::from_fbs(&state)),
+            ),
+            rtx: data.rtx,
+            srtp_parameters: Mutex::new(
+                data.srtp_parameters
+                    .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
+            ),
+        })
+    }
+}
+
+pub(crate) struct PipeTransportData {
+    pub(crate) tuple: Mutex<TransportTuple>,
+    pub(crate) sctp_parameters: Option<SctpParameters>,
+    pub(crate) sctp_state: Mutex<Option<SctpState>>,
+    pub(crate) rtx: bool,
+    pub(crate) srtp_parameters: Mutex<Option<SrtpParameters>>,
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

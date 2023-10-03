@@ -698,7 +698,7 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request(
+            .request_fbs(
                 self.inner.id,
                 RouterCreatePipeTransportRequest {
                     data: RouterCreatePipeTransportData::from_options(
