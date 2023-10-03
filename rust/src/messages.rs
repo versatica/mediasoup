@@ -2874,9 +2874,9 @@ impl RequestFbs for RtpObserverRemoveProducerRequest {
         let mut builder = Builder::new();
 
         let data =
-            rtp_observer::AddProducerRequest::create(&mut builder, self.producer_id.to_string());
+            rtp_observer::RemoveProducerRequest::create(&mut builder, self.producer_id.to_string());
         let request_body =
-            request::Body::create_rtp_observer_add_producer_request(&mut builder, data);
+            request::Body::create_rtp_observer_remove_producer_request(&mut builder, data);
 
         let request = request::Request::create(
             &mut builder,
