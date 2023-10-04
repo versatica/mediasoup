@@ -17,6 +17,6 @@ table GetStatsResponse {
 // Notifications from Worker.
 
 table RtcpNotification {
-    data: [ubyte] (required);
+    data: [uint8] (required);
 }
 

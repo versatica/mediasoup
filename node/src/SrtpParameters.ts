@@ -62,7 +62,7 @@ export function cryptoSuiteToFbs(cryptoSuite: SrtpCryptoSuite)
 			return FbsSrtpParameters.SrtpCryptoSuite.AES_CM_128_HMAC_SHA1_32;
 
 		default:
-			throw new TypeError(`invalid srtp crypto suite: ${cryptoSuite}`);
+			throw new TypeError(`invalid SrtpCryptoSuite: ${cryptoSuite}`);
 	}
 }
 

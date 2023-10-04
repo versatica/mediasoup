@@ -757,7 +757,7 @@ function fingerprintAlgorithmToFbs(algorithm: FingerprintAlgorithm)
 		case 'sha-512':
 			return FbsFingerprintAlgorithm.SHA512;
 		default:
-			throw new TypeError(`invalid fingerprint algorithm: ${algorithm}`);
+			throw new TypeError(`invalid FingerprintAlgorithm: ${algorithm}`);
 	}
 }
 
@@ -772,7 +772,7 @@ function dtlsRoleToFbs(role: DtlsRole): FbsDtlsRole
 		case 'server':
 			return FbsDtlsRole.SERVER;
 		default:
-			throw new TypeError(`invalid dtls role: ${role}`);
+			throw new TypeError(`invalid DtlsRole: ${role}`);
 	}
 }
 

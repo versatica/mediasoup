@@ -1025,10 +1025,10 @@ impl Producer {
 
 impl DirectProducer {
     /// Sends a RTP packet from the Rust process.
-    pub fn send(&self, _rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
+    pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
             .channel
-            .notify(self.inner.id, ProducerSendNotification {})
+            .notify_fbs(self.inner.id, ProducerSendNotification { rtp_packet })
     }
 }
 

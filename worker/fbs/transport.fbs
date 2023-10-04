@@ -1,5 +1,6 @@
 include "common.fbs";
 include "consumer.fbs";
+include "dataProducer.fbs";
 include "rtpParameters.fbs";
 include "sctpAssociation.fbs";
 include "sctpParameters.fbs";
@@ -61,7 +62,7 @@ table ConsumeResponse {
 
 table ProduceDataRequest {
     data_producer_id: string (required);
-    type: string (required);
+    type: FBS.DataProducer.Type;
     sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
     label: string;
     protocol: string;
@@ -71,7 +72,7 @@ table ProduceDataRequest {
 table ConsumeDataRequest {
     data_consumer_id: string (required);
     data_producer_id: string (required);
-    type: string (required);
+    type: FBS.DataProducer.Type;
     sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
     label: string;
     protocol: string;

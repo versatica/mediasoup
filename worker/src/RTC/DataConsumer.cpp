@@ -26,19 +26,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->typeString = data->type()->str();
+		switch (data->type())
+		{
+			case FBS::DataProducer::Type::SCTP:
+			{
+				this->type = DataConsumer::Type::SCTP;
 
-		if (this->typeString == "sctp")
-		{
-			this->type = DataConsumer::Type::SCTP;
-		}
-		else if (this->typeString == "direct")
-		{
-			this->type = DataConsumer::Type::DIRECT;
-		}
-		else
-		{
-			MS_THROW_TYPE_ERROR("invalid type");
+				break;
+			}
+			case FBS::DataProducer::Type::DIRECT:
+			{
+				this->type = DataConsumer::Type::DIRECT;
+
+				break;
+			}
 		}
 
 		if (this->type == DataConsumer::Type::SCTP)
@@ -66,9 +67,12 @@ namespace RTC
 		// paused is set to false by default.
 		this->paused = data->paused();
 
-		for (const auto subchannel : *data->subchannels())
+		if (flatbuffers::IsFieldPresent(data, FBS::Transport::ConsumeDataRequest::VT_SUBCHANNELS))
 		{
-			this->subchannels.insert(subchannel);
+			for (const auto subchannel : *data->subchannels())
+			{
+				this->subchannels.insert(subchannel);
+			}
 		}
 
 		// NOTE: This may throw.
@@ -111,10 +115,12 @@ namespace RTC
 		  builder,
 		  this->id.c_str(),
 		  this->dataProducerId.c_str(),
-		  this->typeString.c_str(),
+		  this->type == DataConsumer::Type::SCTP ? FBS::DataProducer::Type::SCTP
+		                                         : FBS::DataProducer::Type::DIRECT,
 		  sctpStreamParameters,
 		  this->label.c_str(),
 		  this->protocol.c_str(),
+		  this->bufferedAmountLowThreshold,
 		  this->paused,
 		  this->dataProducerPaused,
 		  std::addressof(subchannels));

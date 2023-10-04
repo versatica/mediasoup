@@ -23,19 +23,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->typeString = data->type()->str();
+		switch (data->type())
+		{
+			case FBS::DataProducer::Type::SCTP:
+			{
+				this->type = DataProducer::Type::SCTP;
 
-		if (this->typeString == "sctp")
-		{
-			this->type = DataProducer::Type::SCTP;
-		}
-		else if (this->typeString == "direct")
-		{
-			this->type = DataProducer::Type::DIRECT;
-		}
-		else
-		{
-			MS_THROW_TYPE_ERROR("invalid type");
+				break;
+			}
+			case FBS::DataProducer::Type::DIRECT:
+			{
+				this->type = DataProducer::Type::DIRECT;
+
+				break;
+			}
 		}
 
 		if (this->type == DataProducer::Type::SCTP)
@@ -92,7 +93,8 @@ namespace RTC
 		return FBS::DataProducer::CreateDumpResponseDirect(
 		  builder,
 		  this->id.c_str(),
-		  this->typeString.c_str(),
+		  this->type == DataProducer::Type::SCTP ? FBS::DataProducer::Type::SCTP
+		                                         : FBS::DataProducer::Type::DIRECT,
 		  sctpStreamParametersOffset,
 		  this->label.c_str(),
 		  this->protocol.c_str(),

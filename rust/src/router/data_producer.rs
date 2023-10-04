@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::{AppData, WebRtcMessage};
+use crate::fbs::{data_producer, response};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
@@ -15,6 +16,7 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -113,6 +115,25 @@ pub struct DataProducerDump {
     pub paused: bool,
 }
 
+impl DataProducerDump {
+    pub(crate) fn from_fbs(dump: data_producer::DumpResponse) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            id: dump.id.parse()?,
+            r#type: if dump.type_ == data_producer::Type::Sctp {
+                DataProducerType::Sctp
+            } else {
+                DataProducerType::Direct
+            },
+            label: dump.label,
+            protocol: dump.protocol,
+            sctp_stream_parameters: dump
+                .sctp_stream_parameters
+                .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
+            paused: dump.paused,
+        })
+    }
+}
+
 /// RTC statistics of the data producer.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -123,8 +144,20 @@ pub struct DataProducerStat {
     pub timestamp: u64,
     pub label: String,
     pub protocol: String,
-    pub messages_received: usize,
-    pub bytes_received: usize,
+    pub messages_received: u64,
+    pub bytes_received: u64,
+}
+
+impl DataProducerStat {
+    pub(crate) fn from_fbs(stats: &data_producer::GetStatsResponse) -> Self {
+        Self {
+            timestamp: stats.timestamp,
+            label: stats.label.to_string(),
+            protocol: stats.protocol.to_string(),
+            messages_received: stats.messages_received,
+            bytes_received: stats.bytes_received,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -176,7 +209,7 @@ impl Inner {
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(transport_id, request).await {
+                        if let Err(error) = channel.request_fbs(transport_id, request).await {
                             error!("data producer closing failed on drop: {}", error);
                         }
                     })
@@ -384,10 +417,17 @@ impl DataProducer {
     pub async fn dump(&self) -> Result<DataProducerDump, RequestError> {
         debug!("dump()");
 
-        self.inner()
+        let response = self
+            .inner()
             .channel
-            .request(self.id(), DataProducerDumpRequest {})
-            .await
+            .request_fbs(self.id(), DataProducerDumpRequest {})
+            .await?;
+
+        if let response::Body::DataProducerDumpResponse(data) = response {
+            Ok(DataProducerDump::from_fbs(*data).expect("Error parsing dump response"))
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Returns current statistics of the data producer.
@@ -397,10 +437,17 @@ impl DataProducer {
     pub async fn get_stats(&self) -> Result<Vec<DataProducerStat>, RequestError> {
         debug!("get_stats()");
 
-        self.inner()
+        let response = self
+            .inner()
             .channel
-            .request(self.id(), DataProducerGetStatsRequest {})
-            .await
+            .request_fbs(self.id(), DataProducerGetStatsRequest {})
+            .await?;
+
+        if let response::Body::DataProducerGetStatsResponse(data) = response {
+            Ok(vec![DataProducerStat::from_fbs(&data)])
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Pauses the data producer (no message is sent to its associated data consumers).
@@ -411,7 +458,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request(self.id(), DataProducerPauseRequest {})
+            .request_fbs(self.id(), DataProducerPauseRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
@@ -431,7 +478,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request(self.id(), DataProducerResumeRequest {})
+            .request_fbs(self.id(), DataProducerResumeRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(false, Ordering::SeqCst);
@@ -499,10 +546,12 @@ impl DirectDataProducer {
     pub fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
         let (ppid, _payload) = message.into_ppid_and_payload();
 
-        self.inner.channel.notify(
+        self.inner.channel.notify_fbs(
             self.inner.id,
-            DataProducerSendNotification { ppid },
-            // payload.into_owned(),
+            DataProducerSendNotification {
+                ppid,
+                payload: _payload.into_owned(),
+            },
         )
     }
 }

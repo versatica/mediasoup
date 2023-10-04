@@ -132,6 +132,26 @@ impl SctpStreamParameters {
 }
 
 impl SctpStreamParameters {
+    pub(crate) fn to_fbs(self) -> sctp_parameters::SctpStreamParameters {
+        sctp_parameters::SctpStreamParameters {
+            stream_id: self.stream_id,
+            ordered: Some(self.ordered),
+            max_packet_life_time: self.max_packet_life_time,
+            max_retransmits: self.max_retransmits,
+        }
+    }
+
+    pub(crate) fn from_fbs(stream_parameters: sctp_parameters::SctpStreamParameters) -> Self {
+        Self {
+            stream_id: stream_parameters.stream_id,
+            ordered: stream_parameters.ordered.unwrap_or(false),
+            max_packet_life_time: stream_parameters.max_packet_life_time,
+            max_retransmits: stream_parameters.max_retransmits,
+        }
+    }
+}
+
+impl SctpStreamParameters {
     /// Messages will be sent reliably in order.
     #[must_use]
     pub fn new_ordered(stream_id: u16) -> Self {

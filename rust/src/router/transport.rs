@@ -724,7 +724,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(
+            .request_fbs(
                 self.id(),
                 TransportProduceDataRequest {
                     data_producer_id,
@@ -820,7 +820,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request(
+            .request_fbs(
                 self.id(),
                 TransportConsumeDataRequest {
                     data_consumer_id,

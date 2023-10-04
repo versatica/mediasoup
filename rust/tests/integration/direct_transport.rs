@@ -319,8 +319,8 @@ fn send_succeeds() {
             assert_eq!(stats.len(), 1);
             assert_eq!(&stats[0].label, data_producer.label());
             assert_eq!(&stats[0].protocol, data_producer.protocol());
-            assert_eq!(stats[0].messages_received, num_messages);
-            assert_eq!(stats[0].bytes_received, sent_message_bytes);
+            assert_eq!(stats[0].messages_received, num_messages as u64);
+            assert_eq!(stats[0].bytes_received, sent_message_bytes as u64);
         }
 
         {
@@ -332,10 +332,13 @@ fn send_succeeds() {
             assert_eq!(stats.len(), 1);
             assert_eq!(&stats[0].label, data_consumer.label());
             assert_eq!(&stats[0].protocol, data_consumer.protocol());
-            assert_eq!(stats[0].messages_sent, expected_received_num_messages);
+            assert_eq!(
+                stats[0].messages_sent,
+                expected_received_num_messages as u64
+            );
             assert_eq!(
                 stats[0].bytes_sent,
-                recv_message_bytes.load(Ordering::SeqCst),
+                recv_message_bytes.load(Ordering::SeqCst) as u64,
             );
         }
     });

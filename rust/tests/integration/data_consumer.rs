@@ -88,7 +88,6 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
 }
 
 #[test]
-#[ignore]
 fn consume_data_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;
@@ -192,7 +191,6 @@ fn consume_data_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn weak() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;
@@ -240,7 +238,6 @@ fn weak() {
 }
 
 #[test]
-#[ignore]
 fn dump_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport, data_producer) = init().await;
@@ -287,7 +284,6 @@ fn dump_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn get_stats_succeeds() {
     future::block_on(async move {
         let (_worker, _router, transport, data_producer) = init().await;
@@ -320,7 +316,6 @@ fn get_stats_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn consume_data_on_direct_transport_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;
@@ -380,7 +375,6 @@ fn consume_data_on_direct_transport_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn dump_on_direct_transport_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;
@@ -416,7 +410,6 @@ fn dump_on_direct_transport_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn get_stats_on_direct_transport_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;
@@ -451,7 +444,6 @@ fn get_stats_on_direct_transport_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn close_event() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;
