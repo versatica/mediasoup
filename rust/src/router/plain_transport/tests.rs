@@ -31,7 +31,6 @@ async fn init() -> Router {
 }
 
 #[test]
-#[ignore]
 fn router_close_event() {
     future::block_on(async move {
         let router = init().await;

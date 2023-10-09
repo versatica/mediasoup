@@ -148,7 +148,6 @@ async fn init() -> (Router, WebRtcTransport) {
 }
 
 #[test]
-#[ignore]
 fn produce_and_consume_succeeds() {
     future::block_on(async move {
         let (router, transport) = init().await;
@@ -207,7 +206,6 @@ fn produce_and_consume_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn fails_to_consume_wrong_parameters() {
     future::block_on(async move {
         let (_router, transport) = init().await;
@@ -261,7 +259,6 @@ fn fails_to_consume_wrong_parameters() {
 }
 
 #[test]
-#[ignore]
 fn fails_to_consume_wrong_channels() {
     future::block_on(async move {
         let (router, transport) = init().await;
