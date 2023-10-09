@@ -213,7 +213,6 @@ fn create_with_webrtc_server_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn router_close_event() {
     future::block_on(async move {
         let (_worker, router) = init().await;
