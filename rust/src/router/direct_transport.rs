@@ -307,7 +307,7 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs(router_id, request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
@@ -567,7 +567,7 @@ impl DirectTransport {
         let subscription_handler = {
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
@@ -629,7 +629,7 @@ impl DirectTransport {
     pub fn send_rtcp(&self, rtcp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
             .channel
-            .notify_fbs(self.id(), TransportSendRtcpNotification { rtcp_packet })
+            .notify(self.id(), TransportSendRtcpNotification { rtcp_packet })
     }
 
     /// Callback is called when the direct transport receives a RTCP packet from its router.

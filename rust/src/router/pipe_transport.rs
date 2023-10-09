@@ -366,7 +366,7 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs(router_id, request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("transport closing failed on drop: {}", error);
                         }
                     })
@@ -616,7 +616,7 @@ impl PipeTransport {
             let handlers = Arc::clone(&handlers);
             let data = Arc::clone(&data);
 
-            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::SctpStateChange { sctp_state } => {
@@ -691,7 +691,7 @@ impl PipeTransport {
         let response = self
             .inner
             .channel
-            .request_fbs(
+            .request(
                 self.id(),
                 PipeTransportConnectRequest {
                     ip: remote_parameters.ip,

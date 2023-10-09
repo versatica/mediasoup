@@ -1,6 +1,6 @@
 use crate::fbs::{message, notification, request, response};
-use crate::messages::{NotificationFbs, RequestFbs};
-use crate::worker::common::{FBSEventHandlers, FBSWeakEventHandlers, SubscriptionTarget};
+use crate::messages::{Notification, Request};
+use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils;
 use crate::worker::utils::{PreparedChannelRead, PreparedChannelWrite};
 use crate::worker::{RequestError, SubscriptionHandler};
@@ -56,17 +56,16 @@ pub enum NotificationParseError {
 #[allow(clippy::type_complexity)]
 pub(crate) struct BufferMessagesGuard {
     target_id: SubscriptionTarget,
-    fbs_buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
-    fbs_event_handlers_weak: FBSWeakEventHandlers<
-        Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Sync + 'static>,
-    >,
+    buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    event_handlers_weak:
+        WeakEventHandlers<Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Sync + 'static>>,
 }
 
 impl Drop for BufferMessagesGuard {
     fn drop(&mut self) {
-        let mut fbs_buffered_notifications_for = self.fbs_buffered_notifications_for.lock();
-        if let Some(notifications) = fbs_buffered_notifications_for.remove(&self.target_id) {
-            if let Some(event_handlers) = self.fbs_event_handlers_weak.upgrade() {
+        let mut buffered_notifications_for = self.buffered_notifications_for.lock();
+        if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
+            if let Some(event_handlers) = self.event_handlers_weak.upgrade() {
                 for notification in notifications {
                     let notification =
                         notification::NotificationRef::read_as_root(&notification).unwrap();
@@ -137,7 +136,7 @@ impl<'a> Drop for RequestDropGuard<'a> {
         // Drop pending message from memory
         self.message.take();
         // Remove request handler from the container
-        if let Some(requests_container) = self.channel.inner.fbs_requests_container_weak.upgrade() {
+        if let Some(requests_container) = self.channel.inner.requests_container_weak.upgrade() {
             requests_container.lock().handlers.remove(&self.id);
         }
     }
@@ -165,11 +164,10 @@ struct OutgoingMessageBuffer {
 struct Inner {
     outgoing_message_buffer: Arc<Mutex<OutgoingMessageBuffer>>,
     internal_message_receiver: async_channel::Receiver<InternalMessage>,
-    fbs_requests_container_weak: Weak<Mutex<FBSRequestsContainer>>,
-    fbs_buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
-    fbs_event_handlers_weak: FBSWeakEventHandlers<
-        Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Sync + 'static>,
-    >,
+    requests_container_weak: Weak<Mutex<FBSRequestsContainer>>,
+    buffered_notifications_for: Arc<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>,
+    event_handlers_weak:
+        WeakEventHandlers<Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Sync + 'static>>,
     worker_closed: Arc<AtomicBool>,
     closed: AtomicBool,
 }
@@ -193,12 +191,12 @@ impl Channel {
             handle: None,
             messages: VecDeque::with_capacity(10),
         }));
-        let fbs_requests_container = Arc::<Mutex<FBSRequestsContainer>>::default();
-        let fbs_requests_container_weak = Arc::downgrade(&fbs_requests_container);
-        let fbs_buffered_notifications_for =
+        let requests_container = Arc::<Mutex<FBSRequestsContainer>>::default();
+        let requests_container_weak = Arc::downgrade(&requests_container);
+        let buffered_notifications_for =
             Arc::<Mutex<HashedMap<SubscriptionTarget, Vec<Vec<u8>>>>>::default();
-        let fbs_event_handlers = FBSEventHandlers::new();
-        let fbs_event_handlers_weak = fbs_event_handlers.downgrade();
+        let event_handlers = EventHandlers::new();
+        let event_handlers_weak = event_handlers.downgrade();
 
         let prepared_channel_read = utils::prepare_channel_read_fn({
             let outgoing_message_buffer = Arc::clone(&outgoing_message_buffer);
@@ -223,7 +221,7 @@ impl Channel {
         let (internal_message_sender, internal_message_receiver) = async_channel::unbounded();
 
         let prepared_channel_write = utils::prepare_channel_write_fn({
-            let fbs_buffered_notifications_for = Arc::clone(&fbs_buffered_notifications_for);
+            let buffered_notifications_for = Arc::clone(&buffered_notifications_for);
             // This this contain cache of targets that are known to not have buffering, so
             // that we can avoid Mutex locking overhead for them
             let mut non_buffered_notifications = LruCache::<SubscriptionTarget, ()>::new(
@@ -240,11 +238,10 @@ impl Channel {
                         );
 
                         if !non_buffered_notifications.contains(&target_id) {
-                            let mut fbs_buffer_notifications_for =
-                                fbs_buffered_notifications_for.lock();
+                            let mut buffer_notifications_for = buffered_notifications_for.lock();
                             // Check if we need to buffer notifications for this
                             // target_id
-                            if let Some(list) = fbs_buffer_notifications_for.get_mut(&target_id) {
+                            if let Some(list) = buffer_notifications_for.get_mut(&target_id) {
                                 list.push(Vec::from(message));
                                 return;
                             }
@@ -252,11 +249,10 @@ impl Channel {
                             // Remember we don't need to buffer these
                             non_buffered_notifications.put(target_id.clone(), ());
                         }
-                        fbs_event_handlers
-                            .call_callbacks_with_single_value(&target_id, notification);
+                        event_handlers.call_callbacks_with_single_value(&target_id, notification);
                     }
                     ChannelReceiveMessage::Response(response) => {
-                        let sender = fbs_requests_container
+                        let sender = requests_container
                             .lock()
                             .handlers
                             .remove(&response.id().unwrap());
@@ -301,9 +297,9 @@ impl Channel {
         let inner = Arc::new(Inner {
             outgoing_message_buffer,
             internal_message_receiver,
-            fbs_requests_container_weak,
-            fbs_buffered_notifications_for,
-            fbs_event_handlers_weak,
+            requests_container_weak,
+            buffered_notifications_for,
+            event_handlers_weak,
             worker_closed,
             closed: AtomicBool::new(false),
         });
@@ -322,33 +318,33 @@ impl Channel {
     /// This allows to enable buffering for messages for specific target while the target itself is
     /// being created. This allows to avoid missing notifications due to race conditions.
     pub(crate) fn buffer_messages_for(&self, target_id: SubscriptionTarget) -> BufferMessagesGuard {
-        let fbs_buffered_notifications_for = Arc::clone(&self.inner.fbs_buffered_notifications_for);
-        let fbs_event_handlers_weak = self.inner.fbs_event_handlers_weak.clone();
-        fbs_buffered_notifications_for
+        let buffered_notifications_for = Arc::clone(&self.inner.buffered_notifications_for);
+        let event_handlers_weak = self.inner.event_handlers_weak.clone();
+        buffered_notifications_for
             .lock()
             .entry(target_id.clone())
             .or_default();
         BufferMessagesGuard {
             target_id,
-            fbs_buffered_notifications_for,
-            fbs_event_handlers_weak,
+            buffered_notifications_for,
+            event_handlers_weak,
         }
     }
 
-    pub(crate) async fn request_fbs<R, HandlerId>(
+    pub(crate) async fn request<R, HandlerId>(
         &self,
         handler_id: HandlerId,
         request: R,
     ) -> Result<R::Response, RequestError>
     where
-        R: RequestFbs<HandlerId = HandlerId> + 'static,
+        R: Request<HandlerId = HandlerId> + 'static,
         HandlerId: Display,
     {
         let id;
         let (result_sender, result_receiver) = async_oneshot::oneshot();
 
         {
-            let requests_container = match self.inner.fbs_requests_container_weak.upgrade() {
+            let requests_container = match self.inner.requests_container_weak.upgrade() {
                 Some(requests_container_lock) => requests_container_lock,
                 None => {
                     return Err(RequestError::ChannelClosed);
@@ -439,13 +435,13 @@ impl Channel {
         }
     }
 
-    pub(crate) fn notify_fbs<N, HandlerId>(
+    pub(crate) fn notify<N, HandlerId>(
         &self,
         handler_id: HandlerId,
         notification: N,
     ) -> Result<(), NotificationError>
     where
-        N: NotificationFbs<HandlerId = HandlerId>,
+        N: Notification<HandlerId = HandlerId>,
         HandlerId: Display,
     {
         debug!("notify() [{notification:?}]");
@@ -476,7 +472,7 @@ impl Channel {
 
         Ok(())
     }
-    pub(crate) fn subscribe_to_fbs_notifications<F>(
+    pub(crate) fn subscribe_to_notifications<F>(
         &self,
         target_id: SubscriptionTarget,
         callback: F,
@@ -485,8 +481,8 @@ impl Channel {
         F: Fn(notification::NotificationRef<'_>) + Send + Sync + 'static,
     {
         self.inner
-            .fbs_event_handlers_weak
+            .event_handlers_weak
             .upgrade()
-            .map(|fbs_event_handlers| fbs_event_handlers.add(target_id, Arc::new(callback)))
+            .map(|event_handlers| event_handlers.add(target_id, Arc::new(callback)))
     }
 }

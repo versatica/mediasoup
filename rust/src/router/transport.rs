@@ -443,25 +443,25 @@ pub(super) trait TransportImpl: TransportGeneric {
 
     async fn dump_impl(&self) -> Result<response::Body, RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportDumpRequest {})
+            .request(self.id(), TransportDumpRequest {})
             .await
     }
 
     async fn get_stats_impl(&self) -> Result<response::Body, RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportGetStatsRequest {})
+            .request(self.id(), TransportGetStatsRequest {})
             .await
     }
 
     async fn set_max_incoming_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
+            .request(self.id(), TransportSetMaxIncomingBitrateRequest { bitrate })
             .await
     }
 
     async fn set_max_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
+            .request(self.id(), TransportSetMaxOutgoingBitrateRequest { bitrate })
             .await
     }
 
@@ -470,13 +470,13 @@ pub(super) trait TransportImpl: TransportGeneric {
         types: Vec<TransportTraceEventType>,
     ) -> Result<(), RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportEnableTraceEventRequest { types })
+            .request(self.id(), TransportEnableTraceEventRequest { types })
             .await
     }
 
     async fn set_min_outgoing_bitrate_impl(&self, bitrate: u32) -> Result<(), RequestError> {
         self.channel()
-            .request_fbs(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
+            .request(self.id(), TransportSetMinOutgoingBitrateRequest { bitrate })
             .await
     }
 
@@ -548,7 +548,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request_fbs(
+            .request(
                 self.id(),
                 TransportProduceRequest {
                     producer_id,
@@ -646,7 +646,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request_fbs(
+            .request(
                 self.id(),
                 TransportConsumeRequest {
                     consumer_id,
@@ -724,7 +724,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request_fbs(
+            .request(
                 self.id(),
                 TransportProduceDataRequest {
                     data_producer_id,
@@ -820,7 +820,7 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let response = self
             .channel()
-            .request_fbs(
+            .request(
                 self.id(),
                 TransportConsumeDataRequest {
                     data_consumer_id,

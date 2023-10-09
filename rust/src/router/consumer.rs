@@ -707,7 +707,7 @@ impl Inner {
                 self.executor
                     .spawn(async move {
                         if weak_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request_fbs(transport_id, request).await {
+                            if let Err(error) = channel.request(transport_id, request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
@@ -783,7 +783,7 @@ impl Consumer {
             let current_layers = Arc::clone(&current_layers);
             let inner_weak = Arc::clone(&inner_weak);
 
-            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::ProducerClose => {
@@ -993,7 +993,7 @@ impl Consumer {
         let response = self
             .inner
             .channel
-            .request_fbs(self.id(), ConsumerDumpRequest {})
+            .request(self.id(), ConsumerDumpRequest {})
             .await?;
 
         if let response::Body::ConsumerDumpResponse(data) = response {
@@ -1013,7 +1013,7 @@ impl Consumer {
         let response = self
             .inner
             .channel
-            .request_fbs(self.id(), ConsumerGetStatsRequest {})
+            .request(self.id(), ConsumerGetStatsRequest {})
             .await;
 
         if let Ok(response::Body::ConsumerGetStatsResponse(data)) = response {
@@ -1042,7 +1042,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request_fbs(self.id(), ConsumerPauseRequest {})
+            .request(self.id(), ConsumerPauseRequest {})
             .await?;
 
         let mut paused = self.inner.paused.lock();
@@ -1062,7 +1062,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request_fbs(self.id(), ConsumerResumeRequest {})
+            .request(self.id(), ConsumerResumeRequest {})
             .await?;
 
         let mut paused = self.inner.paused.lock();
@@ -1087,7 +1087,7 @@ impl Consumer {
         let consumer_layers = self
             .inner
             .channel
-            .request_fbs(
+            .request(
                 self.id(),
                 ConsumerSetPreferredLayersRequest {
                     data: consumer_layers,
@@ -1109,7 +1109,7 @@ impl Consumer {
         let result = self
             .inner
             .channel
-            .request_fbs(self.id(), ConsumerSetPriorityRequest { priority })
+            .request(self.id(), ConsumerSetPriorityRequest { priority })
             .await?;
 
         *self.inner.priority.lock() = result.priority;
@@ -1126,7 +1126,7 @@ impl Consumer {
         let result = self
             .inner
             .channel
-            .request_fbs(self.id(), ConsumerSetPriorityRequest { priority })
+            .request(self.id(), ConsumerSetPriorityRequest { priority })
             .await?;
 
         *self.inner.priority.lock() = result.priority;
@@ -1140,7 +1140,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request_fbs(self.id(), ConsumerRequestKeyFrameRequest {})
+            .request(self.id(), ConsumerRequestKeyFrameRequest {})
             .await
     }
 
@@ -1153,7 +1153,7 @@ impl Consumer {
 
         self.inner
             .channel
-            .request_fbs(self.id(), ConsumerEnableTraceEventRequest { types })
+            .request(self.id(), ConsumerEnableTraceEventRequest { types })
             .await
     }
 

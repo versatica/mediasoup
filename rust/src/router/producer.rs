@@ -601,7 +601,7 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs(transport_id, request).await {
+                        if let Err(error) = channel.request(transport_id, request).await {
                             error!("producer closing failed on drop: {}", error);
                         }
                     })
@@ -722,7 +722,7 @@ impl Producer {
             let handlers = Arc::clone(&handlers);
             let score = Arc::clone(&score);
 
-            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Score(scores) => {
@@ -852,7 +852,7 @@ impl Producer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), ProducerDumpRequest {})
+            .request(self.id(), ProducerDumpRequest {})
             .await?;
 
         if let response::Body::ProducerDumpResponse(data) = response {
@@ -872,7 +872,7 @@ impl Producer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), ProducerGetStatsRequest {})
+            .request(self.id(), ProducerGetStatsRequest {})
             .await;
 
         if let Ok(response::Body::ProducerGetStatsResponse(data)) = response {
@@ -890,7 +890,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), ProducerPauseRequest {})
+            .request(self.id(), ProducerPauseRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
@@ -910,7 +910,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), ProducerResumeRequest {})
+            .request(self.id(), ProducerResumeRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(false, Ordering::SeqCst);
@@ -931,7 +931,7 @@ impl Producer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), ProducerEnableTraceEventRequest { types })
+            .request(self.id(), ProducerEnableTraceEventRequest { types })
             .await
     }
 
@@ -1028,7 +1028,7 @@ impl DirectProducer {
     pub fn send(&self, rtp_packet: Vec<u8>) -> Result<(), NotificationError> {
         self.inner
             .channel
-            .notify_fbs(self.inner.id, ProducerSendNotification { rtp_packet })
+            .notify(self.inner.id, ProducerSendNotification { rtp_packet })
     }
 }
 

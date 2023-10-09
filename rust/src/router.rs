@@ -403,7 +403,7 @@ impl Inner {
                 let request = RouterCloseRequest { router_id: self.id };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs("", request).await {
+                        if let Err(error) = channel.request("", request).await {
                             error!("router closing failed on drop: {}", error);
                         }
                     })
@@ -534,7 +534,7 @@ impl Router {
 
         self.inner
             .channel
-            .request_fbs(self.inner.id, RouterDumpRequest {})
+            .request(self.inner.id, RouterDumpRequest {})
             .await
     }
 
@@ -563,7 +563,7 @@ impl Router {
 
         self.inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 RouterCreateDirectTransportRequest {
                     data: RouterCreateDirectTransportData::from_options(
@@ -629,7 +629,7 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 RouterCreateWebRtcTransportRequest {
                     data: RouterCreateWebrtcTransportData::from_options(
@@ -698,7 +698,7 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 RouterCreatePipeTransportRequest {
                     data: RouterCreatePipeTransportData::from_options(
@@ -763,7 +763,7 @@ impl Router {
         let data = self
             .inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 RouterCreatePlainTransportRequest {
                     data: RouterCreatePlainTransportData::from_options(
@@ -829,7 +829,7 @@ impl Router {
 
         self.inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 RouterCreateAudioLevelObserverRequest {
                     data: RouterCreateAudioLevelObserverData::from_options(
@@ -889,7 +889,7 @@ impl Router {
 
         self.inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 RouterCreateActiveSpeakerObserverRequest {
                     data: RouterCreateActiveSpeakerObserverData::from_options(

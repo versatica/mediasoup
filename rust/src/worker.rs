@@ -488,7 +488,7 @@ impl Inner {
         let (sender, receiver) = async_oneshot::oneshot();
         let id = self.id;
         let sender = Mutex::new(Some(sender));
-        let _handler = self.channel.subscribe_to_fbs_notifications(
+        let _handler = self.channel.subscribe_to_notifications(
             SubscriptionTarget::String(std::process::id().to_string()),
             move |notification| {
                 let result = match notification.event().unwrap() {
@@ -553,7 +553,7 @@ impl Inner {
 
             self.executor
                 .spawn(async move {
-                    let _ = channel.request_fbs("", WorkerCloseRequest {}).await;
+                    let _ = channel.request("", WorkerCloseRequest {}).await;
 
                     // Drop channels in here after response from worker
                     drop(channel);
@@ -622,10 +622,7 @@ impl Worker {
     pub async fn dump(&self) -> Result<WorkerDump, RequestError> {
         debug!("dump()");
 
-        self.inner
-            .channel
-            .request_fbs("", WorkerDumpRequest {})
-            .await
+        self.inner.channel.request("", WorkerDumpRequest {}).await
     }
 
     /// Updates the worker settings in runtime. Just a subset of the worker settings can be updated.
@@ -635,7 +632,7 @@ impl Worker {
         match self
             .inner
             .channel
-            .request_fbs("", WorkerUpdateSettingsRequest { data })
+            .request("", WorkerUpdateSettingsRequest { data })
             .await
         {
             Ok(_) => Ok(()),
@@ -666,7 +663,7 @@ impl Worker {
 
         self.inner
             .channel
-            .request_fbs(
+            .request(
                 "",
                 WorkerCreateWebRtcServerRequest {
                     webrtc_server_id,
@@ -715,7 +712,7 @@ impl Worker {
 
         self.inner
             .channel
-            .request_fbs("", WorkerCreateRouterRequest { router_id })
+            .request("", WorkerCreateRouterRequest { router_id })
             .await
             .map_err(CreateRouterError::Request)?;
 
