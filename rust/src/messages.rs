@@ -35,7 +35,6 @@ use crate::webrtc_transport::{
 use crate::worker::{ChannelMessageHandlers, WorkerDump, WorkerUpdateSettings};
 use parking_lot::Mutex;
 use planus::Builder;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::{Debug, Display};
@@ -43,23 +42,6 @@ use std::net::IpAddr;
 use std::num::NonZeroU16;
 
 pub(crate) trait Request
-where
-    Self: Debug + Serialize,
-{
-    type HandlerId: Display;
-    type Response: DeserializeOwned;
-
-    /// Request method to call on worker.
-    fn as_method(&self) -> &'static str;
-
-    /// Default response to return in case of soft error, such as channel already closed, entity
-    /// doesn't exist on worker during closing.
-    fn default_for_soft_error() -> Option<Self::Response> {
-        None
-    }
-}
-
-pub(crate) trait RequestFbs
 where
     Self: Debug,
 {
@@ -82,7 +64,7 @@ where
         -> Result<Self::Response, Box<dyn Error>>;
 }
 
-pub(crate) trait NotificationFbs: Debug {
+pub(crate) trait Notification: Debug {
     /// Notification event to call on worker.
     const EVENT: notification::Event;
     type HandlerId: Display;
@@ -94,7 +76,7 @@ pub(crate) trait NotificationFbs: Debug {
 #[derive(Debug)]
 pub(crate) struct WorkerCloseRequest {}
 
-impl RequestFbs for WorkerCloseRequest {
+impl Request for WorkerCloseRequest {
     const METHOD: request::Method = request::Method::WorkerClose;
     type HandlerId = &'static str;
     type Response = ();
@@ -125,7 +107,7 @@ impl RequestFbs for WorkerCloseRequest {
 #[derive(Debug)]
 pub(crate) struct WorkerDumpRequest {}
 
-impl RequestFbs for WorkerDumpRequest {
+impl Request for WorkerDumpRequest {
     const METHOD: request::Method = request::Method::WorkerDump;
     type HandlerId = &'static str;
     type Response = WorkerDump;
@@ -187,7 +169,7 @@ pub(crate) struct WorkerUpdateSettingsRequest {
     pub(crate) data: WorkerUpdateSettings,
 }
 
-impl RequestFbs for WorkerUpdateSettingsRequest {
+impl Request for WorkerUpdateSettingsRequest {
     const METHOD: request::Method = request::Method::WorkerUpdateSettings;
     type HandlerId = &'static str;
     type Response = ();
@@ -234,7 +216,7 @@ pub(crate) struct WorkerCreateWebRtcServerRequest {
     pub(crate) listen_infos: WebRtcServerListenInfos,
 }
 
-impl RequestFbs for WorkerCreateWebRtcServerRequest {
+impl Request for WorkerCreateWebRtcServerRequest {
     const METHOD: request::Method = request::Method::WorkerCreateWebrtcserver;
     type HandlerId = &'static str;
     type Response = ();
@@ -273,7 +255,7 @@ pub(crate) struct WebRtcServerCloseRequest {
     pub(crate) webrtc_server_id: WebRtcServerId,
 }
 
-impl RequestFbs for WebRtcServerCloseRequest {
+impl Request for WebRtcServerCloseRequest {
     const METHOD: request::Method = request::Method::WorkerWebrtcserverClose;
     type HandlerId = &'static str;
     type Response = ();
@@ -310,7 +292,7 @@ impl RequestFbs for WebRtcServerCloseRequest {
 #[derive(Debug)]
 pub(crate) struct WebRtcServerDumpRequest {}
 
-impl RequestFbs for WebRtcServerDumpRequest {
+impl Request for WebRtcServerDumpRequest {
     const METHOD: request::Method = request::Method::WebrtcserverDump;
     type HandlerId = WebRtcServerId;
     type Response = WebRtcServerDump;
@@ -389,7 +371,7 @@ pub(crate) struct WorkerCreateRouterRequest {
     pub(crate) router_id: RouterId,
 }
 
-impl RequestFbs for WorkerCreateRouterRequest {
+impl Request for WorkerCreateRouterRequest {
     const METHOD: request::Method = request::Method::WorkerCreateRouter;
     type HandlerId = &'static str;
     type Response = ();
@@ -423,7 +405,7 @@ pub(crate) struct RouterCloseRequest {
     pub(crate) router_id: RouterId,
 }
 
-impl RequestFbs for RouterCloseRequest {
+impl Request for RouterCloseRequest {
     const METHOD: request::Method = request::Method::WorkerCloseRouter;
     type HandlerId = &'static str;
     type Response = ();
@@ -456,7 +438,7 @@ impl RequestFbs for RouterCloseRequest {
 #[derive(Debug)]
 pub(crate) struct RouterDumpRequest {}
 
-impl RequestFbs for RouterDumpRequest {
+impl Request for RouterDumpRequest {
     const METHOD: request::Method = request::Method::RouterDump;
     type HandlerId = RouterId;
     type Response = RouterDump;
@@ -593,7 +575,7 @@ pub(crate) struct RouterCreateDirectTransportRequest {
     pub(crate) data: RouterCreateDirectTransportData,
 }
 
-impl RequestFbs for RouterCreateDirectTransportRequest {
+impl Request for RouterCreateDirectTransportRequest {
     const METHOD: request::Method = request::Method::RouterCreateDirecttransport;
     type HandlerId = RouterId;
     type Response = ();
@@ -742,7 +724,7 @@ pub(crate) struct RouterCreateWebRtcTransportRequest {
     pub(crate) data: RouterCreateWebrtcTransportData,
 }
 
-impl RequestFbs for RouterCreateWebRtcTransportRequest {
+impl Request for RouterCreateWebRtcTransportRequest {
     const METHOD: request::Method = request::Method::RouterCreateWebrtctransport;
     type HandlerId = RouterId;
     type Response = WebRtcTransportData;
@@ -872,7 +854,7 @@ pub(crate) struct RouterCreatePlainTransportRequest {
     pub(crate) data: RouterCreatePlainTransportData,
 }
 
-impl RequestFbs for RouterCreatePlainTransportRequest {
+impl Request for RouterCreatePlainTransportRequest {
     const METHOD: request::Method = request::Method::RouterCreatePlaintransport;
     type HandlerId = RouterId;
     type Response = PlainTransportData;
@@ -996,7 +978,7 @@ pub(crate) struct RouterCreatePipeTransportRequest {
     pub(crate) data: RouterCreatePipeTransportData,
 }
 
-impl RequestFbs for RouterCreatePipeTransportRequest {
+impl Request for RouterCreatePipeTransportRequest {
     const METHOD: request::Method = request::Method::RouterCreatePipetransport;
     type HandlerId = RouterId;
     type Response = PipeTransportData;
@@ -1087,7 +1069,7 @@ impl RouterCreateAudioLevelObserverData {
     }
 }
 
-impl RequestFbs for RouterCreateAudioLevelObserverRequest {
+impl Request for RouterCreateAudioLevelObserverRequest {
     const METHOD: request::Method = request::Method::RouterCreateAudiolevelobserver;
     type HandlerId = RouterId;
     type Response = ();
@@ -1154,7 +1136,7 @@ impl RouterCreateActiveSpeakerObserverData {
     }
 }
 
-impl RequestFbs for RouterCreateActiveSpeakerObserverRequest {
+impl Request for RouterCreateActiveSpeakerObserverRequest {
     const METHOD: request::Method = request::Method::RouterCreateActivespeakerobserver;
     type HandlerId = RouterId;
     type Response = ();
@@ -1197,7 +1179,7 @@ impl RequestFbs for RouterCreateActiveSpeakerObserverRequest {
 #[derive(Debug)]
 pub(crate) struct TransportDumpRequest {}
 
-impl RequestFbs for TransportDumpRequest {
+impl Request for TransportDumpRequest {
     const METHOD: request::Method = request::Method::TransportDump;
     type HandlerId = TransportId;
     type Response = response::Body;
@@ -1232,7 +1214,7 @@ impl RequestFbs for TransportDumpRequest {
 #[derive(Debug)]
 pub(crate) struct TransportGetStatsRequest {}
 
-impl RequestFbs for TransportGetStatsRequest {
+impl Request for TransportGetStatsRequest {
     const METHOD: request::Method = request::Method::TransportGetStats;
     type HandlerId = TransportId;
     type Response = response::Body;
@@ -1270,7 +1252,7 @@ pub(crate) struct TransportCloseRequest {
     pub(crate) transport_id: TransportId,
 }
 
-impl RequestFbs for TransportCloseRequest {
+impl Request for TransportCloseRequest {
     const METHOD: request::Method = request::Method::RouterCloseTransport;
     type HandlerId = RouterId;
     type Response = ();
@@ -1311,7 +1293,7 @@ pub(crate) struct WebRtcTransportConnectRequest {
     pub(crate) dtls_parameters: DtlsParameters,
 }
 
-impl RequestFbs for WebRtcTransportConnectRequest {
+impl Request for WebRtcTransportConnectRequest {
     const METHOD: request::Method = request::Method::WebrtctransportConnect;
     type HandlerId = TransportId;
     type Response = WebRtcTransportConnectResponse;
@@ -1360,7 +1342,7 @@ pub(crate) struct PipeTransportConnectRequest {
     pub(crate) srtp_parameters: Option<SrtpParameters>,
 }
 
-impl RequestFbs for PipeTransportConnectRequest {
+impl Request for PipeTransportConnectRequest {
     const METHOD: request::Method = request::Method::PipetransportConnect;
     type HandlerId = TransportId;
     type Response = PipeTransportConnectResponse;
@@ -1415,7 +1397,7 @@ pub(crate) struct TransportConnectPlainRequest {
     pub(crate) srtp_parameters: Option<SrtpParameters>,
 }
 
-impl RequestFbs for TransportConnectPlainRequest {
+impl Request for TransportConnectPlainRequest {
     const METHOD: request::Method = request::Method::PlaintransportConnect;
     type HandlerId = TransportId;
     type Response = PlainTransportConnectResponse;
@@ -1468,7 +1450,7 @@ pub(crate) struct TransportSetMaxIncomingBitrateRequest {
     pub(crate) bitrate: u32,
 }
 
-impl RequestFbs for TransportSetMaxIncomingBitrateRequest {
+impl Request for TransportSetMaxIncomingBitrateRequest {
     const METHOD: request::Method = request::Method::TransportSetMaxIncomingBitrate;
     type HandlerId = TransportId;
     type Response = ();
@@ -1504,7 +1486,7 @@ pub(crate) struct TransportSetMaxOutgoingBitrateRequest {
     pub(crate) bitrate: u32,
 }
 
-impl RequestFbs for TransportSetMaxOutgoingBitrateRequest {
+impl Request for TransportSetMaxOutgoingBitrateRequest {
     const METHOD: request::Method = request::Method::TransportSetMaxOutgoingBitrate;
     type HandlerId = TransportId;
     type Response = ();
@@ -1540,7 +1522,7 @@ pub(crate) struct TransportSetMinOutgoingBitrateRequest {
     pub(crate) bitrate: u32,
 }
 
-impl RequestFbs for TransportSetMinOutgoingBitrateRequest {
+impl Request for TransportSetMinOutgoingBitrateRequest {
     const METHOD: request::Method = request::Method::TransportSetMinOutgoingBitrate;
     type HandlerId = TransportId;
     type Response = ();
@@ -1574,7 +1556,7 @@ impl RequestFbs for TransportSetMinOutgoingBitrateRequest {
 #[derive(Debug)]
 pub(crate) struct TransportRestartIceRequest {}
 
-impl RequestFbs for TransportRestartIceRequest {
+impl Request for TransportRestartIceRequest {
     const METHOD: request::Method = request::Method::TransportRestartIce;
     type HandlerId = TransportId;
     type Response = IceParameters;
@@ -1624,7 +1606,7 @@ pub(crate) struct TransportProduceResponse {
     pub(crate) r#type: ProducerType,
 }
 
-impl RequestFbs for TransportProduceRequest {
+impl Request for TransportProduceRequest {
     const METHOD: request::Method = request::Method::TransportProduce;
     type HandlerId = TransportId;
     type Response = TransportProduceResponse;
@@ -1688,7 +1670,7 @@ pub(crate) struct TransportConsumeResponse {
     pub(crate) preferred_layers: Option<ConsumerLayers>,
 }
 
-impl RequestFbs for TransportConsumeRequest {
+impl Request for TransportConsumeRequest {
     const METHOD: request::Method = request::Method::TransportConsume;
     type HandlerId = TransportId;
     type Response = TransportConsumeResponse;
@@ -1762,7 +1744,7 @@ pub(crate) struct TransportProduceDataResponse {
     pub(crate) paused: bool,
 }
 
-impl RequestFbs for TransportProduceDataRequest {
+impl Request for TransportProduceDataRequest {
     const METHOD: request::Method = request::Method::TransportProduceData;
     type HandlerId = TransportId;
     type Response = TransportProduceDataResponse;
@@ -1847,7 +1829,7 @@ pub(crate) struct TransportConsumeDataResponse {
     pub(crate) data_producer_paused: bool,
 }
 
-impl RequestFbs for TransportConsumeDataRequest {
+impl Request for TransportConsumeDataRequest {
     const METHOD: request::Method = request::Method::TransportConsumeData;
     type HandlerId = TransportId;
     type Response = TransportConsumeDataResponse;
@@ -1920,7 +1902,7 @@ pub(crate) struct TransportEnableTraceEventRequest {
     pub(crate) types: Vec<TransportTraceEventType>,
 }
 
-impl RequestFbs for TransportEnableTraceEventRequest {
+impl Request for TransportEnableTraceEventRequest {
     const METHOD: request::Method = request::Method::TransportEnableTraceEvent;
     type HandlerId = TransportId;
     type Response = ();
@@ -1967,7 +1949,7 @@ pub(crate) struct TransportSendRtcpNotification {
     pub(crate) rtcp_packet: Vec<u8>,
 }
 
-impl NotificationFbs for TransportSendRtcpNotification {
+impl Notification for TransportSendRtcpNotification {
     const EVENT: notification::Event = notification::Event::TransportSendRtcp;
     type HandlerId = TransportId;
 
@@ -1996,7 +1978,7 @@ pub(crate) struct ProducerCloseRequest {
     pub(crate) producer_id: ProducerId,
 }
 
-impl RequestFbs for ProducerCloseRequest {
+impl Request for ProducerCloseRequest {
     const METHOD: request::Method = request::Method::TransportCloseProducer;
     type HandlerId = TransportId;
     type Response = ();
@@ -2031,7 +2013,7 @@ impl RequestFbs for ProducerCloseRequest {
 #[derive(Debug)]
 pub(crate) struct ProducerDumpRequest {}
 
-impl RequestFbs for ProducerDumpRequest {
+impl Request for ProducerDumpRequest {
     const METHOD: request::Method = request::Method::ProducerDump;
     type HandlerId = ProducerId;
     type Response = response::Body;
@@ -2067,7 +2049,7 @@ impl RequestFbs for ProducerDumpRequest {
 #[derive(Debug)]
 pub(crate) struct ProducerGetStatsRequest {}
 
-impl RequestFbs for ProducerGetStatsRequest {
+impl Request for ProducerGetStatsRequest {
     const METHOD: request::Method = request::Method::ProducerGetStats;
     type HandlerId = ProducerId;
     type Response = response::Body;
@@ -2103,7 +2085,7 @@ impl RequestFbs for ProducerGetStatsRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct ProducerPauseRequest {}
 
-impl RequestFbs for ProducerPauseRequest {
+impl Request for ProducerPauseRequest {
     const METHOD: request::Method = request::Method::ProducerPause;
     type HandlerId = ProducerId;
     type Response = ();
@@ -2134,7 +2116,7 @@ impl RequestFbs for ProducerPauseRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct ProducerResumeRequest {}
 
-impl RequestFbs for ProducerResumeRequest {
+impl Request for ProducerResumeRequest {
     const METHOD: request::Method = request::Method::ProducerResume;
     type HandlerId = ProducerId;
     type Response = ();
@@ -2167,7 +2149,7 @@ pub(crate) struct ProducerEnableTraceEventRequest {
     pub(crate) types: Vec<ProducerTraceEventType>,
 }
 
-impl RequestFbs for ProducerEnableTraceEventRequest {
+impl Request for ProducerEnableTraceEventRequest {
     const METHOD: request::Method = request::Method::ProducerEnableTraceEvent;
     type HandlerId = ProducerId;
     type Response = ();
@@ -2214,7 +2196,7 @@ pub(crate) struct ProducerSendNotification {
     pub(crate) rtp_packet: Vec<u8>,
 }
 
-impl NotificationFbs for ProducerSendNotification {
+impl Notification for ProducerSendNotification {
     const EVENT: notification::Event = notification::Event::ProducerSend;
     type HandlerId = ProducerId;
 
@@ -2243,7 +2225,7 @@ pub(crate) struct ConsumerCloseRequest {
     pub(crate) consumer_id: ConsumerId,
 }
 
-impl RequestFbs for ConsumerCloseRequest {
+impl Request for ConsumerCloseRequest {
     const METHOD: request::Method = request::Method::TransportCloseConsumer;
     type HandlerId = TransportId;
     type Response = ();
@@ -2278,7 +2260,7 @@ impl RequestFbs for ConsumerCloseRequest {
 #[derive(Debug)]
 pub(crate) struct ConsumerDumpRequest {}
 
-impl RequestFbs for ConsumerDumpRequest {
+impl Request for ConsumerDumpRequest {
     const METHOD: request::Method = request::Method::ConsumerDump;
     type HandlerId = ConsumerId;
     type Response = response::Body;
@@ -2314,7 +2296,7 @@ impl RequestFbs for ConsumerDumpRequest {
 #[derive(Debug)]
 pub(crate) struct ConsumerGetStatsRequest {}
 
-impl RequestFbs for ConsumerGetStatsRequest {
+impl Request for ConsumerGetStatsRequest {
     const METHOD: request::Method = request::Method::ConsumerGetStats;
     type HandlerId = ConsumerId;
     type Response = response::Body;
@@ -2350,7 +2332,7 @@ impl RequestFbs for ConsumerGetStatsRequest {
 #[derive(Debug)]
 pub(crate) struct ConsumerPauseRequest {}
 
-impl RequestFbs for ConsumerPauseRequest {
+impl Request for ConsumerPauseRequest {
     const METHOD: request::Method = request::Method::ConsumerPause;
     type HandlerId = ConsumerId;
     type Response = ();
@@ -2381,7 +2363,7 @@ impl RequestFbs for ConsumerPauseRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct ConsumerResumeRequest {}
 
-impl RequestFbs for ConsumerResumeRequest {
+impl Request for ConsumerResumeRequest {
     const METHOD: request::Method = request::Method::ConsumerResume;
     type HandlerId = ConsumerId;
     type Response = ();
@@ -2414,7 +2396,7 @@ pub(crate) struct ConsumerSetPreferredLayersRequest {
     pub(crate) data: ConsumerLayers,
 }
 
-impl RequestFbs for ConsumerSetPreferredLayersRequest {
+impl Request for ConsumerSetPreferredLayersRequest {
     const METHOD: request::Method = request::Method::ConsumerSetPreferredLayers;
     type HandlerId = ConsumerId;
     type Response = Option<ConsumerLayers>;
@@ -2466,7 +2448,7 @@ pub(crate) struct ConsumerSetPriorityResponse {
     pub(crate) priority: u8,
 }
 
-impl RequestFbs for ConsumerSetPriorityRequest {
+impl Request for ConsumerSetPriorityRequest {
     const METHOD: request::Method = request::Method::ConsumerSetPriority;
     type HandlerId = ConsumerId;
     type Response = ConsumerSetPriorityResponse;
@@ -2506,7 +2488,7 @@ impl RequestFbs for ConsumerSetPriorityRequest {
 #[derive(Debug)]
 pub(crate) struct ConsumerRequestKeyFrameRequest {}
 
-impl RequestFbs for ConsumerRequestKeyFrameRequest {
+impl Request for ConsumerRequestKeyFrameRequest {
     const METHOD: request::Method = request::Method::ConsumerRequestKeyFrame;
     type HandlerId = ConsumerId;
     type Response = ();
@@ -2538,7 +2520,7 @@ pub(crate) struct ConsumerEnableTraceEventRequest {
     pub(crate) types: Vec<ConsumerTraceEventType>,
 }
 
-impl RequestFbs for ConsumerEnableTraceEventRequest {
+impl Request for ConsumerEnableTraceEventRequest {
     const METHOD: request::Method = request::Method::ConsumerEnableTraceEvent;
     type HandlerId = ConsumerId;
     type Response = ();
@@ -2584,7 +2566,7 @@ pub(crate) struct DataProducerCloseRequest {
     pub(crate) data_producer_id: DataProducerId,
 }
 
-impl RequestFbs for DataProducerCloseRequest {
+impl Request for DataProducerCloseRequest {
     const METHOD: request::Method = request::Method::TransportCloseDataproducer;
     type HandlerId = TransportId;
     type Response = ();
@@ -2621,7 +2603,7 @@ impl RequestFbs for DataProducerCloseRequest {
 #[derive(Debug)]
 pub(crate) struct DataProducerDumpRequest {}
 
-impl RequestFbs for DataProducerDumpRequest {
+impl Request for DataProducerDumpRequest {
     const METHOD: request::Method = request::Method::DataproducerDump;
     type HandlerId = DataProducerId;
     type Response = response::Body;
@@ -2657,7 +2639,7 @@ impl RequestFbs for DataProducerDumpRequest {
 #[derive(Debug)]
 pub(crate) struct DataProducerGetStatsRequest {}
 
-impl RequestFbs for DataProducerGetStatsRequest {
+impl Request for DataProducerGetStatsRequest {
     const METHOD: request::Method = request::Method::DataproducerGetStats;
     type HandlerId = DataProducerId;
     type Response = response::Body;
@@ -2693,7 +2675,7 @@ impl RequestFbs for DataProducerGetStatsRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct DataProducerPauseRequest {}
 
-impl RequestFbs for DataProducerPauseRequest {
+impl Request for DataProducerPauseRequest {
     const METHOD: request::Method = request::Method::DataproducerPause;
     type HandlerId = DataProducerId;
     type Response = ();
@@ -2724,7 +2706,7 @@ impl RequestFbs for DataProducerPauseRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct DataProducerResumeRequest {}
 
-impl RequestFbs for DataProducerResumeRequest {
+impl Request for DataProducerResumeRequest {
     const METHOD: request::Method = request::Method::DataproducerResume;
     type HandlerId = DataProducerId;
     type Response = ();
@@ -2758,7 +2740,7 @@ pub(crate) struct DataProducerSendNotification {
     pub(crate) payload: Vec<u8>,
 }
 
-impl NotificationFbs for DataProducerSendNotification {
+impl Notification for DataProducerSendNotification {
     const EVENT: notification::Event = notification::Event::DataproducerSend;
     type HandlerId = DataProducerId;
 
@@ -2798,7 +2780,7 @@ pub(crate) struct DataConsumerCloseRequest {
     pub(crate) data_consumer_id: DataConsumerId,
 }
 
-impl RequestFbs for DataConsumerCloseRequest {
+impl Request for DataConsumerCloseRequest {
     const METHOD: request::Method = request::Method::TransportCloseDataconsumer;
     type HandlerId = TransportId;
     type Response = ();
@@ -2835,7 +2817,7 @@ impl RequestFbs for DataConsumerCloseRequest {
 #[derive(Debug)]
 pub(crate) struct DataConsumerDumpRequest {}
 
-impl RequestFbs for DataConsumerDumpRequest {
+impl Request for DataConsumerDumpRequest {
     const METHOD: request::Method = request::Method::DataconsumerDump;
     type HandlerId = DataConsumerId;
     type Response = response::Body;
@@ -2871,7 +2853,7 @@ impl RequestFbs for DataConsumerDumpRequest {
 #[derive(Debug)]
 pub(crate) struct DataConsumerGetStatsRequest {}
 
-impl RequestFbs for DataConsumerGetStatsRequest {
+impl Request for DataConsumerGetStatsRequest {
     const METHOD: request::Method = request::Method::DataconsumerGetStats;
     type HandlerId = DataConsumerId;
     type Response = response::Body;
@@ -2907,7 +2889,7 @@ impl RequestFbs for DataConsumerGetStatsRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct DataConsumerPauseRequest {}
 
-impl RequestFbs for DataConsumerPauseRequest {
+impl Request for DataConsumerPauseRequest {
     const METHOD: request::Method = request::Method::DataconsumerPause;
     type HandlerId = DataConsumerId;
     type Response = ();
@@ -2938,7 +2920,7 @@ impl RequestFbs for DataConsumerPauseRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct DataConsumerResumeRequest {}
 
-impl RequestFbs for DataConsumerResumeRequest {
+impl Request for DataConsumerResumeRequest {
     const METHOD: request::Method = request::Method::DataconsumerResume;
     type HandlerId = DataConsumerId;
     type Response = ();
@@ -2974,7 +2956,7 @@ pub(crate) struct DataConsumerGetBufferedAmountResponse {
     pub(crate) buffered_amount: u32,
 }
 
-impl RequestFbs for DataConsumerGetBufferedAmountRequest {
+impl Request for DataConsumerGetBufferedAmountRequest {
     const METHOD: request::Method = request::Method::DataconsumerGetBufferedAmount;
     type HandlerId = DataConsumerId;
     type Response = DataConsumerGetBufferedAmountResponse;
@@ -3013,7 +2995,7 @@ pub(crate) struct DataConsumerSetBufferedAmountLowThresholdRequest {
     pub(crate) threshold: u32,
 }
 
-impl RequestFbs for DataConsumerSetBufferedAmountLowThresholdRequest {
+impl Request for DataConsumerSetBufferedAmountLowThresholdRequest {
     const METHOD: request::Method = request::Method::DataconsumerSetBufferedAmountLowThreshold;
     type HandlerId = DataConsumerId;
     type Response = ();
@@ -3058,7 +3040,7 @@ pub(crate) struct DataConsumerSendRequest {
     pub(crate) payload: Vec<u8>,
 }
 
-impl RequestFbs for DataConsumerSendRequest {
+impl Request for DataConsumerSendRequest {
     const METHOD: request::Method = request::Method::DataconsumerSend;
     type HandlerId = DataConsumerId;
     type Response = ();
@@ -3102,7 +3084,7 @@ pub(crate) struct RtpObserverCloseRequest {
     pub(crate) rtp_observer_id: RtpObserverId,
 }
 
-impl RequestFbs for RtpObserverCloseRequest {
+impl Request for RtpObserverCloseRequest {
     const METHOD: request::Method = request::Method::RouterCloseRtpobserver;
     type HandlerId = RouterId;
     type Response = ();
@@ -3137,7 +3119,7 @@ impl RequestFbs for RtpObserverCloseRequest {
 #[derive(Debug)]
 pub(crate) struct RtpObserverPauseRequest {}
 
-impl RequestFbs for RtpObserverPauseRequest {
+impl Request for RtpObserverPauseRequest {
     const METHOD: request::Method = request::Method::RtpobserverPause;
     type HandlerId = RtpObserverId;
     type Response = ();
@@ -3167,7 +3149,7 @@ impl RequestFbs for RtpObserverPauseRequest {
 #[derive(Debug)]
 pub(crate) struct RtpObserverResumeRequest {}
 
-impl RequestFbs for RtpObserverResumeRequest {
+impl Request for RtpObserverResumeRequest {
     const METHOD: request::Method = request::Method::RtpobserverResume;
     type HandlerId = RtpObserverId;
     type Response = ();
@@ -3200,7 +3182,7 @@ pub(crate) struct RtpObserverAddProducerRequest {
     pub(crate) producer_id: ProducerId,
 }
 
-impl RequestFbs for RtpObserverAddProducerRequest {
+impl Request for RtpObserverAddProducerRequest {
     const METHOD: request::Method = request::Method::RtpobserverAddProducer;
     type HandlerId = RtpObserverId;
     type Response = ();
@@ -3239,7 +3221,7 @@ pub(crate) struct RtpObserverRemoveProducerRequest {
     pub(crate) producer_id: ProducerId,
 }
 
-impl RequestFbs for RtpObserverRemoveProducerRequest {
+impl Request for RtpObserverRemoveProducerRequest {
     const METHOD: request::Method = request::Method::RtpobserverRemoveProducer;
     type HandlerId = RtpObserverId;
     type Response = ();

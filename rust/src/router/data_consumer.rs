@@ -338,7 +338,7 @@ impl Inner {
                 self.executor
                     .spawn(async move {
                         if weak_data_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request_fbs(transport_id, request).await {
+                            if let Err(error) = channel.request(transport_id, request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
@@ -470,7 +470,7 @@ impl DataConsumer {
             let data_producer_paused = Arc::clone(&data_producer_paused);
             let inner_weak = Arc::clone(&inner_weak);
 
-            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
@@ -658,7 +658,7 @@ impl DataConsumer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), DataConsumerDumpRequest {})
+            .request(self.id(), DataConsumerDumpRequest {})
             .await?;
 
         if let response::Body::DataConsumerDumpResponse(data) = response {
@@ -678,7 +678,7 @@ impl DataConsumer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), DataConsumerGetStatsRequest {})
+            .request(self.id(), DataConsumerGetStatsRequest {})
             .await?;
 
         if let response::Body::DataConsumerGetStatsResponse(data) = response {
@@ -694,7 +694,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), DataConsumerPauseRequest {})
+            .request(self.id(), DataConsumerPauseRequest {})
             .await?;
 
         let mut paused = self.inner().paused.lock();
@@ -714,7 +714,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), DataConsumerResumeRequest {})
+            .request(self.id(), DataConsumerResumeRequest {})
             .await?;
 
         let mut paused = self.inner().paused.lock();
@@ -741,7 +741,7 @@ impl DataConsumer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), DataConsumerGetBufferedAmountRequest {})
+            .request(self.id(), DataConsumerGetBufferedAmountRequest {})
             .await?;
 
         Ok(response.buffered_amount)
@@ -760,7 +760,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request_fbs(
+            .request(
                 self.id(),
                 DataConsumerSetBufferedAmountLowThresholdRequest { threshold },
             )
@@ -888,7 +888,7 @@ impl DirectDataConsumer {
 
         self.inner
             .channel
-            .request_fbs(
+            .request(
                 self.inner.id,
                 DataConsumerSendRequest {
                     ppid,

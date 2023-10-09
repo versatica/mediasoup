@@ -209,7 +209,7 @@ impl Inner {
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs(transport_id, request).await {
+                        if let Err(error) = channel.request(transport_id, request).await {
                             error!("data producer closing failed on drop: {}", error);
                         }
                     })
@@ -420,7 +420,7 @@ impl DataProducer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), DataProducerDumpRequest {})
+            .request(self.id(), DataProducerDumpRequest {})
             .await?;
 
         if let response::Body::DataProducerDumpResponse(data) = response {
@@ -440,7 +440,7 @@ impl DataProducer {
         let response = self
             .inner()
             .channel
-            .request_fbs(self.id(), DataProducerGetStatsRequest {})
+            .request(self.id(), DataProducerGetStatsRequest {})
             .await?;
 
         if let response::Body::DataProducerGetStatsResponse(data) = response {
@@ -458,7 +458,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), DataProducerPauseRequest {})
+            .request(self.id(), DataProducerPauseRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(true, Ordering::SeqCst);
@@ -478,7 +478,7 @@ impl DataProducer {
 
         self.inner()
             .channel
-            .request_fbs(self.id(), DataProducerResumeRequest {})
+            .request(self.id(), DataProducerResumeRequest {})
             .await?;
 
         let was_paused = self.inner().paused.swap(false, Ordering::SeqCst);
@@ -546,7 +546,7 @@ impl DirectDataProducer {
     pub fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
         let (ppid, _payload) = message.into_ppid_and_payload();
 
-        self.inner.channel.notify_fbs(
+        self.inner.channel.notify(
             self.inner.id,
             DataProducerSendNotification {
                 ppid,

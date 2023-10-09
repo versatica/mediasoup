@@ -21,11 +21,11 @@ impl<F> Default for EventHandlersList<F> {
 }
 
 #[derive(Clone)]
-pub(super) struct FBSEventHandlers<F> {
+pub(super) struct EventHandlers<F> {
     handlers: Arc<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>,
 }
 
-impl<F: Sized + Send + Sync + 'static> FBSEventHandlers<F> {
+impl<F: Sized + Send + Sync + 'static> EventHandlers<F> {
     pub(super) fn new() -> Self {
         let handlers = Arc::<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>::default();
         Self { handlers }
@@ -73,14 +73,14 @@ impl<F: Sized + Send + Sync + 'static> FBSEventHandlers<F> {
         })
     }
 
-    pub(super) fn downgrade(&self) -> FBSWeakEventHandlers<F> {
-        FBSWeakEventHandlers {
+    pub(super) fn downgrade(&self) -> WeakEventHandlers<F> {
+        WeakEventHandlers {
             handlers: Arc::downgrade(&self.handlers),
         }
     }
 }
 
-impl FBSEventHandlers<Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Sync + 'static>> {
+impl EventHandlers<Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Sync + 'static>> {
     pub(super) fn call_callbacks_with_single_value(
         &self,
         target_id: &SubscriptionTarget,
@@ -96,15 +96,15 @@ impl FBSEventHandlers<Arc<dyn Fn(notification::NotificationRef<'_>) + Send + Syn
 }
 
 #[derive(Clone)]
-pub(super) struct FBSWeakEventHandlers<F> {
+pub(super) struct WeakEventHandlers<F> {
     handlers: Weak<Mutex<HashedMap<SubscriptionTarget, EventHandlersList<F>>>>,
 }
 
-impl<F> FBSWeakEventHandlers<F> {
-    pub(super) fn upgrade(&self) -> Option<FBSEventHandlers<F>> {
+impl<F> WeakEventHandlers<F> {
+    pub(super) fn upgrade(&self) -> Option<EventHandlers<F>> {
         self.handlers
             .upgrade()
-            .map(|handlers| FBSEventHandlers { handlers })
+            .map(|handlers| EventHandlers { handlers })
     }
 }
 

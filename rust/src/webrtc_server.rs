@@ -184,7 +184,7 @@ impl Inner {
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs("", request).await {
+                        if let Err(error) = channel.request("", request).await {
                             error!("WebRTC server closing failed on drop: {}", error);
                         }
                     })
@@ -286,7 +286,7 @@ impl WebRtcServer {
 
         self.inner
             .channel
-            .request_fbs(self.id(), WebRtcServerDumpRequest {})
+            .request(self.id(), WebRtcServerDumpRequest {})
             .await
     }
 

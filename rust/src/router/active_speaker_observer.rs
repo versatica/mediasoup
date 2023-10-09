@@ -138,7 +138,7 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request_fbs(router_id, request).await {
+                        if let Err(error) = channel.request(router_id, request).await {
                             error!("active speaker observer closing failed on drop: {}", error);
                         }
                     })
@@ -199,7 +199,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request_fbs(self.id(), RtpObserverPauseRequest {})
+            .request(self.id(), RtpObserverPauseRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(true, Ordering::SeqCst);
@@ -216,7 +216,7 @@ impl RtpObserver for ActiveSpeakerObserver {
 
         self.inner
             .channel
-            .request_fbs(self.id(), RtpObserverResumeRequest {})
+            .request(self.id(), RtpObserverResumeRequest {})
             .await?;
 
         let was_paused = self.inner.paused.swap(false, Ordering::SeqCst);
@@ -240,7 +240,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request_fbs(self.id(), RtpObserverAddProducerRequest { producer_id })
+            .request(self.id(), RtpObserverAddProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.add_producer.call_simple(&producer);
@@ -257,7 +257,7 @@ impl RtpObserver for ActiveSpeakerObserver {
         };
         self.inner
             .channel
-            .request_fbs(self.id(), RtpObserverRemoveProducerRequest { producer_id })
+            .request(self.id(), RtpObserverRemoveProducerRequest { producer_id })
             .await?;
 
         self.inner.handlers.remove_producer.call_simple(&producer);
@@ -317,7 +317,7 @@ impl ActiveSpeakerObserver {
             let router = router.clone();
             let handlers = Arc::clone(&handlers);
 
-            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+            channel.subscribe_to_notifications(id.into(), move |notification| {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::DominantSpeaker(dominant_speaker) => {
