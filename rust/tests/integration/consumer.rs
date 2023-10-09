@@ -1371,7 +1371,6 @@ fn set_unset_priority_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn producer_pause_resume_events() {
     future::block_on(async move {
         let (_executor_guard, _worker, _router, transport_1, transport_2) = init().await;

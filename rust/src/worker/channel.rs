@@ -18,6 +18,7 @@ use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Weak};
 use thiserror::Error;
+use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -66,10 +67,17 @@ impl Drop for BufferMessagesGuard {
         let mut buffered_notifications_for = self.buffered_notifications_for.lock();
         if let Some(notifications) = buffered_notifications_for.remove(&self.target_id) {
             if let Some(event_handlers) = self.event_handlers_weak.upgrade() {
-                for notification in notifications {
-                    let notification =
-                        notification::NotificationRef::read_as_root(&notification).unwrap();
-                    event_handlers.call_callbacks_with_single_value(&self.target_id, notification);
+                for bytes in notifications {
+                    let message_ref = message::MessageRef::read_as_root(&bytes).unwrap();
+
+                    let message::BodyRef::Notification(notification_ref) =
+                        message_ref.data().unwrap()
+                    else {
+                        panic!("Wrong notification stored: {message_ref:?}");
+                    };
+
+                    event_handlers
+                        .call_callbacks_with_single_value(&self.target_id, notification_ref);
                 }
             }
         }
@@ -233,16 +241,20 @@ impl Channel {
 
                 match deserialize_message(message) {
                     ChannelReceiveMessage::Notification(notification) => {
-                        let target_id: SubscriptionTarget = SubscriptionTarget::String(
-                            notification.handler_id().unwrap().to_string(),
-                        );
+                        let target_id = notification.handler_id().unwrap();
+                        // Target id can be either the worker PID or a UUID.
+                        let target_id = match target_id.parse::<u64>() {
+                            Ok(_) => SubscriptionTarget::String(target_id.to_string()),
+                            Err(_) => SubscriptionTarget::Uuid(Uuid::parse_str(target_id).unwrap()),
+                        };
 
                         if !non_buffered_notifications.contains(&target_id) {
                             let mut buffer_notifications_for = buffered_notifications_for.lock();
                             // Check if we need to buffer notifications for this
                             // target_id
                             if let Some(list) = buffer_notifications_for.get_mut(&target_id) {
-                                list.push(Vec::from(message));
+                                // Store the whole message removing the size prefix.
+                                list.push(Vec::from(&message[4..]));
                                 return;
                             }
 

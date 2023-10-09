@@ -122,7 +122,6 @@ async fn init() -> (Router, Router, WebRtcTransport, WebRtcTransport) {
 }
 
 #[test]
-#[ignore]
 fn producer_close_is_transmitted_to_pipe_consumer() {
     future::block_on(async move {
         let (router1, router2, transport1, transport2) = init().await;
@@ -162,7 +161,6 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
 }
 
 #[test]
-#[ignore]
 fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
     future::block_on(async move {
         let (router1, router2, transport1, transport2) = init().await;
