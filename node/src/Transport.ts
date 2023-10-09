@@ -16,12 +16,14 @@ import {
 	DataProducer,
 	DataProducerOptions,
 	DataProducerType,
+	dataProducerTypeToFbs,
 	parseDataProducerDumpResponse
 } from './DataProducer';
 import {
 	DataConsumer,
 	DataConsumerOptions,
 	DataConsumerType,
+	dataConsumerTypeToFbs,
 	parseDataConsumerDumpResponse
 } from './DataConsumer';
 import {
@@ -1193,11 +1195,12 @@ export class Transport
 				},
 				data :
 				{
-					dataProducerId       : dump.dataProducerId,
-					type                 : dump.type,
-					sctpStreamParameters : dump.sctpStreamParameters,
-					label                : dump.label,
-					protocol             : dump.protocol
+					dataProducerId             : dump.dataProducerId,
+					type                       : dump.type,
+					sctpStreamParameters       : dump.sctpStreamParameters,
+					label                      : dump.label,
+					protocol                   : dump.protocol,
+					bufferedAmountLowThreshold : dump.bufferedAmountLowThreshold
 				},
 				channel            : this.channel,
 				paused             : dump.paused,
@@ -1321,7 +1324,7 @@ function transportTraceEventTypeToFbs(eventType: TransportTraceEventType)
 		case 'bwe':
 			return FbsTransport.TraceEventType.BWE;
 		default:
-			throw new TypeError(`invalid transport event type: ${eventType}`);
+			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
 	}
 }
 
@@ -1687,7 +1690,6 @@ function createProduceDataRequest({
 }): number
 {
 	const dataProducerIdOffset = builder.createString(dataProducerId);
-	const typeOffset = builder.createString(type);
 	const labelOffset = builder.createString(label);
 	const protocolOffset = builder.createString(protocol);
 
@@ -1702,7 +1704,7 @@ function createProduceDataRequest({
 
 	FbsTransport.ProduceDataRequest.startProduceDataRequest(builder);
 	FbsTransport.ProduceDataRequest.addDataProducerId(builder, dataProducerIdOffset);
-	FbsTransport.ProduceDataRequest.addType(builder, typeOffset);
+	FbsTransport.ProduceDataRequest.addType(builder, dataProducerTypeToFbs(type));
 
 	if (sctpStreamParametersOffset)
 	{
@@ -1742,7 +1744,6 @@ function createConsumeDataRequest({
 {
 	const dataConsumerIdOffset = builder.createString(dataConsumerId);
 	const dataProducerIdOffset = builder.createString(dataProducerId);
-	const typeOffset = builder.createString(type);
 	const labelOffset = builder.createString(label);
 	const protocolOffset = builder.createString(protocol);
 
@@ -1762,7 +1763,7 @@ function createConsumeDataRequest({
 	FbsTransport.ConsumeDataRequest.startConsumeDataRequest(builder);
 	FbsTransport.ConsumeDataRequest.addDataConsumerId(builder, dataConsumerIdOffset);
 	FbsTransport.ConsumeDataRequest.addDataProducerId(builder, dataProducerIdOffset);
-	FbsTransport.ConsumeDataRequest.addType(builder, typeOffset);
+	FbsTransport.ConsumeDataRequest.addType(builder, dataConsumerTypeToFbs(type));
 
 	if (sctpStreamParametersOffset)
 	{

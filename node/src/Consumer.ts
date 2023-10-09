@@ -1012,7 +1012,7 @@ function consumerTraceEventTypeToFbs(eventType: ConsumerTraceEventType)
 		case 'rtp':
 			return FbsConsumer.TraceEventType.RTP;
 		default:
-			throw new TypeError(`invalid eventType: ${eventType}`);
+			throw new TypeError(`invalid ConsumerTraceEventType: ${eventType}`);
 	}
 }
 
@@ -1032,7 +1032,7 @@ function consumerTraceEventTypeFromFbs(traceType: FbsConsumer.TraceEventType)
 		case FbsConsumer.TraceEventType.RTP:
 			return 'rtp';
 		default:
-			throw new TypeError(`invalid TraceType: ${traceType}`);
+			throw new TypeError(`invalid FbsConsumer.TraceEventType: ${traceType}`);
 	}
 }
 

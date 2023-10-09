@@ -2,9 +2,14 @@ include "sctpParameters.fbs";
 
 namespace FBS.DataProducer;
 
+enum Type: uint8 {
+    SCTP,
+    DIRECT
+}
+
 table DumpResponse {
     id: string (required);
-    type: string (required);
+    type: Type;
     sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
     label: string (required);
     protocol: string (required);
@@ -34,7 +39,7 @@ union Data {
 }
 
 table SendNotification {
-    ppid: uint8;
+    ppid: uint32;
     data: Data (required);
     subchannels: [uint16];
     required_subchannel: uint16 = null;

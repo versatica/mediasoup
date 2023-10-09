@@ -1068,8 +1068,6 @@ impl<'a> WebRtcMessage<'a> {
     // | WebRTC Binary Empty                | 57        |
     // +------------------------------------+-----------+
 
-    /*
-     * TODO.
     pub(crate) fn new(ppid: u32, payload: Cow<'a, [u8]>) -> Result<Self, u32> {
         match ppid {
             51 => Ok(WebRtcMessage::String(
@@ -1081,7 +1079,6 @@ impl<'a> WebRtcMessage<'a> {
             ppid => Err(ppid),
         }
     }
-    */
 
     pub(crate) fn into_ppid_and_payload(self) -> (u32, Cow<'a, [u8]>) {
         match self {

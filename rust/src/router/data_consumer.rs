@@ -3,6 +3,7 @@ mod tests;
 
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
+use crate::fbs::{data_consumer, data_producer, notification, response};
 use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
     DataConsumerGetStatsRequest, DataConsumerPauseRequest, DataConsumerResumeRequest,
@@ -11,12 +12,14 @@ use crate::messages::{
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
-use crate::worker::{Channel, RequestError, SubscriptionHandler};
+use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
+use std::error::Error;
 // TODO.
 // use std::borrow::Cow;
 use std::fmt;
@@ -148,6 +151,28 @@ pub struct DataConsumerDump {
     pub data_producer_paused: bool,
 }
 
+impl DataConsumerDump {
+    pub(crate) fn from_fbs(dump: data_consumer::DumpResponse) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            id: dump.id.parse()?,
+            data_producer_id: dump.data_producer_id.parse()?,
+            r#type: if dump.type_ == data_producer::Type::Sctp {
+                DataConsumerType::Sctp
+            } else {
+                DataConsumerType::Direct
+            },
+            label: dump.label,
+            protocol: dump.protocol,
+            sctp_stream_parameters: dump
+                .sctp_stream_parameters
+                .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
+            buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
+            paused: dump.paused,
+            data_producer_paused: dump.data_producer_paused,
+        })
+    }
+}
+
 /// RTC statistics of the data consumer.
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -158,9 +183,22 @@ pub struct DataConsumerStat {
     pub timestamp: u64,
     pub label: String,
     pub protocol: String,
-    pub messages_sent: usize,
-    pub bytes_sent: usize,
+    pub messages_sent: u64,
+    pub bytes_sent: u64,
     pub buffered_amount: u32,
+}
+
+impl DataConsumerStat {
+    pub(crate) fn from_fbs(stats: &data_consumer::GetStatsResponse) -> Self {
+        Self {
+            timestamp: stats.timestamp,
+            label: stats.label.to_string(),
+            protocol: stats.protocol.to_string(),
+            messages_sent: stats.messages_sent,
+            bytes_sent: stats.bytes_sent,
+            buffered_amount: stats.buffered_amount,
+        }
+    }
 }
 
 /// Data consumer type.
@@ -180,12 +218,60 @@ enum Notification {
     DataProducerPause,
     DataProducerResume,
     SctpSendBufferFull,
-    // TODO.
-    // Message { ppid: u32 },
+    Message {
+        ppid: u32,
+        data: Vec<u8>,
+    },
     #[serde(rename_all = "camelCase")]
     BufferedAmountLow {
         buffered_amount: u32,
     },
+}
+
+impl Notification {
+    pub(crate) fn from_fbs(
+        notification: notification::NotificationRef<'_>,
+    ) -> Result<Self, NotificationParseError> {
+        match notification.event().unwrap() {
+            notification::Event::DataconsumerDataproducerClose => {
+                Ok(Notification::DataProducerClose)
+            }
+            notification::Event::DataconsumerDataproducerPause => {
+                Ok(Notification::DataProducerPause)
+            }
+            notification::Event::DataconsumerDataproducerResume => {
+                Ok(Notification::DataProducerResume)
+            }
+            notification::Event::DataconsumerSctpSendbufferFull => {
+                Ok(Notification::SctpSendBufferFull)
+            }
+            notification::Event::DataconsumerMessage => {
+                let Ok(Some(notification::BodyRef::DataConsumerMessageNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                Ok(Notification::Message {
+                    ppid: body.ppid().unwrap(),
+                    data: body.data().unwrap().into(),
+                })
+            }
+            notification::Event::DataconsumerBufferedAmountLow => {
+                let Ok(Some(notification::BodyRef::DataConsumerBufferedAmountLowNotification(
+                    body,
+                ))) = notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                Ok(Notification::BufferedAmountLow {
+                    buffered_amount: body.buffered_amount().unwrap(),
+                })
+            }
+            _ => Err(NotificationParseError::InvalidEvent),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -252,7 +338,7 @@ impl Inner {
                 self.executor
                     .spawn(async move {
                         if weak_data_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request(transport_id, request).await {
+                            if let Err(error) = channel.request_fbs(transport_id, request).await {
                                 error!("consumer closing failed on drop: {}", error);
                             }
                         }
@@ -384,8 +470,8 @@ impl DataConsumer {
             let data_producer_paused = Arc::clone(&data_producer_paused);
             let inner_weak = Arc::clone(&inner_weak);
 
-            channel.subscribe_to_notifications(id.into(), move |notification| {
-                match serde_json::from_slice::<Notification>(notification) {
+            channel.subscribe_to_fbs_notifications(id.into(), move |notification| {
+                match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
@@ -432,13 +518,11 @@ impl DataConsumer {
                         Notification::SctpSendBufferFull => {
                             handlers.sctp_send_buffer_full.call_simple();
                         }
-                        /*
-                         * TODO.
-                        Notification::Message { ppid } => {
-                            match WebRtcMessage::new(ppid, Cow::from(_notification)) {
+                        Notification::Message { ppid, data } => {
+                            match WebRtcMessage::new(ppid, Cow::from(data)) {
                                 Ok(message) => {
                                     handlers.message.call(|callback| {
-                                        callback(&_notification);
+                                        callback(&message);
                                     });
                                 }
                                 Err(ppid) => {
@@ -446,7 +530,6 @@ impl DataConsumer {
                                 }
                             }
                         }
-                        */
                         Notification::BufferedAmountLow { buffered_amount } => {
                             handlers.buffered_amount_low.call(|callback| {
                                 callback(buffered_amount);
@@ -572,10 +655,17 @@ impl DataConsumer {
     pub async fn dump(&self) -> Result<DataConsumerDump, RequestError> {
         debug!("dump()");
 
-        self.inner()
+        let response = self
+            .inner()
             .channel
-            .request(self.id(), DataConsumerDumpRequest {})
-            .await
+            .request_fbs(self.id(), DataConsumerDumpRequest {})
+            .await?;
+
+        if let response::Body::DataConsumerDumpResponse(data) = response {
+            Ok(DataConsumerDump::from_fbs(*data).expect("Error parsing dump response"))
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Returns current statistics of the data consumer.
@@ -585,10 +675,17 @@ impl DataConsumer {
     pub async fn get_stats(&self) -> Result<Vec<DataConsumerStat>, RequestError> {
         debug!("get_stats()");
 
-        self.inner()
+        let response = self
+            .inner()
             .channel
-            .request(self.id(), DataConsumerGetStatsRequest {})
-            .await
+            .request_fbs(self.id(), DataConsumerGetStatsRequest {})
+            .await?;
+
+        if let response::Body::DataConsumerGetStatsResponse(data) = response {
+            Ok(vec![DataConsumerStat::from_fbs(&data)])
+        } else {
+            panic!("Wrong message from worker");
+        }
     }
 
     /// Pauses the data consumer (no mossage is sent to the consuming endpoint).
@@ -597,7 +694,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request(self.id(), DataConsumerPauseRequest {})
+            .request_fbs(self.id(), DataConsumerPauseRequest {})
             .await?;
 
         let mut paused = self.inner().paused.lock();
@@ -617,7 +714,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request(self.id(), DataConsumerResumeRequest {})
+            .request_fbs(self.id(), DataConsumerResumeRequest {})
             .await?;
 
         let mut paused = self.inner().paused.lock();
@@ -644,7 +741,7 @@ impl DataConsumer {
         let response = self
             .inner()
             .channel
-            .request(self.id(), DataConsumerGetBufferedAmountRequest {})
+            .request_fbs(self.id(), DataConsumerGetBufferedAmountRequest {})
             .await?;
 
         Ok(response.buffered_amount)
@@ -663,7 +760,7 @@ impl DataConsumer {
 
         self.inner()
             .channel
-            .request(
+            .request_fbs(
                 self.id(),
                 DataConsumerSetBufferedAmountLowThresholdRequest { threshold },
             )
@@ -784,7 +881,6 @@ impl DataConsumer {
     }
 }
 
-// TODO: used because 'payload' is not being used yet.
 impl DirectDataConsumer {
     /// Sends direct messages from the Rust process.
     pub async fn send(&self, message: WebRtcMessage<'_>) -> Result<(), RequestError> {
@@ -792,7 +888,13 @@ impl DirectDataConsumer {
 
         self.inner
             .channel
-            .request(self.inner.id, DataConsumerSendRequest { ppid })
+            .request_fbs(
+                self.inner.id,
+                DataConsumerSendRequest {
+                    ppid,
+                    payload: _payload.into_owned(),
+                },
+            )
             .await
     }
 }

@@ -123,7 +123,6 @@ namespace RTC
 		size_t maxMessageSize{ 0u };
 		// Others.
 		Type type;
-		std::string typeString;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;

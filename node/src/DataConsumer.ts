@@ -8,6 +8,7 @@ import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
+import * as FbsDataProducer from './fbs/data-producer';
 import * as utils from './utils';
 
 export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
@@ -116,6 +117,7 @@ type DataConsumerData =
 	sctpStreamParameters?: SctpStreamParameters;
 	label: string;
 	protocol: string;
+	bufferedAmountLowThreshold: number;
 };
 
 const logger = new Logger('DataConsumer');
@@ -712,6 +714,30 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	}
 }
 
+export function dataConsumerTypeToFbs(type: DataConsumerType): FbsDataProducer.Type
+{
+	switch (type)
+	{
+		case 'sctp':
+			return FbsDataProducer.Type.SCTP;
+		case 'direct':
+			return FbsDataProducer.Type.DIRECT;
+		default:
+			throw new TypeError('invalid DataConsumerType: ${type}');
+	}
+}
+
+export function dataConsumerTypeFromFbs(type: FbsDataProducer.Type): DataConsumerType
+{
+	switch (type)
+	{
+		case FbsDataProducer.Type.SCTP:
+			return 'sctp';
+		case FbsDataProducer.Type.DIRECT:
+			return 'direct';
+	}
+}
+
 export function parseDataConsumerDumpResponse(
 	data: FbsDataConsumer.DumpResponse
 ): DataConsumerDump
@@ -719,15 +745,16 @@ export function parseDataConsumerDumpResponse(
 	return {
 		id                   : data.id()!,
 		dataProducerId       : data.dataProducerId()!,
-		type                 : data.type()! as DataConsumerType,
+		type                 : dataConsumerTypeFromFbs(data.type()),
 		sctpStreamParameters : data.sctpStreamParameters() !== null ?
 			parseSctpStreamParameters(data.sctpStreamParameters()!) :
 			undefined,
-		label              : data.label()!,
-		protocol           : data.protocol()!,
-		paused             : data.paused(),
-		dataProducerPaused : data.dataProducerPaused(),
-		subchannels        : utils.parseVector(data, 'subchannels')
+		label                      : data.label()!,
+		protocol                   : data.protocol()!,
+		bufferedAmountLowThreshold : data.bufferedAmountLowThreshold(),
+		paused                     : data.paused(),
+		dataProducerPaused         : data.dataProducerPaused(),
+		subchannels                : utils.parseVector(data, 'subchannels')
 	};
 }
 

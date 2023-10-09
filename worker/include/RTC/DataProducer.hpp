@@ -93,7 +93,6 @@ namespace RTC
 		RTC::DataProducer::Listener* listener{ nullptr };
 		// Others.
 		Type type;
-		std::string typeString;
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;

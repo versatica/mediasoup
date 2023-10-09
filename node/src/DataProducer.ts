@@ -478,13 +478,37 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	}
 }
 
+export function dataProducerTypeToFbs(type: DataProducerType): FbsDataProducer.Type
+{
+	switch (type)
+	{
+		case 'sctp':
+			return FbsDataProducer.Type.SCTP;
+		case 'direct':
+			return FbsDataProducer.Type.DIRECT;
+		default:
+			throw new TypeError('invalid DataConsumerType: ${type}');
+	}
+}
+
+export function dataProducerTypeFromFbs(type: FbsDataProducer.Type): DataProducerType
+{
+	switch (type)
+	{
+		case FbsDataProducer.Type.SCTP:
+			return 'sctp';
+		case FbsDataProducer.Type.DIRECT:
+			return 'direct';
+	}
+}
+
 export function parseDataProducerDumpResponse(
 	data: FbsDataProducer.DumpResponse
 ): DataProducerDump
 {
 	return {
 		id                   : data.id()!,
-		type                 : data.type()! as DataProducerType,
+		type                 : dataProducerTypeFromFbs(data.type()),
 		sctpStreamParameters : data.sctpStreamParameters() !== null ?
 			parseSctpStreamParameters(data.sctpStreamParameters()!) :
 			undefined,

@@ -665,7 +665,7 @@ function producerTraceEventTypeToFbs(eventType: ProducerTraceEventType)
 		case 'rtp':
 			return FbsProducer.TraceEventType.RTP;
 		default:
-			throw new TypeError(`invalid eventType: ${eventType}`);
+			throw new TypeError(`invalid ProducerTraceEventType: ${eventType}`);
 	}
 }
 

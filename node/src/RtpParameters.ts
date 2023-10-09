@@ -781,7 +781,7 @@ export function rtpHeaderExtensionUriToFbs(uri: RtpHeaderExtensionUri): FbsRtpHe
 		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time':
 			return FbsRtpHeaderExtensionUri.AbsCaptureTime;
 		default:
-			throw new TypeError(`invalid RTP header extension URI: ${uri}`);
+			throw new TypeError(`invalid RtpHeaderExtensionUri: ${uri}`);
 	}
 }
 

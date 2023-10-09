@@ -1,4 +1,5 @@
 include "common.fbs";
+include "dataProducer.fbs";
 include "sctpParameters.fbs";
 
 namespace FBS.DataConsumer;
@@ -14,13 +15,14 @@ table SetBufferedAmountLowThresholdRequest {
 table DumpResponse {
     id: string (required);
     data_producer_id: string (required);
-    type: string (required);
+    type: FBS.DataProducer.Type;
     sctp_stream_parameters: FBS.SctpParameters.SctpStreamParameters;
     label: string (required);
     protocol: string (required);
+    buffered_amount_low_threshold: uint32;
     paused: bool;
     data_producer_paused: bool;
-    subchannels: [uint16];
+    subchannels: [uint16] (required);
 }
 
 table GetStatsResponse {
@@ -46,7 +48,7 @@ union Data {
 }
 
 table SendRequest {
-    ppid: uint8;
+    ppid: uint32;
     data: Data (required);
 }
 
@@ -66,6 +68,6 @@ table BufferedAmountLowNotification {
 
 table MessageNotification {
     ppid: uint32;
-    data: [ubyte] (required);
+    data: [uint8] (required);
 }
 
