@@ -2849,7 +2849,8 @@ impl Notification for DataProducerSendNotification {
             Some(notification_body),
         );
         let message_body = message::Body::create_notification(&mut builder, notification);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message =
+            message::Message::create(&mut builder, message::Type::Notification, message_body);
 
         builder.finish(message, None).to_vec()
     }
