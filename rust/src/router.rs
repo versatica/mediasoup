@@ -37,7 +37,8 @@ use crate::messages::{
     RouterCreateDirectTransportRequest, RouterCreatePipeTransportData,
     RouterCreatePipeTransportRequest, RouterCreatePlainTransportData,
     RouterCreatePlainTransportRequest, RouterCreateWebRtcTransportRequest,
-    RouterCreateWebrtcTransportData, RouterDumpRequest,
+    RouterCreateWebRtcTransportWithServerRequest, RouterCreateWebrtcTransportData,
+    RouterDumpRequest,
 };
 use crate::pipe_transport::{
     PipeTransport, PipeTransportOptions, PipeTransportRemoteParameters, WeakPipeTransport,
@@ -626,6 +627,38 @@ impl Router {
 
         let _buffer_guard = self.inner.channel.buffer_messages_for(transport_id.into());
 
+        let data = match webrtc_transport_options.listen {
+            WebRtcTransportListen::Individual { listen_infos: _ } => {
+                self.inner
+                    .channel
+                    .request(
+                        self.inner.id,
+                        RouterCreateWebRtcTransportRequest {
+                            data: RouterCreateWebrtcTransportData::from_options(
+                                transport_id,
+                                &webrtc_transport_options,
+                            ),
+                        },
+                    )
+                    .await?
+            }
+            WebRtcTransportListen::Server { webrtc_server: _ } => {
+                self.inner
+                    .channel
+                    .request(
+                        self.inner.id,
+                        RouterCreateWebRtcTransportWithServerRequest {
+                            data: RouterCreateWebrtcTransportData::from_options(
+                                transport_id,
+                                &webrtc_transport_options,
+                            ),
+                        },
+                    )
+                    .await?
+            }
+        };
+
+        /*
         let data = self
             .inner
             .channel
@@ -639,6 +672,7 @@ impl Router {
                 },
             )
             .await?;
+            */
 
         let transport = WebRtcTransport::new(
             transport_id,

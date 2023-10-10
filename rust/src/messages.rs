@@ -730,6 +730,86 @@ impl Request for RouterCreateWebRtcTransportRequest {
     type Response = WebRtcTransportData;
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let RouterCreateWebrtcTransportListen::Individual { listen_infos: _ } = self.data.listen
+        else {
+            panic!("RouterCreateWebrtcTransportListen variant must be Individual");
+        };
+
+        let mut builder = Builder::new();
+        let data = router::CreateWebRtcTransportRequest::create(
+            &mut builder,
+            self.data.transport_id.to_string(),
+            self.data.to_fbs(),
+        );
+        let request_body =
+            request::Body::create_router_create_web_rtc_transport_request(&mut builder, data);
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::WebRtcTransportDumpResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(WebRtcTransportData {
+            ice_role: IceRole::from_fbs(data.ice_role),
+            ice_parameters: IceParameters::from_fbs(*data.ice_parameters),
+            ice_candidates: data
+                .ice_candidates
+                .iter()
+                .map(IceCandidate::from_fbs)
+                .collect(),
+            ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
+            ice_selected_tuple: Mutex::new(
+                data.ice_selected_tuple
+                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+            ),
+            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
+            dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
+            dtls_remote_cert: Mutex::new(None),
+            sctp_parameters: data
+                .base
+                .sctp_parameters
+                .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
+            sctp_state: Mutex::new(
+                data.base
+                    .sctp_state
+                    .map(|state| SctpState::from_fbs(&state)),
+            ),
+        })
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct RouterCreateWebRtcTransportWithServerRequest {
+    pub(crate) data: RouterCreateWebrtcTransportData,
+}
+
+impl Request for RouterCreateWebRtcTransportWithServerRequest {
+    const METHOD: request::Method = request::Method::RouterCreateWebrtctransportWithServer;
+    type HandlerId = RouterId;
+    type Response = WebRtcTransportData;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let RouterCreateWebrtcTransportListen::Server {
+            webrtc_server_id: _,
+        } = self.data.listen
+        else {
+            panic!("RouterCreateWebrtcTransportListen variant must be Server");
+        };
+
         let mut builder = Builder::new();
         let data = router::CreateWebRtcTransportRequest::create(
             &mut builder,
