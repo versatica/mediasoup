@@ -3,6 +3,7 @@
 
 #include "RTC/RateCalculator.hpp"
 #include "Logger.hpp"
+#include "handles/Timer.hpp"
 #include <cmath> // std::trunc()
 
 namespace RTC
@@ -116,7 +117,7 @@ namespace RTC
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
 	{
-		const uint64_t nowMs = DepLibUV::GetTimeMs();
+		const uint64_t nowMs = GetTimeMs();
 
 		this->packets++;
 		this->rate.Update(packet->GetSize(), nowMs);
