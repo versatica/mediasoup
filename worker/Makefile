@@ -79,6 +79,7 @@ endif
 	mediasoup-worker \
 	libmediasoup-worker \
 	flatc \
+	flatc-clean \
 	xcode \
 	lint \
 	format \
