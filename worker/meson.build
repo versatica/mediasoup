@@ -277,6 +277,57 @@ executable(
   cpp_args: cpp_args + ['-DMS_EXECUTABLE'],
 )
 
+flatbuffers_schemas = [
+  'fbs/activeSpeakerObserver.fbs',
+  'fbs/audioLevelObserver.fbs',
+  'fbs/common.fbs',
+  'fbs/consumer.fbs',
+  'fbs/dataConsumer.fbs',
+  'fbs/dataProducer.fbs',
+  'fbs/directTransport.fbs',
+  'fbs/log.fbs',
+  'fbs/message.fbs',
+  'fbs/notification.fbs',
+  'fbs/pipeTransport.fbs',
+  'fbs/plainTransport.fbs',
+  'fbs/producer.fbs',
+  'fbs/request.fbs',
+  'fbs/response.fbs',
+  'fbs/router.fbs',
+  'fbs/rtpObserver.fbs',
+  'fbs/rtpParameters.fbs',
+  'fbs/rtpStream.fbs',
+  'fbs/rtxStream.fbs',
+  'fbs/sctpAssociation.fbs',
+  'fbs/sctpParameters.fbs',
+  'fbs/srtpParameters.fbs',
+  'fbs/transport.fbs',
+  'fbs/webRtcServer.fbs',
+  'fbs/webRtcTransport.fbs',
+  'fbs/worker.fbs',
+]
+
+flatbuffers_cpp_out_dir = 'FBS'
+flatbuffers_cpp_install_dir = meson.current_source_dir() + '/include'
+
+flatc = find_program('flatc')
+flatc_generator = custom_target('flatc-generator',
+  output: flatbuffers_cpp_out_dir,
+  input: flatbuffers_schemas,
+  command : [
+    flatc,
+    '--cpp',
+    '--cpp-field-case-style', 'lower',
+    '--reflect-names',
+    '--scoped-enums',
+    '-o', '@OUTPUT@',
+    '@INPUT@'
+  ],
+  install: true,
+  install_dir: flatbuffers_cpp_install_dir,
+  install_tag: 'flatc-generator',
+)
+
 test_sources = [
     'test/src/tests.cpp',
     'test/src/RTC/TestKeyFrameRequestManager.cpp',
