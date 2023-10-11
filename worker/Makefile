@@ -21,6 +21,7 @@ INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
 BUILD_DIR ?= $(INSTALL_DIR)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_VERSION ?= 1.2.1
+FLATC_OUT_DIR ?= ./include/FBS
 # `MESON_ARGS` can be used to provide extra configuration parameters to Meson,
 # such as adding defines or changing optimization options. For instance, use
 # `MESON_ARGS="-Dms_log_trace=true -Dms_log_file_line=true" npm i` to compile
@@ -176,7 +177,7 @@ else
 endif
 endif
 
-clean:
+clean: flatc-clean
 	$(RM) -rf $(INSTALL_DIR)
 
 clean-build:
@@ -188,7 +189,7 @@ clean-pip:
 clean-subprojects: meson-ninja
 	$(MESON) subprojects purge --include-cache --confirm
 
-clean-all: clean-subprojects
+clean-all: clean-subprojects flatc-clean
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
 
 # Update the wrap file of a subproject. Usage example:
@@ -209,6 +210,9 @@ libmediasoup-worker: setup flatc
 flatc: setup
 	$(MESON) compile -C $(BUILD_DIR) flatc-generator
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --only-changed --tags flatc-generator
+
+flatc-clean:
+	$(RM) -rf $(FLATC_OUT_DIR)
 
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
