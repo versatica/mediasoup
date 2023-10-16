@@ -37,7 +37,7 @@ jobs:
             cxx: cl
         # A single Node.js version should be fine for C++.
         node:
-          - 18
+          - 20
 
     runs-on: ${{ matrix.build.os }}
 

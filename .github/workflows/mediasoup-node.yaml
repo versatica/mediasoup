@@ -18,9 +18,9 @@ jobs:
           - os: ubuntu-22.04
             node: 20
           - os: macos-12
-            node: 18
+            node: 20
           - os: windows-2022
-            node: 18
+            node: 20
 
     runs-on: ${{ matrix.ci.os }}
 
