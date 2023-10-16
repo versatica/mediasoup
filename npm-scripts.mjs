@@ -351,7 +351,9 @@ function cleanWorkerArtifacts()
 
 	if (IS_WINDOWS)
 	{
-		executeCmd('rd /s /q worker\\out\\msys');
+		const msysPath = `${process.cwd()}\\worker\\out\\msys`;
+
+		executeCmd(`rd /s /q ${msysPath}`);
 	}
 }
 
