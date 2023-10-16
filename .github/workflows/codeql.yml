@@ -36,6 +36,9 @@ jobs:
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
+    env:
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
