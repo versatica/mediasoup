@@ -310,7 +310,7 @@ flatbuffers_schemas = [
 flatbuffers_cpp_out_dir = 'FBS'
 flatbuffers_cpp_install_dir = meson.current_source_dir() + '/include'
 
-flatc = find_program('flatc', version: '=23.3.3')
+flatc = find_program('flatc')
 flatc_generator = custom_target('flatc-generator',
   output: flatbuffers_cpp_out_dir,
   input: flatbuffers_schemas,
