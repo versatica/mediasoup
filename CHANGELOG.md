@@ -4,6 +4,7 @@
 ### NEXT
 
 * CI: Use Node.js version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).
+* Fix `IceServer` crash when client uses ICE nomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
 
 
 ### 3.12.13
