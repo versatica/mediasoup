@@ -9,6 +9,7 @@
 * Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
 * DataChannel subchannels feature ([PR #1152](https://github.com/versatica/mediasoup/pull/1152)).
 * `Worker`: Make DTLS fragment stay within MTU size range ([PR #1156](https://github.com/versatica/mediasoup/pull/1156), based on [PR #1143](https://github.com/versatica/mediasoup/pull/1143) by @vpnts-se).
+* CI: Use Node.js version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).
 
 
 ### 3.12.13
