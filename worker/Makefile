@@ -207,7 +207,7 @@ libmediasoup-worker: setup flatc
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
 
 flatc: setup
-	$(MESON) compile -C $(BUILD_DIR) flatc-generator
+	$(MESON) compile -C $(BUILD_DIR) flatbuffers-generator
 
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode

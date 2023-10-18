@@ -165,62 +165,6 @@ common_sources = [
 
 cpp = meson.get_compiler('cpp')
 
-flatbuffers_schemas = [
-  'fbs/activeSpeakerObserver.fbs',
-  'fbs/audioLevelObserver.fbs',
-  'fbs/common.fbs',
-  'fbs/consumer.fbs',
-  'fbs/dataConsumer.fbs',
-  'fbs/dataProducer.fbs',
-  'fbs/directTransport.fbs',
-  'fbs/log.fbs',
-  'fbs/message.fbs',
-  'fbs/notification.fbs',
-  'fbs/pipeTransport.fbs',
-  'fbs/plainTransport.fbs',
-  'fbs/producer.fbs',
-  'fbs/request.fbs',
-  'fbs/response.fbs',
-  'fbs/router.fbs',
-  'fbs/rtpObserver.fbs',
-  'fbs/rtpParameters.fbs',
-  'fbs/rtpStream.fbs',
-  'fbs/rtxStream.fbs',
-  'fbs/sctpAssociation.fbs',
-  'fbs/sctpParameters.fbs',
-  'fbs/srtpParameters.fbs',
-  'fbs/transport.fbs',
-  'fbs/webRtcServer.fbs',
-  'fbs/webRtcTransport.fbs',
-  'fbs/worker.fbs',
-]
-
-flatbuffers_cpp_out_dir = 'FBS'
-
-flatc = find_program('flatc')
-flatc_generator = custom_target('flatc-generator',
-  output: flatbuffers_cpp_out_dir,
-  input: flatbuffers_schemas,
-  command : [
-    flatc,
-    '--cpp',
-    '--cpp-field-case-style', 'lower',
-    '--reflect-names',
-    '--scoped-enums',
-    '-o', '@OUTPUT@',
-    '@INPUT@'
-  ],
-  build_by_default: true,
-)
-
-flatbuffers_cpp_dep = declare_dependency(
-  include_directories: '.',
-)
-
-dependencies = [
-  flatbuffers_cpp_dep,
-]
-
 openssl_proj = subproject(
   'openssl',
   default_options: [
@@ -269,11 +213,14 @@ flatbuffers_proj = subproject(
     'warning_level=0',
   ],
 )
+# flatbuffers schemas subdirectory.
+subdir('fbs')
 # Add current build directory so libwebrtc has access to FBS folder.
-libwebrtc_include_directories = include_directories('include', '.')
+libwebrtc_include_directories = include_directories('include', 'fbs')
 subdir('deps/libwebrtc')
 
-dependencies += [
+dependencies = [
+  flatbuffers_generator_dep,
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   libuv_proj.get_variable('libuv_dep'),
