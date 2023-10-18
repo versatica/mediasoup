@@ -220,13 +220,13 @@ libwebrtc_include_directories = include_directories('include', 'fbs')
 subdir('deps/libwebrtc')
 
 dependencies = [
-  flatbuffers_generator_dep,
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   libuv_proj.get_variable('libuv_dep'),
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
   flatbuffers_proj.get_variable('flatbuffers_dep'),
+  flatbuffers_generator_dep,
   libwebrtc_dep,
 ]
 
