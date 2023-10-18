@@ -1,7 +1,7 @@
 #ifndef MS_RTC_PLAIN_TRANSPORT_HPP
 #define MS_RTC_PLAIN_TRANSPORT_HPP
 
-#include "FBS/plainTransport_generated.h"
+#include "FBS/plainTransport.h"
 #include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"

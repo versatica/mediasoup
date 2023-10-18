@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "FBS/rtxStream_generated.h"
+#include "FBS/rtxStream.h"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"

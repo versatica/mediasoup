@@ -1,7 +1,7 @@
 #ifndef MS_RTC_PIPE_TRANSPORT_HPP
 #define MS_RTC_PIPE_TRANSPORT_HPP
 
-#include "FBS/pipeTransport_generated.h"
+#include "FBS/pipeTransport.h"
 #include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/Transport.hpp"

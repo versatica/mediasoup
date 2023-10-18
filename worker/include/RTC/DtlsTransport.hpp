@@ -2,7 +2,7 @@
 #define MS_RTC_DTLS_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "FBS/webRtcTransport_generated.h"
+#include "FBS/webRtcTransport.h"
 #include "RTC/SrtpSession.hpp"
 #include "handles/TimerHandle.hpp"
 #include <openssl/bio.h>

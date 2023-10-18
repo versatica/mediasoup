@@ -2,9 +2,9 @@
 #define MS_CHANNEL_REQUEST_HPP
 
 #include "common.hpp"
-#include "FBS/message_generated.h"
-#include "FBS/request_generated.h"
-#include "FBS/response_generated.h"
+#include "FBS/message.h"
+#include "FBS/request.h"
+#include "FBS/response.h"
 #include <absl/container/flat_hash_map.h>
 #include <flatbuffers/minireflect.h>
 #include <string>

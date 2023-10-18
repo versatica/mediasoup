@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "FBS/rtpStream_generated.h"
+#include "FBS/rtpStream.h"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"

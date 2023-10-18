@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_DICTIONARIES_HPP
 
 #include "common.hpp"
-#include "FBS/rtpParameters_generated.h"
+#include "FBS/rtpParameters.h"
 #include "RTC/Parameters.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <string>
