@@ -4,6 +4,7 @@ import { Channel } from './Channel';
 import { TransportListenInfo } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 import { AppData } from './types';
+import * as utils from './utils';
 import { Body as RequestBody, Method } from './fbs/request';
 import * as FbsWorker from './fbs/worker';
 import * as FbsWebRtcServer from './fbs/web-rtc-server';
@@ -224,7 +225,7 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 
 		response.body(dump);
 
-		return dump.unpack();
+		return parseWebRtcServerDump(dump);
 	}
 
 	/**
@@ -245,4 +246,34 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 			this.#observer.safeEmit('webrtctransportunhandled', webRtcTransport);
 		});
 	}
+}
+
+// TODO: This function should return WebRtcServerDump TypeScript type but we
+// don't have it yet (same for many other dump() methods everywhere).
+function parseWebRtcServerDump(
+	data: FbsWebRtcServer.DumpResponse
+): any
+{
+	return {
+		id                        : data.id(),
+		udpSockets                : utils.parseVector(
+			data, 'udpSockets', (udpSocket: any) => udpSocket.unpack()
+		),
+		tcpServers                : utils.parseVector(
+			data, 'tcpServers', (tcpServer: any) => tcpServer.unpack()
+		),
+		webRtcTransportIds        : utils.parseVector(data, 'webRtcTransportIds'),
+		localIceUsernameFragments : utils.parseVector(
+			data, 'localIceUsernameFragments', (localIceUsernameFragment: any) => localIceUsernameFragment.unpack()
+		),
+		tupleHashes               : utils.parseVector(
+			data, 'tupleHashes', (tupleHash: any) =>
+			{
+				return {
+					localIceUsernameFragment : Number(tupleHash.localIceUsernameFragment()),
+					webRtcTransportId        : tupleHash.webRtcTransportId()
+				};
+			}
+		)
+	};
 }

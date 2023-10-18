@@ -520,7 +520,7 @@ export function parseDataProducerDumpResponse(
 
 function parseDataProducerStats(
 	binary: FbsDataProducer.GetStatsResponse
-):DataProducerStat
+): DataProducerStat
 {
 	return {
 		type             : 'data-producer',
