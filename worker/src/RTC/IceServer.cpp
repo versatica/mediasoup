@@ -397,13 +397,8 @@ namespace RTC
 				}
 				else
 				{
-					auto* storedTuple = HasTuple(tuple);
-
-					// If a new tuple store it.
-					if (!storedTuple)
-					{
-						storedTuple = AddTuple(tuple);
-					}
+					// Store the tuple.
+					auto* storedTuple = AddTuple(tuple);
 
 					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
 					{
@@ -464,13 +459,8 @@ namespace RTC
 				}
 				else
 				{
-					auto* storedTuple = HasTuple(tuple);
-
-					// If a new tuple store it.
-					if (!storedTuple)
-					{
-						storedTuple = AddTuple(tuple);
-					}
+					// Store the tuple.
+					auto* storedTuple = AddTuple(tuple);
 
 					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
 					{
@@ -512,11 +502,8 @@ namespace RTC
 
 				if (!hasUseCandidate && !hasNomination)
 				{
-					// If a new tuple store it.
-					if (!HasTuple(tuple))
-					{
-						AddTuple(tuple);
-					}
+					// Store the tuple.
+					AddTuple(tuple);
 				}
 				else
 				{
@@ -528,13 +515,8 @@ namespace RTC
 					  hasNomination ? "true" : "false",
 					  nomination);
 
-					auto* storedTuple = HasTuple(tuple);
-
-					// If a new tuple store it.
-					if (!storedTuple)
-					{
-						storedTuple = AddTuple(tuple);
-					}
+					// Store the tuple.
+					auto* storedTuple = AddTuple(tuple);
 
 					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
 					{
@@ -568,21 +550,13 @@ namespace RTC
 
 				if (!hasUseCandidate && !hasNomination)
 				{
-					// If a new tuple store it.
-					if (!HasTuple(tuple))
-					{
-						AddTuple(tuple);
-					}
+					// Store the tuple.
+					AddTuple(tuple);
 				}
 				else
 				{
-					auto* storedTuple = HasTuple(tuple);
-
-					// If a new tuple store it.
-					if (!storedTuple)
-					{
-						storedTuple = AddTuple(tuple);
-					}
+					// Store the tuple.
+					auto* storedTuple = AddTuple(tuple);
 
 					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
 					{
@@ -606,10 +580,19 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		auto* storedTuple = HasTuple(tuple);
+
+		if (storedTuple)
+		{
+			MS_DEBUG_DEV('tuple already exists');
+
+			return storedTuple;
+		}
+
 		// Add the new tuple at the beginning of the list.
 		this->tuples.push_front(*tuple);
 
-		auto* storedTuple = std::addressof(*this->tuples.begin());
+		storedTuple = std::addressof(*this->tuples.begin());
 
 		// If it is UDP then we must store the remote address (until now it is
 		// just a pointer that will be freed soon).
