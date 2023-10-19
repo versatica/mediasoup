@@ -105,9 +105,8 @@ fn create_with_webrtc_server_succeeds() {
 
         let transport = router
             .create_webrtc_transport({
-                let mut webrtc_transport_options = WebRtcTransportOptions::new_with_server(
-                    webrtc_server.clone()
-                );
+                let mut webrtc_transport_options =
+                    WebRtcTransportOptions::new_with_server(webrtc_server.clone());
                 // Let's disable UDP so resulting ICE candidates should only contain TCP.
                 webrtc_transport_options.enable_udp = false;
 
