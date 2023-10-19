@@ -53,7 +53,7 @@ IncludeCategories:
     Priority: 3
   - Regex:    '"*"'
     Priority: 2
-  - Regex:    '^<(json|uv|openssl|srtp|usrsctp|libwebrtc)(.|/)'
+  - Regex:    '^<(flatbuffers|uv|openssl|srtp|usrsctp|libwebrtc)(.|/)'
     Priority: 4
   - Regex:    '<*>'
     Priority: 5

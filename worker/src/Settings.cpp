@@ -5,8 +5,8 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cctype> // isprint()
 #include <flatbuffers/flatbuffers.h>
+#include <cctype>   // isprint()
 #include <iterator> // std::ostream_iterator
 #include <mutex>
 #include <sstream> // std::ostringstream

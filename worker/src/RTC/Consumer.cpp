@@ -470,8 +470,9 @@ namespace RTC
 
 		if (this->traceEventTypes.keyframe && packet->IsKeyFrame())
 		{
-			auto traceInfo = FBS::Consumer::CreateKeyFrameTraceInfo(
-			  this->shared->channelNotifier->GetBufferBuilder(), isRtx);
+			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+			auto traceInfo     = FBS::Consumer::CreateKeyFrameTraceInfo(
+        this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),
@@ -485,8 +486,9 @@ namespace RTC
 		}
 		else if (this->traceEventTypes.rtp)
 		{
-			auto traceInfo =
-			  FBS::Consumer::CreateRtpTraceInfo(this->shared->channelNotifier->GetBufferBuilder(), isRtx);
+			auto rtpPacketDump = packet->FillBuffer(this->shared->channelNotifier->GetBufferBuilder());
+			auto traceInfo     = FBS::Consumer::CreateRtpTraceInfo(
+        this->shared->channelNotifier->GetBufferBuilder(), rtpPacketDump, isRtx);
 
 			auto notification = FBS::Consumer::CreateTraceNotification(
 			  this->shared->channelNotifier->GetBufferBuilder(),

@@ -1,4 +1,5 @@
 include "common.fbs";
+include "rtpPacket.fbs";
 include "rtpParameters.fbs";
 include "rtpStream.fbs";
 
@@ -98,6 +99,7 @@ union TraceInfo {
 }
 
 table KeyFrameTraceInfo {
+    rtp_packet: FBS.RtpPacket.Dump (required);
     is_rtx: bool;
 }
 
@@ -110,6 +112,7 @@ table PliTraceInfo {
 }
 
 table RtpTraceInfo {
+    rtp_packet: FBS.RtpPacket.Dump (required);
     is_rtx: bool;
 }
 
