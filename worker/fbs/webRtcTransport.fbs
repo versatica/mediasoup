@@ -19,6 +19,10 @@ union Listen {
 table WebRtcTransportOptions {
     base: FBS.Transport.Options (required);
     listen: Listen (required);
+    enable_udp: bool = true;
+    enable_tcp: bool = true;
+    prefer_udp: bool = false;
+    prefer_tcp: bool = false;
 }
 
 enum FingerprintAlgorithm: uint8 {

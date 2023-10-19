@@ -108,7 +108,6 @@ table RecvRtpHeaderExtensions {
 
 table Options {
     direct: bool = false;
-
     /// Only needed for DirectTransport. This value is handled by base Transport.
     max_message_size: uint32 = null;
     initial_available_outgoing_bitrate: uint32 = null;

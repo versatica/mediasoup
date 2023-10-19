@@ -46,10 +46,6 @@ namespace RTC
 
 		try
 		{
-			uint16_t iceLocalPreferenceDecrement{ 0u };
-
-			this->iceCandidates.reserve(listenInfos->size());
-
 			for (const auto* listenInfo : *listenInfos)
 			{
 				auto ip = listenInfo->ip()->str();
@@ -63,10 +59,6 @@ namespace RTC
 				{
 					announcedIp = listenInfo->announcedIp()->str();
 				}
-
-				const uint16_t iceLocalPreference =
-				  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
-				const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 				if (listenInfo->protocol() == FBS::Transport::Protocol::UDP)
 				{
@@ -83,15 +75,6 @@ namespace RTC
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
-
-					if (announcedIp.size() == 0)
-					{
-						this->iceCandidates.emplace_back(udpSocket, icePriority);
-					}
-					else
-					{
-						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
-					}
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -125,15 +108,6 @@ namespace RTC
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);
 
-					if (announcedIp.size() == 0)
-					{
-						this->iceCandidates.emplace_back(tcpServer, icePriority);
-					}
-					else
-					{
-						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
-					}
-
 					if (listenInfo->sendBufferSize() != 0)
 					{
 						tcpServer->SetSendBufferSize(listenInfo->sendBufferSize());
@@ -150,9 +124,6 @@ namespace RTC
 					  tcpServer->GetSendBufferSize(),
 					  tcpServer->GetRecvBufferSize());
 				}
-
-				// Decrement initial ICE local preference for next IP.
-				iceLocalPreferenceDecrement += 100;
 			}
 
 			// NOTE: This may throw.
@@ -289,11 +260,64 @@ namespace RTC
 		}
 	}
 
-	const std::vector<RTC::IceCandidate>& WebRtcServer::GetIceCandidates() const
+	const std::vector<RTC::IceCandidate> WebRtcServer::GetIceCandidates(
+	  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp) const
 	{
 		MS_TRACE();
 
-		return this->iceCandidates;
+		std::vector<RTC::IceCandidate> iceCandidates;
+		uint16_t iceLocalPreferenceDecrement{ 0 };
+
+		for (auto& item : this->udpSocketOrTcpServers)
+		{
+			if (item.udpSocket && enableUdp)
+			{
+				uint16_t iceLocalPreference = IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+
+				if (preferUdp)
+				{
+					iceLocalPreference += 1000;
+				}
+
+				uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+
+				if (item.announcedIp.empty())
+				{
+					iceCandidates.emplace_back(item.udpSocket, icePriority);
+				}
+				else
+				{
+					iceCandidates.emplace_back(
+					  item.udpSocket, icePriority, const_cast<std::string&>(item.announcedIp));
+				}
+			}
+			else if (item.tcpServer && enableTcp)
+			{
+				uint16_t iceLocalPreference = IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
+
+				if (preferTcp)
+				{
+					iceLocalPreference += 1000;
+				}
+
+				uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
+
+				if (item.announcedIp.empty())
+				{
+					iceCandidates.emplace_back(item.tcpServer, icePriority);
+				}
+				else
+				{
+					iceCandidates.emplace_back(
+					  item.tcpServer, icePriority, const_cast<std::string&>(item.announcedIp));
+				}
+			}
+
+			// Decrement initial ICE local preference for next IP.
+			iceLocalPreferenceDecrement += 100;
+		}
+
+		return iceCandidates;
 	}
 
 	inline std::string WebRtcServer::GetLocalIceUsernameFragmentFromReceivedStunPacket(

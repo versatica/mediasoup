@@ -651,6 +651,10 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     #[serde(flatten)]
     listen: RouterCreateWebrtcTransportListen,
     initial_available_outgoing_bitrate: u32,
+    enable_udp: bool,
+    enable_tcp: bool,
+    prefer_udp: bool,
+    prefer_tcp: bool,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
     max_sctp_message_size: u32,
@@ -679,6 +683,10 @@ impl RouterCreateWebrtcTransportData {
             },
             initial_available_outgoing_bitrate: webrtc_transport_options
                 .initial_available_outgoing_bitrate,
+            enable_udp: webrtc_transport_options.enable_udp,
+            enable_tcp: webrtc_transport_options.enable_tcp,
+            prefer_udp: webrtc_transport_options.prefer_udp,
+            prefer_tcp: webrtc_transport_options.prefer_tcp,
             enable_sctp: webrtc_transport_options.enable_sctp,
             num_sctp_streams: webrtc_transport_options.num_sctp_streams,
             max_sctp_message_size: webrtc_transport_options.max_sctp_message_size,
@@ -700,6 +708,10 @@ impl RouterCreateWebrtcTransportData {
                 is_data_channel: true,
             }),
             listen: self.listen.to_fbs(),
+            enable_udp: self.enable_udp,
+            enable_tcp: self.enable_tcp,
+            prefer_udp: self.prefer_udp,
+            prefer_tcp: self.prefer_tcp,
         }
     }
 }
