@@ -1,4 +1,4 @@
-#include "FBS/consumer_generated.h"
+#include "FBS/consumer.h"
 #define MS_CLASS "RTC::PipeConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 

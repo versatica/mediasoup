@@ -391,7 +391,7 @@ function flatcNode(clean = false)
 	logInfo('flatcNode()');
 
 	// Build flatc if needed.
-	executeCmd(`${MAKE} -C worker flatc-all`);
+	executeCmd(`${MAKE} -C worker flatc`);
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';

@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "FBS/transport_generated.h"
+#include "FBS/transport.h"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>

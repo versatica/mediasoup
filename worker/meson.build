@@ -213,7 +213,10 @@ flatbuffers_proj = subproject(
     'warning_level=0',
   ],
 )
-libwebrtc_include_directories = include_directories('include')
+# flatbuffers schemas subdirectory.
+subdir('fbs')
+# Add current build directory so libwebrtc has access to FBS folder.
+libwebrtc_include_directories = include_directories('include', 'fbs')
 subdir('deps/libwebrtc')
 
 dependencies = [
@@ -223,6 +226,7 @@ dependencies = [
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
   flatbuffers_proj.get_variable('flatbuffers_dep'),
+  flatbuffers_generator_dep,
   libwebrtc_dep,
 ]
 

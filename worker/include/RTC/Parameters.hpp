@@ -2,7 +2,7 @@
 #define MS_RTC_PARAMETERS_HPP
 
 #include "common.hpp"
-#include "FBS/rtpParameters_generated.h"
+#include "FBS/rtpParameters.h"
 #include <absl/container/flat_hash_map.h>
 #include <string>
 #include <vector>

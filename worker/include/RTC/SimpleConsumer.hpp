@@ -1,7 +1,7 @@
 #ifndef MS_RTC_SIMPLE_CONSUMER_HPP
 #define MS_RTC_SIMPLE_CONSUMER_HPP
 
-#include "FBS/transport_generated.h"
+#include "FBS/transport.h"
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"

@@ -2,7 +2,7 @@
 #define MS_RTC_SRTP_SESSION_HPP
 
 #include "common.hpp"
-#include "FBS/srtpParameters_generated.h"
+#include "FBS/srtpParameters.h"
 #include <srtp.h>
 
 namespace RTC

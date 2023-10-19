@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "FBS/worker_generated.h"
+#include "FBS/worker.h"
 #include "RTC/Router.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/WebRtcServer.hpp"

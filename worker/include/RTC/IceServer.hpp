@@ -2,7 +2,7 @@
 #define MS_RTC_ICE_SERVER_HPP
 
 #include "common.hpp"
-#include "FBS/webRtcTransport_generated.h"
+#include "FBS/webRtcTransport.h"
 #include "RTC/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include <list>

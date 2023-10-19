@@ -9,8 +9,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Channel/ChannelNotifier.hpp"
-#include "FBS/response_generated.h"
-#include "FBS/worker_generated.h"
+#include "FBS/response.h"
+#include "FBS/worker.h"
 
 /* Instance methods. */
 

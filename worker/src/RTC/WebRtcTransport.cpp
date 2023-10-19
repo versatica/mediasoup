@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "FBS/webRtcTransport_generated.h"
+#include "FBS/webRtcTransport.h"
 #include <cmath> // std::pow()
 
 namespace RTC
