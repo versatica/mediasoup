@@ -104,9 +104,15 @@ fn create_with_webrtc_server_succeeds() {
         });
 
         let transport = router
-            .create_webrtc_transport(WebRtcTransportOptions::new_with_server(
-                webrtc_server.clone(),
-            ))
+            .create_webrtc_transport({
+                let mut webrtc_transport_options = WebRtcTransportOptions::new_with_server(
+                    webrtc_server.clone()
+                );
+                // Let's disable UDP so resulting ICE candidates should only contain TCP.
+                webrtc_transport_options.enable_udp = false;
+
+                webrtc_transport_options
+            })
             .await
             .expect("Failed to create WebRTC transport");
 
@@ -124,18 +130,13 @@ fn create_with_webrtc_server_succeeds() {
 
         {
             let ice_candidates = transport.ice_candidates();
-            assert_eq!(ice_candidates.len(), 2);
+            assert_eq!(ice_candidates.len(), 1);
             assert_eq!(ice_candidates[0].ip, IpAddr::V4(Ipv4Addr::LOCALHOST));
-            assert_eq!(ice_candidates[0].protocol, Protocol::Udp);
-            assert_eq!(ice_candidates[0].port, port1);
+            assert_eq!(ice_candidates[0].protocol, Protocol::Tcp);
+            assert_eq!(ice_candidates[0].port, port2);
             assert_eq!(ice_candidates[0].r#type, IceCandidateType::Host);
-            assert_eq!(ice_candidates[0].tcp_type, None);
-            assert_eq!(ice_candidates[1].ip, IpAddr::V4(Ipv4Addr::LOCALHOST));
-            assert_eq!(ice_candidates[1].protocol, Protocol::Tcp);
-            assert_eq!(ice_candidates[1].port, port2);
-            assert_eq!(ice_candidates[1].r#type, IceCandidateType::Host);
             assert_eq!(
-                ice_candidates[1].tcp_type,
+                ice_candidates[0].tcp_type,
                 Some(IceCandidateTcpType::Passive)
             );
         }
