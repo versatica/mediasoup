@@ -5,8 +5,8 @@
 #include "FBS/message.h"
 #include "FBS/request.h"
 #include "FBS/response.h"
-#include <absl/container/flat_hash_map.h>
 #include <flatbuffers/minireflect.h>
+#include <absl/container/flat_hash_map.h>
 #include <string>
 
 namespace Channel
