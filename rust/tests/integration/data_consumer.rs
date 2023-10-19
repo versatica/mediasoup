@@ -129,6 +129,7 @@ fn consume_data_succeeds() {
                     4000,
                 );
 
+                options.subchannels = Some(vec![0, 1, 1, 1, 2, 65535, 100]);
                 options.app_data = AppData::new(CustomAppData { baz: "LOL" });
 
                 options
@@ -152,6 +153,11 @@ fn consume_data_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
+
+        let mut sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [0, 1, 2, 100, 65535]);
         assert_eq!(
             data_consumer
                 .app_data()
@@ -339,7 +345,7 @@ fn consume_data_on_direct_transport_succeeds() {
 
         let data_consumer = transport3
             .consume_data({
-                let mut options = DataConsumerOptions::new_direct(data_producer.id());
+                let mut options = DataConsumerOptions::new_direct(data_producer.id(), None);
 
                 options.app_data = AppData::new(CustomAppData2 { hehe: "HEHE" });
 
@@ -386,7 +392,7 @@ fn dump_on_direct_transport_succeeds() {
 
         let data_consumer = transport3
             .consume_data({
-                let mut options = DataConsumerOptions::new_direct(data_producer.id());
+                let mut options = DataConsumerOptions::new_direct(data_producer.id(), None);
 
                 options.app_data = AppData::new(CustomAppData2 { hehe: "HEHE" });
 
@@ -421,7 +427,7 @@ fn get_stats_on_direct_transport_succeeds() {
 
         let data_consumer = transport3
             .consume_data({
-                let mut options = DataConsumerOptions::new_direct(data_producer.id());
+                let mut options = DataConsumerOptions::new_direct(data_producer.id(), None);
 
                 options.app_data = AppData::new(CustomAppData2 { hehe: "HEHE" });
 

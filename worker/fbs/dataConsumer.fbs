@@ -53,11 +53,11 @@ table SendRequest {
 }
 
 table SetSubchannelsRequest {
-    subchannels: [uint16];
+    subchannels: [uint16] (required);
 }
 
 table SetSubchannelsResponse {
-    subchannels: [uint16];
+    subchannels: [uint16] (required);
 }
 
 // Notifications from Worker.

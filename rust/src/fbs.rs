@@ -26331,16 +26331,7 @@ mod root {
             )]
             pub struct SetSubchannelsRequest {
                 /// The field `subchannels` in the table `SetSubchannelsRequest`
-                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for SetSubchannelsRequest {
-                fn default() -> Self {
-                    Self {
-                        subchannels: ::core::default::Default::default(),
-                    }
-                }
+                pub subchannels: ::planus::alloc::vec::Vec<u16>,
             }
 
             impl SetSubchannelsRequest {
@@ -26353,23 +26344,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    field_subchannels: impl ::planus::WriteAs<::planus::Offset<[u16]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_subchannels = field_subchannels.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_subchannels.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[u16]>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<[u16]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_subchannels) =
-                                prepared_subchannels
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_subchannels);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_subchannels);
                         });
                     }
                     builder.current_offset()
@@ -26424,16 +26409,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn subchannels<T0>(self, value: T0) -> SetSubchannelsRequestBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    T0: ::planus::WriteAs<::planus::Offset<[u16]>>,
                 {
                     SetSubchannelsRequestBuilder((value,))
-                }
-
-                /// Sets the [`subchannels` field](SetSubchannelsRequest#structfield.subchannels) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn subchannels_as_null(self) -> SetSubchannelsRequestBuilder<((),)> {
-                    self.subchannels(())
                 }
             }
 
@@ -26451,7 +26429,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[u16]>>>
                 ::planus::WriteAs<::planus::Offset<SetSubchannelsRequest>>
                 for SetSubchannelsRequestBuilder<(T0,)>
             {
@@ -26466,7 +26444,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[u16]>>>
                 ::planus::WriteAsOptional<::planus::Offset<SetSubchannelsRequest>>
                 for SetSubchannelsRequestBuilder<(T0,)>
             {
@@ -26482,7 +26460,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[u16]>>>
                 ::planus::WriteAsOffset<SetSubchannelsRequest>
                 for SetSubchannelsRequestBuilder<(T0,)>
             {
@@ -26503,22 +26481,16 @@ mod root {
             impl<'a> SetSubchannelsRequestRef<'a> {
                 /// Getter for the [`subchannels` field](SetSubchannelsRequest#structfield.subchannels).
                 #[inline]
-                pub fn subchannels(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
-                {
-                    self.0.access(0, "SetSubchannelsRequest", "subchannels")
+                pub fn subchannels(&self) -> ::planus::Result<::planus::Vector<'a, u16>> {
+                    self.0
+                        .access_required(0, "SetSubchannelsRequest", "subchannels")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for SetSubchannelsRequestRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("SetSubchannelsRequestRef");
-                    if let ::core::option::Option::Some(field_subchannels) =
-                        self.subchannels().transpose()
-                    {
-                        f.field("subchannels", &field_subchannels);
-                    }
+                    f.field("subchannels", &self.subchannels());
                     f.finish()
                 }
             }
@@ -26529,13 +26501,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: SetSubchannelsRequestRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        subchannels: if let ::core::option::Option::Some(subchannels) =
-                            value.subchannels()?
-                        {
-                            ::core::option::Option::Some(subchannels.to_vec()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        subchannels: value.subchannels()?.to_vec()?,
                     })
                 }
             }
@@ -26631,16 +26597,7 @@ mod root {
             )]
             pub struct SetSubchannelsResponse {
                 /// The field `subchannels` in the table `SetSubchannelsResponse`
-                pub subchannels: ::core::option::Option<::planus::alloc::vec::Vec<u16>>,
-            }
-
-            #[allow(clippy::derivable_impls)]
-            impl ::core::default::Default for SetSubchannelsResponse {
-                fn default() -> Self {
-                    Self {
-                        subchannels: ::core::default::Default::default(),
-                    }
-                }
+                pub subchannels: ::planus::alloc::vec::Vec<u16>,
             }
 
             impl SetSubchannelsResponse {
@@ -26653,23 +26610,17 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_subchannels: impl ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    field_subchannels: impl ::planus::WriteAs<::planus::Offset<[u16]>>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_subchannels = field_subchannels.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<6> =
                         ::core::default::Default::default();
-                    if prepared_subchannels.is_some() {
-                        table_writer.write_entry::<::planus::Offset<[u16]>>(0);
-                    }
+                    table_writer.write_entry::<::planus::Offset<[u16]>>(0);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(prepared_subchannels) =
-                                prepared_subchannels
-                            {
-                                object_writer.write::<_, _, 4>(&prepared_subchannels);
-                            }
+                            object_writer.write::<_, _, 4>(&prepared_subchannels);
                         });
                     }
                     builder.current_offset()
@@ -26726,16 +26677,9 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn subchannels<T0>(self, value: T0) -> SetSubchannelsResponseBuilder<(T0,)>
                 where
-                    T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>,
+                    T0: ::planus::WriteAs<::planus::Offset<[u16]>>,
                 {
                     SetSubchannelsResponseBuilder((value,))
-                }
-
-                /// Sets the [`subchannels` field](SetSubchannelsResponse#structfield.subchannels) to null.
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn subchannels_as_null(self) -> SetSubchannelsResponseBuilder<((),)> {
-                    self.subchannels(())
                 }
             }
 
@@ -26753,7 +26697,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[u16]>>>
                 ::planus::WriteAs<::planus::Offset<SetSubchannelsResponse>>
                 for SetSubchannelsResponseBuilder<(T0,)>
             {
@@ -26768,7 +26712,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[u16]>>>
                 ::planus::WriteAsOptional<::planus::Offset<SetSubchannelsResponse>>
                 for SetSubchannelsResponseBuilder<(T0,)>
             {
@@ -26784,7 +26728,7 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsOptional<::planus::Offset<[u16]>>>
+            impl<T0: ::planus::WriteAs<::planus::Offset<[u16]>>>
                 ::planus::WriteAsOffset<SetSubchannelsResponse>
                 for SetSubchannelsResponseBuilder<(T0,)>
             {
@@ -26805,22 +26749,16 @@ mod root {
             impl<'a> SetSubchannelsResponseRef<'a> {
                 /// Getter for the [`subchannels` field](SetSubchannelsResponse#structfield.subchannels).
                 #[inline]
-                pub fn subchannels(
-                    &self,
-                ) -> ::planus::Result<::core::option::Option<::planus::Vector<'a, u16>>>
-                {
-                    self.0.access(0, "SetSubchannelsResponse", "subchannels")
+                pub fn subchannels(&self) -> ::planus::Result<::planus::Vector<'a, u16>> {
+                    self.0
+                        .access_required(0, "SetSubchannelsResponse", "subchannels")
                 }
             }
 
             impl<'a> ::core::fmt::Debug for SetSubchannelsResponseRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("SetSubchannelsResponseRef");
-                    if let ::core::option::Option::Some(field_subchannels) =
-                        self.subchannels().transpose()
-                    {
-                        f.field("subchannels", &field_subchannels);
-                    }
+                    f.field("subchannels", &self.subchannels());
                     f.finish()
                 }
             }
@@ -26831,13 +26769,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: SetSubchannelsResponseRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        subchannels: if let ::core::option::Option::Some(subchannels) =
-                            value.subchannels()?
-                        {
-                            ::core::option::Option::Some(subchannels.to_vec()?)
-                        } else {
-                            ::core::option::Option::None
-                        },
+                        subchannels: value.subchannels()?.to_vec()?,
                     })
                 }
             }

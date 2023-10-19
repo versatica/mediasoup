@@ -765,6 +765,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             max_packet_life_time,
             max_retransmits,
             paused,
+            subchannels,
             app_data,
         } = data_consumer_options;
 
@@ -829,6 +830,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     sctp_stream_parameters,
                     label: data_producer.label().clone(),
                     protocol: data_producer.protocol().clone(),
+                    subchannels,
                     paused,
                 },
             )
@@ -846,6 +848,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             Arc::clone(self.executor()),
             self.channel().clone(),
             response.data_producer_paused,
+            response.subchannels,
             app_data,
             Arc::new(self.clone()),
             transport_type == TransportType::Direct,

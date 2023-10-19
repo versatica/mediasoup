@@ -2,6 +2,7 @@
 Checks: "*,\
  -altera*,\
  -boost-use-to-string,\
+ -bugprone-easily-swappable-parameters,\
  -cert-*,\
  -clang-analyzer-optin.osx.*,\
  -clang-analyzer-osx.*,\

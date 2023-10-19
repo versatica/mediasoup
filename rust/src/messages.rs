@@ -1909,6 +1909,7 @@ pub(crate) struct TransportConsumeDataRequest {
     pub(crate) label: String,
     pub(crate) protocol: String,
     pub(crate) paused: bool,
+    pub(crate) subchannels: Option<Vec<u16>>,
 }
 
 #[derive(Debug)]
@@ -1919,6 +1920,7 @@ pub(crate) struct TransportConsumeDataResponse {
     pub(crate) protocol: String,
     pub(crate) paused: bool,
     pub(crate) data_producer_paused: bool,
+    pub(crate) subchannels: Vec<u16>,
 }
 
 impl Request for TransportConsumeDataRequest {
@@ -1949,8 +1951,7 @@ impl Request for TransportConsumeDataRequest {
                 Some(self.protocol)
             },
             self.paused,
-            // TODO.
-            None::<Vec<u16>>,
+            self.subchannels,
         );
         let request_body = request::Body::create_transport_consume_data_request(&mut builder, data);
         let request = request::Request::create(
@@ -1985,6 +1986,7 @@ impl Request for TransportConsumeDataRequest {
             protocol: data.protocol.to_string(),
             paused: data.paused,
             data_producer_paused: data.data_producer_paused,
+            subchannels: data.subchannels,
         })
     }
 }
@@ -2830,6 +2832,8 @@ impl Request for DataProducerResumeRequest {
 pub(crate) struct DataProducerSendNotification {
     pub(crate) ppid: u32,
     pub(crate) payload: Vec<u8>,
+    pub(crate) subchannels: Option<Vec<u16>>,
+    pub(crate) required_subchannel: Option<u16>,
 }
 
 impl Notification for DataProducerSendNotification {
@@ -2839,17 +2843,14 @@ impl Notification for DataProducerSendNotification {
     fn into_bytes(self, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
 
-        // TODO: Implement subchannels.
-        let subchannels: Vec<u16> = vec![];
-        let required_subchannel: Option<u16> = Default::default();
         let binary_data = data_producer::Binary::create(&mut builder, self.payload);
         let binary = data_producer::Data::create_binary(&mut builder, binary_data);
         let data = data_producer::SendNotification::create(
             &mut builder,
             self.ppid,
             binary,
-            subchannels,
-            required_subchannel,
+            self.subchannels,
+            self.required_subchannel,
         );
         let notification_body =
             notification::Body::create_data_producer_send_notification(&mut builder, data);
@@ -3169,6 +3170,54 @@ impl Request for DataConsumerSendRequest {
 impl From<DataConsumerSendRequest> for u32 {
     fn from(request: DataConsumerSendRequest) -> Self {
         request.ppid
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct DataConsumerSetSubchannelsRequest {
+    pub(crate) subchannels: Vec<u16>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct DataConsumerSetSubchannelsResponse {
+    pub(crate) subchannels: Vec<u16>,
+}
+
+impl Request for DataConsumerSetSubchannelsRequest {
+    const METHOD: request::Method = request::Method::DataconsumerSetSubchannels;
+    type HandlerId = DataConsumerId;
+    type Response = DataConsumerSetSubchannelsResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = data_consumer::SetSubchannelsRequest::create(&mut builder, self.subchannels);
+        let request_body =
+            request::Body::create_data_consumer_set_subchannels_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::Body>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::Body::DataConsumerSetSubchannelsResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        Ok(DataConsumerSetSubchannelsResponse {
+            subchannels: data.subchannels,
+        })
     }
 }
 
