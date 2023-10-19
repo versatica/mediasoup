@@ -1,10 +1,15 @@
 # Changelog
 
 
-### NEXT
+### Next
+
+* Fix `IceServer` crash when client uses ICE renomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
+
+
+### 3.12.14
 
 * CI: Use Node.js version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).
-* Fix `IceServer` crash when client uses ICE renomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
+* Use given `PYTHON` environment variable (if given) when running `worker/scripts/getmake.py` ([PR #1186](https://github.com/versatica/mediasoup/pull/1186)).
 
 
 ### 3.12.13
