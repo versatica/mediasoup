@@ -268,6 +268,11 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		uint16_t iceLocalPreferenceDecrement{ 0 };
 
+		if (!enableUdp)
+			MS_DUMP_STD("---------------------- no enableUdp");
+		else
+			MS_DUMP_STD("---------------------- YES enableUdp");
+
 		for (auto& item : this->udpSocketOrTcpServers)
 		{
 			if (item.udpSocket && enableUdp)

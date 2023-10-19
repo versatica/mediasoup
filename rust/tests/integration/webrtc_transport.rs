@@ -160,8 +160,8 @@ fn create_succeeds() {
                         .try_into()
                         .unwrap(),
                     );
-                    // TODO: I wonder how this was not needed before...
                     webrtc_transport_options.enable_sctp = true;
+                    webrtc_transport_options.enable_udp = false;
                     webrtc_transport_options.num_sctp_streams = NumSctpStreams {
                         os: 2048,
                         mis: 2048,
