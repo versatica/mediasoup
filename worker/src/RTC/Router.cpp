@@ -248,7 +248,8 @@ namespace RTC
 				if (!webRtcServer)
 					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
 
-				auto& iceCandidates = webRtcServer->GetIceCandidates();
+				auto iceCandidates = webRtcServer->GetIceCandidates(
+				  options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
 
 				// This may throw.
 				auto* webRtcTransport = new RTC::WebRtcTransport(

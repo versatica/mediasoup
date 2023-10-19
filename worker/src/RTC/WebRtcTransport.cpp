@@ -28,6 +28,9 @@ namespace RTC
 
 	/* Instance methods. */
 
+	/**
+	 * This constructor is used when the WebRtcTransport doesn't use a WebRtcServer.
+	 */
 	WebRtcTransport::WebRtcTransport(
 	  RTC::Shared* shared,
 	  const std::string& id,

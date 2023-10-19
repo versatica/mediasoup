@@ -405,8 +405,8 @@ export class Router<RouterAppData extends AppData = AppData>
 			listenInfos,
 			listenIps,
 			port,
-			enableUdp = true,
-			enableTcp = false,
+			enableUdp,
+			enableTcp,
 			preferUdp = false,
 			preferTcp = false,
 			initialAvailableOutgoingBitrate = 600000,
@@ -438,6 +438,19 @@ export class Router<RouterAppData extends AppData = AppData>
 		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
+		}
+
+		// If webRtcServer is given, then do not force default values for enableUdp
+		// and enableTcp. Otherwise set them if unset.
+		if (webRtcServer)
+		{
+			enableUdp ??= true;
+			enableTcp ??= true;
+		}
+		else
+		{
+			enableUdp ??= true;
+			enableTcp ??= false;
 		}
 
 		// Convert deprecated TransportListenIps to TransportListenInfos.
@@ -545,7 +558,11 @@ export class Router<RouterAppData extends AppData = AppData>
 			webRtcServer ?
 				FbsWebRtcTransport.Listen.ListenServer :
 				FbsWebRtcTransport.Listen.ListenIndividual,
-			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual
+			webRtcServer ? webRtcTransportListenServer : webRtcTransportListenIndividual,
+			enableUdp,
+			enableTcp,
+			preferUdp,
+			preferTcp
 		);
 
 		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(
