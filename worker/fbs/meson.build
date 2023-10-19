@@ -16,6 +16,7 @@ flatbuffers_schemas = [
   'response.fbs',
   'router.fbs',
   'rtpObserver.fbs',
+  'rtpPacket.fbs',
   'rtpParameters.fbs',
   'rtpStream.fbs',
   'rtxStream.fbs',

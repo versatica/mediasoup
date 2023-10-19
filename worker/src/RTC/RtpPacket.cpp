@@ -1,9 +1,9 @@
 #define MS_CLASS "RTC::RtpPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/RtpPacket.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
+#include "RTC/RtpPacket.hpp"
 #include <cstring>  // std::memcpy(), std::memmove(), std::memset()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
@@ -315,6 +315,62 @@ namespace RTC
 		MS_DUMP("  spatial layer     : %" PRIu8, GetSpatialLayer());
 		MS_DUMP("  temporal layer    : %" PRIu8, GetTemporalLayer());
 		MS_DUMP("</RtpPacket>");
+	}
+
+	flatbuffers::Offset<FBS::RtpPacket::Dump> RtpPacket::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
+	{
+		// Add mid.
+		std::string mid;
+
+		if (this->midExtensionId != 0u)
+		{
+			ReadMid(mid);
+		}
+
+		// Add rid.
+		std::string rid;
+
+		if (this->ridExtensionId != 0u)
+		{
+			ReadRid(rid);
+		}
+
+		// Add rrid.
+		std::string rrid;
+
+		if (this->rridExtensionId != 0u)
+		{
+			ReadRid(rrid);
+		}
+
+		// Add wideSequenceNumber.
+		uint16_t wideSequenceNumber;
+		bool wideSequenceNumberSet = false;
+
+		if (this->transportWideCc01ExtensionId != 0u)
+		{
+			wideSequenceNumberSet = true;
+			ReadTransportWideCc01(wideSequenceNumber);
+		}
+
+		return FBS::RtpPacket::CreateDumpDirect(
+		  builder,
+		  this->GetPayloadType(),
+		  this->GetSequenceNumber(),
+		  this->GetTimestamp(),
+		  this->HasMarker(),
+		  this->GetSsrc(),
+		  this->IsKeyFrame(),
+		  this->GetSize(),
+		  this->GetPayloadLength(),
+		  this->GetSpatialLayer(),
+		  this->GetTemporalLayer(),
+		  mid.empty() ? nullptr : mid.c_str(),
+		  rid.empty() ? nullptr : rid.c_str(),
+		  rrid.empty() ? nullptr : rrid.c_str(),
+		  wideSequenceNumberSet ? flatbuffers::Optional<uint16_t>(wideSequenceNumber)
+		                        : flatbuffers::nullopt);
 	}
 
 	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)

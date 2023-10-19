@@ -3245,7 +3245,7 @@ mod root {
             /// The table `ConsumerLayers` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumerLayers` in the file `../worker/fbs/consumer.fbs:7`
+            /// * Table `ConsumerLayers` in the file `../worker/fbs/consumer.fbs:8`
             #[derive(
                 Clone,
                 Debug,
@@ -3584,7 +3584,7 @@ mod root {
             /// The table `ConsumerScore` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumerScore` in the file `../worker/fbs/consumer.fbs:12`
+            /// * Table `ConsumerScore` in the file `../worker/fbs/consumer.fbs:13`
             #[derive(
                 Clone,
                 Debug,
@@ -3945,7 +3945,7 @@ mod root {
             /// The table `SetPreferredLayersRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPreferredLayersRequest` in the file `../worker/fbs/consumer.fbs:18`
+            /// * Table `SetPreferredLayersRequest` in the file `../worker/fbs/consumer.fbs:19`
             #[derive(
                 Clone,
                 Debug,
@@ -4231,7 +4231,7 @@ mod root {
             /// The table `SetPreferredLayersResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPreferredLayersResponse` in the file `../worker/fbs/consumer.fbs:22`
+            /// * Table `SetPreferredLayersResponse` in the file `../worker/fbs/consumer.fbs:23`
             #[derive(
                 Clone,
                 Debug,
@@ -4548,7 +4548,7 @@ mod root {
             /// The table `SetPriorityRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPriorityRequest` in the file `../worker/fbs/consumer.fbs:26`
+            /// * Table `SetPriorityRequest` in the file `../worker/fbs/consumer.fbs:27`
             #[derive(
                 Clone,
                 Debug,
@@ -4832,7 +4832,7 @@ mod root {
             /// The table `SetPriorityResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetPriorityResponse` in the file `../worker/fbs/consumer.fbs:30`
+            /// * Table `SetPriorityResponse` in the file `../worker/fbs/consumer.fbs:31`
             #[derive(
                 Clone,
                 Debug,
@@ -5120,7 +5120,7 @@ mod root {
             /// The enum `TraceEventType` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceEventType` in the file `../worker/fbs/consumer.fbs:34`
+            /// * Enum `TraceEventType` in the file `../worker/fbs/consumer.fbs:35`
             #[derive(
                 Copy,
                 Clone,
@@ -5303,7 +5303,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/consumer.fbs:42`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/consumer.fbs:43`
             #[derive(
                 Clone,
                 Debug,
@@ -5581,7 +5581,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/consumer.fbs:46`
+            /// * Table `DumpResponse` in the file `../worker/fbs/consumer.fbs:47`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -5832,7 +5832,7 @@ mod root {
             /// The table `BaseConsumerDump` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `BaseConsumerDump` in the file `../worker/fbs/consumer.fbs:50`
+            /// * Table `BaseConsumerDump` in the file `../worker/fbs/consumer.fbs:51`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -6636,7 +6636,7 @@ mod root {
             /// The table `ConsumerDump` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ConsumerDump` in the file `../worker/fbs/consumer.fbs:64`
+            /// * Table `ConsumerDump` in the file `../worker/fbs/consumer.fbs:65`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -7325,7 +7325,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/consumer.fbs:75`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/consumer.fbs:76`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -7592,7 +7592,7 @@ mod root {
             /// The table `LayersChangeNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `LayersChangeNotification` in the file `../worker/fbs/consumer.fbs:81`
+            /// * Table `LayersChangeNotification` in the file `../worker/fbs/consumer.fbs:82`
             #[derive(
                 Clone,
                 Debug,
@@ -7873,7 +7873,7 @@ mod root {
             /// The table `RtpNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpNotification` in the file `../worker/fbs/consumer.fbs:85`
+            /// * Table `RtpNotification` in the file `../worker/fbs/consumer.fbs:86`
             #[derive(
                 Clone,
                 Debug,
@@ -8131,7 +8131,7 @@ mod root {
             /// The table `ScoreNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `ScoreNotification` in the file `../worker/fbs/consumer.fbs:89`
+            /// * Table `ScoreNotification` in the file `../worker/fbs/consumer.fbs:90`
             #[derive(
                 Clone,
                 Debug,
@@ -8391,7 +8391,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/consumer.fbs:93`
+            /// * Union `TraceInfo` in the file `../worker/fbs/consumer.fbs:94`
             #[derive(
                 Clone,
                 Debug,
@@ -8723,7 +8723,7 @@ mod root {
             /// The table `KeyFrameTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/consumer.fbs:100`
+            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/consumer.fbs:101`
             #[derive(
                 Clone,
                 Debug,
@@ -8736,6 +8736,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct KeyFrameTraceInfo {
+                /// The field `rtp_packet` in the table `KeyFrameTraceInfo`
+                pub rtp_packet: ::planus::alloc::boxed::Box<super::rtp_packet::Dump>,
                 /// The field `is_rtx` in the table `KeyFrameTraceInfo`
                 pub is_rtx: bool,
             }
@@ -8743,7 +8745,10 @@ mod root {
             #[allow(clippy::derivable_impls)]
             impl ::core::default::Default for KeyFrameTraceInfo {
                 fn default() -> Self {
-                    Self { is_rtx: false }
+                    Self {
+                        rtp_packet: ::core::default::Default::default(),
+                        is_rtx: false,
+                    }
                 }
             }
 
@@ -8757,18 +8762,22 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_rtp_packet: impl ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
                     field_is_rtx: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_rtp_packet = field_rtp_packet.prepare(builder);
                     let prepared_is_rtx = field_is_rtx.prepare(builder, &false);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
+                    table_writer.write_entry::<::planus::Offset<super::rtp_packet::Dump>>(0);
                     if prepared_is_rtx.is_some() {
-                        table_writer.write_entry::<bool>(0);
+                        table_writer.write_entry::<bool>(1);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_rtp_packet);
                             if let ::core::option::Option::Some(prepared_is_rtx) = prepared_is_rtx {
                                 object_writer.write::<_, _, 1>(&prepared_is_rtx);
                             }
@@ -8808,7 +8817,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<KeyFrameTraceInfo> {
-                    KeyFrameTraceInfo::create(builder, self.is_rtx)
+                    KeyFrameTraceInfo::create(builder, &self.rtp_packet, self.is_rtx)
                 }
             }
 
@@ -8820,14 +8829,27 @@ mod root {
             pub struct KeyFrameTraceInfoBuilder<State>(State);
 
             impl KeyFrameTraceInfoBuilder<()> {
+                /// Setter for the [`rtp_packet` field](KeyFrameTraceInfo#structfield.rtp_packet).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rtp_packet<T0>(self, value: T0) -> KeyFrameTraceInfoBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                {
+                    KeyFrameTraceInfoBuilder((value,))
+                }
+            }
+
+            impl<T0> KeyFrameTraceInfoBuilder<(T0,)> {
                 /// Setter for the [`is_rtx` field](KeyFrameTraceInfo#structfield.is_rtx).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn is_rtx<T0>(self, value: T0) -> KeyFrameTraceInfoBuilder<(T0,)>
+                pub fn is_rtx<T1>(self, value: T1) -> KeyFrameTraceInfoBuilder<(T0, T1)>
                 where
-                    T0: ::planus::WriteAsDefault<bool, bool>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
                 {
-                    KeyFrameTraceInfoBuilder((value,))
+                    let (v0,) = self.0;
+                    KeyFrameTraceInfoBuilder((v0, value))
                 }
 
                 /// Sets the [`is_rtx` field](KeyFrameTraceInfo#structfield.is_rtx) to the default value.
@@ -8835,12 +8857,12 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn is_rtx_as_default(
                     self,
-                ) -> KeyFrameTraceInfoBuilder<(::planus::DefaultValue,)> {
+                ) -> KeyFrameTraceInfoBuilder<(T0, ::planus::DefaultValue)> {
                     self.is_rtx(::planus::DefaultValue)
                 }
             }
 
-            impl<T0> KeyFrameTraceInfoBuilder<(T0,)> {
+            impl<T0, T1> KeyFrameTraceInfoBuilder<(T0, T1)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [KeyFrameTraceInfo].
                 #[inline]
                 pub fn finish(
@@ -8854,9 +8876,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAs<::planus::Offset<KeyFrameTraceInfo>>
-                for KeyFrameTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAs<::planus::Offset<KeyFrameTraceInfo>>
+                for KeyFrameTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<KeyFrameTraceInfo>;
 
@@ -8869,9 +8893,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAsOptional<::planus::Offset<KeyFrameTraceInfo>>
-                for KeyFrameTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOptional<::planus::Offset<KeyFrameTraceInfo>>
+                for KeyFrameTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<KeyFrameTraceInfo>;
 
@@ -8884,16 +8910,19 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAsOffset<KeyFrameTraceInfo> for KeyFrameTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOffset<KeyFrameTraceInfo>
+                for KeyFrameTraceInfoBuilder<(T0, T1)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<KeyFrameTraceInfo> {
-                    let (v0,) = &self.0;
-                    KeyFrameTraceInfo::create(builder, v0)
+                    let (v0, v1) = &self.0;
+                    KeyFrameTraceInfo::create(builder, v0, v1)
                 }
             }
 
@@ -8902,12 +8931,18 @@ mod root {
             pub struct KeyFrameTraceInfoRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> KeyFrameTraceInfoRef<'a> {
+                /// Getter for the [`rtp_packet` field](KeyFrameTraceInfo#structfield.rtp_packet).
+                #[inline]
+                pub fn rtp_packet(&self) -> ::planus::Result<super::rtp_packet::DumpRef<'a>> {
+                    self.0.access_required(0, "KeyFrameTraceInfo", "rtp_packet")
+                }
+
                 /// Getter for the [`is_rtx` field](KeyFrameTraceInfo#structfield.is_rtx).
                 #[inline]
                 pub fn is_rtx(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(0, "KeyFrameTraceInfo", "is_rtx")?
+                            .access(1, "KeyFrameTraceInfo", "is_rtx")?
                             .unwrap_or(false),
                     )
                 }
@@ -8916,6 +8951,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for KeyFrameTraceInfoRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("KeyFrameTraceInfoRef");
+                    f.field("rtp_packet", &self.rtp_packet());
                     f.field("is_rtx", &self.is_rtx());
                     f.finish()
                 }
@@ -8927,6 +8963,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: KeyFrameTraceInfoRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        rtp_packet: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.rtp_packet()?)?,
+                        ),
                         is_rtx: ::core::convert::TryInto::try_into(value.is_rtx()?)?,
                     })
                 }
@@ -9005,7 +9044,7 @@ mod root {
             /// The table `FirTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `FirTraceInfo` in the file `../worker/fbs/consumer.fbs:104`
+            /// * Table `FirTraceInfo` in the file `../worker/fbs/consumer.fbs:106`
             #[derive(
                 Clone,
                 Debug,
@@ -9282,7 +9321,7 @@ mod root {
             /// The table `PliTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `PliTraceInfo` in the file `../worker/fbs/consumer.fbs:108`
+            /// * Table `PliTraceInfo` in the file `../worker/fbs/consumer.fbs:110`
             #[derive(
                 Clone,
                 Debug,
@@ -9559,7 +9598,7 @@ mod root {
             /// The table `RtpTraceInfo` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpTraceInfo` in the file `../worker/fbs/consumer.fbs:112`
+            /// * Table `RtpTraceInfo` in the file `../worker/fbs/consumer.fbs:114`
             #[derive(
                 Clone,
                 Debug,
@@ -9572,6 +9611,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct RtpTraceInfo {
+                /// The field `rtp_packet` in the table `RtpTraceInfo`
+                pub rtp_packet: ::planus::alloc::boxed::Box<super::rtp_packet::Dump>,
                 /// The field `is_rtx` in the table `RtpTraceInfo`
                 pub is_rtx: bool,
             }
@@ -9579,7 +9620,10 @@ mod root {
             #[allow(clippy::derivable_impls)]
             impl ::core::default::Default for RtpTraceInfo {
                 fn default() -> Self {
-                    Self { is_rtx: false }
+                    Self {
+                        rtp_packet: ::core::default::Default::default(),
+                        is_rtx: false,
+                    }
                 }
             }
 
@@ -9593,18 +9637,22 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_rtp_packet: impl ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
                     field_is_rtx: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_rtp_packet = field_rtp_packet.prepare(builder);
                     let prepared_is_rtx = field_is_rtx.prepare(builder, &false);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
+                    table_writer.write_entry::<::planus::Offset<super::rtp_packet::Dump>>(0);
                     if prepared_is_rtx.is_some() {
-                        table_writer.write_entry::<bool>(0);
+                        table_writer.write_entry::<bool>(1);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_rtp_packet);
                             if let ::core::option::Option::Some(prepared_is_rtx) = prepared_is_rtx {
                                 object_writer.write::<_, _, 1>(&prepared_is_rtx);
                             }
@@ -9644,7 +9692,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<RtpTraceInfo> {
-                    RtpTraceInfo::create(builder, self.is_rtx)
+                    RtpTraceInfo::create(builder, &self.rtp_packet, self.is_rtx)
                 }
             }
 
@@ -9656,25 +9704,40 @@ mod root {
             pub struct RtpTraceInfoBuilder<State>(State);
 
             impl RtpTraceInfoBuilder<()> {
+                /// Setter for the [`rtp_packet` field](RtpTraceInfo#structfield.rtp_packet).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rtp_packet<T0>(self, value: T0) -> RtpTraceInfoBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                {
+                    RtpTraceInfoBuilder((value,))
+                }
+            }
+
+            impl<T0> RtpTraceInfoBuilder<(T0,)> {
                 /// Setter for the [`is_rtx` field](RtpTraceInfo#structfield.is_rtx).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn is_rtx<T0>(self, value: T0) -> RtpTraceInfoBuilder<(T0,)>
+                pub fn is_rtx<T1>(self, value: T1) -> RtpTraceInfoBuilder<(T0, T1)>
                 where
-                    T0: ::planus::WriteAsDefault<bool, bool>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
                 {
-                    RtpTraceInfoBuilder((value,))
+                    let (v0,) = self.0;
+                    RtpTraceInfoBuilder((v0, value))
                 }
 
                 /// Sets the [`is_rtx` field](RtpTraceInfo#structfield.is_rtx) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn is_rtx_as_default(self) -> RtpTraceInfoBuilder<(::planus::DefaultValue,)> {
+                pub fn is_rtx_as_default(
+                    self,
+                ) -> RtpTraceInfoBuilder<(T0, ::planus::DefaultValue)> {
                     self.is_rtx(::planus::DefaultValue)
                 }
             }
 
-            impl<T0> RtpTraceInfoBuilder<(T0,)> {
+            impl<T0, T1> RtpTraceInfoBuilder<(T0, T1)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [RtpTraceInfo].
                 #[inline]
                 pub fn finish(
@@ -9688,8 +9751,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAs<::planus::Offset<RtpTraceInfo>> for RtpTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAs<::planus::Offset<RtpTraceInfo>>
+                for RtpTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<RtpTraceInfo>;
 
@@ -9702,9 +9768,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAsOptional<::planus::Offset<RtpTraceInfo>>
-                for RtpTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOptional<::planus::Offset<RtpTraceInfo>>
+                for RtpTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<RtpTraceInfo>;
 
@@ -9717,16 +9785,18 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>> ::planus::WriteAsOffset<RtpTraceInfo>
-                for RtpTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOffset<RtpTraceInfo> for RtpTraceInfoBuilder<(T0, T1)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<RtpTraceInfo> {
-                    let (v0,) = &self.0;
-                    RtpTraceInfo::create(builder, v0)
+                    let (v0, v1) = &self.0;
+                    RtpTraceInfo::create(builder, v0, v1)
                 }
             }
 
@@ -9735,11 +9805,17 @@ mod root {
             pub struct RtpTraceInfoRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> RtpTraceInfoRef<'a> {
+                /// Getter for the [`rtp_packet` field](RtpTraceInfo#structfield.rtp_packet).
+                #[inline]
+                pub fn rtp_packet(&self) -> ::planus::Result<super::rtp_packet::DumpRef<'a>> {
+                    self.0.access_required(0, "RtpTraceInfo", "rtp_packet")
+                }
+
                 /// Getter for the [`is_rtx` field](RtpTraceInfo#structfield.is_rtx).
                 #[inline]
                 pub fn is_rtx(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
-                        self.0.access(0, "RtpTraceInfo", "is_rtx")?.unwrap_or(false),
+                        self.0.access(1, "RtpTraceInfo", "is_rtx")?.unwrap_or(false),
                     )
                 }
             }
@@ -9747,6 +9823,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for RtpTraceInfoRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("RtpTraceInfoRef");
+                    f.field("rtp_packet", &self.rtp_packet());
                     f.field("is_rtx", &self.is_rtx());
                     f.finish()
                 }
@@ -9758,6 +9835,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: RtpTraceInfoRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        rtp_packet: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.rtp_packet()?)?,
+                        ),
                         is_rtx: ::core::convert::TryInto::try_into(value.is_rtx()?)?,
                     })
                 }
@@ -9836,7 +9916,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Consumer`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/consumer.fbs:116`
+            /// * Table `TraceNotification` in the file `../worker/fbs/consumer.fbs:119`
             #[derive(
                 Clone,
                 Debug,
@@ -10300,6 +10380,971 @@ mod root {
                     )
                     .map_err(|error_kind| {
                         error_kind.with_error_location("[TraceNotificationRef]", "read_as_root", 0)
+                    })
+                }
+            }
+        }
+        /// The namespace `FBS.RtpPacket`
+        ///
+        /// Generated from these locations:
+        /// * File `../worker/fbs/rtpPacket.fbs`
+        pub mod rtp_packet {
+            /// The table `Dump` in the namespace `FBS.RtpPacket`
+            ///
+            /// Generated from these locations:
+            /// * Table `Dump` in the file `../worker/fbs/rtpPacket.fbs:5`
+            #[derive(
+                Clone,
+                Debug,
+                PartialEq,
+                PartialOrd,
+                Eq,
+                Ord,
+                Hash,
+                ::serde::Serialize,
+                ::serde::Deserialize,
+            )]
+            pub struct Dump {
+                /// The field `payload_type` in the table `Dump`
+                pub payload_type: u8,
+                /// The field `sequence_number` in the table `Dump`
+                pub sequence_number: u16,
+                /// The field `timestamp` in the table `Dump`
+                pub timestamp: u32,
+                /// The field `marker` in the table `Dump`
+                pub marker: bool,
+                /// The field `ssrc` in the table `Dump`
+                pub ssrc: u32,
+                /// The field `is_key_frame` in the table `Dump`
+                pub is_key_frame: bool,
+                /// The field `size` in the table `Dump`
+                pub size: u64,
+                /// The field `payload_size` in the table `Dump`
+                pub payload_size: u64,
+                /// The field `spatial_layer` in the table `Dump`
+                pub spatial_layer: u8,
+                /// The field `temporal_layer` in the table `Dump`
+                pub temporal_layer: u8,
+                /// The field `mid` in the table `Dump`
+                pub mid: ::core::option::Option<::planus::alloc::string::String>,
+                /// The field `rid` in the table `Dump`
+                pub rid: ::core::option::Option<::planus::alloc::string::String>,
+                /// The field `rrid` in the table `Dump`
+                pub rrid: ::core::option::Option<::planus::alloc::string::String>,
+                /// The field `wide_sequence_number` in the table `Dump`
+                pub wide_sequence_number: ::core::option::Option<u16>,
+            }
+
+            #[allow(clippy::derivable_impls)]
+            impl ::core::default::Default for Dump {
+                fn default() -> Self {
+                    Self {
+                        payload_type: 0,
+                        sequence_number: 0,
+                        timestamp: 0,
+                        marker: false,
+                        ssrc: 0,
+                        is_key_frame: false,
+                        size: 0,
+                        payload_size: 0,
+                        spatial_layer: 0,
+                        temporal_layer: 0,
+                        mid: ::core::default::Default::default(),
+                        rid: ::core::default::Default::default(),
+                        rrid: ::core::default::Default::default(),
+                        wide_sequence_number: ::core::default::Default::default(),
+                    }
+                }
+            }
+
+            impl Dump {
+                /// Creates a [DumpBuilder] for serializing an instance of this table.
+                #[inline]
+                pub fn builder() -> DumpBuilder<()> {
+                    DumpBuilder(())
+                }
+
+                #[allow(clippy::too_many_arguments)]
+                pub fn create(
+                    builder: &mut ::planus::Builder,
+                    field_payload_type: impl ::planus::WriteAsDefault<u8, u8>,
+                    field_sequence_number: impl ::planus::WriteAsDefault<u16, u16>,
+                    field_timestamp: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_marker: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_ssrc: impl ::planus::WriteAsDefault<u32, u32>,
+                    field_is_key_frame: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_size: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_payload_size: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_spatial_layer: impl ::planus::WriteAsDefault<u8, u8>,
+                    field_temporal_layer: impl ::planus::WriteAsDefault<u8, u8>,
+                    field_mid: impl ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    field_rid: impl ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    field_rrid: impl ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    field_wide_sequence_number: impl ::planus::WriteAsOptional<u16>,
+                ) -> ::planus::Offset<Self> {
+                    let prepared_payload_type = field_payload_type.prepare(builder, &0);
+                    let prepared_sequence_number = field_sequence_number.prepare(builder, &0);
+                    let prepared_timestamp = field_timestamp.prepare(builder, &0);
+                    let prepared_marker = field_marker.prepare(builder, &false);
+                    let prepared_ssrc = field_ssrc.prepare(builder, &0);
+                    let prepared_is_key_frame = field_is_key_frame.prepare(builder, &false);
+                    let prepared_size = field_size.prepare(builder, &0);
+                    let prepared_payload_size = field_payload_size.prepare(builder, &0);
+                    let prepared_spatial_layer = field_spatial_layer.prepare(builder, &0);
+                    let prepared_temporal_layer = field_temporal_layer.prepare(builder, &0);
+                    let prepared_mid = field_mid.prepare(builder);
+                    let prepared_rid = field_rid.prepare(builder);
+                    let prepared_rrid = field_rrid.prepare(builder);
+                    let prepared_wide_sequence_number = field_wide_sequence_number.prepare(builder);
+
+                    let mut table_writer: ::planus::table_writer::TableWriter<32> =
+                        ::core::default::Default::default();
+                    if prepared_size.is_some() {
+                        table_writer.write_entry::<u64>(6);
+                    }
+                    if prepared_payload_size.is_some() {
+                        table_writer.write_entry::<u64>(7);
+                    }
+                    if prepared_timestamp.is_some() {
+                        table_writer.write_entry::<u32>(2);
+                    }
+                    if prepared_ssrc.is_some() {
+                        table_writer.write_entry::<u32>(4);
+                    }
+                    if prepared_mid.is_some() {
+                        table_writer.write_entry::<::planus::Offset<str>>(10);
+                    }
+                    if prepared_rid.is_some() {
+                        table_writer.write_entry::<::planus::Offset<str>>(11);
+                    }
+                    if prepared_rrid.is_some() {
+                        table_writer.write_entry::<::planus::Offset<str>>(12);
+                    }
+                    if prepared_sequence_number.is_some() {
+                        table_writer.write_entry::<u16>(1);
+                    }
+                    if prepared_wide_sequence_number.is_some() {
+                        table_writer.write_entry::<u16>(13);
+                    }
+                    if prepared_payload_type.is_some() {
+                        table_writer.write_entry::<u8>(0);
+                    }
+                    if prepared_marker.is_some() {
+                        table_writer.write_entry::<bool>(3);
+                    }
+                    if prepared_is_key_frame.is_some() {
+                        table_writer.write_entry::<bool>(5);
+                    }
+                    if prepared_spatial_layer.is_some() {
+                        table_writer.write_entry::<u8>(8);
+                    }
+                    if prepared_temporal_layer.is_some() {
+                        table_writer.write_entry::<u8>(9);
+                    }
+
+                    unsafe {
+                        table_writer.finish(builder, |object_writer| {
+                            if let ::core::option::Option::Some(prepared_size) = prepared_size {
+                                object_writer.write::<_, _, 8>(&prepared_size);
+                            }
+                            if let ::core::option::Option::Some(prepared_payload_size) =
+                                prepared_payload_size
+                            {
+                                object_writer.write::<_, _, 8>(&prepared_payload_size);
+                            }
+                            if let ::core::option::Option::Some(prepared_timestamp) =
+                                prepared_timestamp
+                            {
+                                object_writer.write::<_, _, 4>(&prepared_timestamp);
+                            }
+                            if let ::core::option::Option::Some(prepared_ssrc) = prepared_ssrc {
+                                object_writer.write::<_, _, 4>(&prepared_ssrc);
+                            }
+                            if let ::core::option::Option::Some(prepared_mid) = prepared_mid {
+                                object_writer.write::<_, _, 4>(&prepared_mid);
+                            }
+                            if let ::core::option::Option::Some(prepared_rid) = prepared_rid {
+                                object_writer.write::<_, _, 4>(&prepared_rid);
+                            }
+                            if let ::core::option::Option::Some(prepared_rrid) = prepared_rrid {
+                                object_writer.write::<_, _, 4>(&prepared_rrid);
+                            }
+                            if let ::core::option::Option::Some(prepared_sequence_number) =
+                                prepared_sequence_number
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_sequence_number);
+                            }
+                            if let ::core::option::Option::Some(prepared_wide_sequence_number) =
+                                prepared_wide_sequence_number
+                            {
+                                object_writer.write::<_, _, 2>(&prepared_wide_sequence_number);
+                            }
+                            if let ::core::option::Option::Some(prepared_payload_type) =
+                                prepared_payload_type
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_payload_type);
+                            }
+                            if let ::core::option::Option::Some(prepared_marker) = prepared_marker {
+                                object_writer.write::<_, _, 1>(&prepared_marker);
+                            }
+                            if let ::core::option::Option::Some(prepared_is_key_frame) =
+                                prepared_is_key_frame
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_is_key_frame);
+                            }
+                            if let ::core::option::Option::Some(prepared_spatial_layer) =
+                                prepared_spatial_layer
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_spatial_layer);
+                            }
+                            if let ::core::option::Option::Some(prepared_temporal_layer) =
+                                prepared_temporal_layer
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_temporal_layer);
+                            }
+                        });
+                    }
+                    builder.current_offset()
+                }
+            }
+
+            impl ::planus::WriteAs<::planus::Offset<Dump>> for Dump {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Dump> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl ::planus::WriteAsOptional<::planus::Offset<Dump>> for Dump {
+                type Prepared = ::planus::Offset<Self>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<Dump>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl ::planus::WriteAsOffset<Dump> for Dump {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Dump> {
+                    Dump::create(
+                        builder,
+                        self.payload_type,
+                        self.sequence_number,
+                        self.timestamp,
+                        self.marker,
+                        self.ssrc,
+                        self.is_key_frame,
+                        self.size,
+                        self.payload_size,
+                        self.spatial_layer,
+                        self.temporal_layer,
+                        &self.mid,
+                        &self.rid,
+                        &self.rrid,
+                        self.wide_sequence_number,
+                    )
+                }
+            }
+
+            /// Builder for serializing an instance of the [Dump] type.
+            ///
+            /// Can be created using the [Dump::builder] method.
+            #[derive(Debug)]
+            #[must_use]
+            pub struct DumpBuilder<State>(State);
+
+            impl DumpBuilder<()> {
+                /// Setter for the [`payload_type` field](Dump#structfield.payload_type).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn payload_type<T0>(self, value: T0) -> DumpBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                {
+                    DumpBuilder((value,))
+                }
+
+                /// Sets the [`payload_type` field](Dump#structfield.payload_type) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn payload_type_as_default(self) -> DumpBuilder<(::planus::DefaultValue,)> {
+                    self.payload_type(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0> DumpBuilder<(T0,)> {
+                /// Setter for the [`sequence_number` field](Dump#structfield.sequence_number).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn sequence_number<T1>(self, value: T1) -> DumpBuilder<(T0, T1)>
+                where
+                    T1: ::planus::WriteAsDefault<u16, u16>,
+                {
+                    let (v0,) = self.0;
+                    DumpBuilder((v0, value))
+                }
+
+                /// Sets the [`sequence_number` field](Dump#structfield.sequence_number) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn sequence_number_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, ::planus::DefaultValue)> {
+                    self.sequence_number(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1> DumpBuilder<(T0, T1)> {
+                /// Setter for the [`timestamp` field](Dump#structfield.timestamp).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn timestamp<T2>(self, value: T2) -> DumpBuilder<(T0, T1, T2)>
+                where
+                    T2: ::planus::WriteAsDefault<u32, u32>,
+                {
+                    let (v0, v1) = self.0;
+                    DumpBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`timestamp` field](Dump#structfield.timestamp) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn timestamp_as_default(self) -> DumpBuilder<(T0, T1, ::planus::DefaultValue)> {
+                    self.timestamp(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2> DumpBuilder<(T0, T1, T2)> {
+                /// Setter for the [`marker` field](Dump#structfield.marker).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn marker<T3>(self, value: T3) -> DumpBuilder<(T0, T1, T2, T3)>
+                where
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                {
+                    let (v0, v1, v2) = self.0;
+                    DumpBuilder((v0, v1, v2, value))
+                }
+
+                /// Sets the [`marker` field](Dump#structfield.marker) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn marker_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, ::planus::DefaultValue)> {
+                    self.marker(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3> DumpBuilder<(T0, T1, T2, T3)> {
+                /// Setter for the [`ssrc` field](Dump#structfield.ssrc).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn ssrc<T4>(self, value: T4) -> DumpBuilder<(T0, T1, T2, T3, T4)>
+                where
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                {
+                    let (v0, v1, v2, v3) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, value))
+                }
+
+                /// Sets the [`ssrc` field](Dump#structfield.ssrc) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn ssrc_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)> {
+                    self.ssrc(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4> DumpBuilder<(T0, T1, T2, T3, T4)> {
+                /// Setter for the [`is_key_frame` field](Dump#structfield.is_key_frame).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn is_key_frame<T5>(self, value: T5) -> DumpBuilder<(T0, T1, T2, T3, T4, T5)>
+                where
+                    T5: ::planus::WriteAsDefault<bool, bool>,
+                {
+                    let (v0, v1, v2, v3, v4) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, value))
+                }
+
+                /// Sets the [`is_key_frame` field](Dump#structfield.is_key_frame) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn is_key_frame_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, ::planus::DefaultValue)> {
+                    self.is_key_frame(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5> DumpBuilder<(T0, T1, T2, T3, T4, T5)> {
+                /// Setter for the [`size` field](Dump#structfield.size).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn size<T6>(self, value: T6) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6)>
+                where
+                    T6: ::planus::WriteAsDefault<u64, u64>,
+                {
+                    let (v0, v1, v2, v3, v4, v5) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, value))
+                }
+
+                /// Sets the [`size` field](Dump#structfield.size) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn size_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, ::planus::DefaultValue)> {
+                    self.size(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6)> {
+                /// Setter for the [`payload_size` field](Dump#structfield.payload_size).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn payload_size<T7>(
+                    self,
+                    value: T7,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)>
+                where
+                    T7: ::planus::WriteAsDefault<u64, u64>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, value))
+                }
+
+                /// Sets the [`payload_size` field](Dump#structfield.payload_size) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn payload_size_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, ::planus::DefaultValue)>
+                {
+                    self.payload_size(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7)> {
+                /// Setter for the [`spatial_layer` field](Dump#structfield.spatial_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn spatial_layer<T8>(
+                    self,
+                    value: T8,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
+                where
+                    T8: ::planus::WriteAsDefault<u8, u8>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, value))
+                }
+
+                /// Sets the [`spatial_layer` field](Dump#structfield.spatial_layer) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn spatial_layer_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, ::planus::DefaultValue)>
+                {
+                    self.spatial_layer(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8)> {
+                /// Setter for the [`temporal_layer` field](Dump#structfield.temporal_layer).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn temporal_layer<T9>(
+                    self,
+                    value: T9,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)>
+                where
+                    T9: ::planus::WriteAsDefault<u8, u8>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, value))
+                }
+
+                /// Sets the [`temporal_layer` field](Dump#structfield.temporal_layer) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn temporal_layer_as_default(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, ::planus::DefaultValue)>
+                {
+                    self.temporal_layer(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> {
+                /// Setter for the [`mid` field](Dump#structfield.mid).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn mid<T10>(
+                    self,
+                    value: T10,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
+                where
+                    T10: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, value))
+                }
+
+                /// Sets the [`mid` field](Dump#structfield.mid) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn mid_as_null(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, ())> {
+                    self.mid(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+                DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)>
+            {
+                /// Setter for the [`rid` field](Dump#structfield.rid).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rid<T11>(
+                    self,
+                    value: T11,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>
+                where
+                    T11: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, value))
+                }
+
+                /// Sets the [`rid` field](Dump#structfield.rid) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rid_as_null(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, ())>
+                {
+                    self.rid(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+                DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)>
+            {
+                /// Setter for the [`rrid` field](Dump#structfield.rrid).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rrid<T12>(
+                    self,
+                    value: T12,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)>
+                where
+                    T12: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, value))
+                }
+
+                /// Sets the [`rrid` field](Dump#structfield.rrid) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rrid_as_null(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, ())>
+                {
+                    self.rrid(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+                DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)>
+            {
+                /// Setter for the [`wide_sequence_number` field](Dump#structfield.wide_sequence_number).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn wide_sequence_number<T13>(
+                    self,
+                    value: T13,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)>
+                where
+                    T13: ::planus::WriteAsOptional<u16>,
+                {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12) = self.0;
+                    DumpBuilder((v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, value))
+                }
+
+                /// Sets the [`wide_sequence_number` field](Dump#structfield.wide_sequence_number) to null.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn wide_sequence_number_as_null(
+                    self,
+                ) -> DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, ())>
+                {
+                    self.wide_sequence_number(())
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+                DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)>
+            {
+                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [Dump].
+                #[inline]
+                pub fn finish(self, builder: &mut ::planus::Builder) -> ::planus::Offset<Dump>
+                where
+                    Self: ::planus::WriteAsOffset<Dump>,
+                {
+                    ::planus::WriteAsOffset::prepare(&self, builder)
+                }
+            }
+
+            impl<
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
+                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                    T5: ::planus::WriteAsDefault<bool, bool>,
+                    T6: ::planus::WriteAsDefault<u64, u64>,
+                    T7: ::planus::WriteAsDefault<u64, u64>,
+                    T8: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T10: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T11: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T12: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T13: ::planus::WriteAsOptional<u16>,
+                > ::planus::WriteAs<::planus::Offset<Dump>>
+                for DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)>
+            {
+                type Prepared = ::planus::Offset<Dump>;
+
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Dump> {
+                    ::planus::WriteAsOffset::prepare(self, builder)
+                }
+            }
+
+            impl<
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
+                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                    T5: ::planus::WriteAsDefault<bool, bool>,
+                    T6: ::planus::WriteAsDefault<u64, u64>,
+                    T7: ::planus::WriteAsDefault<u64, u64>,
+                    T8: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T10: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T11: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T12: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T13: ::planus::WriteAsOptional<u16>,
+                > ::planus::WriteAsOptional<::planus::Offset<Dump>>
+                for DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)>
+            {
+                type Prepared = ::planus::Offset<Dump>;
+
+                #[inline]
+                fn prepare(
+                    &self,
+                    builder: &mut ::planus::Builder,
+                ) -> ::core::option::Option<::planus::Offset<Dump>> {
+                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
+                }
+            }
+
+            impl<
+                    T0: ::planus::WriteAsDefault<u8, u8>,
+                    T1: ::planus::WriteAsDefault<u16, u16>,
+                    T2: ::planus::WriteAsDefault<u32, u32>,
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                    T4: ::planus::WriteAsDefault<u32, u32>,
+                    T5: ::planus::WriteAsDefault<bool, bool>,
+                    T6: ::planus::WriteAsDefault<u64, u64>,
+                    T7: ::planus::WriteAsDefault<u64, u64>,
+                    T8: ::planus::WriteAsDefault<u8, u8>,
+                    T9: ::planus::WriteAsDefault<u8, u8>,
+                    T10: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T11: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T12: ::planus::WriteAsOptional<::planus::Offset<::core::primitive::str>>,
+                    T13: ::planus::WriteAsOptional<u16>,
+                > ::planus::WriteAsOffset<Dump>
+                for DumpBuilder<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)>
+            {
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<Dump> {
+                    let (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13) = &self.0;
+                    Dump::create(
+                        builder, v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13,
+                    )
+                }
+            }
+
+            /// Reference to a deserialized [Dump].
+            #[derive(Copy, Clone)]
+            pub struct DumpRef<'a>(::planus::table_reader::Table<'a>);
+
+            impl<'a> DumpRef<'a> {
+                /// Getter for the [`payload_type` field](Dump#structfield.payload_type).
+                #[inline]
+                pub fn payload_type(&self) -> ::planus::Result<u8> {
+                    ::core::result::Result::Ok(
+                        self.0.access(0, "Dump", "payload_type")?.unwrap_or(0),
+                    )
+                }
+
+                /// Getter for the [`sequence_number` field](Dump#structfield.sequence_number).
+                #[inline]
+                pub fn sequence_number(&self) -> ::planus::Result<u16> {
+                    ::core::result::Result::Ok(
+                        self.0.access(1, "Dump", "sequence_number")?.unwrap_or(0),
+                    )
+                }
+
+                /// Getter for the [`timestamp` field](Dump#structfield.timestamp).
+                #[inline]
+                pub fn timestamp(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(self.0.access(2, "Dump", "timestamp")?.unwrap_or(0))
+                }
+
+                /// Getter for the [`marker` field](Dump#structfield.marker).
+                #[inline]
+                pub fn marker(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(self.0.access(3, "Dump", "marker")?.unwrap_or(false))
+                }
+
+                /// Getter for the [`ssrc` field](Dump#structfield.ssrc).
+                #[inline]
+                pub fn ssrc(&self) -> ::planus::Result<u32> {
+                    ::core::result::Result::Ok(self.0.access(4, "Dump", "ssrc")?.unwrap_or(0))
+                }
+
+                /// Getter for the [`is_key_frame` field](Dump#structfield.is_key_frame).
+                #[inline]
+                pub fn is_key_frame(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0.access(5, "Dump", "is_key_frame")?.unwrap_or(false),
+                    )
+                }
+
+                /// Getter for the [`size` field](Dump#structfield.size).
+                #[inline]
+                pub fn size(&self) -> ::planus::Result<u64> {
+                    ::core::result::Result::Ok(self.0.access(6, "Dump", "size")?.unwrap_or(0))
+                }
+
+                /// Getter for the [`payload_size` field](Dump#structfield.payload_size).
+                #[inline]
+                pub fn payload_size(&self) -> ::planus::Result<u64> {
+                    ::core::result::Result::Ok(
+                        self.0.access(7, "Dump", "payload_size")?.unwrap_or(0),
+                    )
+                }
+
+                /// Getter for the [`spatial_layer` field](Dump#structfield.spatial_layer).
+                #[inline]
+                pub fn spatial_layer(&self) -> ::planus::Result<u8> {
+                    ::core::result::Result::Ok(
+                        self.0.access(8, "Dump", "spatial_layer")?.unwrap_or(0),
+                    )
+                }
+
+                /// Getter for the [`temporal_layer` field](Dump#structfield.temporal_layer).
+                #[inline]
+                pub fn temporal_layer(&self) -> ::planus::Result<u8> {
+                    ::core::result::Result::Ok(
+                        self.0.access(9, "Dump", "temporal_layer")?.unwrap_or(0),
+                    )
+                }
+
+                /// Getter for the [`mid` field](Dump#structfield.mid).
+                #[inline]
+                pub fn mid(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                {
+                    self.0.access(10, "Dump", "mid")
+                }
+
+                /// Getter for the [`rid` field](Dump#structfield.rid).
+                #[inline]
+                pub fn rid(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                {
+                    self.0.access(11, "Dump", "rid")
+                }
+
+                /// Getter for the [`rrid` field](Dump#structfield.rrid).
+                #[inline]
+                pub fn rrid(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<&'a ::core::primitive::str>>
+                {
+                    self.0.access(12, "Dump", "rrid")
+                }
+
+                /// Getter for the [`wide_sequence_number` field](Dump#structfield.wide_sequence_number).
+                #[inline]
+                pub fn wide_sequence_number(
+                    &self,
+                ) -> ::planus::Result<::core::option::Option<u16>> {
+                    self.0.access(13, "Dump", "wide_sequence_number")
+                }
+            }
+
+            impl<'a> ::core::fmt::Debug for DumpRef<'a> {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    let mut f = f.debug_struct("DumpRef");
+                    f.field("payload_type", &self.payload_type());
+                    f.field("sequence_number", &self.sequence_number());
+                    f.field("timestamp", &self.timestamp());
+                    f.field("marker", &self.marker());
+                    f.field("ssrc", &self.ssrc());
+                    f.field("is_key_frame", &self.is_key_frame());
+                    f.field("size", &self.size());
+                    f.field("payload_size", &self.payload_size());
+                    f.field("spatial_layer", &self.spatial_layer());
+                    f.field("temporal_layer", &self.temporal_layer());
+                    if let ::core::option::Option::Some(field_mid) = self.mid().transpose() {
+                        f.field("mid", &field_mid);
+                    }
+                    if let ::core::option::Option::Some(field_rid) = self.rid().transpose() {
+                        f.field("rid", &field_rid);
+                    }
+                    if let ::core::option::Option::Some(field_rrid) = self.rrid().transpose() {
+                        f.field("rrid", &field_rrid);
+                    }
+                    if let ::core::option::Option::Some(field_wide_sequence_number) =
+                        self.wide_sequence_number().transpose()
+                    {
+                        f.field("wide_sequence_number", &field_wide_sequence_number);
+                    }
+                    f.finish()
+                }
+            }
+
+            impl<'a> ::core::convert::TryFrom<DumpRef<'a>> for Dump {
+                type Error = ::planus::Error;
+
+                #[allow(unreachable_code)]
+                fn try_from(value: DumpRef<'a>) -> ::planus::Result<Self> {
+                    ::core::result::Result::Ok(Self {
+                        payload_type: ::core::convert::TryInto::try_into(value.payload_type()?)?,
+                        sequence_number: ::core::convert::TryInto::try_into(
+                            value.sequence_number()?,
+                        )?,
+                        timestamp: ::core::convert::TryInto::try_into(value.timestamp()?)?,
+                        marker: ::core::convert::TryInto::try_into(value.marker()?)?,
+                        ssrc: ::core::convert::TryInto::try_into(value.ssrc()?)?,
+                        is_key_frame: ::core::convert::TryInto::try_into(value.is_key_frame()?)?,
+                        size: ::core::convert::TryInto::try_into(value.size()?)?,
+                        payload_size: ::core::convert::TryInto::try_into(value.payload_size()?)?,
+                        spatial_layer: ::core::convert::TryInto::try_into(value.spatial_layer()?)?,
+                        temporal_layer: ::core::convert::TryInto::try_into(
+                            value.temporal_layer()?,
+                        )?,
+                        mid: if let ::core::option::Option::Some(mid) = value.mid()? {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(mid)?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        rid: if let ::core::option::Option::Some(rid) = value.rid()? {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(rid)?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        rrid: if let ::core::option::Option::Some(rrid) = value.rrid()? {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(rrid)?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                        wide_sequence_number: if let ::core::option::Option::Some(
+                            wide_sequence_number,
+                        ) = value.wide_sequence_number()?
+                        {
+                            ::core::option::Option::Some(::core::convert::TryInto::try_into(
+                                wide_sequence_number,
+                            )?)
+                        } else {
+                            ::core::option::Option::None
+                        },
+                    })
+                }
+            }
+
+            impl<'a> ::planus::TableRead<'a> for DumpRef<'a> {
+                #[inline]
+                fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
+                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
+                        buffer, offset,
+                    )?))
+                }
+            }
+
+            impl<'a> ::planus::VectorReadInner<'a> for DumpRef<'a> {
+                type Error = ::planus::Error;
+                const STRIDE: usize = 4;
+
+                unsafe fn from_buffer(
+                    buffer: ::planus::SliceWithStartOffset<'a>,
+                    offset: usize,
+                ) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
+                        error_kind.with_error_location("[DumpRef]", "get", buffer.offset_from_start)
+                    })
+                }
+            }
+
+            impl ::planus::VectorWrite<::planus::Offset<Dump>> for Dump {
+                type Value = ::planus::Offset<Dump>;
+                const STRIDE: usize = 4;
+                #[inline]
+                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
+                    ::planus::WriteAs::prepare(self, builder)
+                }
+
+                #[inline]
+                unsafe fn write_values(
+                    values: &[::planus::Offset<Dump>],
+                    bytes: *mut ::core::mem::MaybeUninit<u8>,
+                    buffer_position: u32,
+                ) {
+                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
+                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
+                        ::planus::WriteAsPrimitive::write(
+                            v,
+                            ::planus::Cursor::new(&mut *bytes.add(i)),
+                            buffer_position - (Self::STRIDE * i) as u32,
+                        );
+                    }
+                }
+            }
+
+            impl<'a> ::planus::ReadAsRoot<'a> for DumpRef<'a> {
+                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
+                    ::planus::TableRead::from_buffer(
+                        ::planus::SliceWithStartOffset {
+                            buffer: slice,
+                            offset_from_start: 0,
+                        },
+                        0,
+                    )
+                    .map_err(|error_kind| {
+                        error_kind.with_error_location("[DumpRef]", "read_as_root", 0)
                     })
                 }
             }
@@ -63853,7 +64898,7 @@ mod root {
             /// The enum `TraceEventType` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceEventType` in the file `../worker/fbs/producer.fbs:7`
+            /// * Enum `TraceEventType` in the file `../worker/fbs/producer.fbs:8`
             #[derive(
                 Copy,
                 Clone,
@@ -64036,7 +65081,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/producer.fbs:15`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/producer.fbs:16`
             #[derive(
                 Clone,
                 Debug,
@@ -64314,7 +65359,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/producer.fbs:19`
+            /// * Table `DumpResponse` in the file `../worker/fbs/producer.fbs:20`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -64919,7 +65964,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/producer.fbs:30`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/producer.fbs:31`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -65186,7 +66231,7 @@ mod root {
             /// The table `SendNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `SendNotification` in the file `../worker/fbs/producer.fbs:34`
+            /// * Table `SendNotification` in the file `../worker/fbs/producer.fbs:35`
             #[derive(
                 Clone,
                 Debug,
@@ -65444,7 +66489,7 @@ mod root {
             /// The table `Score` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `Score` in the file `../worker/fbs/producer.fbs:40`
+            /// * Table `Score` in the file `../worker/fbs/producer.fbs:41`
             #[derive(
                 Clone,
                 Debug,
@@ -65850,7 +66895,7 @@ mod root {
             /// The table `ScoreNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `ScoreNotification` in the file `../worker/fbs/producer.fbs:47`
+            /// * Table `ScoreNotification` in the file `../worker/fbs/producer.fbs:48`
             #[derive(
                 Clone,
                 Debug,
@@ -66114,7 +67159,7 @@ mod root {
             /// The table `VideoOrientationChangeNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `VideoOrientationChangeNotification` in the file `../worker/fbs/producer.fbs:51`
+            /// * Table `VideoOrientationChangeNotification` in the file `../worker/fbs/producer.fbs:52`
             #[derive(
                 Clone,
                 Debug,
@@ -66537,7 +67582,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/producer.fbs:57`
+            /// * Union `TraceInfo` in the file `../worker/fbs/producer.fbs:58`
             #[derive(
                 Clone,
                 Debug,
@@ -66869,7 +67914,7 @@ mod root {
             /// The table `KeyFrameTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/producer.fbs:64`
+            /// * Table `KeyFrameTraceInfo` in the file `../worker/fbs/producer.fbs:65`
             #[derive(
                 Clone,
                 Debug,
@@ -66882,6 +67927,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct KeyFrameTraceInfo {
+                /// The field `rtp_packet` in the table `KeyFrameTraceInfo`
+                pub rtp_packet: ::planus::alloc::boxed::Box<super::rtp_packet::Dump>,
                 /// The field `is_rtx` in the table `KeyFrameTraceInfo`
                 pub is_rtx: bool,
             }
@@ -66889,7 +67936,10 @@ mod root {
             #[allow(clippy::derivable_impls)]
             impl ::core::default::Default for KeyFrameTraceInfo {
                 fn default() -> Self {
-                    Self { is_rtx: false }
+                    Self {
+                        rtp_packet: ::core::default::Default::default(),
+                        is_rtx: false,
+                    }
                 }
             }
 
@@ -66903,18 +67953,22 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_rtp_packet: impl ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
                     field_is_rtx: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_rtp_packet = field_rtp_packet.prepare(builder);
                     let prepared_is_rtx = field_is_rtx.prepare(builder, &false);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
+                    table_writer.write_entry::<::planus::Offset<super::rtp_packet::Dump>>(0);
                     if prepared_is_rtx.is_some() {
-                        table_writer.write_entry::<bool>(0);
+                        table_writer.write_entry::<bool>(1);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_rtp_packet);
                             if let ::core::option::Option::Some(prepared_is_rtx) = prepared_is_rtx {
                                 object_writer.write::<_, _, 1>(&prepared_is_rtx);
                             }
@@ -66954,7 +68008,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<KeyFrameTraceInfo> {
-                    KeyFrameTraceInfo::create(builder, self.is_rtx)
+                    KeyFrameTraceInfo::create(builder, &self.rtp_packet, self.is_rtx)
                 }
             }
 
@@ -66966,14 +68020,27 @@ mod root {
             pub struct KeyFrameTraceInfoBuilder<State>(State);
 
             impl KeyFrameTraceInfoBuilder<()> {
+                /// Setter for the [`rtp_packet` field](KeyFrameTraceInfo#structfield.rtp_packet).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rtp_packet<T0>(self, value: T0) -> KeyFrameTraceInfoBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                {
+                    KeyFrameTraceInfoBuilder((value,))
+                }
+            }
+
+            impl<T0> KeyFrameTraceInfoBuilder<(T0,)> {
                 /// Setter for the [`is_rtx` field](KeyFrameTraceInfo#structfield.is_rtx).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn is_rtx<T0>(self, value: T0) -> KeyFrameTraceInfoBuilder<(T0,)>
+                pub fn is_rtx<T1>(self, value: T1) -> KeyFrameTraceInfoBuilder<(T0, T1)>
                 where
-                    T0: ::planus::WriteAsDefault<bool, bool>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
                 {
-                    KeyFrameTraceInfoBuilder((value,))
+                    let (v0,) = self.0;
+                    KeyFrameTraceInfoBuilder((v0, value))
                 }
 
                 /// Sets the [`is_rtx` field](KeyFrameTraceInfo#structfield.is_rtx) to the default value.
@@ -66981,12 +68048,12 @@ mod root {
                 #[allow(clippy::type_complexity)]
                 pub fn is_rtx_as_default(
                     self,
-                ) -> KeyFrameTraceInfoBuilder<(::planus::DefaultValue,)> {
+                ) -> KeyFrameTraceInfoBuilder<(T0, ::planus::DefaultValue)> {
                     self.is_rtx(::planus::DefaultValue)
                 }
             }
 
-            impl<T0> KeyFrameTraceInfoBuilder<(T0,)> {
+            impl<T0, T1> KeyFrameTraceInfoBuilder<(T0, T1)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [KeyFrameTraceInfo].
                 #[inline]
                 pub fn finish(
@@ -67000,9 +68067,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAs<::planus::Offset<KeyFrameTraceInfo>>
-                for KeyFrameTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAs<::planus::Offset<KeyFrameTraceInfo>>
+                for KeyFrameTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<KeyFrameTraceInfo>;
 
@@ -67015,9 +68084,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAsOptional<::planus::Offset<KeyFrameTraceInfo>>
-                for KeyFrameTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOptional<::planus::Offset<KeyFrameTraceInfo>>
+                for KeyFrameTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<KeyFrameTraceInfo>;
 
@@ -67030,16 +68101,19 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAsOffset<KeyFrameTraceInfo> for KeyFrameTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOffset<KeyFrameTraceInfo>
+                for KeyFrameTraceInfoBuilder<(T0, T1)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<KeyFrameTraceInfo> {
-                    let (v0,) = &self.0;
-                    KeyFrameTraceInfo::create(builder, v0)
+                    let (v0, v1) = &self.0;
+                    KeyFrameTraceInfo::create(builder, v0, v1)
                 }
             }
 
@@ -67048,12 +68122,18 @@ mod root {
             pub struct KeyFrameTraceInfoRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> KeyFrameTraceInfoRef<'a> {
+                /// Getter for the [`rtp_packet` field](KeyFrameTraceInfo#structfield.rtp_packet).
+                #[inline]
+                pub fn rtp_packet(&self) -> ::planus::Result<super::rtp_packet::DumpRef<'a>> {
+                    self.0.access_required(0, "KeyFrameTraceInfo", "rtp_packet")
+                }
+
                 /// Getter for the [`is_rtx` field](KeyFrameTraceInfo#structfield.is_rtx).
                 #[inline]
                 pub fn is_rtx(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
                         self.0
-                            .access(0, "KeyFrameTraceInfo", "is_rtx")?
+                            .access(1, "KeyFrameTraceInfo", "is_rtx")?
                             .unwrap_or(false),
                     )
                 }
@@ -67062,6 +68142,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for KeyFrameTraceInfoRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("KeyFrameTraceInfoRef");
+                    f.field("rtp_packet", &self.rtp_packet());
                     f.field("is_rtx", &self.is_rtx());
                     f.finish()
                 }
@@ -67073,6 +68154,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: KeyFrameTraceInfoRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        rtp_packet: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.rtp_packet()?)?,
+                        ),
                         is_rtx: ::core::convert::TryInto::try_into(value.is_rtx()?)?,
                     })
                 }
@@ -67151,7 +68235,7 @@ mod root {
             /// The table `FirTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `FirTraceInfo` in the file `../worker/fbs/producer.fbs:68`
+            /// * Table `FirTraceInfo` in the file `../worker/fbs/producer.fbs:70`
             #[derive(
                 Clone,
                 Debug,
@@ -67428,7 +68512,7 @@ mod root {
             /// The table `PliTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `PliTraceInfo` in the file `../worker/fbs/producer.fbs:72`
+            /// * Table `PliTraceInfo` in the file `../worker/fbs/producer.fbs:74`
             #[derive(
                 Clone,
                 Debug,
@@ -67705,7 +68789,7 @@ mod root {
             /// The table `RtpTraceInfo` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `RtpTraceInfo` in the file `../worker/fbs/producer.fbs:76`
+            /// * Table `RtpTraceInfo` in the file `../worker/fbs/producer.fbs:78`
             #[derive(
                 Clone,
                 Debug,
@@ -67718,6 +68802,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct RtpTraceInfo {
+                /// The field `rtp_packet` in the table `RtpTraceInfo`
+                pub rtp_packet: ::planus::alloc::boxed::Box<super::rtp_packet::Dump>,
                 /// The field `is_rtx` in the table `RtpTraceInfo`
                 pub is_rtx: bool,
             }
@@ -67725,7 +68811,10 @@ mod root {
             #[allow(clippy::derivable_impls)]
             impl ::core::default::Default for RtpTraceInfo {
                 fn default() -> Self {
-                    Self { is_rtx: false }
+                    Self {
+                        rtp_packet: ::core::default::Default::default(),
+                        is_rtx: false,
+                    }
                 }
             }
 
@@ -67739,18 +68828,22 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
+                    field_rtp_packet: impl ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
                     field_is_rtx: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
+                    let prepared_rtp_packet = field_rtp_packet.prepare(builder);
                     let prepared_is_rtx = field_is_rtx.prepare(builder, &false);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
+                    table_writer.write_entry::<::planus::Offset<super::rtp_packet::Dump>>(0);
                     if prepared_is_rtx.is_some() {
-                        table_writer.write_entry::<bool>(0);
+                        table_writer.write_entry::<bool>(1);
                     }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
+                            object_writer.write::<_, _, 4>(&prepared_rtp_packet);
                             if let ::core::option::Option::Some(prepared_is_rtx) = prepared_is_rtx {
                                 object_writer.write::<_, _, 1>(&prepared_is_rtx);
                             }
@@ -67790,7 +68883,7 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<RtpTraceInfo> {
-                    RtpTraceInfo::create(builder, self.is_rtx)
+                    RtpTraceInfo::create(builder, &self.rtp_packet, self.is_rtx)
                 }
             }
 
@@ -67802,25 +68895,40 @@ mod root {
             pub struct RtpTraceInfoBuilder<State>(State);
 
             impl RtpTraceInfoBuilder<()> {
+                /// Setter for the [`rtp_packet` field](RtpTraceInfo#structfield.rtp_packet).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn rtp_packet<T0>(self, value: T0) -> RtpTraceInfoBuilder<(T0,)>
+                where
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                {
+                    RtpTraceInfoBuilder((value,))
+                }
+            }
+
+            impl<T0> RtpTraceInfoBuilder<(T0,)> {
                 /// Setter for the [`is_rtx` field](RtpTraceInfo#structfield.is_rtx).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn is_rtx<T0>(self, value: T0) -> RtpTraceInfoBuilder<(T0,)>
+                pub fn is_rtx<T1>(self, value: T1) -> RtpTraceInfoBuilder<(T0, T1)>
                 where
-                    T0: ::planus::WriteAsDefault<bool, bool>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
                 {
-                    RtpTraceInfoBuilder((value,))
+                    let (v0,) = self.0;
+                    RtpTraceInfoBuilder((v0, value))
                 }
 
                 /// Sets the [`is_rtx` field](RtpTraceInfo#structfield.is_rtx) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn is_rtx_as_default(self) -> RtpTraceInfoBuilder<(::planus::DefaultValue,)> {
+                pub fn is_rtx_as_default(
+                    self,
+                ) -> RtpTraceInfoBuilder<(T0, ::planus::DefaultValue)> {
                     self.is_rtx(::planus::DefaultValue)
                 }
             }
 
-            impl<T0> RtpTraceInfoBuilder<(T0,)> {
+            impl<T0, T1> RtpTraceInfoBuilder<(T0, T1)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [RtpTraceInfo].
                 #[inline]
                 pub fn finish(
@@ -67834,8 +68942,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAs<::planus::Offset<RtpTraceInfo>> for RtpTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAs<::planus::Offset<RtpTraceInfo>>
+                for RtpTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<RtpTraceInfo>;
 
@@ -67848,9 +68959,11 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>>
-                ::planus::WriteAsOptional<::planus::Offset<RtpTraceInfo>>
-                for RtpTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOptional<::planus::Offset<RtpTraceInfo>>
+                for RtpTraceInfoBuilder<(T0, T1)>
             {
                 type Prepared = ::planus::Offset<RtpTraceInfo>;
 
@@ -67863,16 +68976,18 @@ mod root {
                 }
             }
 
-            impl<T0: ::planus::WriteAsDefault<bool, bool>> ::planus::WriteAsOffset<RtpTraceInfo>
-                for RtpTraceInfoBuilder<(T0,)>
+            impl<
+                    T0: ::planus::WriteAs<::planus::Offset<super::rtp_packet::Dump>>,
+                    T1: ::planus::WriteAsDefault<bool, bool>,
+                > ::planus::WriteAsOffset<RtpTraceInfo> for RtpTraceInfoBuilder<(T0, T1)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<RtpTraceInfo> {
-                    let (v0,) = &self.0;
-                    RtpTraceInfo::create(builder, v0)
+                    let (v0, v1) = &self.0;
+                    RtpTraceInfo::create(builder, v0, v1)
                 }
             }
 
@@ -67881,11 +68996,17 @@ mod root {
             pub struct RtpTraceInfoRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> RtpTraceInfoRef<'a> {
+                /// Getter for the [`rtp_packet` field](RtpTraceInfo#structfield.rtp_packet).
+                #[inline]
+                pub fn rtp_packet(&self) -> ::planus::Result<super::rtp_packet::DumpRef<'a>> {
+                    self.0.access_required(0, "RtpTraceInfo", "rtp_packet")
+                }
+
                 /// Getter for the [`is_rtx` field](RtpTraceInfo#structfield.is_rtx).
                 #[inline]
                 pub fn is_rtx(&self) -> ::planus::Result<bool> {
                     ::core::result::Result::Ok(
-                        self.0.access(0, "RtpTraceInfo", "is_rtx")?.unwrap_or(false),
+                        self.0.access(1, "RtpTraceInfo", "is_rtx")?.unwrap_or(false),
                     )
                 }
             }
@@ -67893,6 +69014,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for RtpTraceInfoRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("RtpTraceInfoRef");
+                    f.field("rtp_packet", &self.rtp_packet());
                     f.field("is_rtx", &self.is_rtx());
                     f.finish()
                 }
@@ -67904,6 +69026,9 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: RtpTraceInfoRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
+                        rtp_packet: ::planus::alloc::boxed::Box::new(
+                            ::core::convert::TryInto::try_into(value.rtp_packet()?)?,
+                        ),
                         is_rtx: ::core::convert::TryInto::try_into(value.is_rtx()?)?,
                     })
                 }
@@ -67982,7 +69107,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Producer`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/producer.fbs:80`
+            /// * Table `TraceNotification` in the file `../worker/fbs/producer.fbs:83`
             #[derive(
                 Clone,
                 Debug,

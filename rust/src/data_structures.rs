@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::{common, sctp_association, transport, web_rtc_transport};
+use crate::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -1114,8 +1114,6 @@ pub enum OwnedWebRtcMessage {
     EmptyBinary,
 }
 
-/**
- * TODO. Implement FBS conversion.
 /// RTP packet info in trace event.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1133,9 +1131,9 @@ pub struct RtpPacketTraceInfo {
     /// Whether packet contains a key frame.
     pub is_key_frame: bool,
     /// Packet size.
-    pub size: usize,
+    pub size: u64,
     /// Payload size.
-    pub payload_size: usize,
+    pub payload_size: u64,
     /// The spatial layer index (from 0 to N).
     pub spatial_layer: u8,
     /// The temporal layer index (from 0 to N).
@@ -1152,15 +1150,27 @@ pub struct RtpPacketTraceInfo {
     #[serde(default)]
     pub is_rtx: bool,
 }
-*/
 
-/// RTP packet info in trace event.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RtpPacketTraceInfo {
-    /// Whether this is an RTX packet.
-    #[serde(default)]
-    pub is_rtx: bool,
+impl RtpPacketTraceInfo {
+    pub(crate) fn from_fbs(rtp_packet: rtp_packet::Dump, is_rtx: bool) -> Self {
+        Self {
+            payload_type: rtp_packet.payload_type,
+            sequence_number: rtp_packet.sequence_number,
+            timestamp: rtp_packet.timestamp,
+            marker: rtp_packet.marker,
+            ssrc: rtp_packet.ssrc,
+            is_key_frame: rtp_packet.is_key_frame,
+            size: rtp_packet.size,
+            payload_size: rtp_packet.payload_size,
+            spatial_layer: rtp_packet.spatial_layer,
+            temporal_layer: rtp_packet.temporal_layer,
+            mid: rtp_packet.mid,
+            rid: rtp_packet.rid,
+            rrid: rtp_packet.rrid,
+            wide_sequence_number: rtp_packet.wide_sequence_number,
+            is_rtx,
+        }
+    }
 }
 
 /// SSRC info in trace event.

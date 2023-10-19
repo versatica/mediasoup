@@ -398,9 +398,7 @@ impl ProducerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    RtpPacketTraceInfo {
-                        is_rtx: info.is_rtx,
-                    }
+                    RtpPacketTraceInfo::from_fbs(*info.rtp_packet, info.is_rtx)
                 },
             },
             producer::TraceEventType::Keyframe => ProducerTraceEventData::KeyFrame {
@@ -411,9 +409,7 @@ impl ProducerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    RtpPacketTraceInfo {
-                        is_rtx: info.is_rtx,
-                    }
+                    RtpPacketTraceInfo::from_fbs(*info.rtp_packet, info.is_rtx)
                 },
             },
             producer::TraceEventType::Nack => ProducerTraceEventData::Nack {
