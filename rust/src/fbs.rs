@@ -1,4 +1,3 @@
-//! Flatbuffers data structures compiled from `.fbs` files
 pub use root::fbs::*;
 
 const _: () = ::planus::check_version_compatibility("planus-0.4.0");
@@ -37815,7 +37814,7 @@ mod root {
             /// The enum `TraceEventType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `TraceEventType` in the file `../worker/fbs/transport.fbs:122`
+            /// * Enum `TraceEventType` in the file `../worker/fbs/transport.fbs:121`
             #[derive(
                 Copy,
                 Clone,
@@ -37985,7 +37984,7 @@ mod root {
             /// The table `Dump` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:127`
+            /// * Table `Dump` in the file `../worker/fbs/transport.fbs:126`
             #[derive(
                 Clone,
                 Debug,
@@ -39028,7 +39027,7 @@ mod root {
             /// The table `Stats` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:145`
+            /// * Table `Stats` in the file `../worker/fbs/transport.fbs:144`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -41689,7 +41688,7 @@ mod root {
             /// The table `SetMaxIncomingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:172`
+            /// * Table `SetMaxIncomingBitrateRequest` in the file `../worker/fbs/transport.fbs:171`
             #[derive(
                 Clone,
                 Debug,
@@ -41997,7 +41996,7 @@ mod root {
             /// The table `SetMaxOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:176`
+            /// * Table `SetMaxOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:175`
             #[derive(
                 Clone,
                 Debug,
@@ -42305,7 +42304,7 @@ mod root {
             /// The table `SetMinOutgoingBitrateRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:180`
+            /// * Table `SetMinOutgoingBitrateRequest` in the file `../worker/fbs/transport.fbs:179`
             #[derive(
                 Clone,
                 Debug,
@@ -42613,7 +42612,7 @@ mod root {
             /// The table `EnableTraceEventRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:184`
+            /// * Table `EnableTraceEventRequest` in the file `../worker/fbs/transport.fbs:183`
             #[derive(
                 Clone,
                 Debug,
@@ -42891,7 +42890,7 @@ mod root {
             /// The table `CloseProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:188`
+            /// * Table `CloseProducerRequest` in the file `../worker/fbs/transport.fbs:187`
             #[derive(
                 Clone,
                 Debug,
@@ -43157,7 +43156,7 @@ mod root {
             /// The table `CloseConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:192`
+            /// * Table `CloseConsumerRequest` in the file `../worker/fbs/transport.fbs:191`
             #[derive(
                 Clone,
                 Debug,
@@ -43423,7 +43422,7 @@ mod root {
             /// The table `CloseDataProducerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:196`
+            /// * Table `CloseDataProducerRequest` in the file `../worker/fbs/transport.fbs:195`
             #[derive(
                 Clone,
                 Debug,
@@ -43698,7 +43697,7 @@ mod root {
             /// The table `CloseDataConsumerRequest` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:200`
+            /// * Table `CloseDataConsumerRequest` in the file `../worker/fbs/transport.fbs:199`
             #[derive(
                 Clone,
                 Debug,
@@ -43973,7 +43972,7 @@ mod root {
             /// The table `SendRtcpNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:206`
+            /// * Table `SendRtcpNotification` in the file `../worker/fbs/transport.fbs:205`
             #[derive(
                 Clone,
                 Debug,
@@ -44238,7 +44237,7 @@ mod root {
             /// The table `SctpStateChangeNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:212`
+            /// * Table `SctpStateChangeNotification` in the file `../worker/fbs/transport.fbs:211`
             #[derive(
                 Clone,
                 Debug,
@@ -44559,7 +44558,7 @@ mod root {
             /// The union `TraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:216`
+            /// * Union `TraceInfo` in the file `../worker/fbs/transport.fbs:215`
             #[derive(
                 Clone,
                 Debug,
@@ -44712,7 +44711,7 @@ mod root {
             /// The enum `BweType` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:220`
+            /// * Enum `BweType` in the file `../worker/fbs/transport.fbs:219`
             #[derive(
                 Copy,
                 Clone,
@@ -44882,7 +44881,7 @@ mod root {
             /// The table `BweTraceInfo` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:225`
+            /// * Table `BweTraceInfo` in the file `../worker/fbs/transport.fbs:224`
             #[derive(
                 Clone,
                 Debug,
@@ -45560,7 +45559,7 @@ mod root {
             /// The table `TraceNotification` in the namespace `FBS.Transport`
             ///
             /// Generated from these locations:
-            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:236`
+            /// * Table `TraceNotification` in the file `../worker/fbs/transport.fbs:235`
             #[derive(
                 Clone,
                 Debug,
@@ -73997,6 +73996,14 @@ mod root {
                 pub base: ::planus::alloc::boxed::Box<super::transport::Options>,
                 /// The field `listen` in the table `WebRtcTransportOptions`
                 pub listen: self::Listen,
+                /// The field `enable_udp` in the table `WebRtcTransportOptions`
+                pub enable_udp: bool,
+                /// The field `enable_tcp` in the table `WebRtcTransportOptions`
+                pub enable_tcp: bool,
+                /// The field `prefer_udp` in the table `WebRtcTransportOptions`
+                pub prefer_udp: bool,
+                /// The field `prefer_tcp` in the table `WebRtcTransportOptions`
+                pub prefer_tcp: bool,
             }
 
             impl WebRtcTransportOptions {
@@ -74011,21 +74018,61 @@ mod root {
                     builder: &mut ::planus::Builder,
                     field_base: impl ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     field_listen: impl ::planus::WriteAsUnion<self::Listen>,
+                    field_enable_udp: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_enable_tcp: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_prefer_udp: impl ::planus::WriteAsDefault<bool, bool>,
+                    field_prefer_tcp: impl ::planus::WriteAsDefault<bool, bool>,
                 ) -> ::planus::Offset<Self> {
                     let prepared_base = field_base.prepare(builder);
                     let prepared_listen = field_listen.prepare(builder);
+                    let prepared_enable_udp = field_enable_udp.prepare(builder, &true);
+                    let prepared_enable_tcp = field_enable_tcp.prepare(builder, &true);
+                    let prepared_prefer_udp = field_prefer_udp.prepare(builder, &false);
+                    let prepared_prefer_tcp = field_prefer_tcp.prepare(builder, &false);
 
-                    let mut table_writer: ::planus::table_writer::TableWriter<10> =
+                    let mut table_writer: ::planus::table_writer::TableWriter<18> =
                         ::core::default::Default::default();
                     table_writer.write_entry::<::planus::Offset<super::transport::Options>>(0);
                     table_writer.write_entry::<::planus::Offset<self::Listen>>(2);
                     table_writer.write_entry::<u8>(1);
+                    if prepared_enable_udp.is_some() {
+                        table_writer.write_entry::<bool>(3);
+                    }
+                    if prepared_enable_tcp.is_some() {
+                        table_writer.write_entry::<bool>(4);
+                    }
+                    if prepared_prefer_udp.is_some() {
+                        table_writer.write_entry::<bool>(5);
+                    }
+                    if prepared_prefer_tcp.is_some() {
+                        table_writer.write_entry::<bool>(6);
+                    }
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
                             object_writer.write::<_, _, 4>(&prepared_base);
                             object_writer.write::<_, _, 4>(&prepared_listen.offset());
                             object_writer.write::<_, _, 1>(&prepared_listen.tag());
+                            if let ::core::option::Option::Some(prepared_enable_udp) =
+                                prepared_enable_udp
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_enable_udp);
+                            }
+                            if let ::core::option::Option::Some(prepared_enable_tcp) =
+                                prepared_enable_tcp
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_enable_tcp);
+                            }
+                            if let ::core::option::Option::Some(prepared_prefer_udp) =
+                                prepared_prefer_udp
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_prefer_udp);
+                            }
+                            if let ::core::option::Option::Some(prepared_prefer_tcp) =
+                                prepared_prefer_tcp
+                            {
+                                object_writer.write::<_, _, 1>(&prepared_prefer_tcp);
+                            }
                         });
                     }
                     builder.current_offset()
@@ -74065,7 +74112,15 @@ mod root {
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<WebRtcTransportOptions> {
-                    WebRtcTransportOptions::create(builder, &self.base, &self.listen)
+                    WebRtcTransportOptions::create(
+                        builder,
+                        &self.base,
+                        &self.listen,
+                        self.enable_udp,
+                        self.enable_tcp,
+                        self.prefer_udp,
+                        self.prefer_tcp,
+                    )
                 }
             }
 
@@ -74102,6 +74157,110 @@ mod root {
             }
 
             impl<T0, T1> WebRtcTransportOptionsBuilder<(T0, T1)> {
+                /// Setter for the [`enable_udp` field](WebRtcTransportOptions#structfield.enable_udp).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn enable_udp<T2>(
+                    self,
+                    value: T2,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2)>
+                where
+                    T2: ::planus::WriteAsDefault<bool, bool>,
+                {
+                    let (v0, v1) = self.0;
+                    WebRtcTransportOptionsBuilder((v0, v1, value))
+                }
+
+                /// Sets the [`enable_udp` field](WebRtcTransportOptions#structfield.enable_udp) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn enable_udp_as_default(
+                    self,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, ::planus::DefaultValue)>
+                {
+                    self.enable_udp(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2> WebRtcTransportOptionsBuilder<(T0, T1, T2)> {
+                /// Setter for the [`enable_tcp` field](WebRtcTransportOptions#structfield.enable_tcp).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn enable_tcp<T3>(
+                    self,
+                    value: T3,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3)>
+                where
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                {
+                    let (v0, v1, v2) = self.0;
+                    WebRtcTransportOptionsBuilder((v0, v1, v2, value))
+                }
+
+                /// Sets the [`enable_tcp` field](WebRtcTransportOptions#structfield.enable_tcp) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn enable_tcp_as_default(
+                    self,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2, ::planus::DefaultValue)>
+                {
+                    self.enable_tcp(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3)> {
+                /// Setter for the [`prefer_udp` field](WebRtcTransportOptions#structfield.prefer_udp).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn prefer_udp<T4>(
+                    self,
+                    value: T4,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4)>
+                where
+                    T4: ::planus::WriteAsDefault<bool, bool>,
+                {
+                    let (v0, v1, v2, v3) = self.0;
+                    WebRtcTransportOptionsBuilder((v0, v1, v2, v3, value))
+                }
+
+                /// Sets the [`prefer_udp` field](WebRtcTransportOptions#structfield.prefer_udp) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn prefer_udp_as_default(
+                    self,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, ::planus::DefaultValue)>
+                {
+                    self.prefer_udp(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4)> {
+                /// Setter for the [`prefer_tcp` field](WebRtcTransportOptions#structfield.prefer_tcp).
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn prefer_tcp<T5>(
+                    self,
+                    value: T5,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5)>
+                where
+                    T5: ::planus::WriteAsDefault<bool, bool>,
+                {
+                    let (v0, v1, v2, v3, v4) = self.0;
+                    WebRtcTransportOptionsBuilder((v0, v1, v2, v3, v4, value))
+                }
+
+                /// Sets the [`prefer_tcp` field](WebRtcTransportOptions#structfield.prefer_tcp) to the default value.
+                #[inline]
+                #[allow(clippy::type_complexity)]
+                pub fn prefer_tcp_as_default(
+                    self,
+                ) -> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4, ::planus::DefaultValue)>
+                {
+                    self.prefer_tcp(::planus::DefaultValue)
+                }
+            }
+
+            impl<T0, T1, T2, T3, T4, T5> WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5)> {
                 /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [WebRtcTransportOptions].
                 #[inline]
                 pub fn finish(
@@ -74118,8 +74277,12 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     T1: ::planus::WriteAsUnion<self::Listen>,
+                    T2: ::planus::WriteAsDefault<bool, bool>,
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                    T4: ::planus::WriteAsDefault<bool, bool>,
+                    T5: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAs<::planus::Offset<WebRtcTransportOptions>>
-                for WebRtcTransportOptionsBuilder<(T0, T1)>
+                for WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5)>
             {
                 type Prepared = ::planus::Offset<WebRtcTransportOptions>;
 
@@ -74135,8 +74298,12 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     T1: ::planus::WriteAsUnion<self::Listen>,
+                    T2: ::planus::WriteAsDefault<bool, bool>,
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                    T4: ::planus::WriteAsDefault<bool, bool>,
+                    T5: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAsOptional<::planus::Offset<WebRtcTransportOptions>>
-                for WebRtcTransportOptionsBuilder<(T0, T1)>
+                for WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5)>
             {
                 type Prepared = ::planus::Offset<WebRtcTransportOptions>;
 
@@ -74153,16 +74320,20 @@ mod root {
             impl<
                     T0: ::planus::WriteAs<::planus::Offset<super::transport::Options>>,
                     T1: ::planus::WriteAsUnion<self::Listen>,
+                    T2: ::planus::WriteAsDefault<bool, bool>,
+                    T3: ::planus::WriteAsDefault<bool, bool>,
+                    T4: ::planus::WriteAsDefault<bool, bool>,
+                    T5: ::planus::WriteAsDefault<bool, bool>,
                 > ::planus::WriteAsOffset<WebRtcTransportOptions>
-                for WebRtcTransportOptionsBuilder<(T0, T1)>
+                for WebRtcTransportOptionsBuilder<(T0, T1, T2, T3, T4, T5)>
             {
                 #[inline]
                 fn prepare(
                     &self,
                     builder: &mut ::planus::Builder,
                 ) -> ::planus::Offset<WebRtcTransportOptions> {
-                    let (v0, v1) = &self.0;
-                    WebRtcTransportOptions::create(builder, v0, v1)
+                    let (v0, v1, v2, v3, v4, v5) = &self.0;
+                    WebRtcTransportOptions::create(builder, v0, v1, v2, v3, v4, v5)
                 }
             }
 
@@ -74183,6 +74354,46 @@ mod root {
                     self.0
                         .access_union_required(1, "WebRtcTransportOptions", "listen")
                 }
+
+                /// Getter for the [`enable_udp` field](WebRtcTransportOptions#structfield.enable_udp).
+                #[inline]
+                pub fn enable_udp(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(3, "WebRtcTransportOptions", "enable_udp")?
+                            .unwrap_or(true),
+                    )
+                }
+
+                /// Getter for the [`enable_tcp` field](WebRtcTransportOptions#structfield.enable_tcp).
+                #[inline]
+                pub fn enable_tcp(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(4, "WebRtcTransportOptions", "enable_tcp")?
+                            .unwrap_or(true),
+                    )
+                }
+
+                /// Getter for the [`prefer_udp` field](WebRtcTransportOptions#structfield.prefer_udp).
+                #[inline]
+                pub fn prefer_udp(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(5, "WebRtcTransportOptions", "prefer_udp")?
+                            .unwrap_or(false),
+                    )
+                }
+
+                /// Getter for the [`prefer_tcp` field](WebRtcTransportOptions#structfield.prefer_tcp).
+                #[inline]
+                pub fn prefer_tcp(&self) -> ::planus::Result<bool> {
+                    ::core::result::Result::Ok(
+                        self.0
+                            .access(6, "WebRtcTransportOptions", "prefer_tcp")?
+                            .unwrap_or(false),
+                    )
+                }
             }
 
             impl<'a> ::core::fmt::Debug for WebRtcTransportOptionsRef<'a> {
@@ -74190,6 +74401,10 @@ mod root {
                     let mut f = f.debug_struct("WebRtcTransportOptionsRef");
                     f.field("base", &self.base());
                     f.field("listen", &self.listen());
+                    f.field("enable_udp", &self.enable_udp());
+                    f.field("enable_tcp", &self.enable_tcp());
+                    f.field("prefer_udp", &self.prefer_udp());
+                    f.field("prefer_tcp", &self.prefer_tcp());
                     f.finish()
                 }
             }
@@ -74204,6 +74419,10 @@ mod root {
                             value.base()?,
                         )?),
                         listen: ::core::convert::TryInto::try_into(value.listen()?)?,
+                        enable_udp: ::core::convert::TryInto::try_into(value.enable_udp()?)?,
+                        enable_tcp: ::core::convert::TryInto::try_into(value.enable_tcp()?)?,
+                        prefer_udp: ::core::convert::TryInto::try_into(value.prefer_udp()?)?,
+                        prefer_tcp: ::core::convert::TryInto::try_into(value.prefer_tcp()?)?,
                     })
                 }
             }
@@ -74285,7 +74504,7 @@ mod root {
             /// The enum `FingerprintAlgorithm` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `FingerprintAlgorithm` in the file `../worker/fbs/webRtcTransport.fbs:24`
+            /// * Enum `FingerprintAlgorithm` in the file `../worker/fbs/webRtcTransport.fbs:28`
             #[derive(
                 Copy,
                 Clone,
@@ -74473,7 +74692,7 @@ mod root {
             /// The table `Fingerprint` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `Fingerprint` in the file `../worker/fbs/webRtcTransport.fbs:32`
+            /// * Table `Fingerprint` in the file `../worker/fbs/webRtcTransport.fbs:36`
             #[derive(
                 Clone,
                 Debug,
@@ -74797,7 +75016,7 @@ mod root {
             /// The enum `DtlsRole` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `DtlsRole` in the file `../worker/fbs/webRtcTransport.fbs:37`
+            /// * Enum `DtlsRole` in the file `../worker/fbs/webRtcTransport.fbs:41`
             #[derive(
                 Copy,
                 Clone,
@@ -74971,7 +75190,7 @@ mod root {
             /// The enum `DtlsState` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `DtlsState` in the file `../worker/fbs/webRtcTransport.fbs:43`
+            /// * Enum `DtlsState` in the file `../worker/fbs/webRtcTransport.fbs:47`
             #[derive(
                 Copy,
                 Clone,
@@ -75159,7 +75378,7 @@ mod root {
             /// The table `DtlsParameters` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DtlsParameters` in the file `../worker/fbs/webRtcTransport.fbs:51`
+            /// * Table `DtlsParameters` in the file `../worker/fbs/webRtcTransport.fbs:55`
             #[derive(
                 Clone,
                 Debug,
@@ -75474,7 +75693,7 @@ mod root {
             /// The table `IceParameters` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceParameters` in the file `../worker/fbs/webRtcTransport.fbs:56`
+            /// * Table `IceParameters` in the file `../worker/fbs/webRtcTransport.fbs:60`
             #[derive(
                 Clone,
                 Debug,
@@ -75822,7 +76041,7 @@ mod root {
             /// The enum `IceCandidateType` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceCandidateType` in the file `../worker/fbs/webRtcTransport.fbs:62`
+            /// * Enum `IceCandidateType` in the file `../worker/fbs/webRtcTransport.fbs:66`
             #[derive(
                 Copy,
                 Clone,
@@ -75988,7 +76207,7 @@ mod root {
             /// The enum `IceCandidateTcpType` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceCandidateTcpType` in the file `../worker/fbs/webRtcTransport.fbs:66`
+            /// * Enum `IceCandidateTcpType` in the file `../worker/fbs/webRtcTransport.fbs:70`
             #[derive(
                 Copy,
                 Clone,
@@ -76154,7 +76373,7 @@ mod root {
             /// The enum `IceRole` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceRole` in the file `../worker/fbs/webRtcTransport.fbs:70`
+            /// * Enum `IceRole` in the file `../worker/fbs/webRtcTransport.fbs:74`
             #[derive(
                 Copy,
                 Clone,
@@ -76324,7 +76543,7 @@ mod root {
             /// The enum `IceState` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Enum `IceState` in the file `../worker/fbs/webRtcTransport.fbs:75`
+            /// * Enum `IceState` in the file `../worker/fbs/webRtcTransport.fbs:79`
             #[derive(
                 Copy,
                 Clone,
@@ -76507,7 +76726,7 @@ mod root {
             /// The table `IceCandidate` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceCandidate` in the file `../worker/fbs/webRtcTransport.fbs:82`
+            /// * Table `IceCandidate` in the file `../worker/fbs/webRtcTransport.fbs:86`
             #[derive(
                 Clone,
                 Debug,
@@ -77078,7 +77297,7 @@ mod root {
             /// The table `ConnectRequest` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectRequest` in the file `../worker/fbs/webRtcTransport.fbs:92`
+            /// * Table `ConnectRequest` in the file `../worker/fbs/webRtcTransport.fbs:96`
             #[derive(
                 Clone,
                 Debug,
@@ -77341,7 +77560,7 @@ mod root {
             /// The table `ConnectResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `ConnectResponse` in the file `../worker/fbs/webRtcTransport.fbs:96`
+            /// * Table `ConnectResponse` in the file `../worker/fbs/webRtcTransport.fbs:100`
             #[derive(
                 Clone,
                 Debug,
@@ -77630,7 +77849,7 @@ mod root {
             /// The table `DumpResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DumpResponse` in the file `../worker/fbs/webRtcTransport.fbs:100`
+            /// * Table `DumpResponse` in the file `../worker/fbs/webRtcTransport.fbs:104`
             #[derive(
                 Clone,
                 Debug,
@@ -78230,7 +78449,7 @@ mod root {
             /// The table `GetStatsResponse` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `GetStatsResponse` in the file `../worker/fbs/webRtcTransport.fbs:111`
+            /// * Table `GetStatsResponse` in the file `../worker/fbs/webRtcTransport.fbs:115`
             #[derive(
                 Clone, Debug, PartialEq, PartialOrd, ::serde::Serialize, ::serde::Deserialize,
             )]
@@ -78713,7 +78932,7 @@ mod root {
             /// The table `IceSelectedTupleChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceSelectedTupleChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:121`
+            /// * Table `IceSelectedTupleChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:125`
             #[derive(
                 Clone,
                 Debug,
@@ -78996,7 +79215,7 @@ mod root {
             /// The table `IceStateChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `IceStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:125`
+            /// * Table `IceStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:129`
             #[derive(
                 Clone,
                 Debug,
@@ -79297,7 +79516,7 @@ mod root {
             /// The table `DtlsStateChangeNotification` in the namespace `FBS.WebRtcTransport`
             ///
             /// Generated from these locations:
-            /// * Table `DtlsStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:129`
+            /// * Table `DtlsStateChangeNotification` in the file `../worker/fbs/webRtcTransport.fbs:133`
             #[derive(
                 Clone,
                 Debug,
