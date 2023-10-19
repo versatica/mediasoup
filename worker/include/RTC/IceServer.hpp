@@ -93,9 +93,11 @@ namespace RTC
 		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
-		// This should be just called in 'connected' or completed' state
-		// and the given tuple must be an already valid tuple.
-		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
+		/**
+		 * This should be just called in 'connected' or completed' state and the
+		 * given tuple must be an already valid tuple.
+		 */
+		void MayForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
 		void HandleTuple(

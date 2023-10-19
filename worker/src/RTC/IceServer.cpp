@@ -337,18 +337,25 @@ namespace RTC
 		}
 	}
 
-	void IceServer::ForceSelectedTuple(const RTC::TransportTuple* tuple)
+	void IceServer::MayForceSelectedTuple(const RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
-		MS_ASSERT(
-		  this->selectedTuple, "cannot force the selected tuple if there was not a selected tuple");
+		if (this->state != IceState::CONNECTED && this->state != IceState::COMPLETED)
+		{
+			MS_WARN_TAG(ice, "cannot force selected tuple if not in state 'connected' or 'completed'");
+
+			return;
+		}
 
 		auto* storedTuple = HasTuple(tuple);
 
-		MS_ASSERT(
-		  storedTuple,
-		  "cannot force the selected tuple if the given tuple was not already a valid tuple");
+		if (!storedTuple)
+		{
+			MS_WARN_TAG(ice, "cannot force selected tuple if the given tuple was not already a valid one");
+
+			return;
+		}
 
 		// Mark it as selected tuple.
 		SetSelectedTuple(storedTuple);
