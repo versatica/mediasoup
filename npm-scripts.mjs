@@ -474,21 +474,34 @@ function installMsysMake()
 {
 	logInfo('installMsysMake()');
 
-	let res = spawnSync('where', [ 'python3.exe' ]);
+	let pythonPath;
 
-	if (res.status !== 0)
+	// If PYTHON environment variable is given, use it.
+	if (process.env.PYTHON)
 	{
-		res = spawnSync('where', [ 'python.exe' ]);
+		pythonPath = process.env.PYTHON;
+	}
+	// Otherwise ensure python3.exe is available in the PATH.
+	else
+	{
+		let res = spawnSync('where', [ 'python3.exe' ]);
 
 		if (res.status !== 0)
 		{
-			logError('`installMsysMake() | cannot find Python executable');
+			res = spawnSync('where', [ 'python.exe' ]);
 
-			exitWithError();
+			if (res.status !== 0)
+			{
+				logError('`installMsysMake() | cannot find Python executable');
+
+				exitWithError();
+			}
 		}
+
+		pythonPath = String(res.stdout).trim();
 	}
 
-	executeCmd(`${String(res.stdout).trim()} worker\\scripts\\getmake.py`);
+	executeCmd(`${pythonPath} worker\\scripts\\getmake.py`);
 }
 
 function ensureDir(dir)
