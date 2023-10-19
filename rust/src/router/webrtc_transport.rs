@@ -117,6 +117,18 @@ pub struct WebRtcTransportOptions {
     /// Initial available outgoing bitrate (in bps).
     /// Default 600000.
     pub initial_available_outgoing_bitrate: u32,
+    /// Enable UDP.
+    /// Default true.
+    pub enable_udp: bool,
+    /// Enable TCP.
+    /// Default true if webrtc_server is given, false otherwise.
+    pub enable_tcp: bool,
+    /// Prefer UDP.
+    /// Default false.
+    pub prefer_udp: bool,
+    /// Prefer TCP.
+    /// Default false.
+    pub prefer_tcp: bool,
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
@@ -133,12 +145,16 @@ pub struct WebRtcTransportOptions {
 }
 
 impl WebRtcTransportOptions {
-    /// Create [`WebRtcTransport`] options with given listen IPs.
+    /// Create [`WebRtcTransport`] options with given listen infos.
     #[must_use]
     pub fn new(listen_infos: WebRtcTransportListenInfos) -> Self {
         Self {
             listen: WebRtcTransportListen::Individual { listen_infos },
             initial_available_outgoing_bitrate: 600_000,
+            enable_udp: true,
+            enable_tcp: false,
+            prefer_udp: false,
+            prefer_tcp: false,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 262_144,
@@ -152,6 +168,10 @@ impl WebRtcTransportOptions {
         Self {
             listen: WebRtcTransportListen::Server { webrtc_server },
             initial_available_outgoing_bitrate: 600_000,
+            enable_udp: true,
+            enable_tcp: true,
+            prefer_udp: false,
+            prefer_tcp: false,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 262_144,

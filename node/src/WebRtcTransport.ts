@@ -78,25 +78,21 @@ export type WebRtcTransportOptionsBase<WebRtcTransportAppData> =
 {
 	/**
 	 * Listen in UDP. Default true.
-	 * @deprecated
 	 */
 	enableUdp?: boolean;
 
 	/**
-	 * Listen in TCP. Default false.
-	 * @deprecated
+	 * Listen in TCP. Default true if webrtcServer is given, false otherwise.
 	 */
 	enableTcp?: boolean;
 
 	/**
 	 * Prefer UDP. Default false.
-	 * @deprecated
 	 */
 	preferUdp?: boolean;
 
 	/**
 	 * Prefer TCP. Default false.
-	 * @deprecated
 	 */
 	preferTcp?: boolean;
 
