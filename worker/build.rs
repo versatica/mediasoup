@@ -96,7 +96,7 @@ fn main() {
             if !Command::new(python)
                 .arg("scripts\\getmake.py")
                 .arg("--dir")
-                .arg(dir)
+                .arg(dir.clone())
                 .status()
                 .expect("Failed to start")
                 .success()
