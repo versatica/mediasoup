@@ -97,7 +97,7 @@ fn main() {
                 "python".to_string()
             };
 
-            let dir = format!("{}/msys", mediasoup_out_dir.replace("\\", "/"));
+            let dir = format!("{}/msys", mediasoup_out_dir.replace('\\', "/"));
 
             if !Command::new(python)
                 .arg("scripts\\getmake.py")
