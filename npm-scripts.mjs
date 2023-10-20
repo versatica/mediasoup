@@ -445,7 +445,9 @@ function installMsysMake()
 		pythonPath = String(res.stdout).trim();
 	}
 
-	executeCmd(`${pythonPath} worker\\scripts\\getmake.py`);
+	const dir = path.resolve('worker/out/msys');
+
+	executeCmd(`${pythonPath} worker\\scripts\\getmake.py --dir="${dir}"`);
 }
 
 function ensureDir(dir)
