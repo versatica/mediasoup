@@ -80,8 +80,8 @@ fn main() {
     #[cfg(target_os = "windows")]
     {
         if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
-            let python = if env::var("PYTHON").is_ok() {
-                env::var("PYTHON").unwrap()
+            let python = if let Ok(python) = env::var("PYTHON") {
+                python
             } else if Command::new("where")
                 .arg("python3")
                 .status()
