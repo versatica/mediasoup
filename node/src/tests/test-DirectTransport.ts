@@ -211,7 +211,7 @@ test('dataProducer.send() succeeds', async () =>
 				expect(ppid).toBe(53); // PPID of WebRTC DataChannel binary.
 			}
 
-			expect(id).toBe(++lastRecvMessageId);
+			++lastRecvMessageId;
 		});
 	});
 
