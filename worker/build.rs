@@ -78,19 +78,24 @@ fn main() {
     #[cfg(target_os = "windows")]
     {
         if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
-            let python = if Command::new("where")
-                .arg("python3.exe")
+            let python = if env::var("PYTHON").is_ok() {
+                env::var("PYTHON").unwrap().to_string()
+            } else if Command::new("where")
+                .arg("python3")
                 .status()
                 .expect("Failed to start")
                 .success()
             {
-                "python3"
+                "python3".to_string()
             } else {
-                "python"
+                "python".to_string()
             };
 
+            let worker_abs_path = env::current_dir().unwrap();
+            let dir = format!("{}\\out\\msys", worker_abs_path.display());
+
             if !Command::new(python)
-                .arg("scripts\\getmake.py")
+                .arg("scripts\\getmake.py --dir {}", dir)
                 .status()
                 .expect("Failed to start")
                 .success()
