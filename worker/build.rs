@@ -1,4 +1,5 @@
 use std::env;
+use std::path::Path;
 use std::process::Command;
 
 fn main() {
@@ -95,7 +96,9 @@ fn main() {
             let dir = Path::new(&worker_abs_path).join("out/msys");
 
             if !Command::new(python)
-                .arg("scripts\\getmake.py --dir {}", dir.display())
+                .arg("scripts\\getmake.py")
+                .arg("--dir")
+                .arg(dir)
                 .status()
                 .expect("Failed to start")
                 .success()
