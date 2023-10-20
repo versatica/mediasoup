@@ -1,6 +1,4 @@
 use std::env;
-#[cfg(target_os = "windows")]
-use std::path::Path;
 use std::process::Command;
 
 fn main() {
@@ -94,7 +92,7 @@ fn main() {
             };
 
             let worker_abs_path = env::current_dir().unwrap();
-            let dir = Path::new(&worker_abs_path).join("out/msys");
+            let dir = worker_abs_path.join("out/msys");
 
             if !Command::new(python)
                 .arg("scripts\\getmake.py")
