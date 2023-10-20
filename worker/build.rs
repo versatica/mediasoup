@@ -79,7 +79,7 @@ fn main() {
     {
         if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
             let python = if env::var("PYTHON").is_ok() {
-                env::var("PYTHON").unwrap().to_string()
+                env::var("PYTHON").unwrap()
             } else if Command::new("where")
                 .arg("python3")
                 .status()
@@ -92,10 +92,10 @@ fn main() {
             };
 
             let worker_abs_path = env::current_dir().unwrap();
-            let dir = format!("{}\\out\\msys", worker_abs_path.display());
+            let dir = Path::new(&worker_abs_path).join("out/msys");
 
             if !Command::new(python)
-                .arg("scripts\\getmake.py --dir {}", dir)
+                .arg("scripts\\getmake.py --dir {}", dir.display())
                 .status()
                 .expect("Failed to start")
                 .success()
