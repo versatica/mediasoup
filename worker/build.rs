@@ -19,6 +19,10 @@ fn main() {
     // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`.
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 
+    // Store original PATH so we make `make clean-all` use it, otherwise
+    // our modified PATH may include rm.exe in Windows and delete itself.
+    let original_path = env::var("PATH").unwrap();
+
     // Add C++ std lib
     #[cfg(target_os = "linux")]
     {
@@ -172,6 +176,7 @@ fn main() {
         // Clean
         if !Command::new("make")
             .arg("clean-all")
+            .env("PATH", original_path)
             .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
             .spawn()
             .expect("Failed to start")
