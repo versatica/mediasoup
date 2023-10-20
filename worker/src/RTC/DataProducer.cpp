@@ -224,11 +224,14 @@ namespace RTC
 
 				std::vector<uint16_t> subchannels;
 
-				subchannels.reserve(body->subchannels()->size());
-
-				for (const auto subchannel : *body->subchannels())
+				if (flatbuffers::IsFieldPresent(body, FBS::DataProducer::SendNotification::VT_SUBCHANNELS))
 				{
-					subchannels.emplace_back(subchannel);
+					subchannels.reserve(body->subchannels()->size());
+
+					for (const auto subchannel : *body->subchannels())
+					{
+						subchannels.emplace_back(subchannel);
+					}
 				}
 
 				std::optional<uint16_t> requiredSubchannel{ std::nullopt };
