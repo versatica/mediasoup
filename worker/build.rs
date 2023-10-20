@@ -16,7 +16,7 @@ fn main() {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
+    // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`.
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 
     // Add C++ std lib
@@ -91,8 +91,7 @@ fn main() {
                 "python".to_string()
             };
 
-            let worker_abs_path = env::current_dir().unwrap();
-            let dir = worker_abs_path.join("out/msys");
+            let dir = format!("{}/msys", mediasoup_out_dir.replace('\\', "/"));
 
             if !Command::new(python)
                 .arg("scripts\\getmake.py")
@@ -104,6 +103,11 @@ fn main() {
             {
                 panic!("Failed to install MSYS/make")
             }
+
+            env::set_var(
+                "PATH",
+                format!("{}\\bin;{}", dir, env::var("PATH").unwrap()),
+            );
         }
 
         env::set_var(
