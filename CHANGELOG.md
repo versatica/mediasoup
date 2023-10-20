@@ -11,6 +11,11 @@
 * `Worker`: Make DTLS fragment stay within MTU size range ([PR #1156](https://github.com/versatica/mediasoup/pull/1156), based on [PR #1143](https://github.com/versatica/mediasoup/pull/1143) by @vpnts-se).
 
 
+### 3.12.15
+
+* Fix NPM "postinstall" task in Windows ([PR #1187](https://github.com/versatica/mediasoup/pull/1187)).
+
+
 ### 3.12.14
 
 * CI: Use Node.js version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).

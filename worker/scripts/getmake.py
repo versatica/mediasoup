@@ -1,10 +1,21 @@
-import io, hashlib, tarfile, urllib.request
+import argparse, io, hashlib, tarfile, urllib.request
+
+argParser = argparse.ArgumentParser()
+
+argParser.add_argument(
+  '--dir',
+  type=str,
+  required=True,
+  help='absolute path of the directoy in which fetched content will be placed'
+)
+
+args = argParser.parse_args()
 
 def get(url, digest):
   data = urllib.request.urlopen(url).read()
   assert hashlib.sha256(data).hexdigest() == digest
   tar = tarfile.open(fileobj=io.BytesIO(data))
-  tar.extractall('worker/out/msys')
+  tar.extractall(args.dir)
   tar.close()
 
 get('https://sourceforge.net/projects/mingw/files/MSYS/Base/msys-core/msys-1.0.19-1/msysCORE-1.0.19-1-msys-1.0.19-bin.tar.xz/download', '8c4157d739a460f85563bc4451e9f1bbd42b13c4f63770d43b9f45a781f07858')
