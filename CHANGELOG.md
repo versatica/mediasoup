@@ -6,6 +6,11 @@
 * Fix `IceServer` crash when client uses ICE renomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
 
 
+### 3.12.15
+
+* Fix NPM "postinstall" task in Windows ([PR #1187](https://github.com/versatica/mediasoup/pull/1187)).
+
+
 ### 3.12.14
 
 * CI: Use Node.js version 20 ([PR #1177](https://github.com/versatica/mediasoup/pull/1177)).
