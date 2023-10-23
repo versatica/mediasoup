@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.12.15",
+  "version": "3.12.16",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -111,8 +111,8 @@
     "@types/uuid": "^9.0.6",
     "@typescript-eslint/eslint-plugin": "^6.8.0",
     "@typescript-eslint/parser": "^6.8.0",
-    "eslint": "^8.51.0",
-    "eslint-plugin-jest": "^27.4.2",
+    "eslint": "^8.52.0",
+    "eslint-plugin-jest": "^27.4.3",
     "jest": "^29.7.0",
     "marked": "^9.1.2",
     "open-cli": "^7.2.0",

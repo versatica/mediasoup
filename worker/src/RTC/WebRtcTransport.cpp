@@ -883,7 +883,7 @@ namespace RTC
 		}
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
-		this->iceServer->ForceSelectedTuple(tuple);
+		this->iceServer->MayForceSelectedTuple(tuple);
 
 		// Check that DTLS status is 'connecting' or 'connected'.
 		if (
@@ -967,7 +967,7 @@ namespace RTC
 		}
 
 		// Trick for clients performing aggressive ICE regardless we are ICE-Lite.
-		this->iceServer->ForceSelectedTuple(tuple);
+		this->iceServer->MayForceSelectedTuple(tuple);
 
 		// Pass the packet to the parent transport.
 		RTC::Transport::ReceiveRtpPacket(packet);
