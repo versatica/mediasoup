@@ -658,22 +658,6 @@ impl Router {
             }
         };
 
-        /*
-        let data = self
-            .inner
-            .channel
-            .request(
-                self.inner.id,
-                RouterCreateWebRtcTransportRequest {
-                    data: RouterCreateWebrtcTransportData::from_options(
-                        transport_id,
-                        &webrtc_transport_options,
-                    ),
-                },
-            )
-            .await?;
-            */
-
         let transport = WebRtcTransport::new(
             transport_id,
             Arc::clone(&self.inner.executor),

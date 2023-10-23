@@ -385,11 +385,13 @@ test('dataProducer.send() with subchannels succeeds', async () =>
 	for (const message of receivedMessages1)
 	{
 		expect([ 'both', 'dc1' ].includes(message)).toBe(true);
+		expect([ 'dc2' ].includes(message)).toBe(false);
 	}
 
 	for (const message of receivedMessages2)
 	{
 		expect([ 'both', 'dc2' ].includes(message)).toBe(true);
+		expect([ 'dc1' ].includes(message)).toBe(false);
 	}
 }, 5000);
 

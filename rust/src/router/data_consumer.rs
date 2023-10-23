@@ -8,6 +8,7 @@ use crate::messages::{
     DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
     DataConsumerGetStatsRequest, DataConsumerPauseRequest, DataConsumerResumeRequest,
     DataConsumerSendRequest, DataConsumerSetBufferedAmountLowThresholdRequest,
+    DataConsumerSetSubchannelsRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -56,6 +57,10 @@ pub struct DataConsumerOptions {
     pub(super) max_retransmits: Option<u16>,
     /// Whether the DataConsumer must start in paused mode. Default false.
     pub paused: bool,
+    /// Subchannels this DataConsumer initially subscribes to.
+    /// Only used in case this DataConsumer receives messages from a local DataProducer
+    /// that specifies subchannel(s) when calling send().
+    pub subchannels: Option<Vec<u16>>,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -70,6 +75,7 @@ impl DataConsumerOptions {
             ordered: None,
             max_packet_life_time: None,
             max_retransmits: None,
+            subchannels: None,
             paused: false,
             app_data: AppData::default(),
         }
@@ -77,13 +83,14 @@ impl DataConsumerOptions {
 
     /// For [`DirectTransport`](crate::direct_transport::DirectTransport).
     #[must_use]
-    pub fn new_direct(data_producer_id: DataProducerId) -> Self {
+    pub fn new_direct(data_producer_id: DataProducerId, subchannels: Option<Vec<u16>>) -> Self {
         Self {
             data_producer_id,
             ordered: Some(true),
             max_packet_life_time: None,
             max_retransmits: None,
             paused: false,
+            subchannels,
             app_data: AppData::default(),
         }
     }
@@ -97,6 +104,7 @@ impl DataConsumerOptions {
             max_packet_life_time: None,
             max_retransmits: None,
             paused: false,
+            subchannels: None,
             app_data: AppData::default(),
         }
     }
@@ -114,6 +122,7 @@ impl DataConsumerOptions {
             max_packet_life_time: Some(max_packet_life_time),
             max_retransmits: None,
             paused: false,
+            subchannels: None,
             app_data: AppData::default(),
         }
     }
@@ -130,6 +139,7 @@ impl DataConsumerOptions {
             max_packet_life_time: None,
             max_retransmits: Some(max_retransmits),
             paused: false,
+            subchannels: None,
             app_data: AppData::default(),
         }
     }
@@ -148,6 +158,7 @@ pub struct DataConsumerDump {
     pub sctp_stream_parameters: Option<SctpStreamParameters>,
     pub buffered_amount_low_threshold: u32,
     pub paused: bool,
+    pub subchannels: Vec<u16>,
     pub data_producer_paused: bool,
 }
 
@@ -168,6 +179,7 @@ impl DataConsumerDump {
                 .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
             buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
             paused: dump.paused,
+            subchannels: dump.subchannels,
             data_producer_paused: dump.data_producer_paused,
         })
     }
@@ -298,6 +310,7 @@ struct Inner {
     data_producer_id: DataProducerId,
     direct: bool,
     paused: Arc<Mutex<bool>>,
+    subchannels: Arc<Mutex<Vec<u16>>>,
     data_producer_paused: Arc<Mutex<bool>>,
     executor: Arc<Executor<'static>>,
     channel: Channel,
@@ -450,6 +463,7 @@ impl DataConsumer {
         executor: Arc<Executor<'static>>,
         channel: Channel,
         data_producer_paused: bool,
+        subchannels: Vec<u16>,
         app_data: AppData,
         transport: Arc<dyn Transport>,
         direct: bool,
@@ -461,6 +475,7 @@ impl DataConsumer {
         let paused = Arc::new(Mutex::new(paused));
         #[allow(clippy::mutex_atomic)]
         let data_producer_paused = Arc::new(Mutex::new(data_producer_paused));
+        let subchannels = Arc::new(Mutex::new(subchannels));
 
         let inner_weak = Arc::<Mutex<Option<Weak<Inner>>>>::default();
         let subscription_handler = {
@@ -567,6 +582,7 @@ impl DataConsumer {
             executor,
             channel,
             handlers,
+            subchannels,
             app_data,
             transport,
             weak_data_producer: data_producer.downgrade(),
@@ -636,6 +652,12 @@ impl DataConsumer {
     #[must_use]
     pub fn protocol(&self) -> &String {
         &self.inner().protocol
+    }
+
+    /// The data consumer subchannels.
+    #[must_use]
+    pub fn subchannels(&self) -> Vec<u16> {
+        self.inner().subchannels.lock().clone()
     }
 
     /// Custom application data.
@@ -896,6 +918,22 @@ impl DirectDataConsumer {
                 },
             )
             .await
+    }
+
+    /// Sets subchannels to the worker DataConsumer.
+    pub async fn set_subchannels(&self, subchannels: Vec<u16>) -> Result<(), RequestError> {
+        let response = self
+            .inner
+            .channel
+            .request(
+                self.inner.id,
+                DataConsumerSetSubchannelsRequest { subchannels },
+            )
+            .await?;
+
+        *self.inner.subchannels.lock() = response.subchannels;
+
+        Ok(())
     }
 }
 

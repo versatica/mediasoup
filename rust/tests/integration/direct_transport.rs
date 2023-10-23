@@ -175,7 +175,7 @@ fn send_succeeds() {
             .expect("Failed to produce data");
 
         let data_consumer = transport
-            .consume_data(DataConsumerOptions::new_direct(data_producer.id()))
+            .consume_data(DataConsumerOptions::new_direct(data_producer.id(), None))
             .await
             .expect("Failed to consume data");
 
@@ -286,7 +286,7 @@ fn send_succeeds() {
             };
 
             direct_data_producer
-                .send(message)
+                .send(message, None, None)
                 .expect("Failed to send message");
 
             if id == num_messages {
@@ -339,6 +339,212 @@ fn send_succeeds() {
                 recv_message_bytes.load(Ordering::SeqCst) as u64,
             );
         }
+    });
+}
+
+#[test]
+fn send_with_subchannels_succeeds() {
+    future::block_on(async move {
+        let (_worker, _router, transport) = init().await;
+
+        let data_producer = transport
+            .produce_data({
+                let mut options = DataProducerOptions::new_direct();
+
+                options.label = "foo".to_string();
+                options.protocol = "bar".to_string();
+                options.app_data = AppData::new(CustomAppData { foo: "bar" });
+
+                options
+            })
+            .await
+            .expect("Failed to produce data");
+
+        let data_consumer_1 = transport
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![1, 11, 666]),
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        let data_consumer_2 = transport
+            .consume_data(DataConsumerOptions::new_direct(
+                data_producer.id(),
+                Some(vec![2, 22, 666]),
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        let expected_received_num_messages_1 = 7;
+        let expected_received_num_messages_2 = 5;
+        let received_messages_1: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
+        let received_messages_2: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(vec![]));
+
+        let (received_messages_tx_1, received_messages_rx_1) = async_oneshot::oneshot::<()>();
+        let _handler_1 = data_consumer_1.on_message({
+            let received_messages_tx_1 = Mutex::new(Some(received_messages_tx_1));
+            let received_messages_1 = Arc::clone(&received_messages_1);
+
+            move |message| {
+                let text: String = match message {
+                    WebRtcMessage::String(string) => string.parse().unwrap(),
+                    _ => {
+                        panic!("Unexpected empty messages!");
+                    }
+                };
+
+                received_messages_1.lock().push(text);
+
+                if received_messages_1.lock().len() == expected_received_num_messages_1 {
+                    let _ = received_messages_tx_1.lock().take().unwrap().send(());
+                }
+            }
+        });
+
+        let (received_messages_tx_2, received_messages_rx_2) = async_oneshot::oneshot::<()>();
+        let _handler_2 = data_consumer_2.on_message({
+            let received_messages_tx_2 = Mutex::new(Some(received_messages_tx_2));
+            let received_messages_2 = Arc::clone(&received_messages_2);
+
+            move |message| {
+                let text: String = match message {
+                    WebRtcMessage::String(string) => string.parse().unwrap(),
+                    _ => {
+                        panic!("Unexpected empty messages!");
+                    }
+                };
+
+                received_messages_2.lock().push(text);
+
+                if received_messages_2.lock().len() == expected_received_num_messages_2 {
+                    let _ = received_messages_tx_2.lock().take().unwrap().send(());
+                }
+            }
+        });
+
+        let direct_data_producer = match &data_producer {
+            DataProducer::Direct(direct_data_producer) => direct_data_producer,
+            _ => {
+                panic!("Expected direct data producer")
+            }
+        };
+
+        let direct_data_consumer_2 = match &data_consumer_2 {
+            DataConsumer::Direct(direct_data_consumer) => direct_data_consumer,
+            _ => {
+                panic!("Expected direct data consumer")
+            }
+        };
+
+        let both: &'static str = "both";
+        let none: &'static str = "none";
+        let dc1: &'static str = "dc1";
+        let dc2: &'static str = "dc2";
+
+        // Must be received by dataConsumer1 and dataConsumer2.
+        direct_data_producer
+            .send(WebRtcMessage::String(both.to_string()), None, None)
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer1 and dataConsumer2.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(both.to_string()),
+                Some(vec![1, 2]),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer1 and dataConsumer2.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(both.to_string()),
+                Some(vec![11, 22, 33]),
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // Must not be received by neither dataConsumer1 nor dataConsumer2.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(none.to_string()),
+                Some(vec![3]),
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        // Must not be received by neither dataConsumer1 nor dataConsumer2.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(none.to_string()),
+                Some(vec![666]),
+                Some(3),
+            )
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer1.
+        direct_data_producer
+            .send(WebRtcMessage::String(dc1.to_string()), Some(vec![1]), None)
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer1.
+        direct_data_producer
+            .send(WebRtcMessage::String(dc1.to_string()), Some(vec![11]), None)
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer1.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(dc1.to_string()),
+                Some(vec![666]),
+                Some(11),
+            )
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer2.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(dc2.to_string()),
+                Some(vec![666]),
+                Some(2),
+            )
+            .expect("Failed to send message");
+
+        let mut subchannels = data_consumer_2.subchannels();
+        subchannels.push(1);
+
+        direct_data_consumer_2
+            .set_subchannels(subchannels)
+            .await
+            .expect("Failed to set subchannels");
+
+        // Must be received by dataConsumer2.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(both.to_string()),
+                Some(vec![1]),
+                Some(666),
+            )
+            .expect("Failed to send message");
+
+        received_messages_rx_1
+            .await
+            .expect("Failed tor receive all messages");
+
+        received_messages_rx_2
+            .await
+            .expect("Failed tor receive all messages");
+
+        let received_messages_1 = received_messages_1.lock().clone();
+        assert!(received_messages_1.contains(&both.to_string()));
+        assert!(received_messages_1.contains(&dc1.to_string()));
+        assert!(!received_messages_1.contains(&dc2.to_string()));
+
+        let received_messages_2 = received_messages_2.lock().clone();
+        assert!(received_messages_2.contains(&both.to_string()));
+        assert!(!received_messages_2.contains(&dc1.to_string()));
+        assert!(received_messages_2.contains(&dc2.to_string()));
     });
 }
 

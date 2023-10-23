@@ -543,7 +543,12 @@ impl DataProducer {
 
 impl DirectDataProducer {
     /// Sends direct messages from the Rust to the worker.
-    pub fn send(&self, message: WebRtcMessage<'_>) -> Result<(), NotificationError> {
+    pub fn send(
+        &self,
+        message: WebRtcMessage<'_>,
+        subchannels: Option<Vec<u16>>,
+        required_subchannel: Option<u16>,
+    ) -> Result<(), NotificationError> {
         let (ppid, _payload) = message.into_ppid_and_payload();
 
         self.inner.channel.notify(
@@ -551,6 +556,8 @@ impl DirectDataProducer {
             DataProducerSendNotification {
                 ppid,
                 payload: _payload.into_owned(),
+                subchannels,
+                required_subchannel,
             },
         )
     }
