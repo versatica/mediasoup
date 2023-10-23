@@ -270,9 +270,9 @@ impl Channel {
                             .remove(&response.id().unwrap());
                         if let Some(mut sender) = sender {
                             // Request did not succeed.
-                            if let Ok(Some(error)) = response.error() {
+                            if let Ok(Some(reason)) = response.reason() {
                                 let _ = sender.send(Err(ResponseError {
-                                    reason: error.to_string(),
+                                    reason: reason.to_string(),
                                 }));
                             }
                             // Request succeeded.

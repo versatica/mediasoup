@@ -561,7 +561,6 @@ fn pipe_to_router_succeeds_with_video() {
 }
 
 #[test]
-#[ignore]
 fn pipe_to_router_fails_if_both_routers_belong_to_the_same_worker() {
     future::block_on(async move {
         let (worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
@@ -945,7 +944,6 @@ fn consume_for_pipe_producer_succeeds() {
 }
 
 #[test]
-#[ignore]
 fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
     future::block_on(async move {
         let (_worker1, _worker2, router1, router2, transport1, transport2) = init().await;
