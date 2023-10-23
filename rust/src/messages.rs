@@ -13,12 +13,13 @@ use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{
     active_speaker_observer, audio_level_observer, consumer, data_consumer, data_producer,
     direct_transport, message, notification, pipe_transport, plain_transport, producer, request,
-    response, router, rtp_observer, transport, web_rtc_transport, worker,
+    response, router, rtp_observer, transport, web_rtc_server, web_rtc_transport, worker,
 };
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
 use crate::producer::{ProducerId, ProducerTraceEventType, ProducerType};
+use crate::router::producer::ProducerDump;
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_observer::RtpObserverId;
 use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
@@ -60,8 +61,9 @@ where
     }
 
     /// Convert generic response into specific type of this request.
-    fn convert_response(response: Option<response::Body>)
-        -> Result<Self::Response, Box<dyn Error>>;
+    fn convert_response(
+        response: Option<response::BodyRef<'_>>,
+    ) -> Result<Self::Response, Box<dyn Error>>;
 }
 
 pub(crate) trait Notification: Debug {
@@ -98,7 +100,7 @@ impl Request for WorkerCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -129,11 +131,13 @@ impl Request for WorkerDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::WorkerDumpResponse(data)) = response else {
+        let Some(response::BodyRef::WorkerDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = worker::DumpResponse::try_from(data)?;
 
         Ok(WorkerDump {
             router_ids: data
@@ -204,7 +208,7 @@ impl Request for WorkerUpdateSettingsRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -244,7 +248,7 @@ impl Request for WorkerCreateWebRtcServerRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -283,7 +287,7 @@ impl Request for WebRtcServerCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -314,11 +318,13 @@ impl Request for WebRtcServerDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::WebRtcServerDumpResponse(data)) = response else {
+        let Some(response::BodyRef::WebRtcServerDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = web_rtc_server::DumpResponse::try_from(data)?;
 
         Ok(WebRtcServerDump {
             id: data.id.parse()?,
@@ -394,7 +400,7 @@ impl Request for WorkerCreateRouterRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -429,7 +435,7 @@ impl Request for RouterCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -460,11 +466,13 @@ impl Request for RouterDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::RouterDumpResponse(data)) = response else {
+        let Some(response::BodyRef::RouterDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = router::DumpResponse::try_from(data)?;
 
         Ok(RouterDump {
             id: data.id.parse()?,
@@ -603,7 +611,7 @@ impl Request for RouterCreateDirectTransportRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -769,11 +777,13 @@ impl Request for RouterCreateWebRtcTransportRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::WebRtcTransportDumpResponse(data)) = response else {
+        let Some(response::BodyRef::WebRtcTransportDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = web_rtc_transport::DumpResponse::try_from(data)?;
 
         Ok(WebRtcTransportData {
             ice_role: IceRole::from_fbs(data.ice_role),
@@ -844,11 +854,13 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::WebRtcTransportDumpResponse(data)) = response else {
+        let Some(response::BodyRef::WebRtcTransportDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = web_rtc_transport::DumpResponse::try_from(data)?;
 
         Ok(WebRtcTransportData {
             ice_role: IceRole::from_fbs(data.ice_role),
@@ -974,11 +986,13 @@ impl Request for RouterCreatePlainTransportRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::PlainTransportDumpResponse(data)) = response else {
+        let Some(response::BodyRef::PlainTransportDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = plain_transport::DumpResponse::try_from(data)?;
 
         Ok(PlainTransportData {
             tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
@@ -1098,11 +1112,13 @@ impl Request for RouterCreatePipeTransportRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::PipeTransportDumpResponse(data)) = response else {
+        let Some(response::BodyRef::PipeTransportDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = pipe_transport::DumpResponse::try_from(data)?;
 
         Ok(PipeTransportData {
             tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
@@ -1197,7 +1213,7 @@ impl Request for RouterCreateAudioLevelObserverRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -1262,7 +1278,7 @@ impl Request for RouterCreateActiveSpeakerObserverRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -1293,10 +1309,10 @@ impl Request for TransportDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -1328,10 +1344,10 @@ impl Request for TransportGetStatsRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -1369,7 +1385,7 @@ impl Request for TransportCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -1410,11 +1426,13 @@ impl Request for WebRtcTransportConnectRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::WebRtcTransportConnectResponse(data)) = response else {
+        let Some(response::BodyRef::WebRtcTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = web_rtc_transport::ConnectResponse::try_from(data)?;
 
         Ok(WebRtcTransportConnectResponse {
             dtls_local_role: DtlsRole::from_fbs(data.dtls_local_role),
@@ -1462,11 +1480,13 @@ impl Request for PipeTransportConnectRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::PipeTransportConnectResponse(data)) = response else {
+        let Some(response::BodyRef::PipeTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = pipe_transport::ConnectResponse::try_from(data)?;
 
         Ok(PipeTransportConnectResponse {
             tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
@@ -1519,11 +1539,13 @@ impl Request for TransportConnectPlainRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::PlainTransportConnectResponse(data)) = response else {
+        let Some(response::BodyRef::PlainTransportConnectResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = plain_transport::ConnectResponse::try_from(data)?;
 
         Ok(PlainTransportConnectResponse {
             tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
@@ -1567,7 +1589,7 @@ impl Request for TransportSetMaxIncomingBitrateRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -1603,7 +1625,7 @@ impl Request for TransportSetMaxOutgoingBitrateRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -1639,7 +1661,7 @@ impl Request for TransportSetMinOutgoingBitrateRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -1669,11 +1691,13 @@ impl Request for TransportRestartIceRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::TransportRestartIceResponse(data)) = response else {
+        let Some(response::BodyRef::TransportRestartIceResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = transport::RestartIceResponse::try_from(data)?;
 
         Ok(IceParameters::from_fbs(web_rtc_transport::IceParameters {
             username_fragment: data.username_fragment,
@@ -1729,11 +1753,13 @@ impl Request for TransportProduceRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::TransportProduceResponse(data)) = response else {
+        let Some(response::BodyRef::TransportProduceResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = transport::ProduceResponse::try_from(data)?;
 
         Ok(TransportProduceResponse {
             r#type: ProducerType::from_fbs(data.type_),
@@ -1799,11 +1825,13 @@ impl Request for TransportConsumeRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::TransportConsumeResponse(data)) = response else {
+        let Some(response::BodyRef::TransportConsumeResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = transport::ConsumeResponse::try_from(data)?;
 
         Ok(TransportConsumeResponse {
             paused: data.paused,
@@ -1879,11 +1907,13 @@ impl Request for TransportProduceDataRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::DataProducerDumpResponse(data)) = response else {
+        let Some(response::BodyRef::DataProducerDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = data_producer::DumpResponse::try_from(data)?;
 
         Ok(TransportProduceDataResponse {
             r#type: match data.type_ {
@@ -1968,11 +1998,13 @@ impl Request for TransportConsumeDataRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::DataConsumerDumpResponse(data)) = response else {
+        let Some(response::BodyRef::DataConsumerDumpResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = data_consumer::DumpResponse::try_from(data)?;
 
         Ok(TransportConsumeDataResponse {
             r#type: match data.type_ {
@@ -2027,7 +2059,7 @@ impl Request for TransportEnableTraceEventRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2098,7 +2130,7 @@ impl Request for ProducerCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2110,7 +2142,7 @@ pub(crate) struct ProducerDumpRequest {}
 impl Request for ProducerDumpRequest {
     const METHOD: request::Method = request::Method::ProducerDump;
     type HandlerId = ProducerId;
-    type Response = response::Body;
+    type Response = ProducerDump;
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
@@ -2129,14 +2161,13 @@ impl Request for ProducerDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        match response {
-            Some(data) => Ok(data),
-            _ => {
-                panic!("Wrong message from worker: {response:?}");
-            }
-        }
+        let Some(response::BodyRef::ProducerDumpResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        ProducerDump::from_fbs_ref(data)
     }
 }
 
@@ -2165,10 +2196,10 @@ impl Request for ProducerGetStatsRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -2201,7 +2232,7 @@ impl Request for ProducerPauseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2232,7 +2263,7 @@ impl Request for ProducerResumeRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2274,7 +2305,7 @@ impl Request for ProducerEnableTraceEventRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2345,7 +2376,7 @@ impl Request for ConsumerCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2376,10 +2407,10 @@ impl Request for ConsumerDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -2412,10 +2443,10 @@ impl Request for ConsumerGetStatsRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -2448,7 +2479,7 @@ impl Request for ConsumerPauseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2479,7 +2510,7 @@ impl Request for ConsumerResumeRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2519,11 +2550,13 @@ impl Request for ConsumerSetPreferredLayersRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::ConsumerSetPreferredLayersResponse(data)) = response else {
+        let Some(response::BodyRef::ConsumerSetPreferredLayersResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = consumer::SetPreferredLayersResponse::try_from(data)?;
 
         match data.preferred_layers {
             Some(preferred_layers) => Ok(Some(ConsumerLayers::from_fbs(*preferred_layers))),
@@ -2567,11 +2600,13 @@ impl Request for ConsumerSetPriorityRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::ConsumerSetPriorityResponse(data)) = response else {
+        let Some(response::BodyRef::ConsumerSetPriorityResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = consumer::SetPriorityResponse::try_from(data)?;
 
         Ok(ConsumerSetPriorityResponse {
             priority: data.priority,
@@ -2603,7 +2638,7 @@ impl Request for ConsumerRequestKeyFrameRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2645,7 +2680,7 @@ impl Request for ConsumerEnableTraceEventRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2688,7 +2723,7 @@ impl Request for DataProducerCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2719,10 +2754,10 @@ impl Request for DataProducerDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -2755,10 +2790,10 @@ impl Request for DataProducerGetStatsRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -2791,7 +2826,7 @@ impl Request for DataProducerPauseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2822,7 +2857,7 @@ impl Request for DataProducerResumeRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2902,7 +2937,7 @@ impl Request for DataConsumerCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -2933,10 +2968,10 @@ impl Request for DataConsumerDumpRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -2969,10 +3004,10 @@ impl Request for DataConsumerGetStatsRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         match response {
-            Some(data) => Ok(data),
+            Some(data) => Ok(data.try_into().unwrap()),
             _ => {
                 panic!("Wrong message from worker: {response:?}");
             }
@@ -3005,7 +3040,7 @@ impl Request for DataConsumerPauseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3036,7 +3071,7 @@ impl Request for DataConsumerResumeRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3072,11 +3107,13 @@ impl Request for DataConsumerGetBufferedAmountRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::DataConsumerGetBufferedAmountResponse(data)) = response else {
+        let Some(response::BodyRef::DataConsumerGetBufferedAmountResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = data_consumer::GetBufferedAmountResponse::try_from(data)?;
 
         Ok(DataConsumerGetBufferedAmountResponse {
             buffered_amount: data.buffered_amount,
@@ -3121,7 +3158,7 @@ impl Request for DataConsumerSetBufferedAmountLowThresholdRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3161,7 +3198,7 @@ impl Request for DataConsumerSendRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3209,11 +3246,13 @@ impl Request for DataConsumerSetSubchannelsRequest {
     }
 
     fn convert_response(
-        response: Option<response::Body>,
+        response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        let Some(response::Body::DataConsumerSetSubchannelsResponse(data)) = response else {
+        let Some(response::BodyRef::DataConsumerSetSubchannelsResponse(data)) = response else {
             panic!("Wrong message from worker: {response:?}");
         };
+
+        let data = data_consumer::SetSubchannelsResponse::try_from(data)?;
 
         Ok(DataConsumerSetSubchannelsResponse {
             subchannels: data.subchannels,
@@ -3252,7 +3291,7 @@ impl Request for RtpObserverCloseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3282,7 +3321,7 @@ impl Request for RtpObserverPauseRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3312,7 +3351,7 @@ impl Request for RtpObserverResumeRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3351,7 +3390,7 @@ impl Request for RtpObserverAddProducerRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }
@@ -3390,7 +3429,7 @@ impl Request for RtpObserverRemoveProducerRequest {
     }
 
     fn convert_response(
-        _response: Option<response::Body>,
+        _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
         Ok(())
     }

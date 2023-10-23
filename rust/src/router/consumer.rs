@@ -180,6 +180,26 @@ impl RtpStreamParams {
             rtx_payload_type: params.rtx_payload_type,
         }
     }
+
+    pub(crate) fn from_fbs_ref(params: rtp_stream::ParamsRef<'_>) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            clock_rate: params.clock_rate()?,
+            cname: params.cname()?.to_string(),
+            encoding_idx: params.encoding_idx()?,
+            mime_type: params.mime_type()?.parse()?,
+            payload_type: params.payload_type()?,
+            spatial_layers: params.spatial_layers()?,
+            ssrc: params.ssrc()?,
+            temporal_layers: params.temporal_layers()?,
+            use_dtx: params.use_dtx()?,
+            use_in_band_fec: params.use_in_band_fec()?,
+            use_nack: params.use_nack()?,
+            use_pli: params.use_pli()?,
+            rid: params.rid()?.map(|rid| rid.to_string()),
+            rtx_ssrc: params.rtx_ssrc()?,
+            rtx_payload_type: params.rtx_payload_type()?,
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
@@ -195,15 +215,15 @@ pub struct RtxStreamParams {
 }
 
 impl RtxStreamParams {
-    pub(crate) fn from_fbs(params: &rtx_stream::Params) -> Self {
-        Self {
-            clock_rate: params.clock_rate,
-            cname: params.cname.clone(),
-            mime_type: params.mime_type.clone().parse().unwrap(),
-            payload_type: params.payload_type,
-            ssrc: params.ssrc,
-            rrid: params.rrid.clone(),
-        }
+    pub(crate) fn from_fbs_ref(params: rtx_stream::ParamsRef<'_>) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            clock_rate: params.clock_rate()?,
+            cname: params.cname()?.to_string(),
+            mime_type: params.mime_type()?.parse()?,
+            payload_type: params.payload_type()?,
+            ssrc: params.ssrc()?,
+            rrid: params.rrid()?.map(|rrid| rrid.to_string()),
+        })
     }
 }
 

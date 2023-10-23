@@ -106,14 +106,14 @@ pub struct RtpStreamRecv {
 }
 
 impl RtpStreamRecv {
-    pub(crate) fn from_fbs(dump: &rtp_stream::Dump) -> Self {
-        Self {
-            params: RtpStreamParams::from_fbs(&dump.params),
-            score: dump.score,
-            rtx_stream: dump.rtx_stream.clone().map(|stream| RtxStream {
-                params: RtxStreamParams::from_fbs(&stream.params),
+    pub(crate) fn from_fbs_ref(dump: rtp_stream::DumpRef<'_>) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
+            score: dump.score()?,
+            rtx_stream: dump.rtx_stream()?.map(|stream| RtxStream {
+                params: RtxStreamParams::from_fbs_ref(stream.params().unwrap()).unwrap(),
             }),
-        }
+        })
     }
 }
 
@@ -133,24 +133,29 @@ pub struct ProducerDump {
 }
 
 impl ProducerDump {
-    pub(crate) fn from_fbs(dump: producer::DumpResponse) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs_ref(
+        dump: producer::DumpResponseRef<'_>,
+    ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
-            id: dump.id.parse()?,
-            kind: MediaKind::from_fbs(dump.kind),
-            paused: dump.paused,
-            rtp_mapping: RtpMapping::from_fbs(*dump.rtp_mapping),
-            rtp_parameters: RtpParameters::from_fbs(*dump.rtp_parameters).unwrap(),
+            id: dump.id()?.parse()?,
+            kind: MediaKind::from_fbs(dump.kind()?),
+            paused: dump.paused()?,
+            rtp_mapping: RtpMapping::from_fbs_ref(dump.rtp_mapping()?)?,
+            rtp_parameters: RtpParameters::from_fbs_ref(dump.rtp_parameters()?)?,
             rtp_streams: dump
-                .rtp_streams
+                .rtp_streams()?
                 .iter()
-                .map(RtpStreamRecv::from_fbs)
-                .collect(),
+                .map(|rtp_stream| RtpStreamRecv::from_fbs_ref(rtp_stream?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
             trace_event_types: dump
-                .trace_event_types
+                .trace_event_types()?
                 .iter()
-                .map(ProducerTraceEventType::from_fbs)
+                .map(|trace_event_type| {
+                    ProducerTraceEventType::from_fbs(&trace_event_type.unwrap())
+                })
                 .collect(),
-            r#type: ProducerType::from_fbs(dump.type_),
+
+            r#type: ProducerType::from_fbs(dump.type_()?),
         })
     }
 }
@@ -845,17 +850,10 @@ impl Producer {
     pub async fn dump(&self) -> Result<ProducerDump, RequestError> {
         debug!("dump()");
 
-        let response = self
-            .inner()
+        self.inner()
             .channel
             .request(self.id(), ProducerDumpRequest {})
-            .await?;
-
-        if let response::Body::ProducerDumpResponse(data) = response {
-            Ok(ProducerDump::from_fbs(*data).expect("Error parsing dump response"))
-        } else {
-            panic!("Wrong message from worker");
-        }
+            .await
     }
 
     /// Returns current RTC statistics of the producer.

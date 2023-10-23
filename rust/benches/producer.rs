@@ -120,6 +120,77 @@ fn audio_producer_options() -> ProducerOptions {
     )
 }
 
+fn video_producer_options() -> ProducerOptions {
+    ProducerOptions::new(
+        MediaKind::Video,
+        RtpParameters {
+            mid: Some(fastrand::u32(100_000_000..999_999_999).to_string()),
+            codecs: vec![
+                RtpCodecParameters::Video {
+                    mime_type: MimeTypeVideo::H264,
+                    payload_type: 112,
+                    clock_rate: NonZeroU32::new(90000).unwrap(),
+                    parameters: RtpCodecParametersParameters::from([
+                        ("packetization-mode", 1_u32.into()),
+                        ("profile-level-id", "4d0032".into()),
+                    ]),
+                    rtcp_feedback: vec![
+                        RtcpFeedback::Nack,
+                        RtcpFeedback::NackPli,
+                        RtcpFeedback::GoogRemb,
+                    ],
+                },
+                RtpCodecParameters::Video {
+                    mime_type: MimeTypeVideo::Rtx,
+                    payload_type: 113,
+                    clock_rate: NonZeroU32::new(90000).unwrap(),
+                    parameters: RtpCodecParametersParameters::from([("apt", 112u32.into())]),
+                    rtcp_feedback: vec![],
+                },
+            ],
+            header_extensions: vec![
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::Mid,
+                    id: 10,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::VideoOrientation,
+                    id: 13,
+                    encrypt: false,
+                },
+            ],
+            encodings: vec![
+                RtpEncodingParameters {
+                    ssrc: Some(22222222),
+                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
+                    scalability_mode: "L1T3".parse().unwrap(),
+                    ..RtpEncodingParameters::default()
+                },
+                RtpEncodingParameters {
+                    ssrc: Some(22222224),
+                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
+                    ..RtpEncodingParameters::default()
+                },
+                RtpEncodingParameters {
+                    ssrc: Some(22222226),
+                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
+                    ..RtpEncodingParameters::default()
+                },
+                RtpEncodingParameters {
+                    ssrc: Some(22222228),
+                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
+                    ..RtpEncodingParameters::default()
+                },
+            ],
+            rtcp: RtcpParameters {
+                cname: Some("video-1".to_string()),
+                ..RtcpParameters::default()
+            },
+        },
+    )
+}
+
 pub fn criterion_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("producer");
 
@@ -127,36 +198,73 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         let (_worker, _router, transport_1, _transport_2) =
             futures_lite::future::block_on(async { init().await });
 
-        let producer = futures_lite::future::block_on(async {
-            let (_worker, _router, transport_1, _transport_2) = init().await;
-            transport_1
-                .produce(audio_producer_options())
-                .await
-                .expect("Failed to produce audio")
-        });
+        {
+            let audio_producer = futures_lite::future::block_on(async {
+                let (_worker, _router, transport_1, _transport_2) = init().await;
+                transport_1
+                    .produce(audio_producer_options())
+                    .await
+                    .expect("Failed to produce audio")
+            });
 
-        group.bench_function("create", |b| {
-            b.iter(|| {
-                let _ = futures_lite::future::block_on(async {
-                    transport_1
-                        .produce(audio_producer_options())
-                        .await
-                        .expect("Failed to produce audio")
-                });
-            })
-        });
+            group.bench_function("create/audio", |b| {
+                b.iter(|| {
+                    let _ = futures_lite::future::block_on(async {
+                        transport_1
+                            .produce(audio_producer_options())
+                            .await
+                            .expect("Failed to produce audio")
+                    });
+                })
+            });
 
-        group.bench_function("dump", |b| {
-            b.iter(|| {
-                let _ = futures_lite::future::block_on(async { producer.dump().await });
-            })
-        });
+            group.bench_function("dump/audio", |b| {
+                b.iter(|| {
+                    let _ = futures_lite::future::block_on(async { audio_producer.dump().await });
+                })
+            });
 
-        group.bench_function("stats", |b| {
-            b.iter(|| {
-                let _ = futures_lite::future::block_on(async { producer.get_stats().await });
-            })
-        });
+            group.bench_function("stats/audio", |b| {
+                b.iter(|| {
+                    let _ =
+                        futures_lite::future::block_on(async { audio_producer.get_stats().await });
+                })
+            });
+        }
+
+        {
+            let video_producer = futures_lite::future::block_on(async {
+                let (_worker, _router, transport_1, _transport_2) = init().await;
+                transport_1
+                    .produce(video_producer_options())
+                    .await
+                    .expect("Failed to produce video")
+            });
+
+            group.bench_function("create/video", |b| {
+                b.iter(|| {
+                    let _ = futures_lite::future::block_on(async {
+                        transport_1
+                            .produce(video_producer_options())
+                            .await
+                            .expect("Failed to produce video")
+                    });
+                })
+            });
+
+            group.bench_function("dump/video", |b| {
+                b.iter(|| {
+                    let _ = futures_lite::future::block_on(async { video_producer.dump().await });
+                })
+            });
+
+            group.bench_function("stats/video", |b| {
+                b.iter(|| {
+                    let _ =
+                        futures_lite::future::block_on(async { video_producer.get_stats().await });
+                })
+            });
+        }
     }
 
     group.finish();

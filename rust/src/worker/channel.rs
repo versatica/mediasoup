@@ -126,7 +126,7 @@ struct ResponseError {
     reason: String,
 }
 
-type FBSResponseResult = Result<Option<response::Body>, ResponseError>;
+type FBSResponseResult = Result<Option<Vec<u8>>, ResponseError>;
 
 struct RequestDropGuard<'a> {
     id: u32,
@@ -279,12 +279,8 @@ impl Channel {
                             else {
                                 match response.body().expect("failed accessing response body") {
                                     // Response has body.
-                                    Some(body_ref) => {
-                                        let _ = sender.send(Ok(Some(
-                                            body_ref
-                                                .try_into()
-                                                .expect("failed to retrieve response body"),
-                                        )));
+                                    Some(_) => {
+                                        let _ = sender.send(Ok(Some(Vec::from(&message[4..]))));
                                     }
                                     // Response does not have body.
                                     None => {
@@ -421,11 +417,25 @@ impl Channel {
         };
 
         match response_result {
-            Ok(data) => {
+            Ok(bytes) => {
                 debug!("request succeeded [method:{:?}, id:{}]", R::METHOD, id);
-                trace!("{data:?}");
 
-                Ok(R::convert_response(data).map_err(RequestError::ResponseConversion)?)
+                match bytes {
+                    Some(bytes) => {
+                        let message_ref = message::MessageRef::read_as_root(&bytes).unwrap();
+
+                        let message::BodyRef::Response(response_ref) = message_ref.data().unwrap()
+                        else {
+                            panic!("Wrong response stored: {message_ref:?}");
+                        };
+
+                        Ok(R::convert_response(response_ref.body().unwrap())
+                            .map_err(RequestError::ResponseConversion)?)
+                    }
+                    None => {
+                        Ok(R::convert_response(None).map_err(RequestError::ResponseConversion)?)
+                    }
+                }
             }
             Err(ResponseError { reason }) => {
                 debug!(
