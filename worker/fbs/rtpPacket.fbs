@@ -18,3 +18,4 @@ table Dump {
     rrid: string;
     wide_sequence_number: uint16 = null;
 }
+
