@@ -537,14 +537,14 @@ fn send_with_subchannels_succeeds() {
             .expect("Failed tor receive all messages");
 
         let received_messages_1 = received_messages_1.lock().clone();
-        assert_eq!(received_messages_1.contains(&both.to_string()), true);
-        assert_eq!(received_messages_1.contains(&dc1.to_string()), true);
-        assert_eq!(received_messages_1.contains(&dc2.to_string()), false);
+        assert!(received_messages_1.contains(&both.to_string()));
+        assert!(received_messages_1.contains(&dc1.to_string()));
+        assert!(!received_messages_1.contains(&dc2.to_string()));
 
         let received_messages_2 = received_messages_2.lock().clone();
-        assert_eq!(received_messages_2.contains(&both.to_string()), true);
-        assert_eq!(received_messages_2.contains(&dc1.to_string()), false);
-        assert_eq!(received_messages_2.contains(&dc2.to_string()), true);
+        assert!(received_messages_2.contains(&both.to_string()));
+        assert!(!received_messages_2.contains(&dc1.to_string()));
+        assert!(received_messages_2.contains(&dc2.to_string()));
     });
 }
 
