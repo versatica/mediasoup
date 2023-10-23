@@ -1,7 +1,7 @@
 # Changelog
 
 
-### Next
+### 3.12.16
 
 * Fix `IceServer` crash when client uses ICE renomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
 
