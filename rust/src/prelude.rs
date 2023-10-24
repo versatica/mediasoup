@@ -63,8 +63,9 @@ pub use crate::data_structures::{
     AppData, DtlsParameters, IceCandidate, IceParameters, ListenInfo, Protocol, WebRtcMessage,
 };
 pub use crate::rtp_parameters::{
-    MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities,
-    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecParametersParameters, RtpParameters,
+    MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
+    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
+    RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
 pub use crate::sctp_parameters::SctpStreamParameters;
 pub use crate::srtp_parameters::SrtpCryptoSuite;
