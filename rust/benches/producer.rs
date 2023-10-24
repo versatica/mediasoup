@@ -153,6 +153,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 let _ = futures_lite::future::block_on(async { producer.dump().await });
             })
         });
+
+        group.bench_function("stats", |b| {
+            b.iter(|| {
+                let _ = futures_lite::future::block_on(async { producer.get_stats().await });
+            })
+        });
     }
 
     group.finish();
