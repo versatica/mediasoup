@@ -1,5 +1,5 @@
-import * as os from 'os';
-import { Duplex } from 'stream';
+import * as os from 'node:os';
+import { Duplex } from 'node:stream';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
@@ -10,7 +10,8 @@ import { Message, Type as MessageType, Body as MessageBody } from './fbs/message
 import { Notification, Body as NotificationBody, Event } from './fbs/notification';
 import { Log } from './fbs/log';
 
-const littleEndian = os.endianness() == 'LE';
+const IS_LITTLE_ENDIAN = os.endianness() === 'LE';
+
 const logger = new Logger('Channel');
 
 type Sent =
@@ -110,7 +111,7 @@ export class Channel extends EnhancedEventEmitter
 				const dataView = new DataView(
 					this.#recvBuffer.buffer,
 					this.#recvBuffer.byteOffset + msgStart);
-				const msgLen = dataView.getUint32(0, littleEndian);
+				const msgLen = dataView.getUint32(0, IS_LITTLE_ENDIAN);
 
 				if (readLen < 4 + msgLen)
 				{

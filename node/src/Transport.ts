@@ -1,8 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import * as utils from './utils';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { RouterInternal } from './Router';
@@ -40,6 +38,7 @@ import {
 	SctpStreamParameters
 } from './SctpParameters';
 import { AppData } from './types';
+import * as utils from './utils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
@@ -251,7 +250,8 @@ type SctpListenerDump =
 	streamIdTable : {key: number; value: string}[];
 };
 
-type RecvRtpHeaderExtensions = {
+type RecvRtpHeaderExtensions =
+{
   mid?: number;
   rid?: number;
   rrid?: number;
@@ -736,11 +736,11 @@ export class Transport
 			{
 				this.#cnameForProducers = rtpParameters.rtcp.cname;
 			}
-			// Otherwise if we don't have yet a CNAME for Producers and the RTP parameters
-			// do not include CNAME, create a random one.
+			// Otherwise if we don't have yet a CNAME for Producers and the RTP
+			// parameters do not include CNAME, create a random one.
 			else if (!this.#cnameForProducers)
 			{
-				this.#cnameForProducers = uuidv4().substr(0, 8);
+				this.#cnameForProducers = utils.generateUUIDv4().substr(0, 8);
 			}
 
 			// Override Producer's CNAME.
@@ -758,7 +758,7 @@ export class Transport
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
 			kind, rtpParameters, routerRtpCapabilities, rtpMapping);
 
-		const producerId = id || uuidv4();
+		const producerId = id || utils.generateUUIDv4();
 		const requestOffset = createProduceRequest({
 			builder : this.channel.bufferBuilder,
 			producerId,
@@ -901,7 +901,7 @@ export class Transport
 			}
 		}
 
-		const consumerId = uuidv4();
+		const consumerId = utils.generateUUIDv4();
 		const requestOffset = createConsumeRequest({
 			builder : this.channel.bufferBuilder,
 			producer,
@@ -1015,7 +1015,7 @@ export class Transport
 			}
 		}
 
-		const dataProducerId = id || uuidv4();
+		const dataProducerId = id || utils.generateUUIDv4();
 		const requestOffset = createProduceDataRequest({
 			builder : this.channel.bufferBuilder,
 			dataProducerId,
@@ -1158,7 +1158,7 @@ export class Transport
 		}
 
 		const { label, protocol } = dataProducer;
-		const dataConsumerId = uuidv4();
+		const dataConsumerId = utils.generateUUIDv4();
 
 		const requestOffset = createConsumeDataRequest({
 			builder : this.channel.bufferBuilder,

@@ -1,9 +1,7 @@
-import * as dgram from 'dgram';
+import * as dgram from 'node:dgram';
 // @ts-ignore
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
-
-const { createWorker } = mediasoup;
 
 // Set node-sctp default PMTU to 1200.
 sctp.defaults({ PMTU: 1200 });
@@ -20,7 +18,7 @@ let sctpSendStream: any;
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter();
 	transport = await router.createPlainTransport(
 		{

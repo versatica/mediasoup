@@ -1,4 +1,4 @@
-import { randomInt } from 'crypto';
+import { randomUUID, randomInt } from 'node:crypto';
 import { ProducerType } from './Producer';
 import { Type as FbsRtpParametersType } from './fbs/rtp-parameters';
 
@@ -24,6 +24,14 @@ export function clone<T>(value: T): T
 	{
 		return JSON.parse(JSON.stringify(value));
 	}
+}
+
+/**
+ * Generates a random UUID v4.
+ */
+export function generateUUIDv4(): string
+{
+	return randomUUID();
 }
 
 /**

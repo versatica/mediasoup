@@ -2,8 +2,6 @@
 import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
 
-const { createWorker } = mediasoup;
-
 let worker1: mediasoup.types.Worker;
 let worker2: mediasoup.types.Worker;
 let router1: mediasoup.types.Router;
@@ -190,8 +188,8 @@ const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
 
 beforeAll(async () =>
 {
-	worker1 = await createWorker();
-	worker2 = await createWorker();
+	worker1 = await mediasoup.createWorker();
+	worker2 = await mediasoup.createWorker();
 	router1 = await worker1.createRouter({ mediaCodecs });
 	router2 = await worker2.createRouter({ mediaCodecs });
 	transport1 = await router1.createWebRtcTransport(

@@ -1,7 +1,5 @@
 import * as h264 from 'h264-profile-level-id';
 import * as flatbuffers from 'flatbuffers';
-import * as utils from './utils';
-import { UnsupportedError } from './errors';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parse as parseScalabilityMode } from './scalabilityModes';
 import {
@@ -22,6 +20,8 @@ import {
 	SctpParameters,
 	SctpStreamParameters
 } from './SctpParameters';
+import * as utils from './utils';
+import { UnsupportedError } from './errors';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 
 export type RtpMapping =

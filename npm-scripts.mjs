@@ -1,8 +1,8 @@
-import process from 'process';
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
-import { execSync, spawnSync } from 'child_process';
+import process from 'node:process';
+import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync, spawnSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
 

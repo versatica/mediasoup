@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import { Logger } from './Logger';
 
 const logger = new Logger('EnhancedEventEmitter');

@@ -4,8 +4,6 @@ import { UnsupportedError } from '../errors';
 import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
 import * as FbsProducer from '../fbs/producer';
 
-const { createWorker } = mediasoup;
-
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
 let transport1: mediasoup.types.WebRtcTransport;
@@ -47,7 +45,7 @@ const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
 		{
