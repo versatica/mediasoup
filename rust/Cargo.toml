@@ -81,3 +81,6 @@ version = "4.2.1"
 [[bench]]
 name = "direct_data"
 harness = false
+[[bench]]
+name = "producer"
+harness = false
