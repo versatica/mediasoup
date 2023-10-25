@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import * as ortc from './ortc';
@@ -29,6 +28,7 @@ import {
 	SrtpParameters
 } from './SrtpParameters';
 import { AppData, Either } from './types';
+import { generateUUIDv4 } from './utils';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { Event, Notification } from './fbs/notification';
@@ -368,7 +368,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 			}
 		);
 
-		const consumerId = uuidv4();
+		const consumerId = generateUUIDv4();
 
 		const consumeRequestOffset = createConsumeRequest({
 			builder : this.channel.bufferBuilder,

@@ -4,12 +4,12 @@ import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
 import { AppData } from './types';
+import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsTransport from './fbs/transport';
 import * as FbsRequest from './fbs/request';
 import * as FbsDataConsumer from './fbs/data-consumer';
 import * as FbsDataProducer from './fbs/data-producer';
-import * as utils from './utils';
 
 export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
 {

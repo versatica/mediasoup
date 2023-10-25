@@ -3,8 +3,6 @@ import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
 import { InvalidStateError } from '../errors';
 
-const { createWorker } = mediasoup;
-
 let worker: mediasoup.types.Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
@@ -12,7 +10,7 @@ afterEach(() => worker && !worker.closed && worker.close());
 
 test('worker.createWebRtcServer() succeeds', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	const onObserverNewWebRtcServer = jest.fn();
 
@@ -91,7 +89,7 @@ test('worker.createWebRtcServer() succeeds', async () =>
 
 test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	const onObserverNewWebRtcServer = jest.fn();
 
@@ -165,7 +163,7 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 
 test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	// @ts-ignore
 	await expect(worker.createWebRtcServer({}))
@@ -192,8 +190,8 @@ test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', 
 
 test('worker.createWebRtcServer() with unavailable listenInfos rejects with Error', async () =>
 {
-	const worker1 = await createWorker();
-	const worker2 = await createWorker();
+	const worker1 = await mediasoup.createWorker();
+	const worker2 = await mediasoup.createWorker();
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 
@@ -271,7 +269,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 
 test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	worker.close();
 
@@ -287,7 +285,7 @@ test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is cl
 
 test('webRtcServer.close() succeeds', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const webRtcServer = await worker.createWebRtcServer(
@@ -305,7 +303,7 @@ test('webRtcServer.close() succeeds', async () =>
 
 test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const webRtcServer = await worker.createWebRtcServer(
@@ -328,7 +326,7 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 
 test('router.createWebRtcTransport() with webRtcServer succeeds and transport is closed', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
@@ -438,7 +436,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer is closed', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });

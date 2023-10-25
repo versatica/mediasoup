@@ -1,7 +1,6 @@
-import * as process from 'process';
-import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
-import { v4 as uuidv4 } from 'uuid';
+import * as process from 'node:process';
+import * as path from 'node:path';
+import { spawn, ChildProcess } from 'node:child_process';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
@@ -9,6 +8,7 @@ import { Channel } from './Channel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { AppData } from './types';
+import { generateUUIDv4 } from './utils';
 import { Event } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsWorker from './fbs/worker';
@@ -695,7 +695,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			);
 		}
 
-		const webRtcServerId = uuidv4();
+		const webRtcServerId = generateUUIDv4();
 
 		const createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
 			webRtcServerId, fbsListenInfos
@@ -742,7 +742,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		// This may throw.
 		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
 
-		const routerId = uuidv4();
+		const routerId = generateUUIDv4();
 
 		// Get flatbuffer builder.
 		const createRouterRequestOffset =

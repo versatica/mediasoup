@@ -1,14 +1,12 @@
 import * as mediasoup from '../';
 
-const { createWorker } = mediasoup;
-
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
 let transport: mediasoup.types.DirectTransport;
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter();
 });
 

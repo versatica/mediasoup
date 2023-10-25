@@ -5,7 +5,6 @@ import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
-import { AppData } from './types';
 
 /**
  * Expose all types.
@@ -44,7 +43,7 @@ export { workerBin };
 /**
  * Create a Worker.
  */
-export async function createWorker<WorkerAppData extends AppData = AppData>(
+export async function createWorker<WorkerAppData extends types.AppData = types.AppData>(
 	{
 		logLevel = 'error',
 		logTags,

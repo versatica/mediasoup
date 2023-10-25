@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
@@ -22,9 +21,10 @@ import { RtpObserver } from './RtpObserver';
 import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpeakerObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
+import { cryptoSuiteToFbs } from './SrtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { AppData, Either } from './types';
-import { cryptoSuiteToFbs } from './SrtpParameters';
+import { generateUUIDv4 } from './utils';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
@@ -507,7 +507,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			}
 		}
 
-		const transportId = uuidv4();
+		const transportId = generateUUIDv4();
 
 		/* Build Request. */
 		let webRtcTransportListenServer:
@@ -689,7 +689,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			};
 		}
 
-		const transportId = uuidv4();
+		const transportId = generateUUIDv4();
 
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
@@ -837,7 +837,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			};
 		}
 
-		const transportId = uuidv4();
+		const transportId = generateUUIDv4();
 
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
@@ -946,7 +946,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		const transportId = uuidv4();
+		const transportId = generateUUIDv4();
 
 		/* Build Request. */
 		const baseTransportOptions = new FbsTransport.OptionsT(
@@ -1404,7 +1404,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		const rtpObserverId = uuidv4();
+		const rtpObserverId = generateUUIDv4();
 
 		/* Build Request. */
 		const activeRtpObserverOptions =
@@ -1482,7 +1482,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		const rtpObserverId = uuidv4();
+		const rtpObserverId = generateUUIDv4();
 
 		/* Build Request. */
 		const audioLevelObserverOptions =
