@@ -91,8 +91,14 @@ enum ChannelReceiveMessage<'a> {
     Event(InternalMessage),
 }
 
+// Remove the first 4 bytes which represent the buffer size.
+// NOTE: This is only needed for NodeJS.
+fn unprefix_message(bytes: &[u8]) -> &[u8] {
+    &bytes[4..]
+}
+
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage<'_> {
-    let message_ref = message::MessageRef::read_as_root(&bytes[4..]).unwrap();
+    let message_ref = message::MessageRef::read_as_root(&bytes).unwrap();
 
     match message_ref.data().unwrap() {
         message::BodyRef::Log(data) => match data.data().unwrap().chars().next() {
@@ -239,6 +245,8 @@ impl Channel {
             move |message| {
                 trace!("received raw message: {}", String::from_utf8_lossy(message));
 
+                let message = unprefix_message(message);
+
                 match deserialize_message(message) {
                     ChannelReceiveMessage::Notification(notification) => {
                         let target_id = notification.handler_id().unwrap();
@@ -254,7 +262,7 @@ impl Channel {
                             // target_id
                             if let Some(list) = buffer_notifications_for.get_mut(&target_id) {
                                 // Store the whole message removing the size prefix.
-                                list.push(Vec::from(&message[4..]));
+                                list.push(Vec::from(message));
                                 return;
                             }
 
@@ -280,7 +288,7 @@ impl Channel {
                                 match response.body().expect("failed accessing response body") {
                                     // Response has body.
                                     Some(_) => {
-                                        let _ = sender.send(Ok(Some(Vec::from(&message[4..]))));
+                                        let _ = sender.send(Ok(Some(Vec::from(message))));
                                     }
                                     // Response does not have body.
                                     None => {
