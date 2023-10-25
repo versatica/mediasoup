@@ -81,7 +81,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
 }
 
 fn audio_producer_options() -> ProducerOptions {
-    let options = ProducerOptions::new(
+    ProducerOptions::new(
         MediaKind::Audio,
         RtpParameters {
             mid: Some(fastrand::u32(100_000_000..999_999_999).to_string()),
@@ -117,9 +117,7 @@ fn audio_producer_options() -> ProducerOptions {
                 ..RtcpParameters::default()
             },
         },
-    );
-
-    options
+    )
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
