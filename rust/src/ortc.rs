@@ -101,8 +101,9 @@ impl RtpMapping {
                         ssrc: mapping?.ssrc()?,
                         scalability_mode: mapping?
                             .scalability_mode()?
-                            .unwrap_or(String::from("S1T1").as_str())
-                            .parse()?,
+                            .map(|maybe_scalability_mode| maybe_scalability_mode.parse())
+                            .transpose()?
+                            .unwrap_or_default(),
                         mapped_ssrc: mapping?.mapped_ssrc()?,
                     })
                 })

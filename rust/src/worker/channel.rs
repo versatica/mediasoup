@@ -92,13 +92,13 @@ enum ChannelReceiveMessage<'a> {
 }
 
 // Remove the first 4 bytes which represent the buffer size.
-// NOTE: This is only needed for NodeJS.
+// NOTE: The prefix is only needed for NodeJS.
 fn unprefix_message(bytes: &[u8]) -> &[u8] {
     &bytes[4..]
 }
 
 fn deserialize_message(bytes: &[u8]) -> ChannelReceiveMessage<'_> {
-    let message_ref = message::MessageRef::read_as_root(&bytes).unwrap();
+    let message_ref = message::MessageRef::read_as_root(bytes).unwrap();
 
     match message_ref.data().unwrap() {
         message::BodyRef::Log(data) => match data.data().unwrap().chars().next() {
