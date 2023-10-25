@@ -631,6 +631,10 @@ async function downloadPrebuiltWorker()
 							env   : {}
 						}
 					);
+
+					logInfo(
+						'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
+					);
 				}
 				catch (error)
 				{
