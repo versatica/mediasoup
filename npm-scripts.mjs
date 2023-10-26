@@ -279,7 +279,7 @@ function replaceVersion()
 	const files = fs.readdirSync('node/lib',
 		{
 			withFileTypes : true,
-			recursive     : false
+			recursive     : true
 		});
 
 	for (const file of files)
@@ -289,7 +289,8 @@ function replaceVersion()
 			continue;
 		}
 
-		const filePath = path.join('node/lib', file.name);
+		// NOTE: dirent.path is only available in Node >= 20.
+		const filePath = path.join(file.path ?? 'node/lib', file.name);
 		const text = fs.readFileSync(filePath, { encoding: 'utf8' });
 		const result = text.replace(/__MEDIASOUP_VERSION__/g, PKG.version);
 
