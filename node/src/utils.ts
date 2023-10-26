@@ -92,6 +92,25 @@ export function parseVector<Type>(
 }
 
 /**
+ * Parse flatbuffers vector of StringString into the corresponding array.
+ */
+export function parseStringStringVector(
+	binary: any, methodName: string
+): { key: string; value: string }[]
+{
+	const array: { key: string; value: string }[] = [];
+
+	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	{
+		const kv = binary[methodName](i)!;
+
+		array.push({ key: kv.key(), value: kv.value() });
+	}
+
+	return array;
+}
+
+/**
  * Parse flatbuffers vector of StringUint8 into the corresponding array.
  */
 export function parseStringUint8Vector(
@@ -111,7 +130,7 @@ export function parseStringUint8Vector(
 }
 
 /**
- * Parse flatbuffers of Uint16String into the corresponding array.
+ * Parse flatbuffers vector of Uint16String into the corresponding array.
  */
 export function parseUint16StringVector(
 	binary: any, methodName: string
@@ -130,7 +149,7 @@ export function parseUint16StringVector(
 }
 
 /**
- * Parse flatbuffers of Uint32String into the corresponding array.
+ * Parse flatbuffers vector of Uint32String into the corresponding array.
  */
 export function parseUint32StringVector(
 	binary: any, methodName: string
@@ -143,6 +162,31 @@ export function parseUint32StringVector(
 		const kv = binary[methodName](i)!;
 
 		array.push({ key: kv.key(), value: kv.value() });
+	}
+
+	return array;
+}
+
+/**
+ * Parse flatbuffers vector of StringStringArray into the corresponding array.
+ */
+export function parseStringStringArrayVector(
+	binary: any, methodName: string
+): { key: string; values: string[] }[]
+{
+	const array: { key: string; values: string[] }[] = [];
+
+	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	{
+		const kv = binary[methodName](i)!;
+		const values: string[] = [];
+
+		for (let i2=0; i2<kv.valuesLength(); ++ i2)
+		{
+			values.push(kv.values(i2)!);
+		}
+
+		array.push({ key: kv.key(), values });
 	}
 
 	return array;
