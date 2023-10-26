@@ -19,6 +19,7 @@ use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
 use crate::producer::{ProducerId, ProducerTraceEventType, ProducerType};
+use crate::router::consumer::ConsumerDump;
 use crate::router::producer::ProducerDump;
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_observer::RtpObserverId;
@@ -2388,7 +2389,7 @@ pub(crate) struct ConsumerDumpRequest {}
 impl Request for ConsumerDumpRequest {
     const METHOD: request::Method = request::Method::ConsumerDump;
     type HandlerId = ConsumerId;
-    type Response = response::Body;
+    type Response = ConsumerDump;
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
@@ -2409,12 +2410,11 @@ impl Request for ConsumerDumpRequest {
     fn convert_response(
         response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error>> {
-        match response {
-            Some(data) => Ok(data.try_into().unwrap()),
-            _ => {
-                panic!("Wrong message from worker: {response:?}");
-            }
-        }
+        let Some(response::BodyRef::ConsumerDumpResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        ConsumerDump::from_fbs_ref(data)
     }
 }
 

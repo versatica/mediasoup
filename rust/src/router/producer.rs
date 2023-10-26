@@ -110,9 +110,13 @@ impl RtpStreamRecv {
         Ok(Self {
             params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
             score: dump.score()?,
-            rtx_stream: dump.rtx_stream()?.map(|stream| RtxStream {
-                params: RtxStreamParams::from_fbs_ref(stream.params().unwrap()).unwrap(),
-            }),
+            rtx_stream: if let Some(rtx_stream) = dump.rtx_stream()? {
+                Some(RtxStream {
+                    params: RtxStreamParams::from_fbs_ref(rtx_stream.params()?)?,
+                })
+            } else {
+                None
+            },
         })
     }
 }
