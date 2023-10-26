@@ -1,10 +1,10 @@
 [wrap-file]
 directory = openssl-3.0.7
-source_url = https://www.openssl.org/source/openssl-3.0.7.tar.gz
-source_filename = openssl-3.0.72.tar.gz
+# source_url = https://www.openssl.org/source/openssl-3.0.7.tar.gz
+source_filename = /home/viper/.tmp/mediasoup_deps/openssl-3.0.7.tar.gz
 source_hash = 83049d042a260e696f62406ac5c08bf706fd84383f945cf21bd61e9ed95c396e
-patch_filename = openssl_3.0.7-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/openssl_3.0.7-1/get_patch
+patch_filename = /home/viper/.tmp/mediasoup_deps/openssl_3.0.7-1_patch.zip
+# patch_url = https://wrapdb.mesonbuild.com/v2/openssl_3.0.7-1/get_patch
 patch_hash = 8f04d911dc22d1dddc6a192ab27d6d8275976a252bd9c73e09f95f1f927e42b5
 wrapdb_version = 3.0.7-1
 
