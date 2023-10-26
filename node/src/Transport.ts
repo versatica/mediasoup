@@ -599,7 +599,7 @@ export class Transport
 	async dump(): Promise<any>
 	{
 		// Should not happen.
-		throw new Error('method not implemented in the subclass');
+		throw new Error('method implemented in the subclass');
 	}
 
 	/**
@@ -610,7 +610,7 @@ export class Transport
 	async getStats(): Promise<any[]>
 	{
 		// Should not happen.
-		throw new Error('method not implemented in the subclass');
+		throw new Error('method implemented in the subclass');
 	}
 
 	/**
@@ -622,7 +622,7 @@ export class Transport
 	async connect(params: any): Promise<void>
 	{
 		// Should not happen.
-		throw new Error('method not implemented in the subclass');
+		throw new Error('method implemented in the subclass');
 	}
 
 	/**

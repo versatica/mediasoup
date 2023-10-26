@@ -1009,27 +1009,27 @@ test('consumer.close() succeeds', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
 
-	let dump = await router.dump();
+	const routerDump = await router.dump();
 
-	expect(dump.mapProducerIdConsumerIds)
+	expect(routerDump.mapProducerIdConsumerIds)
 		.toEqual(expect.arrayContaining([
 			{ key: audioProducer.id, values: [ ] }
 		]));
 
-	expect(dump.mapConsumerIdProducerId)
+	expect(routerDump.mapConsumerIdProducerId)
 		.toEqual(expect.arrayContaining([
 			{ key: videoConsumer.id, value: videoProducer.id }
 		]));
-	expect(dump.mapConsumerIdProducerId)
+	expect(routerDump.mapConsumerIdProducerId)
 		.toEqual(expect.arrayContaining([
 			{ key: videoPipeConsumer.id, value: videoProducer.id }
 		]));
 
-	dump = await transport2.dump();
+	const transportDump = await transport2.dump();
 
-	dump.consumerIds = dump.consumerIds.sort();
+	transportDump.consumerIds = transportDump.consumerIds.sort();
 
-	expect(dump)
+	expect(transportDump)
 		.toMatchObject(
 			{
 				id          : transport2.id,

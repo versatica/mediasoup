@@ -24,7 +24,7 @@ import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { cryptoSuiteToFbs } from './SrtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { AppData, Either } from './types';
-import { generateUUIDv4 } from './utils';
+import { generateUUIDv4, parseVector, parseStringStringVector, parseStringStringArrayVector } from './utils';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
@@ -126,6 +126,42 @@ export type PipeToRouterResult =
 	 * The DataProducer created in the target Router.
 	 */
 	pipeDataProducer?: DataProducer;
+};
+
+export type RouterDump =
+{
+	/**
+	 * The Router id.
+	 */
+	id: string;
+	/**
+	 * Id of Transports.
+	 */
+	transportIds: string[];
+	/**
+	 * Id of RtpObservers.
+	 */
+	rtpObserverIds: string[];
+	/**
+	 * Array of Producer id and its respective Consumer ids.
+	 */
+	mapProducerIdConsumerIds: { key: string; values: string[] }[];
+	/**
+	 * Array of Consumer id and its Producer id.
+	 */
+	mapConsumerIdProducerId: {key: string; value: string}[];
+	/**
+	 * Array of Producer id and its respective Observer ids.
+	 */
+	mapProducerIdObserverIds: {key: string; values: string[]}[];
+	/**
+	 * Array of Producer id and its respective DataConsumer ids.
+	 */
+	mapDataProducerIdDataConsumerIds: {key: string; values: string[]}[];
+	/**
+	 * Array of DataConsumer id and its DataProducer id.
+	 */
+	mapDataConsumerIdDataProducerId: {key: string; value: string}[];
 };
 
 type PipeTransportPair =
@@ -376,7 +412,7 @@ export class Router<RouterAppData extends AppData = AppData>
 	/**
 	 * Dump Router.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<RouterDump>
 	{
 		logger.debug('dump()');
 
@@ -393,7 +429,7 @@ export class Router<RouterAppData extends AppData = AppData>
 
 		response.body(dump);
 
-		return dump.unpack();
+		return parseRouterDumpResponse(dump);
 	}
 
 	/**
@@ -1565,4 +1601,20 @@ export class Router<RouterAppData extends AppData = AppData>
 			return false;
 		}
 	}
+}
+
+export function parseRouterDumpResponse(
+	binary: FbsRouter.DumpResponse
+): RouterDump
+{
+	return {
+		id                               : binary.id()!,
+		transportIds                     : parseVector(binary, 'transportIds'),
+		rtpObserverIds                   : parseVector(binary, 'rtpObserverIds'),
+		mapProducerIdConsumerIds         : parseStringStringArrayVector(binary, 'mapProducerIdConsumerIds'),
+		mapConsumerIdProducerId          : parseStringStringVector(binary, 'mapConsumerIdProducerId'),
+		mapProducerIdObserverIds         : parseStringStringArrayVector(binary, 'mapProducerIdObserverIds'),
+		mapDataProducerIdDataConsumerIds : parseStringStringArrayVector(binary, 'mapDataProducerIdDataConsumerIds'),
+		mapDataConsumerIdDataProducerId  : parseStringStringVector(binary, 'mapDataConsumerIdDataProducerId')
+	};
 }

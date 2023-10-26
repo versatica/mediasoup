@@ -183,6 +183,7 @@ const eslintConfig =
 			}
 		],
 		'space-in-parens' : [ 2, 'never' ],
+		'space-infix-ops' : [ 2, { 'int32Hint': false } ],
 		'spaced-comment'  : [ 2, 'always' ],
 		'strict'          : 2,
 		'valid-typeof'    : 2,

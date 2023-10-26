@@ -13,7 +13,7 @@ table IceUserNameFragment {
 }
 
 table TupleHash {
-    local_ice_username_fragment: uint64;
+    tuple_hash: uint64;
     web_rtc_transport_id: string (required);
 }
 

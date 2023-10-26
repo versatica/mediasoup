@@ -29,7 +29,7 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 export type WebRtcServerListenInfo = TransportListenInfo;
 
 export type WebRtcServerEvents =
-{ 
+{
 	workerclose: [];
 	// Private events.
 	'@close': [];
@@ -40,6 +40,34 @@ export type WebRtcServerObserverEvents =
 	close: [];
 	webrtctransporthandled: [WebRtcTransport];
 	webrtctransportunhandled: [WebRtcTransport];
+};
+
+export type WebRtcServerDump =
+{
+	id: string;
+	udpSockets: IpPort[];
+	tcpServers: IpPort[];
+	webRtcTransportIds: string[];
+	localIceUsernameFragments: IceUserNameFragment[];
+	tupleHashes: TupleHash[];
+};
+
+type IpPort =
+{
+	ip: string;
+	port: number;
+};
+
+type IceUserNameFragment =
+{
+	localIceUsernameFragment: string;
+	webRtcTransportId: string;
+};
+
+type TupleHash =
+{
+	tupleHash: number;
+	webRtcTransportId: string;
 };
 
 type WebRtcServerInternal =
@@ -213,7 +241,7 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	/**
 	 * Dump WebRtcServer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<WebRtcServerDump>
 	{
 		logger.debug('dump()');
 
@@ -248,32 +276,48 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	}
 }
 
-// TODO: This function should return WebRtcServerDump TypeScript type but we
-// don't have it yet (same for many other dump() methods everywhere).
-function parseWebRtcServerDump(
-	data: FbsWebRtcServer.DumpResponse
-): any
+function parseIpPort(binary: FbsWebRtcServer.IpPort): IpPort
 {
 	return {
-		id                        : data.id(),
+		ip   : binary.ip()!,
+		port : binary.port()
+	};
+}
+
+function parseIceUserNameFragment(binary: FbsWebRtcServer.IceUserNameFragment): IceUserNameFragment
+{
+	return {
+		localIceUsernameFragment : binary.localIceUsernameFragment()!,
+		webRtcTransportId        : binary.webRtcTransportId()!
+	};
+}
+
+function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash
+{
+	return {
+		tupleHash         : Number(binary.tupleHash()!),
+		webRtcTransportId : binary.webRtcTransportId()!
+	};
+}
+
+function parseWebRtcServerDump(
+	data: FbsWebRtcServer.DumpResponse
+): WebRtcServerDump
+{
+	return {
+		id                        : data.id()!,
 		udpSockets                : utils.parseVector(
-			data, 'udpSockets', (udpSocket: any) => udpSocket.unpack()
+			data, 'udpSockets', parseIpPort
 		),
 		tcpServers                : utils.parseVector(
-			data, 'tcpServers', (tcpServer: any) => tcpServer.unpack()
+			data, 'tcpServers', parseIpPort
 		),
 		webRtcTransportIds        : utils.parseVector(data, 'webRtcTransportIds'),
 		localIceUsernameFragments : utils.parseVector(
-			data, 'localIceUsernameFragments', (localIceUsernameFragment: any) => localIceUsernameFragment.unpack()
+			data, 'localIceUsernameFragments', parseIceUserNameFragment
 		),
 		tupleHashes               : utils.parseVector(
-			data, 'tupleHashes', (tupleHash: any) =>
-			{
-				return {
-					localIceUsernameFragment : Number(tupleHash.localIceUsernameFragment()),
-					webRtcTransportId        : tupleHash.webRtcTransportId()
-				};
-			}
+			data, 'tupleHashes', parseTupleHash
 		)
 	};
 }

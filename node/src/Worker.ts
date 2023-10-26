@@ -8,7 +8,7 @@ import { Channel } from './Channel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { AppData } from './types';
-import { generateUUIDv4 } from './utils';
+import { generateUUIDv4, parseVector } from './utils';
 import { Event } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 import * as FbsWorker from './fbs/worker';
@@ -184,7 +184,7 @@ export type WorkerResourceUsage =
 export type WorkerDump =
 {
 	pid : number;
-	webrtcServerIds : string[];
+	webRtcServerIds : string[];
 	routerIds : string[];
 	channelMessageHandlers :
 	{
@@ -581,7 +581,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 	/**
 	 * Dump Worker.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<WorkerDump>
 	{
 		logger.debug('dump()');
 
@@ -595,7 +595,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 		response.body(dump);
 
-		return dump.unpack();
+		return parseWorkerDumpResponse(dump);
 	}
 
 	/**
@@ -806,4 +806,20 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		// Emit observer event.
 		this.#observer.safeEmit('close');
 	}
+}
+
+export function parseWorkerDumpResponse(
+	binary: FbsWorker.DumpResponse
+): WorkerDump
+{
+	return {
+		pid                    : binary.pid()!,
+		webRtcServerIds        : parseVector(binary, 'webRtcServerIds'),
+		routerIds              : parseVector(binary, 'routerIds'),
+		channelMessageHandlers :
+		{
+			channelRequestHandlers      : parseVector(binary.channelMessageHandlers()!, 'channelRequestHandlers'),
+			channelNotificationHandlers : parseVector(binary.channelMessageHandlers()!, 'channelNotificationHandlers')
+		}
+	};
 }

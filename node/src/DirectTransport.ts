@@ -33,6 +33,8 @@ export type DirectTransportOptions<DirectTransportAppData extends AppData = AppD
 	appData?: DirectTransportAppData;
 };
 
+export type DirectTransportDump = BaseTransportDump;
+
 export type DirectTransportStat = BaseTransportStats &
 {
 	type: string;
@@ -118,7 +120,7 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	/**
 	 * Dump Transport.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<DirectTransportDump>
 	{
 		logger.debug('dump()');
 
