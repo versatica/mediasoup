@@ -128,7 +128,8 @@ export type PipeToRouterResult =
 	pipeDataProducer?: DataProducer;
 };
 
-export type RouterDump = {
+export type RouterDump =
+{
 	/**
 	 * The Router id.
 	 */
