@@ -1029,7 +1029,7 @@ test('consumer.close() succeeds', async () =>
 
 	transportDump.consumerIds = transportDump.consumerIds.sort();
 
-	expect(routerDump)
+	expect(transportDump)
 		.toMatchObject(
 			{
 				id          : transport2.id,
