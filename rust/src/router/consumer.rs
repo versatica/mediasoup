@@ -291,13 +291,13 @@ impl ConsumerDump {
                 .consumable_rtp_encodings()?
                 .iter()
                 .map(|encoding_parameters| {
-                    Ok(RtpEncodingParameters::from_fbs_ref(encoding_parameters?)?)
+                    RtpEncodingParameters::from_fbs_ref(encoding_parameters?)
                 })
                 .collect::<Result<_, Box<dyn Error>>>()?,
             rtp_streams: dump?
                 .rtp_streams()?
                 .iter()
-                .map(|stream| Ok(RtpStream::from_fbs_ref(stream?)?))
+                .map(|stream| RtpStream::from_fbs_ref(stream?))
                 .collect::<Result<_, Box<dyn Error>>>()?,
             preferred_spatial_layer: dump?.preferred_spatial_layer()?,
             target_spatial_layer: dump?.target_spatial_layer()?,
