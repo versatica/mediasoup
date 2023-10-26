@@ -17,6 +17,8 @@ namespace RTC
 	// We do not support non rtcp-mux so component is always 1.
 	static constexpr uint16_t IceComponent{ 1 };
 
+	static std::unordered_map<std::string, RTC::UdpSocket*> singleUdpSocket;
+
 	static inline uint32_t generateIceCandidatePriority(uint16_t localPreference)
 	{
 		MS_TRACE();
@@ -179,18 +181,39 @@ namespace RTC
 					uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
 					// This may throw.
-					RTC::TcpServer* tcpServer;
-					if (port != 0)
-						tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
-					else
-						tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
+					// RTC::TcpServer* tcpServer;
+					// if (port != 0)
+					// 	tcpServer = new RTC::TcpServer(this, this, listenIp.ip, port);
+					// else
+					// 	tcpServer = new RTC::TcpServer(this, this, listenIp.ip);
 
-					this->tcpServers[tcpServer] = listenIp.announcedIp;
+					// this->tcpServers[tcpServer] = listenIp.announcedIp;
+
+					// if (listenIp.announcedIp.empty())
+					// 	this->iceCandidates.emplace_back(tcpServer, icePriority);
+					// else
+					// 	this->iceCandidates.emplace_back(tcpServer, icePriority, listenIp.announcedIp);
+
+					// This may throw.
+					RTC::UdpSocket* udpSocket = NULL;
+					auto iter                 = singleUdpSocket.find(listenIp.ip);
+					if (iter != singleUdpSocket.end())
+					{
+						udpSocket = iter->second;
+					}
+					else
+					{
+						if (port != 0)
+							udpSocket = new RTC::UdpSocket(this, listenIp.ip, port);
+						else
+							udpSocket = new RTC::UdpSocket(this, listenIp.ip);
+						singleUdpSocket[listenIp.ip] = udpSocket;
+					}
 
 					if (listenIp.announcedIp.empty())
-						this->iceCandidates.emplace_back(tcpServer, icePriority);
+						this->iceCandidates.emplace_back(udpSocket, icePriority);
 					else
-						this->iceCandidates.emplace_back(tcpServer, icePriority, listenIp.announcedIp);
+						this->iceCandidates.emplace_back(udpSocket, icePriority, listenIp.announcedIp);
 				}
 
 				// Decrement initial ICE local preference for next IP.
@@ -200,6 +223,24 @@ namespace RTC
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
 			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+
+			for (auto& listenIp : listenIps)
+			{
+				if (enableUdp)
+				{
+					RTC::UdpSocket* udpSocket = NULL;
+					auto iter                 = singleUdpSocket.find(listenIp.ip);
+					if (iter != singleUdpSocket.end())
+					{
+						udpSocket = iter->second;
+					}
+
+					if (udpSocket)
+					{
+						udpSocket->SetTransportByUserName(this, iceServer->GetUsernameFragment());
+					}
+				}
+			}
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
@@ -337,6 +378,11 @@ namespace RTC
 		// Notify the webRtcTransportListener.
 		if (this->webRtcTransportListener)
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
+
+		for (auto& item : singleUdpSocket)
+		{
+			item.second->DeleteTransport(this);
+		}
 	}
 
 	void WebRtcTransport::FillJson(json& jsonObject) const
