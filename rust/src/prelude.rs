@@ -65,7 +65,8 @@ pub use crate::data_structures::{
 pub use crate::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
     RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
-    RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
+    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionParameters,
+    RtpHeaderExtensionUri, RtpParameters,
 };
 pub use crate::sctp_parameters::SctpStreamParameters;
 pub use crate::srtp_parameters::SrtpCryptoSuite;

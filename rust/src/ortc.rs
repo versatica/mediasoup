@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+use std::error::Error;
 use std::mem;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::ops::Deref;
@@ -77,32 +78,37 @@ impl RtpMapping {
         }
     }
 
-    pub(crate) fn from_fbs(mapping: rtp_parameters::RtpMapping) -> Self {
-        Self {
+    pub(crate) fn from_fbs_ref(
+        mapping: rtp_parameters::RtpMappingRef<'_>,
+    ) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
             codecs: mapping
-                .codecs
+                .codecs()?
                 .iter()
-                .map(|mapping| RtpMappingCodec {
-                    payload_type: mapping.payload_type,
-                    mapped_payload_type: mapping.mapped_payload_type,
+                .map(|mapping| {
+                    Ok(RtpMappingCodec {
+                        payload_type: mapping?.payload_type()?,
+                        mapped_payload_type: mapping?.mapped_payload_type()?,
+                    })
                 })
-                .collect(),
+                .collect::<Result<Vec<_>, Box<dyn Error>>>()?,
             encodings: mapping
-                .encodings
+                .encodings()?
                 .iter()
-                .map(|mapping| RtpMappingEncoding {
-                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
-                    ssrc: mapping.ssrc,
-                    scalability_mode: mapping
-                        .scalability_mode
-                        .clone()
-                        .unwrap_or(String::from("S1T1"))
-                        .parse()
-                        .unwrap(),
-                    mapped_ssrc: mapping.mapped_ssrc,
+                .map(|mapping| {
+                    Ok(RtpMappingEncoding {
+                        rid: mapping?.rid()?.map(|rid| rid.to_string()),
+                        ssrc: mapping?.ssrc()?,
+                        scalability_mode: mapping?
+                            .scalability_mode()?
+                            .map(|maybe_scalability_mode| maybe_scalability_mode.parse())
+                            .transpose()?
+                            .unwrap_or_default(),
+                        mapped_ssrc: mapping?.mapped_ssrc()?,
+                    })
                 })
-                .collect(),
-        }
+                .collect::<Result<Vec<_>, Box<dyn Error>>>()?,
+        })
     }
 }
 

@@ -787,61 +787,63 @@ pub struct RtpParameters {
 }
 
 impl RtpParameters {
-    pub(crate) fn from_fbs(
-        rtp_parameters: rtp_parameters::RtpParameters,
+    pub(crate) fn from_fbs_ref(
+        rtp_parameters: rtp_parameters::RtpParametersRef<'_>,
     ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
-            mid: rtp_parameters.mid,
+            mid: rtp_parameters.mid()?.map(|mid| mid.to_string()),
             codecs: rtp_parameters
-                .codecs
+                .codecs()?
                 .into_iter()
                 .map(|codec| {
-                    let parameters = codec
-                        .parameters
-                        .unwrap_or_default()
+                    let parameters = codec?
+                        .parameters()?
+                        .unwrap_or(planus::Vector::new_empty())
                         .into_iter()
                         .map(|parameters| {
                             Ok((
-                                Cow::Owned(parameters.name),
-                                match parameters.value {
-                                    rtp_parameters::Value::Boolean(_)
-                                    | rtp_parameters::Value::Double(_)
-                                    | rtp_parameters::Value::Integer32Array(_) => {
+                                Cow::Owned(parameters?.name()?.to_string()),
+                                match parameters?.value()? {
+                                    rtp_parameters::ValueRef::Boolean(_)
+                                    | rtp_parameters::ValueRef::Double(_)
+                                    | rtp_parameters::ValueRef::Integer32Array(_) => {
                                         // TODO: Above value variant should not exist in the
                                         //  first place
                                         panic!("Invalid parameter")
                                     }
-                                    rtp_parameters::Value::Integer32(n) => {
+                                    rtp_parameters::ValueRef::Integer32(n) => {
                                         RtpCodecParametersParametersValue::Number(
-                                            n.value.try_into()?,
+                                            n.value()?.try_into()?,
                                         )
                                     }
-                                    rtp_parameters::Value::String(s) => {
-                                        RtpCodecParametersParametersValue::String(s.value.into())
+                                    rtp_parameters::ValueRef::String(s) => {
+                                        RtpCodecParametersParametersValue::String(
+                                            s.value()?.to_string().into(),
+                                        )
                                     }
                                 },
                             ))
                         })
                         .collect::<Result<_, Box<dyn Error>>>()?;
-                    let rtcp_feedback = codec
-                        .rtcp_feedback
-                        .unwrap_or_default()
+                    let rtcp_feedback = codec?
+                        .rtcp_feedback()?
+                        .unwrap_or(planus::Vector::new_empty())
                         .into_iter()
                         .map(|rtcp_feedback| {
-                            RtcpFeedback::from_type_parameter(
-                                &rtcp_feedback.type_,
-                                &rtcp_feedback.parameter.unwrap_or_default(),
-                            )
+                            Ok(RtcpFeedback::from_type_parameter(
+                                rtcp_feedback?.type_()?,
+                                rtcp_feedback?.parameter()?.unwrap_or_default(),
+                            )?)
                         })
-                        .collect::<Result<_, _>>()?;
+                        .collect::<Result<_, Box<dyn Error>>>()?;
 
-                    Ok(match MimeType::from_str(&codec.mime_type)? {
+                    Ok(match MimeType::from_str(codec?.mime_type()?)? {
                         MimeType::Audio(mime_type) => RtpCodecParameters::Audio {
                             mime_type,
-                            payload_type: codec.payload_type,
-                            clock_rate: codec.clock_rate.try_into()?,
-                            channels: codec
-                                .channels
+                            payload_type: codec?.payload_type()?,
+                            clock_rate: codec?.clock_rate()?.try_into()?,
+                            channels: codec?
+                                .channels()?
                                 .ok_or("Audio must have channels specified")?
                                 .try_into()?,
                             parameters,
@@ -849,8 +851,8 @@ impl RtpParameters {
                         },
                         MimeType::Video(mime_type) => RtpCodecParameters::Video {
                             mime_type,
-                            payload_type: codec.payload_type,
-                            clock_rate: codec.clock_rate.try_into()?,
+                            payload_type: codec?.payload_type()?,
+                            clock_rate: codec?.clock_rate()?.try_into()?,
                             parameters,
                             rtcp_feedback,
                         },
@@ -858,44 +860,47 @@ impl RtpParameters {
                 })
                 .collect::<Result<_, Box<dyn Error>>>()?,
             header_extensions: rtp_parameters
-                .header_extensions
+                .header_extensions()?
                 .into_iter()
                 .map(|header_extension_parameters| {
                     Ok(RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::from_fbs(header_extension_parameters.uri),
-                        id: u16::from(header_extension_parameters.id),
-                        encrypt: header_extension_parameters.encrypt,
+                        uri: RtpHeaderExtensionUri::from_fbs(header_extension_parameters?.uri()?),
+                        id: u16::from(header_extension_parameters?.id()?),
+                        encrypt: header_extension_parameters?.encrypt()?,
                     })
                 })
                 .collect::<Result<_, Box<dyn Error>>>()?,
             encodings: rtp_parameters
-                .encodings
+                .encodings()?
                 .into_iter()
                 .map(|encoding| {
                     Ok(RtpEncodingParameters {
-                        ssrc: encoding.ssrc,
-                        rid: encoding.rid,
-                        codec_payload_type: encoding.codec_payload_type,
-                        rtx: encoding
-                            .rtx
-                            .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
+                        ssrc: encoding?.ssrc()?,
+                        rid: encoding?.rid()?.map(|rid| rid.to_string()),
+                        codec_payload_type: encoding?.codec_payload_type()?,
+                        rtx: encoding?.rtx()?.map(|rtx| RtpEncodingParametersRtx {
+                            ssrc: rtx.ssrc().unwrap(),
+                        }),
                         dtx: {
-                            match encoding.dtx {
+                            match encoding?.dtx()? {
                                 true => Some(true),
                                 false => None,
                             }
                         },
-                        scalability_mode: encoding
-                            .scalability_mode
-                            .unwrap_or(String::from("S1T1"))
+                        scalability_mode: encoding?
+                            .scalability_mode()?
+                            .unwrap_or(String::from("S1T1").as_str())
                             .parse()?,
-                        max_bitrate: encoding.max_bitrate,
+                        max_bitrate: encoding?.max_bitrate()?,
                     })
                 })
                 .collect::<Result<_, Box<dyn Error>>>()?,
             rtcp: RtcpParameters {
-                cname: rtp_parameters.rtcp.cname,
-                reduced_size: rtp_parameters.rtcp.reduced_size,
+                cname: rtp_parameters
+                    .rtcp()?
+                    .cname()?
+                    .map(|cname| cname.to_string()),
+                reduced_size: rtp_parameters.rtcp()?.reduced_size()?,
             },
         })
     }
@@ -1303,27 +1308,31 @@ impl RtpEncodingParameters {
         }
     }
 
-    pub(crate) fn from_fbs(encoding_parameters: rtp_parameters::RtpEncodingParameters) -> Self {
-        Self {
-            ssrc: encoding_parameters.ssrc,
-            rid: encoding_parameters.rid.clone(),
-            codec_payload_type: encoding_parameters.codec_payload_type,
-            rtx: encoding_parameters
-                .rtx
-                .map(|rtx| RtpEncodingParametersRtx { ssrc: rtx.ssrc }),
+    pub(crate) fn from_fbs_ref(
+        encoding_parameters: rtp_parameters::RtpEncodingParametersRef<'_>,
+    ) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            ssrc: encoding_parameters.ssrc()?,
+            rid: encoding_parameters.rid()?.map(|rid| rid.to_string()),
+            codec_payload_type: encoding_parameters.codec_payload_type()?,
+            rtx: if let Some(rtx) = encoding_parameters.rtx()? {
+                Some(RtpEncodingParametersRtx { ssrc: rtx.ssrc()? })
+            } else {
+                None
+            },
             dtx: {
-                match encoding_parameters.dtx {
+                match encoding_parameters.dtx()? {
                     true => Some(true),
                     false => None,
                 }
             },
             scalability_mode: encoding_parameters
-                .scalability_mode
-                .unwrap_or(String::from("S1T1"))
-                .parse()
-                .unwrap(),
-            max_bitrate: encoding_parameters.max_bitrate,
-        }
+                .scalability_mode()?
+                .map(|maybe_scalability_mode| maybe_scalability_mode.parse())
+                .transpose()?
+                .unwrap_or_default(),
+            max_bitrate: encoding_parameters.max_bitrate()?,
+        })
     }
 }
 

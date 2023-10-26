@@ -161,24 +161,24 @@ pub struct RtpStreamParams {
 }
 
 impl RtpStreamParams {
-    pub(crate) fn from_fbs(params: &rtp_stream::Params) -> Self {
-        Self {
-            clock_rate: params.clock_rate,
-            cname: params.cname.clone(),
-            encoding_idx: params.encoding_idx,
-            mime_type: params.mime_type.clone().parse().unwrap(),
-            payload_type: params.payload_type,
-            spatial_layers: params.spatial_layers,
-            ssrc: params.ssrc,
-            temporal_layers: params.temporal_layers,
-            use_dtx: params.use_dtx,
-            use_in_band_fec: params.use_in_band_fec,
-            use_nack: params.use_nack,
-            use_pli: params.use_pli,
-            rid: params.rid.clone(),
-            rtx_ssrc: params.rtx_ssrc,
-            rtx_payload_type: params.rtx_payload_type,
-        }
+    pub(crate) fn from_fbs_ref(params: rtp_stream::ParamsRef<'_>) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            clock_rate: params.clock_rate()?,
+            cname: params.cname()?.to_string(),
+            encoding_idx: params.encoding_idx()?,
+            mime_type: params.mime_type()?.parse()?,
+            payload_type: params.payload_type()?,
+            spatial_layers: params.spatial_layers()?,
+            ssrc: params.ssrc()?,
+            temporal_layers: params.temporal_layers()?,
+            use_dtx: params.use_dtx()?,
+            use_in_band_fec: params.use_in_band_fec()?,
+            use_nack: params.use_nack()?,
+            use_pli: params.use_pli()?,
+            rid: params.rid()?.map(|rid| rid.to_string()),
+            rtx_ssrc: params.rtx_ssrc()?,
+            rtx_payload_type: params.rtx_payload_type()?,
+        })
     }
 }
 
@@ -195,15 +195,15 @@ pub struct RtxStreamParams {
 }
 
 impl RtxStreamParams {
-    pub(crate) fn from_fbs(params: &rtx_stream::Params) -> Self {
-        Self {
-            clock_rate: params.clock_rate,
-            cname: params.cname.clone(),
-            mime_type: params.mime_type.clone().parse().unwrap(),
-            payload_type: params.payload_type,
-            ssrc: params.ssrc,
-            rrid: params.rrid.clone(),
-        }
+    pub(crate) fn from_fbs_ref(params: rtx_stream::ParamsRef<'_>) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            clock_rate: params.clock_rate()?,
+            cname: params.cname()?.to_string(),
+            mime_type: params.mime_type()?.parse()?,
+            payload_type: params.payload_type()?,
+            ssrc: params.ssrc()?,
+            rrid: params.rrid()?.map(|rrid| rrid.to_string()),
+        })
     }
 }
 
@@ -216,11 +216,11 @@ pub struct RtpStream {
 }
 
 impl RtpStream {
-    pub(crate) fn from_fbs(dump: rtp_stream::Dump) -> Self {
-        Self {
-            params: RtpStreamParams::from_fbs(&dump.params),
-            score: dump.score,
-        }
+    pub(crate) fn from_fbs_ref(dump: rtp_stream::DumpRef<'_>) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
+            score: dump.score()?,
+        })
     }
 }
 
@@ -263,42 +263,48 @@ pub struct ConsumerDump {
 }
 
 impl ConsumerDump {
-    pub(crate) fn from_fbs(dump: consumer::DumpResponse) -> Result<Self, Box<dyn Error>> {
-        let dump = dump.data;
+    pub(crate) fn from_fbs_ref(
+        dump: consumer::DumpResponseRef<'_>,
+    ) -> Result<Self, Box<dyn Error>> {
+        let dump = dump.data();
 
         Ok(Self {
-            id: dump.base.id.parse()?,
-            kind: MediaKind::from_fbs(dump.base.kind),
-            paused: dump.base.paused,
-            priority: dump.base.priority,
-            producer_id: dump.base.producer_id.parse()?,
-            producer_paused: dump.base.producer_paused,
-            rtp_parameters: RtpParameters::from_fbs(*dump.base.rtp_parameters).unwrap(),
-            supported_codec_payload_types: dump.base.supported_codec_payload_types,
-            trace_event_types: dump
-                .base
-                .trace_event_types
+            id: dump?.base()?.id()?.parse()?,
+            kind: MediaKind::from_fbs(dump?.base()?.kind()?),
+            paused: dump?.base()?.paused()?,
+            priority: dump?.base()?.priority()?,
+            producer_id: dump?.base()?.producer_id()?.parse()?,
+            producer_paused: dump?.base()?.producer_paused()?,
+            rtp_parameters: RtpParameters::from_fbs_ref(dump?.base()?.rtp_parameters()?)?,
+            supported_codec_payload_types: Vec::from(
+                dump?.base()?.supported_codec_payload_types()?,
+            ),
+            trace_event_types: dump?
+                .base()?
+                .trace_event_types()?
                 .iter()
-                .map(ConsumerTraceEventType::from_fbs)
-                .collect(),
-            r#type: ConsumerType::from_fbs(dump.base.type_),
-            consumable_rtp_encodings: dump
-                .base
-                .consumable_rtp_encodings
-                .into_iter()
-                .map(RtpEncodingParameters::from_fbs)
-                .collect(),
-            rtp_streams: dump
-                .rtp_streams
-                .into_iter()
-                .map(RtpStream::from_fbs)
-                .collect(),
-            preferred_spatial_layer: dump.preferred_spatial_layer,
-            target_spatial_layer: dump.target_spatial_layer,
-            current_spatial_layer: dump.current_spatial_layer,
-            preferred_temporal_layer: dump.preferred_temporal_layer,
-            target_temporal_layer: dump.target_temporal_layer,
-            current_temporal_layer: dump.current_temporal_layer,
+                .map(|trace_event_type| Ok(ConsumerTraceEventType::from_fbs(trace_event_type?)))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            r#type: ConsumerType::from_fbs(dump?.base()?.type_()?),
+            consumable_rtp_encodings: dump?
+                .base()?
+                .consumable_rtp_encodings()?
+                .iter()
+                .map(|encoding_parameters| {
+                    RtpEncodingParameters::from_fbs_ref(encoding_parameters?)
+                })
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            rtp_streams: dump?
+                .rtp_streams()?
+                .iter()
+                .map(|stream| RtpStream::from_fbs_ref(stream?))
+                .collect::<Result<_, Box<dyn Error>>>()?,
+            preferred_spatial_layer: dump?.preferred_spatial_layer()?,
+            target_spatial_layer: dump?.target_spatial_layer()?,
+            current_spatial_layer: dump?.current_spatial_layer()?,
+            preferred_temporal_layer: dump?.preferred_temporal_layer()?,
+            target_temporal_layer: dump?.target_temporal_layer()?,
+            current_temporal_layer: dump?.current_temporal_layer()?,
         })
     }
 }
@@ -563,7 +569,7 @@ impl ConsumerTraceEventType {
         }
     }
 
-    pub(crate) fn from_fbs(event_type: &consumer::TraceEventType) -> Self {
+    pub(crate) fn from_fbs(event_type: consumer::TraceEventType) -> Self {
         match event_type {
             consumer::TraceEventType::Rtp => ConsumerTraceEventType::Rtp,
             consumer::TraceEventType::Keyframe => ConsumerTraceEventType::KeyFrame,
@@ -986,17 +992,10 @@ impl Consumer {
     pub async fn dump(&self) -> Result<ConsumerDump, RequestError> {
         debug!("dump()");
 
-        let response = self
-            .inner
+        self.inner
             .channel
             .request(self.id(), ConsumerDumpRequest {})
-            .await?;
-
-        if let response::Body::ConsumerDumpResponse(data) = response {
-            Ok(ConsumerDump::from_fbs(*data).expect("Error parsing dump response"))
-        } else {
-            panic!("Wrong message from worker");
-        }
+            .await
     }
 
     /// Returns current RTC statistics of the consumer.
