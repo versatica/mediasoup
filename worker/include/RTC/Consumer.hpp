@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
+#include <bits/stdc++.h>
 
 using json = nlohmann::json;
 
