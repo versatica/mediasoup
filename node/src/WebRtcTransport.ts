@@ -864,7 +864,7 @@ function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsPar
 {
 	const fingerprints: DtlsFingerprint[] = [];
 
-	for (let i=0; i<binary.fingerprintsLength(); ++i)
+	for (let i = 0; i < binary.fingerprintsLength(); ++i)
 	{
 		const fbsFingerprint = binary.fingerprints(i)!;
 		const fingerPrint : DtlsFingerprint =
@@ -878,7 +878,7 @@ function parseDtlsParameters(binary: FbsWebRtcTransport.DtlsParameters): DtlsPar
 
 	return {
 		fingerprints : fingerprints,
-		role         : binary.role() === null? undefined : dtlsRoleFromFbs(binary.role()!)
+		role         : binary.role() === null ? undefined : dtlsRoleFromFbs(binary.role()!)
 	};
 }
 

@@ -1169,7 +1169,7 @@ export function getConsumerRtpParameters(
 	}
 
 	// Must sanitize the list of matched codecs by removing useless RTX codecs.
-	for (let idx = consumerParams.codecs.length -1; idx >= 0; --idx)
+	for (let idx = consumerParams.codecs.length - 1; idx >= 0; --idx)
 	{
 		const codec = consumerParams.codecs[idx];
 

@@ -396,7 +396,7 @@ export function serializeRtpParameters(
 
 		const rtcpFeedback: number[] = [];
 
-		for (const rtcp of codec.rtcpFeedback?? [])
+		for (const rtcp of codec.rtcpFeedback ?? [])
 		{
 			const typeOffset = builder.createString(rtcp.type);
 			const rtcpParametersOffset = builder.createString(rtcp.parameter);
@@ -575,7 +575,7 @@ export function serializeParameters(
 		if (typeof value === 'boolean')
 		{
 			parameterOffset = FbsParameter.createParameter(
-				builder, keyOffset, FbsValue.Boolean, value === true ? 1:0
+				builder, keyOffset, FbsValue.Boolean, value === true ? 1 : 0
 			);
 		}
 		else if (typeof value === 'number')
@@ -638,7 +638,7 @@ export function parseParameters(data: any): any
 {
 	const parameters: any = {};
 
-	for (let i=0; i<data.parametersLength(); i++)
+	for (let i = 0; i < data.parametersLength(); i++)
 	{
 		const fbsParameter = data.parameters(i)!;
 

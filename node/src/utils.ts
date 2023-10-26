@@ -76,7 +76,7 @@ export function parseVector<Type>(
 {
 	const array: Type[] = [];
 
-	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	for (let i = 0; i < binary[`${methodName}Length`](); ++i)
 	{
 		if (parseFn)
 		{
@@ -100,7 +100,7 @@ export function parseStringStringVector(
 {
 	const array: { key: string; value: string }[] = [];
 
-	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	for (let i = 0; i < binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 
@@ -119,7 +119,7 @@ export function parseStringUint8Vector(
 {
 	const array: {key: string; value: number}[] = [];
 
-	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	for (let i = 0; i < binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 
@@ -138,7 +138,7 @@ export function parseUint16StringVector(
 {
 	const array: { key: number; value: string }[] = [];
 
-	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	for (let i = 0; i < binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 
@@ -157,7 +157,7 @@ export function parseUint32StringVector(
 {
 	const array: { key: number; value: string }[] = [];
 
-	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	for (let i = 0; i < binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 
@@ -176,12 +176,12 @@ export function parseStringStringArrayVector(
 {
 	const array: { key: string; values: string[] }[] = [];
 
-	for (let i=0; i<binary[`${methodName}Length`](); ++i)
+	for (let i = 0; i < binary[`${methodName}Length`](); ++i)
 	{
 		const kv = binary[methodName](i)!;
 		const values: string[] = [];
 
-		for (let i2=0; i2<kv.valuesLength(); ++ i2)
+		for (let i2 = 0; i2 < kv.valuesLength(); ++i2)
 		{
 			values.push(kv.values(i2)!);
 		}
