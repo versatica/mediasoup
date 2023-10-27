@@ -25333,251 +25333,10 @@ mod root {
                 }
             }
 
-            /// The table `String` in the namespace `FBS.DataConsumer`
-            ///
-            /// Generated from these locations:
-            /// * Table `String` in the file `../worker/fbs/dataConsumer.fbs:37`
-            #[derive(
-                Clone,
-                Debug,
-                PartialEq,
-                PartialOrd,
-                Eq,
-                Ord,
-                Hash,
-                ::serde::Serialize,
-                ::serde::Deserialize,
-            )]
-            pub struct String {
-                /// The field `value` in the table `String`
-                pub value: ::planus::alloc::string::String,
-            }
-
-            impl String {
-                /// Creates a [StringBuilder] for serializing an instance of this table.
-                #[inline]
-                pub fn builder() -> StringBuilder<()> {
-                    StringBuilder(())
-                }
-
-                #[allow(clippy::too_many_arguments)]
-                pub fn create(
-                    builder: &mut ::planus::Builder,
-                    field_value: impl ::planus::WriteAs<::planus::Offset<str>>,
-                ) -> ::planus::Offset<Self> {
-                    let prepared_value = field_value.prepare(builder);
-
-                    let mut table_writer: ::planus::table_writer::TableWriter<6> =
-                        ::core::default::Default::default();
-                    table_writer.write_entry::<::planus::Offset<str>>(0);
-
-                    unsafe {
-                        table_writer.finish(builder, |object_writer| {
-                            object_writer.write::<_, _, 4>(&prepared_value);
-                        });
-                    }
-                    builder.current_offset()
-                }
-            }
-
-            impl ::planus::WriteAs<::planus::Offset<String>> for String {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<String> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl ::planus::WriteAsOptional<::planus::Offset<String>> for String {
-                type Prepared = ::planus::Offset<Self>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<String>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl ::planus::WriteAsOffset<String> for String {
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<String> {
-                    String::create(builder, &self.value)
-                }
-            }
-
-            /// Builder for serializing an instance of the [String] type.
-            ///
-            /// Can be created using the [String::builder] method.
-            #[derive(Debug)]
-            #[must_use]
-            pub struct StringBuilder<State>(State);
-
-            impl StringBuilder<()> {
-                /// Setter for the [`value` field](String#structfield.value).
-                #[inline]
-                #[allow(clippy::type_complexity)]
-                pub fn value<T0>(self, value: T0) -> StringBuilder<(T0,)>
-                where
-                    T0: ::planus::WriteAs<::planus::Offset<str>>,
-                {
-                    StringBuilder((value,))
-                }
-            }
-
-            impl<T0> StringBuilder<(T0,)> {
-                /// Finish writing the builder to get an [Offset](::planus::Offset) to a serialized [String].
-                #[inline]
-                pub fn finish(self, builder: &mut ::planus::Builder) -> ::planus::Offset<String>
-                where
-                    Self: ::planus::WriteAsOffset<String>,
-                {
-                    ::planus::WriteAsOffset::prepare(&self, builder)
-                }
-            }
-
-            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
-                ::planus::WriteAs<::planus::Offset<String>> for StringBuilder<(T0,)>
-            {
-                type Prepared = ::planus::Offset<String>;
-
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<String> {
-                    ::planus::WriteAsOffset::prepare(self, builder)
-                }
-            }
-
-            impl<T0: ::planus::WriteAs<::planus::Offset<str>>>
-                ::planus::WriteAsOptional<::planus::Offset<String>> for StringBuilder<(T0,)>
-            {
-                type Prepared = ::planus::Offset<String>;
-
-                #[inline]
-                fn prepare(
-                    &self,
-                    builder: &mut ::planus::Builder,
-                ) -> ::core::option::Option<::planus::Offset<String>> {
-                    ::core::option::Option::Some(::planus::WriteAsOffset::prepare(self, builder))
-                }
-            }
-
-            impl<T0: ::planus::WriteAs<::planus::Offset<str>>> ::planus::WriteAsOffset<String>
-                for StringBuilder<(T0,)>
-            {
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<String> {
-                    let (v0,) = &self.0;
-                    String::create(builder, v0)
-                }
-            }
-
-            /// Reference to a deserialized [String].
-            #[derive(Copy, Clone)]
-            pub struct StringRef<'a>(::planus::table_reader::Table<'a>);
-
-            impl<'a> StringRef<'a> {
-                /// Getter for the [`value` field](String#structfield.value).
-                #[inline]
-                pub fn value(&self) -> ::planus::Result<&'a ::core::primitive::str> {
-                    self.0.access_required(0, "String", "value")
-                }
-            }
-
-            impl<'a> ::core::fmt::Debug for StringRef<'a> {
-                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    let mut f = f.debug_struct("StringRef");
-                    f.field("value", &self.value());
-                    f.finish()
-                }
-            }
-
-            impl<'a> ::core::convert::TryFrom<StringRef<'a>> for String {
-                type Error = ::planus::Error;
-
-                #[allow(unreachable_code)]
-                fn try_from(value: StringRef<'a>) -> ::planus::Result<Self> {
-                    ::core::result::Result::Ok(Self {
-                        value: ::core::convert::TryInto::try_into(value.value()?)?,
-                    })
-                }
-            }
-
-            impl<'a> ::planus::TableRead<'a> for StringRef<'a> {
-                #[inline]
-                fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::core::result::Result<Self, ::planus::errors::ErrorKind> {
-                    ::core::result::Result::Ok(Self(::planus::table_reader::Table::from_buffer(
-                        buffer, offset,
-                    )?))
-                }
-            }
-
-            impl<'a> ::planus::VectorReadInner<'a> for StringRef<'a> {
-                type Error = ::planus::Error;
-                const STRIDE: usize = 4;
-
-                unsafe fn from_buffer(
-                    buffer: ::planus::SliceWithStartOffset<'a>,
-                    offset: usize,
-                ) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(buffer, offset).map_err(|error_kind| {
-                        error_kind.with_error_location(
-                            "[StringRef]",
-                            "get",
-                            buffer.offset_from_start,
-                        )
-                    })
-                }
-            }
-
-            impl ::planus::VectorWrite<::planus::Offset<String>> for String {
-                type Value = ::planus::Offset<String>;
-                const STRIDE: usize = 4;
-                #[inline]
-                fn prepare(&self, builder: &mut ::planus::Builder) -> Self::Value {
-                    ::planus::WriteAs::prepare(self, builder)
-                }
-
-                #[inline]
-                unsafe fn write_values(
-                    values: &[::planus::Offset<String>],
-                    bytes: *mut ::core::mem::MaybeUninit<u8>,
-                    buffer_position: u32,
-                ) {
-                    let bytes = bytes as *mut [::core::mem::MaybeUninit<u8>; 4];
-                    for (i, v) in ::core::iter::Iterator::enumerate(values.iter()) {
-                        ::planus::WriteAsPrimitive::write(
-                            v,
-                            ::planus::Cursor::new(&mut *bytes.add(i)),
-                            buffer_position - (Self::STRIDE * i) as u32,
-                        );
-                    }
-                }
-            }
-
-            impl<'a> ::planus::ReadAsRoot<'a> for StringRef<'a> {
-                fn read_as_root(slice: &'a [u8]) -> ::planus::Result<Self> {
-                    ::planus::TableRead::from_buffer(
-                        ::planus::SliceWithStartOffset {
-                            buffer: slice,
-                            offset_from_start: 0,
-                        },
-                        0,
-                    )
-                    .map_err(|error_kind| {
-                        error_kind.with_error_location("[StringRef]", "read_as_root", 0)
-                    })
-                }
-            }
-
             /// The table `SendRequest` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `SendRequest` in the file `../worker/fbs/dataConsumer.fbs:41`
+            /// * Table `SendRequest` in the file `../worker/fbs/dataConsumer.fbs:37`
             #[derive(
                 Clone,
                 Debug,
@@ -25881,7 +25640,7 @@ mod root {
             /// The table `SetSubchannelsRequest` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetSubchannelsRequest` in the file `../worker/fbs/dataConsumer.fbs:46`
+            /// * Table `SetSubchannelsRequest` in the file `../worker/fbs/dataConsumer.fbs:42`
             #[derive(
                 Clone,
                 Debug,
@@ -26147,7 +25906,7 @@ mod root {
             /// The table `SetSubchannelsResponse` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `SetSubchannelsResponse` in the file `../worker/fbs/dataConsumer.fbs:50`
+            /// * Table `SetSubchannelsResponse` in the file `../worker/fbs/dataConsumer.fbs:46`
             #[derive(
                 Clone,
                 Debug,
@@ -26415,7 +26174,7 @@ mod root {
             /// The table `BufferedAmountLowNotification` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `BufferedAmountLowNotification` in the file `../worker/fbs/dataConsumer.fbs:56`
+            /// * Table `BufferedAmountLowNotification` in the file `../worker/fbs/dataConsumer.fbs:52`
             #[derive(
                 Clone,
                 Debug,
@@ -26720,7 +26479,7 @@ mod root {
             /// The table `MessageNotification` in the namespace `FBS.DataConsumer`
             ///
             /// Generated from these locations:
-            /// * Table `MessageNotification` in the file `../worker/fbs/dataConsumer.fbs:60`
+            /// * Table `MessageNotification` in the file `../worker/fbs/dataConsumer.fbs:56`
             #[derive(
                 Clone,
                 Debug,
@@ -62938,8 +62697,8 @@ mod root {
                 ::serde::Deserialize,
             )]
             pub struct TupleHash {
-                /// The field `local_ice_username_fragment` in the table `TupleHash`
-                pub local_ice_username_fragment: u64,
+                /// The field `tuple_hash` in the table `TupleHash`
+                pub tuple_hash: u64,
                 /// The field `web_rtc_transport_id` in the table `TupleHash`
                 pub web_rtc_transport_id: ::planus::alloc::string::String,
             }
@@ -62954,28 +62713,25 @@ mod root {
                 #[allow(clippy::too_many_arguments)]
                 pub fn create(
                     builder: &mut ::planus::Builder,
-                    field_local_ice_username_fragment: impl ::planus::WriteAsDefault<u64, u64>,
+                    field_tuple_hash: impl ::planus::WriteAsDefault<u64, u64>,
                     field_web_rtc_transport_id: impl ::planus::WriteAs<::planus::Offset<str>>,
                 ) -> ::planus::Offset<Self> {
-                    let prepared_local_ice_username_fragment =
-                        field_local_ice_username_fragment.prepare(builder, &0);
+                    let prepared_tuple_hash = field_tuple_hash.prepare(builder, &0);
                     let prepared_web_rtc_transport_id = field_web_rtc_transport_id.prepare(builder);
 
                     let mut table_writer: ::planus::table_writer::TableWriter<8> =
                         ::core::default::Default::default();
-                    if prepared_local_ice_username_fragment.is_some() {
+                    if prepared_tuple_hash.is_some() {
                         table_writer.write_entry::<u64>(0);
                     }
                     table_writer.write_entry::<::planus::Offset<str>>(1);
 
                     unsafe {
                         table_writer.finish(builder, |object_writer| {
-                            if let ::core::option::Option::Some(
-                                prepared_local_ice_username_fragment,
-                            ) = prepared_local_ice_username_fragment
+                            if let ::core::option::Option::Some(prepared_tuple_hash) =
+                                prepared_tuple_hash
                             {
-                                object_writer
-                                    .write::<_, _, 8>(&prepared_local_ice_username_fragment);
+                                object_writer.write::<_, _, 8>(&prepared_tuple_hash);
                             }
                             object_writer.write::<_, _, 4>(&prepared_web_rtc_transport_id);
                         });
@@ -63008,11 +62764,7 @@ mod root {
             impl ::planus::WriteAsOffset<TupleHash> for TupleHash {
                 #[inline]
                 fn prepare(&self, builder: &mut ::planus::Builder) -> ::planus::Offset<TupleHash> {
-                    TupleHash::create(
-                        builder,
-                        self.local_ice_username_fragment,
-                        &self.web_rtc_transport_id,
-                    )
+                    TupleHash::create(builder, self.tuple_hash, &self.web_rtc_transport_id)
                 }
             }
 
@@ -63024,23 +62776,21 @@ mod root {
             pub struct TupleHashBuilder<State>(State);
 
             impl TupleHashBuilder<()> {
-                /// Setter for the [`local_ice_username_fragment` field](TupleHash#structfield.local_ice_username_fragment).
+                /// Setter for the [`tuple_hash` field](TupleHash#structfield.tuple_hash).
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn local_ice_username_fragment<T0>(self, value: T0) -> TupleHashBuilder<(T0,)>
+                pub fn tuple_hash<T0>(self, value: T0) -> TupleHashBuilder<(T0,)>
                 where
                     T0: ::planus::WriteAsDefault<u64, u64>,
                 {
                     TupleHashBuilder((value,))
                 }
 
-                /// Sets the [`local_ice_username_fragment` field](TupleHash#structfield.local_ice_username_fragment) to the default value.
+                /// Sets the [`tuple_hash` field](TupleHash#structfield.tuple_hash) to the default value.
                 #[inline]
                 #[allow(clippy::type_complexity)]
-                pub fn local_ice_username_fragment_as_default(
-                    self,
-                ) -> TupleHashBuilder<(::planus::DefaultValue,)> {
-                    self.local_ice_username_fragment(::planus::DefaultValue)
+                pub fn tuple_hash_as_default(self) -> TupleHashBuilder<(::planus::DefaultValue,)> {
+                    self.tuple_hash(::planus::DefaultValue)
                 }
             }
 
@@ -63115,13 +62865,11 @@ mod root {
             pub struct TupleHashRef<'a>(::planus::table_reader::Table<'a>);
 
             impl<'a> TupleHashRef<'a> {
-                /// Getter for the [`local_ice_username_fragment` field](TupleHash#structfield.local_ice_username_fragment).
+                /// Getter for the [`tuple_hash` field](TupleHash#structfield.tuple_hash).
                 #[inline]
-                pub fn local_ice_username_fragment(&self) -> ::planus::Result<u64> {
+                pub fn tuple_hash(&self) -> ::planus::Result<u64> {
                     ::core::result::Result::Ok(
-                        self.0
-                            .access(0, "TupleHash", "local_ice_username_fragment")?
-                            .unwrap_or(0),
+                        self.0.access(0, "TupleHash", "tuple_hash")?.unwrap_or(0),
                     )
                 }
 
@@ -63136,10 +62884,7 @@ mod root {
             impl<'a> ::core::fmt::Debug for TupleHashRef<'a> {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     let mut f = f.debug_struct("TupleHashRef");
-                    f.field(
-                        "local_ice_username_fragment",
-                        &self.local_ice_username_fragment(),
-                    );
+                    f.field("tuple_hash", &self.tuple_hash());
                     f.field("web_rtc_transport_id", &self.web_rtc_transport_id());
                     f.finish()
                 }
@@ -63151,9 +62896,7 @@ mod root {
                 #[allow(unreachable_code)]
                 fn try_from(value: TupleHashRef<'a>) -> ::planus::Result<Self> {
                     ::core::result::Result::Ok(Self {
-                        local_ice_username_fragment: ::core::convert::TryInto::try_into(
-                            value.local_ice_username_fragment()?,
-                        )?,
+                        tuple_hash: ::core::convert::TryInto::try_into(value.tuple_hash()?)?,
                         web_rtc_transport_id: ::core::convert::TryInto::try_into(
                             value.web_rtc_transport_id()?,
                         )?,

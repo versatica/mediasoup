@@ -34,10 +34,6 @@ table GetStatsResponse {
     buffered_amount: uint32;
 }
 
-table String {
-    value: string (required);
-}
-
 table SendRequest {
     ppid: uint32;
     data: [uint8] (required);

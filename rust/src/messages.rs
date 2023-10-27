@@ -365,7 +365,7 @@ impl Request for WebRtcServerDumpRequest {
                 .tuple_hashes
                 .into_iter()
                 .map(|tuple_hash| WebRtcServerTupleHash {
-                    tuple_hash: tuple_hash.local_ice_username_fragment,
+                    tuple_hash: tuple_hash.tuple_hash,
                     webrtc_transport_id: tuple_hash.web_rtc_transport_id.parse().unwrap(),
                 })
                 .collect(),

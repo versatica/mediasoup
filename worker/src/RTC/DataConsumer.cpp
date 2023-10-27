@@ -282,8 +282,6 @@ namespace RTC
 				const uint8_t* data = body->data()->Data();
 				size_t len          = body->data()->size();
 
-				const int ppid = body->ppid();
-
 				if (len > this->maxMessageSize)
 				{
 					MS_THROW_TYPE_ERROR(
@@ -307,7 +305,7 @@ namespace RTC
 
 				static std::vector<uint16_t> EmptySubchannels;
 
-				SendMessage(data, len, ppid, EmptySubchannels, std::nullopt, cb);
+				SendMessage(data, len, body->ppid(), EmptySubchannels, std::nullopt, cb);
 
 				break;
 			}
