@@ -10,7 +10,7 @@
 
 # 0.11.3
 
-* Updates from mediasoup TypeScript `3.11.1..=3.11.8`.
+* Updates from mediasoup TypeScript `3.11.3..=3.11.8`.
 
 # 0.11.2
 
