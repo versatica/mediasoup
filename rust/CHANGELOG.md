@@ -1,6 +1,6 @@
 # Changelog
 
-# 0.11.5
+# 0.12.0
 
 * Updates from mediasoup TypeScript `3.11.9..=3.12.16`.
 
