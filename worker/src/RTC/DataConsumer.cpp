@@ -278,20 +278,9 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				const auto* body = request->data->body_as<FBS::DataConsumer::SendRequest>();
-				const uint8_t* data{ nullptr };
-				size_t len{ 0 };
-
-				if (body->data_type() == FBS::DataConsumer::Data::String)
-				{
-					data = body->data_as_String()->value()->Data();
-					len  = body->data_as_String()->value()->size();
-				}
-				else
-				{
-					data = body->data_as_Binary()->value()->Data();
-					len  = body->data_as_Binary()->value()->size();
-				}
+				const auto* body    = request->data->body_as<FBS::DataConsumer::SendRequest>();
+				const uint8_t* data = body->data()->Data();
+				size_t len          = body->data()->size();
 
 				const int ppid = body->ppid();
 

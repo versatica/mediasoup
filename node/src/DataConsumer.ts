@@ -517,23 +517,14 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		if (typeof message === 'string')
 		{
-			const messageOffset = builder.createString(message);
-
-			dataOffset = FbsDataConsumer.String.createString(builder, messageOffset);
+			message = Buffer.from(message);
 		}
-		else
-		{
-			const messageOffset = FbsDataConsumer.Binary.createValueVector(builder, message);
 
-			dataOffset = FbsDataConsumer.Binary.createBinary(builder, messageOffset);
-		}
+		dataOffset = FbsDataConsumer.SendRequest.createDataVector(builder, message);
 
 		const requestOffset = FbsDataConsumer.SendRequest.createSendRequest(
 			builder,
 			ppid,
-			typeof message === 'string' ?
-				FbsDataConsumer.Data.String :
-				FbsDataConsumer.Data.Binary,
 			dataOffset
 		);
 

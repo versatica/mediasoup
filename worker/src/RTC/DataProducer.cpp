@@ -199,20 +199,9 @@ namespace RTC
 		{
 			case Channel::ChannelNotification::Event::DATAPRODUCER_SEND:
 			{
-				const auto* body = notification->data->body_as<FBS::DataProducer::SendNotification>();
-				const uint8_t* data{ nullptr };
-				size_t len{ 0 };
-
-				if (body->data_type() == FBS::DataProducer::Data::String)
-				{
-					data = body->data_as_String()->value()->Data();
-					len  = body->data_as_String()->value()->size();
-				}
-				else
-				{
-					data = body->data_as_Binary()->value()->Data();
-					len  = body->data_as_Binary()->value()->size();
-				}
+				const auto* body    = notification->data->body_as<FBS::DataProducer::SendNotification>();
+				const uint8_t* data = body->data()->Data();
+				size_t len          = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{

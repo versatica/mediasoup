@@ -38,18 +38,9 @@ table String {
     value: string (required);
 }
 
-table Binary {
-    value: [uint8] (required);
-}
-
-union Data {
-    String,
-    Binary
-}
-
 table SendRequest {
     ppid: uint32;
-    data: Data (required);
+    data: [uint8] (required);
 }
 
 table SetSubchannelsRequest {
