@@ -4,6 +4,10 @@ use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 
+fn create_ssrc() -> u32 {
+    fastrand::u32(100_000_000..999_999_999)
+}
+
 fn media_codecs() -> Vec<RtpCodecCapability> {
     vec![
         RtpCodecCapability::Audio {
@@ -162,24 +166,32 @@ fn video_producer_options() -> ProducerOptions {
             ],
             encodings: vec![
                 RtpEncodingParameters {
-                    ssrc: Some(22222222),
-                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
+                    ssrc: Some(create_ssrc()),
+                    rtx: Some(RtpEncodingParametersRtx {
+                        ssrc: create_ssrc(),
+                    }),
                     scalability_mode: "L1T3".parse().unwrap(),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
-                    ssrc: Some(22222224),
-                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
+                    ssrc: Some(create_ssrc()),
+                    rtx: Some(RtpEncodingParametersRtx {
+                        ssrc: create_ssrc(),
+                    }),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
-                    ssrc: Some(22222226),
-                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
+                    ssrc: Some(create_ssrc()),
+                    rtx: Some(RtpEncodingParametersRtx {
+                        ssrc: create_ssrc(),
+                    }),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
-                    ssrc: Some(22222228),
-                    rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
+                    ssrc: Some(create_ssrc()),
+                    rtx: Some(RtpEncodingParametersRtx {
+                        ssrc: create_ssrc(),
+                    }),
                     ..RtpEncodingParameters::default()
                 },
             ],
