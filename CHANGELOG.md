@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.12.17
+
+* Update abseil to 20230125.1-5 ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)).
+
+
 ### 3.12.16
 
 * Fix `IceServer` crash when client uses ICE renomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
