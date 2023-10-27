@@ -1,6 +1,7 @@
 import * as process from 'node:process';
 import * as path from 'node:path';
 import { spawn, ChildProcess } from 'node:child_process';
+import { version } from './';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
@@ -334,7 +335,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			{
 				env :
 				{
-					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__',
+					MEDIASOUP_VERSION : version,
 					// Let the worker process inherit all environment variables, useful
 					// if a custom and not in the path GCC is used so the user can set
 					// LD_LIBRARY_PATH environment variable for runtime.

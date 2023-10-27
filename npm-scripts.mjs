@@ -96,7 +96,6 @@ async function run()
 		{
 			installNodeDeps();
 			buildTypescript(/* force */ true);
-			replaceVersion();
 
 			break;
 		}
@@ -161,7 +160,6 @@ async function run()
 		case 'test:node':
 		{
 			buildTypescript(/* force */ false);
-			replaceVersion();
 			testNode();
 
 			break;
@@ -177,7 +175,6 @@ async function run()
 		case 'coverage:node':
 		{
 			buildTypescript(/* force */ false);
-			replaceVersion();
 			executeCmd('jest --coverage');
 			executeCmd('open-cli coverage/lcov-report/index.html');
 
@@ -269,32 +266,6 @@ async function run()
 
 			exitWithError();
 		}
-	}
-}
-
-function replaceVersion()
-{
-	logInfo('replaceVersion()');
-
-	const files = fs.readdirSync('node/lib',
-		{
-			withFileTypes : true,
-			recursive     : true
-		});
-
-	for (const file of files)
-	{
-		if (!file.isFile())
-		{
-			continue;
-		}
-
-		// NOTE: dirent.path is only available in Node >= 20.
-		const filePath = path.join(file.path ?? 'node/lib', file.name);
-		const text = fs.readFileSync(filePath, { encoding: 'utf8' });
-		const result = text.replace(/__MEDIASOUP_VERSION__/g, PKG.version);
-
-		fs.writeFileSync(filePath, result, { encoding: 'utf8' });
 	}
 }
 
@@ -463,7 +434,6 @@ function checkRelease()
 	installNodeDeps();
 	flatcNode();
 	buildTypescript(/* force */ true);
-	replaceVersion();
 	buildWorker();
 	lintNode();
 	lintWorker();

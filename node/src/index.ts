@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { workerBin, Worker, WorkerSettings } from './Worker';
@@ -14,14 +16,14 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-export const version = '__MEDIASOUP_VERSION__';
+export const { version } = JSON.parse(fs.readFileSync(
+	path.join(__dirname, '..', '..', 'package.json'), { encoding: 'utf-8' }
+));
 
 /**
  * Expose parseScalabilityMode() function.
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
-
-const logger = new Logger();
 
 export type ObserverEvents =
 {
@@ -39,6 +41,8 @@ export { observer };
  * Full path of the mediasoup-worker binary.
  */
 export { workerBin };
+
+const logger = new Logger();
 
 /**
  * Create a Worker.
