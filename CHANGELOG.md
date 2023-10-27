@@ -3,8 +3,9 @@
 
 ### 3.12.17
 
-* Update abseil to 20230125.1-5 ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)).
-
+* Update worker dependencies:
+    * abseil-cpp 20230125.1-5.0.
+    * libuv 1.46.0-1
 
 ### 3.12.16
 
