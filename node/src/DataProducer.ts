@@ -442,23 +442,14 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 
 		if (typeof message === 'string')
 		{
-			const messageOffset = builder.createString(message);
-
-			dataOffset = FbsDataProducer.String.createString(builder, messageOffset);
+			message = Buffer.from(message);
 		}
-		else
-		{
-			const messageOffset = FbsDataProducer.Binary.createValueVector(builder, message);
 
-			dataOffset = FbsDataProducer.Binary.createBinary(builder, messageOffset);
-		}
+		dataOffset = FbsDataProducer.SendNotification.createDataVector(builder, message);
 
 		const notificationOffset = FbsDataProducer.SendNotification.createSendNotification(
 			builder,
 			ppid,
-			typeof message === 'string' ?
-				FbsDataProducer.Data.String :
-				FbsDataProducer.Data.Binary,
 			dataOffset,
 			subchannelsOffset,
 			requiredSubchannel ?? null

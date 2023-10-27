@@ -365,7 +365,7 @@ impl Request for WebRtcServerDumpRequest {
                 .tuple_hashes
                 .into_iter()
                 .map(|tuple_hash| WebRtcServerTupleHash {
-                    tuple_hash: tuple_hash.local_ice_username_fragment,
+                    tuple_hash: tuple_hash.tuple_hash,
                     webrtc_transport_id: tuple_hash.web_rtc_transport_id.parse().unwrap(),
                 })
                 .collect(),
@@ -2878,12 +2878,10 @@ impl Notification for DataProducerSendNotification {
     fn into_bytes(self, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
 
-        let binary_data = data_producer::Binary::create(&mut builder, self.payload);
-        let binary = data_producer::Data::create_binary(&mut builder, binary_data);
         let data = data_producer::SendNotification::create(
             &mut builder,
             self.ppid,
-            binary,
+            self.payload,
             self.subchannels,
             self.required_subchannel,
         );
@@ -3179,9 +3177,7 @@ impl Request for DataConsumerSendRequest {
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
 
-        let binary_data = data_consumer::Binary::create(&mut builder, self.payload);
-        let binary = data_consumer::Data::create_binary(&mut builder, binary_data);
-        let data = data_consumer::SendRequest::create(&mut builder, self.ppid, binary);
+        let data = data_consumer::SendRequest::create(&mut builder, self.ppid, self.payload);
         let request_body = request::Body::create_data_consumer_send_request(&mut builder, data);
 
         let request = request::Request::create(

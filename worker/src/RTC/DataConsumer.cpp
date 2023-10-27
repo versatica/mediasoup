@@ -278,22 +278,9 @@ namespace RTC
 					MS_THROW_ERROR("no SCTP association present");
 				}
 
-				const auto* body = request->data->body_as<FBS::DataConsumer::SendRequest>();
-				const uint8_t* data{ nullptr };
-				size_t len{ 0 };
-
-				if (body->data_type() == FBS::DataConsumer::Data::String)
-				{
-					data = body->data_as_String()->value()->Data();
-					len  = body->data_as_String()->value()->size();
-				}
-				else
-				{
-					data = body->data_as_Binary()->value()->Data();
-					len  = body->data_as_Binary()->value()->size();
-				}
-
-				const int ppid = body->ppid();
+				const auto* body    = request->data->body_as<FBS::DataConsumer::SendRequest>();
+				const uint8_t* data = body->data()->Data();
+				size_t len          = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{
@@ -318,7 +305,7 @@ namespace RTC
 
 				static std::vector<uint16_t> EmptySubchannels;
 
-				SendMessage(data, len, ppid, EmptySubchannels, std::nullopt, cb);
+				SendMessage(data, len, body->ppid(), EmptySubchannels, std::nullopt, cb);
 
 				break;
 			}
