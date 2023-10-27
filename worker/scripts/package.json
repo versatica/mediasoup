@@ -1,5 +1,5 @@
 {
-  "name": "clang-tools",
+  "name": "mediasoup-worker-dev-tools",
   "version": "0.0.1",
   "description": "mediasoup worker dev tools",
   "devDependencies": {
