@@ -7,6 +7,7 @@
     * abseil-cpp 20230125.1-5.0.
     * libuv 1.46.0-1
 
+
 ### 3.12.16
 
 * Fix `IceServer` crash when client uses ICE renomination ([PR #1182](https://github.com/versatica/mediasoup/pull/1182)).
