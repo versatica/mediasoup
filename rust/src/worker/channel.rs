@@ -1,4 +1,3 @@
-use crate::fbs::{message, notification, request, response};
 use crate::messages::{Notification, Request};
 use crate::worker::common::{EventHandlers, SubscriptionTarget, WeakEventHandlers};
 use crate::worker::utils;
@@ -8,6 +7,7 @@ use atomic_take::AtomicTake;
 use hash_hasher::HashedMap;
 use log::{debug, error, trace, warn};
 use lru::LruCache;
+use mediasoup_sys::fbs::{message, notification, request, response};
 use mediasoup_sys::UvAsyncT;
 use parking_lot::Mutex;
 use planus::ReadAsRoot;

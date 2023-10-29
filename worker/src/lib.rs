@@ -1,5 +1,7 @@
 use std::os::raw::{c_char, c_int, c_void};
 
+include!(concat!(env!("OUT_DIR"), "/fbs.rs"));
+
 #[repr(transparent)]
 #[derive(Copy, Clone)]
 pub struct UvAsyncT(pub *const c_void);

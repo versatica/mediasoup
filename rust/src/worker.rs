@@ -6,7 +6,6 @@ mod common;
 mod utils;
 
 use crate::data_structures::AppData;
-use crate::fbs;
 use crate::messages::{
     WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
     WorkerDumpRequest, WorkerUpdateSettingsRequest,
@@ -24,6 +23,7 @@ pub(crate) use common::{SubscriptionHandler, SubscriptionTarget};
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::FutureExt;
 use log::{debug, error, warn};
+use mediasoup_sys::fbs;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::error::Error;

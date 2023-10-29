@@ -1,4 +1,3 @@
-use crate::fbs::rtp_parameters;
 use crate::rtp_parameters::{
     MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
     RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
@@ -8,6 +7,7 @@ use crate::rtp_parameters::{
 };
 use crate::scalability_modes::ScalabilityMode;
 use crate::supported_rtp_capabilities;
+use mediasoup_sys::fbs::rtp_parameters;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;

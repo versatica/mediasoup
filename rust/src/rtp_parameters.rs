@@ -4,8 +4,8 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::rtp_parameters;
 use crate::scalability_modes::ScalabilityMode;
+use mediasoup_sys::fbs::rtp_parameters;
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};

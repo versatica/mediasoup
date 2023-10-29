@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport};
+use mediasoup_sys::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};

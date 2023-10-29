@@ -1,5 +1,5 @@
-use crate::fbs::notification;
 use hash_hasher::HashedMap;
+use mediasoup_sys::fbs::notification;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::Deserialize;

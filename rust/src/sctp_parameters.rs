@@ -1,6 +1,6 @@
 //! Collection of SCTP-related data structures that are used to specify SCTP association parameters.
 
-use crate::fbs::sctp_parameters;
+use mediasoup_sys::fbs::sctp_parameters;
 use serde::{Deserialize, Serialize};
 
 /// Number of SCTP streams.
