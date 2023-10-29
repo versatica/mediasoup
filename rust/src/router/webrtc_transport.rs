@@ -8,7 +8,6 @@ use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
-use crate::fbs::{notification, response, transport, web_rtc_transport};
 use crate::messages::{
     TransportCloseRequest, TransportRestartIceRequest, WebRtcTransportConnectRequest,
     WebRtcTransportData,
@@ -28,6 +27,7 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use mediasoup_sys::fbs::{notification, response, transport, web_rtc_transport};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};

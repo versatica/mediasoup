@@ -3,7 +3,6 @@ mod tests;
 
 use crate::consumer::{RtpStreamParams, RtxStreamParams};
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
-use crate::fbs::{notification, producer, response, rtp_parameters, rtp_stream};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
@@ -18,6 +17,7 @@ use crate::worker::{
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use mediasoup_sys::fbs::{notification, producer, response, rtp_parameters, rtp_stream};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};

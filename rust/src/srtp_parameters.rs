@@ -1,7 +1,7 @@
 //! Collection of SRTP-related data structures that are used to specify SRTP encryption/decryption
 //! parameters.
 
-use crate::fbs::srtp_parameters;
+use mediasoup_sys::fbs::srtp_parameters;
 use serde::{Deserialize, Serialize};
 
 /// SRTP parameters.

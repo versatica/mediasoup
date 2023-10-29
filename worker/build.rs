@@ -1,5 +1,5 @@
-use std::env;
 use std::process::Command;
+use std::{env, fs};
 
 fn main() {
     if env::var("DOCS_RS").is_ok() {
@@ -16,6 +16,35 @@ fn main() {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
+
+    // Compile Rust flatbuffers
+    let flatbuffers_declarations = planus_translation::translate_files(
+        &fs::read_dir("fbs")
+            .expect("Failed to read `fbs` directory")
+            .filter_map(|maybe_entry| {
+                maybe_entry
+                    .map(|entry| {
+                        let path = entry.path();
+                        if path.extension() == Some("fbs".as_ref()) {
+                            Some(path)
+                        } else {
+                            None
+                        }
+                    })
+                    .transpose()
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .expect("Failed to collect flatbuffers files"),
+    )
+    .expect("Failed to translate flatbuffers files");
+
+    fs::write(
+        format!("{out_dir}/fbs.rs"),
+        planus_codegen::generate_rust(&flatbuffers_declarations)
+            .expect("Failed to generate Rust code from flatbuffers"),
+    )
+    .expect("Failed to write generated Rust flatbuffers into fbs.rs");
+
     // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`.
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 

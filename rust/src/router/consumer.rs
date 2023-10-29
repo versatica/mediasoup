@@ -2,7 +2,6 @@
 mod tests;
 
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
-use crate::fbs::{consumer, notification, response, rtp_parameters, rtp_stream, rtx_stream};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
     ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerRequestKeyFrameRequest,
@@ -18,6 +17,9 @@ use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionH
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use mediasoup_sys::fbs::{
+    consumer, notification, response, rtp_parameters, rtp_stream, rtx_stream,
+};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::error::Error;

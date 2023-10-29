@@ -2,7 +2,6 @@
 mod tests;
 
 use crate::data_structures::AppData;
-use crate::fbs::notification;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
@@ -15,6 +14,7 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use mediasoup_sys::fbs::notification;
 use parking_lot::Mutex;
 use serde::Deserialize;
 use std::fmt;

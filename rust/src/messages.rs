@@ -10,11 +10,6 @@ use crate::data_structures::{
     ListenInfo, SctpState, TransportTuple,
 };
 use crate::direct_transport::DirectTransportOptions;
-use crate::fbs::{
-    active_speaker_observer, audio_level_observer, consumer, data_consumer, data_producer,
-    direct_transport, message, notification, pipe_transport, plain_transport, producer, request,
-    response, router, rtp_observer, transport, web_rtc_server, web_rtc_transport, worker,
-};
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
@@ -35,6 +30,11 @@ use crate::webrtc_transport::{
     WebRtcTransportListen, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use crate::worker::{ChannelMessageHandlers, WorkerDump, WorkerUpdateSettings};
+use mediasoup_sys::fbs::{
+    active_speaker_observer, audio_level_observer, consumer, data_consumer, data_producer,
+    direct_transport, message, notification, pipe_transport, plain_transport, producer, request,
+    response, router, rtp_observer, transport, web_rtc_server, web_rtc_transport, worker,
+};
 use parking_lot::Mutex;
 use planus::Builder;
 use serde::{Deserialize, Serialize};

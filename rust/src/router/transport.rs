@@ -2,7 +2,6 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
-use crate::fbs::{response, transport};
 use crate::messages::{
     TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
     TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
@@ -22,6 +21,7 @@ use async_executor::Executor;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
 use log::{error, warn};
+use mediasoup_sys::fbs::{response, transport};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};

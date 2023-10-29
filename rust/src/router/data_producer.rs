@@ -2,7 +2,6 @@
 mod tests;
 
 use crate::data_structures::{AppData, WebRtcMessage};
-use crate::fbs::{data_producer, response};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
@@ -14,6 +13,7 @@ use crate::worker::{Channel, NotificationError, RequestError};
 use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
+use mediasoup_sys::fbs::{data_producer, response};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
