@@ -149,9 +149,9 @@ namespace Channel
 			return;
 		}
 
-		auto log     = FBS::Log::CreateLogDirect(this->bufferBuilder, msg);
-		auto message = FBS::Message::CreateMessage(
-		  this->bufferBuilder, FBS::Message::Type::LOG, FBS::Message::Body::Log, log.Union());
+		auto log = FBS::Log::CreateLogDirect(this->bufferBuilder, msg);
+		auto message =
+		  FBS::Message::CreateMessage(this->bufferBuilder, FBS::Message::Body::Log, log.Union());
 
 		this->bufferBuilder.FinishSizePrefixed(message);
 		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
@@ -185,7 +185,7 @@ namespace Channel
 			MS_DUMP("%s", s.c_str());
 #endif
 
-			if (message->type() == FBS::Message::Type::REQUEST)
+			if (message->data_type() == FBS::Message::Body::Request)
 			{
 				ChannelRequest* request;
 
@@ -207,7 +207,7 @@ namespace Channel
 
 				delete request;
 			}
-			else if (message->type() == FBS::Message::Type::NOTIFICATION)
+			else if (message->data_type() == FBS::Message::Body::Notification)
 			{
 				ChannelNotification* notification;
 
@@ -265,7 +265,7 @@ namespace Channel
 		MS_DUMP("%s", s.c_str());
 #endif
 
-		if (message->type() == FBS::Message::Type::REQUEST)
+		if (message->data_type() == FBS::Message::Body::Request)
 		{
 			ChannelRequest* request;
 
@@ -287,7 +287,7 @@ namespace Channel
 
 			delete request;
 		}
-		else if (message->type() == FBS::Message::Type::NOTIFICATION)
+		else if (message->data_type() == FBS::Message::Body::Notification)
 		{
 			ChannelNotification* notification;
 

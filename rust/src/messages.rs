@@ -95,7 +95,7 @@ impl Request for WorkerCloseRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -126,7 +126,7 @@ impl Request for WorkerDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -203,7 +203,7 @@ impl Request for WorkerUpdateSettingsRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -243,7 +243,7 @@ impl Request for WorkerCreateWebRtcServerRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -282,7 +282,7 @@ impl Request for WebRtcServerCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -313,7 +313,7 @@ impl Request for WebRtcServerDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -395,7 +395,7 @@ impl Request for WorkerCreateRouterRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -430,7 +430,7 @@ impl Request for RouterCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -461,7 +461,7 @@ impl Request for RouterDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -606,7 +606,7 @@ impl Request for RouterCreateDirectTransportRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -772,7 +772,7 @@ impl Request for RouterCreateWebRtcTransportRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -849,7 +849,7 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -981,7 +981,7 @@ impl Request for RouterCreatePlainTransportRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1107,7 +1107,7 @@ impl Request for RouterCreatePipeTransportRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1208,7 +1208,7 @@ impl Request for RouterCreateAudioLevelObserverRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1273,7 +1273,7 @@ impl Request for RouterCreateActiveSpeakerObserverRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1304,7 +1304,7 @@ impl Request for TransportDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1339,7 +1339,7 @@ impl Request for TransportGetStatsRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1380,7 +1380,7 @@ impl Request for TransportCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1421,7 +1421,7 @@ impl Request for WebRtcTransportConnectRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1475,7 +1475,7 @@ impl Request for PipeTransportConnectRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1534,7 +1534,7 @@ impl Request for TransportConnectPlainRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1584,7 +1584,7 @@ impl Request for TransportSetMaxIncomingBitrateRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1620,7 +1620,7 @@ impl Request for TransportSetMaxOutgoingBitrateRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1656,7 +1656,7 @@ impl Request for TransportSetMinOutgoingBitrateRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1686,7 +1686,7 @@ impl Request for TransportRestartIceRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1748,7 +1748,7 @@ impl Request for TransportProduceRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1820,7 +1820,7 @@ impl Request for TransportConsumeRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1902,7 +1902,7 @@ impl Request for TransportProduceDataRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -1993,7 +1993,7 @@ impl Request for TransportConsumeDataRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2054,7 +2054,7 @@ impl Request for TransportEnableTraceEventRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2094,7 +2094,7 @@ impl Notification for TransportSendRtcpNotification {
             Some(notification_body),
         );
         let message_body = message::Body::create_notification(&mut builder, notification);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2125,7 +2125,7 @@ impl Request for ProducerCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2156,7 +2156,7 @@ impl Request for ProducerDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2191,7 +2191,7 @@ impl Request for ProducerGetStatsRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2227,7 +2227,7 @@ impl Request for ProducerPauseRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2258,7 +2258,7 @@ impl Request for ProducerResumeRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2300,7 +2300,7 @@ impl Request for ProducerEnableTraceEventRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2340,7 +2340,7 @@ impl Notification for ProducerSendNotification {
             Some(notification_body),
         );
         let message_body = message::Body::create_notification(&mut builder, notification);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2371,7 +2371,7 @@ impl Request for ConsumerCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2402,7 +2402,7 @@ impl Request for ConsumerDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2437,7 +2437,7 @@ impl Request for ConsumerGetStatsRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2473,7 +2473,7 @@ impl Request for ConsumerPauseRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2504,7 +2504,7 @@ impl Request for ConsumerResumeRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2544,7 +2544,7 @@ impl Request for ConsumerSetPreferredLayersRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2594,7 +2594,7 @@ impl Request for ConsumerSetPriorityRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2632,7 +2632,7 @@ impl Request for ConsumerRequestKeyFrameRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2674,7 +2674,7 @@ impl Request for ConsumerEnableTraceEventRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2717,7 +2717,7 @@ impl Request for DataProducerCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2748,7 +2748,7 @@ impl Request for DataProducerDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2784,7 +2784,7 @@ impl Request for DataProducerGetStatsRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2820,7 +2820,7 @@ impl Request for DataProducerPauseRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2851,7 +2851,7 @@ impl Request for DataProducerResumeRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2895,8 +2895,7 @@ impl Notification for DataProducerSendNotification {
             Some(notification_body),
         );
         let message_body = message::Body::create_notification(&mut builder, notification);
-        let message =
-            message::Message::create(&mut builder, message::Type::Notification, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2929,7 +2928,7 @@ impl Request for DataConsumerCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2960,7 +2959,7 @@ impl Request for DataConsumerDumpRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -2996,7 +2995,7 @@ impl Request for DataConsumerGetStatsRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3032,7 +3031,7 @@ impl Request for DataConsumerPauseRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3063,7 +3062,7 @@ impl Request for DataConsumerResumeRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3099,7 +3098,7 @@ impl Request for DataConsumerGetBufferedAmountRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3150,7 +3149,7 @@ impl Request for DataConsumerSetBufferedAmountLowThresholdRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3188,7 +3187,7 @@ impl Request for DataConsumerSendRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3236,7 +3235,7 @@ impl Request for DataConsumerSetSubchannelsRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3281,7 +3280,7 @@ impl Request for RtpObserverCloseRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3311,7 +3310,7 @@ impl Request for RtpObserverPauseRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3341,7 +3340,7 @@ impl Request for RtpObserverResumeRequest {
             None::<request::Body>,
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3380,7 +3379,7 @@ impl Request for RtpObserverAddProducerRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }
@@ -3419,7 +3418,7 @@ impl Request for RtpObserverRemoveProducerRequest {
             Some(request_body),
         );
         let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message::Type::Request, message_body);
+        let message = message::Message::create(&mut builder, message_body);
 
         builder.finish(message, None).to_vec()
     }

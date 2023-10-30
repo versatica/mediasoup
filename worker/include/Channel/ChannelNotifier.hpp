@@ -29,11 +29,8 @@ namespace Channel
 			auto notification = FBS::Notification::CreateNotificationDirect(
 			  builder, targetId.c_str(), event, type, body.Union());
 
-			auto message = FBS::Message::CreateMessage(
-			  builder,
-			  FBS::Message::Type::NOTIFICATION,
-			  FBS::Message::Body::Notification,
-			  notification.Union());
+			auto message =
+			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());
 
 			builder.FinishSizePrefixed(message);
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
@@ -46,11 +43,8 @@ namespace Channel
 			auto notification =
 			  FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
 
-			auto message = FBS::Message::CreateMessage(
-			  builder,
-			  FBS::Message::Type::NOTIFICATION,
-			  FBS::Message::Body::Notification,
-			  notification.Union());
+			auto message =
+			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());
 
 			builder.FinishSizePrefixed(message);
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());

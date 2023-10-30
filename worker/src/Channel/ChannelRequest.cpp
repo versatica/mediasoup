@@ -165,8 +165,8 @@ namespace Channel
 	void ChannelRequest::SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response)
 	{
 		auto& builder = this->bufferBuilder;
-		auto message  = FBS::Message::CreateMessage(
-      builder, FBS::Message::Type::RESPONSE, FBS::Message::Body::Response, response.Union());
+		auto message =
+		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());
 
 		builder.FinishSizePrefixed(message);
 		this->Send(builder.GetBufferPointer(), builder.GetSize());

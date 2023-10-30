@@ -128,9 +128,9 @@ export class Channel extends EnhancedEventEmitter
 
 				try
 				{
-					switch (message.type())
+					switch (message.dataType())
 					{
-						case MessageType.RESPONSE:
+						case MessageBody.Response:
 						{
 							const response = new Response();
 
@@ -141,7 +141,7 @@ export class Channel extends EnhancedEventEmitter
 							break;
 						}
 
-						case MessageType.NOTIFICATION:
+						case MessageBody.Notification:
 						{
 							const notification = new Notification();
 
@@ -152,7 +152,7 @@ export class Channel extends EnhancedEventEmitter
 							break;
 						}
 
-						case MessageType.LOG:
+						case MessageBody.Log:
 						{
 							const log = new Log();
 
@@ -283,7 +283,6 @@ export class Channel extends EnhancedEventEmitter
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
-			MessageType.NOTIFICATION,
 			MessageBody.Notification,
 			notificationOffset
 		);
@@ -348,7 +347,6 @@ export class Channel extends EnhancedEventEmitter
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
-			MessageType.REQUEST,
 			MessageBody.Request,
 			requestOffset
 		);
