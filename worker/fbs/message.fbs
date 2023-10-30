@@ -5,13 +5,6 @@ include "response.fbs";
 
 namespace FBS.Message;
 
-enum Type: uint8 {
-    REQUEST = 0,
-    RESPONSE,
-    NOTIFICATION,
-    LOG,
-}
-
 union Body {
     Request: FBS.Request.Request,
     Response: FBS.Response.Response,
@@ -20,7 +13,6 @@ union Body {
 }
 
 table Message {
-    type: Type;
     data: Body (required);
 }
 

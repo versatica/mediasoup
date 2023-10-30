@@ -6,7 +6,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request';
 import { Response } from './fbs/response';
-import { Message, Type as MessageType, Body as MessageBody } from './fbs/message';
+import { Message, Body as MessageBody } from './fbs/message';
 import { Notification, Body as NotificationBody, Event } from './fbs/notification';
 import { Log } from './fbs/log';
 
@@ -128,9 +128,9 @@ export class Channel extends EnhancedEventEmitter
 
 				try
 				{
-					switch (message.type())
+					switch (message.dataType())
 					{
-						case MessageType.RESPONSE:
+						case MessageBody.Response:
 						{
 							const response = new Response();
 
@@ -141,7 +141,7 @@ export class Channel extends EnhancedEventEmitter
 							break;
 						}
 
-						case MessageType.NOTIFICATION:
+						case MessageBody.Notification:
 						{
 							const notification = new Notification();
 
@@ -152,7 +152,7 @@ export class Channel extends EnhancedEventEmitter
 							break;
 						}
 
-						case MessageType.LOG:
+						case MessageBody.Log:
 						{
 							const log = new Log();
 
@@ -283,7 +283,6 @@ export class Channel extends EnhancedEventEmitter
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
-			MessageType.NOTIFICATION,
 			MessageBody.Notification,
 			notificationOffset
 		);
@@ -348,7 +347,6 @@ export class Channel extends EnhancedEventEmitter
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
-			MessageType.REQUEST,
 			MessageBody.Request,
 			requestOffset
 		);
