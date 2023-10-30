@@ -6,7 +6,7 @@ import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request';
 import { Response } from './fbs/response';
-import { Message, Type as MessageType, Body as MessageBody } from './fbs/message';
+import { Message, Body as MessageBody } from './fbs/message';
 import { Notification, Body as NotificationBody, Event } from './fbs/notification';
 import { Log } from './fbs/log';
 
