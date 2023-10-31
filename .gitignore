@@ -9,8 +9,6 @@
 /node/lib
 # flatc generated files.
 /node/src/fbs
-# nvm version file.
-/.nvmrc
 
 ## Rust.
 /rust/examples-frontend/*/node_modules
@@ -35,13 +33,5 @@
 ## Others.
 /coverage
 /.cache
-/NO_GIT
-*.swp
-*.swo
-.DS_Store
-# Vistual Studio Code stuff.
-/.vscode
-# JetBrains IDE stuff.
-/.idea
 # Packaged module.
 *.tgz
