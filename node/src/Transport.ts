@@ -1077,7 +1077,7 @@ export class Transport
 	/**
 	 * Create a DataConsumer.
 	 */
-	async consumeData<ConsumerAppData extends AppData = AppData>(
+	async consumeData<DataConsumerAppData extends AppData = AppData>(
 		{
 			dataProducerId,
 			ordered,
@@ -1086,8 +1086,8 @@ export class Transport
 			paused = false,
 			subchannels,
 			appData
-		}: DataConsumerOptions<ConsumerAppData>
-	): Promise<DataConsumer<ConsumerAppData>>
+		}: DataConsumerOptions<DataConsumerAppData>
+	): Promise<DataConsumer<DataConsumerAppData>>
 	{
 		logger.debug('consumeData()');
 
@@ -1186,7 +1186,7 @@ export class Transport
 
 		const dump = parseDataConsumerDumpResponse(consumeDataResponse);
 
-		const dataConsumer = new DataConsumer<ConsumerAppData>(
+		const dataConsumer = new DataConsumer<DataConsumerAppData>(
 			{
 				internal :
 				{
