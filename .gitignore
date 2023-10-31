@@ -7,8 +7,10 @@
 ## Node.
 /node_modules
 /node/lib
-# Flatc generated files.
+# flatc generated files.
 /node/src/fbs
+# nvm version file.
+/.nvmrc
 
 ## Rust.
 /rust/examples-frontend/*/node_modules
@@ -41,6 +43,5 @@
 /.vscode
 # JetBrains IDE stuff.
 /.idea
-
 # Packaged module.
 *.tgz
