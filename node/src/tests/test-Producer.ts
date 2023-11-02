@@ -235,6 +235,69 @@ test('transport2.produce() succeeds', async () =>
 			});
 }, 2000);
 
+test.only('transport1.produce() without header extensions and rtcp succeeds', async () =>
+{
+	const onObserverNewProducer = jest.fn();
+
+	transport1.observer.once('newproducer', onObserverNewProducer);
+
+	audioProducer = await transport1.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO',
+				codecs :
+				[
+					{
+						mimeType    : 'audio/opus',
+						payloadType : 0,
+						clockRate   : 48000,
+						channels    : 2,
+						parameters  :
+						{
+							useinbandfec : 1,
+							usedtx       : 1,
+							foo          : 222.222,
+							bar          : '333'
+						}
+					}
+				]
+			},
+			appData : { foo: 1, bar: '2' }
+		});
+
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer);
+	expect(typeof audioProducer.id).toBe('string');
+	expect(audioProducer.closed).toBe(false);
+	expect(audioProducer.kind).toBe('audio');
+	expect(typeof audioProducer.rtpParameters).toBe('object');
+	expect(audioProducer.type).toBe('simple');
+	// Private API.
+	expect(typeof audioProducer.consumableRtpParameters).toBe('object');
+	expect(audioProducer.paused).toBe(false);
+	expect(audioProducer.score).toEqual([]);
+	expect(audioProducer.appData).toEqual({ foo: 1, bar: '2' });
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				mapProducerIdConsumerIds : [ { key: audioProducer.id, values: [] } ],
+				mapConsumerIdProducerId  : []
+			});
+
+	await expect(transport1.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : transport1.id,
+				producerIds : [ audioProducer.id ],
+				consumerIds : []
+			});
+}, 2000);
+
 test('transport1.produce() with wrong arguments rejects with TypeError', async () =>
 {
 	await expect(transport1.produce(
