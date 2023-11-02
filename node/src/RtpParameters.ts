@@ -440,25 +440,15 @@ export function serializeRtpParameters(
 		FbsRtpParameters.createHeaderExtensionsVector(builder, headerExtensions);
 
 	// RtpEncodingParameters.
-	let encodingsOffset: number | undefined;
-
-	if (rtpParameters.encodings)
-	{
-		encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings);
-	}
+	const encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings ?? []);
 
 	// RtcpParameters.
-	let rtcpOffset: number | undefined;
+	const { cname, reducedSize } = rtpParameters.rtcp ?? { reducedSize: true };
+	const cnameOffset = builder.createString(cname);
 
-	if (rtpParameters.rtcp)
-	{
-		const { cname, reducedSize } = rtpParameters.rtcp;
-		const cnameOffset = builder.createString(cname);
-
-		rtcpOffset = FbsRtcpParameters.createRtcpParameters(
-			builder, cnameOffset, Boolean(reducedSize)
-		);
-	}
+	const rtcpOffset = FbsRtcpParameters.createRtcpParameters(
+		builder, cnameOffset, Boolean(reducedSize)
+	);
 
 	const midOffset = builder.createString(rtpParameters.mid);
 
@@ -466,31 +456,20 @@ export function serializeRtpParameters(
 	FbsRtpParameters.addMid(builder, midOffset);
 	FbsRtpParameters.addCodecs(builder, codecsOffset);
 
-	if (headerExtensions.length > 0)
-	{
-		FbsRtpParameters.addHeaderExtensions(builder, headerExtensionsOffset);
-	}
-
-	if (encodingsOffset)
-	{
-		FbsRtpParameters.addEncodings(builder, encodingsOffset);
-	}
-
-	if (rtcpOffset)
-	{
-		FbsRtpParameters.addRtcp(builder, rtcpOffset);
-	}
+	FbsRtpParameters.addHeaderExtensions(builder, headerExtensionsOffset);
+	FbsRtpParameters.addEncodings(builder, encodingsOffset);
+	FbsRtpParameters.addRtcp(builder, rtcpOffset);
 
 	return FbsRtpParameters.endRtpParameters(builder);
 }
 
 export function serializeRtpEncodingParameters(
-	builder: flatbuffers.Builder, rtpEncodingParameters: RtpEncodingParameters[]
+	builder: flatbuffers.Builder, rtpEncodingParameters: RtpEncodingParameters[] = []
 ): number
 {
 	const encodings: number[] = [];
 
-	for (const encoding of rtpEncodingParameters ?? [])
+	for (const encoding of rtpEncodingParameters)
 	{
 		// Prepare Rid.
 		const ridOffset = builder.createString(encoding.rid);
