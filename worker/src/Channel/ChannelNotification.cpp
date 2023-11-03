@@ -30,12 +30,16 @@ namespace Channel
 		auto eventCStrIt = ChannelNotification::event2String.find(this->event);
 
 		if (eventCStrIt == ChannelNotification::event2String.end())
-			MS_THROW_ERROR("unknown event '%" PRIu8 "'", this->event);
+		{
+			MS_THROW_ERROR("unknown event '%" PRIu8 "'", static_cast<uint8_t>(this->event));
+		}
 
 		this->eventCStr = eventCStrIt->second;
 
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::Notification::VT_HANDLERID))
+		{
 			this->handlerId = this->data->handlerId()->str();
+		}
 	}
 } // namespace Channel

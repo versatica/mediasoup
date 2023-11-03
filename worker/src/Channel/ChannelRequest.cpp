@@ -102,14 +102,16 @@ namespace Channel
 		{
 			Error("unknown method");
 
-			MS_THROW_ERROR("unknown method '%" PRIu8 "'", this->method);
+			MS_THROW_ERROR("unknown method '%" PRIu8 "'", static_cast<uint8_t>(this->method));
 		}
 
 		this->methodCStr = methodCStrIt->second;
 
 		// Handler ID is optional.
 		if (flatbuffers::IsFieldPresent(this->data, FBS::Request::Request::VT_HANDLERID))
+		{
 			this->handlerId = this->data->handlerId()->str();
+		}
 	}
 
 	void ChannelRequest::Accept()
