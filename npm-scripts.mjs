@@ -42,8 +42,8 @@ async function run()
 		// TypeScript to JavaScript.
 		case 'prepare':
 		{
-			flatcNode(/* clean */ true);
-			buildTypescript(/* force */ false);
+			flatcNode();
+			buildTypescript({ force: false });
 
 			break;
 		}
@@ -86,7 +86,11 @@ async function run()
 				logInfo(`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`);
 
 				buildWorker();
-				cleanWorkerArtifacts();
+
+				if (!process.env.MEDIASOUP_LOCAL_DEV)
+				{
+					cleanWorkerArtifacts();
+				}
 			}
 
 			break;
@@ -95,7 +99,7 @@ async function run()
 		case 'typescript:build':
 		{
 			installNodeDeps();
-			buildTypescript(/* force */ true);
+			buildTypescript({ force: true });
 
 			break;
 		}
@@ -159,7 +163,7 @@ async function run()
 
 		case 'test:node':
 		{
-			buildTypescript(/* force */ false);
+			buildTypescript({ force: false });
 			testNode();
 
 			break;
@@ -174,7 +178,7 @@ async function run()
 
 		case 'coverage:node':
 		{
-			buildTypescript(/* force */ false);
+			buildTypescript({ force: false });
 			executeCmd('jest --coverage');
 			executeCmd('open-cli coverage/lcov-report/index.html');
 
@@ -289,7 +293,7 @@ function deleteNodeLib()
 	}
 }
 
-function buildTypescript(force = false)
+function buildTypescript({ force = false } = { force: false })
 {
 	if (!force && fs.existsSync('node/lib'))
 	{
@@ -358,7 +362,7 @@ function lintWorker()
 	executeCmd(`${MAKE} lint -C worker`);
 }
 
-function flatcNode(clean = false)
+function flatcNode()
 {
 	logInfo('flatcNode()');
 
@@ -381,11 +385,6 @@ function flatcNode(clean = false)
 	else
 	{
 		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
-	}
-
-	if (clean)
-	{
-		cleanWorkerArtifacts();
 	}
 }
 
@@ -433,7 +432,7 @@ function checkRelease()
 
 	installNodeDeps();
 	flatcNode();
-	buildTypescript(/* force */ true);
+	buildTypescript({ force: true });
 	buildWorker();
 	lintNode();
 	lintWorker();
