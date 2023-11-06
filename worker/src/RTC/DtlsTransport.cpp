@@ -16,7 +16,9 @@
 	do                                                                                               \
 	{                                                                                                \
 		if (ERR_peek_error() == 0)                                                                     \
+		{                                                                                              \
 			MS_ERROR("OpenSSL error [desc:'%s']", desc);                                                 \
+		}                                                                                              \
 		else                                                                                           \
 		{                                                                                              \
 			int64_t err;                                                                                 \
@@ -46,11 +48,17 @@ inline static void onSslInfo(const SSL* ssl, int where, int ret)
 inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 {
 	if (timerUs == 0)
+	{
 		return 100000;
+	}
 	else if (timerUs >= 4000000)
+	{
 		return 4000000;
+	}
 	else
+	{
 		return 2 * timerUs;
+	}
 }
 
 inline static long onSslBioOut(
@@ -167,11 +175,19 @@ namespace RTC
 		MS_TRACE();
 
 		if (DtlsTransport::privateKey)
+		{
 			EVP_PKEY_free(DtlsTransport::privateKey);
+		}
+
 		if (DtlsTransport::certificate)
+		{
 			X509_free(DtlsTransport::certificate);
+		}
+
 		if (DtlsTransport::sslCtx)
+		{
 			SSL_CTX_free(DtlsTransport::sslCtx);
+		}
 	}
 
 	DtlsTransport::Role DtlsTransport::RoleFromFbs(FBS::WebRtcTransport::DtlsRole role)
@@ -179,13 +195,19 @@ namespace RTC
 		switch (role)
 		{
 			case FBS::WebRtcTransport::DtlsRole::AUTO:
+			{
 				return DtlsTransport::Role::AUTO;
+			}
 
 			case FBS::WebRtcTransport::DtlsRole::CLIENT:
+			{
 				return DtlsTransport::Role::CLIENT;
+			}
 
 			case FBS::WebRtcTransport::DtlsRole::SERVER:
+			{
 				return DtlsTransport::Role::SERVER;
+			}
 		}
 	}
 
@@ -194,13 +216,19 @@ namespace RTC
 		switch (role)
 		{
 			case DtlsTransport::Role::AUTO:
+			{
 				return FBS::WebRtcTransport::DtlsRole::AUTO;
+			}
 
 			case DtlsTransport::Role::CLIENT:
+			{
 				return FBS::WebRtcTransport::DtlsRole::CLIENT;
+			}
 
 			case DtlsTransport::Role::SERVER:
+			{
 				return FBS::WebRtcTransport::DtlsRole::SERVER;
+			}
 		}
 	}
 
@@ -209,19 +237,29 @@ namespace RTC
 		switch (state)
 		{
 			case DtlsTransport::DtlsState::NEW:
+			{
 				return FBS::WebRtcTransport::DtlsState::NEW;
+			}
 
 			case DtlsTransport::DtlsState::CONNECTING:
+			{
 				return FBS::WebRtcTransport::DtlsState::CONNECTING;
+			}
 
 			case DtlsTransport::DtlsState::CONNECTED:
+			{
 				return FBS::WebRtcTransport::DtlsState::CONNECTED;
+			}
 
 			case DtlsTransport::DtlsState::FAILED:
+			{
 				return FBS::WebRtcTransport::DtlsState::FAILED;
+			}
 
 			case DtlsTransport::DtlsState::CLOSED:
+			{
 				return FBS::WebRtcTransport::DtlsState::CLOSED;
+			}
 		}
 	}
 
@@ -231,19 +269,29 @@ namespace RTC
 		switch (algorithm)
 		{
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA1:
+			{
 				return DtlsTransport::FingerprintAlgorithm::SHA1;
+			}
 
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA224:
+			{
 				return DtlsTransport::FingerprintAlgorithm::SHA224;
+			}
 
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA256:
+			{
 				return DtlsTransport::FingerprintAlgorithm::SHA256;
+			}
 
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA384:
+			{
 				return DtlsTransport::FingerprintAlgorithm::SHA384;
+			}
 
 			case FBS::WebRtcTransport::FingerprintAlgorithm::SHA512:
+			{
 				return DtlsTransport::FingerprintAlgorithm::SHA512;
+			}
 		}
 	}
 
@@ -253,19 +301,29 @@ namespace RTC
 		switch (algorithm)
 		{
 			case DtlsTransport::FingerprintAlgorithm::SHA1:
+			{
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA1;
+			}
 
 			case DtlsTransport::FingerprintAlgorithm::SHA224:
+			{
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA224;
+			}
 
 			case DtlsTransport::FingerprintAlgorithm::SHA256:
+			{
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA256;
+			}
 
 			case DtlsTransport::FingerprintAlgorithm::SHA384:
+			{
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA384;
+			}
 
 			case DtlsTransport::FingerprintAlgorithm::SHA512:
+			{
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA512;
+			}
 		}
 	}
 
@@ -360,10 +418,14 @@ namespace RTC
 	error:
 
 		if (DtlsTransport::privateKey)
+		{
 			EVP_PKEY_free(DtlsTransport::privateKey);
+		}
 
 		if (DtlsTransport::certificate)
+		{
 			X509_free(DtlsTransport::certificate);
+		}
 
 		MS_THROW_ERROR("DTLS certificate and private key generation failed");
 	}
@@ -515,7 +577,9 @@ namespace RTC
 		     ++it)
 		{
 			if (it != DtlsTransport::srtpCryptoSuites.begin())
+			{
 				dtlsSrtpCryptoSuites += ":";
+			}
 
 			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(*it);
 			dtlsSrtpCryptoSuites += cryptoSuiteEntry->name;
@@ -565,27 +629,39 @@ namespace RTC
 			switch (algorithm)
 			{
 				case FingerprintAlgorithm::SHA1:
+				{
 					hashFunction = EVP_sha1();
 					break;
+				}
 
 				case FingerprintAlgorithm::SHA224:
+				{
 					hashFunction = EVP_sha224();
 					break;
+				}
 
 				case FingerprintAlgorithm::SHA256:
+				{
 					hashFunction = EVP_sha256();
 					break;
+				}
 
 				case FingerprintAlgorithm::SHA384:
+				{
 					hashFunction = EVP_sha384();
 					break;
+				}
 
 				case FingerprintAlgorithm::SHA512:
+				{
 					hashFunction = EVP_sha512();
 					break;
+				}
 
 				default:
+				{
 					MS_THROW_ERROR("unknown algorithm");
+				}
 			}
 
 			ret = X509_digest(DtlsTransport::certificate, hashFunction, binaryFingerprint, &size);
@@ -679,13 +755,19 @@ namespace RTC
 		// NOTE: At this point SSL_set_bio() was not called so we must free BIOs as
 		// well.
 		if (this->sslBioFromNetwork)
+		{
 			BIO_free(this->sslBioFromNetwork);
+		}
 
 		if (this->sslBioToNetwork)
+		{
 			BIO_free(this->sslBioToNetwork);
+		}
 
 		if (this->ssl)
+		{
 			SSL_free(this->ssl);
+		}
 
 		// NOTE: If this is not catched by the caller the program will abort, but
 		// this should never happen.
@@ -725,17 +807,29 @@ namespace RTC
 		switch (this->state)
 		{
 			case DtlsState::CONNECTING:
+			{
 				state = "connecting";
 				break;
+			}
+
 			case DtlsState::CONNECTED:
+			{
 				state = "connected";
 				break;
+			}
+
 			case DtlsState::FAILED:
+			{
 				state = "failed";
 				break;
+			}
+
 			case DtlsState::CLOSED:
+			{
 				state = "closed";
 				break;
+			}
+
 			default:;
 		}
 
@@ -744,14 +838,22 @@ namespace RTC
 			switch (this->localRole.value())
 			{
 				case Role::AUTO:
+				{
 					role = "auto";
 					break;
+				}
+
 				case Role::SERVER:
+				{
 					role = "server";
 					break;
+				}
+
 				case Role::CLIENT:
+				{
 					role = "client";
 					break;
+				}
 			}
 		}
 
@@ -874,11 +976,15 @@ namespace RTC
 
 		// Check SSL status and return if it is bad/closed.
 		if (!CheckStatus(read))
+		{
 			return;
+		}
 
 		// Set/update the DTLS timeout.
 		if (!SetTimeout())
+		{
 			return;
+		}
 
 		// Application data received. Notify to the listener.
 		if (read > 0)
@@ -925,7 +1031,9 @@ namespace RTC
 			LOG_OPENSSL_ERROR("SSL_write() failed");
 
 			if (!CheckStatus(written))
+			{
 				return;
+			}
 		}
 		else if (written != static_cast<int>(len))
 		{
@@ -949,7 +1057,9 @@ namespace RTC
 		int ret;
 
 		if (!IsRunning())
+		{
 			return;
+		}
 
 		MS_WARN_TAG(dtls, "resetting DTLS transport");
 
@@ -972,7 +1082,9 @@ namespace RTC
 		ret = SSL_clear(this->ssl);
 
 		if (ret == 0)
+		{
 			ERR_clear_error();
+		}
 	}
 
 	inline bool DtlsTransport::CheckStatus(int returnCode)
@@ -987,40 +1099,60 @@ namespace RTC
 		switch (err)
 		{
 			case SSL_ERROR_NONE:
+			{
 				break;
+			}
 
 			case SSL_ERROR_SSL:
+			{
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SSL");
 				break;
+			}
 
 			case SSL_ERROR_WANT_READ:
+			{
 				break;
+			}
 
 			case SSL_ERROR_WANT_WRITE:
+			{
 				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_WRITE");
 				break;
+			}
 
 			case SSL_ERROR_WANT_X509_LOOKUP:
+			{
 				MS_DEBUG_TAG(dtls, "SSL status: SSL_ERROR_WANT_X509_LOOKUP");
 				break;
+			}
 
 			case SSL_ERROR_SYSCALL:
+			{
 				LOG_OPENSSL_ERROR("SSL status: SSL_ERROR_SYSCALL");
 				break;
+			}
 
 			case SSL_ERROR_ZERO_RETURN:
+			{
 				break;
+			}
 
 			case SSL_ERROR_WANT_CONNECT:
+			{
 				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_CONNECT");
 				break;
+			}
 
 			case SSL_ERROR_WANT_ACCEPT:
+			{
 				MS_WARN_TAG(dtls, "SSL status: SSL_ERROR_WANT_ACCEPT");
 				break;
+			}
 
 			default:
+			{
 				MS_WARN_TAG(dtls, "SSL status: unknown error");
+			}
 		}
 
 		// Check if the handshake (or re-handshake) has been done right now.
@@ -1034,7 +1166,9 @@ namespace RTC
 
 			// Process the handshake just once (ignore if DTLS renegotiation).
 			if (!wasHandshakeDone && this->remoteFingerprint.has_value())
+			{
 				return ProcessHandshake();
+			}
 
 			return true;
 		}
@@ -1187,24 +1321,34 @@ namespace RTC
 		switch (this->remoteFingerprint->algorithm)
 		{
 			case FingerprintAlgorithm::SHA1:
+			{
 				hashFunction = EVP_sha1();
 				break;
+			}
 
 			case FingerprintAlgorithm::SHA224:
+			{
 				hashFunction = EVP_sha224();
 				break;
+			}
 
 			case FingerprintAlgorithm::SHA256:
+			{
 				hashFunction = EVP_sha256();
 				break;
+			}
 
 			case FingerprintAlgorithm::SHA384:
+			{
 				hashFunction = EVP_sha384();
 				break;
+			}
 
 			case FingerprintAlgorithm::SHA512:
+			{
 				hashFunction = EVP_sha512();
 				break;
+			}
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.
@@ -1400,7 +1544,9 @@ namespace RTC
 		SRTP_PROTECTION_PROFILE* sslSrtpCryptoSuite = SSL_get_selected_srtp_profile(this->ssl);
 
 		if (!sslSrtpCryptoSuite)
+		{
 			return negotiatedSrtpCryptoSuite;
+		}
 
 		// Get the negotiated SRTP crypto suite.
 		for (auto& srtpCryptoSuite : DtlsTransport::srtpCryptoSuites)
@@ -1429,11 +1575,17 @@ namespace RTC
 		const char* role;
 
 		if ((w & SSL_ST_CONNECT) != 0)
+		{
 			role = "client";
+		}
 		else if ((w & SSL_ST_ACCEPT) != 0)
+		{
 			role = "server";
+		}
 		else
+		{
 			role = "undefined";
+		}
 
 		if ((where & SSL_CB_LOOP) != 0)
 		{
@@ -1446,15 +1598,21 @@ namespace RTC
 			switch (*SSL_alert_type_string(ret))
 			{
 				case 'W':
+				{
 					alertType = "warning";
 					break;
+				}
 
 				case 'F':
+				{
 					alertType = "fatal";
 					break;
+				}
 
 				default:
+				{
 					alertType = "undefined";
+				}
 			}
 
 			if ((where & SSL_CB_READ) != 0)
@@ -1473,9 +1631,13 @@ namespace RTC
 		else if ((where & SSL_CB_EXIT) != 0)
 		{
 			if (ret == 0)
+			{
 				MS_DEBUG_TAG(dtls, "[role:%s, failed:'%s']", role, SSL_state_string_long(this->ssl));
+			}
 			else if (ret < 0)
+			{
 				MS_DEBUG_TAG(dtls, "role: %s, waiting:'%s']", role, SSL_state_string_long(this->ssl));
+			}
 		}
 		else if ((where & SSL_CB_HANDSHAKE_START) != 0)
 		{
