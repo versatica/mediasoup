@@ -1033,7 +1033,7 @@ namespace RTC
 			this->timer->Stop();
 
 			// Process the handshake just once (ignore if DTLS renegotiation).
-			if (!wasHandshakeDone)
+			if (!wasHandshakeDone && this->remoteFingerprint.has_value())
 				return ProcessHandshake();
 
 			return true;
