@@ -49,11 +49,11 @@ jobs:
 
       # NOTE: Add --force since otherwise `npm ci` fails in Node 16 because
       # @octokit/auth-token dev dependency requires Node >= 16.
-      - name: Install
+      - name: npm ci
         run: npm ci --force
 
-      - name: Lint
+      - name: npm run lint:node
         run: npm run lint:node
 
-      - name: Test
+      - name: npm run test:node
         run: npm run test:node
