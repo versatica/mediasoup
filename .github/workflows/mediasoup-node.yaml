@@ -27,7 +27,7 @@ jobs:
     runs-on: ${{ matrix.ci.os }}
 
     env:
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout
@@ -47,8 +47,13 @@ jobs:
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 
-      # NOTE: Add --force since otherwise `npm ci` fails in Node 26 because
+      # NOTE: Add --force since otherwise `npm ci` fails in Node 16 because
       # @octokit/auth-token dev dependency requires Node >= 16.
-      - run: npm ci --force
-      - run: npm run lint:node
-      - run: npm run test:node
+      - name: Install
+        run: npm ci --force
+
+      - name: Lint
+        run: npm run lint:node
+
+      - name: Test
+        run: npm run test:node

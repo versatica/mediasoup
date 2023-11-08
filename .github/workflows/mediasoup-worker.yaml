@@ -44,7 +44,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout
@@ -73,7 +73,10 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      - run: npm run worker:build
-      - run: npm run test:worker
+      - name: Build
+        run: npm run worker:build
+
+      - name: Test
+        run: npm run test:worker
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'

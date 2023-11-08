@@ -23,6 +23,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      KEEP_BUILD_ARTIFACTS: '1'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -36,21 +39,10 @@ jobs:
           key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
 
       - name: cargo clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-targets -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: cargo test
-        uses: actions-rs/cargo@v1
-        env:
-          KEEP_BUILD_ARTIFACTS: '1'
-        with:
-          command: test
-          args: --verbose
+        run: cargo test --verbose
