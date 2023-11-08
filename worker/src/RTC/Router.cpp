@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Router.hpp"
+#include "DepLibUring.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -650,6 +651,11 @@ namespace RTC
 			// Clone only happens if needed.
 			std::shared_ptr<RTC::RtpPacket> sharedPacket;
 
+#ifdef MS_LIBURING_ENABLED
+			// Activate liburing usage.
+			DepLibUring::liburing->SetActive();
+#endif
+
 			for (auto* consumer : consumers)
 			{
 				// Update MID RTP extension value.
@@ -660,6 +666,11 @@ namespace RTC
 
 				consumer->SendRtpPacket(packet, sharedPacket);
 			}
+
+#ifdef MS_LIBURING_ENABLED
+			// Submit all prepared submission entries.
+			DepLibUring::liburing->Submit();
+#endif
 		}
 
 		auto it = this->mapProducerRtpObservers.find(producer);

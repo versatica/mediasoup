@@ -257,6 +257,26 @@ if host_machine.system() == 'windows'
   ]
 endif
 
+if host_machine.system() == 'linux'
+  kernel_version = run_command('uname', '-r').stdout().strip()
+
+  # Enable liburing for kernel versions greather than or equal to 6.
+  if kernel_version[0].to_int() >= 6
+    liburing_proj = subproject('liburing', default_options: ['default_library=static'], required: true)
+    liburing = liburing_proj.get_variable('uring')
+
+    dependencies += [liburing]
+
+    common_sources += [
+      'src/DepLibUring.cpp',
+      ]
+
+    cpp_args += [
+      '-DMS_LIBURING_ENABLED',
+      ]
+  endif
+endif
+
 libmediasoup_worker = library(
   'libmediasoup-worker',
   name_prefix: '',

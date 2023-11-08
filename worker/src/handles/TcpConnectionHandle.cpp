@@ -3,6 +3,7 @@
 
 #include "handles/TcpConnectionHandle.hpp"
 #include "DepLibUV.hpp"
+#include "DepLibUring.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -232,6 +233,26 @@ void TcpConnectionHandle::Write(
 		return;
 	}
 
+#ifdef MS_LIBURING_ENABLED
+	{
+		if (!DepLibUring::liburing->IsActive())
+		{
+			goto write_libuv;
+		}
+
+		auto prepared = DepLibUring::liburing->PrepareWrite(this->fd, data1, len1, data2, len2, cb);
+
+		if (!prepared)
+		{
+			// Cannot write via liburing, fallback to libuv.
+			goto write_libuv;
+		}
+
+		return;
+	}
+#endif
+
+write_libuv:
 	const size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
 	int written{ 0 };
@@ -353,6 +374,15 @@ bool TcpConnectionHandle::SetPeerAddress()
 
 	Utils::IP::GetAddressInfo(
 	  reinterpret_cast<const struct sockaddr*>(&this->peerAddr), family, this->peerIp, this->peerPort);
+
+	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+	if (err != 0)
+	{
+		MS_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+
+		return false;
+	}
 
 	return true;
 }

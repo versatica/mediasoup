@@ -143,6 +143,7 @@ private:
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
+	uv_os_fd_t fd{ 0u };
 	bool closed{ false };
 	size_t recvBytes{ 0u };
 	size_t sentBytes{ 0u };

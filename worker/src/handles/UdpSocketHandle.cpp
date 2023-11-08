@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "handles/UdpSocketHandle.hpp"
+#include "DepLibUring.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -157,6 +158,26 @@ void UdpSocketHandle::Send(
 		return;
 	}
 
+#ifdef MS_LIBURING_ENABLED
+	{
+		if (!DepLibUring::liburing->IsActive())
+		{
+			goto send_libuv;
+		}
+
+		auto prepared = DepLibUring::liburing->PrepareSend(this->fd, data, len, addr, cb);
+
+		if (!prepared)
+		{
+			// Cannot send via liburing, fallback to libuv.
+			goto send_libuv;
+		}
+
+		return;
+	}
+#endif
+
+send_libuv:
 	// First try uv_udp_try_send(). In case it can not directly send the datagram
 	// then build a uv_req_t and use uv_udp_send().
 
@@ -321,6 +342,13 @@ bool UdpSocketHandle::SetLocalAddress()
 
 	Utils::IP::GetAddressInfo(
 	  reinterpret_cast<const struct sockaddr*>(&this->localAddr), family, this->localIp, this->localPort);
+
+	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+	if (err != 0)
+	{
+		MS_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+	}
 
 	return true;
 }
