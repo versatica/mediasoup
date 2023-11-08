@@ -32,7 +32,7 @@ jobs:
             cc: cl
             cxx: cl
         node:
-          - 18
+          - 20
 
     runs-on: ${{ matrix.build.os }}
 
@@ -51,10 +51,16 @@ jobs:
           node-version: ${{ matrix.node }}
 
       # We need to install some NPM production deps for npm-scripts.mjs to work.
-      - run: npm ci --ignore-scripts --omit=dev
-      - run: npm run worker:build
+      - name: npm ci
+        run: npm ci --ignore-scripts --omit=dev
+
+      - name: npm run worker:build
+        run: npm run worker:build
+
       # Publish prebuild binaries on tag.
-      - run: npm run worker:prebuild
+      - name: npm run worker:prebuild
+        run: npm run worker:prebuild
+
       - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v1
         with:
