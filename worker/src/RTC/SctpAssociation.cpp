@@ -341,30 +341,27 @@ namespace RTC
 		}
 	}
 
-	void SctpAssociation::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::SctpParameters::SctpParameters> SctpAssociation::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add port (always 5000).
-		jsonObject["port"] = 5000;
-
-		// Add OS.
-		jsonObject["OS"] = this->os;
-
-		// Add MIS.
-		jsonObject["MIS"] = this->mis;
-
-		// Add maxMessageSize.
-		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
-
-		// Add sendBufferSize.
-		jsonObject["sendBufferSize"] = this->sctpSendBufferSize;
-
-		// Add sctpBufferedAmountLowThreshold.
-		jsonObject["sctpBufferedAmount"] = this->sctpBufferedAmount;
-
-		// Add isDataChannel.
-		jsonObject["isDataChannel"] = this->isDataChannel;
+		return FBS::SctpParameters::CreateSctpParameters(
+		  builder,
+		  // Add port (always 5000).
+		  5000,
+		  // Add OS.
+		  this->os,
+		  // Add MIS.
+		  this->mis,
+		  // Add maxMessageSize.
+		  this->maxSctpMessageSize,
+		  // Add sendBufferSize.
+		  this->sctpSendBufferSize,
+		  // Add sctpBufferedAmountLowThreshold.
+		  this->sctpBufferedAmount,
+		  // Add isDataChannel.
+		  this->isDataChannel);
 	}
 
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
@@ -379,7 +376,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -691,7 +688,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
 
-			this->listener->OnSctpAssociationMessageReceived(this, streamId, ppid, data, len);
+			this->listener->OnSctpAssociationMessageReceived(this, streamId, data, len, ppid);
 		}
 		// If end of message and there is buffered data, append data and notify buffer.
 		else if (eor && this->messageBufferLen != 0)
@@ -702,7 +699,7 @@ namespace RTC
 			MS_DEBUG_DEV("notifying listener [eor:1, buffer len:%zu]", this->messageBufferLen);
 
 			this->listener->OnSctpAssociationMessageReceived(
-			  this, streamId, ppid, this->messageBuffer, this->messageBufferLen);
+			  this, streamId, this->messageBuffer, this->messageBufferLen, ppid);
 
 			this->messageBufferLen = 0;
 		}

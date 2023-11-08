@@ -3,15 +3,14 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
+#include "FBS/rtpPacket.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtcLogger.hpp"
+#include <flatbuffers/flatbuffers.h>
 #include <absl/container/flat_hash_map.h>
 #include <array>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -147,8 +146,7 @@ namespace RTC
 		~RtpPacket();
 
 		void Dump() const;
-
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::RtpPacket::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		const uint8_t* GetData() const
 		{

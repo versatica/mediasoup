@@ -150,8 +150,7 @@ fn dump_succeeds() {
             dump.channel_message_handlers,
             ChannelMessageHandlers {
                 channel_request_handlers: vec![],
-                payload_channel_request_handlers: vec![],
-                payload_channel_notification_handlers: vec![]
+                channel_notification_handlers: vec![]
             }
         );
     });

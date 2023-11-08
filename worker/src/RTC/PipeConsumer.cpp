@@ -1,11 +1,12 @@
+#include "FBS/consumer.h"
 #define MS_CLASS "RTC::PipeConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/PipeConsumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/PipeConsumer.hpp"
 
 namespace RTC
 {
@@ -16,7 +17,7 @@ namespace RTC
 	  const std::string& id,
 	  const std::string& producerId,
 	  RTC::Consumer::Listener* listener,
-	  json& data)
+	  const FBS::Transport::ConsumeRequest* data)
 	  : RTC::Consumer::Consumer(shared, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
@@ -37,8 +38,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->RegisterHandler(
 		  this->id,
 		  /*channelRequestHandler*/ this,
-		  /*payloadChannelRequestHandler*/ nullptr,
-		  /*payloadChannelNotificationHandler*/ nullptr);
+		  /*channelNotificationHandler*/ nullptr);
 	}
 
 	PipeConsumer::~PipeConsumer()
@@ -56,61 +56,72 @@ namespace RTC
 		this->mapSsrcRtpStream.clear();
 	}
 
-	void PipeConsumer::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::DumpResponse> PipeConsumer::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Call the parent method.
-		RTC::Consumer::FillJson(jsonObject);
+		auto base = RTC::Consumer::FillBuffer(builder);
 
 		// Add rtpStreams.
-		jsonObject["rtpStreams"] = json::array();
-		auto jsonRtpStreamsIt    = jsonObject.find("rtpStreams");
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
+		rtpStreams.reserve(this->rtpStreams.size());
 
-		for (auto* rtpStream : this->rtpStreams)
+		for (const auto* rtpStream : this->rtpStreams)
 		{
-			jsonRtpStreamsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonRtpStreamsIt)[jsonRtpStreamsIt->size() - 1];
-
-			rtpStream->FillJson(jsonEntry);
+			rtpStreams.emplace_back(rtpStream->FillBuffer(builder));
 		}
+
+		auto dump = FBS::Consumer::CreateConsumerDumpDirect(builder, base, &rtpStreams);
+
+		return FBS::Consumer::CreateDumpResponse(builder, dump);
 	}
 
-	void PipeConsumer::FillJsonStats(json& jsonArray) const
+	flatbuffers::Offset<FBS::Consumer::GetStatsResponse> PipeConsumer::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
+
+		std::vector<flatbuffers::Offset<FBS::RtpStream::Stats>> rtpStreams;
+		rtpStreams.reserve(this->rtpStreams.size());
 
 		// Add stats of our send streams.
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			jsonArray.emplace_back(json::value_t::object);
-
-			auto& jsonEntry = jsonArray[jsonArray.size() - 1];
-
-			rtpStream->FillJsonStats(jsonEntry);
+			rtpStreams.emplace_back(rtpStream->FillBufferStats(builder));
 		}
+
+		return FBS::Consumer::CreateGetStatsResponseDirect(builder, &rtpStreams);
 	}
 
-	void PipeConsumer::FillJsonScore(json& jsonObject) const
+	flatbuffers::Offset<FBS::Consumer::ConsumerScore> PipeConsumer::FillBufferScore(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		MS_ASSERT(this->producerRtpStreamScores, "producerRtpStreamScores not set");
 
 		// NOTE: Hardcoded values in PipeTransport.
-		jsonObject["score"]          = 10;
-		jsonObject["producerScore"]  = 10;
-		jsonObject["producerScores"] = *this->producerRtpStreamScores;
+		return FBS::Consumer::CreateConsumerScoreDirect(builder, 10, 10, this->producerRtpStreamScores);
 	}
 
 	void PipeConsumer::HandleRequest(Channel::ChannelRequest* request)
 	{
 		MS_TRACE();
 
-		switch (request->methodId)
+		switch (request->method)
 		{
-			case Channel::ChannelRequest::MethodId::CONSUMER_REQUEST_KEY_FRAME:
+			case Channel::ChannelRequest::Method::CONSUMER_DUMP:
+			{
+				auto dumpOffset = FillBuffer(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::Consumer_DumpResponse, dumpOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
 					RequestKeyFrame();
@@ -120,11 +131,14 @@ namespace RTC
 				break;
 			}
 
-			case Channel::ChannelRequest::MethodId::CONSUMER_SET_PREFERRED_LAYERS:
+			case Channel::ChannelRequest::Method::CONSUMER_SET_PREFERRED_LAYERS:
 			{
-				// Do nothing.
+				// Accept with empty preferred layers object.
 
-				request->Accept();
+				auto responseOffset =
+				  FBS::Consumer::CreateSetPreferredLayersResponse(request->GetBufferBuilder());
+
+				request->Accept(FBS::Response::Body::Consumer_SetPreferredLayersResponse, responseOffset);
 
 				break;
 			}

@@ -1,6 +1,7 @@
 #ifndef MS_RTC_SIMULCAST_CONSUMER_HPP
 #define MS_RTC_SIMULCAST_CONSUMER_HPP
 
+#include "FBS/consumer.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
@@ -16,13 +17,16 @@ namespace RTC
 		  const std::string& id,
 		  const std::string& producerId,
 		  RTC::Consumer::Listener* listener,
-		  json& data);
+		  const FBS::Transport::ConsumeRequest* data);
 		~SimulcastConsumer() override;
 
 	public:
-		void FillJson(json& jsonObject) const override;
-		void FillJsonStats(json& jsonArray) const override;
-		void FillJsonScore(json& jsonObject) const override;
+		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
+		flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) override;
+		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
+		  flatbuffers::FlatBufferBuilder& builder) const override;
 		RTC::Consumer::Layers GetPreferredLayers() const override
 		{
 			RTC::Consumer::Layers layers;

@@ -28,6 +28,42 @@ namespace RTC
 		}
 	}
 
+	FBS::SrtpParameters::SrtpCryptoSuite SrtpSession::CryptoSuiteToFbs(CryptoSuite cryptoSuite)
+	{
+		switch (cryptoSuite)
+		{
+			case SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM;
+
+			case SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_128_GCM;
+
+			case SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_80;
+
+			case SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32;
+		}
+	}
+
+	SrtpSession::CryptoSuite SrtpSession::CryptoSuiteFromFbs(FBS::SrtpParameters::SrtpCryptoSuite cryptoSuite)
+	{
+		switch (cryptoSuite)
+		{
+			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM:
+				return SrtpSession::CryptoSuite::AEAD_AES_256_GCM;
+
+			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_128_GCM:
+				return SrtpSession::CryptoSuite::AEAD_AES_128_GCM;
+
+			case FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_80:
+				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80;
+
+			case FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32:
+				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32;
+		}
+	}
+
 	void SrtpSession::OnSrtpEvent(srtp_event_data_t* data)
 	{
 		MS_TRACE();

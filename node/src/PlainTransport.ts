@@ -1,19 +1,49 @@
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import {
+	parseSctpState,
+	BaseTransportDump,
+	BaseTransportStats,
+	parseTuple,
+	parseBaseTransportDump,
+	parseBaseTransportStats,
+	parseTransportTraceEventData,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportTuple,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions,
 	SctpState
 } from './Transport';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { SrtpParameters, SrtpCryptoSuite } from './SrtpParameters';
-import { AppData } from './types';
+import {
+	parseSrtpParameters,
+	serializeSrtpParameters,
+	SrtpParameters,
+	SrtpCryptoSuite
+} from './SrtpParameters';
+import { AppData, Either } from './types';
+import { Event, Notification } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsPlainTransport from './fbs/plain-transport';
 
-export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
+type PlainTransportListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfo: TransportListenInfo;
+
+	/**
+	 * Optional listening info for RTCP.
+	 */
+	rtcpListenInfo?: TransportListenInfo;
+};
+
+type PlainTransportListenIp =
 {
 	/**
 	 * Listening IP address.
@@ -25,7 +55,12 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	 * range.
 	 */
 	port?: number;
+};
 
+type PlainTransportListen = Either<PlainTransportListenInfo, PlainTransportListenIp>;
+
+export type PlainTransportOptions<PlainTransportAppData extends AppData = AppData> =
+{
 	/**
 	 * Use RTCP-mux (RTP and RTCP in the same port). Default true.
 	 */
@@ -77,33 +112,11 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	 * Custom application data.
 	 */
 	appData?: PlainTransportAppData;
-};
+} & PlainTransportListen;
 
-export type PlainTransportStat =
+export type PlainTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	sctpState?: SctpState;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
-	// PlainTransport specific.
 	rtcpMux: boolean;
 	comedia: boolean;
 	tuple: TransportTuple;
@@ -138,6 +151,15 @@ export type PlainTransportData =
 	rtcpTuple?: TransportTuple;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	srtpParameters?: SrtpParameters;
+};
+
+type PlainTransportDump = BaseTransportDump &
+{
+	rtcpMux: boolean;
+	comedia: boolean;
+	tuple: TransportTuple;
+	rtcpTuple?: TransportTuple;
 	srtpParameters?: SrtpParameters;
 };
 
@@ -256,6 +278,28 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Dump Transport.
+	 */
+	async dump(): Promise<PlainTransportDump>
+	{
+		logger.debug('dump()');
+
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_DUMP,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPlainTransport.DumpResponse();
+
+		response.body(data);
+
+		return parsePlainTransportDumpResponse(data);
+	}
+
+	/**
 	 * Get PlainTransport stats.
 	 *
 	 * @override
@@ -264,7 +308,19 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.transportId);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_GET_STATS,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPlainTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -289,34 +345,58 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port, rtcpPort, srtpParameters };
+		const requestOffset = createConnectRequest({
+			builder : this.channel.bufferBuilder,
+			ip,
+			port,
+			rtcpPort,
+			srtpParameters
+		});
 
-		const data =
-			await this.channel.request('transport.connect', this.internal.transportId, reqData);
+		// Wait for response.
+		const response = await this.channel.request(
+			FbsRequest.Method.PLAINTRANSPORT_CONNECT,
+			FbsRequest.Body.PlainTransport_ConnectRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPlainTransport.ConnectResponse();
+
+		response.body(data);
 
 		// Update data.
-		if (data.tuple)
+		if (data.tuple())
 		{
-			this.#data.tuple = data.tuple;
+			this.#data.tuple = parseTuple(data.tuple()!);
 		}
 
-		if (data.rtcpTuple)
+		if (data.rtcpTuple())
 		{
-			this.#data.rtcpTuple = data.rtcpTuple;
+			this.#data.rtcpTuple = parseTuple(data.rtcpTuple()!);
 		}
 
-		this.#data.srtpParameters = data.srtpParameters;
+		if (data.srtpParameters())
+		{
+			this.#data.srtpParameters = parseSrtpParameters(
+				data.srtpParameters()!);
+		}
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'tuple':
+				case Event.PLAINTRANSPORT_TUPLE:
 				{
-					const tuple = data.tuple as TransportTuple;
+					const notification = new FbsPlainTransport.TupleNotification();
+
+					data!.body(notification);
+
+					const tuple = parseTuple(notification.tuple()!);
 
 					this.#data.tuple = tuple;
 
@@ -328,9 +408,13 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 					break;
 				}
 
-				case 'rtcptuple':
+				case Event.PLAINTRANSPORT_RTCP_TUPLE:
 				{
-					const rtcpTuple = data.rtcpTuple as TransportTuple;
+					const notification = new FbsPlainTransport.RtcpTupleNotification();
+
+					data!.body(notification);
+
+					const rtcpTuple = parseTuple(notification.tuple()!);
 
 					this.#data.rtcpTuple = rtcpTuple;
 
@@ -342,9 +426,13 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 					break;
 				}
 
-				case 'sctpstatechange':
+				case Event.TRANSPORT_SCTP_STATE_CHANGE:
 				{
-					const sctpState = data.sctpState as SctpState;
+					const notification = new FbsTransport.SctpStateChangeNotification();
+
+					data!.body(notification);
+
+					const sctpState = parseSctpState(notification.sctpState());
 
 					this.#data.sctpState = sctpState;
 
@@ -356,9 +444,13 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 					break;
 				}
 
-				case 'trace':
+				case Event.TRANSPORT_TRACE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
@@ -375,4 +467,110 @@ export class PlainTransport<PlainTransportAppData extends AppData = AppData>
 			}
 		});
 	}
+}
+
+export function parsePlainTransportDumpResponse(
+	binary: FbsPlainTransport.DumpResponse
+): PlainTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const baseTransportDump = parseBaseTransportDump(binary.base()!);
+	// Retrieve RTP Tuple.
+	const tuple = parseTuple(binary.tuple()!);
+
+	// Retrieve RTCP Tuple.
+	let rtcpTuple: TransportTuple | undefined;
+
+	if (binary.rtcpTuple())
+	{
+		rtcpTuple = parseTuple(binary.rtcpTuple()!);
+	}
+
+	// Retrieve SRTP Parameters.
+	let srtpParameters: SrtpParameters | undefined;
+
+	if (binary.srtpParameters())
+	{
+		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
+	}
+
+	return {
+		...baseTransportDump,
+		rtcpMux        : binary.rtcpMux(),
+		comedia        : binary.comedia(),
+		tuple          : tuple,
+		rtcpTuple      : rtcpTuple,
+		srtpParameters : srtpParameters
+	};
+}
+
+function parseGetStatsResponse(
+	binary: FbsPlainTransport.GetStatsResponse
+):PlainTransportStat
+{
+	const base = parseBaseTransportStats(binary.base()!);
+
+	return {
+		...base,
+		type      : 'plain-rtp-transport',
+		rtcpMux   : binary.rtcpMux(),
+		comedia   : binary.comedia(),
+		tuple     : parseTuple(binary.tuple()!),
+		rtcpTuple : binary.rtcpTuple() ?
+			parseTuple(binary.rtcpTuple()!) :
+			undefined
+	};
+}
+
+function createConnectRequest(
+	{
+		builder,
+		ip,
+		port,
+		rtcpPort,
+		srtpParameters
+	}:
+	{
+		builder : flatbuffers.Builder;
+		ip?: string;
+		port?: number;
+		rtcpPort?: number;
+		srtpParameters?: SrtpParameters;
+	}
+): number
+{
+	let ipOffset = 0;
+	let srtpParametersOffset = 0;
+
+	if (ip)
+	{
+		ipOffset = builder.createString(ip);
+	}
+
+	// Serialize SrtpParameters.
+	if (srtpParameters)
+	{
+		srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
+	}
+
+	// Create PlainTransportConnectData.
+	FbsPlainTransport.ConnectRequest.startConnectRequest(builder);
+	FbsPlainTransport.ConnectRequest.addIp(builder, ipOffset);
+
+	if (typeof port === 'number')
+	{
+		FbsPlainTransport.ConnectRequest.addPort(builder, port);
+	}
+	if (typeof rtcpPort === 'number')
+	{
+		FbsPlainTransport.ConnectRequest.addRtcpPort(builder, rtcpPort);
+	}
+	if (srtpParameters)
+	{
+		FbsPlainTransport.ConnectRequest.addSrtpParameters(
+			builder, srtpParametersOffset
+		);
+	}
+
+	return FbsPlainTransport.ConnectRequest.endConnectRequest(builder);
 }

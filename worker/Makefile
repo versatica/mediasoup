@@ -77,6 +77,7 @@ endif
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
+	flatc \
 	xcode \
 	lint \
 	format \
@@ -195,15 +196,18 @@ clean-all: clean-subprojects
 update-wrap-file: meson-ninja
 	$(MESON) subprojects update --reset $(SUBPROJECT)
 
-mediasoup-worker: setup
+mediasoup-worker: setup flatc
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker
 endif
 
-libmediasoup-worker: setup
+libmediasoup-worker: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
+
+flatc: setup
+	$(MESON) compile -C $(BUILD_DIR) flatbuffers-generator
 
 xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
@@ -214,7 +218,7 @@ lint:
 format:
 	$(GULP) --gulpfile ./scripts/gulpfile.mjs format:worker
 
-test: setup
+test: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test
 ifeq ($(OS),Windows_NT)

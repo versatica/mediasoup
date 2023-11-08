@@ -317,63 +317,60 @@ namespace RTC
 		MS_DUMP("</RtpPacket>");
 	}
 
-	void RtpPacket::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpPacket::Dump> RtpPacket::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
-		MS_TRACE();
-
-		// Add payloadType.
-		jsonObject["payloadType"] = GetPayloadType();
-
-		// Add sequenceNumber.
-		jsonObject["sequenceNumber"] = GetSequenceNumber();
-
-		// Add timestamp.
-		jsonObject["timestamp"] = GetTimestamp();
-
-		// Add marker.
-		jsonObject["marker"] = HasMarker();
-
-		// Add ssrc.
-		jsonObject["ssrc"] = GetSsrc();
-
-		// Add isKeyFrame.
-		jsonObject["isKeyFrame"] = IsKeyFrame();
-
-		// Add size.
-		jsonObject["size"] = GetSize();
-
-		// Add payloadSize.
-		jsonObject["payloadSize"] = GetPayloadLength();
-
-		// Add spatialLayer.
-		jsonObject["spatialLayer"] = GetSpatialLayer();
-
-		// Add temporalLayer.
-		jsonObject["temporalLayer"] = GetTemporalLayer();
-
 		// Add mid.
 		std::string mid;
 
-		if (this->midExtensionId != 0u && ReadMid(mid))
-			jsonObject["mid"] = mid;
+		if (this->midExtensionId != 0u)
+		{
+			ReadMid(mid);
+		}
 
 		// Add rid.
 		std::string rid;
 
-		if (this->ridExtensionId != 0u && ReadRid(rid))
-			jsonObject["rid"] = rid;
+		if (this->ridExtensionId != 0u)
+		{
+			ReadRid(rid);
+		}
 
 		// Add rrid.
 		std::string rrid;
 
-		if (this->rridExtensionId != 0u && ReadRid(rrid))
-			jsonObject["rrid"] = rrid;
+		if (this->rridExtensionId != 0u)
+		{
+			ReadRid(rrid);
+		}
 
 		// Add wideSequenceNumber.
 		uint16_t wideSequenceNumber;
+		bool wideSequenceNumberSet = false;
 
-		if (this->transportWideCc01ExtensionId != 0u && ReadTransportWideCc01(wideSequenceNumber))
-			jsonObject["wideSequenceNumber"] = wideSequenceNumber;
+		if (this->transportWideCc01ExtensionId != 0u)
+		{
+			wideSequenceNumberSet = true;
+			ReadTransportWideCc01(wideSequenceNumber);
+		}
+
+		return FBS::RtpPacket::CreateDumpDirect(
+		  builder,
+		  this->GetPayloadType(),
+		  this->GetSequenceNumber(),
+		  this->GetTimestamp(),
+		  this->HasMarker(),
+		  this->GetSsrc(),
+		  this->IsKeyFrame(),
+		  this->GetSize(),
+		  this->GetPayloadLength(),
+		  this->GetSpatialLayer(),
+		  this->GetTemporalLayer(),
+		  mid.empty() ? nullptr : mid.c_str(),
+		  rid.empty() ? nullptr : rid.c_str(),
+		  rrid.empty() ? nullptr : rrid.c_str(),
+		  wideSequenceNumberSet ? flatbuffers::Optional<uint16_t>(wideSequenceNumber)
+		                        : flatbuffers::nullopt);
 	}
 
 	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)

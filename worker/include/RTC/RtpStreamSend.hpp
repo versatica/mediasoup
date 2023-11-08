@@ -28,7 +28,8 @@ namespace RTC
 		  RTC::RtpStreamSend::Listener* listener, RTC::RtpStream::Params& params, std::string& mid);
 		~RtpStreamSend() override;
 
-		void FillJsonStats(json& jsonObject) override;
+		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
 		bool ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);

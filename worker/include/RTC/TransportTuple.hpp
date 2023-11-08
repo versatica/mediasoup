@@ -3,12 +3,11 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
+#include "FBS/transport.h"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffers.h>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
@@ -23,6 +22,9 @@ namespace RTC
 			UDP = 1,
 			TCP
 		};
+
+		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
+		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
@@ -63,7 +65,7 @@ namespace RTC
 				return this->tcpConnection->IsClosed();
 		}
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		void Dump() const;
 

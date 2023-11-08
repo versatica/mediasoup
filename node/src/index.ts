@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { workerBin, Worker, WorkerSettings } from './Worker';
@@ -5,7 +7,6 @@ import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
-import { AppData } from './types';
 
 /**
  * Expose all types.
@@ -15,14 +16,14 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-export const version = '__MEDIASOUP_VERSION__';
+export const { version } = JSON.parse(fs.readFileSync(
+	path.join(__dirname, '..', '..', 'package.json'), { encoding: 'utf-8' }
+));
 
 /**
  * Expose parseScalabilityMode() function.
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
-
-const logger = new Logger();
 
 export type ObserverEvents =
 {
@@ -41,10 +42,12 @@ export { observer };
  */
 export { workerBin };
 
+const logger = new Logger();
+
 /**
  * Create a Worker.
  */
-export async function createWorker<WorkerAppData extends AppData = AppData>(
+export async function createWorker<WorkerAppData extends types.AppData = types.AppData>(
 	{
 		logLevel = 'error',
 		logTags,

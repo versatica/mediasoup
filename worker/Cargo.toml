@@ -9,6 +9,7 @@ documentation = "https://docs.rs/mediasoup-sys"
 repository = "https://github.com/versatica/mediasoup/tree/v3/worker"
 include = [
     "/deps/libwebrtc",
+    "/fbs",
     "/fuzzer/include",
     "/fuzzer/src",
     "/include",
@@ -28,3 +29,14 @@ include = [
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
+
+[build-dependencies]
+planus-codegen = "0.4.0"
+planus-translation = "0.4.0"
+
+[dependencies]
+planus = "0.4.0"
+
+[dependencies.serde]
+features = ["derive"]
+version = "1.0.190"

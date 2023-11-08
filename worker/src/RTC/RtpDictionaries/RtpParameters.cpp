@@ -11,34 +11,25 @@ namespace RTC
 {
 	/* Class variables. */
 
-	// clang-format off
-	absl::flat_hash_map<std::string, RtpParameters::Type> RtpParameters::string2Type =
-	{
-		{ "none",      RtpParameters::Type::NONE      },
-		{ "simple",    RtpParameters::Type::SIMPLE    },
-		{ "simulcast", RtpParameters::Type::SIMULCAST },
-		{ "svc",       RtpParameters::Type::SVC       },
-		{ "pipe",      RtpParameters::Type::PIPE      }
-	};
-	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String =
-	{
-		{ RtpParameters::Type::NONE,      "none"      },
-		{ RtpParameters::Type::SIMPLE,    "simple"    },
+	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String = {
+		{ RtpParameters::Type::SIMPLE, "simple" },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
-		{ RtpParameters::Type::SVC,       "svc"       },
-		{ RtpParameters::Type::PIPE,      "pipe"      }
+		{ RtpParameters::Type::SVC, "svc" },
+		{ RtpParameters::Type::PIPE, "pipe" }
 	};
 	// clang-format on
 
 	/* Class methods. */
 
-	RtpParameters::Type RtpParameters::GetType(const RtpParameters& rtpParameters)
+	std::optional<RtpParameters::Type> RtpParameters::GetType(const RtpParameters& rtpParameters)
 	{
 		MS_TRACE();
 
+		std::optional<RtpParameters::Type> type;
+
 		if (rtpParameters.encodings.size() == 1)
 		{
-			auto& encoding = rtpParameters.encodings[0];
+			const auto& encoding = rtpParameters.encodings[0];
 			const auto* mediaCodec =
 			  rtpParameters.GetCodecForEncoding(const_cast<RTC::RtpEncodingParameters&>(encoding));
 
@@ -46,53 +37,25 @@ namespace RTC
 			{
 				if (RTC::Codecs::Tools::IsValidTypeForCodec(RtpParameters::Type::SVC, mediaCodec->mimeType))
 				{
-					return RtpParameters::Type::SVC;
+					type.emplace(RtpParameters::Type::SVC);
 				}
 				else if (RTC::Codecs::Tools::IsValidTypeForCodec(
 				           RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
 				{
-					return RtpParameters::Type::SIMULCAST;
-				}
-				else
-				{
-					return RtpParameters::Type::NONE;
+					type.emplace(RtpParameters::Type::SIMULCAST);
 				}
 			}
 			else
 			{
-				return RtpParameters::Type::SIMPLE;
+				type.emplace(RtpParameters::Type::SIMPLE);
 			}
 		}
 		else if (rtpParameters.encodings.size() > 1)
 		{
-			return RtpParameters::Type::SIMULCAST;
+			type.emplace(RtpParameters::Type::SIMULCAST);
 		}
 
-		return RtpParameters::Type::NONE;
-	}
-
-	RtpParameters::Type RtpParameters::GetType(std::string& str)
-	{
-		MS_TRACE();
-
-		auto it = RtpParameters::string2Type.find(str);
-
-		if (it == RtpParameters::string2Type.end())
-			MS_THROW_TYPE_ERROR("invalid RtpParameters type [type:%s]", str.c_str());
-
-		return it->second;
-	}
-
-	RtpParameters::Type RtpParameters::GetType(std::string&& str)
-	{
-		MS_TRACE();
-
-		auto it = RtpParameters::string2Type.find(str);
-
-		if (it == RtpParameters::string2Type.end())
-			MS_THROW_TYPE_ERROR("invalid RtpParameters type [type:%s]", str.c_str());
-
-		return it->second;
+		return type;
 	}
 
 	std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
@@ -102,37 +65,41 @@ namespace RTC
 		return RtpParameters::type2String.at(type);
 	}
 
-	/* Instance methods. */
-
-	RtpParameters::RtpParameters(json& data)
+	FBS::RtpParameters::Type RtpParameters::TypeToFbs(RtpParameters::Type type)
 	{
 		MS_TRACE();
 
-		if (!data.is_object())
-			MS_THROW_TYPE_ERROR("data is not an object");
+		switch (type)
+		{
+			case Type::SIMPLE:
+				return FBS::RtpParameters::Type::SIMPLE;
+			case Type::SIMULCAST:
+				return FBS::RtpParameters::Type::SIMULCAST;
+			case Type::SVC:
+				return FBS::RtpParameters::Type::SVC;
+			case Type::PIPE:
+				return FBS::RtpParameters::Type::PIPE;
+		}
+	}
 
-		auto jsonMidIt              = data.find("mid");
-		auto jsonCodecsIt           = data.find("codecs");
-		auto jsonEncodingsIt        = data.find("encodings");
-		auto jsonHeaderExtensionsIt = data.find("headerExtensions");
-		auto jsonRtcpIt             = data.find("rtcp");
+	/* Instance methods. */
+
+	RtpParameters::RtpParameters(const FBS::RtpParameters::RtpParameters* data)
+	{
+		MS_TRACE();
 
 		// mid is optional.
-		if (jsonMidIt != data.end() && jsonMidIt->is_string())
+		if (data->mid())
 		{
-			this->mid = jsonMidIt->get<std::string>();
+			this->mid = data->mid()->str();
 
 			if (this->mid.empty())
 				MS_THROW_TYPE_ERROR("empty mid");
 		}
 
-		// codecs is mandatory.
-		if (jsonCodecsIt == data.end() || !jsonCodecsIt->is_array())
-			MS_THROW_TYPE_ERROR("missing codecs");
+		this->codecs.reserve(data->codecs()->size());
 
-		this->codecs.reserve(jsonCodecsIt->size());
-
-		for (auto& entry : *jsonCodecsIt)
+		for (const auto* entry : *data->codecs())
 		{
 			// This may throw due the constructor of RTC::RtpCodecParameters.
 			this->codecs.emplace_back(entry);
@@ -141,13 +108,9 @@ namespace RTC
 		if (this->codecs.empty())
 			MS_THROW_TYPE_ERROR("empty codecs");
 
-		// encodings is mandatory.
-		if (jsonEncodingsIt == data.end() || !jsonEncodingsIt->is_array())
-			MS_THROW_TYPE_ERROR("missing encodings");
+		this->encodings.reserve(data->encodings()->size());
 
-		this->encodings.reserve(jsonEncodingsIt->size());
-
-		for (auto& entry : *jsonEncodingsIt)
+		for (const auto* entry : *data->encodings())
 		{
 			// This may throw due the constructor of RTC::RtpEncodingParameters.
 			this->encodings.emplace_back(entry);
@@ -156,86 +119,61 @@ namespace RTC
 		if (this->encodings.empty())
 			MS_THROW_TYPE_ERROR("empty encodings");
 
-		// headerExtensions is optional.
-		if (jsonHeaderExtensionsIt != data.end() && jsonHeaderExtensionsIt->is_array())
-		{
-			this->headerExtensions.reserve(jsonHeaderExtensionsIt->size());
+		this->headerExtensions.reserve(data->headerExtensions()->size());
 
-			for (auto& entry : *jsonHeaderExtensionsIt)
-			{
-				// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
-				this->headerExtensions.emplace_back(entry);
-			}
+		for (const auto* entry : *data->headerExtensions())
+		{
+			// This may throw due the constructor of RTC::RtpHeaderExtensionParameters.
+			this->headerExtensions.emplace_back(entry);
 		}
 
-		// rtcp is optional.
-		if (jsonRtcpIt != data.end() && jsonRtcpIt->is_object())
-		{
-			// This may throw.
-			this->rtcp    = RTC::RtcpParameters(*jsonRtcpIt);
-			this->hasRtcp = true;
-		}
+		// This may throw.
+		this->rtcp = RTC::RtcpParameters(data->rtcp());
 
 		// Validate RTP parameters.
 		ValidateCodecs();
 		ValidateEncodings();
 	}
 
-	void RtpParameters::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtpParameters::RtpParameters> RtpParameters::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add mid.
-		if (!this->mid.empty())
-			jsonObject["mid"] = this->mid;
-
 		// Add codecs.
-		jsonObject["codecs"] = json::array();
-		auto jsonCodecsIt    = jsonObject.find("codecs");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpCodecParameters>> codecs;
+		codecs.reserve(this->codecs.size());
 
-		for (size_t i{ 0 }; i < this->codecs.size(); ++i)
+		for (const auto& codec : this->codecs)
 		{
-			jsonCodecsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonCodecsIt)[i];
-			auto& codec     = this->codecs[i];
-
-			codec.FillJson(jsonEntry);
+			codecs.emplace_back(codec.FillBuffer(builder));
 		}
 
 		// Add encodings.
-		jsonObject["encodings"] = json::array();
-		auto jsonEncodingsIt    = jsonObject.find("encodings");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings;
+		encodings.reserve(this->encodings.size());
 
-		for (size_t i{ 0 }; i < this->encodings.size(); ++i)
+		for (const auto& encoding : this->encodings)
 		{
-			jsonEncodingsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry = (*jsonEncodingsIt)[i];
-			auto& encoding  = this->encodings[i];
-
-			encoding.FillJson(jsonEntry);
+			encodings.emplace_back(encoding.FillBuffer(builder));
 		}
 
 		// Add headerExtensions.
-		jsonObject["headerExtensions"] = json::array();
-		auto jsonHeaderExtensionsIt    = jsonObject.find("headerExtensions");
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpHeaderExtensionParameters>> headerExtensions;
+		headerExtensions.reserve(this->headerExtensions.size());
 
-		for (size_t i{ 0 }; i < this->headerExtensions.size(); ++i)
+		for (const auto& headerExtension : this->headerExtensions)
 		{
-			jsonHeaderExtensionsIt->emplace_back(json::value_t::object);
-
-			auto& jsonEntry       = (*jsonHeaderExtensionsIt)[i];
-			auto& headerExtension = this->headerExtensions[i];
-
-			headerExtension.FillJson(jsonEntry);
+			headerExtensions.emplace_back(headerExtension.FillBuffer(builder));
 		}
 
 		// Add rtcp.
-		if (this->hasRtcp)
-			this->rtcp.FillJson(jsonObject["rtcp"]);
-		else
-			jsonObject["rtcp"] = json::object();
+		flatbuffers::Offset<FBS::RtpParameters::RtcpParameters> rtcp;
+
+		rtcp = this->rtcp.FillBuffer(builder);
+
+		return FBS::RtpParameters::CreateRtpParametersDirect(
+		  builder, mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp);
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const
@@ -247,7 +185,7 @@ namespace RTC
 
 		for (; it != this->codecs.end(); ++it)
 		{
-			auto& codec = *it;
+			const auto& codec = *it;
 
 			if (codec.payloadType == payloadType)
 				return std::addressof(codec);

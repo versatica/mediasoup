@@ -7,46 +7,56 @@
 
 namespace RTC
 {
+	/* Static methods. */
+
+	TransportTuple::Protocol TransportTuple::ProtocolFromFbs(FBS::Transport::Protocol protocol)
+	{
+		switch (protocol)
+		{
+			case FBS::Transport::Protocol::UDP:
+				return TransportTuple::Protocol::UDP;
+
+			case FBS::Transport::Protocol::TCP:
+				return TransportTuple::Protocol::TCP;
+		}
+	}
+
+	FBS::Transport::Protocol TransportTuple::ProtocolToFbs(TransportTuple::Protocol protocol)
+	{
+		switch (protocol)
+		{
+			case TransportTuple::Protocol::UDP:
+				return FBS::Transport::Protocol::UDP;
+
+			case TransportTuple::Protocol::TCP:
+				return FBS::Transport::Protocol::TCP;
+		}
+	}
+
 	/* Instance methods. */
 
-	void TransportTuple::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		int family;
-		std::string ip;
-		uint16_t port;
+		std::string localIp;
+		uint16_t localPort;
 
-		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
+		Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
 
-		// Add localIp.
-		if (this->localAnnouncedIp.empty())
-			jsonObject["localIp"] = ip;
-		else
-			jsonObject["localIp"] = this->localAnnouncedIp;
+		localIp = this->localAnnouncedIp.empty() ? localIp : this->localAnnouncedIp;
 
-		// Add localPort.
-		jsonObject["localPort"] = port;
+		std::string remoteIp;
+		uint16_t remotePort;
 
-		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
+		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, remoteIp, remotePort);
 
-		// Add remoteIp.
-		jsonObject["remoteIp"] = ip;
+		auto protocol = TransportTuple::ProtocolToFbs(GetProtocol());
 
-		// Add remotePort.
-		jsonObject["remotePort"] = port;
-
-		// Add protocol.
-		switch (GetProtocol())
-		{
-			case Protocol::UDP:
-				jsonObject["protocol"] = "udp";
-				break;
-
-			case Protocol::TCP:
-				jsonObject["protocol"] = "tcp";
-				break;
-		}
+		return FBS::Transport::CreateTupleDirect(
+		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol);
 	}
 
 	void TransportTuple::Dump() const

@@ -2,16 +2,14 @@
 #define MS_CHANNEL_SOCKET_HPP
 
 #include "common.hpp"
+#include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
-#include "handles/UnixStreamSocket.hpp"
-#include <nlohmann/json.hpp>
+#include "handles/UnixStreamSocketHandle.hpp"
 #include <string>
-
-using json = nlohmann::json;
 
 namespace Channel
 {
-	class ConsumerSocket : public ::UnixStreamSocket
+	class ConsumerSocket : public ::UnixStreamSocketHandle
 	{
 	public:
 		class Listener
@@ -28,7 +26,7 @@ namespace Channel
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
 		~ConsumerSocket();
 
-		/* Pure virtual methods inherited from ::UnixStreamSocket. */
+		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override;
 		void UserOnUnixStreamSocketClosed() override;
@@ -38,12 +36,12 @@ namespace Channel
 		Listener* listener{ nullptr };
 	};
 
-	class ProducerSocket : public ::UnixStreamSocket
+	class ProducerSocket : public ::UnixStreamSocketHandle
 	{
 	public:
 		ProducerSocket(int fd, size_t bufferSize);
 
-		/* Pure virtual methods inherited from ::UnixStreamSocket. */
+		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override
 		{
@@ -65,7 +63,16 @@ namespace Channel
 			virtual void HandleRequest(Channel::ChannelRequest* request) = 0;
 		};
 
-		class Listener : public RequestHandler
+		class NotificationHandler
+		{
+		public:
+			virtual ~NotificationHandler() = default;
+
+		public:
+			virtual void HandleNotification(Channel::ChannelNotification* notification) = 0;
+		};
+
+		class Listener : public RequestHandler, public NotificationHandler
 		{
 		public:
 			virtual ~Listener() = default;
@@ -86,8 +93,7 @@ namespace Channel
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		void Send(json& jsonMessage);
-		void Send(const std::string& message);
+		void Send(const uint8_t* message, uint32_t messageLen);
 		void SendLog(const char* message, uint32_t messageLen);
 		bool CallbackRead();
 
@@ -111,7 +117,7 @@ namespace Channel
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
-		uint8_t* writeBuffer{ nullptr };
+		flatbuffers::FlatBufferBuilder bufferBuilder{};
 	};
 } // namespace Channel
 

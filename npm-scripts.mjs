@@ -1,8 +1,8 @@
-import process from 'process';
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
-import { execSync, spawnSync } from 'child_process';
+import process from 'node:process';
+import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync, spawnSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
 
@@ -11,6 +11,7 @@ const IS_FREEBSD = os.platform() === 'freebsd';
 const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
+const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
@@ -31,19 +32,18 @@ async function run()
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
 		// `prepare` script:
 		//
-		// - Runs BEFORE the package is packed, i.e. during `npm publish` and
-		//   `npm pack`.
+		// - Runs BEFORE the package is packed, i.e. during `npm publish` and `npm pack`.
 		// - Runs on local `npm install` without any arguments.
 		// - NOTE: If a package being installed through git contains a `prepare` script,
 		//   its dependencies and devDependencies will be installed, and the `prepare`
 		//   script will be run, before the package is packaged and installed.
 		//
-		// So here we compile TypeScript and flatbuffers to JavaScript.
+		// So here we generate flatbuffers definitions for TypeScript and compile
+		// TypeScript to JavaScript.
 		case 'prepare':
 		{
-			buildTypescript(/* force */ false);
-
-			// TODO: Compile flatbuffers.
+			flatcNode();
+			buildTypescript({ force: false });
 
 			break;
 		}
@@ -86,7 +86,11 @@ async function run()
 				logInfo(`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`);
 
 				buildWorker();
-				cleanWorkerArtifacts();
+
+				if (!process.env.MEDIASOUP_LOCAL_DEV)
+				{
+					cleanWorkerArtifacts();
+				}
 			}
 
 			break;
@@ -95,8 +99,7 @@ async function run()
 		case 'typescript:build':
 		{
 			installNodeDeps();
-			buildTypescript(/* force */ true);
-			replaceVersion();
+			buildTypescript({ force: true });
 
 			break;
 		}
@@ -144,10 +147,23 @@ async function run()
 			break;
 		}
 
+		case 'flatc:node':
+		{
+			flatcNode();
+
+			break;
+		}
+
+		case 'flatc:worker':
+		{
+			flatcWorker();
+
+			break;
+		}
+
 		case 'test:node':
 		{
-			buildTypescript(/* force */ false);
-			replaceVersion();
+			buildTypescript({ force: false });
 			testNode();
 
 			break;
@@ -162,8 +178,7 @@ async function run()
 
 		case 'coverage:node':
 		{
-			buildTypescript(/* force */ false);
-			replaceVersion();
+			buildTypescript({ force: false });
 			executeCmd('jest --coverage');
 			executeCmd('open-cli coverage/lcov-report/index.html');
 
@@ -258,31 +273,6 @@ async function run()
 	}
 }
 
-function replaceVersion()
-{
-	logInfo('replaceVersion()');
-
-	const files = fs.readdirSync('node/lib',
-		{
-			withFileTypes : true,
-			recursive     : false
-		});
-
-	for (const file of files)
-	{
-		if (!file.isFile())
-		{
-			continue;
-		}
-
-		const filePath = path.join('node/lib', file.name);
-		const text = fs.readFileSync(filePath, { encoding: 'utf8' });
-		const result = text.replace(/__MEDIASOUP_VERSION__/g, PKG.version);
-
-		fs.writeFileSync(filePath, result, { encoding: 'utf8' });
-	}
-}
-
 function deleteNodeLib()
 {
 	if (!fs.existsSync('node/lib'))
@@ -303,7 +293,7 @@ function deleteNodeLib()
 	}
 }
 
-function buildTypescript(force = false)
+function buildTypescript({ force = false } = { force: false })
 {
 	if (!force && fs.existsSync('node/lib'))
 	{
@@ -351,7 +341,10 @@ function cleanWorkerArtifacts()
 
 	if (IS_WINDOWS)
 	{
-		executeCmd('rd /s /q worker\\out\\msys');
+		if (fs.existsSync('worker/out/msys'))
+		{
+			executeCmd('rd /s /q worker\\out\\msys');
+		}
 	}
 }
 
@@ -359,7 +352,7 @@ function lintNode()
 {
 	logInfo('lintNode()');
 
-	executeCmd('eslint -c node/.eslintrc.js --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/gulpfile.mjs');
+	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/gulpfile.mjs');
 }
 
 function lintWorker()
@@ -367,6 +360,39 @@ function lintWorker()
 	logInfo('lintWorker()');
 
 	executeCmd(`${MAKE} lint -C worker`);
+}
+
+function flatcNode()
+{
+	logInfo('flatcNode()');
+
+	// Build flatc if needed.
+	executeCmd(`${MAKE} -C worker flatc`);
+
+	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
+	const extension = IS_WINDOWS ? '.exe' : '';
+	const flatc = path.resolve(path.join(
+		'worker', 'out', buildType, 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
+	const src = path.resolve(path.join('worker', 'fbs', '*.fbs'));
+	const out = path.resolve(path.join('node', 'src'));
+	const options = '--ts-no-import-ext --gen-object-api';
+	const command = `${flatc} --ts ${options} -o ${out} `;
+
+	if (IS_WINDOWS)
+	{
+		executeCmd(`for %f in (${src}) do ${command} %f`);
+	}
+	else
+	{
+		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
+	}
+}
+
+function flatcWorker()
+{
+	logInfo('flatcWorker()');
+
+	executeCmd(`${MAKE} -C worker flatc`);
 }
 
 function testNode()
@@ -405,8 +431,8 @@ function checkRelease()
 	logInfo('checkRelease()');
 
 	installNodeDeps();
-	buildTypescript(/* force */ true);
-	replaceVersion();
+	flatcNode();
+	buildTypescript({ force: true });
 	buildWorker();
 	lintNode();
 	lintWorker();
@@ -574,6 +600,10 @@ async function downloadPrebuiltWorker()
 							// Ensure no env is passed to avoid accidents.
 							env   : {}
 						}
+					);
+
+					logInfo(
+						'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
 					);
 				}
 				catch (error)

@@ -26,7 +26,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Set the timer.
-		this->timer = new Timer(this);
+		this->timer = new TimerHandle(this);
 	}
 
 	NackGenerator::~NackGenerator()
@@ -372,7 +372,7 @@ namespace RTC
 		}
 	}
 
-	inline void NackGenerator::OnTimer(Timer* /*timer*/)
+	inline void NackGenerator::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();
 

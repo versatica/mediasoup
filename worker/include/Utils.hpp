@@ -5,7 +5,6 @@
 #include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 #ifdef _WIN32
@@ -14,8 +13,6 @@
 #include <intrin.h>
 #define __builtin_popcount __popcnt
 #endif
-
-using json = nlohmann::json;
 
 namespace Utils
 {
@@ -311,8 +308,6 @@ namespace Utils
 		static uint8_t* Base64Decode(const uint8_t* data, size_t len, size_t& outLen);
 
 		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
-
-		static std::vector<std::string> Split(const std::string& str, char separator, size_t limit = 0);
 	};
 
 	class Time
@@ -373,26 +368,6 @@ namespace Utils
 		static uint32_t TimeMsToAbsSendTime(uint64_t ms)
 		{
 			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
-		}
-	};
-
-	class Json
-	{
-	public:
-		static bool IsPositiveInteger(const json& value)
-		{
-			if (value.is_number_unsigned())
-			{
-				return true;
-			}
-			else if (value.is_number_integer())
-			{
-				return value.get<int64_t>() >= 0;
-			}
-			else
-			{
-				return false;
-			}
 		}
 	};
 } // namespace Utils

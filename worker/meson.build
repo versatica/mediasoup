@@ -60,19 +60,16 @@ common_sources = [
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
   'src/Utils/String.cpp',
-  'src/handles/SignalsHandler.cpp',
-  'src/handles/TcpConnectionHandler.cpp',
-  'src/handles/TcpServerHandler.cpp',
-  'src/handles/Timer.cpp',
-  'src/handles/UdpSocketHandler.cpp',
-  'src/handles/UnixStreamSocket.cpp',
+  'src/handles/SignalHandle.cpp',
+  'src/handles/TcpConnectionHandle.cpp',
+  'src/handles/TcpServerHandle.cpp',
+  'src/handles/TimerHandle.cpp',
+  'src/handles/UdpSocketHandle.cpp',
+  'src/handles/UnixStreamSocketHandle.cpp',
   'src/Channel/ChannelNotifier.cpp',
   'src/Channel/ChannelRequest.cpp',
+  'src/Channel/ChannelNotification.cpp',
   'src/Channel/ChannelSocket.cpp',
-  'src/PayloadChannel/PayloadChannelNotification.cpp',
-  'src/PayloadChannel/PayloadChannelNotifier.cpp',
-  'src/PayloadChannel/PayloadChannelRequest.cpp',
-  'src/PayloadChannel/PayloadChannelSocket.cpp',
   'src/RTC/ActiveSpeakerObserver.cpp',
   'src/RTC/AudioLevelObserver.cpp',
   'src/RTC/Consumer.cpp',
@@ -126,7 +123,6 @@ common_sources = [
   'src/RTC/Codecs/VP8.cpp',
   'src/RTC/Codecs/VP9.cpp',
   'src/RTC/Codecs/Opus.cpp',
-  'src/RTC/RtpDictionaries/Media.cpp',
   'src/RTC/RtpDictionaries/Parameters.cpp',
   'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
   'src/RTC/RtpDictionaries/RtcpParameters.cpp',
@@ -175,12 +171,6 @@ openssl_proj = subproject(
     'warning_level=0',
   ],
 )
-nlohmann_json_proj = subproject(
-  'nlohmann_json',
-  default_options: [
-    'warning_level=0',
-  ],
-)
 libuv_proj = subproject(
   'libuv',
   default_options: [
@@ -217,16 +207,26 @@ catch2_proj = subproject(
     'warning_level=0',
   ],
 )
-libwebrtc_include_directories = include_directories('include')
+flatbuffers_proj = subproject(
+  'flatbuffers',
+  default_options: [
+    'warning_level=0',
+  ],
+)
+# flatbuffers schemas subdirectory.
+subdir('fbs')
+# Add current build directory so libwebrtc has access to FBS folder.
+libwebrtc_include_directories = include_directories('include', 'fbs')
 subdir('deps/libwebrtc')
 
 dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
-  nlohmann_json_proj.get_variable('nlohmann_json_dep'),
   libuv_proj.get_variable('libuv_dep'),
   libsrtp2_proj.get_variable('libsrtp2_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
+  flatbuffers_proj.get_variable('flatbuffers_dep'),
+  flatbuffers_generator_dep,
   libwebrtc_dep,
 ]
 
@@ -237,6 +237,7 @@ link_whole = [
   libuv_proj.get_variable('libuv'),
   libsrtp2_proj.get_variable('libsrtp2'),
   usrsctp_proj.get_variable('usrsctp'),
+  flatbuffers_proj.get_variable('flatbuffers_lib'),
   libwebrtc,
 ]
 
@@ -282,8 +283,6 @@ executable(
 
 test_sources = [
     'test/src/tests.cpp',
-    'test/src/PayloadChannel/TestPayloadChannelNotification.cpp',
-    'test/src/PayloadChannel/TestPayloadChannelRequest.cpp',
     'test/src/RTC/TestKeyFrameRequestManager.cpp',
     'test/src/RTC/TestNackGenerator.cpp',
     'test/src/RTC/TestRateCalculator.cpp',
@@ -323,7 +322,6 @@ test_sources = [
     'test/src/Utils/TestBits.cpp',
     'test/src/Utils/TestByte.cpp',
     'test/src/Utils/TestIP.cpp',
-    'test/src/Utils/TestJson.cpp',
     'test/src/Utils/TestString.cpp',
     'test/src/Utils/TestTime.cpp',
 ]

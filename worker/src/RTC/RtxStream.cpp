@@ -28,12 +28,15 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	void RtxStream::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtxStream::RtxDump> RtxStream::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
 		// Add params.
-		this->params.FillJson(jsonObject["params"]);
+		auto params = this->params.FillBuffer(builder);
+
+		return FBS::RtxStream::CreateRtxDump(builder, params);
 	}
 
 	bool RtxStream::ReceivePacket(RTC::RtpPacket* packet)
@@ -231,18 +234,18 @@ namespace RTC
 		this->badSeq  = RtpSeqMod + 1; // So seq == badSeq is false.
 	}
 
-	void RtxStream::Params::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::RtxStream::Params> RtxStream::Params::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		jsonObject["ssrc"]        = this->ssrc;
-		jsonObject["payloadType"] = this->payloadType;
-		jsonObject["mimeType"]    = this->mimeType.ToString();
-		jsonObject["clockRate"]   = this->clockRate;
-
-		if (!this->rrid.empty())
-			jsonObject["rrid"] = this->rrid;
-
-		jsonObject["cname"] = this->cname;
+		return FBS::RtxStream::CreateParamsDirect(
+		  builder,
+		  this->ssrc,
+		  this->payloadType,
+		  this->mimeType.ToString().c_str(),
+		  this->clockRate,
+		  this->rrid.c_str(),
+		  this->cname.c_str());
 	}
 } // namespace RTC

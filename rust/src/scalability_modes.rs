@@ -118,7 +118,7 @@ impl Default for ScalabilityMode {
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum ParseScalabilityModeError {
     /// Invalid input string
-    #[error("Invalid input string")]
+    #[error("Invalid Scalability Mode input string")]
     InvalidInput,
 }
 

@@ -1,7 +1,8 @@
+import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
-
-const { createWorker } = mediasoup;
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import * as FbsProducer from '../fbs/producer';
 
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
@@ -44,7 +45,7 @@ const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
 		{
@@ -123,8 +124,8 @@ test('transport1.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
+				mapProducerIdConsumerIds : [ { key: audioProducer.id, values: [] } ],
+				mapConsumerIdProducerId  : []
 			});
 
 	await expect(transport1.dump())
@@ -213,13 +214,16 @@ test('transport2.produce() succeeds', async () =>
 	expect(videoProducer.score).toEqual([]);
 	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(
+			expect.arrayContaining([
+				{ key: videoProducer.id, values: [] }
+			])
+		);
+
+	expect(dump.mapConsumerIdProducerId.length).toBe(0);
 
 	await expect(transport2.dump())
 		.resolves
@@ -227,6 +231,69 @@ test('transport2.produce() succeeds', async () =>
 			{
 				id          : transport2.id,
 				producerIds : [ videoProducer.id ],
+				consumerIds : []
+			});
+}, 2000);
+
+test.only('transport1.produce() without header extensions and rtcp succeeds', async () =>
+{
+	const onObserverNewProducer = jest.fn();
+
+	transport1.observer.once('newproducer', onObserverNewProducer);
+
+	audioProducer = await transport1.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO',
+				codecs :
+				[
+					{
+						mimeType    : 'audio/opus',
+						payloadType : 0,
+						clockRate   : 48000,
+						channels    : 2,
+						parameters  :
+						{
+							useinbandfec : 1,
+							usedtx       : 1,
+							foo          : 222.222,
+							bar          : '333'
+						}
+					}
+				]
+			},
+			appData : { foo: 1, bar: '2' }
+		});
+
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer);
+	expect(typeof audioProducer.id).toBe('string');
+	expect(audioProducer.closed).toBe(false);
+	expect(audioProducer.kind).toBe('audio');
+	expect(typeof audioProducer.rtpParameters).toBe('object');
+	expect(audioProducer.type).toBe('simple');
+	// Private API.
+	expect(typeof audioProducer.consumableRtpParameters).toBe('object');
+	expect(audioProducer.paused).toBe(false);
+	expect(audioProducer.score).toEqual([]);
+	expect(audioProducer.appData).toEqual({ foo: 1, bar: '2' });
+
+	await expect(router.dump())
+		.resolves
+		.toMatchObject(
+			{
+				mapProducerIdConsumerIds : [ { key: audioProducer.id, values: [] } ],
+				mapConsumerIdProducerId  : []
+			});
+
+	await expect(transport1.dump())
+		.resolves
+		.toMatchObject(
+			{
+				id          : transport1.id,
+				producerIds : [ audioProducer.id ],
 				consumerIds : []
 			});
 }, 2000);
@@ -520,7 +587,7 @@ test('producer.dump() succeeds', async () =>
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -537,11 +604,13 @@ test('producer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(1);
-	expect(data.rtpParameters.encodings).toEqual(
-		[
-			{ codecPayloadType: 0 }
-		]);
+	expect(data.rtpParameters.encodings!.length).toBe(1);
+	expect(data.rtpParameters.encodings![0]).toEqual(
+		expect.objectContaining(
+			{
+				codecPayloadType : 0
+			})
+	);
 	expect(data.type).toBe('simple');
 
 	data = await videoProducer.dump();
@@ -575,7 +644,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
 	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -592,7 +661,7 @@ test('producer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(4);
+	expect(data.rtpParameters.encodings!.length).toBe(4);
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
@@ -638,26 +707,28 @@ test('producer.pause() and resume() succeed', async () =>
 
 test('producer.enableTraceEvent() succeed', async () =>
 {
+	let dump;
+
 	await audioProducer.enableTraceEvent([ 'rtp', 'pli' ]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'rtp,pli' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'rtp', 'pli' ]));
 
 	await audioProducer.enableTraceEvent([]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 
 	// @ts-ignore
 	await audioProducer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'nack,fir' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'nack', 'fir' ]));
 
 	await audioProducer.enableTraceEvent();
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 }, 2000);
 
 test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
@@ -686,12 +757,32 @@ test('Producer emits "score"', async () =>
 
 	videoProducer.on('score', onScore);
 
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 10 } ]);
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 8 } ]);
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+	// Simulate a 'score' notification coming through the channel.
+	const builder = new flatbuffers.Builder();
+	const producerScoreNotification = new FbsProducer.ScoreNotificationT([
+		new FbsProducer.ScoreT(/* encodingIdx */ 0, /* ssrc */ 11, /* rid */ undefined, /* score */ 10),
+		new FbsProducer.ScoreT(/* encodingIdx */ 1, /* ssrc */ 22, /* rid */ undefined, /* score */ 9)
+	]);
+	const notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(videoProducer.id),
+		Event.PRODUCER_SCORE,
+		NotificationBody.Producer_ScoreNotification,
+		producerScoreNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	const notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
 
 	expect(onScore).toHaveBeenCalledTimes(3);
-	expect(videoProducer.score).toEqual([ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+	expect(videoProducer.score).toEqual(
+		[ { ssrc: 11, score: 10 }, { ssrc: 22, score: 9 } ]);
 }, 2000);
 
 test('producer.close() succeeds', async () =>

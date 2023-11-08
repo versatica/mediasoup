@@ -200,7 +200,7 @@ DepUsrSCTP::Checker::Checker()
 {
 	MS_TRACE();
 
-	this->timer = new Timer(this);
+	this->timer = new TimerHandle(this);
 }
 
 DepUsrSCTP::Checker::~Checker()
@@ -232,7 +232,7 @@ void DepUsrSCTP::Checker::Stop()
 	this->timer->Stop();
 }
 
-void DepUsrSCTP::Checker::OnTimer(Timer* /*timer*/)
+void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
 {
 	MS_TRACE();
 

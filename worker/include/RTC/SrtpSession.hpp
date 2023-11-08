@@ -2,6 +2,7 @@
 #define MS_RTC_SRTP_SESSION_HPP
 
 #include "common.hpp"
+#include "FBS/srtpParameters.h"
 #include <srtp.h>
 
 namespace RTC
@@ -11,8 +12,7 @@ namespace RTC
 	public:
 		enum class CryptoSuite
 		{
-			NONE             = 0,
-			AEAD_AES_256_GCM = 1,
+			AEAD_AES_256_GCM = 0,
 			AEAD_AES_128_GCM,
 			AES_CM_128_HMAC_SHA1_80,
 			AES_CM_128_HMAC_SHA1_32,
@@ -27,6 +27,8 @@ namespace RTC
 
 	public:
 		static void ClassInit();
+		static FBS::SrtpParameters::SrtpCryptoSuite CryptoSuiteToFbs(CryptoSuite cryptoSuite);
+		static CryptoSuite CryptoSuiteFromFbs(FBS::SrtpParameters::SrtpCryptoSuite cryptoSuite);
 
 	private:
 		static void OnSrtpEvent(srtp_event_data_t* data);

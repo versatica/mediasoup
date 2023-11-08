@@ -1,14 +1,23 @@
 import { Logger } from './Logger';
 import { UnsupportedError } from './errors';
 import {
+	BaseTransportDump,
+	BaseTransportStats,
+	parseBaseTransportDump,
+	parseBaseTransportStats,
+	parseTransportTraceEventData,
 	Transport,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions
 } from './Transport';
 import { SctpParameters } from './SctpParameters';
 import { AppData } from './types';
+import { Event, Notification } from './fbs/notification';
+import * as FbsDirectTransport from './fbs/direct-transport';
+import * as FbsTransport from './fbs/transport';
+import * as FbsNotification from './fbs/notification';
+import * as FbsRequest from './fbs/request';
 
 export type DirectTransportOptions<DirectTransportAppData extends AppData = AppData> =
 {
@@ -24,29 +33,11 @@ export type DirectTransportOptions<DirectTransportAppData extends AppData = AppD
 	appData?: DirectTransportAppData;
 };
 
-export type DirectTransportStat =
+export type DirectTransportDump = BaseTransportDump;
+
+export type DirectTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
 };
 
 export type DirectTransportEvents = TransportEvents &
@@ -127,6 +118,28 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	}
 
 	/**
+	 * Dump Transport.
+	 */
+	async dump(): Promise<DirectTransportDump>
+	{
+		logger.debug('dump()');
+
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_DUMP,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDirectTransport.DumpResponse();
+
+		response.body(data);
+
+		return parseDirectTransportDumpResponse(data);
+	}
+
+	/**
 	 * Get DirectTransport stats.
 	 *
 	 * @override
@@ -135,7 +148,19 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.transportId);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_GET_STATS,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDirectTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -188,24 +213,58 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 			throw new TypeError('rtcpPacket must be a Buffer');
 		}
 
-		this.payloadChannel.notify(
-			'transport.sendRtcp', this.internal.transportId, undefined, rtcpPacket);
+		const builder = this.channel.bufferBuilder;
+		const dataOffset =
+			FbsTransport.SendRtcpNotification.createDataVector(builder, rtcpPacket);
+		const notificationOffset =
+			FbsTransport.SendRtcpNotification.createSendRtcpNotification(
+				builder,
+				dataOffset
+			);
+
+		this.channel.notify(
+			FbsNotification.Event.TRANSPORT_SEND_RTCP,
+			FbsNotification.Body.Transport_SendRtcpNotification,
+			notificationOffset,
+			this.internal.transportId
+		);
+
 	}
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'trace':
+				case Event.TRANSPORT_TRACE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
 					// Emit observer event.
 					this.observer.safeEmit('trace', trace);
+
+					break;
+				}
+
+				case Event.DIRECTTRANSPORT_RTCP:
+				{
+					if (this.closed)
+					{
+						break;
+					}
+
+					const notification = new FbsDirectTransport.RtcpNotification();
+
+					data!.body(notification);
+
+					this.safeEmit('rtcp', Buffer.from(notification.dataArray()!));
 
 					break;
 				}
@@ -216,32 +275,24 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 				}
 			}
 		});
-
-		this.payloadChannel.on(
-			this.internal.transportId,
-			(event: string, data: any | undefined, payload: Buffer) =>
-			{
-				switch (event)
-				{
-					case 'rtcp':
-					{
-						if (this.closed)
-						{
-							break;
-						}
-
-						const packet = payload;
-
-						this.safeEmit('rtcp', packet);
-
-						break;
-					}
-
-					default:
-					{
-						logger.error('ignoring unknown event "%s"', event);
-					}
-				}
-			});
 	}
+}
+
+export function parseDirectTransportDumpResponse(
+	binary: FbsDirectTransport.DumpResponse
+): BaseTransportDump
+{
+	return parseBaseTransportDump(binary.base()!);
+}
+
+function parseGetStatsResponse(
+	binary: FbsDirectTransport.GetStatsResponse
+):DirectTransportStat
+{
+	const base = parseBaseTransportStats(binary.base()!);
+
+	return {
+		...base,
+		type : 'direct-transport'
+	};
 }
