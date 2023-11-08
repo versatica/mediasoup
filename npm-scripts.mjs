@@ -247,6 +247,7 @@ async function run()
 			// and upload it to the release.
 			if (os.platform() === 'darwin' && os.arch() === 'arm64')
 			{
+				await prebuildWorker();
 				await uploadMacArmPrebuiltWorker();
 			}
 
