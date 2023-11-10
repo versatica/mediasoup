@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { workerBin, Worker, WorkerSettings } from './Worker';
@@ -16,9 +14,8 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-export const { version } = JSON.parse(fs.readFileSync(
-	path.join(__dirname, '..', '..', 'package.json'), { encoding: 'utf-8' }
-));
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const version: string = require('../../package.json').version;
 
 /**
  * Expose parseScalabilityMode() function.
