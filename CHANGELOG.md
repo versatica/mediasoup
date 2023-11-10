@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.13.1
+
+* Node: Extract version from `package.json` using `require()` ([PR #1217](https://github.com/versatica/mediasoup/pull/1217) by @arcinston).
+
+
 ### 3.13.0
 
 * Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
