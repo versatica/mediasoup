@@ -1,6 +1,8 @@
 #ifndef MS_DEP_LIBURING_HPP
 #define MS_DEP_LIBURING_HPP
 
+#ifdef MS_LIBURING_ENABLED
+
 #include "DepLibUV.hpp"
 #include <functional>
 #include <liburing.h>
@@ -74,4 +76,5 @@ private:
 	std::queue<size_t> availableUserDataEntries;
 };
 
+#endif
 #endif
