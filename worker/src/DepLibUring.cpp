@@ -110,14 +110,14 @@ DepLibUring::DepLibUring()
 
 	if (error != 0)
 	{
-		delete uvHandle;
+		delete this->uvHandle;
 
 		MS_THROW_ERROR("uv_poll_init() failed: %s", uv_strerror(error));
 	}
 
-	uvHandle->data = this;
+	this->uvHandle->data = this;
 
-	error = uv_poll_start(uvHandle, UV_READABLE, static_cast<uv_poll_cb>(onFdEvent));
+	error = uv_poll_start(this->uvHandle, UV_READABLE, static_cast<uv_poll_cb>(onFdEvent));
 
 	if (error != 0)
 	{
