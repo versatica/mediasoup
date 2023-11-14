@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Enable liburing usage for linux (kernel versions >= 6).
+* Enable liburing usage for linux (kernel versions >= 6) ([PR #1218](https://github.com/versatica/mediasoup/pull/1218)).
 
 
 ### 3.13.1
