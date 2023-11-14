@@ -47,7 +47,7 @@ public:
 	}
 	io_uring* GetRing()
 	{
-		return &this->ring;
+		return std::addressof(this->ring);
 	}
 	int GetEventFd() const
 	{

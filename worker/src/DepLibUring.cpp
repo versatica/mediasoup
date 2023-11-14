@@ -25,7 +25,7 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	// libuv uses level triggering, so we need to read from the socket to reset
 	// the counter in order to avoid libuv calling this callback indefinitely.
 	eventfd_t v;
-	int error = eventfd_read(liburing->GetEventFd(), &v);
+	int error = eventfd_read(liburing->GetEventFd(), std::addressof(v);
 	if (error < 0)
 	{
 		MS_ERROR("eventfd_read() failed: %s", std::strerror(-error));
@@ -81,7 +81,7 @@ DepLibUring::DepLibUring()
 {
 	MS_TRACE();
 
-	auto error = io_uring_queue_init(DepLibUring::QueueDepth, &this->ring, 0);
+	auto error = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), 0);
 
 	if (error < 0)
 	{
@@ -96,7 +96,7 @@ DepLibUring::DepLibUring()
 		MS_THROW_ERROR("eventfd() failed: %s", std::strerror(-this->efd));
 	}
 
-	error = io_uring_register_eventfd(&this->ring, this->efd);
+	error = io_uring_register_eventfd(std::addressof(this->ring), this->efd);
 
 	if (error < 0)
 	{
@@ -144,7 +144,7 @@ DepLibUring::~DepLibUring()
 	close(this->efd);
 
 	// Close the ring.
-	io_uring_queue_exit(&this->ring);
+	io_uring_queue_exit(std::addressof(this->ring));
 }
 
 bool DepLibUring::PrepareSend(
@@ -161,7 +161,7 @@ bool DepLibUring::PrepareSend(
 		return false;
 	}
 
-	auto* sqe = io_uring_get_sqe(&this->ring);
+	auto* sqe = io_uring_get_sqe(std::addressof(this->ring));
 
 	if (!sqe)
 	{
@@ -205,7 +205,7 @@ bool DepLibUring::PrepareWrite(
 		return false;
 	}
 
-	auto* sqe = io_uring_get_sqe(&this->ring);
+	auto* sqe = io_uring_get_sqe(std::addressof(this->ring));
 
 	if (!sqe)
 	{
@@ -231,7 +231,7 @@ void DepLibUring::Submit()
 	// Unset active flag.
 	this->active = false;
 
-	auto error = io_uring_submit(&this->ring);
+	auto error = io_uring_submit(std::addressof(this->ring));
 
 	if (error >= 0)
 	{
@@ -258,7 +258,7 @@ DepLibUring::UserData* DepLibUring::GetUserData()
 
 	this->availableUserDataEntries.pop();
 
-	auto* userData = &this->userDataBuffer[idx];
+	auto* userData = std::addressof(this->userDataBuffer[idx]);
 	userData->idx  = idx;
 
 	return userData;
