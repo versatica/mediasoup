@@ -106,7 +106,7 @@ DepLibUring::DepLibUring()
 	// Watch the event file descriptor.
 	this->uvHandle = new uv_poll_t;
 
-	error = uv_poll_init(DepLibUV::GetLoop(), uvHandle, efd);
+	error = uv_poll_init(DepLibUV::GetLoop(), this->uvHandle, this->efd);
 
 	if (error != 0)
 	{
