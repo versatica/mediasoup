@@ -125,7 +125,7 @@ DepLibUring::DepLibUring()
 	}
 
 	// Initialize available UserData entries.
-	for (size_t i = 0; i < DepLibUring::QueueDepth; ++i)
+	for (size_t i{ 0 }; i < DepLibUring::QueueDepth; ++i)
 	{
 		this->availableUserDataEntries.push(i);
 	}
@@ -235,7 +235,7 @@ void DepLibUring::Submit()
 
 	if (error >= 0)
 	{
-		MS_DEBUG_DEV("%i submission queue entries submitted", ret);
+		MS_DEBUG_DEV("%i submission queue entries submitted", error);
 	}
 	else
 	{
