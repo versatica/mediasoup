@@ -93,7 +93,7 @@ DepLibUring::DepLibUring()
 
 	if (this->efd < 0)
 	{
-		MS_THROW_ERROR("eventfd() failed: %s", std::strerror(-efd));
+		MS_THROW_ERROR("eventfd() failed: %s", std::strerror(-this->efd));
 	}
 
 	error = io_uring_register_eventfd(&this->ring, this->efd);
