@@ -81,6 +81,7 @@ DepLibUring::DepLibUring()
 {
 	MS_TRACE();
 
+	// Initialize io_uring.
 	auto error = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), 0);
 
 	if (error < 0)
@@ -88,7 +89,7 @@ DepLibUring::DepLibUring()
 		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(-error));
 	}
 
-	/* Create an eventfd instance */
+	// Create an eventfd instance.
 	this->efd = eventfd(0, 0);
 
 	if (this->efd < 0)
@@ -103,7 +104,7 @@ DepLibUring::DepLibUring()
 		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(-error));
 	}
 
-	// Watch the event file descriptor.
+	// Watch the event file descriptor for completions.
 	this->uvHandle = new uv_poll_t;
 
 	error = uv_poll_init(DepLibUV::GetLoop(), this->uvHandle, this->efd);
