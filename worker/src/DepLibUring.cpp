@@ -25,7 +25,7 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	// libuv uses level triggering, so we need to read from the socket to reset
 	// the counter in order to avoid libuv calling this callback indefinitely.
 	eventfd_t v;
-	int error = eventfd_read(liburing->GetEventFd(), std::addressof(v);
+	int error = eventfd_read(liburing->GetEventFd(), std::addressof(v));
 	if (error < 0)
 	{
 		MS_ERROR("eventfd_read() failed: %s", std::strerror(-error));
