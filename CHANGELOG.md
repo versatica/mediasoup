@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Enable liburing usage for linux (kernel versions >= 6).
+
+
 ### 3.13.1
 
 * Node: Extract version from `package.json` using `require()` ([PR #1217](https://github.com/versatica/mediasoup/pull/1217) by @arcinston).
