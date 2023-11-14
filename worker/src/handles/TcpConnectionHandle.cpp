@@ -240,6 +240,9 @@ void TcpConnectionHandle::Write(
 			goto write_libuv;
 		}
 
+		// Prepare the data to be sent.
+		// NOTE: If all SQEs are currently in use or no UserData entry is available we'll
+		// fall back to libuv.
 		auto prepared = DepLibUring::liburing->PrepareWrite(this->fd, data1, len1, data2, len2, cb);
 
 		if (!prepared)

@@ -165,6 +165,9 @@ void UdpSocketHandle::Send(
 			goto send_libuv;
 		}
 
+		// Prepare the data to be sent.
+		// NOTE: If all SQEs are currently in use or no UserData entry is available we'll
+		// fall back to libuv.
 		auto prepared = DepLibUring::liburing->PrepareSend(this->fd, data, len, addr, cb);
 
 		if (!prepared)
