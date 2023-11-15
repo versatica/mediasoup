@@ -224,7 +224,9 @@ namespace RTC
 		uint16_t GetHeaderExtensionId() const
 		{
 			if (!this->headerExtension)
+			{
 				return 0u;
+			}
 
 			return uint16_t{ ntohs(this->headerExtension->id) };
 		}
@@ -232,7 +234,9 @@ namespace RTC
 		size_t GetHeaderExtensionLength() const
 		{
 			if (!this->headerExtension)
+			{
 				return 0u;
+			}
 
 			return static_cast<size_t>(ntohs(this->headerExtension->length) * 4);
 		}
@@ -240,7 +244,9 @@ namespace RTC
 		uint8_t* GetHeaderExtensionValue() const
 		{
 			if (!this->headerExtension)
+			{
 				return nullptr;
+			}
 
 			return this->headerExtension->value;
 		}
@@ -307,7 +313,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
 
 			if (!extenValue || extenLen == 0u)
+			{
 				return false;
+			}
 
 			mid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
 
@@ -347,7 +355,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
 
 			if (!extenValue || extenLen != 3u)
+			{
 				return false;
+			}
 
 			absSendtime = Utils::Byte::Get3Bytes(extenValue, 0);
 
@@ -360,7 +370,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
 
 			if (!extenValue || extenLen != 3u)
+			{
 				return false;
+			}
 
 			auto absSendTime = Utils::Time::TimeMsToAbsSendTime(ms);
 
@@ -375,7 +387,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->transportWideCc01ExtensionId, extenLen);
 
 			if (!extenValue || extenLen != 2u)
+			{
 				return false;
+			}
 
 			wideSeqNumber = Utils::Byte::Get2Bytes(extenValue, 0);
 
@@ -388,7 +402,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->transportWideCc01ExtensionId, extenLen);
 
 			if (!extenValue || extenLen != 2u)
+			{
 				return false;
+			}
 
 			Utils::Byte::Set2Bytes(extenValue, 0, wideSeqNumber);
 
@@ -402,10 +418,14 @@ namespace RTC
 
 			// NOTE: Remove this once framemarking draft becomes RFC.
 			if (!extenValue)
+			{
 				extenValue = GetExtension(this->frameMarking07ExtensionId, extenLen);
+			}
 
 			if (!extenValue || extenLen > 3u)
+			{
 				return false;
+			}
 
 			*frameMarking = reinterpret_cast<RtpPacket::FrameMarking*>(extenValue);
 			length        = extenLen;
@@ -419,7 +439,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->ssrcAudioLevelExtensionId, extenLen);
 
 			if (!extenValue || extenLen != 1u)
+			{
 				return false;
+			}
 
 			volume = Utils::Byte::Get1Byte(extenValue, 0);
 			voice  = (volume & (1 << 7)) ? true : false;
@@ -434,7 +456,9 @@ namespace RTC
 			uint8_t* extenValue = GetExtension(this->videoOrientationExtensionId, extenLen);
 
 			if (!extenValue || extenLen != 1u)
+			{
 				return false;
+			}
 
 			uint8_t cvoByte       = Utils::Byte::Get1Byte(extenValue, 0);
 			uint8_t cameraValue   = ((cvoByte & 0b00001000) >> 3);
@@ -472,7 +496,9 @@ namespace RTC
 			else if (HasOneByteExtensions())
 			{
 				if (id > 14)
+				{
 					return false;
+				}
 
 				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 				return this->oneByteExtensions[id - 1] != nullptr;
@@ -482,13 +508,17 @@ namespace RTC
 				auto it = this->mapTwoBytesExtensions.find(id);
 
 				if (it == this->mapTwoBytesExtensions.end())
+				{
 					return false;
+				}
 
 				auto* extension = it->second;
 
 				// In Two-Byte extensions value length may be zero. If so, return false.
 				if (extension->len == 0u)
+				{
 					return false;
+				}
 
 				return true;
 			}
@@ -509,13 +539,17 @@ namespace RTC
 			else if (HasOneByteExtensions())
 			{
 				if (id > 14)
+				{
 					return nullptr;
+				}
 
 				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
 				auto* extension = this->oneByteExtensions[id - 1];
 
 				if (!extension)
+				{
 					return nullptr;
+				}
 
 				// In One-Byte extensions value length 0 means 1.
 				len = extension->len + 1;
@@ -527,7 +561,9 @@ namespace RTC
 				auto it = this->mapTwoBytesExtensions.find(id);
 
 				if (it == this->mapTwoBytesExtensions.end())
+				{
 					return nullptr;
+				}
 
 				auto* extension = it->second;
 
@@ -535,7 +571,9 @@ namespace RTC
 
 				// In Two-Byte extensions value length may be zero. If so, return nullptr.
 				if (extension->len == 0u)
+				{
 					return nullptr;
+				}
 
 				return extension->value;
 			}
@@ -567,7 +605,9 @@ namespace RTC
 		uint8_t GetSpatialLayer() const
 		{
 			if (!this->payloadDescriptorHandler)
+			{
 				return 0u;
+			}
 
 			return this->payloadDescriptorHandler->GetSpatialLayer();
 		}
@@ -575,7 +615,9 @@ namespace RTC
 		uint8_t GetTemporalLayer() const
 		{
 			if (!this->payloadDescriptorHandler)
+			{
 				return 0u;
+			}
 
 			return this->payloadDescriptorHandler->GetTemporalLayer();
 		}
@@ -583,7 +625,9 @@ namespace RTC
 		bool IsKeyFrame() const
 		{
 			if (!this->payloadDescriptorHandler)
+			{
 				return false;
+			}
 
 			return this->payloadDescriptorHandler->IsKeyFrame();
 		}

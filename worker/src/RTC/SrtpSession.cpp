@@ -166,7 +166,9 @@ namespace RTC
 		const srtp_err_status_t err = srtp_create(&this->session, &policy);
 
 		if (DepLibSRTP::IsError(err))
+		{
 			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err));
+		}
 	}
 
 	SrtpSession::~SrtpSession()
@@ -178,7 +180,9 @@ namespace RTC
 			const srtp_err_status_t err = srtp_dealloc(this->session);
 
 			if (DepLibSRTP::IsError(err))
+			{
 				MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
+			}
 		}
 	}
 

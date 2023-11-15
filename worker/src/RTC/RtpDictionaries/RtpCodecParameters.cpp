@@ -32,7 +32,9 @@ namespace RTC
 
 		// parameters is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_PARAMETERS))
+		{
 			this->parameters.Set(data->parameters());
+		}
 
 		// rtcpFeedback is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpCodecParameters::VT_RTCPFEEDBACK))
@@ -87,7 +89,9 @@ namespace RTC
 			{
 				// A RTX codec must have 'apt' parameter.
 				if (!this->parameters.HasPositiveInteger(aptString))
+				{
 					MS_THROW_TYPE_ERROR("missing apt parameter in RTX codec");
+				}
 
 				break;
 			}

@@ -104,7 +104,9 @@ namespace RTC
 			auto it = RtpCodecMimeType::string2Type.find(type);
 
 			if (it == RtpCodecMimeType::string2Type.end())
+			{
 				MS_THROW_TYPE_ERROR("unknown codec MIME type '%s'", type.c_str());
+			}
 
 			this->type = it->second;
 		}
@@ -114,7 +116,9 @@ namespace RTC
 			auto it = RtpCodecMimeType::string2Subtype.find(subtype);
 
 			if (it == RtpCodecMimeType::string2Subtype.end())
+			{
 				MS_THROW_TYPE_ERROR("unknown codec MIME subtype '%s'", subtype.c_str());
+			}
 
 			this->subtype = it->second;
 		}

@@ -45,24 +45,34 @@ namespace RTC
 		    protocol(tuple->protocol)
 		{
 			if (protocol == TransportTuple::Protocol::UDP)
+			{
 				StoreUdpRemoteAddress();
+			}
 		}
 
 	public:
 		void Close()
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				this->udpSocket->Close();
+			}
 			else
+			{
 				this->tcpConnection->Close();
+			}
 		}
 
 		bool IsClosed()
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				return this->udpSocket->IsClosed();
+			}
 			else
+			{
 				return this->tcpConnection->IsClosed();
+			}
 		}
 
 		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
@@ -90,9 +100,13 @@ namespace RTC
 		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr)
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+			}
 			else
+			{
 				this->tcpConnection->Send(data, len, cb);
+			}
 		}
 
 		Protocol GetProtocol() const
@@ -103,33 +117,49 @@ namespace RTC
 		const struct sockaddr* GetLocalAddress() const
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				return this->udpSocket->GetLocalAddress();
+			}
 			else
+			{
 				return this->tcpConnection->GetLocalAddress();
+			}
 		}
 
 		const struct sockaddr* GetRemoteAddress() const
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				return (const struct sockaddr*)this->udpRemoteAddr;
+			}
 			else
+			{
 				return this->tcpConnection->GetPeerAddress();
+			}
 		}
 
 		size_t GetRecvBytes() const
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				return this->udpSocket->GetRecvBytes();
+			}
 			else
+			{
 				return this->tcpConnection->GetRecvBytes();
+			}
 		}
 
 		size_t GetSentBytes() const
 		{
 			if (this->protocol == Protocol::UDP)
+			{
 				return this->udpSocket->GetSentBytes();
+			}
 			else
+			{
 				return this->tcpConnection->GetSentBytes();
+			}
 		}
 
 	private:

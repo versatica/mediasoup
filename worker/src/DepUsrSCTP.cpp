@@ -127,7 +127,9 @@ uintptr_t DepUsrSCTP::GetNextSctpAssociationId()
 
 	// NOTE: usrsctp_connect() fails with a value of 0.
 	if (DepUsrSCTP::nextSctpAssociationId == 0u)
+	{
 		++DepUsrSCTP::nextSctpAssociationId;
+	}
 
 	// In case we've wrapped around and need to find an empty spot from a removed
 	// SctpAssociation. Assumes we'll never be full.
@@ -137,7 +139,9 @@ uintptr_t DepUsrSCTP::GetNextSctpAssociationId()
 		++DepUsrSCTP::nextSctpAssociationId;
 
 		if (DepUsrSCTP::nextSctpAssociationId == 0u)
+		{
 			++DepUsrSCTP::nextSctpAssociationId;
+		}
 	}
 
 	return DepUsrSCTP::nextSctpAssociationId++;
@@ -160,7 +164,9 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
 
 	if (++DepUsrSCTP::numSctpAssociations == 1u)
+	{
 		DepUsrSCTP::checker->Start();
+	}
 }
 
 void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
@@ -177,7 +183,9 @@ void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation
 	MS_ASSERT(DepUsrSCTP::numSctpAssociations > 0u, "numSctpAssociations was not higher than 0");
 
 	if (--DepUsrSCTP::numSctpAssociations == 0u)
+	{
 		DepUsrSCTP::checker->Stop();
+	}
 }
 
 RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
@@ -189,7 +197,9 @@ RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 	auto it = DepUsrSCTP::mapIdSctpAssociation.find(id);
 
 	if (it == DepUsrSCTP::mapIdSctpAssociation.end())
+	{
 		return nullptr;
+	}
 
 	return it->second;
 }

@@ -43,7 +43,9 @@ namespace RTC
 		flatbuffers::Offset<FBS::RtxStream::RtxDump> rtxStream;
 
 		if (HasRtx())
+		{
 			rtxStream = this->rtxStream->FillBuffer(builder);
+		}
 
 		return FBS::RtpStream::CreateDump(builder, params, this->score, rtxStream);
 	}
@@ -167,11 +169,15 @@ namespace RTC
 
 			// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 			if (previousScore == 0u)
+			{
 				this->activeSinceMs = DepLibUV::GetTimeMs();
+			}
 
 			// Notify the listener.
 			if (notify)
+			{
 				this->listener->OnRtpStreamScore(this, score, previousScore);
+			}
 		}
 	}
 
@@ -252,7 +258,9 @@ namespace RTC
 
 		// Add the score into the histogram.
 		if (this->scores.size() == ScoreHistogramLength)
+		{
 			this->scores.erase(this->scores.begin());
+		}
 
 		auto previousScore = this->score;
 
@@ -300,7 +308,9 @@ namespace RTC
 
 			// If previous score was 0 (and new one is not 0) then update activeSinceMs.
 			if (previousScore == 0u)
+			{
 				this->activeSinceMs = DepLibUV::GetTimeMs();
+			}
 
 			this->listener->OnRtpStreamScore(this, this->score, previousScore);
 		}

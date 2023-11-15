@@ -139,7 +139,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 
@@ -153,7 +155,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 
@@ -167,7 +171,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 
@@ -181,7 +187,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 
@@ -195,7 +203,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 
@@ -209,7 +219,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 
@@ -223,7 +235,9 @@ namespace RTC
 		auto it = this->mapKeyValues.find(key);
 
 		if (it == this->mapKeyValues.end())
+		{
 			return false;
+		}
 
 		const auto& value = it->second;
 		const auto& array = value.arrayOfIntegers;

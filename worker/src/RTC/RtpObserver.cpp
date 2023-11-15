@@ -89,7 +89,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->paused)
+		{
 			return;
+		}
 
 		this->paused = true;
 
@@ -101,7 +103,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->paused)
+		{
 			return;
+		}
 
 		this->paused = false;
 

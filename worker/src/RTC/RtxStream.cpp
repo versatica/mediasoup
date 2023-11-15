@@ -95,9 +95,13 @@ namespace RTC
 		auto expected = GetExpectedPackets();
 
 		if (expected > this->packetsCount)
+		{
 			this->packetsLost = expected - this->packetsCount;
+		}
 		else
+		{
 			this->packetsLost = 0u;
+		}
 
 		// Calculate Fraction Lost.
 		const uint32_t expectedInterval = expected - this->expectedPrior;
@@ -111,9 +115,13 @@ namespace RTC
 		const int32_t lostInterval = expectedInterval - receivedInterval;
 
 		if (expectedInterval == 0 || lostInterval <= 0)
+		{
 			this->fractionLost = 0;
+		}
 		else
+		{
 			this->fractionLost = std::round((static_cast<double>(lostInterval << 8) / expectedInterval));
+		}
 
 		this->reportedPacketLost += (this->packetsLost - prevPacketsLost);
 

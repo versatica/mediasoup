@@ -31,6 +31,7 @@ namespace RTC
 
 				break;
 			}
+
 			case FBS::DataProducer::Type::DIRECT:
 			{
 				this->type = DataProducer::Type::DIRECT;

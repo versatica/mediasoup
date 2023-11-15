@@ -22,7 +22,9 @@ namespace RTC
 
 		// Don't allow id 0.
 		if (this->id == 0u)
+		{
 			MS_THROW_TYPE_ERROR("invalid id 0");
+		}
 
 		// encrypt is false by default.
 		this->encrypt = data->encrypt();

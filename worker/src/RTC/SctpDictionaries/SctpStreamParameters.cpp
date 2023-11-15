@@ -17,7 +17,9 @@ namespace RTC
 		this->streamId = data->streamId();
 
 		if (this->streamId > 65534)
+		{
 			MS_THROW_TYPE_ERROR("streamId must not be greater than 65534");
+		}
 
 		// ordered is optional.
 		bool orderedGiven = false;
@@ -41,7 +43,9 @@ namespace RTC
 		}
 
 		if (this->maxPacketLifeTime && this->maxRetransmits)
+		{
 			MS_THROW_TYPE_ERROR("cannot provide both maxPacketLifeTime and maxRetransmits");
+		}
 
 		// clang-format off
 		if (

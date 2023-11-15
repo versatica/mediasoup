@@ -355,7 +355,9 @@ public:
 		  bufferDataLen += loggerWritten; \
 		} \
 		if (bufferDataLen != 0) \
+		{ \
 			Logger::channel->SendLog(Logger::buffer, static_cast<uint32_t>(bufferDataLen)); \
+		} \
 	} \
 	while (false)
 

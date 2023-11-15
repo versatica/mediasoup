@@ -266,7 +266,9 @@ namespace RTC
 			{
 				// Ensure this method is not called twice.
 				if (this->tuple)
+				{
 					MS_THROW_ERROR("connect() already called");
+				}
 
 				try
 				{
@@ -306,7 +308,9 @@ namespace RTC
 						auto* srtpKey = Utils::String::Base64Decode(srtpKeyBase64, outLen);
 
 						if (outLen != PipeTransport::srtpMasterLength)
+						{
 							MS_THROW_TYPE_ERROR("invalid decoded SRTP key length");
+						}
 
 						auto* srtpLocalKey  = new uint8_t[PipeTransport::srtpMasterLength];
 						auto* srtpRemoteKey = new uint8_t[PipeTransport::srtpMasterLength];
@@ -351,7 +355,9 @@ namespace RTC
 					}
 
 					if (!flatbuffers::IsFieldPresent(body, FBS::PipeTransport::ConnectRequest::VT_IP))
+					{
 						MS_THROW_TYPE_ERROR("missing ip");
+					}
 
 					ip = body->ip()->str();
 
@@ -377,7 +383,9 @@ namespace RTC
 							  reinterpret_cast<struct sockaddr_in*>(&this->remoteAddrStorage));
 
 							if (err != 0)
+							{
 								MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+							}
 
 							break;
 						}
@@ -390,7 +398,9 @@ namespace RTC
 							  reinterpret_cast<struct sockaddr_in6*>(&this->remoteAddrStorage));
 
 							if (err != 0)
+							{
 								MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+							}
 
 							break;
 						}
@@ -507,13 +517,17 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
@@ -528,7 +542,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		packet->Serialize(RTC::RTCP::Buffer);
 
@@ -536,7 +552,9 @@ namespace RTC
 		auto intLen         = static_cast<int>(packet->GetSize());
 
 		if (HasSrtp() && !this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
@@ -559,7 +577,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		this->tuple->Send(data, len);
 
@@ -620,7 +640,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		// Decrypt the SRTP packet.
 		auto intLen = static_cast<int>(len);
@@ -680,7 +702,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		// Decrypt the SRTCP packet.
 		auto intLen = static_cast<int>(len);
@@ -717,7 +741,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		// Verify that the packet's tuple matches our tuple.
 		if (!this->tuple->Compare(tuple))

@@ -293,7 +293,9 @@ namespace RTC
 			size_t GetSize() const override
 			{
 				if (this->size)
+				{
 					return this->size;
+				}
 
 				// Fixed packet size.
 				size_t size = FeedbackRtpPacket::GetSize();

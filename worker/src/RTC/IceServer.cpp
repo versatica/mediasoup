@@ -20,16 +20,24 @@ namespace RTC
 		switch (state)
 		{
 			case FBS::WebRtcTransport::IceState::NEW:
+			{
 				return IceServer::IceState::NEW;
+			}
 
 			case FBS::WebRtcTransport::IceState::CONNECTED:
+			{
 				return IceServer::IceState::CONNECTED;
+			}
 
 			case FBS::WebRtcTransport::IceState::COMPLETED:
+			{
 				return IceServer::IceState::COMPLETED;
+			}
 
 			case FBS::WebRtcTransport::IceState::DISCONNECTED:
+			{
 				return IceServer::IceState::DISCONNECTED;
+			}
 		}
 	}
 

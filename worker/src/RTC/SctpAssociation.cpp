@@ -293,7 +293,9 @@ namespace RTC
 
 		// Just run the SCTP stack if our state is 'new'.
 		if (this->state != SctpState::NEW)
+		{
 			return;
+		}
 
 		try
 		{
@@ -311,7 +313,9 @@ namespace RTC
 			ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(rconn));
 
 			if (ret < 0 && errno != EINPROGRESS)
+			{
 				MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
+			}
 
 			// Disable MTU discovery.
 			sctp_paddrparams peerAddrParams; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -328,7 +332,9 @@ namespace RTC
 			  this->socket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerAddrParams, sizeof(peerAddrParams));
 
 			if (ret < 0)
+			{
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_PEER_ADDR_PARAMS) failed: %s", std::strerror(errno));
+			}
 
 			// Announce connecting state.
 			this->state = SctpState::CONNECTING;
@@ -485,7 +491,9 @@ namespace RTC
 
 		// We need more OS.
 		if (streamId > this->os - 1)
+		{
 			AddOutgoingStreams(/*force*/ false);
+		}
 	}
 
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
@@ -497,9 +505,13 @@ namespace RTC
 		// Send SCTP_RESET_STREAMS to the remote.
 		// https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
 		if (this->isDataChannel)
+		{
 			ResetSctpStream(streamId, StreamDirection::OUTGOING);
+		}
 		else
+		{
 			ResetSctpStream(streamId, StreamDirection::INCOMING);
+		}
 	}
 
 	void SctpAssociation::DataConsumerClosed(RTC::DataConsumer* dataConsumer)
@@ -518,7 +530,9 @@ namespace RTC
 
 		// Do nothing if an outgoing stream that could not be allocated by us.
 		if (direction == StreamDirection::OUTGOING && streamId > this->os - 1)
+		{
 			return;
+		}
 
 		int ret;
 		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -585,9 +599,13 @@ namespace RTC
 		uint16_t additionalOs{ 0 };
 
 		if (MaxSctpStreams - this->os >= 32)
+		{
 			additionalOs = 32;
+		}
 		else
+		{
 			additionalOs = MaxSctpStreams - this->os;
+		}
 
 		if (additionalOs == 0)
 		{
@@ -600,7 +618,9 @@ namespace RTC
 
 		// Already in progress, ignore (unless forced).
 		if (!force && nextDesiredOs == this->desiredOs)
+		{
 			return;
+		}
 
 		// Update desired value.
 		this->desiredOs = nextDesiredOs;
@@ -625,7 +645,9 @@ namespace RTC
 		  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
 
 		if (ret < 0)
+		{
 			MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_ADD_STREAMS) failed: %s", std::strerror(errno));
+		}
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
@@ -708,7 +730,9 @@ namespace RTC
 		{
 			// Allocate the buffer if not already done.
 			if (!this->messageBuffer)
+			{
 				this->messageBuffer = new uint8_t[this->maxSctpMessageSize];
+			}
 
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);
 			this->messageBufferLen += len;
@@ -720,7 +744,9 @@ namespace RTC
 	void SctpAssociation::OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len)
 	{
 		if (notification->sn_header.sn_length != (uint32_t)len)
+		{
 			return;
+		}
 
 		switch (notification->sn_header.sn_type)
 		{
@@ -751,7 +777,9 @@ namespace RTC
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)
+						{
 							AddOutgoingStreams(/*force*/ true);
+						}
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -807,7 +835,9 @@ namespace RTC
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)
+						{
 							AddOutgoingStreams(/*force*/ true);
+						}
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -947,10 +977,14 @@ namespace RTC
 				  sizeof(uint16_t);
 
 				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN)
+				{
 					incoming = true;
+				}
 
 				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN)
+				{
 					outgoing = true;
+				}
 
 				if (MS_HAS_DEBUG_TAG(sctp))
 				{
@@ -969,7 +1003,9 @@ namespace RTC
 						}
 
 						if (i > 0)
+						{
 							streamIds.append(",");
+						}
 
 						streamIds.append(std::to_string(streamId));
 					}

@@ -18,16 +18,21 @@ namespace RTC
 			{
 				size += this->senderReportPacket.GetSize();
 			}
+
 			if (this->receiverReportPacket.GetCount() > 0u)
 			{
 				size += this->receiverReportPacket.GetSize();
 			}
 
 			if (this->sdesPacket.GetCount() > 0u)
+			{
 				size += this->sdesPacket.GetSize();
+			}
 
 			if (this->xrPacket.Begin() != this->xrPacket.End())
+			{
 				size += this->xrPacket.GetSize();
+			}
 
 			return size;
 		}
@@ -72,17 +77,25 @@ namespace RTC
 			// Add the items into the packet.
 
 			if (senderReport)
+			{
 				this->senderReportPacket.AddReport(senderReport);
+			}
 
 			if (sdesChunk)
+			{
 				this->sdesPacket.AddChunk(sdesChunk);
+			}
 
 			if (delaySinceLastRrReport)
+			{
 				this->xrPacket.AddReport(delaySinceLastRrReport);
+			}
 
 			// New items can hold in the packet, report it.
 			if (GetSize() <= MaxSize)
+			{
 				return true;
+			}
 
 			// New items can not hold in the packet, remove them,
 			// delete and report it.
@@ -126,7 +139,9 @@ namespace RTC
 
 			// New items can hold in the packet, report it.
 			if (GetSize() <= MaxSize)
+			{
 				return true;
+			}
 
 			// New items can not hold in the packet, remove them,
 			// delete and report it.
@@ -162,11 +177,15 @@ namespace RTC
 				this->receiverReportPacket.AddReport(report);
 
 			if (receiverReferenceTimeReport)
+			{
 				this->xrPacket.AddReport(receiverReferenceTimeReport);
+			}
 
 			// New items can hold in the packet, report it.
 			if (GetSize() <= MaxSize)
+			{
 				return true;
+			}
 
 			// New items can not hold in the packet, remove them,
 			// delete and report it.
@@ -197,7 +216,9 @@ namespace RTC
 				this->senderReportPacket.Dump();
 
 				if (this->receiverReportPacket.GetCount() != 0u)
+				{
 					this->receiverReportPacket.Dump();
+				}
 			}
 			else
 			{
@@ -205,10 +226,14 @@ namespace RTC
 			}
 
 			if (this->sdesPacket.GetCount() != 0u)
+			{
 				this->sdesPacket.Dump();
+			}
 
 			if (this->xrPacket.Begin() != this->xrPacket.End())
+			{
 				this->xrPacket.Dump();
+			}
 
 			MS_DUMP("</CompoundPacket>");
 		}
