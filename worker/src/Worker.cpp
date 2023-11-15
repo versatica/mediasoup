@@ -3,6 +3,9 @@
 
 #include "Worker.hpp"
 #include "ChannelMessageRegistrator.hpp"
+#ifdef MS_LIBURING_ENABLED
+#include "DepLibUring.hpp"
+#endif
 #include "DepLibUV.hpp"
 #include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
@@ -39,6 +42,11 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 
 	// Create the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CreateChecker();
+
+#ifdef MS_LIBURING_ENABLED
+	// Start polling CQEs, which will create a uv_pool_t handle.
+	DepLibUring::liburing->StartPollingCQEs();
+#endif
 
 	// Tell the Node process that we are running.
 	this->shared->channelNotifier->Emit(
@@ -92,6 +100,11 @@ void Worker::Close()
 
 	// Close the Checker instance in DepUsrSCTP.
 	DepUsrSCTP::CloseChecker();
+
+#ifdef MS_LIBURING_ENABLED
+	// Stop polling CQEs, which will close the uv_pool_t handle.
+	DepLibUring::liburing->StopPollingCQEs();
+#endif
 
 	// Close the Channel.
 	this->channel->Close();

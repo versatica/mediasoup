@@ -109,10 +109,37 @@ DepLibUring::DepLibUring()
 		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(-error));
 	}
 
+	// Initialize available UserData entries.
+	for (size_t i{ 0 }; i < DepLibUring::QueueDepth; ++i)
+	{
+		this->availableUserDataEntries.push(i);
+	}
+}
+
+DepLibUring::~DepLibUring()
+{
+	MS_TRACE();
+
+	// Close the event file descriptor.
+	const auto err = close(this->efd);
+
+	if (err != 0)
+	{
+		MS_ABORT("close() failed: %s", std::strerror(-err));
+	}
+
+	// Close the ring.
+	io_uring_queue_exit(std::addressof(this->ring));
+}
+
+void DepLibUring::StartPollingCQEs()
+{
+	MS_TRACE();
+
 	// Watch the event file descriptor for completions.
 	this->uvHandle = new uv_poll_t;
 
-	error = uv_poll_init(DepLibUV::GetLoop(), this->uvHandle, this->efd);
+	auto error = uv_poll_init(DepLibUV::GetLoop(), this->uvHandle, this->efd);
 
 	if (error != 0)
 	{
@@ -129,36 +156,24 @@ DepLibUring::DepLibUring()
 	{
 		MS_THROW_ERROR("uv_poll_start() failed: %s", uv_strerror(error));
 	}
-
-	// Initialize available UserData entries.
-	for (size_t i{ 0 }; i < DepLibUring::QueueDepth; ++i)
-	{
-		this->availableUserDataEntries.push(i);
-	}
 }
 
-DepLibUring::~DepLibUring()
+void DepLibUring::StopPollingCQEs()
 {
 	MS_TRACE();
 
 	this->uvHandle->data = nullptr;
 
 	// Stop polling the event file descriptor.
-	const auto err = uv_poll_stop(this->uvHandle);
+	auto err = uv_poll_stop(this->uvHandle);
 
 	if (err != 0)
 	{
 		MS_ABORT("uv_poll_stop() failed: %s", uv_strerror(err));
 	}
 
-	// Handles that wrap file descriptors are clossed immediately.
+	// NOTE: Handles that wrap file descriptors are clossed immediately.
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseFd));
-
-	// Close the event file descriptor.
-	close(this->efd);
-
-	// Close the ring.
-	io_uring_queue_exit(std::addressof(this->ring));
 }
 
 bool DepLibUring::PrepareSend(

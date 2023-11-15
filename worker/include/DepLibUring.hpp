@@ -32,6 +32,8 @@ public:
 public:
 	DepLibUring();
 	~DepLibUring();
+	void StartPollingCQEs();
+	void StopPollingCQEs();
 	bool PrepareSend(
 	  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb);
 	bool PrepareWrite(
