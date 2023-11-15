@@ -15,7 +15,7 @@ thread_local DepLibUring* DepLibUring::liburing{ nullptr };
 /* Completion queue entry array used to retrieve processes tasks. */
 thread_local struct io_uring_cqe* cqes[DepLibUring::QueueDepth];
 
-/* Static method for UV callbacks. */
+/* Static methods for UV callbacks. */
 
 inline static void onCloseFd(uv_handle_t* handle)
 {
