@@ -14,7 +14,12 @@ thread_local DepLibUring* DepLibUring::liburing{ nullptr };
 /* Completion queue entry array used to retrieve processes tasks. */
 thread_local struct io_uring_cqe* cqes[DepLibUring::QueueDepth];
 
-/* Static method for UV callback. */
+/* Static method for UV callbacks. */
+
+inline static void onCloseFd(uv_handle_t* handle)
+{
+	delete reinterpret_cast<uv_poll_t*>(handle);
+}
 
 inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 {
@@ -136,10 +141,18 @@ DepLibUring::~DepLibUring()
 {
 	MS_TRACE();
 
-	// Stop polling the event file descriptor.
-	uv_poll_stop(this->uvHandle);
+	this->uvHandle->data = nullptr;
 
-	delete this->uvHandle;
+	// Stop polling the event file descriptor.
+	const auto err = uv_poll_stop(this->uvHandle);
+
+	if (err != 0)
+	{
+		MS_ABORT("uv_poll_stop() failed: %s", uv_strerror(err));
+	}
+
+	// Handles that wrap file descriptors are clossed immediately.
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseFd));
 
 	// Close the event file descriptor.
 	close(this->efd);
