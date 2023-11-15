@@ -190,6 +190,7 @@ bool DepLibUring::IsActive()
 }
 
 /* Instance methods. */
+
 DepLibUring::LibUring::LibUring()
 {
 	MS_TRACE();
