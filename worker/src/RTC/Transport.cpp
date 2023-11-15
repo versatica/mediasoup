@@ -336,20 +336,34 @@ namespace RTC
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::NEW;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::CONNECTING:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::CONNECTED:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::FAILED:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::FAILED;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::CLOSED:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
 					break;
+				}
 			}
 
 			sctpListener = this->sctpListener.FillBuffer(builder);
@@ -403,20 +417,34 @@ namespace RTC
 			switch (this->sctpAssociation->GetState())
 			{
 				case RTC::SctpAssociation::SctpState::NEW:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::NEW;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::CONNECTING:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTING;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::CONNECTED:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::CONNECTED;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::FAILED:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::FAILED;
 					break;
+				}
+
 				case RTC::SctpAssociation::SctpState::CLOSED:
+				{
 					sctpState = FBS::SctpAssociation::SctpState::CLOSED;
 					break;
+				}
 			}
 		}
 

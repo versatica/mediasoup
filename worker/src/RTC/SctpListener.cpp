@@ -57,9 +57,13 @@ namespace RTC
 		for (auto it = this->streamIdTable.begin(); it != this->streamIdTable.end();)
 		{
 			if (it->second == dataProducer)
+			{
 				it = this->streamIdTable.erase(it);
+			}
 			else
+			{
 				++it;
+			}
 		}
 	}
 

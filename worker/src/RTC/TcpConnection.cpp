@@ -60,13 +60,17 @@ namespace RTC
 			// a DTLS Close Alert this would be closed (Close() called) so we cannot call
 			// our listeners anymore.
 			if (IsClosed())
+			{
 				return;
+			}
 
 			const size_t dataLen = this->bufferDataLen - this->frameStart;
 			size_t packetLen;
 
 			if (dataLen >= 2)
+			{
 				packetLen = size_t{ Utils::Byte::Get2Bytes(this->buffer + this->frameStart, 0) };
+			}
 
 			// We have packetLen bytes.
 			if (dataLen >= 2 && dataLen >= 2 + packetLen)
