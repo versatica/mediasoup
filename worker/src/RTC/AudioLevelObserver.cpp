@@ -27,12 +27,18 @@ namespace RTC
 		this->interval   = options->interval();
 
 		if (this->threshold > 0)
+		{
 			MS_THROW_TYPE_ERROR("invalid threshold value %" PRIi8, this->threshold);
+		}
 
 		if (this->interval < 250)
+		{
 			this->interval = 250;
+		}
 		else if (this->interval > 5000)
+		{
 			this->interval = 5000;
+		}
 
 		this->periodicTimer = new TimerHandle(this);
 
@@ -59,7 +65,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (producer->GetKind() != RTC::Media::Kind::AUDIO)
+		{
 			MS_THROW_TYPE_ERROR("not an audio Producer");
+		}
 
 		// Insert into the map.
 		this->mapProducerDBovs[producer];
@@ -78,13 +86,17 @@ namespace RTC
 		MS_TRACE();
 
 		if (IsPaused())
+		{
 			return;
+		}
 
 		uint8_t volume;
 		bool voice;
 
 		if (!packet->ReadSsrcAudioLevel(volume, voice))
+		{
 			return;
+		}
 
 		auto& dBovs = this->mapProducerDBovs.at(producer);
 

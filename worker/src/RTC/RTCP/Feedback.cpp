@@ -34,7 +34,9 @@ namespace RTC
 			auto it = FeedbackPacket<T>::type2String.find(type);
 
 			if (it == FeedbackPacket<T>::type2String.end())
+			{
 				return Unknown;
+			}
 
 			return it->second;
 		}

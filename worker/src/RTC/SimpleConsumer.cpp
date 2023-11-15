@@ -24,7 +24,9 @@ namespace RTC
 
 		// Ensure there is a single encoding.
 		if (this->consumableRtpEncodings.size() != 1u)
+		{
 			MS_THROW_TYPE_ERROR("invalid consumableRtpEncodings with size != 1");
+		}
 
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -110,7 +112,9 @@ namespace RTC
 		uint8_t producerScore{ 0 };
 
 		if (this->producerRtpStream)
+		{
 			producerScore = this->producerRtpStream->GetScore();
+		}
 
 		return FBS::Consumer::CreateConsumerScoreDirect(
 		  builder, this->rtpStream->GetScore(), producerScore, this->producerRtpStreamScores);
@@ -134,7 +138,9 @@ namespace RTC
 			case Channel::ChannelRequest::Method::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
+				{
 					RequestKeyFrame();
+				}
 
 				request->Accept();
 
@@ -202,10 +208,14 @@ namespace RTC
 
 		// Audio SimpleConsumer does not play the BWE game.
 		if (this->kind != RTC::Media::Kind::VIDEO)
+		{
 			return 0u;
+		}
 
 		if (!IsActive())
+		{
 			return 0u;
+		}
 
 		return this->priority;
 	}
@@ -221,7 +231,9 @@ namespace RTC
 		// If this is not the first time this method is called within the same iteration,
 		// return 0 since a video SimpleConsumer does not keep state about this.
 		if (this->managingBitrate)
+		{
 			return 0u;
+		}
 
 		this->managingBitrate = true;
 
@@ -231,9 +243,13 @@ namespace RTC
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
 
 		if (desiredBitrate < bitrate)
+		{
 			return desiredBitrate;
+		}
 		else
+		{
 			return bitrate;
+		}
 	}
 
 	void SimpleConsumer::ApplyLayers()
@@ -257,10 +273,14 @@ namespace RTC
 
 		// Audio SimpleConsumer does not play the BWE game.
 		if (this->kind != RTC::Media::Kind::VIDEO)
+		{
 			return 0u;
+		}
 
 		if (!IsActive())
+		{
 			return 0u;
+		}
 
 		auto nowMs          = DepLibUV::GetTimeMs();
 		auto desiredBitrate = this->producerRtpStream->GetBitrate(nowMs);
@@ -270,7 +290,9 @@ namespace RTC
 		auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
 
 		if (maxBitrate > desiredBitrate)
+		{
 			desiredBitrate = maxBitrate;
+		}
 
 		return desiredBitrate;
 	}
@@ -335,7 +357,9 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (packet->IsKeyFrame())
+			{
 				MS_DEBUG_TAG(rtp, "sync key frame received");
+			}
 
 			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
@@ -401,12 +425,16 @@ namespace RTC
 		MS_TRACE();
 
 		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
+		{
 			return true;
+		}
 
 		auto* senderReport = this->rtpStream->GetRtcpSenderReport(nowMs);
 
 		if (!senderReport)
+		{
 			return true;
+		}
 
 		// Build SDES chunk for this sender.
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
@@ -423,7 +451,9 @@ namespace RTC
 
 		// RTCP Compound packet buffer cannot hold the data.
 		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrReport))
+		{
 			return false;
+		}
 
 		this->lastRtcpSentTime = nowMs;
 
@@ -436,13 +466,17 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return;
+		}
 
 		auto fractionLost = this->rtpStream->GetFractionLost();
 
 		// If our fraction lost is worse than the given one, update it.
 		if (fractionLost > worstRemoteFractionLost)
+		{
 			worstRemoteFractionLost = fractionLost;
+		}
 	}
 
 	void SimpleConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
@@ -450,7 +484,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return;
+		}
 
 		// May emit 'trace' event.
 		EmitTraceEventNackType();
@@ -485,7 +521,9 @@ namespace RTC
 		this->rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
+		{
 			RequestKeyFrame();
+		}
 	}
 
 	void SimpleConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -507,7 +545,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return 0u;
+		}
 
 		return this->rtpStream->GetBitrate(nowMs);
 	}
@@ -526,7 +566,9 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
+		{
 			RequestKeyFrame();
+		}
 	}
 
 	void SimpleConsumer::UserOnTransportDisconnected()
@@ -543,7 +585,9 @@ namespace RTC
 		this->rtpStream->Pause();
 
 		if (this->externallyManagedBitrate && this->kind == RTC::Media::Kind::VIDEO)
+		{
 			this->listener->OnConsumerNeedZeroBitrate(this);
+		}
 	}
 
 	void SimpleConsumer::UserOnResumed()
@@ -553,7 +597,9 @@ namespace RTC
 		this->syncRequired = true;
 
 		if (IsActive())
+		{
 			RequestKeyFrame();
+		}
 	}
 
 	void SimpleConsumer::CreateRtpStream()
@@ -626,12 +672,16 @@ namespace RTC
 
 		// If the Consumer is paused, tell the RtpStreamSend.
 		if (IsPaused() || IsProducerPaused())
+		{
 			this->rtpStream->Pause();
+		}
 
 		const auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 		if (rtxCodec && encoding.hasRtx)
+		{
 			this->rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
+		}
 	}
 
 	void SimpleConsumer::RequestKeyFrame()
@@ -639,7 +689,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->kind != RTC::Media::Kind::VIDEO)
+		{
 			return;
+		}
 
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 

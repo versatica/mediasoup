@@ -106,9 +106,13 @@ namespace RTC
 		this->interval = options->interval();
 
 		if (this->interval < 100)
+		{
 			this->interval = 100;
+		}
 		else if (this->interval > 5000)
+		{
 			this->interval = 5000;
+		}
 
 		this->periodicTimer = new TimerHandle(this);
 
@@ -145,10 +149,14 @@ namespace RTC
 		MS_TRACE();
 
 		if (producer->GetKind() != RTC::Media::Kind::AUDIO)
+		{
 			MS_THROW_TYPE_ERROR("not an audio Producer");
+		}
 
 		if (this->mapProducerSpeakers.find(producer->id) != this->mapProducerSpeakers.end())
+		{
 			MS_THROW_ERROR("Producer already in map");
+		}
 
 		this->mapProducerSpeakers[producer->id] = new ProducerSpeaker(producer);
 	}
@@ -211,13 +219,18 @@ namespace RTC
 		MS_TRACE();
 
 		if (IsPaused())
+		{
 			return;
+		}
 
 		uint8_t level;
 		bool voice;
 
 		if (!packet->ReadSsrcAudioLevel(level, voice))
+		{
 			return;
+		}
+
 		uint8_t volume = 127 - level;
 
 		auto it = this->mapProducerSpeakers.find(producer->id);

@@ -70,7 +70,9 @@ namespace RTC
 			SenderReport* report = SenderReport::Parse(data + offset, len - offset);
 
 			if (report)
+			{
 				packet->AddReport(report);
+			}
 
 			return packet.release();
 		}

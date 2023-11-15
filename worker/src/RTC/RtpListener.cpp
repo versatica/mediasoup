@@ -123,7 +123,9 @@ namespace RTC
 			const auto& rid = encoding.rid;
 
 			if (rid.empty())
+			{
 				continue;
+			}
 
 			if (this->ridTable.find(rid) == this->ridTable.end())
 			{
@@ -148,25 +150,37 @@ namespace RTC
 		for (auto it = this->ssrcTable.begin(); it != this->ssrcTable.end();)
 		{
 			if (it->second == producer)
+			{
 				it = this->ssrcTable.erase(it);
+			}
 			else
+			{
 				++it;
+			}
 		}
 
 		for (auto it = this->midTable.begin(); it != this->midTable.end();)
 		{
 			if (it->second == producer)
+			{
 				it = this->midTable.erase(it);
+			}
 			else
+			{
 				++it;
+			}
 		}
 
 		for (auto it = this->ridTable.begin(); it != this->ridTable.end();)
 		{
 			if (it->second == producer)
+			{
 				it = this->ridTable.erase(it);
+			}
 			else
+			{
 				++it;
+			}
 		}
 	}
 

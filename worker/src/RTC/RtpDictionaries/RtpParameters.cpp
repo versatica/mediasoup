@@ -72,13 +72,24 @@ namespace RTC
 		switch (type)
 		{
 			case Type::SIMPLE:
+			{
 				return FBS::RtpParameters::Type::SIMPLE;
+			}
+
 			case Type::SIMULCAST:
+			{
 				return FBS::RtpParameters::Type::SIMULCAST;
+			}
+
 			case Type::SVC:
+			{
 				return FBS::RtpParameters::Type::SVC;
+			}
+
 			case Type::PIPE:
+			{
 				return FBS::RtpParameters::Type::PIPE;
+			}
 		}
 	}
 
@@ -94,7 +105,9 @@ namespace RTC
 			this->mid = data->mid()->str();
 
 			if (this->mid.empty())
+			{
 				MS_THROW_TYPE_ERROR("empty mid");
+			}
 		}
 
 		this->codecs.reserve(data->codecs()->size());
@@ -106,7 +119,9 @@ namespace RTC
 		}
 
 		if (this->codecs.empty())
+		{
 			MS_THROW_TYPE_ERROR("empty codecs");
+		}
 
 		this->encodings.reserve(data->encodings()->size());
 
@@ -117,7 +132,9 @@ namespace RTC
 		}
 
 		if (this->encodings.empty())
+		{
 			MS_THROW_TYPE_ERROR("empty encodings");
+		}
 
 		this->headerExtensions.reserve(data->headerExtensions()->size());
 
@@ -188,12 +205,16 @@ namespace RTC
 			const auto& codec = *it;
 
 			if (codec.payloadType == payloadType)
+			{
 				return std::addressof(codec);
+			}
 		}
 
 		// This should never happen.
 		if (it == this->codecs.end())
+		{
 			MS_ABORT("no valid codec payload type for the given encoding");
+		}
 
 		return nullptr;
 	}
@@ -228,7 +249,9 @@ namespace RTC
 		for (auto& codec : this->codecs)
 		{
 			if (payloadTypes.find(codec.payloadType) != payloadTypes.end())
+			{
 				MS_THROW_TYPE_ERROR("duplicated payloadType");
+			}
 
 			payloadTypes.insert(codec.payloadType);
 
@@ -248,18 +271,28 @@ namespace RTC
 						if (static_cast<int32_t>(codec.payloadType) == apt)
 						{
 							if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::RTX)
+							{
 								MS_THROW_TYPE_ERROR("apt in RTX codec points to a RTX codec");
+							}
 							else if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::ULPFEC)
+							{
 								MS_THROW_TYPE_ERROR("apt in RTX codec points to a ULPFEC codec");
+							}
 							else if (codec.mimeType.subtype == RTC::RtpCodecMimeType::Subtype::FLEXFEC)
+							{
 								MS_THROW_TYPE_ERROR("apt in RTX codec points to a FLEXFEC codec");
+							}
 							else
+							{
 								break;
+							}
 						}
 					}
 
 					if (it == this->codecs.end())
+					{
 						MS_THROW_TYPE_ERROR("apt in RTX codec points to a non existing codec");
+					}
 
 					break;
 				}
@@ -290,7 +323,9 @@ namespace RTC
 			}
 
 			if (it == this->codecs.end())
+			{
 				MS_THROW_TYPE_ERROR("no media codecs found");
+			}
 		}
 
 		// Iterate all the encodings, set the first payloadType in all of them with
@@ -323,14 +358,18 @@ namespace RTC
 					{
 						// Must be a media codec.
 						if (codec.mimeType.IsMediaCodec())
+						{
 							break;
+						}
 
 						MS_THROW_TYPE_ERROR("invalid codecPayloadType");
 					}
 				}
 
 				if (it == this->codecs.end())
+				{
 					MS_THROW_TYPE_ERROR("unknown codecPayloadType");
+				}
 			}
 		}
 	}

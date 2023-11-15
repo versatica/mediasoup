@@ -54,7 +54,9 @@ Worker::~Worker()
 	MS_TRACE();
 
 	if (!this->closed)
+	{
 		Close();
+	}
 }
 
 void Worker::Close()
@@ -62,7 +64,9 @@ void Worker::Close()
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	this->closed = true;
 
@@ -139,7 +143,9 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	err = uv_getrusage(std::addressof(uvRusage));
 
 	if (err != 0)
+	{
 		MS_THROW_ERROR("uv_getrusagerequest() failed: %s", uv_strerror(err));
+	}
 
 	return FBS::Worker::CreateResourceUsageResponse(
 	  builder,
@@ -195,7 +201,9 @@ RTC::Router* Worker::GetRouter(const std::string& routerId) const
 	auto it = this->mapRouters.find(routerId);
 
 	if (it == this->mapRouters.end())
+	{
 		MS_THROW_ERROR("Router not found");
+	}
 
 	return it->second;
 }
@@ -203,13 +211,17 @@ RTC::Router* Worker::GetRouter(const std::string& routerId) const
 void Worker::CheckNoWebRtcServer(const std::string& webRtcServerId) const
 {
 	if (this->mapWebRtcServers.find(webRtcServerId) != this->mapWebRtcServers.end())
+	{
 		MS_THROW_ERROR("a WebRtcServer with same webRtcServerId already exists");
+	}
 }
 
 void Worker::CheckNoRouter(const std::string& routerId) const
 {
 	if (this->mapRouters.find(routerId) != this->mapRouters.end())
+	{
 		MS_THROW_ERROR("a Router with same routerId already exists");
+	}
 }
 
 RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) const
@@ -217,7 +229,9 @@ RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) co
 	auto it = this->mapWebRtcServers.find(webRtcServerId);
 
 	if (it == this->mapWebRtcServers.end())
+	{
 		MS_THROW_ERROR("WebRtcServer not found");
+	}
 
 	return it->second;
 }
@@ -234,7 +248,9 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		case Channel::ChannelRequest::Method::WORKER_CLOSE:
 		{
 			if (this->closed)
+			{
 				return;
+			}
 
 			MS_DEBUG_DEV("Worker close request, stopping");
 
@@ -459,14 +475,18 @@ inline void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 	MS_TRACE();
 
 	if (this->closed)
+	{
 		return;
+	}
 
 	switch (signum)
 	{
 		case SIGINT:
 		{
 			if (this->closed)
+			{
 				return;
+			}
 
 			MS_DEBUG_DEV("INT signal received, closing myself");
 
@@ -478,7 +498,9 @@ inline void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 		case SIGTERM:
 		{
 			if (this->closed)
+			{
 				return;
+			}
 
 			MS_DEBUG_DEV("TERM signal received, closing myself");
 

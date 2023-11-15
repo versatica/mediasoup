@@ -79,7 +79,9 @@ namespace Channel
 		MS_TRACE_STD();
 
 		if (!this->closed)
+		{
 			Close();
+		}
 
 		delete this->consumerSocket;
 		delete this->producerSocket;
@@ -90,7 +92,9 @@ namespace Channel
 		MS_TRACE_STD();
 
 		if (this->closed)
+		{
 			return;
+		}
 
 		this->closed = true;
 
@@ -123,7 +127,9 @@ namespace Channel
 		MS_TRACE_STD();
 
 		if (this->closed)
+		{
 			return;
+		}
 
 		if (messageLen > PayloadMaxLen)
 		{
@@ -140,7 +146,9 @@ namespace Channel
 		MS_TRACE_STD();
 
 		if (this->closed)
+		{
 			return;
+		}
 
 		if (messageLen > PayloadMaxLen)
 		{
@@ -163,7 +171,9 @@ namespace Channel
 		MS_TRACE_STD();
 
 		if (this->closed)
+		{
 			return false;
+		}
 
 		uint8_t* msg{ nullptr };
 		uint32_t msgLen;
@@ -342,7 +352,9 @@ namespace Channel
 		while (true)
 		{
 			if (IsClosed())
+			{
 				return;
+			}
 
 			size_t readLen = this->bufferDataLen - msgStart;
 

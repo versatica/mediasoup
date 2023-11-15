@@ -32,7 +32,9 @@ namespace RTC
 			std::unique_ptr<FeedbackPsRembPacket> packet(new FeedbackPsRembPacket(commonHeader, len));
 
 			if (!packet->IsCorrect())
+			{
 				return nullptr;
+			}
 
 			return packet.release();
 		}

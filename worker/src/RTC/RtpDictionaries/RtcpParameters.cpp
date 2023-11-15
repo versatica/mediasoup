@@ -16,7 +16,9 @@ namespace RTC
 
 		// cname is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtcpParameters::VT_CNAME))
+		{
 			this->cname = data->cname()->str();
+		}
 
 		// reducedSize is optional, default value is true.
 		this->reducedSize = data->reducedSize();

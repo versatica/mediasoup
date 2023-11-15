@@ -92,7 +92,9 @@ namespace RTC
 			packet->SetSsrc(ssrc);
 
 			if (offset == 0)
+			{
 				offset = Packet::CommonHeaderSize + 4u /* ssrc */;
+			}
 
 			uint8_t count = header->count;
 

@@ -246,7 +246,9 @@ namespace RTC
 				auto* webRtcServer = this->listener->OnRouterNeedWebRtcServer(this, webRtcServerId);
 
 				if (!webRtcServer)
+				{
 					MS_THROW_ERROR("wrong webRtcServerId (no associated WebRtcServer found)");
+				}
 
 				auto iceCandidates = webRtcServer->GetIceCandidates(
 				  options->enableUdp(), options->enableTcp(), options->preferUdp(), options->preferTcp());
@@ -443,13 +445,17 @@ namespace RTC
 	void Router::CheckNoTransport(const std::string& transportId) const
 	{
 		if (this->mapTransports.find(transportId) != this->mapTransports.end())
+		{
 			MS_THROW_ERROR("a Transport with same id already exists");
+		}
 	}
 
 	void Router::CheckNoRtpObserver(const std::string& rtpObserverId) const
 	{
 		if (this->mapRtpObservers.find(rtpObserverId) != this->mapRtpObservers.end())
+		{
 			MS_THROW_ERROR("an RtpObserver with same id already exists");
+		}
 	}
 
 	RTC::Transport* Router::GetTransportById(const std::string& transportId) const
@@ -459,7 +465,9 @@ namespace RTC
 		auto it = this->mapTransports.find(transportId);
 
 		if (this->mapTransports.find(transportId) == this->mapTransports.end())
+		{
 			MS_THROW_ERROR("Transport not found");
+		}
 
 		return it->second;
 	}
@@ -471,7 +479,9 @@ namespace RTC
 		auto it = this->mapRtpObservers.find(rtpObserverId);
 
 		if (this->mapRtpObservers.find(rtpObserverId) == this->mapRtpObservers.end())
+		{
 			MS_THROW_ERROR("RtpObserver not found");
+		}
 
 		return it->second;
 	}
@@ -656,7 +666,9 @@ namespace RTC
 				const auto& mid = consumer->GetRtpParameters().mid;
 
 				if (!mid.empty())
+				{
 					packet->UpdateMid(mid);
+				}
 
 				consumer->SendRtpPacket(packet, sharedPacket);
 			}
@@ -699,7 +711,9 @@ namespace RTC
 		auto mapProducersIt = this->mapProducers.find(producerId);
 
 		if (mapProducersIt == this->mapProducers.end())
+		{
 			MS_THROW_ERROR("Producer not found [producerId:%s]", producerId.c_str());
+		}
 
 		auto* producer              = mapProducersIt->second;
 		auto mapProducerConsumersIt = this->mapProducerConsumers.find(producer);
@@ -1025,7 +1039,9 @@ namespace RTC
 		auto it = this->mapProducers.find(id);
 
 		if (it == this->mapProducers.end())
+		{
 			MS_THROW_ERROR("Producer not found");
+		}
 
 		RTC::Producer* producer = it->second;
 

@@ -17,7 +17,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!RtpPacket::IsRtp(data, len))
+		{
 			return nullptr;
+		}
 
 		auto* ptr = const_cast<uint8_t*>(data);
 
@@ -136,7 +138,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->header->csrcCount != 0u)
+		{
 			this->csrcList = reinterpret_cast<uint8_t*>(header) + HeaderSize;
+		}
 
 		// Parse RFC 5285 header extension.
 		ParseExtensions();
@@ -408,9 +412,13 @@ namespace RTC
 		else if (this->headerExtension)
 		{
 			if (type == 1u)
+			{
 				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
+			}
 			else if (type == 2u)
+			{
 				this->headerExtension->id = uint16_t{ htons(0b0001000000000000) };
+			}
 		}
 
 		// Calculate total size required for all extensions (with padding if needed).
@@ -486,9 +494,13 @@ namespace RTC
 
 			// Set the header extension id.
 			if (type == 1u)
+			{
 				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
+			}
 			else if (type == 2u)
+			{
 				this->headerExtension->id = uint16_t{ htons(0b0001000000000000) };
+			}
 
 			// Set the header extension length.
 			this->headerExtension->length = htons(extensionsTotalSize / 4);
@@ -502,7 +514,9 @@ namespace RTC
 			if (type == 1u)
 			{
 				if (extension.id == 0 || extension.id > 14 || extension.len == 0 || extension.len > 16)
+				{
 					continue;
+				}
 
 				// Store the One-Byte extension element in an array.
 				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
@@ -516,7 +530,9 @@ namespace RTC
 			else if (type == 2u)
 			{
 				if (extension.id == 0)
+				{
 					continue;
+				}
 
 				// Store the Two-Bytes extension element in the map.
 				this->mapTwoBytesExtensions[extension.id] = reinterpret_cast<TwoBytesExtension*>(ptr);
@@ -547,7 +563,9 @@ namespace RTC
 		uint8_t* extenValue = GetExtension(this->midExtensionId, extenLen);
 
 		if (!extenValue)
+		{
 			return;
+		}
 
 		const size_t midLen = mid.length();
 
@@ -593,13 +611,17 @@ namespace RTC
 			auto* extension = this->oneByteExtensions[id - 1];
 
 			if (!extension)
+			{
 				return false;
+			}
 
 			auto currentLen = extension->len + 1;
 
 			// Fill with 0's if new length is minor.
 			if (len < currentLen)
+			{
 				std::memset(extension->value + len, 0, currentLen - len);
+			}
 
 			// In One-Byte extensions value length 0 means 1.
 			extension->len = len - 1;
@@ -611,14 +633,18 @@ namespace RTC
 			auto it = this->mapTwoBytesExtensions.find(id);
 
 			if (it == this->mapTwoBytesExtensions.end())
+			{
 				return false;
+			}
 
 			auto* extension = it->second;
 			auto currentLen = extension->len;
 
 			// Fill with 0's if new length is minor.
 			if (len < currentLen)
+			{
 				std::memset(extension->value + len, 0, currentLen - len);
+			}
 
 			extension->len = len;
 
@@ -771,7 +797,9 @@ namespace RTC
 		// Chrome sends some RTX packets with no payload when the stream is started.
 		// Just ignore them.
 		if (this->payloadLength < 2u)
+		{
 			return false;
+		}
 
 		// Rewrite the payload type.
 		SetPayloadType(payloadType);
@@ -808,7 +836,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->payloadDescriptorHandler)
+		{
 			return true;
+		}
 
 		if (this->payloadDescriptorHandler->Process(context, this->payload, marker))
 		{
@@ -825,7 +855,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!this->payloadDescriptorHandler)
+		{
 			return;
+		}
 
 		this->payloadDescriptorHandler->Restore(this->payload);
 	}
@@ -835,12 +867,16 @@ namespace RTC
 		MS_TRACE();
 
 		if (shift == 0u)
+		{
 			return;
+		}
 
 		MS_ASSERT(payloadOffset < this->payloadLength, "payload offset bigger than payload size");
 
 		if (!expand)
+		{
 			MS_ASSERT(shift <= (this->payloadLength - payloadOffset), "shift too big");
+		}
 
 		uint8_t* payloadOffsetPtr = this->payload + payloadOffset;
 		size_t shiftedLen{ 0 };
@@ -887,7 +923,9 @@ namespace RTC
 
 				// id=15 in One-Byte extensions means "stop parsing here".
 				if (id == 15u)
+				{
 					break;
+				}
 
 				// Valid extension id.
 				if (id != 0u)

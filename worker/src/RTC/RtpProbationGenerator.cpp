@@ -139,9 +139,13 @@ namespace RTC
 
 		// Make the packet length fit into our available limits.
 		if (size > MaxProbationPacketSize)
+		{
 			size = MaxProbationPacketSize;
+		}
 		else if (size < ProbationPacketHeaderSize)
+		{
 			size = ProbationPacketHeaderSize;
+		}
 
 		// Just send up to StepNumPackets per step.
 		// Increase RTP seq number and timestamp.

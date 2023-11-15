@@ -24,7 +24,9 @@ namespace RTC
 
 		// Ensure there are as many encodings as consumable encodings.
 		if (this->rtpParameters.encodings.size() != this->consumableRtpEncodings.size())
+		{
 			MS_THROW_TYPE_ERROR("number of rtpParameters.encodings and consumableRtpEncodings do not match");
+		}
 
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -124,7 +126,9 @@ namespace RTC
 			case Channel::ChannelRequest::Method::CONSUMER_REQUEST_KEY_FRAME:
 			{
 				if (IsActive())
+				{
 					RequestKeyFrame();
+				}
 
 				request->Accept();
 
@@ -258,7 +262,9 @@ namespace RTC
 		if (isSyncPacket)
 		{
 			if (packet->IsKeyFrame())
+			{
 				MS_DEBUG_TAG(rtp, "sync key frame received");
+			}
 
 			rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
@@ -346,7 +352,9 @@ namespace RTC
 			auto* report = rtpStream->GetRtcpSenderReport(nowMs);
 
 			if (!report)
+			{
 				continue;
+			}
 
 			senderReports.push_back(report);
 
@@ -367,7 +375,9 @@ namespace RTC
 
 		// RTCP Compound packet buffer cannot hold the data.
 		if (!packet->Add(senderReports, sdesChunks, xrReports))
+		{
 			return false;
+		}
 
 		this->lastRtcpSentTime = nowMs;
 
@@ -379,7 +389,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return;
+		}
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -387,7 +399,9 @@ namespace RTC
 
 			// If our fraction lost is worse than the given one, update it.
 			if (fractionLost > worstRemoteFractionLost)
+			{
 				worstRemoteFractionLost = fractionLost;
+			}
 		}
 	}
 
@@ -396,7 +410,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return;
+		}
 
 		// May emit 'trace' event.
 		EmitTraceEventNackType();
@@ -435,7 +451,9 @@ namespace RTC
 		rtpStream->ReceiveKeyFrameRequest(messageType);
 
 		if (IsActive())
+		{
 			RequestKeyFrame();
+		}
 	}
 
 	void PipeConsumer::ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report)
@@ -462,7 +480,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsActive())
+		{
 			return 0u;
+		}
 
 		uint32_t rate{ 0u };
 
@@ -483,7 +503,9 @@ namespace RTC
 		for (auto* rtpStream : this->rtpStreams)
 		{
 			if (rtpStream->GetRtt() > rtt)
+			{
 				rtt = rtpStream->GetRtt();
+			}
 		}
 
 		return rtt;
@@ -626,12 +648,16 @@ namespace RTC
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())
+			{
 				rtpStream->Pause();
+			}
 
 			const auto* rtxCodec = this->rtpParameters.GetRtxCodecForEncoding(encoding);
 
 			if (rtxCodec && encoding.hasRtx)
+			{
 				rtpStream->SetRtx(rtxCodec->payloadType, encoding.rtx.ssrc);
+			}
 
 			this->rtpStreams.push_back(rtpStream);
 			this->mapMappedSsrcSsrc[consumableEncoding.ssrc] = encoding.ssrc;
@@ -646,7 +672,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (this->kind != RTC::Media::Kind::VIDEO)
+		{
 			return;
+		}
 
 		for (auto& consumableRtpEncoding : this->consumableRtpEncodings)
 		{

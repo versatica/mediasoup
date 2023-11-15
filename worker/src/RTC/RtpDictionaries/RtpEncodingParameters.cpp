@@ -18,11 +18,15 @@ namespace RTC
 
 		// ssrc is optional.
 		if (data->ssrc().has_value())
+		{
 			this->ssrc = data->ssrc().value();
+		}
 
 		// rid is optional.
 		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtpEncodingParameters::VT_RID))
+		{
 			this->rid = data->rid()->str();
+		}
 
 		// codecPayloadType is optional.
 		if (data->codecPayloadType().has_value())
@@ -40,7 +44,9 @@ namespace RTC
 
 		// maxBitrate is optional.
 		if (data->maxBitrate().has_value())
+		{
 			this->maxBitrate = data->maxBitrate().value();
+		}
 
 		// dtx is optional, default is false.
 		this->dtx = data->dtx();

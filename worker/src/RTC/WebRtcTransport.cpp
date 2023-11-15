@@ -218,7 +218,9 @@ namespace RTC
 		try
 		{
 			if (iceCandidates.empty())
+			{
 				MS_THROW_TYPE_ERROR("empty iceCandidates");
+			}
 
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
@@ -295,7 +297,9 @@ namespace RTC
 
 		// Notify the webRtcTransportListener.
 		if (this->webRtcTransportListener)
+		{
 			this->webRtcTransportListener->OnWebRtcTransportClosed(this);
+		}
 	}
 
 	flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> WebRtcTransport::FillBuffer(
@@ -325,7 +329,9 @@ namespace RTC
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
 
 		if (this->iceServer->GetSelectedTuple())
+		{
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+		}
 
 		// Add dtlsParameters.fingerprints.
 		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::Fingerprint>> fingerprints;
@@ -373,7 +379,9 @@ namespace RTC
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
 
 		if (this->iceServer->GetSelectedTuple())
+		{
 			iceSelectedTuple = this->iceServer->GetSelectedTuple()->FillBuffer(builder);
+		}
 
 		auto dtlsState = DtlsTransport::StateToFbs(this->dtlsTransport->GetState());
 
@@ -418,7 +426,9 @@ namespace RTC
 			{
 				// Ensure this method is not called twice.
 				if (this->connectCalled)
+				{
 					MS_THROW_ERROR("connect() already called");
+				}
 
 				const auto* body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
 				const auto* dtlsParameters = body->dtlsParameters();
@@ -589,7 +599,9 @@ namespace RTC
 		// Do nothing if we have the same local DTLS role as the DTLS transport.
 		// NOTE: local role in DTLS transport can be NONE, but not ours.
 		if (this->dtlsTransport->GetLocalRole() == this->dtlsRole)
+		{
 			return;
+		}
 
 		// Check our local DTLS role.
 		switch (this->dtlsRole)
@@ -717,7 +729,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		const uint8_t* data = packet->GetData();
 		auto intLen         = static_cast<int>(packet->GetSize());
@@ -731,7 +745,9 @@ namespace RTC
 		}
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
@@ -746,7 +762,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (!IsConnected())
+		{
 			return;
+		}
 
 		packet->Serialize(RTC::RTCP::Buffer);
 
@@ -762,7 +780,9 @@ namespace RTC
 		}
 
 		if (!this->srtpSendSession->EncryptRtcp(&data, &intLen))
+		{
 			return;
+		}
 
 		auto len = static_cast<size_t>(intLen);
 
@@ -1006,7 +1026,9 @@ namespace RTC
 		auto intLen = static_cast<int>(len);
 
 		if (!this->srtpRecvSession->DecryptSrtcp(const_cast<uint8_t*>(data), &intLen))
+		{
 			return;
+		}
 
 		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, static_cast<size_t>(intLen));
 
