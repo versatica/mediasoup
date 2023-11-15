@@ -263,9 +263,13 @@ if host_machine.system() == 'linux'
   # Enable liburing for kernel versions greather than or equal to 6.
   if kernel_version[0].to_int() >= 6
     liburing_proj = subproject('liburing', default_options: ['default_library=static'], required: true)
-    liburing = liburing_proj.get_variable('uring')
 
-    dependencies += [liburing]
+    dependencies += [
+      liburing_proj.get_variable('uring'),
+    ]
+    link_whole += [
+      liburing_proj.get_variable('liburing')
+      ]
 
     common_sources += [
       'src/DepLibUring.cpp',
