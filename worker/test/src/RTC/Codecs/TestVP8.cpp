@@ -228,7 +228,9 @@ Codecs::VP8::PayloadDescriptor* CreatePacket(
 	buffer[5] = tlIndex << 6;
 
 	if (layerSync)
+	{
 		buffer[5] |= 0x20; // y bit
+	}
 
 	auto* payloadDescriptor = Codecs::VP8::Parse(buffer, bufferLen);
 

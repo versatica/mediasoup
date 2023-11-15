@@ -188,7 +188,9 @@ namespace RTC
 				auto it = std::find(this->chunks.begin(), this->chunks.end(), chunk);
 
 				if (it != this->chunks.end())
+				{
 					this->chunks.erase(it);
+				}
 			}
 			Iterator Begin()
 			{
