@@ -13,7 +13,6 @@ MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
 # Check the meaning of useful macros in the `worker/include/Logger.hpp` header
 # file if you want to enable tracing or other debug information.
 MEDIASOUP_BUILDTYPE ?= Release
-GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
 DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
@@ -213,10 +212,10 @@ xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
-	$(GULP) --gulpfile ./scripts/gulpfile.mjs lint:worker
+	npm run lint --prefix scripts/
 
 format:
-	$(GULP) --gulpfile ./scripts/gulpfile.mjs format:worker
+	npm run format --prefix scripts/
 
 test: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test

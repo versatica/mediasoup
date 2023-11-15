@@ -192,7 +192,7 @@ async function run()
 			break;
 		}
 
-		case 'install-clang-tools':
+		case 'install-worker-dev-tools':
 		{
 			executeCmd('npm ci --prefix worker/scripts');
 
@@ -353,7 +353,7 @@ function lintNode()
 {
 	logInfo('lintNode()');
 
-	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/gulpfile.mjs');
+	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/clang-format.mjs');
 }
 
 function lintWorker()
@@ -744,19 +744,19 @@ function executeCmd(command, exitOnError = true)
 function logInfo(message)
 {
 	// eslint-disable-next-line no-console
-	console.log(`npm-scripts \x1b[36m[INFO] [${task}]\x1b\[0m`, message);
+	console.log(`npm-scripts.mjs \x1b[36m[INFO] [${task}]\x1b\[0m`, message);
 }
 
 function logWarn(message)
 {
 	// eslint-disable-next-line no-console
-	console.warn(`npm-scripts \x1b[33m[WARN] [${task}]\x1b\[0m`, message);
+	console.warn(`npm-scripts.mjs \x1b[33m[WARN] [${task}]\x1b\[0m`, message);
 }
 
 function logError(message)
 {
 	// eslint-disable-next-line no-console
-	console.error(`npm-scripts \x1b[31m[ERROR] [${task}]\x1b\[0m`, message);
+	console.error(`npm-scripts.mjs \x1b[31m[ERROR] [${task}]\x1b\[0m`, message);
 }
 
 function exitWithError()

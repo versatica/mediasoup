@@ -97,7 +97,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->SetFeedbackPacketCount(1);
 
 		for (auto& input : inputs)
+		{
 			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+		}
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1013);
 		REQUIRE(packet->GetLatestTimestamp() == 1000000013);
@@ -170,7 +172,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->SetFeedbackPacketCount(10);
 
 		for (auto& input : inputs)
+		{
 			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+		}
 
 		packet->Finish();
 		validate(inputs, packet->GetPacketResults());
@@ -233,7 +237,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->SetFeedbackPacketCount(1);
 
 		for (auto& input : inputs)
+		{
 			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+		}
 
 		packet->Finish();
 		validate(inputs, packet->GetPacketResults());
@@ -289,7 +295,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->SetFeedbackPacketCount(1);
 
 		for (auto& input : inputs)
+		{
 			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+		}
 
 		packet->Finish();
 		validate(inputs, packet->GetPacketResults());
@@ -354,7 +362,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet->SetFeedbackPacketCount(1);
 
 		for (auto& input : inputs)
+		{
 			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+		}
 
 		packet->Finish();
 		validate(inputs, packet->GetPacketResults());
@@ -413,7 +423,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		packet2->SetFeedbackPacketCount(2);
 
 		for (auto& input : inputs2)
+		{
 			packet2->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+		}
 
 		packet2->Finish();
 		validate(inputs2, packet2->GetPacketResults());
@@ -593,8 +605,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			  .packetStatusCount = 1,
 			  .deltas            = std::vector<int16_t>{ 57 },
 			  .buffer            = std::vector<uint8_t>{ 0xaf, 0xcd, 0x00, 0x05, 0xfa, 0x17, 0xfa, 0x17,
-                                        0x00, 0x00, 0x04, 0xd2, 0x00, 0x0d, 0x00, 0x01,
-                                        0x00, 0x8A, 0xB0, 0x00, 0x20, 0x01, 0xE4, 0x01 } },
+			                                             0x00, 0x00, 0x04, 0xd2, 0x00, 0x0d, 0x00, 0x01,
+			                                             0x00, 0x8A, 0xB0, 0x00, 0x20, 0x01, 0xE4, 0x01 } },
 			{ .baseTimeRaw       = 35504,
 			  .baseTimeMs        = 1076014080,
 			  .baseSequence      = 14,
@@ -630,8 +642,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			  .packetStatusCount = 2,
 			  .deltas            = std::vector<int16_t>{ 35, 17 },
 			  .buffer            = std::vector<uint8_t>{ 0x8F, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
-                                        0x39, 0xE9, 0x42, 0x38, 0x00, 0x01, 0x00, 0x02,
-                                        0xBD, 0x57, 0xAA, 0x00, 0x20, 0x02, 0x8C, 0x44 } },
+			                                             0x39, 0xE9, 0x42, 0x38, 0x00, 0x01, 0x00, 0x02,
+			                                             0xBD, 0x57, 0xAA, 0x00, 0x20, 0x02, 0x8C, 0x44 } },
 
 			{ .baseTimeRaw       = 818995,
 			  .baseTimeMs        = 1126157504,
@@ -690,16 +702,16 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 			  .packetStatusCount = 2,
 			  .deltas            = std::vector<int16_t>{ 44, 18 },
 			  .buffer            = std::vector<uint8_t>{ 0x8F, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
-                                        0x08, 0xEB, 0x06, 0xD7, 0x00, 0x11, 0x00, 0x02,
-                                        0x0C, 0x89, 0x14, 0x01, 0x20, 0x02, 0xB0, 0x48 } },
+			                                             0x08, 0xEB, 0x06, 0xD7, 0x00, 0x11, 0x00, 0x02,
+			                                             0x0C, 0x89, 0x14, 0x01, 0x20, 0x02, 0xB0, 0x48 } },
 			{ .baseTimeRaw       = 821524,
 			  .baseTimeMs        = 1126319360,
 			  .baseSequence      = 17,
 			  .packetStatusCount = 1,
 			  .deltas            = std::vector<int16_t>{ 62 },
 			  .buffer            = std::vector<uint8_t>{ 0xAF, 0xCD, 0x00, 0x05, 0xFA, 0x17, 0xFA, 0x17,
-                                        0x20, 0x92, 0x5E, 0xB7, 0x00, 0x11, 0x00, 0x01,
-                                        0x0C, 0x89, 0x14, 0x00, 0x20, 0x01, 0xF8, 0x01 } },
+			                                             0x20, 0x92, 0x5E, 0xB7, 0x00, 0x11, 0x00, 0x01,
+			                                             0x0C, 0x89, 0x14, 0x00, 0x20, 0x01, 0xF8, 0x01 } },
 			{ .baseTimeRaw       = 821526,
 			  .baseTimeMs        = 1126319488,
 			  .baseSequence      = 19,
