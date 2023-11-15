@@ -11,7 +11,7 @@
 /* Static variables. */
 
 /* liburing instance per thread. */
-thread_local DepLibUring* DepLibUring::liburing{ nullptr };
+thread_local DepLibUring::LibUring* DepLibUring::liburing{ nullptr };
 /* Completion queue entry array used to retrieve processes tasks. */
 thread_local struct io_uring_cqe* cqes[DepLibUring::QueueDepth];
 
@@ -24,7 +24,7 @@ inline static void onCloseFd(uv_handle_t* handle)
 
 inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 {
-	auto* liburing = static_cast<DepLibUring*>(handle->data);
+	auto* liburing = static_cast<DepLibUring::LibUring*>(handle->data);
 
 	auto count = io_uring_peek_batch_cqe(liburing->GetRing(), cqes, DepLibUring::QueueDepth);
 
@@ -75,7 +75,7 @@ void DepLibUring::ClassInit()
 
 	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
 
-	DepLibUring::liburing = new DepLibUring();
+	DepLibUring::liburing = new LibUring();
 
 	// clang-format off
 	struct utsname buffer{};
@@ -111,7 +111,7 @@ void DepLibUring::ClassDestroy()
 	delete DepLibUring::liburing;
 }
 
-DepLibUring::DepLibUring()
+DepLibUring::LibUring::LibUring()
 {
 	MS_TRACE();
 
@@ -145,7 +145,7 @@ DepLibUring::DepLibUring()
 	}
 }
 
-DepLibUring::~DepLibUring()
+DepLibUring::LibUring::~LibUring()
 {
 	MS_TRACE();
 
@@ -161,7 +161,7 @@ DepLibUring::~DepLibUring()
 	io_uring_queue_exit(std::addressof(this->ring));
 }
 
-void DepLibUring::StartPollingCQEs()
+void DepLibUring::LibUring::StartPollingCQEs()
 {
 	MS_TRACE();
 
@@ -187,7 +187,7 @@ void DepLibUring::StartPollingCQEs()
 	}
 }
 
-void DepLibUring::StopPollingCQEs()
+void DepLibUring::LibUring::StopPollingCQEs()
 {
 	MS_TRACE();
 
@@ -205,7 +205,7 @@ void DepLibUring::StopPollingCQEs()
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseFd));
 }
 
-bool DepLibUring::PrepareSend(
+bool DepLibUring::LibUring::PrepareSend(
   int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
 {
 	MS_TRACE();
@@ -249,7 +249,7 @@ bool DepLibUring::PrepareSend(
 	return true;
 }
 
-bool DepLibUring::PrepareWrite(
+bool DepLibUring::LibUring::PrepareWrite(
   int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb)
 {
 	MS_TRACE();
@@ -282,7 +282,7 @@ bool DepLibUring::PrepareWrite(
 	return true;
 }
 
-void DepLibUring::Submit()
+void DepLibUring::LibUring::Submit()
 {
 	MS_TRACE();
 
@@ -301,7 +301,7 @@ void DepLibUring::Submit()
 	}
 }
 
-DepLibUring::UserData* DepLibUring::GetUserData()
+DepLibUring::UserData* DepLibUring::LibUring::GetUserData()
 {
 	MS_TRACE();
 

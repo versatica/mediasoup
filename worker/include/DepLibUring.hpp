@@ -27,64 +27,70 @@ public:
 	static void ClassInit();
 	static void ClassDestroy();
 
-	thread_local static DepLibUring* liburing;
+	class LibUring;
+
+	thread_local static LibUring* liburing;
 
 public:
-	DepLibUring();
-	~DepLibUring();
-	void StartPollingCQEs();
-	void StopPollingCQEs();
-	bool PrepareSend(
-	  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb);
-	bool PrepareWrite(
-	  int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb);
-	void Submit();
-	void Enable()
+	class LibUring
 	{
-		this->enabled = true;
-	}
-	void SetActive()
-	{
-		if (this->enabled)
+	public:
+		LibUring();
+		~LibUring();
+		void StartPollingCQEs();
+		void StopPollingCQEs();
+		bool PrepareSend(
+				int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb);
+		bool PrepareWrite(
+				int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb);
+		void Submit();
+		void Enable()
 		{
-			this->active = true;
+			this->enabled = true;
 		}
-	}
-	bool IsActive() const
-	{
-		return this->enabled && this->active;
-	}
-	io_uring* GetRing()
-	{
-		return std::addressof(this->ring);
-	}
-	int GetEventFd() const
-	{
-		return this->efd;
-	}
-	void ReleaseUserDataEntry(size_t idx)
-	{
-		this->availableUserDataEntries.push(idx);
-	}
+		void SetActive()
+		{
+			if (this->enabled)
+			{
+				this->active = true;
+			}
+		}
+		bool IsActive() const
+		{
+			return this->enabled && this->active;
+		}
+		io_uring* GetRing()
+		{
+			return std::addressof(this->ring);
+		}
+		int GetEventFd() const
+		{
+			return this->efd;
+		}
+		void ReleaseUserDataEntry(size_t idx)
+		{
+			this->availableUserDataEntries.push(idx);
+		}
 
-private:
-	UserData* GetUserData();
+		private:
+		UserData* GetUserData();
 
-private:
-	// io_uring instance.
-	io_uring ring;
-	// Event file descriptor to watch for completions.
-	int efd;
-	// libuv handle used to poll uring completions.
-	uv_poll_t* uvHandle{ nullptr };
-	// Whether we are currently sending RTP over io_uring.
-	bool active{ false };
-	// Whether io_uring is enabled in runtime.
-	bool enabled{ false };
-	// Pre-allocated UserData entries.
-	UserData userDataBuffer[QueueDepth]{};
-	// Indexes of available UserData entries.
-	std::queue<size_t> availableUserDataEntries;
+		private:
+		// io_uring instance.
+		io_uring ring;
+		// Event file descriptor to watch for completions.
+		int efd;
+		// libuv handle used to poll uring completions.
+		uv_poll_t* uvHandle{ nullptr };
+		// Whether we are currently sending RTP over io_uring.
+		bool active{ false };
+		// Whether io_uring is enabled in runtime.
+		bool enabled{ false };
+		// Pre-allocated UserData entries.
+		UserData userDataBuffer[QueueDepth]{};
+		// Indexes of available UserData entries.
+		std::queue<size_t> availableUserDataEntries;
+	};
 };
 
 #endif
