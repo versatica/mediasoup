@@ -26,6 +26,15 @@ public:
 
 	static void ClassInit();
 	static void ClassDestroy();
+	static void StartPollingCQEs();
+	static void StopPollingCQEs();
+	static bool PrepareSend(
+	  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb);
+	static bool PrepareWrite(
+	  int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb);
+	static void Submit();
+	static void SetActive();
+	static bool IsActive();
 
 	class LibUring;
 
@@ -40,24 +49,17 @@ public:
 		void StartPollingCQEs();
 		void StopPollingCQEs();
 		bool PrepareSend(
-				int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb);
+		  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb);
 		bool PrepareWrite(
-				int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb);
+		  int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb);
 		void Submit();
-		void Enable()
-		{
-			this->enabled = true;
-		}
 		void SetActive()
 		{
-			if (this->enabled)
-			{
-				this->active = true;
-			}
+			this->active = true;
 		}
 		bool IsActive() const
 		{
-			return this->enabled && this->active;
+			return this->active;
 		}
 		io_uring* GetRing()
 		{
@@ -72,10 +74,10 @@ public:
 			this->availableUserDataEntries.push(idx);
 		}
 
-		private:
+	private:
 		UserData* GetUserData();
 
-		private:
+	private:
 		// io_uring instance.
 		io_uring ring;
 		// Event file descriptor to watch for completions.
@@ -84,8 +86,6 @@ public:
 		uv_poll_t* uvHandle{ nullptr };
 		// Whether we are currently sending RTP over io_uring.
 		bool active{ false };
-		// Whether io_uring is enabled in runtime.
-		bool enabled{ false };
 		// Pre-allocated UserData entries.
 		UserData userDataBuffer[QueueDepth]{};
 		// Indexes of available UserData entries.

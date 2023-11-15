@@ -45,7 +45,7 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 
 #ifdef MS_LIBURING_ENABLED
 	// Start polling CQEs, which will create a uv_pool_t handle.
-	DepLibUring::liburing->StartPollingCQEs();
+	DepLibUring::StartPollingCQEs();
 #endif
 
 	// Tell the Node process that we are running.
@@ -103,7 +103,7 @@ void Worker::Close()
 
 #ifdef MS_LIBURING_ENABLED
 	// Stop polling CQEs, which will close the uv_pool_t handle.
-	DepLibUring::liburing->StopPollingCQEs();
+	DepLibUring::StopPollingCQEs();
 #endif
 
 	// Close the Channel.

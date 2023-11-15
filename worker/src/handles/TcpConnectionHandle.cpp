@@ -235,7 +235,7 @@ void TcpConnectionHandle::Write(
 
 #ifdef MS_LIBURING_ENABLED
 	{
-		if (!DepLibUring::liburing->IsActive())
+		if (!DepLibUring::IsActive())
 		{
 			goto write_libuv;
 		}
@@ -243,7 +243,7 @@ void TcpConnectionHandle::Write(
 		// Prepare the data to be sent.
 		// NOTE: If all SQEs are currently in use or no UserData entry is available we'll
 		// fall back to libuv.
-		auto prepared = DepLibUring::liburing->PrepareWrite(this->fd, data1, len1, data2, len2, cb);
+		auto prepared = DepLibUring::PrepareWrite(this->fd, data1, len1, data2, len2, cb);
 
 		if (!prepared)
 		{

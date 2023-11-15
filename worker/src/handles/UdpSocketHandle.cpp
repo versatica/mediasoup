@@ -160,7 +160,7 @@ void UdpSocketHandle::Send(
 
 #ifdef MS_LIBURING_ENABLED
 	{
-		if (!DepLibUring::liburing->IsActive())
+		if (!DepLibUring::IsActive())
 		{
 			goto send_libuv;
 		}
@@ -168,7 +168,7 @@ void UdpSocketHandle::Send(
 		// Prepare the data to be sent.
 		// NOTE: If all SQEs are currently in use or no UserData entry is available we'll
 		// fall back to libuv.
-		auto prepared = DepLibUring::liburing->PrepareSend(this->fd, data, len, addr, cb);
+		auto prepared = DepLibUring::PrepareSend(this->fd, data, len, addr, cb);
 
 		if (!prepared)
 		{

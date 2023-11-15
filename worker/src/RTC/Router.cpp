@@ -653,7 +653,7 @@ namespace RTC
 
 #ifdef MS_LIBURING_ENABLED
 			// Activate liburing usage.
-			DepLibUring::liburing->SetActive();
+			DepLibUring::SetActive();
 #endif
 
 			for (auto* consumer : consumers)
@@ -669,7 +669,7 @@ namespace RTC
 
 #ifdef MS_LIBURING_ENABLED
 			// Submit all prepared submission entries.
-			DepLibUring::liburing->Submit();
+			DepLibUring::Submit();
 #endif
 		}
 

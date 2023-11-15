@@ -75,8 +75,6 @@ void DepLibUring::ClassInit()
 
 	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
 
-	DepLibUring::liburing = new LibUring();
-
 	// clang-format off
 	struct utsname buffer{};
 	// clang-format on
@@ -96,7 +94,7 @@ void DepLibUring::ClassInit()
 	// Enable liburing for kernel versions greather than or equal to 6.
 	if (kernelMayorLong >= 6)
 	{
-		DepLibUring::liburing->Enable();
+		DepLibUring::liburing = new LibUring();
 	}
 	else
 	{
@@ -111,6 +109,87 @@ void DepLibUring::ClassDestroy()
 	delete DepLibUring::liburing;
 }
 
+void DepLibUring::StartPollingCQEs()
+{
+	MS_TRACE();
+
+	if (!DepLibUring::liburing)
+	{
+		return;
+	}
+
+	DepLibUring::liburing->StartPollingCQEs();
+}
+
+void DepLibUring::StopPollingCQEs()
+{
+	MS_TRACE();
+
+	if (!DepLibUring::liburing)
+	{
+		return;
+	}
+
+	DepLibUring::liburing->StopPollingCQEs();
+}
+
+bool DepLibUring::PrepareSend(
+  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
+{
+	MS_TRACE();
+
+	MS_ASSERT(DepLibUring::liburing, "DepLibUring::liburing is not set");
+
+	return DepLibUring::liburing->PrepareSend(sockfd, data, len, addr, cb);
+}
+
+bool DepLibUring::PrepareWrite(
+  int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb)
+{
+	MS_TRACE();
+
+	MS_ASSERT(DepLibUring::liburing, "DepLibUring::liburing is not set");
+
+	return DepLibUring::liburing->PrepareWrite(sockfd, data1, len1, data2, len2, cb);
+}
+
+void DepLibUring::Submit()
+{
+	MS_TRACE();
+
+	if (!DepLibUring::liburing)
+	{
+		return;
+	}
+
+	DepLibUring::liburing->Submit();
+}
+
+void DepLibUring::SetActive()
+{
+	MS_TRACE();
+
+	if (!DepLibUring::liburing)
+	{
+		return;
+	}
+
+	DepLibUring::liburing->SetActive();
+}
+
+bool DepLibUring::IsActive()
+{
+	MS_TRACE();
+
+	if (!DepLibUring::liburing)
+	{
+		return false;
+	}
+
+	return DepLibUring::liburing->IsActive();
+}
+
+/* Instance methods. */
 DepLibUring::LibUring::LibUring()
 {
 	MS_TRACE();
