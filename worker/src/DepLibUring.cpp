@@ -6,6 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <sys/eventfd.h>
+#include <sys/utsname.h>
 
 /* Static variables. */
 
@@ -65,6 +66,8 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	}
 }
 
+/* Static class methods */
+
 void DepLibUring::ClassInit()
 {
 	const auto mayor = io_uring_major_version();
@@ -73,6 +76,29 @@ void DepLibUring::ClassInit()
 	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
 
 	DepLibUring::liburing = new DepLibUring();
+
+	struct utsname buffer{};
+	auto err = uname(std::addressof(buffer));
+
+	if (err != 0)
+	{
+		MS_THROW_ERROR("uname() failed: %s", std::strerror(err));
+	}
+
+	MS_DEBUG_TAG(info, "kernel version: %s", buffer.version);
+
+	auto* kernelMayorCstr = buffer.release;
+	auto kernelMayorLong  = strtol(kernelMayorCstr, &kernelMayorCstr, 10);
+
+	// Enable liburing for kernel versions greather than or equal to 6.
+	if (kernelMayorLong >= 6)
+	{
+		DepLibUring::liburing->Enable();
+	}
+	else
+	{
+		MS_DEBUG_TAG(info, "kernel version not compatible with liburing");
+	}
 }
 
 void DepLibUring::ClassDestroy()
