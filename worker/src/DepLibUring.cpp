@@ -77,7 +77,10 @@ void DepLibUring::ClassInit()
 
 	DepLibUring::liburing = new DepLibUring();
 
+	// clang-format off
 	struct utsname buffer{};
+	// clang-format on
+
 	auto err = uname(std::addressof(buffer));
 
 	if (err != 0)
