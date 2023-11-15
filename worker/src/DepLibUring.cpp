@@ -30,10 +30,10 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	// libuv uses level triggering, so we need to read from the socket to reset
 	// the counter in order to avoid libuv calling this callback indefinitely.
 	eventfd_t v;
-	int error = eventfd_read(liburing->GetEventFd(), std::addressof(v));
-	if (error < 0)
+	int err = eventfd_read(liburing->GetEventFd(), std::addressof(v));
+	if (err < 0)
 	{
-		MS_ERROR("eventfd_read() failed: %s", std::strerror(-error));
+		MS_ERROR("eventfd_read() failed: %s", std::strerror(-err));
 	};
 
 	for (unsigned int i = 0; i < count; ++i)
@@ -87,11 +87,11 @@ DepLibUring::DepLibUring()
 	MS_TRACE();
 
 	// Initialize io_uring.
-	auto error = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), 0);
+	auto err = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), 0);
 
-	if (error < 0)
+	if (err < 0)
 	{
-		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(-error));
+		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(-err));
 	}
 
 	// Create an eventfd instance.
@@ -102,11 +102,11 @@ DepLibUring::DepLibUring()
 		MS_THROW_ERROR("eventfd() failed: %s", std::strerror(-this->efd));
 	}
 
-	error = io_uring_register_eventfd(std::addressof(this->ring), this->efd);
+	err = io_uring_register_eventfd(std::addressof(this->ring), this->efd);
 
-	if (error < 0)
+	if (err < 0)
 	{
-		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(-error));
+		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(-err));
 	}
 
 	// Initialize available UserData entries.
@@ -139,22 +139,22 @@ void DepLibUring::StartPollingCQEs()
 	// Watch the event file descriptor for completions.
 	this->uvHandle = new uv_poll_t;
 
-	auto error = uv_poll_init(DepLibUV::GetLoop(), this->uvHandle, this->efd);
+	auto err = uv_poll_init(DepLibUV::GetLoop(), this->uvHandle, this->efd);
 
-	if (error != 0)
+	if (err != 0)
 	{
 		delete this->uvHandle;
 
-		MS_THROW_ERROR("uv_poll_init() failed: %s", uv_strerror(error));
+		MS_THROW_ERROR("uv_poll_init() failed: %s", uv_strerror(err));
 	}
 
 	this->uvHandle->data = this;
 
-	error = uv_poll_start(this->uvHandle, UV_READABLE, static_cast<uv_poll_cb>(onFdEvent));
+	err = uv_poll_start(this->uvHandle, UV_READABLE, static_cast<uv_poll_cb>(onFdEvent));
 
-	if (error != 0)
+	if (err != 0)
 	{
-		MS_THROW_ERROR("uv_poll_start() failed: %s", uv_strerror(error));
+		MS_THROW_ERROR("uv_poll_start() failed: %s", uv_strerror(err));
 	}
 }
 
@@ -260,15 +260,15 @@ void DepLibUring::Submit()
 	// Unset active flag.
 	this->active = false;
 
-	auto error = io_uring_submit(std::addressof(this->ring));
+	auto err = io_uring_submit(std::addressof(this->ring));
 
-	if (error >= 0)
+	if (err >= 0)
 	{
-		MS_DEBUG_DEV("%i submission queue entries submitted", error);
+		MS_DEBUG_DEV("%i submission queue entries submitted", err);
 	}
 	else
 	{
-		MS_ERROR("io_uring_submit() failed: %s", std::strerror(-error));
+		MS_ERROR("io_uring_submit() failed: %s", std::strerror(-err));
 	}
 }
 
