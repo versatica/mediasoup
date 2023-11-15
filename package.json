@@ -67,7 +67,7 @@
     "test:worker": "node npm-scripts.mjs test:worker",
     "coverage:node": "node npm-scripts.mjs coverage:node",
     "install-deps:node": "node npm-scripts.mjs install-deps:node",
-    "install-clang-tools": "node npm-scripts.mjs install-clang-tools",
+    "install-worker-dev-tools": "node npm-scripts.mjs install-worker-dev-tools",
     "release:check": "node npm-scripts.mjs release:check",
     "release": "node npm-scripts.mjs release",
     "release:upload-mac-arm-prebuilt-worker": "node npm-scripts.mjs release:upload-mac-arm-prebuilt-worker"

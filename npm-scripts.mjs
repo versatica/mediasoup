@@ -192,7 +192,7 @@ async function run()
 			break;
 		}
 
-		case 'install-clang-tools':
+		case 'install-worker-dev-tools':
 		{
 			executeCmd('npm ci --prefix worker/scripts');
 
