@@ -129,13 +129,19 @@ namespace RTC
 			// Add the items into the packet.
 
 			for (auto* report : senderReports)
+			{
 				this->senderReportPacket.AddReport(report);
+			}
 
 			for (auto* chunk : sdesChunks)
+			{
 				this->sdesPacket.AddChunk(chunk);
+			}
 
 			for (auto* report : delaySinceLastRrReports)
+			{
 				this->xrPacket.AddReport(report);
+			}
 
 			// New items can hold in the packet, report it.
 			if (GetSize() <= MaxSize)
@@ -174,7 +180,9 @@ namespace RTC
 			// Add the items into the packet.
 
 			for (auto* report : receiverReports)
+			{
 				this->receiverReportPacket.AddReport(report);
+			}
 
 			if (receiverReferenceTimeReport)
 			{

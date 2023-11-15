@@ -2,12 +2,13 @@
   "name": "mediasoup-worker-dev-tools",
   "version": "0.0.1",
   "description": "mediasoup worker dev tools",
-  "devDependencies": {
-    "clang-tools-prebuilt": "^0.1.4",
-    "gulp": "^4.0.2",
-    "gulp-clang-format": "^1.0.27"
+  "scripts": {
+    "lint": "node clang-format.mjs lint",
+    "format": "node clang-format.mjs format"
   },
-  "peerDependencies": {
-    "uuid": "^3.3.2"
+  "dependencies": {
+    "clang-format": "^1.8.0",
+    "clang-tools-prebuilt": "^0.1.4",
+    "glob": "^10.3.10"
   }
 }
