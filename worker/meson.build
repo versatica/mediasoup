@@ -269,15 +269,13 @@ if host_machine.system() == 'linux'
     ]
     link_whole += [
       liburing_proj.get_variable('liburing')
-      ]
-
+    ]
     common_sources += [
       'src/DepLibUring.cpp',
-      ]
-
+    ]
     cpp_args += [
       '-DMS_LIBURING_ENABLED',
-      ]
+    ]
   endif
 endif
 
