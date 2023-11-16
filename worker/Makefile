@@ -87,7 +87,9 @@ endif
 	fuzzer \
 	fuzzer-run-all \
 	docker \
-	docker-run
+	docker-run \
+	docker-alpine \
+	docker-alpine-run
 
 default: mediasoup-worker
 
@@ -266,3 +268,18 @@ docker-run:
 		--cap-add SYS_PTRACE \
 		-v $(shell pwd)/../:/mediasoup \
 		mediasoup/docker:latest
+
+docker-alpine:
+ifeq ($(DOCKER_NO_CACHE),true)
+	$(DOCKER) build -f Dockerfile.alpine --no-cache --tag mediasoup/docker-alpine:latest .
+else
+	$(DOCKER) build -f Dockerfile.alpine --tag mediasoup/docker-alpine:latest .
+endif
+
+docker-alpine-run:
+	$(DOCKER) run \
+		--name=mediasoupDockerAlpine -it --rm \
+		--privileged \
+		--cap-add SYS_PTRACE \
+		-v $(shell pwd)/../:/mediasoup \
+		mediasoup/docker-alpine:latest
