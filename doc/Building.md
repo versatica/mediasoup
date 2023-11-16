@@ -58,7 +58,7 @@ Same as `npm run test:node` but it also opens a browser window with JavaScript c
 
 Installs NPM dependencies and updates `package-lock.json`.
 
-### `npm run install-worker-dev-tools
+### `npm run install-worker-dev-tools`
 
 Installs worker NPM packages needed for local development.
 
