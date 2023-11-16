@@ -36,6 +36,7 @@ PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-bin
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION ?= 1.10.2.4
+NPM ?= npm
 
 # Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
@@ -212,10 +213,10 @@ xcode: setup
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
-	npm run lint --prefix scripts/
+	$(NPM) run lint --prefix scripts/
 
 format:
-	npm run format --prefix scripts/
+	$(NPM) run format --prefix scripts/
 
 test: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test
