@@ -58,9 +58,9 @@ Same as `npm run test:node` but it also opens a browser window with JavaScript c
 
 Installs NPM dependencies and updates `package-lock.json`.
 
-### `npm run install-clang-tools`
+### `npm run install-worker-dev-tools
 
-Installs clang tools needed for local development.
+Installs worker NPM packages needed for local development.
 
 ## Rust
 
