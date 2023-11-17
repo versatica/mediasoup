@@ -68,7 +68,7 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 
 /* Static class methods */
 
-void DepLibUring::IsSupported()
+bool DepLibUring::IsSupported()
 {
 	// clang-format off
 	struct utsname buffer{};
