@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* FBS: Fix, LayersChangeNotification body must be optional ([1227](https://github.com/versatica/mediasoup/pull/1227))
+* FBS: `LayersChangeNotification` body must be optional ([PR #1227](https://github.com/versatica/mediasoup/pull/1227)).
 
 
 ### 3.13.1
