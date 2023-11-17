@@ -621,11 +621,15 @@ impl Notification {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                let layers_fbs =
-                    consumer::ConsumerLayers::try_from(body.layers().unwrap()).unwrap();
-                let layers = ConsumerLayers::from_fbs(layers_fbs);
+                match body.layers().unwrap() {
+                    Some(layers) => {
+                        let layers_fbs = consumer::ConsumerLayers::try_from(layers).unwrap();
+                        let layers = ConsumerLayers::from_fbs(layers_fbs);
 
-                Ok(Notification::LayersChange(Some(layers)))
+                        Ok(Notification::LayersChange(Some(layers)))
+                    }
+                    None => Ok(Notification::LayersChange(None)),
+                }
             }
             notification::Event::ConsumerTrace => {
                 let Ok(Some(notification::BodyRef::ConsumerTraceNotification(body))) =
