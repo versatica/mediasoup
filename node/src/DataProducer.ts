@@ -61,6 +61,7 @@ export type DataProducerType = 'sctp' | 'direct';
 export type DataProducerEvents =
 {
 	transportclose: [];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };

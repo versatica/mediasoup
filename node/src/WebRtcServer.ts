@@ -31,6 +31,7 @@ export type WebRtcServerListenInfo = TransportListenInfo;
 export type WebRtcServerEvents =
 {
 	workerclose: [];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };

@@ -173,6 +173,7 @@ export type ConsumerEvents =
 	layerschange: [ConsumerLayers?];
 	trace: [ConsumerTraceEventData];
 	rtp: [Buffer];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 	'@producerclose': [];

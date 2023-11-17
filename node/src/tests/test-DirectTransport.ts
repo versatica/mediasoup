@@ -130,6 +130,24 @@ test('dataProducer.send() succeeds', async () =>
 	let lastSentMessageId = 0;
 	let lastRecvMessageId = 0;
 
+	console.log('TODO: REMOVE');
+	transport2.on('listenererror', (eventName, error) =>
+	{
+		throw new Error(`------ transport2 listener error [eventName:${eventName}]: ${error}`);
+	});
+
+	console.log('TODO: REMOVE');
+	dataProducer.on('listenererror', (eventName, error) =>
+	{
+		throw new Error(`------ dataProducer listener error [eventName:${eventName}]: ${error}`);
+	});
+
+	console.log('TODO: REMOVE');
+	dataConsumer.on('listenererror', (eventName, error) =>
+	{
+		throw new Error(`------ dataConsumer listener error [eventName:${eventName}]: ${error}`);
+	});
+
 	// eslint-disable-next-line no-async-promise-executor
 	await new Promise<void>(async (resolve) =>
 	{
