@@ -68,13 +68,8 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 
 /* Static class methods */
 
-void DepLibUring::ClassInit()
+void DepLibUring::IsSupported()
 {
-	const auto mayor = io_uring_major_version();
-	const auto minor = io_uring_minor_version();
-
-	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
-
 	// clang-format off
 	struct utsname buffer{};
 	// clang-format on
@@ -91,14 +86,27 @@ void DepLibUring::ClassInit()
 	auto* kernelMayorCstr = buffer.release;
 	auto kernelMayorLong  = strtol(kernelMayorCstr, &kernelMayorCstr, 10);
 
-	// Enable liburing for kernel versions greather than or equal to 6.
-	if (kernelMayorLong >= 6)
+	// liburing `sento` capabilities are supported for kernel versions greather
+	// than or equal to 6.
+	return kernelMayorLong >= 6;
+}
+
+void DepLibUring::ClassInit()
+{
+	const auto mayor = io_uring_major_version();
+	const auto minor = io_uring_minor_version();
+
+	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
+
+	if (DepLibUring::IsSupported())
 	{
 		DepLibUring::liburing = new LibUring();
+
+		MS_DEBUG_TAG(info, "liburing supported, enabled");
 	}
 	else
 	{
-		MS_DEBUG_TAG(info, "kernel version not compatible with liburing");
+		MS_DEBUG_TAG(info, "liburing not supported, not enabled");
 	}
 }
 

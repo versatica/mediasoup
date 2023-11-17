@@ -24,6 +24,7 @@ public:
 	/* Number of submission queue entries (SQE). */
 	static constexpr size_t QueueDepth{ 1024 * 4 };
 
+	static void IsSupported();
 	static void ClassInit();
 	static void ClassDestroy();
 	static void StartPollingCQEs();
