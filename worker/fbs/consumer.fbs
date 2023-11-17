@@ -80,7 +80,7 @@ table GetStatsResponse {
 // Notifications from Worker.
 
 table LayersChangeNotification {
-    layers: ConsumerLayers (required);
+    layers: ConsumerLayers;
 }
 
 table RtpNotification {
