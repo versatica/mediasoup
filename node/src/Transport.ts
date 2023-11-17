@@ -154,6 +154,7 @@ export type TransportEvents =
 	routerclose: [];
 	listenserverclose: [];
 	trace: [TransportTraceEventData];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 	'@newproducer': [Producer];

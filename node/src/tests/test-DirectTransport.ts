@@ -127,19 +127,38 @@ test('dataProducer.send() succeeds', async () =>
 	let sentMessageBytes = 0;
 	let effectivelySentMessageBytes = 0;
 	let recvMessageBytes = 0;
-	let lastSentMessageId = 0;
-	let lastRecvMessageId = 0;
+	let numSentMessages = 0;
+	let numReceivedMessages = 0;
 
 	// eslint-disable-next-line no-async-promise-executor
-	await new Promise<void>(async (resolve) =>
+	await new Promise<void>(async (resolve, reject) =>
 	{
-		// Send messages over the sctpSendStream created above.
+		transport2.on('listenererror', (eventName, error) =>
+		{
+			reject(
+				new Error(`transport2 'listenererror' [eventName:${eventName}]: ${error}`)
+			);
+		});
+
+		dataProducer.on('listenererror', (eventName, error) =>
+		{
+			reject(
+				new Error(`dataProducer 'listenererror' [eventName:${eventName}]: ${error}`)
+			);
+		});
+
+		dataConsumer.on('listenererror', (eventName, error) =>
+		{
+			reject(
+				new Error(`dataConsumer 'listenererror' [eventName:${eventName}]: ${error}`)
+			);
+		});
 
 		sendNextMessage();
 
-		async function sendNextMessage()
+		async function sendNextMessage(): Promise<void>
 		{
-			const id = ++lastSentMessageId;
+			const id = ++numSentMessages;
 			let ppid;
 			let message;
 
@@ -190,6 +209,8 @@ test('dataProducer.send() succeeds', async () =>
 
 		dataConsumer.on('message', (message, ppid) =>
 		{
+			++numReceivedMessages;
+
 			// message is always a Buffer.
 			recvMessageBytes += message.byteLength;
 
@@ -199,22 +220,25 @@ test('dataProducer.send() succeeds', async () =>
 			{
 				resolve();
 			}
-
-			if (id < numMessages / 2)
+			// PPID of WebRTC DataChannel string.
+			else if (id < numMessages / 2 && ppid !== 51)
 			{
-				expect(ppid).toBe(51); // PPID of WebRTC DataChannel string.
+				reject(
+					new Error(`ppid in message with id ${id} should be 51 but it is ${ppid}`)
+				);
 			}
-			else
+			// PPID of WebRTC DataChannel binary.
+			else if (id > numMessages / 2 && ppid !== 53)
 			{
-				expect(ppid).toBe(53); // PPID of WebRTC DataChannel binary.
+				reject(
+					new Error(`ppid in message with id ${id} should be 53 but it is ${ppid}`)
+				);
 			}
-
-			++lastRecvMessageId;
 		});
 	});
 
-	expect(lastSentMessageId).toBe(numMessages);
-	expect(lastRecvMessageId).toBe(expectedReceivedNumMessages);
+	expect(numSentMessages).toBe(numMessages);
+	expect(numReceivedMessages).toBe(expectedReceivedNumMessages);
 	expect(recvMessageBytes).toBe(effectivelySentMessageBytes);
 
 	await expect(dataProducer.getStats())

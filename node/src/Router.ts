@@ -172,6 +172,7 @@ type PipeTransportPair =
 export type RouterEvents =
 {
 	workerclose: [];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };

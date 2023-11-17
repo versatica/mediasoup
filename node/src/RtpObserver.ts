@@ -11,6 +11,7 @@ import * as FbsRtpObserver from './fbs/rtp-observer';
 export type RtpObserverEvents =
 {
 	routerclose: [];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };

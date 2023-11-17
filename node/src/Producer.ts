@@ -134,6 +134,7 @@ export type ProducerEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };
