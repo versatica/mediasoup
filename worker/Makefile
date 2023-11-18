@@ -74,6 +74,7 @@ endif
 	clean-pip \
 	clean-subprojects \
 	clean-all \
+	foo \
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
@@ -190,7 +191,9 @@ clean-pip:
 clean-subprojects: meson-ninja
 	$(MESON) subprojects purge --include-cache --confirm
 
-clean-all: clean-subprojects
+# Clean subprojects (ignore if it fails) and delete out dir.
+clean-all:
+	-$(MESON) subprojects purge --include-cache --confirm
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
 
 # Update the wrap file of a subproject. Usage example:
