@@ -74,7 +74,6 @@ endif
 	clean-pip \
 	clean-subprojects \
 	clean-all \
-	foo \
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
