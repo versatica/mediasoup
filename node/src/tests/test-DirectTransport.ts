@@ -133,13 +133,6 @@ test('dataProducer.send() succeeds', async () =>
 	// eslint-disable-next-line no-async-promise-executor
 	await new Promise<void>(async (resolve, reject) =>
 	{
-		transport2.on('listenererror', (eventName, error) =>
-		{
-			reject(
-				new Error(`transport2 'listenererror' [eventName:${eventName}]: ${error}`)
-			);
-		});
-
 		dataProducer.on('listenererror', (eventName, error) =>
 		{
 			reject(
