@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.13.3
 
 * Node: Fix issue when 'pause'/'resume' events are not emitted ([PR #1231](https://github.com/versatica/mediasoup/pull/1231) by @douglaseel).
 
