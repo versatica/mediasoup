@@ -235,6 +235,12 @@ test('dataProducer.getStats() succeeds', async () =>
 
 test('dataProducer.pause() and resume() succeed', async () =>
 {
+	const onObserverPause = jest.fn();
+	const onObserverResume = jest.fn();
+
+	dataProducer1.observer.on('pause', onObserverPause);
+	dataProducer1.observer.on('resume', onObserverResume);
+
 	let data;
 
 	await dataProducer1.pause();
@@ -252,6 +258,18 @@ test('dataProducer.pause() and resume() succeed', async () =>
 	data = await dataProducer1.dump();
 
 	expect(data.paused).toBe(false);
+
+	// Even if we don't await for pause()/resume() completion, the observer must
+	// fire 'pause' and 'resume' events if state was the opposite.
+	dataProducer1.pause();
+	dataProducer1.resume();
+	dataProducer1.pause();
+	dataProducer1.pause();
+	dataProducer1.pause();
+	await dataProducer1.resume();
+
+	expect(onObserverPause).toHaveBeenCalledTimes(3);
+	expect(onObserverResume).toHaveBeenCalledTimes(3);
 }, 2000);
 
 test('producer.pause() and resume() emit events', async () =>
