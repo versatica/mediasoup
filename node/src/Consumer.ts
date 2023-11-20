@@ -619,12 +619,12 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 			this.#internal.consumerId
 		);
 
-		const wasPaused = this.#paused || this.#producerPaused;
+		const wasPaused = this.#paused;
 
 		this.#paused = true;
 
 		// Emit observer event.
-		if (!wasPaused)
+		if (!wasPaused && !this.#producerPaused)
 		{
 			this.#observer.safeEmit('pause');
 		}
@@ -644,7 +644,7 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 			this.#internal.consumerId
 		);
 
-		const wasPaused = this.#paused || this.#producerPaused;
+		const wasPaused = this.#paused;
 
 		this.#paused = false;
 
@@ -853,14 +853,12 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 						break;
 					}
 
-					const wasPaused = this.#paused || this.#producerPaused;
-
 					this.#producerPaused = true;
 
 					this.safeEmit('producerpause');
 
 					// Emit observer event.
-					if (!wasPaused)
+					if (!this.#paused)
 					{
 						this.#observer.safeEmit('pause');
 					}
@@ -875,14 +873,12 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 						break;
 					}
 
-					const wasPaused = this.#paused || this.#producerPaused;
-
 					this.#producerPaused = false;
 
 					this.safeEmit('producerresume');
 
 					// Emit observer event.
-					if (wasPaused && !this.#paused)
+					if (!this.#paused)
 					{
 						this.#observer.safeEmit('resume');
 					}
