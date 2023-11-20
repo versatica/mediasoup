@@ -202,8 +202,18 @@ DepLibUring::LibUring::LibUring()
 {
 	MS_TRACE();
 
+	/**
+	 * IORING_SETUP_COOP_TASKRUN: Do not force an inter-processor interrupt
+	 * reschedule on every request complete, which would interrupt the user space
+	 * task.
+	 * IORING_SETUP_SINGLE_ISSUER: A hint to the kernel that only a single task
+	 * (or thread) will submit requests, which is used for internal optimisations.
+	 */
+
+	unsigned int flags = IORING_SETUP_COOP_TASKRUN | IORING_SETUP_SINGLE_ISSUER;
+
 	// Initialize io_uring.
-	auto err = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), 0);
+	auto err = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), flags);
 
 	if (err < 0)
 	{
