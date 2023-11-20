@@ -58,9 +58,9 @@ Same as `npm run test:node` but it also opens a browser window with JavaScript c
 
 Installs NPM dependencies and updates `package-lock.json`.
 
-### `npm run install-clang-tools`
+### `npm run install-worker-dev-tools`
 
-Installs clang tools needed for local development.
+Installs worker NPM packages needed for local development.
 
 ## Rust
 
@@ -154,8 +154,7 @@ Rewrites mediasoup-worker C++ files using [clang-format](https://clang.llvm.org/
 
 Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
 
-
-### 'make test-asan'
+### `make test-asan`
 
 Run test with Address Sanitizer.
 
@@ -189,7 +188,7 @@ Runs all fuzzer cases.
 
 ### `make docker`
 
-Builds a Linux image with fuzzer capable clang++.
+Builds a Linux Ubuntu Docker image with fuzzer capable clang++ and all dependencies to run mediasoup.
 
 **NOTE:** Before running this command, a specific version of Linux clang must be downloaded. To get it, run:
 
@@ -200,4 +199,16 @@ cd worker
 
 ### `make docker-run`
 
-Runs a container of the Docker image created with `make docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
+Runs a container of the Ubuntu Docker image created with `make docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
+
+**NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `make clean-all`.
+
+### `make docker-alpine`
+
+Builds a Linux Alpine Docker image with all dependencies to run mediasoup.
+
+### `make docker-alpine-run`
+
+Runs a container of the Alpine Docker image created with `make docker-alpine`. It automatically executes an `ash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
+
+**NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `make clean-all`.

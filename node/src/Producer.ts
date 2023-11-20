@@ -83,6 +83,11 @@ export type ProducerTraceEventData =
 export type ProducerScore =
 {
 	/**
+	 * Index of the RTP stream in the rtpParameters.encodings array.
+	 */
+	encodingIdx: number;
+
+	/**
 	 * SSRC of the RTP stream.
 	 */
 	ssrc: number;
@@ -129,6 +134,7 @@ export type ProducerEvents =
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };
@@ -719,9 +725,10 @@ function parseProducerScore(
 ): ProducerScore
 {
 	return {
-		ssrc  : binary.ssrc(),
-		rid   : binary.rid() ?? undefined,
-		score : binary.score()
+		encodingIdx : binary.encodingIdx(),
+		ssrc        : binary.ssrc(),
+		rid         : binary.rid() ?? undefined,
+		score       : binary.score()
 	};
 }
 

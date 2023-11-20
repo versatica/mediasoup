@@ -197,6 +197,7 @@ export type WorkerDump =
 export type WorkerEvents =
 {
 	died: [Error];
+	listenererror: [string, Error];
 	// Private events.
 	'@success': [];
 	'@failure': [Error];

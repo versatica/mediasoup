@@ -1,6 +1,6 @@
 {
   "name": "mediasoup",
-  "version": "3.13.1",
+  "version": "3.13.2",
   "description": "Cutting Edge WebRTC Video Conferencing",
   "contributors": [
     "Iñaki Baz Castillo <ibc@aliax.net> (https://inakibaz.me)",
@@ -67,7 +67,7 @@
     "test:worker": "node npm-scripts.mjs test:worker",
     "coverage:node": "node npm-scripts.mjs coverage:node",
     "install-deps:node": "node npm-scripts.mjs install-deps:node",
-    "install-clang-tools": "node npm-scripts.mjs install-clang-tools",
+    "install-worker-dev-tools": "node npm-scripts.mjs install-worker-dev-tools",
     "release:check": "node npm-scripts.mjs release:check",
     "release": "node npm-scripts.mjs release",
     "release:upload-mac-arm-prebuilt-worker": "node npm-scripts.mjs release:upload-mac-arm-prebuilt-worker"
@@ -106,7 +106,7 @@
     "@octokit/rest": "^20.0.2",
     "@types/debug": "^4.1.12",
     "@types/jest": "^29.5.8",
-    "@types/node": "^20.9.0",
+    "@types/node": "^20.9.1",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
     "eslint": "^8.53.0",
