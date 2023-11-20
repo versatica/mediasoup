@@ -240,7 +240,7 @@ test('dataConsumer.pause() and resume() succeed', async () =>
 	expect(onObserverResume).toHaveBeenCalledTimes(3);
 }, 2000);
 
-test('producer.pause() and resume() emit events', async () =>
+test('dataProducer.pause() and resume() emit events', async () =>
 {
 	const promises = [];
 	const events: string[] = [];
@@ -255,10 +255,13 @@ test('producer.pause() and resume() emit events', async () =>
 		events.push('pause');
 	});
 
-	promises.push(dataConsumer1.pause());
-	promises.push(dataConsumer1.resume());
+	promises.push(dataProducer.pause());
+	promises.push(dataProducer.resume());
 
 	await Promise.all(promises);
+
+	// Must also wait a bit for the corresponding events in the data consumer.
+	await new Promise((resolve) => setTimeout(resolve, 100));
 	
 	expect(events).toEqual([ 'pause', 'resume' ]);
 	expect(dataConsumer1.paused).toBe(false);

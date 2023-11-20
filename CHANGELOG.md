@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Node: Fix issue when 'pause'/'resume' events are not emitted ([PR #1230](https://github.com/versatica/mediasoup/pull/1230) by @douglaseel).
+* Node: Fix issue when 'pause'/'resume' events are not emitted ([PR #1231](https://github.com/versatica/mediasoup/pull/1231) by @douglaseel).
 
 
 ### 3.13.2
