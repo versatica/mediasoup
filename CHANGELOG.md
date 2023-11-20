@@ -6,6 +6,11 @@
 * Enable `liburing` usage for Linux (kernel versions >= 6) ([PR #1218](https://github.com/versatica/mediasoup/pull/1218)).
 
 
+### 3.13.3
+
+* Node: Fix issue when 'pause'/'resume' events are not emitted ([PR #1231](https://github.com/versatica/mediasoup/pull/1231) by @douglaseel).
+
+
 ### 3.13.2
 
 * FBS: `LayersChangeNotification` body must be optional (fixes a crash) ([PR #1227](https://github.com/versatica/mediasoup/pull/1227)).

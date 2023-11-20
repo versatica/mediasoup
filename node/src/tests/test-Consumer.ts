@@ -823,6 +823,12 @@ test('consumer.getStats() succeeds', async () =>
 
 test('consumer.pause() and resume() succeed', async () =>
 {
+	const onObserverPause = jest.fn();
+	const onObserverResume = jest.fn();
+
+	audioConsumer.observer.on('pause', onObserverPause);
+	audioConsumer.observer.on('resume', onObserverResume);
+
 	await audioConsumer.pause();
 	expect(audioConsumer.paused).toBe(true);
 
@@ -836,6 +842,45 @@ test('consumer.pause() and resume() succeed', async () =>
 	await expect(audioConsumer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
+
+	// Even if we don't await for pause()/resume() completion, the observer must
+	// fire 'pause' and 'resume' events if state was the opposite.
+	audioConsumer.pause();
+	audioConsumer.resume();
+	audioConsumer.pause();
+	audioConsumer.pause();
+	audioConsumer.pause();
+	await audioConsumer.resume();
+
+	expect(onObserverPause).toHaveBeenCalledTimes(3);
+	expect(onObserverResume).toHaveBeenCalledTimes(3);
+}, 2000);
+
+test('producer.pause() and resume() emit events', async () =>
+{
+	const promises = [];
+	const events: string[] = [];
+	
+	audioConsumer.observer.once('resume', () => 
+	{
+		events.push('resume');
+	});
+
+	audioConsumer.observer.once('pause', () => 
+	{
+		events.push('pause');
+	});
+
+	promises.push(audioProducer.pause());
+	promises.push(audioProducer.resume());
+
+	await Promise.all(promises);
+
+	// Must also wait a bit for the corresponding events in the consumer.
+	await new Promise((resolve) => setTimeout(resolve, 100));
+	
+	expect(events).toEqual([ 'pause', 'resume' ]);
+	expect(audioConsumer.paused).toBe(false);
 }, 2000);
 
 test('consumer.setPreferredLayers() succeed', async () =>

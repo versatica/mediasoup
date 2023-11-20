@@ -203,6 +203,12 @@ test('dataConsumer.getStats() on a DirectTransport succeeds', async () =>
 
 test('dataConsumer.pause() and resume() succeed', async () =>
 {
+	const onObserverPause = jest.fn();
+	const onObserverResume = jest.fn();
+
+	dataConsumer1.observer.on('pause', onObserverPause);
+	dataConsumer1.observer.on('resume', onObserverResume);
+
 	let data;
 
 	await dataConsumer1.pause();
@@ -220,6 +226,45 @@ test('dataConsumer.pause() and resume() succeed', async () =>
 	data = await dataConsumer1.dump();
 
 	expect(data.paused).toBe(false);
+
+	// Even if we don't await for pause()/resume() completion, the observer must
+	// fire 'pause' and 'resume' events if state was the opposite.
+	dataConsumer1.pause();
+	dataConsumer1.resume();
+	dataConsumer1.pause();
+	dataConsumer1.pause();
+	dataConsumer1.pause();
+	await dataConsumer1.resume();
+
+	expect(onObserverPause).toHaveBeenCalledTimes(3);
+	expect(onObserverResume).toHaveBeenCalledTimes(3);
+}, 2000);
+
+test('dataProducer.pause() and resume() emit events', async () =>
+{
+	const promises = [];
+	const events: string[] = [];
+	
+	dataConsumer1.observer.once('resume', () => 
+	{
+		events.push('resume');
+	});
+
+	dataConsumer1.observer.once('pause', () => 
+	{
+		events.push('pause');
+	});
+
+	promises.push(dataProducer.pause());
+	promises.push(dataProducer.resume());
+
+	await Promise.all(promises);
+
+	// Must also wait a bit for the corresponding events in the data consumer.
+	await new Promise((resolve) => setTimeout(resolve, 100));
+	
+	expect(events).toEqual([ 'pause', 'resume' ]);
+	expect(dataConsumer1.paused).toBe(false);
 }, 2000);
 
 test('dataConsumer.close() succeeds', async () =>
