@@ -692,16 +692,17 @@ test('producer.pause() and resume() succeed', async () =>
 
 test('producer.pause() and resume() emit events', async () =>
 {
-	let resumedAt, pausedAt;
-	let currentDate = Date.now();
 	const promises = [];
+	const events: string[] = [];
 	
-	audioProducer.observer.once('resume', () => {
-		resumedAt = currentDate++;
+	audioProducer.observer.once('resume', () => 
+	{
+		events.push('resume');
 	});
 
-	audioProducer.observer.once('pause', () => {
-		pausedAt = currentDate++;
+	audioProducer.observer.once('pause', () => 
+	{
+		events.push('pause');
 	});
 
 	promises.push(audioProducer.pause());
@@ -709,9 +710,7 @@ test('producer.pause() and resume() emit events', async () =>
 
 	await Promise.all(promises);
 	
-	expect(pausedAt).toBeDefined();
-	expect(resumedAt).toBeDefined();
-	expect(resumedAt).toBeGreaterThan(pausedAt!);
+	expect(events).toEqual([ 'pause', 'resume' ]);
 	expect(audioProducer.paused).toBe(false);
 }, 2000);
 

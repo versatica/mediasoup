@@ -224,16 +224,17 @@ test('dataConsumer.pause() and resume() succeed', async () =>
 
 test('producer.pause() and resume() emit events', async () =>
 {
-	let resumedAt, pausedAt;
-	let currentDate = Date.now();
 	const promises = [];
+	const events: string[] = [];
 	
-	dataConsumer1.observer.once('resume', () => {
-		resumedAt = currentDate++;
+	dataConsumer1.observer.once('resume', () => 
+	{
+		events.push('resume');
 	});
 
-	dataConsumer1.observer.once('pause', () => {
-		pausedAt = currentDate++;
+	dataConsumer1.observer.once('pause', () => 
+	{
+		events.push('pause');
 	});
 
 	promises.push(dataConsumer1.pause());
@@ -241,9 +242,7 @@ test('producer.pause() and resume() emit events', async () =>
 
 	await Promise.all(promises);
 	
-	expect(pausedAt).toBeDefined();
-	expect(resumedAt).toBeDefined();
-	expect(resumedAt).toBeGreaterThan(pausedAt!);
+	expect(events).toEqual([ 'pause', 'resume' ]);
 	expect(dataConsumer1.paused).toBe(false);
 }, 2000);
 
