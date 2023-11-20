@@ -174,7 +174,8 @@ void UdpSocketHandle::Send(
 
 		if (!prepared)
 		{
-			// Cannot send via liburing, fallback to libuv.
+			MS_DEBUG_DEV("cannot send via liburing, fallback to libuv");
+
 			goto send_libuv;
 		}
 

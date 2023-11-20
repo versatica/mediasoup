@@ -249,7 +249,8 @@ void TcpConnectionHandle::Write(
 
 		if (!prepared)
 		{
-			// Cannot write via liburing, fallback to libuv.
+			MS_DEBUG_DEV("cannot write via liburing, fallback to libuv");
+
 			goto write_libuv;
 		}
 
