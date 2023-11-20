@@ -1,8 +1,6 @@
 #ifndef MS_DEP_LIBURING_HPP
 #define MS_DEP_LIBURING_HPP
 
-#ifdef MS_LIBURING_SUPPORTED
-
 #include "DepLibUV.hpp"
 #include <functional>
 #include <liburing.h>
@@ -94,5 +92,4 @@ public:
 	};
 };
 
-#endif
 #endif

@@ -3,7 +3,9 @@
 
 #include "handles/TcpConnectionHandle.hpp"
 #include "DepLibUV.hpp"
+#ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
