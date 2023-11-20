@@ -675,6 +675,12 @@ test('producer.getStats() succeeds', async () =>
 
 test('producer.pause() and resume() succeed', async () =>
 {
+	const onObserverPause = jest.fn();
+	const onObserverResume = jest.fn();
+
+	audioProducer.observer.on('pause', onObserverPause);
+	audioProducer.observer.on('resume', onObserverResume);
+
 	await audioProducer.pause();
 	expect(audioProducer.paused).toBe(true);
 
@@ -688,6 +694,42 @@ test('producer.pause() and resume() succeed', async () =>
 	await expect(audioProducer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
+
+	// Even if we don't await for pause()/resume() completion, the observer must
+	// fire 'pause' and 'resume' events if state was the opposite.
+	audioProducer.pause();
+	audioProducer.resume();
+	audioProducer.pause();
+	audioProducer.pause();
+	audioProducer.pause();
+	await audioProducer.resume();
+
+	expect(onObserverPause).toHaveBeenCalledTimes(3);
+	expect(onObserverResume).toHaveBeenCalledTimes(3);
+}, 2000);
+
+test('producer.pause() and resume() emit events', async () =>
+{
+	const promises = [];
+	const events: string[] = [];
+	
+	audioProducer.observer.once('resume', () => 
+	{
+		events.push('resume');
+	});
+
+	audioProducer.observer.once('pause', () => 
+	{
+		events.push('pause');
+	});
+
+	promises.push(audioProducer.pause());
+	promises.push(audioProducer.resume());
+
+	await Promise.all(promises);
+	
+	expect(events).toEqual([ 'pause', 'resume' ]);
+	expect(audioProducer.paused).toBe(false);
 }, 2000);
 
 test('producer.enableTraceEvent() succeed', async () =>

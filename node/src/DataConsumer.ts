@@ -407,8 +407,6 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_PAUSE,
 			undefined,
@@ -416,10 +414,12 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			this.#internal.dataConsumerId
 		);
 
+		const wasPaused = this.#paused;
+
 		this.#paused = true;
 
 		// Emit observer event.
-		if (!wasPaused)
+		if (!wasPaused && !this.#dataProducerPaused)
 		{
 			this.#observer.safeEmit('pause');
 		}
@@ -432,8 +432,6 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_RESUME,
 			undefined,
@@ -441,10 +439,12 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			this.#internal.dataConsumerId
 		);
 
+		const wasPaused = this.#paused;
+
 		this.#paused = false;
 
 		// Emit observer event.
-		if (wasPaused)
+		if (wasPaused && !this.#dataProducerPaused)
 		{
 			this.#observer.safeEmit('resume');
 		}
@@ -620,14 +620,12 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 						break;
 					}
 
-					const wasPaused = this.#paused || this.#dataProducerPaused;
-
 					this.#dataProducerPaused = true;
 
 					this.safeEmit('dataproducerpause');
 
 					// Emit observer event.
-					if (!wasPaused)
+					if (!this.#paused)
 					{
 						this.#observer.safeEmit('pause');
 					}
@@ -642,14 +640,12 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 						break;
 					}
 
-					const wasPaused = this.#paused || this.#dataProducerPaused;
-
 					this.#dataProducerPaused = false;
 
 					this.safeEmit('dataproducerresume');
 
 					// Emit observer event.
-					if (wasPaused && !this.#paused)
+					if (!this.#paused)
 					{
 						this.#observer.safeEmit('resume');
 					}

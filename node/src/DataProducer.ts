@@ -342,14 +342,14 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.DATAPRODUCER_PAUSE,
 			undefined,
 			undefined,
 			this.#internal.dataProducerId
 		);
+
+		const wasPaused = this.#paused;
 
 		this.#paused = true;
 
@@ -367,14 +367,14 @@ export class DataProducer<DataProducerAppData extends AppData = AppData>
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.DATAPRODUCER_RESUME,
 			undefined,
 			undefined,
 			this.#internal.dataProducerId
 		);
+
+		const wasPaused = this.#paused;
 
 		this.#paused = false;
 
