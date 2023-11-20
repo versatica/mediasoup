@@ -26,7 +26,7 @@
     "worker/fuzzer/include",
     "worker/fuzzer/src",
     "worker/include",
-    "worker/scripts/*.js",
+    "worker/scripts/*.mjs",
     "worker/scripts/*.json",
     "worker/scripts/*.py",
     "worker/scripts/*.sh",
