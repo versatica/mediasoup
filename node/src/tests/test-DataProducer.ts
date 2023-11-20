@@ -254,6 +254,31 @@ test('dataProducer.pause() and resume() succeed', async () =>
 	expect(data.paused).toBe(false);
 }, 2000);
 
+test('producer.pause() and resume() emit events', async () =>
+{
+	let resumedAt, pausedAt;
+	let currentDate = Date.now();
+	const promises = [];
+	
+	dataProducer1.observer.once('resume', () => {
+		resumedAt = currentDate++;
+	});
+
+	dataProducer1.observer.once('pause', () => {
+		pausedAt = currentDate++;
+	});
+
+	promises.push(dataProducer1.pause());
+	promises.push(dataProducer1.resume());
+
+	await Promise.all(promises);
+	
+	expect(pausedAt).toBeDefined();
+	expect(resumedAt).toBeDefined();
+	expect(resumedAt).toBeGreaterThan(pausedAt!);
+	expect(dataProducer1.paused).toBe(false);
+}, 2000);
+
 test('dataProducer.close() succeeds', async () =>
 {
 	const onObserverClose = jest.fn();

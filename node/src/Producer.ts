@@ -446,14 +446,14 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_PAUSE,
 			undefined,
 			undefined,
 			this.#internal.producerId
 		);
+
+		const wasPaused = this.#paused;
 
 		this.#paused = true;
 
@@ -471,14 +471,14 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_RESUME,
 			undefined,
 			undefined,
 			this.#internal.producerId
 		);
+
+		const wasPaused = this.#paused;
 
 		this.#paused = false;
 

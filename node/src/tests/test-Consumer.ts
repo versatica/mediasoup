@@ -838,6 +838,31 @@ test('consumer.pause() and resume() succeed', async () =>
 		.toMatchObject({ paused: false });
 }, 2000);
 
+test('producer.pause() and resume() emit events', async () =>
+{
+	let resumedAt, pausedAt;
+	let currentDate = Date.now();
+	const promises = [];
+	
+	audioConsumer.observer.once('resume', () => {
+		resumedAt = currentDate++;
+	});
+
+	audioConsumer.observer.once('pause', () => {
+		pausedAt = currentDate++;
+	});
+
+	promises.push(audioConsumer.pause());
+	promises.push(audioConsumer.resume());
+
+	await Promise.all(promises);
+	
+	expect(pausedAt).toBeDefined();
+	expect(resumedAt).toBeDefined();
+	expect(resumedAt).toBeGreaterThan(pausedAt!);
+	expect(audioConsumer.paused).toBe(false);
+}, 2000);
+
 test('consumer.setPreferredLayers() succeed', async () =>
 {
 	await audioConsumer.setPreferredLayers({ spatialLayer: 1, temporalLayer: 1 });

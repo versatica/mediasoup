@@ -690,6 +690,31 @@ test('producer.pause() and resume() succeed', async () =>
 		.toMatchObject({ paused: false });
 }, 2000);
 
+test('producer.pause() and resume() emit events', async () =>
+{
+	let resumedAt, pausedAt;
+	let currentDate = Date.now();
+	const promises = [];
+	
+	audioProducer.observer.once('resume', () => {
+		resumedAt = currentDate++;
+	});
+
+	audioProducer.observer.once('pause', () => {
+		pausedAt = currentDate++;
+	});
+
+	promises.push(audioProducer.pause());
+	promises.push(audioProducer.resume());
+
+	await Promise.all(promises);
+	
+	expect(pausedAt).toBeDefined();
+	expect(resumedAt).toBeDefined();
+	expect(resumedAt).toBeGreaterThan(pausedAt!);
+	expect(audioProducer.paused).toBe(false);
+}, 2000);
+
 test('producer.enableTraceEvent() succeed', async () =>
 {
 	let dump;

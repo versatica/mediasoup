@@ -612,14 +612,14 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this.#paused || this.#producerPaused;
-
 		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_PAUSE,
 			undefined,
 			undefined,
 			this.#internal.consumerId
 		);
+
+		const wasPaused = this.#paused || this.#producerPaused;
 
 		this.#paused = true;
 
@@ -637,14 +637,14 @@ export class Consumer<ConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this.#paused || this.#producerPaused;
-
 		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_RESUME,
 			undefined,
 			undefined,
 			this.#internal.consumerId
 		);
+
+		const wasPaused = this.#paused || this.#producerPaused;
 
 		this.#paused = false;
 

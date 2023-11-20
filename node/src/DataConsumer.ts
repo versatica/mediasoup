@@ -407,14 +407,14 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('pause()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_PAUSE,
 			undefined,
 			undefined,
 			this.#internal.dataConsumerId
 		);
+
+		const wasPaused = this.#paused;
 
 		this.#paused = true;
 
@@ -432,14 +432,14 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('resume()');
 
-		const wasPaused = this.#paused;
-
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_RESUME,
 			undefined,
 			undefined,
 			this.#internal.dataConsumerId
 		);
+
+		const wasPaused = this.#paused;
 
 		this.#paused = false;
 
