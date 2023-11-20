@@ -81,7 +81,7 @@ public:
 		io_uring ring;
 		// Event file descriptor to watch for completions.
 		int efd;
-		// libuv handle used to poll uring completions.
+		// libuv handle used to poll io_uring completions.
 		uv_poll_t* uvHandle{ nullptr };
 		// Whether we are currently sending RTP over io_uring.
 		bool active{ false };
