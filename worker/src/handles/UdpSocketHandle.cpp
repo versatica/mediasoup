@@ -354,6 +354,8 @@ bool UdpSocketHandle::SetLocalAddress()
 	if (err != 0)
 	{
 		MS_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+
+		return false;
 	}
 
 	return true;
