@@ -24,8 +24,7 @@ inline static void onCloseFd(uv_handle_t* handle)
 inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 {
 	auto* liburing = static_cast<DepLibUring::LibUring*>(handle->data);
-
-	auto count = io_uring_peek_batch_cqe(liburing->GetRing(), cqes, DepLibUring::QueueDepth);
+	auto count     = io_uring_peek_batch_cqe(liburing->GetRing(), cqes, DepLibUring::QueueDepth);
 
 	// libuv uses level triggering, so we need to read from the socket to reset
 	// the counter in order to avoid libuv calling this callback indefinitely.
