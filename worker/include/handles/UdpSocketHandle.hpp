@@ -104,6 +104,7 @@ private:
 	uv_udp_t* uvHandle{ nullptr };
 	// Others.
 #ifdef MS_LIBURING_SUPPORTED
+	// Local file descriptor for io_uring.
 	uv_os_fd_t fd{ 0u };
 #endif
 	bool closed{ false };
