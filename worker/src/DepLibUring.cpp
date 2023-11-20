@@ -34,10 +34,10 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	int err = eventfd_read(liburing->GetEventFd(), std::addressof(v));
 	if (err < 0)
 	{
-		MS_ERROR("eventfd_read() failed: %s", std::strerror(-err));
+		MS_ABORT("eventfd_read() failed: %s", std::strerror(-err));
 	};
 
-	for (unsigned int i = 0; i < count; ++i)
+	for (unsigned int i{ 0 }; i < count; ++i)
 	{
 		struct io_uring_cqe* cqe = cqes[i];
 		auto* userData           = static_cast<DepLibUring::UserData*>(io_uring_cqe_get_data(cqe));
