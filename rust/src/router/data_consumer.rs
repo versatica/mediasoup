@@ -509,24 +509,23 @@ impl DataConsumer {
                         }
                         Notification::DataProducerPause => {
                             let mut data_producer_paused = data_producer_paused.lock();
-                            let was_paused = *paused.lock() || *data_producer_paused;
+                            let paused = *paused.lock();
                             *data_producer_paused = true;
 
                             handlers.data_producer_pause.call_simple();
 
-                            if !was_paused {
+                            if !paused {
                                 handlers.pause.call_simple();
                             }
                         }
                         Notification::DataProducerResume => {
                             let mut data_producer_paused = data_producer_paused.lock();
                             let paused = *paused.lock();
-                            let was_paused = paused || *data_producer_paused;
                             *data_producer_paused = false;
 
                             handlers.data_producer_resume.call_simple();
 
-                            if was_paused && !paused {
+                            if !paused {
                                 handlers.resume.call_simple();
                             }
                         }
