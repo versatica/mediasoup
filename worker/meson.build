@@ -274,7 +274,7 @@ if host_machine.system() == 'linux'
       'src/DepLibUring.cpp',
     ]
     cpp_args += [
-      '-DMS_LIBURING_ENABLED',
+      '-DMS_LIBURING_SUPPORTED',
     ]
   endif
 endif

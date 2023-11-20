@@ -158,7 +158,7 @@ void UdpSocketHandle::Send(
 		return;
 	}
 
-#ifdef MS_LIBURING_ENABLED
+#ifdef MS_LIBURING_SUPPORTED
 	{
 		if (!DepLibUring::IsActive())
 		{

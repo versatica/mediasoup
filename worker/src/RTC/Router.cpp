@@ -661,7 +661,7 @@ namespace RTC
 			// Clone only happens if needed.
 			std::shared_ptr<RTC::RtpPacket> sharedPacket;
 
-#ifdef MS_LIBURING_ENABLED
+#ifdef MS_LIBURING_SUPPORTED
 			// Activate liburing usage.
 			DepLibUring::SetActive();
 #endif
@@ -679,7 +679,7 @@ namespace RTC
 				consumer->SendRtpPacket(packet, sharedPacket);
 			}
 
-#ifdef MS_LIBURING_ENABLED
+#ifdef MS_LIBURING_SUPPORTED
 			// Submit all prepared submission entries.
 			DepLibUring::Submit();
 #endif

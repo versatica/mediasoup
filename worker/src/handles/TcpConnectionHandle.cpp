@@ -233,7 +233,7 @@ void TcpConnectionHandle::Write(
 		return;
 	}
 
-#ifdef MS_LIBURING_ENABLED
+#ifdef MS_LIBURING_SUPPORTED
 	{
 		if (!DepLibUring::IsActive())
 		{
