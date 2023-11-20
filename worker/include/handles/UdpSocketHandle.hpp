@@ -103,7 +103,9 @@ private:
 	// Allocated by this (may be passed by argument).
 	uv_udp_t* uvHandle{ nullptr };
 	// Others.
+#ifdef MS_LIBURING_SUPPORTED
 	uv_os_fd_t fd{ 0u };
+#endif
 	bool closed{ false };
 	size_t recvBytes{ 0u };
 	size_t sentBytes{ 0u };

@@ -87,6 +87,15 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 
 		MS_THROW_ERROR("error setting local IP and port");
 	}
+
+#ifdef MS_LIBURING_SUPPORTED
+	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+	if (err != 0)
+	{
+		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+	}
+#endif
 }
 
 UdpSocketHandle::~UdpSocketHandle()
@@ -348,15 +357,6 @@ bool UdpSocketHandle::SetLocalAddress()
 
 	Utils::IP::GetAddressInfo(
 	  reinterpret_cast<const struct sockaddr*>(&this->localAddr), family, this->localIp, this->localPort);
-
-	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-	if (err != 0)
-	{
-		MS_ERROR("uv_fileno() failed: %s", uv_strerror(err));
-
-		return false;
-	}
 
 	return true;
 }
