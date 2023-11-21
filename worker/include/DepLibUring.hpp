@@ -91,11 +91,11 @@ public:
 		// Indexes of available UserData entries.
 		std::queue<size_t> availableUserDataEntries;
 		// Submission queue entry process count.
-		uint64_t sqeProcessCount{ 0 };
+		uint64_t sqeProcessCount{ 0u };
 		// Submission queue entry miss count.
-		uint64_t sqeMissCount{ 0 };
+		uint64_t sqeMissCount{ 0u };
 		// User data miss count.
-		uint64_t userDataMissCount{ 0 };
+		uint64_t userDataMissCount{ 0u };
 	};
 };
 
