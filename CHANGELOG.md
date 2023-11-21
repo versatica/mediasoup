@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.13.4
 
 * Fix RTCP DLRR (Delay Since Last Receiver Report) block parsing ([PR #1234](https://github.com/versatica/mediasoup/pull/1234)).
 
