@@ -254,6 +254,17 @@ DepLibUring::LibUring::~LibUring()
 	io_uring_queue_exit(std::addressof(this->ring));
 }
 
+void DepLibUring::LibUring::Dump() const
+{
+	MS_TRACE();
+
+	MS_DUMP("<LibUring>");
+	MS_DUMP("  sqeProcessCount        : %" PRIu64, this->sqeProcessCount);
+	MS_DUMP("  sqeMissCount           : %" PRIu64, this->sqeMissCount);
+	MS_DUMP("  userDataMissCount      : %" PRIu64, this->sqeMissCount);
+	MS_DUMP("</LibUring>");
+}
+
 void DepLibUring::LibUring::StartPollingCQEs()
 {
 	MS_TRACE();
@@ -309,6 +320,8 @@ bool DepLibUring::LibUring::PrepareSend(
 	{
 		MS_WARN_DEV("no user data entry available");
 
+		this->userDataMissCount++;
+
 		return false;
 	}
 
@@ -317,6 +330,8 @@ bool DepLibUring::LibUring::PrepareSend(
 	if (!sqe)
 	{
 		MS_WARN_DEV("no sqe available");
+
+		this->sqeMissCount++;
 
 		return false;
 	}
@@ -339,6 +354,8 @@ bool DepLibUring::LibUring::PrepareSend(
 
 	io_uring_prep_sendto(sqe, sockfd, userData->store, len, 0, addr, addrlen);
 
+	this->sqeProcessCount++;
+
 	return true;
 }
 
@@ -353,6 +370,8 @@ bool DepLibUring::LibUring::PrepareWrite(
 	{
 		MS_WARN_DEV("no user data entry available");
 
+		this->userDataMissCount++;
+
 		return false;
 	}
 
@@ -361,6 +380,8 @@ bool DepLibUring::LibUring::PrepareWrite(
 	if (!sqe)
 	{
 		MS_WARN_DEV("no sqe available");
+
+		this->sqeMissCount++;
 
 		return false;
 	}
@@ -371,6 +392,8 @@ bool DepLibUring::LibUring::PrepareWrite(
 
 	io_uring_sqe_set_data(sqe, userData);
 	io_uring_prep_write(sqe, sockfd, userData->store, len1 + len2, 0);
+
+	this->sqeProcessCount++;
 
 	return true;
 }

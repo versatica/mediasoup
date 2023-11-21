@@ -45,6 +45,7 @@ public:
 	public:
 		LibUring();
 		~LibUring();
+		void Dump() const;
 		void StartPollingCQEs();
 		void StopPollingCQEs();
 		bool PrepareSend(
@@ -89,6 +90,12 @@ public:
 		UserData userDataBuffer[QueueDepth]{};
 		// Indexes of available UserData entries.
 		std::queue<size_t> availableUserDataEntries;
+		// Submission queue entry process count.
+		uint64_t sqeProcessCount{ 0 };
+		// Submission queue entry miss count.
+		uint64_t sqeMissCount{ 0 };
+		// User data miss count.
+		uint64_t userDataMissCount{ 0 };
 	};
 };
 
