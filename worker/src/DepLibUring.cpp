@@ -261,7 +261,7 @@ void DepLibUring::LibUring::Dump() const
 	MS_DUMP("<LibUring>");
 	MS_DUMP("  sqeProcessCount        : %" PRIu64, this->sqeProcessCount);
 	MS_DUMP("  sqeMissCount           : %" PRIu64, this->sqeMissCount);
-	MS_DUMP("  userDataMissCount      : %" PRIu64, this->sqeMissCount);
+	MS_DUMP("  userDataMissCount      : %" PRIu64, this->userDataMissCount);
 	MS_DUMP("</LibUring>");
 }
 
