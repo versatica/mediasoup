@@ -213,7 +213,7 @@ libmediasoup-worker: setup flatc
 flatc: setup
 	$(MESON) compile -C $(BUILD_DIR) flatbuffers-generator
 
-xcode: setup
+xcode: setup flatc
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
@@ -234,7 +234,7 @@ else
 	$(BUILD_DIR)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 
-test-asan: setup
+test-asan: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test-asan
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test-asan
 	ASAN_OPTIONS=detect_leaks=1 $(BUILD_DIR)/mediasoup-worker-test-asan --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
@@ -249,7 +249,7 @@ tidy:
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 
-fuzzer: setup
+fuzzer: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-fuzzer
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-fuzzer
 
