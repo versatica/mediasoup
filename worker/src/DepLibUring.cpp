@@ -66,7 +66,7 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 
 /* Static class methods */
 
-bool DepLibUring::IsSupported()
+bool DepLibUring::IsRuntimeSupported()
 {
 	// clang-format off
 	struct utsname buffer{};
@@ -96,7 +96,7 @@ void DepLibUring::ClassInit()
 
 	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
 
-	if (DepLibUring::IsSupported())
+	if (DepLibUring::IsRuntimeSupported())
 	{
 		DepLibUring::liburing = new LibUring();
 
