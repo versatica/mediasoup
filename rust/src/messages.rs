@@ -165,12 +165,11 @@ impl Request for WorkerDumpRequest {
                     .map(|id| id.parse())
                     .collect::<Result<_, _>>()?,
             },
-            liburing: data.liburing.map(|liburing|
-                LibUringDump {
+            liburing: data.liburing.map(|liburing| LibUringDump {
                 sqe_process_count: liburing.sqe_process_count,
                 sqe_miss_count: liburing.sqe_miss_count,
                 user_data_miss_count: liburing.user_data_miss_count,
-            })
+            }),
         })
     }
 }
