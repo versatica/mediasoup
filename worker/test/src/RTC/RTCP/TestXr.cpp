@@ -3,7 +3,7 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <catch2/catch.hpp>
-#include <cstring> // std::memcmp
+#include <cstring> // std::memcmp(), std::memcpy()
 
 using namespace RTC::RTCP;
 
@@ -12,7 +12,7 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		0xa0, 0xcf, 0x00, 0x08, // Padding, Type: 207 (XR), Length: 8
+		0xa0, 0xcf, 0x00, 0x09, // Padding, Type: 207 (XR), Length: 9
 		0x5d, 0x93, 0x15, 0x34, // Sender SSRC: 0x5d931534
 		// Extended Report DLRR
 		0x05, 0x00, 0x00, 0x06, // BT: 5 (DLRR), Block Length: 6
@@ -33,6 +33,7 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 		REQUIRE(packet);
 		// Despite total buffer size is 40 bytes, our GetSize() method doesn't not
 		// consider RTCP padding (4 bytes in this case).
+		// https://github.com/versatica/mediasoup/issues/1233
 		REQUIRE(packet->GetSize() == 36);
 		REQUIRE(packet->GetCount() == 0);
 		REQUIRE(packet->GetSsrc() == 0x5d931534);
@@ -88,6 +89,40 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 
 		// There are 1 block (the DLRR block).
 		REQUIRE(blockIdx == 1);
+
+		SECTION("serialize packet instance")
+		{
+			// NOTE: Padding in RTCP is removed (if not needed) when serializing the
+			// packet, so we must mangle the buffer content (padding bit) and the
+			// buffer length before comparing the serialized packet with and original
+			// buffer.
+
+			const size_t paddingBytes{ 4 };
+			const size_t serializedBufferLength        = sizeof(buffer) - paddingBytes;
+			uint8_t serialized[serializedBufferLength] = { 0 };
+
+			// Clone the original buffer into a new buffer without padding.
+			uint8_t clonedBuffer[serializedBufferLength] = { 0 };
+			std::memcpy(clonedBuffer, buffer, serializedBufferLength);
+
+			// Remove the padding bit in the first byte of the cloned buffer.
+			clonedBuffer[0] = 0x80;
+
+			// Change RTCP length field in the cloned buffer.
+			clonedBuffer[3] = clonedBuffer[3] - 1;
+
+			packet->Serialize(serialized);
+
+			auto* packet2 = ExtendedReportPacket::Parse(serialized, serializedBufferLength);
+
+			REQUIRE(packet2->GetType() == Type::XR);
+			REQUIRE(packet2->GetCount() == 0);
+			REQUIRE(packet2->GetSize() == 36);
+
+			REQUIRE(std::memcmp(clonedBuffer, serialized, serializedBufferLength) == 0);
+
+			delete packet2;
+		}
 
 		delete packet;
 	}
