@@ -72,7 +72,9 @@ namespace RTC
 		}
 
 		bool CompoundPacket::Add(
-		  SenderReport* senderReport, SdesChunk* sdesChunk, DelaySinceLastRr* delaySinceLastRrReport)
+		  SenderReport* senderReport,
+		  SdesChunk* sdesChunk,
+		  DelaySinceLastRr::SsrcInfo* delaySinceLastRrSsrcInfo)
 		{
 			// Add the items into the packet.
 
@@ -86,9 +88,16 @@ namespace RTC
 				this->sdesPacket.AddChunk(sdesChunk);
 			}
 
-			if (delaySinceLastRrReport)
+			if (delaySinceLastRrSsrcInfo)
 			{
-				this->xrPacket.AddReport(delaySinceLastRrReport);
+				// Add a DLRR block into the XR packet if no present.
+				if (!this->delaySinceLastRr)
+				{
+					this->delaySinceLastRr = new RTC::RTCP::DelaySinceLastRr();
+					this->xrPacket.AddReport(this->delaySinceLastRr);
+				}
+
+				this->delaySinceLastRr->AddSsrcInfo(delaySinceLastRrSsrcInfo);
 			}
 
 			// New items can hold in the packet, report it.
@@ -112,10 +121,10 @@ namespace RTC
 				delete sdesChunk;
 			}
 
-			if (delaySinceLastRrReport)
+			if (delaySinceLastRrSsrcInfo)
 			{
-				this->xrPacket.RemoveReport(delaySinceLastRrReport);
-				delete delaySinceLastRrReport;
+				// NOTE: This method deletes the removed instances in place.
+				this->delaySinceLastRr->RemoveLastSsrcInfos(1);
 			}
 
 			return false;
@@ -124,7 +133,7 @@ namespace RTC
 		bool CompoundPacket::Add(
 		  std::vector<SenderReport*>& senderReports,
 		  std::vector<SdesChunk*>& sdesChunks,
-		  std::vector<DelaySinceLastRr*>& delaySinceLastRrReports)
+		  std::vector<DelaySinceLastRr::SsrcInfo*>& delaySinceLastRrSsrcInfos)
 		{
 			// Add the items into the packet.
 
@@ -138,9 +147,16 @@ namespace RTC
 				this->sdesPacket.AddChunk(chunk);
 			}
 
-			for (auto* report : delaySinceLastRrReports)
+			// Add a DLRR block into the XR packet if no present.
+			if (!delaySinceLastRrSsrcInfos.empty() && !this->delaySinceLastRr)
 			{
-				this->xrPacket.AddReport(report);
+				this->delaySinceLastRr = new RTC::RTCP::DelaySinceLastRr();
+				this->xrPacket.AddReport(this->delaySinceLastRr);
+			}
+
+			for (auto* ssrcInfo : delaySinceLastRrSsrcInfos)
+			{
+				this->delaySinceLastRr->AddSsrcInfo(ssrcInfo);
 			}
 
 			// New items can hold in the packet, report it.
@@ -164,10 +180,10 @@ namespace RTC
 				delete chunk;
 			}
 
-			for (auto* report : delaySinceLastRrReports)
+			if (!delaySinceLastRrSsrcInfos.empty())
 			{
-				this->xrPacket.RemoveReport(report);
-				delete report;
+				// NOTE: This method deletes the instances in place.
+				this->delaySinceLastRr->RemoveLastSsrcInfos(delaySinceLastRrSsrcInfos.size());
 			}
 
 			return false;
@@ -268,13 +284,6 @@ namespace RTC
 		}
 
 		void CompoundPacket::AddReceiverReferenceTime(ReceiverReferenceTime* report)
-		{
-			MS_TRACE();
-
-			this->xrPacket.AddReport(report);
-		}
-
-		void CompoundPacket::AddDelaySinceLastRr(DelaySinceLastRr* report)
 		{
 			MS_TRACE();
 

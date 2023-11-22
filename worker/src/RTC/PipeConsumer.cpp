@@ -345,7 +345,7 @@ namespace RTC
 
 		std::vector<RTCP::SenderReport*> senderReports;
 		std::vector<RTCP::SdesChunk*> sdesChunks;
-		std::vector<RTCP::DelaySinceLastRr*> xrReports;
+		std::vector<RTCP::DelaySinceLastRr::SsrcInfo*> delaySinceLastRrSsrcInfos;
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
@@ -362,19 +362,16 @@ namespace RTC
 			auto* sdesChunk = rtpStream->GetRtcpSdesChunk();
 			sdesChunks.push_back(sdesChunk);
 
-			auto* dlrr = rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
+			auto* delaySinceLastRrSsrcInfo = rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowMs);
 
-			if (dlrr)
+			if (delaySinceLastRrSsrcInfo)
 			{
-				auto* report = new RTC::RTCP::DelaySinceLastRr();
-				report->AddSsrcInfo(dlrr);
-
-				xrReports.push_back(report);
+				delaySinceLastRrSsrcInfos.push_back(delaySinceLastRrSsrcInfo);
 			}
 		}
 
 		// RTCP Compound packet buffer cannot hold the data.
-		if (!packet->Add(senderReports, sdesChunks, xrReports))
+		if (!packet->Add(senderReports, sdesChunks, delaySinceLastRrSsrcInfos))
 		{
 			return false;
 		}
