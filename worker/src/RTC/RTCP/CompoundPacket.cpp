@@ -282,12 +282,5 @@ namespace RTC
 
 			this->sdesPacket.AddChunk(chunk);
 		}
-
-		void CompoundPacket::AddReceiverReferenceTime(ReceiverReferenceTime* report)
-		{
-			MS_TRACE();
-
-			this->xrPacket.AddReport(report);
-		}
 	} // namespace RTCP
 } // namespace RTC
