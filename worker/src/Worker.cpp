@@ -142,7 +142,16 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	auto channelMessageHandlers = this->shared->channelMessageRegistrator->FillBuffer(builder);
 
 	return FBS::Worker::CreateDumpResponseDirect(
-	  builder, Logger::pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+	  builder,
+	  Logger::pid,
+	  &webRtcServerIds,
+	  &routerIds,
+	  channelMessageHandlers
+#ifdef MS_LIBURING_SUPPORTED
+	  ,
+	  DepLibUring::FillBuffer(builder)
+#endif
+	);
 }
 
 flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResourceUsage(

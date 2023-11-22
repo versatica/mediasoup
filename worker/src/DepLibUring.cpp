@@ -115,6 +115,18 @@ void DepLibUring::ClassDestroy()
 	delete DepLibUring::liburing;
 }
 
+flatbuffers::Offset<FBS::LibUring::Dump> DepLibUring::FillBuffer(flatbuffers::FlatBufferBuilder& builder)
+{
+	MS_TRACE();
+
+	if (!DepLibUring::liburing)
+	{
+		return 0;
+	}
+
+	return DepLibUring::liburing->FillBuffer(builder);
+}
+
 void DepLibUring::StartPollingCQEs()
 {
 	MS_TRACE();
@@ -254,15 +266,13 @@ DepLibUring::LibUring::~LibUring()
 	io_uring_queue_exit(std::addressof(this->ring));
 }
 
-void DepLibUring::LibUring::Dump() const
+flatbuffers::Offset<FBS::LibUring::Dump> DepLibUring::LibUring::FillBuffer(
+  flatbuffers::FlatBufferBuilder& builder) const
 {
 	MS_TRACE();
 
-	MS_DUMP("<LibUring>");
-	MS_DUMP("  sqeProcessCount        : %" PRIu64, this->sqeProcessCount);
-	MS_DUMP("  sqeMissCount           : %" PRIu64, this->sqeMissCount);
-	MS_DUMP("  userDataMissCount      : %" PRIu64, this->userDataMissCount);
-	MS_DUMP("</LibUring>");
+	return FBS::LibUring::CreateDump(
+	  builder, this->sqeProcessCount, this->sqeMissCount, this->userDataMissCount);
 }
 
 void DepLibUring::LibUring::StartPollingCQEs()

@@ -2,6 +2,7 @@
 #define MS_DEP_LIBURING_HPP
 
 #include "DepLibUV.hpp"
+#include "FBS/liburing.h"
 #include <functional>
 #include <liburing.h>
 #include <queue>
@@ -25,6 +26,7 @@ public:
 	static bool IsRuntimeSupported();
 	static void ClassInit();
 	static void ClassDestroy();
+	static flatbuffers::Offset<FBS::LibUring::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder);
 	static void StartPollingCQEs();
 	static void StopPollingCQEs();
 	static bool PrepareSend(
@@ -45,7 +47,7 @@ public:
 	public:
 		LibUring();
 		~LibUring();
-		void Dump() const;
+		flatbuffers::Offset<FBS::LibUring::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 		void StartPollingCQEs();
 		void StopPollingCQEs();
 		bool PrepareSend(
