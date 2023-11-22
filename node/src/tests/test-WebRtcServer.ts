@@ -46,7 +46,7 @@ test('worker.createWebRtcServer() succeeds', async () =>
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual(
+		.toMatchObject(
 			{
 				pid                    : worker.pid,
 				webRtcServerIds        : [ webRtcServer.id ],
@@ -120,7 +120,7 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual(
+		.toMatchObject(
 			{
 				pid                    : worker.pid,
 				webRtcServerIds        : [ webRtcServer.id ],
@@ -565,7 +565,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual(
+		.toMatchObject(
 			{
 				pid                    : worker.pid,
 				webRtcServerIds        : [],

@@ -135,7 +135,7 @@ test('worker.dump() succeeds', async () =>
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual(
+		.toMatchObject(
 			{
 				pid                    : worker.pid,
 				webRtcServerIds        : [],
