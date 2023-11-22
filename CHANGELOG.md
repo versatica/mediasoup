@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Fix RTCP SDES packet size calculation ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX) based on PR [PR #1234](https://github.com/versatica/mediasoup/pull/1234) by @ybybwdwd).
+
+
 ### 3.13.4
 
 * Fix RTCP DLRR (Delay Since Last Receiver Report) block parsing ([PR #1234](https://github.com/versatica/mediasoup/pull/1234)).

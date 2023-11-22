@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 #include <catch2/catch.hpp>
 #include <cstring> // std::memcmp()
@@ -383,40 +384,118 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		REQUIRE(!packet);
 	}
 
+	SECTION("create SDES packet with 31 chunks")
+	{
+		const size_t count = 31;
+
+		SdesPacket packet;
+		// Create a chunk and an item to obtain their size.
+		SdesChunk* chunk = new SdesChunk(1234 /*ssrc*/);
+		auto* item1 =
+		  new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
+
+		chunk->AddItem(item1);
+
+		auto chunkSize = chunk->GetSize();
+
+		delete chunk;
+
+		for (auto i{ 1 }; i <= count; ++i)
+		{
+			// Create chunk and add to packet.
+			SdesChunk* chunk = new SdesChunk(i /*ssrc*/);
+
+			auto* item1 =
+			  new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
+
+			chunk->AddItem(item1);
+
+			packet.AddChunk(chunk);
+		}
+
+		REQUIRE(packet.GetCount() == count);
+		REQUIRE(packet.GetSize() == Packet::CommonHeaderSize + (count * chunkSize));
+
+		uint8_t buffer1[1500] = { 0 };
+
+		// Serialization must contain 1 SDES packet since report count doesn't
+		// exceed 31.
+		packet.Serialize(buffer1);
+
+		auto* packet2 = static_cast<SdesPacket*>(Packet::Parse(buffer1, sizeof(buffer1)));
+
+		REQUIRE(packet2 != nullptr);
+		REQUIRE(packet2->GetCount() == count);
+		REQUIRE(packet2->GetSize() == Packet::CommonHeaderSize + (count * chunkSize));
+
+		auto reportIt = packet2->Begin();
+
+		for (auto i{ 1 }; i <= 31; ++i, reportIt++)
+		{
+			auto* chunk = *reportIt;
+
+			REQUIRE(chunk->GetSsrc() == i);
+
+			auto* item = *(chunk->Begin());
+
+			REQUIRE(item->GetType() == SdesItem::Type::CNAME);
+			REQUIRE(item->GetSize() == 2 + item1Value.size());
+			REQUIRE(std::string(item->GetValue()) == item1Value);
+		}
+
+		SdesPacket* packet3 = static_cast<SdesPacket*>(packet2->GetNext());
+
+		REQUIRE(packet3 == nullptr);
+
+		delete packet3;
+	}
+
 	SECTION("create SDES packet with more than 31 chunks")
 	{
 		const size_t count = 33;
 
 		SdesPacket packet;
+		// Create a chunk and an item to obtain their size.
+		SdesChunk* chunk = new SdesChunk(1234 /*ssrc*/);
+		auto* item1 =
+		  new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
 
-		for (auto i = 1; i <= count; i++)
+		chunk->AddItem(item1);
+
+		auto chunkSize = chunk->GetSize();
+
+		delete chunk;
+
+		for (auto i{ 1 }; i <= count; ++i)
 		{
 			// Create chunk and add to packet.
-			SdesChunk* chunk1 = new SdesChunk(i /*ssrc*/);
+			SdesChunk* chunk = new SdesChunk(i /*ssrc*/);
 
 			auto* item1 =
 			  new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
 
-			chunk1->AddItem(item1);
+			chunk->AddItem(item1);
 
-			packet.AddChunk(chunk1);
+			packet.AddChunk(chunk);
 		}
 
 		REQUIRE(packet.GetCount() == count);
+		REQUIRE(packet.GetSize() == Packet::CommonHeaderSize + (31 * chunkSize) + Packet::CommonHeaderSize + ((count - 31) * chunkSize));
 
 		uint8_t buffer1[1500] = { 0 };
 
-		// Serialization must contain 2 RR packets since report count exceeds 31.
+		// Serialization must contain 2 SDES packets since report count exceeds 31.
 		packet.Serialize(buffer1);
 
 		auto* packet2 = static_cast<SdesPacket*>(Packet::Parse(buffer1, sizeof(buffer1)));
 
 		REQUIRE(packet2 != nullptr);
 		REQUIRE(packet2->GetCount() == 31);
+		REQUIRE(packet2->GetSize() == Packet::CommonHeaderSize + (31 * chunkSize));
 
 		auto reportIt = packet2->Begin();
 
-		for (auto i = 1; i <= 31; i++, reportIt++)
+		for (auto i{ 1 }; i <= 31; ++i, reportIt++)
 		{
 			auto* chunk = *reportIt;
 
@@ -432,11 +511,12 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		SdesPacket* packet3 = static_cast<SdesPacket*>(packet2->GetNext());
 
 		REQUIRE(packet3 != nullptr);
-		REQUIRE(packet3->GetCount() == 2);
+		REQUIRE(packet3->GetCount() == count - 31);
+		REQUIRE(packet3->GetSize() == Packet::CommonHeaderSize + ((count - 31) * chunkSize));
 
 		reportIt = packet3->Begin();
 
-		for (auto i = 1; i <= 2; i++, reportIt++)
+		for (auto i{ 1 }; i <= 2; ++i, reportIt++)
 		{
 			auto* chunk = *reportIt;
 
