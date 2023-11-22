@@ -35,10 +35,6 @@ int main(int argc, char* argv[])
 	  nullptr,
 	  nullptr,
 	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr,
 	  nullptr);
 
 	std::_Exit(statusCode);

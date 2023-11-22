@@ -1,16 +1,20 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { TransportProtocol } from './Transport';
+import { TransportListenInfo } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
 import { AppData } from './types';
+import * as utils from './utils';
+import { Body as RequestBody, Method } from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsWebRtcServer from './fbs/web-rtc-server';
 
 export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 {
 	/**
 	 * Listen infos.
 	 */
-	listenInfos: WebRtcServerListenInfo[];
+	listenInfos: TransportListenInfo[];
 
 	/**
 	 * Custom application data.
@@ -18,33 +22,16 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 	appData?: WebRtcServerAppData;
 };
 
-export type WebRtcServerListenInfo =
-{
-	/**
-	 * Network protocol.
-	 */
-	protocol: TransportProtocol;
-
-	/**
-	 * Listening IPv4 or IPv6.
-	 */
-	ip: string;
-
-	/**
-	 * Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with
-	 * private IP).
-	 */
-	announcedIp?: string;
-
-	/**
-	 * Listening port.
-	 */
-	port?: number;
-};
+/**
+ * @deprecated
+ * Use TransportListenInfo instead.
+ */
+export type WebRtcServerListenInfo = TransportListenInfo;
 
 export type WebRtcServerEvents =
-{ 
+{
 	workerclose: [];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };
@@ -54,6 +41,34 @@ export type WebRtcServerObserverEvents =
 	close: [];
 	webrtctransporthandled: [WebRtcTransport];
 	webrtctransportunhandled: [WebRtcTransport];
+};
+
+export type WebRtcServerDump =
+{
+	id: string;
+	udpSockets: IpPort[];
+	tcpServers: IpPort[];
+	webRtcTransportIds: string[];
+	localIceUsernameFragments: IceUserNameFragment[];
+	tupleHashes: TupleHash[];
+};
+
+type IpPort =
+{
+	ip: string;
+	port: number;
+};
+
+type IceUserNameFragment =
+{
+	localIceUsernameFragment: string;
+	webRtcTransportId: string;
+};
+
+type TupleHash =
+{
+	tupleHash: number;
+	webRtcTransportId: string;
 };
 
 type WebRtcServerInternal =
@@ -172,9 +187,14 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 
 		this.#closed = true;
 
-		const reqData = { webRtcServerId: this.#internal.webRtcServerId };
+		// Build the request.
+		const requestOffset = new FbsWorker.CloseWebRtcServerRequestT(
+			this.#internal.webRtcServerId).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request('worker.closeWebRtcServer', undefined, reqData)
+		this.#channel.request(
+			Method.WORKER_WEBRTCSERVER_CLOSE,
+			RequestBody.Worker_CloseWebRtcServerRequest,
+			requestOffset)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
@@ -222,11 +242,19 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	/**
 	 * Dump WebRtcServer.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<WebRtcServerDump>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('webRtcServer.dump', this.#internal.webRtcServerId);
+		const response = await this.#channel.request(
+			Method.WEBRTCSERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
+
+		/* Decode Response. */
+		const dump = new FbsWebRtcServer.DumpResponse();
+
+		response.body(dump);
+
+		return parseWebRtcServerDump(dump);
 	}
 
 	/**
@@ -247,4 +275,50 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 			this.#observer.safeEmit('webrtctransportunhandled', webRtcTransport);
 		});
 	}
+}
+
+function parseIpPort(binary: FbsWebRtcServer.IpPort): IpPort
+{
+	return {
+		ip   : binary.ip()!,
+		port : binary.port()
+	};
+}
+
+function parseIceUserNameFragment(binary: FbsWebRtcServer.IceUserNameFragment): IceUserNameFragment
+{
+	return {
+		localIceUsernameFragment : binary.localIceUsernameFragment()!,
+		webRtcTransportId        : binary.webRtcTransportId()!
+	};
+}
+
+function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash
+{
+	return {
+		tupleHash         : Number(binary.tupleHash()!),
+		webRtcTransportId : binary.webRtcTransportId()!
+	};
+}
+
+function parseWebRtcServerDump(
+	data: FbsWebRtcServer.DumpResponse
+): WebRtcServerDump
+{
+	return {
+		id                        : data.id()!,
+		udpSockets                : utils.parseVector(
+			data, 'udpSockets', parseIpPort
+		),
+		tcpServers                : utils.parseVector(
+			data, 'tcpServers', parseIpPort
+		),
+		webRtcTransportIds        : utils.parseVector(data, 'webRtcTransportIds'),
+		localIceUsernameFragments : utils.parseVector(
+			data, 'localIceUsernameFragments', parseIceUserNameFragment
+		),
+		tupleHashes               : utils.parseVector(
+			data, 'tupleHashes', parseTupleHash
+		)
+	};
 }

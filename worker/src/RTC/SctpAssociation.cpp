@@ -293,7 +293,9 @@ namespace RTC
 
 		// Just run the SCTP stack if our state is 'new'.
 		if (this->state != SctpState::NEW)
+		{
 			return;
+		}
 
 		try
 		{
@@ -311,7 +313,9 @@ namespace RTC
 			ret = usrsctp_connect(this->socket, reinterpret_cast<struct sockaddr*>(&rconn), sizeof(rconn));
 
 			if (ret < 0 && errno != EINPROGRESS)
+			{
 				MS_THROW_ERROR("usrsctp_connect() failed: %s", std::strerror(errno));
+			}
 
 			// Disable MTU discovery.
 			sctp_paddrparams peerAddrParams; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -328,7 +332,9 @@ namespace RTC
 			  this->socket, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &peerAddrParams, sizeof(peerAddrParams));
 
 			if (ret < 0)
+			{
 				MS_THROW_ERROR("usrsctp_setsockopt(SCTP_PEER_ADDR_PARAMS) failed: %s", std::strerror(errno));
+			}
 
 			// Announce connecting state.
 			this->state = SctpState::CONNECTING;
@@ -341,30 +347,27 @@ namespace RTC
 		}
 	}
 
-	void SctpAssociation::FillJson(json& jsonObject) const
+	flatbuffers::Offset<FBS::SctpParameters::SctpParameters> SctpAssociation::FillBuffer(
+	  flatbuffers::FlatBufferBuilder& builder) const
 	{
 		MS_TRACE();
 
-		// Add port (always 5000).
-		jsonObject["port"] = 5000;
-
-		// Add OS.
-		jsonObject["OS"] = this->os;
-
-		// Add MIS.
-		jsonObject["MIS"] = this->mis;
-
-		// Add maxMessageSize.
-		jsonObject["maxMessageSize"] = this->maxSctpMessageSize;
-
-		// Add sendBufferSize.
-		jsonObject["sendBufferSize"] = this->sctpSendBufferSize;
-
-		// Add sctpBufferedAmountLowThreshold.
-		jsonObject["sctpBufferedAmount"] = this->sctpBufferedAmount;
-
-		// Add isDataChannel.
-		jsonObject["isDataChannel"] = this->isDataChannel;
+		return FBS::SctpParameters::CreateSctpParameters(
+		  builder,
+		  // Add port (always 5000).
+		  5000,
+		  // Add OS.
+		  this->os,
+		  // Add MIS.
+		  this->mis,
+		  // Add maxMessageSize.
+		  this->maxSctpMessageSize,
+		  // Add sendBufferSize.
+		  this->sctpSendBufferSize,
+		  // Add sctpBufferedAmountLowThreshold.
+		  this->sctpBufferedAmount,
+		  // Add isDataChannel.
+		  this->isDataChannel);
 	}
 
 	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
@@ -379,7 +382,7 @@ namespace RTC
 	}
 
 	void SctpAssociation::SendSctpMessage(
-	  RTC::DataConsumer* dataConsumer, uint32_t ppid, const uint8_t* msg, size_t len, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -488,7 +491,9 @@ namespace RTC
 
 		// We need more OS.
 		if (streamId > this->os - 1)
+		{
 			AddOutgoingStreams(/*force*/ false);
+		}
 	}
 
 	void SctpAssociation::DataProducerClosed(RTC::DataProducer* dataProducer)
@@ -500,9 +505,13 @@ namespace RTC
 		// Send SCTP_RESET_STREAMS to the remote.
 		// https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
 		if (this->isDataChannel)
+		{
 			ResetSctpStream(streamId, StreamDirection::OUTGOING);
+		}
 		else
+		{
 			ResetSctpStream(streamId, StreamDirection::INCOMING);
+		}
 	}
 
 	void SctpAssociation::DataConsumerClosed(RTC::DataConsumer* dataConsumer)
@@ -521,7 +530,9 @@ namespace RTC
 
 		// Do nothing if an outgoing stream that could not be allocated by us.
 		if (direction == StreamDirection::OUTGOING && streamId > this->os - 1)
+		{
 			return;
+		}
 
 		int ret;
 		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
@@ -588,9 +599,13 @@ namespace RTC
 		uint16_t additionalOs{ 0 };
 
 		if (MaxSctpStreams - this->os >= 32)
+		{
 			additionalOs = 32;
+		}
 		else
+		{
 			additionalOs = MaxSctpStreams - this->os;
+		}
 
 		if (additionalOs == 0)
 		{
@@ -603,7 +618,9 @@ namespace RTC
 
 		// Already in progress, ignore (unless forced).
 		if (!force && nextDesiredOs == this->desiredOs)
+		{
 			return;
+		}
 
 		// Update desired value.
 		this->desiredOs = nextDesiredOs;
@@ -628,7 +645,9 @@ namespace RTC
 		  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
 
 		if (ret < 0)
+		{
 			MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_ADD_STREAMS) failed: %s", std::strerror(errno));
+		}
 	}
 
 	void SctpAssociation::OnUsrSctpSendSctpData(void* buffer, size_t len)
@@ -691,7 +710,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("directly notifying listener [eor:1, buffer len:0]");
 
-			this->listener->OnSctpAssociationMessageReceived(this, streamId, ppid, data, len);
+			this->listener->OnSctpAssociationMessageReceived(this, streamId, data, len, ppid);
 		}
 		// If end of message and there is buffered data, append data and notify buffer.
 		else if (eor && this->messageBufferLen != 0)
@@ -702,7 +721,7 @@ namespace RTC
 			MS_DEBUG_DEV("notifying listener [eor:1, buffer len:%zu]", this->messageBufferLen);
 
 			this->listener->OnSctpAssociationMessageReceived(
-			  this, streamId, ppid, this->messageBuffer, this->messageBufferLen);
+			  this, streamId, this->messageBuffer, this->messageBufferLen, ppid);
 
 			this->messageBufferLen = 0;
 		}
@@ -711,7 +730,9 @@ namespace RTC
 		{
 			// Allocate the buffer if not already done.
 			if (!this->messageBuffer)
+			{
 				this->messageBuffer = new uint8_t[this->maxSctpMessageSize];
+			}
 
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);
 			this->messageBufferLen += len;
@@ -723,7 +744,9 @@ namespace RTC
 	void SctpAssociation::OnUsrSctpReceiveSctpNotification(union sctp_notification* notification, size_t len)
 	{
 		if (notification->sn_header.sn_length != (uint32_t)len)
+		{
 			return;
+		}
 
 		switch (notification->sn_header.sn_type)
 		{
@@ -754,7 +777,9 @@ namespace RTC
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)
+						{
 							AddOutgoingStreams(/*force*/ true);
+						}
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -810,7 +835,9 @@ namespace RTC
 
 						// Increase if requested before connected.
 						if (this->desiredOs > this->os)
+						{
 							AddOutgoingStreams(/*force*/ true);
+						}
 
 						if (this->state != SctpState::CONNECTED)
 						{
@@ -950,10 +977,14 @@ namespace RTC
 				  sizeof(uint16_t);
 
 				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN)
+				{
 					incoming = true;
+				}
 
 				if (notification->sn_strreset_event.strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN)
+				{
 					outgoing = true;
+				}
 
 				if (MS_HAS_DEBUG_TAG(sctp))
 				{
@@ -972,7 +1003,9 @@ namespace RTC
 						}
 
 						if (i > 0)
+						{
 							streamIds.append(",");
+						}
 
 						streamIds.append(std::to_string(streamId));
 					}

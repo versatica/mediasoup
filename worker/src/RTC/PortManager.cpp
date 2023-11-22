@@ -75,7 +75,9 @@ namespace RTC
 				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+				}
 
 				break;
 			}
@@ -85,7 +87,9 @@ namespace RTC
 				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+				}
 
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
@@ -277,7 +281,9 @@ namespace RTC
 
 			// If it succeeded, exit the loop here.
 			if (err == 0)
+			{
 				break;
+			}
 
 			// If it failed, close the handle and check the reason.
 			switch (transport)
@@ -382,7 +388,9 @@ namespace RTC
 				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+				}
 
 				break;
 			}
@@ -392,7 +400,9 @@ namespace RTC
 				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+				}
 
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
@@ -558,7 +568,9 @@ namespace RTC
 				auto it = PortManager::mapUdpIpPorts.find(ip);
 
 				if (it == PortManager::mapUdpIpPorts.end())
+				{
 					return;
+				}
 
 				auto& ports = it->second;
 
@@ -573,7 +585,9 @@ namespace RTC
 				auto it = PortManager::mapTcpIpPorts.find(ip);
 
 				if (it == PortManager::mapTcpIpPorts.end())
+				{
 					return;
+				}
 
 				auto& ports = it->second;
 
@@ -651,56 +665,5 @@ namespace RTC
 		}
 
 		return emptyPorts;
-	}
-
-	void PortManager::FillJson(json& jsonObject)
-	{
-		MS_TRACE();
-
-		// Add udp.
-		jsonObject["udp"] = json::object();
-		auto jsonUdpIt    = jsonObject.find("udp");
-
-		for (auto& kv : PortManager::mapUdpIpPorts)
-		{
-			const auto& ip = kv.first;
-			auto& ports    = kv.second;
-
-			(*jsonUdpIt)[ip] = json::array();
-			auto jsonIpIt    = jsonUdpIt->find(ip);
-
-			for (size_t i{ 0 }; i < ports.size(); ++i)
-			{
-				if (!ports[i])
-					continue;
-
-				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
-
-				jsonIpIt->push_back(port);
-			}
-		}
-
-		// Add tcp.
-		jsonObject["tcp"] = json::object();
-		auto jsonTcpIt    = jsonObject.find("tcp");
-
-		for (auto& kv : PortManager::mapTcpIpPorts)
-		{
-			const auto& ip = kv.first;
-			auto& ports    = kv.second;
-
-			(*jsonTcpIt)[ip] = json::array();
-			auto jsonIpIt    = jsonTcpIt->find(ip);
-
-			for (size_t i{ 0 }; i < ports.size(); ++i)
-			{
-				if (!ports[i])
-					continue;
-
-				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
-
-				jsonIpIt->emplace_back(port);
-			}
-		}
 	}
 } // namespace RTC

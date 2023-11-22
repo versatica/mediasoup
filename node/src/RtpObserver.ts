@@ -1,14 +1,17 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { RouterInternal } from './Router';
 import { Producer } from './Producer';
 import { AppData } from './types';
+import * as FbsRequest from './fbs/request';
+import * as FbsRouter from './fbs/router';
+import * as FbsRtpObserver from './fbs/rtp-observer';
 
 export type RtpObserverEvents =
 {
 	routerclose: [];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };
@@ -26,7 +29,6 @@ export type RtpObserverConstructorOptions<RtpObserverAppData> =
 {
 	internal: RtpObserverObserverInternal;
 	channel: Channel;
-	payloadChannel: PayloadChannel;
 	appData?: RtpObserverAppData;
 	getProducerById: (producerId: string) => Producer | undefined;
 };
@@ -57,9 +59,6 @@ export class RtpObserver
 	// Channel instance.
 	protected readonly channel: Channel;
 
-	// PayloadChannel instance.
-	protected readonly payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
@@ -83,7 +82,6 @@ export class RtpObserver
 		{
 			internal,
 			channel,
-			payloadChannel,
 			appData,
 			getProducerById
 		}: RtpObserverConstructorOptions<RtpObserverAppData>
@@ -95,7 +93,6 @@ export class RtpObserver
 
 		this.internal = internal;
 		this.channel = channel;
-		this.payloadChannel = payloadChannel;
 		this.#appData = appData || {} as RtpObserverAppData;
 		this.getProducerById = getProducerById;
 	}
@@ -164,12 +161,18 @@ export class RtpObserver
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
-		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
-		const reqData = { rtpObserverId: this.internal.rtpObserverId };
+		/* Build Request. */
+		const requestOffset = new FbsRouter.CloseRtpObserverRequestT(
+			this.internal.rtpObserverId
+		).pack(this.channel.bufferBuilder);
 
-		this.channel.request('router.closeRtpObserver', this.internal.routerId, reqData)
-			.catch(() => {});
+		this.channel.request(
+			FbsRequest.Method.ROUTER_CLOSE_RTPOBSERVER,
+			FbsRequest.Body.Router_CloseRtpObserverRequest,
+			requestOffset,
+			this.internal.routerId
+		).catch(() => {});
 
 		this.emit('@close');
 
@@ -195,7 +198,6 @@ export class RtpObserver
 
 		// Remove notification subscriptions.
 		this.channel.removeAllListeners(this.internal.rtpObserverId);
-		this.payloadChannel.removeAllListeners(this.internal.rtpObserverId);
 
 		this.safeEmit('routerclose');
 
@@ -212,7 +214,12 @@ export class RtpObserver
 
 		const wasPaused = this.#paused;
 
-		await this.channel.request('rtpObserver.pause', this.internal.rtpObserverId);
+		await this.channel.request(
+			FbsRequest.Method.RTPOBSERVER_PAUSE,
+			undefined,
+			undefined,
+			this.internal.rtpObserverId
+		);
 
 		this.#paused = true;
 
@@ -232,7 +239,12 @@ export class RtpObserver
 
 		const wasPaused = this.#paused;
 
-		await this.channel.request('rtpObserver.resume', this.internal.rtpObserverId);
+		await this.channel.request(
+			FbsRequest.Method.RTPOBSERVER_RESUME,
+			undefined,
+			undefined,
+			this.internal.rtpObserverId
+		);
 
 		this.#paused = false;
 
@@ -257,9 +269,16 @@ export class RtpObserver
 			throw Error(`Producer with id "${producerId}" not found`);
 		}
 
-		const reqData = { producerId };
+		const requestOffset = new FbsRtpObserver.AddProducerRequestT(
+			producerId
+		).pack(this.channel.bufferBuilder);
 
-		await this.channel.request('rtpObserver.addProducer', this.internal.rtpObserverId, reqData);
+		await this.channel.request(
+			FbsRequest.Method.RTPOBSERVER_ADD_PRODUCER,
+			FbsRequest.Body.RtpObserver_AddProducerRequest,
+			requestOffset,
+			this.internal.rtpObserverId
+		);
 
 		// Emit observer event.
 		this.#observer.safeEmit('addproducer', producer);
@@ -279,9 +298,16 @@ export class RtpObserver
 			throw Error(`Producer with id "${producerId}" not found`);
 		}
 
-		const reqData = { producerId };
+		const requestOffset = new FbsRtpObserver.RemoveProducerRequestT(
+			producerId
+		).pack(this.channel.bufferBuilder);
 
-		await this.channel.request('rtpObserver.removeProducer', this.internal.rtpObserverId, reqData);
+		await this.channel.request(
+			FbsRequest.Method.RTPOBSERVER_REMOVE_PRODUCER,
+			FbsRequest.Body.RtpObserver_RemoveProducerRequest,
+			requestOffset,
+			this.internal.rtpObserverId
+		);
 
 		// Emit observer event.
 		this.#observer.safeEmit('removeproducer', producer);

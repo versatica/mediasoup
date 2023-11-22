@@ -2,6 +2,7 @@
 #define MS_RTC_ICE_SERVER_HPP
 
 #include "common.hpp"
+#include "FBS/webRtcTransport.h"
 #include "RTC/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include <list>
@@ -17,8 +18,12 @@ namespace RTC
 			NEW = 1,
 			CONNECTED,
 			COMPLETED,
-			DISCONNECTED
+			DISCONNECTED,
 		};
+
+	public:
+		static IceState RoleFromFbs(FBS::WebRtcTransport::IceState state);
+		static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
 	public:
 		class Listener

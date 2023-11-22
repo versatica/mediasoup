@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod tests;
 
+use mediasoup_sys::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -44,18 +45,45 @@ impl AppData {
     }
 }
 
-/// IP to listen on.
+/// Listening protocol, IP and port for [`WebRtcServer`] to listen on.
 ///
 /// # Notes on usage
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ListenIp {
+pub struct ListenInfo {
+    /// Network protocol.
+    pub protocol: Protocol,
     /// Listening IPv4 or IPv6.
     pub ip: IpAddr,
     /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announced_ip: Option<IpAddr>,
+    /// Listening port.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+    /// Send buffer size (bytes).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub send_buffer_size: Option<u32>,
+    /// Recv buffer size (bytes).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recv_buffer_size: Option<u32>,
+}
+
+impl ListenInfo {
+    pub(crate) fn to_fbs(self) -> transport::ListenInfo {
+        transport::ListenInfo {
+            protocol: match self.protocol {
+                Protocol::Tcp => transport::Protocol::Tcp,
+                Protocol::Udp => transport::Protocol::Udp,
+            },
+            ip: self.ip.to_string(),
+            announced_ip: self.announced_ip.map(|ip| ip.to_string()),
+            port: self.port.unwrap_or(0),
+            send_buffer_size: self.send_buffer_size.unwrap_or(0),
+            recv_buffer_size: self.recv_buffer_size.unwrap_or(0),
+        }
+    }
 }
 
 /// ICE role.
@@ -68,6 +96,15 @@ pub enum IceRole {
     Controlling,
 }
 
+impl IceRole {
+    pub(crate) fn from_fbs(role: web_rtc_transport::IceRole) -> Self {
+        match role {
+            web_rtc_transport::IceRole::Controlled => IceRole::Controlled,
+            web_rtc_transport::IceRole::Controlling => IceRole::Controlling,
+        }
+    }
+}
+
 /// ICE parameters.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -78,6 +115,16 @@ pub struct IceParameters {
     pub password: String,
     /// ICE Lite.
     pub ice_lite: Option<bool>,
+}
+
+impl IceParameters {
+    pub(crate) fn from_fbs(parameters: web_rtc_transport::IceParameters) -> Self {
+        Self {
+            username_fragment: parameters.username_fragment.to_string(),
+            password: parameters.password.to_string(),
+            ice_lite: Some(parameters.ice_lite),
+        }
+    }
 }
 
 /// ICE candidate type.
@@ -100,12 +147,28 @@ pub enum IceCandidateType {
     Relay,
 }
 
+impl IceCandidateType {
+    pub(crate) fn from_fbs(candidate_type: web_rtc_transport::IceCandidateType) -> Self {
+        match candidate_type {
+            web_rtc_transport::IceCandidateType::Host => IceCandidateType::Host,
+        }
+    }
+}
+
 /// ICE candidate TCP type (always `Passive`).
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateTcpType {
     /// Passive.
     Passive,
+}
+
+impl IceCandidateTcpType {
+    pub(crate) fn from_fbs(candidate_type: web_rtc_transport::IceCandidateTcpType) -> Self {
+        match candidate_type {
+            web_rtc_transport::IceCandidateTcpType::Passive => IceCandidateTcpType::Passive,
+        }
+    }
 }
 
 /// Transport protocol.
@@ -116,6 +179,15 @@ pub enum Protocol {
     Tcp,
     /// UDP.
     Udp,
+}
+
+impl Protocol {
+    pub(crate) fn from_fbs(protocol: transport::Protocol) -> Self {
+        match protocol {
+            transport::Protocol::Tcp => Protocol::Tcp,
+            transport::Protocol::Udp => Protocol::Udp,
+        }
+    }
 }
 
 /// ICE candidate
@@ -140,6 +212,20 @@ pub struct IceCandidate {
     pub tcp_type: Option<IceCandidateTcpType>,
 }
 
+impl IceCandidate {
+    pub(crate) fn from_fbs(candidate: &web_rtc_transport::IceCandidate) -> Self {
+        Self {
+            foundation: candidate.foundation.clone(),
+            priority: candidate.priority,
+            ip: candidate.ip.parse().expect("Error parsing IP address"),
+            protocol: Protocol::from_fbs(candidate.protocol),
+            port: candidate.port,
+            r#type: IceCandidateType::from_fbs(candidate.type_),
+            tcp_type: candidate.tcp_type.map(IceCandidateTcpType::from_fbs),
+        }
+    }
+}
+
 /// ICE state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -155,8 +241,17 @@ pub enum IceState {
     /// ICE was `Connected` or `Completed` but it has suddenly failed (this can just happen if the
     /// selected tuple has `Tcp` protocol).
     Disconnected,
-    /// ICE state when the transport has been closed.
-    Closed,
+}
+
+impl IceState {
+    pub(crate) fn from_fbs(state: web_rtc_transport::IceState) -> Self {
+        match state {
+            web_rtc_transport::IceState::New => IceState::New,
+            web_rtc_transport::IceState::Connected => IceState::Connected,
+            web_rtc_transport::IceState::Completed => IceState::Completed,
+            web_rtc_transport::IceState::Disconnected => IceState::Disconnected,
+        }
+    }
 }
 
 /// Tuple of local IP/port/protocol + optional remote IP/port.
@@ -232,6 +327,28 @@ impl TransportTuple {
             None
         }
     }
+
+    pub(crate) fn from_fbs(tuple: &transport::Tuple) -> TransportTuple {
+        match &tuple.remote_ip {
+            Some(_remote_ip) => TransportTuple::WithRemote {
+                local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
+                local_port: tuple.local_port,
+                remote_ip: tuple
+                    .remote_ip
+                    .as_ref()
+                    .unwrap()
+                    .parse()
+                    .expect("Error parsing IP address"),
+                remote_port: tuple.remote_port,
+                protocol: Protocol::from_fbs(tuple.protocol),
+            },
+            None => TransportTuple::LocalOnly {
+                local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
+                local_port: tuple.local_port,
+                protocol: Protocol::from_fbs(tuple.protocol),
+            },
+        }
+    }
 }
 
 /// DTLS state.
@@ -250,6 +367,18 @@ pub enum DtlsState {
     Closed,
 }
 
+impl DtlsState {
+    pub(crate) fn from_fbs(state: web_rtc_transport::DtlsState) -> Self {
+        match state {
+            web_rtc_transport::DtlsState::New => DtlsState::New,
+            web_rtc_transport::DtlsState::Connecting => DtlsState::Connecting,
+            web_rtc_transport::DtlsState::Connected => DtlsState::Connected,
+            web_rtc_transport::DtlsState::Failed => DtlsState::Failed,
+            web_rtc_transport::DtlsState::Closed => DtlsState::Closed,
+        }
+    }
+}
+
 /// SCTP state.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -266,6 +395,18 @@ pub enum SctpState {
     Closed,
 }
 
+impl SctpState {
+    pub(crate) fn from_fbs(state: &sctp_association::SctpState) -> Self {
+        match state {
+            sctp_association::SctpState::New => Self::New,
+            sctp_association::SctpState::Connecting => Self::Connecting,
+            sctp_association::SctpState::Connected => Self::Connected,
+            sctp_association::SctpState::Failed => Self::Failed,
+            sctp_association::SctpState::Closed => Self::Closed,
+        }
+    }
+}
+
 /// DTLS role.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -278,6 +419,24 @@ pub enum DtlsRole {
     Client,
     /// DTLS server role.
     Server,
+}
+
+impl DtlsRole {
+    pub(crate) fn to_fbs(self) -> web_rtc_transport::DtlsRole {
+        match self {
+            DtlsRole::Auto => web_rtc_transport::DtlsRole::Auto,
+            DtlsRole::Client => web_rtc_transport::DtlsRole::Client,
+            DtlsRole::Server => web_rtc_transport::DtlsRole::Server,
+        }
+    }
+
+    pub(crate) fn from_fbs(role: web_rtc_transport::DtlsRole) -> Self {
+        match role {
+            web_rtc_transport::DtlsRole::Auto => DtlsRole::Auto,
+            web_rtc_transport::DtlsRole::Client => DtlsRole::Client,
+            web_rtc_transport::DtlsRole::Server => DtlsRole::Server,
+        }
+    }
 }
 
 impl Default for DtlsRole {
@@ -316,6 +475,91 @@ pub enum DtlsFingerprint {
         /// Certificate fingerprint value.
         value: [u8; 64],
     },
+}
+
+fn hex_as_bytes(input: &str, output: &mut [u8]) {
+    for (i, o) in input.split(':').zip(&mut output.iter_mut()) {
+        *o = u8::from_str_radix(i, 16).unwrap_or_else(|error| {
+            panic!("Failed to parse value {i} as series of hex bytes: {error}")
+        });
+    }
+}
+
+impl DtlsFingerprint {
+    pub(crate) fn to_fbs(self) -> web_rtc_transport::Fingerprint {
+        match self {
+            DtlsFingerprint::Sha1 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha1,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha224 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha224,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha256 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha256,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha384 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha384,
+                value: self.value_string(),
+            },
+            DtlsFingerprint::Sha512 { .. } => web_rtc_transport::Fingerprint {
+                algorithm: web_rtc_transport::FingerprintAlgorithm::Sha512,
+                value: self.value_string(),
+            },
+        }
+    }
+
+    pub(crate) fn from_fbs(fingerprint: &web_rtc_transport::Fingerprint) -> DtlsFingerprint {
+        match fingerprint.algorithm {
+            web_rtc_transport::FingerprintAlgorithm::Sha1 => {
+                let mut value_result = [0_u8; 20];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha1 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha224 => {
+                let mut value_result = [0_u8; 28];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha224 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha256 => {
+                let mut value_result = [0_u8; 32];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha256 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha384 => {
+                let mut value_result = [0_u8; 48];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha384 {
+                    value: value_result,
+                }
+            }
+            web_rtc_transport::FingerprintAlgorithm::Sha512 => {
+                let mut value_result = [0_u8; 64];
+
+                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+
+                DtlsFingerprint::Sha512 {
+                    value: value_result,
+                }
+            }
+        }
+    }
 }
 
 impl fmt::Debug for DtlsFingerprint {
@@ -755,6 +999,30 @@ pub struct DtlsParameters {
     pub fingerprints: Vec<DtlsFingerprint>,
 }
 
+impl DtlsParameters {
+    pub(crate) fn to_fbs(&self) -> web_rtc_transport::DtlsParameters {
+        web_rtc_transport::DtlsParameters {
+            role: self.role.to_fbs(),
+            fingerprints: self
+                .fingerprints
+                .iter()
+                .map(|fingerprint| fingerprint.to_fbs())
+                .collect(),
+        }
+    }
+
+    pub(crate) fn from_fbs(parameters: web_rtc_transport::DtlsParameters) -> DtlsParameters {
+        DtlsParameters {
+            role: DtlsRole::from_fbs(parameters.role),
+            fingerprints: parameters
+                .fingerprints
+                .iter()
+                .map(DtlsFingerprint::from_fbs)
+                .collect(),
+        }
+    }
+}
+
 /// Trace event direction
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -763,6 +1031,15 @@ pub enum TraceEventDirection {
     In,
     /// Out
     Out,
+}
+
+impl TraceEventDirection {
+    pub(crate) fn from_fbs(event_type: common::TraceDirection) -> Self {
+        match event_type {
+            common::TraceDirection::DirectionIn => TraceEventDirection::In,
+            common::TraceDirection::DirectionOut => TraceEventDirection::Out,
+        }
+    }
 }
 
 /// Container used for sending/receiving messages using `DirectTransport` data producers and data
@@ -854,9 +1131,9 @@ pub struct RtpPacketTraceInfo {
     /// Whether packet contains a key frame.
     pub is_key_frame: bool,
     /// Packet size.
-    pub size: usize,
+    pub size: u64,
     /// Payload size.
-    pub payload_size: usize,
+    pub payload_size: u64,
     /// The spatial layer index (from 0 to N).
     pub spatial_layer: u8,
     /// The temporal layer index (from 0 to N).
@@ -874,11 +1151,33 @@ pub struct RtpPacketTraceInfo {
     pub is_rtx: bool,
 }
 
+impl RtpPacketTraceInfo {
+    pub(crate) fn from_fbs(rtp_packet: rtp_packet::Dump, is_rtx: bool) -> Self {
+        Self {
+            payload_type: rtp_packet.payload_type,
+            sequence_number: rtp_packet.sequence_number,
+            timestamp: rtp_packet.timestamp,
+            marker: rtp_packet.marker,
+            ssrc: rtp_packet.ssrc,
+            is_key_frame: rtp_packet.is_key_frame,
+            size: rtp_packet.size,
+            payload_size: rtp_packet.payload_size,
+            spatial_layer: rtp_packet.spatial_layer,
+            temporal_layer: rtp_packet.temporal_layer,
+            mid: rtp_packet.mid,
+            rid: rtp_packet.rid,
+            rrid: rtp_packet.rrid,
+            wide_sequence_number: rtp_packet.wide_sequence_number,
+            is_rtx,
+        }
+    }
+}
+
 /// SSRC info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 pub struct SsrcTraceInfo {
     /// RTP stream SSRC.
-    ssrc: u32,
+    pub ssrc: u32,
 }
 
 /// Bandwidth estimation type.
@@ -890,6 +1189,15 @@ pub enum BweType {
     /// Receiver Estimated Maximum Bitrate.
     #[serde(rename = "remb")]
     Remb,
+}
+
+impl BweType {
+    pub(crate) fn from_fbs(info: transport::BweType) -> Self {
+        match info {
+            transport::BweType::TransportCc => BweType::TransportCc,
+            transport::BweType::Remb => BweType::Remb,
+        }
+    }
 }
 
 /// BWE info in trace event.
@@ -912,4 +1220,19 @@ pub struct BweTraceInfo {
     max_padding_bitrate: u32,
     /// Available bitrate.
     available_bitrate: u32,
+}
+
+impl BweTraceInfo {
+    pub(crate) fn from_fbs(info: transport::BweTraceInfo) -> Self {
+        Self {
+            r#type: BweType::from_fbs(info.bwe_type),
+            desired_bitrate: info.desired_bitrate,
+            effective_desired_bitrate: info.effective_desired_bitrate,
+            min_bitrate: info.min_bitrate,
+            max_bitrate: info.max_bitrate,
+            start_bitrate: info.start_bitrate,
+            max_padding_bitrate: info.max_padding_bitrate,
+            available_bitrate: info.available_bitrate,
+        }
+    }
 }

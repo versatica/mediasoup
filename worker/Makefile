@@ -13,7 +13,6 @@ MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
 # Check the meaning of useful macros in the `worker/include/Logger.hpp` header
 # file if you want to enable tracing or other debug information.
 MEDIASOUP_BUILDTYPE ?= Release
-GULP = ./scripts/node_modules/.bin/gulp
 LCOV = ./deps/lcov/bin/lcov
 DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
@@ -37,6 +36,7 @@ PIP_BUILD_BINARIES = $(shell [ -f /etc/NIXOS -o -d /etc/guix ] && echo "--no-bin
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION ?= 1.10.2.4
+NPM ?= npm
 
 # Disable `*.pyc` files creation.
 export PYTHONDONTWRITEBYTECODE = 1
@@ -77,6 +77,7 @@ endif
 	update-wrap-file \
 	mediasoup-worker \
 	libmediasoup-worker \
+	flatc \
 	xcode \
 	lint \
 	format \
@@ -86,7 +87,9 @@ endif
 	fuzzer \
 	fuzzer-run-all \
 	docker \
-	docker-run
+	docker-run \
+	docker-alpine \
+	docker-alpine-run
 
 default: mediasoup-worker
 
@@ -187,7 +190,9 @@ clean-pip:
 clean-subprojects: meson-ninja
 	$(MESON) subprojects purge --include-cache --confirm
 
-clean-all: clean-subprojects
+# Clean subprojects (ignore if it fails) and delete out dir.
+clean-all:
+	-$(MESON) subprojects purge --include-cache --confirm
 	$(RM) -rf $(MEDIASOUP_OUT_DIR)
 
 # Update the wrap file of a subproject. Usage example:
@@ -195,26 +200,29 @@ clean-all: clean-subprojects
 update-wrap-file: meson-ninja
 	$(MESON) subprojects update --reset $(SUBPROJECT)
 
-mediasoup-worker: setup
+mediasoup-worker: setup flatc
 ifeq ($(MEDIASOUP_WORKER_BIN),)
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker
 endif
 
-libmediasoup-worker: setup
+libmediasoup-worker: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
 
-xcode: setup
+flatc: setup
+	$(MESON) compile -C $(BUILD_DIR) flatbuffers-generator
+
+xcode: setup flatc
 	$(MESON) setup --buildtype debug --backend xcode $(MEDIASOUP_OUT_DIR)/xcode
 
 lint:
-	$(GULP) --gulpfile ./scripts/gulpfile.mjs lint:worker
+	$(NPM) run lint --prefix scripts/
 
 format:
-	$(GULP) --gulpfile ./scripts/gulpfile.mjs format:worker
+	$(NPM) run format --prefix scripts/
 
-test: setup
+test: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test
 ifeq ($(OS),Windows_NT)
@@ -226,7 +234,7 @@ else
 	$(BUILD_DIR)/mediasoup-worker-test --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 endif
 
-test-asan: setup
+test-asan: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test-asan
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test-asan
 	ASAN_OPTIONS=detect_leaks=1 $(BUILD_DIR)/mediasoup-worker-test-asan --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
@@ -241,7 +249,7 @@ tidy:
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 
-fuzzer: setup
+fuzzer: setup flatc
 	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-fuzzer
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-fuzzer
 
@@ -262,3 +270,18 @@ docker-run:
 		--cap-add SYS_PTRACE \
 		-v $(shell pwd)/../:/mediasoup \
 		mediasoup/docker:latest
+
+docker-alpine:
+ifeq ($(DOCKER_NO_CACHE),true)
+	$(DOCKER) build -f Dockerfile.alpine --no-cache --tag mediasoup/docker-alpine:latest .
+else
+	$(DOCKER) build -f Dockerfile.alpine --tag mediasoup/docker-alpine:latest .
+endif
+
+docker-alpine-run:
+	$(DOCKER) run \
+		--name=mediasoupDockerAlpine -it --rm \
+		--privileged \
+		--cap-add SYS_PTRACE \
+		-v $(shell pwd)/../:/mediasoup \
+		mediasoup/docker-alpine:latest

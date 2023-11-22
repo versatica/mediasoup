@@ -42,7 +42,9 @@ namespace RTC
 				offset += 1u;
 
 				if (length <= len - offset)
+				{
 					packet->SetReason(std::string(reinterpret_cast<const char*>(data) + offset, length));
+				}
 			}
 
 			return packet.release();
@@ -95,7 +97,9 @@ namespace RTC
 				MS_DUMP("  ssrc   : %" PRIu32, ssrc);
 			}
 			if (!this->reason.empty())
+			{
 				MS_DUMP("  reason : %s", this->reason.c_str());
+			}
 			MS_DUMP("</ByePacket>");
 		}
 	} // namespace RTCP

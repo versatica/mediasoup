@@ -14,6 +14,51 @@ namespace RTC
 	thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
 	static constexpr size_t MaxTuples{ 8 };
 
+	/* Class methods. */
+	IceServer::IceState IceStateFromFbs(FBS::WebRtcTransport::IceState state)
+	{
+		switch (state)
+		{
+			case FBS::WebRtcTransport::IceState::NEW:
+			{
+				return IceServer::IceState::NEW;
+			}
+
+			case FBS::WebRtcTransport::IceState::CONNECTED:
+			{
+				return IceServer::IceState::CONNECTED;
+			}
+
+			case FBS::WebRtcTransport::IceState::COMPLETED:
+			{
+				return IceServer::IceState::COMPLETED;
+			}
+
+			case FBS::WebRtcTransport::IceState::DISCONNECTED:
+			{
+				return IceServer::IceState::DISCONNECTED;
+			}
+		}
+	}
+
+	FBS::WebRtcTransport::IceState IceServer::IceStateToFbs(IceServer::IceState state)
+	{
+		switch (state)
+		{
+			case IceServer::IceState::NEW:
+				return FBS::WebRtcTransport::IceState::NEW;
+
+			case IceServer::IceState::CONNECTED:
+				return FBS::WebRtcTransport::IceState::CONNECTED;
+
+			case IceServer::IceState::COMPLETED:
+				return FBS::WebRtcTransport::IceState::COMPLETED;
+
+			case IceServer::IceState::DISCONNECTED:
+				return FBS::WebRtcTransport::IceState::DISCONNECTED;
+		}
+	}
+
 	/* Instance methods. */
 
 	IceServer::IceServer(Listener* listener, const std::string& usernameFragment, const std::string& password)

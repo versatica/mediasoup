@@ -158,9 +158,9 @@ namespace RTC
 
 		size_t packetCount{ 0u };
 
-		for (auto& spatialLayerCounter : this->spatialLayerCounters)
+		for (const auto& spatialLayerCounter : this->spatialLayerCounters)
 		{
-			for (auto& temporalLayerCounter : spatialLayerCounter)
+			for (const auto& temporalLayerCounter : spatialLayerCounter)
 			{
 				packetCount += temporalLayerCounter.GetPacketCount();
 			}
@@ -211,7 +211,7 @@ namespace RTC
 		{
 			// Run the RTP inactivity periodic timer (use a different timeout if DTX is
 			// enabled).
-			this->inactivityCheckPeriodicTimer = new Timer(this);
+			this->inactivityCheckPeriodicTimer = new TimerHandle(this);
 
 			this->inactivityCheckPeriodicTimer->Start(
 			  this->params.useDtx ? InactivityCheckIntervalWithDtx : InactivityCheckInterval);
@@ -227,34 +227,41 @@ namespace RTC
 		this->inactivityCheckPeriodicTimer = nullptr;
 	}
 
-	void RtpStreamRecv::FillJsonStats(json& jsonObject)
+	flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamRecv::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
-		RTC::RtpStream::FillJsonStats(jsonObject);
+		auto baseStats = RTC::RtpStream::FillBufferStats(builder);
 
-		jsonObject["type"]        = "inbound-rtp";
-		jsonObject["jitter"]      = static_cast<uint32_t>(this->jitter);
-		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
+		std::vector<flatbuffers::Offset<FBS::RtpStream::BitrateByLayer>> bitrateByLayer;
 
 		if (GetSpatialLayers() > 1 || GetTemporalLayers() > 1)
 		{
-			jsonObject["bitrateByLayer"] = json::object();
-			auto jsonBitrateByLayerIt    = jsonObject.find("bitrateByLayer");
-
 			for (uint8_t sIdx = 0; sIdx < GetSpatialLayers(); ++sIdx)
 			{
 				for (uint8_t tIdx = 0; tIdx < GetTemporalLayers(); ++tIdx)
 				{
-					(*jsonBitrateByLayerIt)[std::to_string(sIdx) + "." + std::to_string(tIdx)] =
-					  GetBitrate(nowMs, sIdx, tIdx);
+					auto layer = std::to_string(sIdx) + "." + std::to_string(tIdx);
+
+					bitrateByLayer.emplace_back(FBS::RtpStream::CreateBitrateByLayerDirect(
+					  builder, layer.c_str(), GetBitrate(nowMs, sIdx, tIdx)));
 				}
 			}
 		}
+
+		auto stats = FBS::RtpStream::CreateRecvStatsDirect(
+		  builder,
+		  baseStats,
+		  static_cast<uint32_t>(this->jitter),
+		  this->transmissionCounter.GetPacketCount(),
+		  this->transmissionCounter.GetBytes(),
+		  this->transmissionCounter.GetBitrate(nowMs),
+		  &bitrateByLayer);
+
+		return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::RecvStats, stats.Union());
 	}
 
 	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
@@ -846,7 +853,7 @@ namespace RTC
 		// Nothing to do.
 	}
 
-	inline void RtpStreamRecv::OnTimer(Timer* timer)
+	inline void RtpStreamRecv::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

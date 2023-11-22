@@ -44,7 +44,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout
@@ -55,15 +55,6 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      # We need to install some NPM production deps for npm-scripts.mjs to work.
-      - run: npm ci --ignore-scripts --omit=dev
-      - run: npm run install-clang-tools
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
-      - run: npm run lint:worker
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
-
       - name: Configure cache
         uses: actions/cache@v3
         with:
@@ -73,7 +64,25 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      - run: npm run worker:build
-      - run: npm run test:worker
+      # We need to install some NPM production deps for npm-scripts.mjs to work.
+      - name: npm ci
+        run: npm ci --ignore-scripts --omit=dev
+
+      # We need to install deps on worker/scripts/package.json.
+      - name: npm run install-worker-dev-tools
+        run: npm run install-worker-dev-tools
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+
+      - name: npm run lint:worker
+        run: npm run lint:worker
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+
+      - name: npm run worker:build
+        run: npm run worker:build
+
+      - name: npm run test:worker
+        run: npm run test:worker
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'

@@ -7,15 +7,18 @@
 ## Node.
 /node_modules
 /node/lib
+# flatc generated files.
+/node/src/fbs
 
 ## Rust.
-/Cargo.lock
 /rust/examples-frontend/*/node_modules
 /rust/examples-frontend/*/package-lock.json
 /target
 
 ## Worker.
 /worker/scripts/node_modules
+# Flatc generated files.
+/worker/include/FBS
 /worker/prebuild
 # Vistual Studio generated Stuff.
 /worker/**/Debug
@@ -30,14 +33,5 @@
 ## Others.
 /coverage
 /.cache
-/NO_GIT
-*.swp
-*.swo
-.DS_Store
-# Vistual Studio Code stuff.
-/.vscode
-# JetBrains IDE stuff.
-/.idea
-
 # Packaged module.
 *.tgz

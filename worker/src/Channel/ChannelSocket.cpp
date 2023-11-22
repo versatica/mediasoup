@@ -5,7 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cmath>   // std::ceil()
 #include <cstring> // std::memcpy(), std::memmove()
 
 namespace Channel
@@ -33,8 +32,7 @@ namespace Channel
 
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
-	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen)),
-	    writeBuffer(static_cast<uint8_t*>(std::malloc(MessageMaxLen)))
+	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen))
 	{
 		MS_TRACE_STD();
 	}
@@ -80,10 +78,10 @@ namespace Channel
 	{
 		MS_TRACE_STD();
 
-		std::free(this->writeBuffer);
-
 		if (!this->closed)
+		{
 			Close();
+		}
 
 		delete this->consumerSocket;
 		delete this->producerSocket;
@@ -94,7 +92,9 @@ namespace Channel
 		MS_TRACE_STD();
 
 		if (this->closed)
+		{
 			return;
+		}
 
 		this->closed = true;
 
@@ -122,50 +122,14 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void ChannelSocket::Send(json& jsonMessage)
+	void ChannelSocket::Send(const uint8_t* message, uint32_t messageLen)
 	{
 		MS_TRACE_STD();
 
 		if (this->closed)
-			return;
-
-		std::string message = jsonMessage.dump();
-
-		if (message.length() > PayloadMaxLen)
 		{
-			MS_ERROR_STD("message too big");
-
 			return;
 		}
-
-		SendImpl(
-		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
-	}
-
-	void ChannelSocket::Send(const std::string& message)
-	{
-		MS_TRACE_STD();
-
-		if (this->closed)
-			return;
-
-		if (message.length() > PayloadMaxLen)
-		{
-			MS_ERROR_STD("message too big");
-
-			return;
-		}
-
-		SendImpl(
-		  reinterpret_cast<const uint8_t*>(message.c_str()), static_cast<uint32_t>(message.length()));
-	}
-
-	void ChannelSocket::SendLog(const char* message, uint32_t messageLen)
-	{
-		MS_TRACE_STD();
-
-		if (this->closed)
-			return;
 
 		if (messageLen > PayloadMaxLen)
 		{
@@ -177,35 +141,69 @@ namespace Channel
 		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
 	}
 
+	void ChannelSocket::SendLog(const char* msg, uint32_t messageLen)
+	{
+		MS_TRACE_STD();
+
+		if (this->closed)
+		{
+			return;
+		}
+
+		if (messageLen > PayloadMaxLen)
+		{
+			MS_ERROR_STD("message too big");
+
+			return;
+		}
+
+		auto log = FBS::Log::CreateLogDirect(this->bufferBuilder, msg);
+		auto message =
+		  FBS::Message::CreateMessage(this->bufferBuilder, FBS::Message::Body::Log, log.Union());
+
+		this->bufferBuilder.FinishSizePrefixed(message);
+		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
+		this->bufferBuilder.Reset();
+	}
+
 	bool ChannelSocket::CallbackRead()
 	{
 		MS_TRACE_STD();
 
 		if (this->closed)
+		{
 			return false;
+		}
 
-		uint8_t* message{ nullptr };
-		uint32_t messageLen;
-		size_t messageCtx;
+		uint8_t* msg{ nullptr };
+		uint32_t msgLen;
+		size_t msgCtx;
 
 		// Try to read next message using `channelReadFn`, message, its length and context will be
 		// stored in provided arguments.
-		auto free = this->channelReadFn(
-		  &message, &messageLen, &messageCtx, this->uvReadHandle, this->channelReadCtx);
+		auto free = this->channelReadFn(&msg, &msgLen, &msgCtx, this->uvReadHandle, this->channelReadCtx);
 
 		// Non-null free function pointer means message was successfully read above and will need to be
 		// freed later.
 		if (free)
 		{
-			try
+			const auto* message = FBS::Message::GetMessage(msg);
+
+#if MS_LOG_DEV_LEVEL == 3
+			auto s = flatbuffers::FlatBufferToString(
+			  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+			MS_DUMP("%s", s.c_str());
+#endif
+
+			if (message->data_type() == FBS::Message::Body::Request)
 			{
-				char* charMessage{ reinterpret_cast<char*>(message) };
+				ChannelRequest* request;
 
-				auto* request = new Channel::ChannelRequest(this, charMessage, messageLen);
-
-				// Notify the listener.
 				try
 				{
+					request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+
+					// Notify the listener.
 					this->listener->HandleRequest(request);
 				}
 				catch (const MediaSoupTypeError& error)
@@ -217,20 +215,33 @@ namespace Channel
 					request->Error(error.what());
 				}
 
-				// Delete the Request.
 				delete request;
 			}
-			catch (const json::parse_error& error)
+			else if (message->data_type() == FBS::Message::Body::Notification)
 			{
-				MS_ERROR_STD("message parsing error: %s", error.what());
+				ChannelNotification* notification;
+
+				try
+				{
+					notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+
+					// Notify the listener.
+					this->listener->HandleNotification(notification);
+				}
+				catch (const MediaSoupError& error)
+				{
+					MS_ERROR("notification failed: %s", error.what());
+				}
+
+				delete notification;
 			}
-			catch (const MediaSoupError& error)
+			else
 			{
-				MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
+				MS_ERROR("discarding wrong Channel data");
 			}
 
 			// Message needs to be freed using stored function pointer.
-			free(message, messageLen, messageCtx);
+			free(msg, msgLen, msgCtx);
 		}
 
 		// Return `true` if something was processed.
@@ -248,30 +259,31 @@ namespace Channel
 		}
 		else
 		{
-			std::memcpy(this->writeBuffer, &payloadLen, sizeof(uint32_t));
-
-			if (payloadLen != 0)
-			{
-				std::memcpy(this->writeBuffer + sizeof(uint32_t), payload, payloadLen);
-			}
-
-			size_t len = sizeof(uint32_t) + payloadLen;
-
-			this->producerSocket->Write(this->writeBuffer, len);
+			this->producerSocket->Write(payload, payloadLen);
 		}
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
 	{
-		MS_TRACE_STD();
+		MS_TRACE();
 
-		try
+		const auto* message = FBS::Message::GetMessage(msg);
+
+#if MS_LOG_DEV_LEVEL == 3
+		auto s = flatbuffers::FlatBufferToString(
+		  reinterpret_cast<uint8_t*>(msg), FBS::Message::MessageTypeTable());
+		MS_DUMP("%s", s.c_str());
+#endif
+
+		if (message->data_type() == FBS::Message::Body::Request)
 		{
-			auto* request = new Channel::ChannelRequest(this, msg, msgLen);
+			ChannelRequest* request;
 
-			// Notify the listener.
 			try
 			{
+				request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+
+				// Notify the listener.
 				this->listener->HandleRequest(request);
 			}
 			catch (const MediaSoupTypeError& error)
@@ -283,16 +295,29 @@ namespace Channel
 				request->Error(error.what());
 			}
 
-			// Delete the Request.
 			delete request;
 		}
-		catch (const json::parse_error& error)
+		else if (message->data_type() == FBS::Message::Body::Notification)
 		{
-			MS_ERROR_STD("JSON parsing error: %s", error.what());
+			ChannelNotification* notification;
+
+			try
+			{
+				notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+
+				// Notify the listener.
+				this->listener->HandleNotification(notification);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_ERROR("notification failed: %s", error.what());
+			}
+
+			delete notification;
 		}
-		catch (const MediaSoupError& error)
+		else
 		{
-			MS_ERROR_STD("discarding wrong Channel request: %s", error.what());
+			MS_ERROR("discarding wrong Channel data");
 		}
 	}
 
@@ -306,7 +331,8 @@ namespace Channel
 	/* Instance methods. */
 
 	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
-	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::CONSUMER), listener(listener)
+	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::CONSUMER),
+	    listener(listener)
 	{
 		MS_TRACE_STD();
 	}
@@ -326,7 +352,9 @@ namespace Channel
 		while (true)
 		{
 			if (IsClosed())
+			{
 				return;
+			}
 
 			size_t readLen = this->bufferDataLen - msgStart;
 
@@ -376,7 +404,7 @@ namespace Channel
 	/* Instance methods. */
 
 	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
-	  : ::UnixStreamSocket(fd, bufferSize, ::UnixStreamSocket::Role::PRODUCER)
+	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::PRODUCER)
 	{
 		MS_TRACE_STD();
 	}

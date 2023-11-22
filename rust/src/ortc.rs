@@ -7,10 +7,12 @@ use crate::rtp_parameters::{
 };
 use crate::scalability_modes::ScalabilityMode;
 use crate::supported_rtp_capabilities;
+use mediasoup_sys::fbs::rtp_parameters;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+use std::error::Error;
 use std::mem;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::ops::Deref;
@@ -50,6 +52,64 @@ pub struct RtpMappingEncoding {
 pub struct RtpMapping {
     pub codecs: Vec<RtpMappingCodec>,
     pub encodings: Vec<RtpMappingEncoding>,
+}
+
+impl RtpMapping {
+    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpMapping {
+        rtp_parameters::RtpMapping {
+            codecs: self
+                .codecs
+                .iter()
+                .map(|mapping| rtp_parameters::CodecMapping {
+                    payload_type: mapping.payload_type,
+                    mapped_payload_type: mapping.mapped_payload_type,
+                })
+                .collect(),
+            encodings: self
+                .encodings
+                .iter()
+                .map(|mapping| rtp_parameters::EncodingMapping {
+                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
+                    ssrc: mapping.ssrc,
+                    scalability_mode: Some(mapping.scalability_mode.to_string()),
+                    mapped_ssrc: mapping.mapped_ssrc,
+                })
+                .collect(),
+        }
+    }
+
+    pub(crate) fn from_fbs_ref(
+        mapping: rtp_parameters::RtpMappingRef<'_>,
+    ) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            codecs: mapping
+                .codecs()?
+                .iter()
+                .map(|mapping| {
+                    Ok(RtpMappingCodec {
+                        payload_type: mapping?.payload_type()?,
+                        mapped_payload_type: mapping?.mapped_payload_type()?,
+                    })
+                })
+                .collect::<Result<Vec<_>, Box<dyn Error>>>()?,
+            encodings: mapping
+                .encodings()?
+                .iter()
+                .map(|mapping| {
+                    Ok(RtpMappingEncoding {
+                        rid: mapping?.rid()?.map(|rid| rid.to_string()),
+                        ssrc: mapping?.ssrc()?,
+                        scalability_mode: mapping?
+                            .scalability_mode()?
+                            .map(|maybe_scalability_mode| maybe_scalability_mode.parse())
+                            .transpose()?
+                            .unwrap_or_default(),
+                        mapped_ssrc: mapping?.mapped_ssrc()?,
+                    })
+                })
+                .collect::<Result<Vec<_>, Box<dyn Error>>>()?,
+        })
+    }
 }
 
 /// Error caused by invalid RTP parameters.
@@ -603,7 +663,6 @@ pub(crate) fn get_consumable_rtp_parameters(
     consumable_params.rtcp = RtcpParameters {
         cname: params.rtcp.cname.clone(),
         reduced_size: true,
-        mux: Some(true),
     };
 
     consumable_params

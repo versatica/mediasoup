@@ -8,6 +8,8 @@ import {
 } from './RtpObserver';
 import { Producer } from './Producer';
 import { AppData } from './types';
+import { Event, Notification } from './fbs/notification';
+import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 
 export type ActiveSpeakerObserverOptions<ActiveSpeakerObserverAppData extends AppData = AppData> =
 {
@@ -65,13 +67,17 @@ export class ActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData 
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.rtpObserverId, (event: string, data?: any) =>
+		this.channel.on(this.internal.rtpObserverId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'dominantspeaker':
+				case Event.ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER:
 				{
-					const producer = this.getProducerById(data.producerId);
+					const notification = new FbsActiveSpeakerObserver.DominantSpeakerNotification();
+
+					data!.body(notification);
+
+					const producer = this.getProducerById(notification.producerId()!);
 
 					if (!producer)
 					{

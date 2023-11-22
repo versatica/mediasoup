@@ -2,23 +2,18 @@
 #define MS_RTC_ICE_CANDIDATE_HPP
 
 #include "common.hpp"
+#include "FBS/webRtcTransport.h"
 #include "RTC/TcpServer.hpp"
+#include "RTC/TransportTuple.hpp"
 #include "RTC/UdpSocket.hpp"
-#include <nlohmann/json.hpp>
+#include <flatbuffers/flatbuffers.h>
 #include <string>
-
-using json = nlohmann::json;
 
 namespace RTC
 {
 	class IceCandidate
 	{
-	public:
-		enum class Protocol
-		{
-			UDP = 1,
-			TCP
-		};
+		using Protocol = TransportTuple::Protocol;
 
 	public:
 		enum class CandidateType
@@ -31,6 +26,12 @@ namespace RTC
 		{
 			PASSIVE = 1
 		};
+
+	public:
+		static CandidateType CandidateTypeFromFbs(FBS::WebRtcTransport::IceCandidateType type);
+		static FBS::WebRtcTransport::IceCandidateType CandidateTypeToFbs(CandidateType type);
+		static TcpCandidateType TcpCandidateTypeFromFbs(FBS::WebRtcTransport::IceCandidateTcpType type);
+		static FBS::WebRtcTransport::IceCandidateTcpType TcpCandidateTypeToFbs(TcpCandidateType type);
 
 	public:
 		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
@@ -59,7 +60,8 @@ namespace RTC
 		{
 		}
 
-		void FillJson(json& jsonObject) const;
+		flatbuffers::Offset<FBS::WebRtcTransport::IceCandidate> FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
 		// Others.

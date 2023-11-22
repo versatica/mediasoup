@@ -4,6 +4,7 @@
 #include "RTC/RtpPacket.hpp"
 #include <catch2/catch.hpp>
 #include <cstring> // std::memset()
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -21,12 +22,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-7.bin", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -81,12 +86,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-8.bin", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -141,12 +150,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-5.bin", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -200,12 +213,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I1-15.bin", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -260,12 +277,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-14.bin", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -320,12 +341,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/2SL-I14.bin", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -390,10 +415,12 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 
 		std::fstream nf;
 		nf.open("data/H264_SVC/naluInfo/naluInfo.csv", std::ios::in);
+
 		if (nf.is_open())
 		{
 			std::string line, word;
 			getline(nf, line); // omit the header in the CSV
+
 			while (getline(nf, line))
 			{
 				std::stringstream s(line);
@@ -412,19 +439,26 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 
 				if (!helpers::readPayloadData(
 				      "data/H264_SVC/naluInfo/naluInfo.264", pos + 4, bytes - 4, buffer))
+				{
 					FAIL("Failed to read payload data!\n");
+				}
 
 				// TODO: One additional byte is written as last value is omitted in the
 				// test bench
 				std::string strFile1 = "rtp-" + std::to_string(rows) + ".bin";
+
 				if (!helpers::writeRtpPacket(
 				      strFile1.c_str(), type, bytes - 4, sid, tid, isIdr, start, end, buffer, buffer2, &len))
+				{
 					FAIL("Failed to write RTP packet!\n");
+				}
 
 				RtpPacket* packet = RtpPacket::Parse(buffer2, len);
 
 				if (!packet)
+				{
 					FAIL("not a RTP packet");
+				}
 
 				packet->SetFrameMarkingExtensionId(1);
 

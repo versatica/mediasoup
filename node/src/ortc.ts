@@ -1,6 +1,5 @@
 import * as h264 from 'h264-profile-level-id';
-import * as utils from './utils';
-import { UnsupportedError } from './errors';
+import * as flatbuffers from 'flatbuffers';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { parse as parseScalabilityMode } from './scalabilityModes';
 import {
@@ -21,8 +20,11 @@ import {
 	SctpParameters,
 	SctpStreamParameters
 } from './SctpParameters';
+import * as utils from './utils';
+import { UnsupportedError } from './errors';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 
-type RtpMapping =
+export type RtpMapping =
 {
 	codecs:
 	{
@@ -1040,7 +1042,8 @@ export function getConsumableRtpParameters(
 	}
 
 	// Clone Producer encodings since we'll mangle them.
-	const consumableEncodings = utils.clone(params.encodings) as RtpEncodingParameters[];
+	const consumableEncodings =
+		(utils.clone(params.encodings) ?? []) as RtpEncodingParameters[];
 
 	for (let i = 0; i < consumableEncodings.length; ++i)
 	{
@@ -1061,8 +1064,7 @@ export function getConsumableRtpParameters(
 	consumableParams.rtcp =
 	{
 		cname       : params.rtcp!.cname,
-		reducedSize : true,
-		mux         : true
+		reducedSize : true
 	};
 
 	return consumableParams;
@@ -1139,7 +1141,7 @@ export function getConsumerRtpParameters(
 	}
 
 	const consumableCodecs =
-		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
+		(utils.clone(consumableRtpParameters.codecs) ?? []) as RtpCodecParameters[];
 
 	let rtxSupported = false;
 
@@ -1167,7 +1169,7 @@ export function getConsumerRtpParameters(
 	}
 
 	// Must sanitize the list of matched codecs by removing useless RTX codecs.
-	for (let idx = consumerParams.codecs.length -1; idx >= 0; --idx)
+	for (let idx = consumerParams.codecs.length - 1; idx >= 0; --idx)
 	{
 		const codec = consumerParams.codecs[idx];
 
@@ -1294,7 +1296,7 @@ export function getConsumerRtpParameters(
 	else
 	{
 		const consumableEncodings =
-			utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
+			(utils.clone(consumableRtpParameters.encodings) ?? []) as RtpEncodingParameters[];
 		const baseSsrc = utils.generateRandomNumber();
 		const baseRtxSsrc = utils.generateRandomNumber();
 
@@ -1346,7 +1348,7 @@ export function getPipeConsumerRtpParameters(
 	};
 
 	const consumableCodecs =
-		utils.clone(consumableRtpParameters.codecs) as RtpCodecParameters[];
+		(utils.clone(consumableRtpParameters.codecs) ?? []) as RtpCodecParameters[];
 
 	for (const codec of consumableCodecs)
 	{
@@ -1374,7 +1376,7 @@ export function getPipeConsumerRtpParameters(
 		));
 
 	const consumableEncodings =
-		utils.clone(consumableRtpParameters.encodings) as RtpEncodingParameters[];
+		(utils.clone(consumableRtpParameters.encodings) ?? []) as RtpEncodingParameters[];
 	const baseSsrc = utils.generateRandomNumber();
 	const baseRtxSsrc = utils.generateRandomNumber();
 
@@ -1516,4 +1518,40 @@ function matchCodecs(
 	}
 
 	return true;
+}
+
+export function serializeRtpMapping(
+	builder: flatbuffers.Builder, rtpMapping: RtpMapping
+): number
+{
+	const codecs: number[] = [];
+
+	for (const codec of rtpMapping.codecs)
+	{
+		codecs.push(
+			FbsRtpParameters.CodecMapping.createCodecMapping(
+				builder, codec.payloadType, codec.mappedPayloadType)
+		);
+	}
+	const codecsOffset =
+		FbsRtpParameters.RtpMapping.createCodecsVector(builder, codecs);
+
+	const encodings: number[] = [];
+
+	for (const encoding of rtpMapping.encodings)
+	{
+		encodings.push(
+			FbsRtpParameters.EncodingMapping.createEncodingMapping(
+				builder,
+				builder.createString(encoding.rid),
+				encoding.ssrc ?? null,
+				builder.createString(encoding.scalabilityMode),
+				encoding.mappedSsrc)
+		);
+	}
+	const encodingsOffset =
+		FbsRtpParameters.RtpMapping.createEncodingsVector(builder, encodings);
+
+	return FbsRtpParameters.RtpMapping.createRtpMapping(
+		builder, codecsOffset, encodingsOffset);
 }

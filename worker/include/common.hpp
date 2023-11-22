@@ -7,6 +7,7 @@
 #include <cstdint>    // uint8_t, etc
 #include <functional> // std::function
 #include <memory>     // std::addressof()
+#include <optional>
 #ifdef _WIN32
 #include <winsock2.h>
 // Avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.
@@ -40,29 +41,5 @@ using ChannelReadFn = ChannelReadFreeFn (*)(
 using ChannelWriteCtx = void*;
 using ChannelWriteFn =
   void (*)(const uint8_t* /* message */, uint32_t /* messageLen */, ChannelWriteCtx /* ctx */);
-
-using PayloadChannelReadCtx    = void*;
-using PayloadChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
-// Returns `PayloadChannelReadFree` on successful read that must be used to free
-// `message` and `payload`.
-using PayloadChannelReadFn = PayloadChannelReadFreeFn (*)(
-  uint8_t** /* message */,
-  uint32_t* /* messageLen */,
-  size_t* /* messageCtx */,
-  uint8_t** /* payload */,
-  uint32_t* /* payloadLen */,
-  size_t* /* payloadCapacity */,
-  // This is `uv_async_t` handle that can be called later with `uv_async_send()`
-  // when there is more data to read.
-  const void* /* handle */,
-  PayloadChannelReadCtx /* ctx */);
-
-using PayloadChannelWriteCtx = void*;
-using PayloadChannelWriteFn  = void (*)(
-  const uint8_t* /* message */,
-  uint32_t /* messageLen */,
-  const uint8_t* /* payload */,
-  uint32_t /* payloadLen */,
-  ChannelWriteCtx /* ctx */);
 
 #endif

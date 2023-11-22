@@ -51,11 +51,6 @@ namespace RTC
 
 					break;
 				}
-
-				default:
-				{
-					MS_ABORT("codec mimeType not set");
-				}
 			}
 
 			this->retransmissionBuffer = new RTC::RtpRetransmissionBuffer(
@@ -72,18 +67,22 @@ namespace RTC
 		this->retransmissionBuffer = nullptr;
 	}
 
-	void RtpStreamSend::FillJsonStats(json& jsonObject)
+	flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamSend::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
-		RTC::RtpStream::FillJsonStats(jsonObject);
+		auto baseStats = RTC::RtpStream::FillBufferStats(builder);
+		auto stats     = FBS::RtpStream::CreateSendStats(
+      builder,
+      baseStats,
+      this->transmissionCounter.GetPacketCount(),
+      this->transmissionCounter.GetBytes(),
+      this->transmissionCounter.GetBitrate(nowMs));
 
-		jsonObject["type"]        = "outbound-rtp";
-		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
+		return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)

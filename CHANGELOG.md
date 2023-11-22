@@ -1,11 +1,42 @@
 # Changelog
 
 
-### 3.12.17
+### NEXT
 
 * Update worker dependencies:
-    * abseil-cpp 20230125.1-5.0.
-    * libuv 1.46.0-1
+* abseil-cpp 20230802.0-1.
+* libuv 1.46.0-1
+* Fix RTCP SDES packet size calculation ([PR #1236](https://github.com/versatica/mediasoup/pull/1236) based on PR [PR #1234](https://github.com/versatica/mediasoup/pull/1234) by @ybybwdwd).
+
+
+### 3.13.4
+
+* Fix RTCP DLRR (Delay Since Last Receiver Report) block parsing ([PR #1234](https://github.com/versatica/mediasoup/pull/1234)).
+
+
+### 3.13.3
+
+* Node: Fix issue when 'pause'/'resume' events are not emitted ([PR #1231](https://github.com/versatica/mediasoup/pull/1231) by @douglaseel).
+
+
+### 3.13.2
+
+* FBS: `LayersChangeNotification` body must be optional (fixes a crash) ([PR #1227](https://github.com/versatica/mediasoup/pull/1227)).
+
+
+### 3.13.1
+
+* Node: Extract version from `package.json` using `require()` ([PR #1217](https://github.com/versatica/mediasoup/pull/1217) by @arcinston).
+
+
+### 3.13.0
+
+* Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
+* Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
+* Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
+* Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
+* DataChannel subchannels feature ([PR #1152](https://github.com/versatica/mediasoup/pull/1152)).
+* `Worker`: Make DTLS fragment stay within MTU size range ([PR #1156](https://github.com/versatica/mediasoup/pull/1156), based on [PR #1143](https://github.com/versatica/mediasoup/pull/1143) by @vpnts-se).
 
 
 ### 3.12.16

@@ -188,7 +188,9 @@ namespace RTC
 				auto it = std::find(this->chunks.begin(), this->chunks.end(), chunk);
 
 				if (it != this->chunks.end())
+				{
 					this->chunks.erase(it);
+				}
 			}
 			Iterator Begin()
 			{
@@ -212,7 +214,7 @@ namespace RTC
 				// A serialized packet can contain a maximum of 31 chunks.
 				// If number of chunks exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
-				size_t size = Packet::CommonHeaderSize * ((this->GetCount() / MaxChunksPerPacket) + 1);
+				size_t size = Packet::CommonHeaderSize * ((this->GetCount() / (MaxChunksPerPacket + 1)) + 1);
 
 				for (auto* chunk : this->chunks)
 				{

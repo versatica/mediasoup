@@ -1,7 +1,8 @@
+import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
-
-const { createWorker } = mediasoup;
+import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import * as FbsProducer from '../fbs/producer';
 
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
@@ -44,7 +45,7 @@ const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter({ mediaCodecs });
 	transport1 = await router.createWebRtcTransport(
 		{
@@ -123,8 +124,8 @@ test('transport1.produce() succeeds', async () =>
 		.resolves
 		.toMatchObject(
 			{
-				mapProducerIdConsumerIds : { [audioProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
+				mapProducerIdConsumerIds : [ { key: audioProducer.id, values: [] } ],
+				mapConsumerIdProducerId  : []
 			});
 
 	await expect(transport1.dump())
@@ -213,13 +214,16 @@ test('transport2.produce() succeeds', async () =>
 	expect(videoProducer.score).toEqual([]);
 	expect(videoProducer.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapProducerIdConsumerIds : { [videoProducer.id]: [] },
-				mapConsumerIdProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapProducerIdConsumerIds)
+		.toEqual(
+			expect.arrayContaining([
+				{ key: videoProducer.id, values: [] }
+			])
+		);
+
+	expect(dump.mapConsumerIdProducerId.length).toBe(0);
 
 	await expect(transport2.dump())
 		.resolves
@@ -229,6 +233,54 @@ test('transport2.produce() succeeds', async () =>
 				producerIds : [ videoProducer.id ],
 				consumerIds : []
 			});
+}, 2000);
+
+test('transport1.produce() without header extensions and rtcp succeeds', async () =>
+{
+	const onObserverNewProducer = jest.fn();
+
+	transport1.observer.once('newproducer', onObserverNewProducer);
+
+	const audioProducer2 = await transport1.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO2',
+				codecs :
+				[
+					{
+						mimeType    : 'audio/opus',
+						payloadType : 0,
+						clockRate   : 48000,
+						channels    : 2,
+						parameters  :
+						{
+							useinbandfec : 1,
+							usedtx       : 1,
+							foo          : 222.222,
+							bar          : '333'
+						}
+					}
+				]
+			},
+			appData : { foo: 1, bar: '2' }
+		});
+
+	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer2);
+	expect(typeof audioProducer2.id).toBe('string');
+	expect(audioProducer2.closed).toBe(false);
+	expect(audioProducer2.kind).toBe('audio');
+	expect(typeof audioProducer2.rtpParameters).toBe('object');
+	expect(audioProducer2.type).toBe('simple');
+	// Private API.
+	expect(typeof audioProducer2.consumableRtpParameters).toBe('object');
+	expect(audioProducer2.paused).toBe(false);
+	expect(audioProducer2.score).toEqual([]);
+	expect(audioProducer2.appData).toEqual({ foo: 1, bar: '2' });
+
+	audioProducer2.close();
 }, 2000);
 
 test('transport1.produce() with wrong arguments rejects with TypeError', async () =>
@@ -520,7 +572,7 @@ test('producer.dump() succeeds', async () =>
 			});
 	expect(data.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -537,11 +589,13 @@ test('producer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(1);
-	expect(data.rtpParameters.encodings).toEqual(
-		[
-			{ codecPayloadType: 0 }
-		]);
+	expect(data.rtpParameters.encodings!.length).toBe(1);
+	expect(data.rtpParameters.encodings![0]).toEqual(
+		expect.objectContaining(
+			{
+				codecPayloadType : 0
+			})
+	);
 	expect(data.type).toBe('simple');
 
 	data = await videoProducer.dump();
@@ -575,7 +629,7 @@ test('producer.dump() succeeds', async () =>
 	expect(data.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
 	expect(data.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
 	expect(Array.isArray(data.rtpParameters.headerExtensions)).toBe(true);
-	expect(data.rtpParameters.headerExtensions.length).toBe(2);
+	expect(data.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(data.rtpParameters.headerExtensions).toEqual(
 		[
 			{
@@ -592,7 +646,7 @@ test('producer.dump() succeeds', async () =>
 			}
 		]);
 	expect(Array.isArray(data.rtpParameters.encodings)).toBe(true);
-	expect(data.rtpParameters.encodings.length).toBe(4);
+	expect(data.rtpParameters.encodings!.length).toBe(4);
 	expect(data.rtpParameters.encodings).toMatchObject(
 		[
 			{
@@ -621,6 +675,12 @@ test('producer.getStats() succeeds', async () =>
 
 test('producer.pause() and resume() succeed', async () =>
 {
+	const onObserverPause = jest.fn();
+	const onObserverResume = jest.fn();
+
+	audioProducer.observer.on('pause', onObserverPause);
+	audioProducer.observer.on('resume', onObserverResume);
+
 	await audioProducer.pause();
 	expect(audioProducer.paused).toBe(true);
 
@@ -634,30 +694,68 @@ test('producer.pause() and resume() succeed', async () =>
 	await expect(audioProducer.dump())
 		.resolves
 		.toMatchObject({ paused: false });
+
+	// Even if we don't await for pause()/resume() completion, the observer must
+	// fire 'pause' and 'resume' events if state was the opposite.
+	audioProducer.pause();
+	audioProducer.resume();
+	audioProducer.pause();
+	audioProducer.pause();
+	audioProducer.pause();
+	await audioProducer.resume();
+
+	expect(onObserverPause).toHaveBeenCalledTimes(3);
+	expect(onObserverResume).toHaveBeenCalledTimes(3);
+}, 2000);
+
+test('producer.pause() and resume() emit events', async () =>
+{
+	const promises = [];
+	const events: string[] = [];
+	
+	audioProducer.observer.once('resume', () => 
+	{
+		events.push('resume');
+	});
+
+	audioProducer.observer.once('pause', () => 
+	{
+		events.push('pause');
+	});
+
+	promises.push(audioProducer.pause());
+	promises.push(audioProducer.resume());
+
+	await Promise.all(promises);
+	
+	expect(events).toEqual([ 'pause', 'resume' ]);
+	expect(audioProducer.paused).toBe(false);
 }, 2000);
 
 test('producer.enableTraceEvent() succeed', async () =>
 {
+	let dump;
+
 	await audioProducer.enableTraceEvent([ 'rtp', 'pli' ]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'rtp,pli' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'rtp', 'pli' ]));
 
 	await audioProducer.enableTraceEvent([]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 
 	// @ts-ignore
 	await audioProducer.enableTraceEvent([ 'nack', 'FOO', 'fir' ]);
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: 'nack,fir' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([ 'nack', 'fir' ]));
 
 	await audioProducer.enableTraceEvent();
-	await expect(audioProducer.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: '' });
+	dump = await audioProducer.dump();
+	expect(dump.traceEventTypes)
+		.toEqual(expect.arrayContaining([]));
 }, 2000);
 
 test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
@@ -686,12 +784,35 @@ test('Producer emits "score"', async () =>
 
 	videoProducer.on('score', onScore);
 
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 10 } ]);
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 8 } ]);
-	channel.emit(videoProducer.id, 'score', [ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+	// Simulate a 'score' notification coming through the channel.
+	const builder = new flatbuffers.Builder();
+	const producerScoreNotification = new FbsProducer.ScoreNotificationT([
+		new FbsProducer.ScoreT(/* encodingIdx */ 0, /* ssrc */ 11, /* rid */ undefined, /* score */ 10),
+		new FbsProducer.ScoreT(/* encodingIdx */ 1, /* ssrc */ 22, /* rid */ undefined, /* score */ 9)
+	]);
+	const notificationOffset = Notification.createNotification(
+		builder,
+		builder.createString(videoProducer.id),
+		Event.PRODUCER_SCORE,
+		NotificationBody.Producer_ScoreNotification,
+		producerScoreNotification.pack(builder)
+	);
+
+	builder.finish(notificationOffset);
+
+	const notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
+	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
 
 	expect(onScore).toHaveBeenCalledTimes(3);
-	expect(videoProducer.score).toEqual([ { ssrc: 11, score: 9 }, { ssrc: 22, score: 9 } ]);
+	expect(videoProducer.score).toEqual(
+		[
+			{ ssrc: 11, rid: undefined, score: 10, encodingIdx: 0 },
+			{ ssrc: 22, rid: undefined, score: 9, encodingIdx: 1 }
+		]);
 }, 2000);
 
 test('producer.close() succeeds', async () =>
