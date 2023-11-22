@@ -838,8 +838,8 @@ export function parseWorkerDumpResponse(
 			sqeProcessCount   : Number(binary.liburing()!.sqeProcessCount()),
 			sqeMissCount      : Number(binary.liburing()!.sqeMissCount()),
 			userDataMissCount : Number(binary.liburing()!.userDataMissCount())
-		}
-	};
+		};
+	}
 
 	return dump;
 }
