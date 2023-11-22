@@ -4,6 +4,7 @@
 ### NEXT
 
 * Fix RTCP SDES packet size calculation ([PR #1236](https://github.com/versatica/mediasoup/pull/1236) based on PR [PR #1234](https://github.com/versatica/mediasoup/pull/1234) by @ybybwdwd).
+* RTCP Compound Packet: Use a single DLRR report to hold all ssrc info sub-blocks ([PR #1237](https://github.com/versatica/mediasoup/pull/1237)).
 
 
 ### 3.13.4
