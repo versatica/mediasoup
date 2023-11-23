@@ -274,7 +274,7 @@ def mediasoup_worker(ctx):
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
-            f'{MESON} compile -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker',
+            f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker',
             echo=True,
             pty=True
         );
@@ -293,7 +293,7 @@ def libmediasoup_worker(ctx):
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
-            f'{MESON} compile -C {BUILD_DIR} --no-rebuild --tags libmediasoup-worker',
+            f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags libmediasoup-worker',
             echo=True,
             pty=True
         );

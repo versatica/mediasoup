@@ -41,3 +41,5 @@ In summary:
   // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`.
   let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
   ```
+
+- "Code QL Analyze (cpp)" CI task fails because "Command failed: invoke -r worker" (as expected): https://github.com/versatica/mediasoup/actions/runs/6973590508/job/18977838894?pr=1239
