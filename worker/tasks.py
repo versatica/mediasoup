@@ -11,8 +11,6 @@ import sys;
 import os;
 import inspect;
 import shutil;
-import subprocess;
-import re;
 from invoke import task;
 
 
@@ -25,9 +23,11 @@ MEDIASOUP_OUT_DIR = os.getenv('MEDIASOUP_OUT_DIR') or f'{WORKER_DIR}/out';
 MEDIASOUP_INSTALL_DIR = os.getenv('MEDIASOUP_INSTALL_DIR') or f'{MEDIASOUP_OUT_DIR}/{MEDIASOUP_BUILDTYPE}';
 BUILD_DIR = os.getenv('BUILD_DIR') or f'{MEDIASOUP_INSTALL_DIR}/build';
 PIP_DIR = f'{MEDIASOUP_OUT_DIR}/pip';
-NUM_CORES = re.findall(
-    r'\b\d+\b', subprocess.check_output(f'{WORKER_DIR}/scripts/cpu_cores.sh', text=True)
-)[0];
+# If available (only on some *nix systems), os.sched_getaffinity(0) gets set of
+# CPUs the calling thread is restricted to. Instead, os.cpu_count() returns the
+# total number of CPUs in a system (it doesn't take into account how many of them
+# the calling thread can use).
+NUM_CORES = len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else os.cpu_count();
 PYTHON = os.getenv('PYTHON') or sys.executable;
 MESON = os.getenv('MESON') or f'{PIP_DIR}/bin/meson';
 MESON_VERSION = os.getenv('MESON_VERSION') or '1.2.1';
@@ -68,6 +68,22 @@ else:
     PYTHONPATH = os.getenv('PYTHONPATH') or '';
     os.environ['PYTHONPATH'] = f'{PIP_DIR}:{PYTHONPATH}';
 
+
+# Utils.
+
+def get_num_cpus():
+    # If available (only on some *nix systems), os.sched_getaffinity(0) gets
+    # accurate set of CPUs the calling thread is restricted to.
+    #
+    if hasattr(os, 'sched_getaffinity'):
+        return len(os.sched_getaffinity(0));
+    # Instead, os.cpu_count() returns the count of the total CPUs in a system
+    # (it doesn't take into account how many of them the calling thread can use).
+    else:
+        return os.cpu_info();
+
+
+# Tasks.
 
 @task
 def meson_ninja(ctx):

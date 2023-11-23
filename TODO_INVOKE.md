@@ -43,3 +43,7 @@ In summary:
   ```
 
 - "Code QL Analyze (cpp)" CI task fails because "Command failed: invoke -r worker" (as expected): https://github.com/versatica/mediasoup/actions/runs/6973590508/job/18977838894?pr=1239
+
+- Once we have `invoke` working, let's remove the no longer used `cpu_cores.sh` script.
+
+- And of course, remove `Makefile`.
