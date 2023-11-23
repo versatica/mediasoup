@@ -21,11 +21,6 @@
   "types": "node/lib/index.d.ts",
   "files": [
     "node/lib",
-    "npm-scripts.mjs",
-    "worker/tasks.py",
-    "worker/Makefile",
-    "worker/meson.build",
-    "worker/meson_options.txt",
     "worker/src",
     "worker/include",
     "worker/fbs",
@@ -38,7 +33,12 @@
     "worker/scripts/*.py",
     "worker/scripts/*.sh",
     "worker/subprojects/*.wrap",
-    "worker/deps/libwebrtc"
+    "worker/deps/libwebrtc",
+    "worker/tasks.py",
+    "worker/Makefile",
+    "worker/meson.build",
+    "worker/meson_options.txt",
+    "npm-scripts.mjs"
   ],
   "engines": {
     "node": ">=16"
