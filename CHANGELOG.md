@@ -4,8 +4,10 @@
 ### NEXT
 
 * Update worker dependencies:
-* abseil-cpp 20230802.0-1.
-* libuv 1.46.0-1
+    * abseil-cpp 20230802.0-2.
+    * libuv 1.46.0-1
+    * OpenSSL 3.0.8-2.
+    * usrsctp snapshot ebb18adac6501bad4501b1f6dccb67a1c85cc299.
 * Fix RTCP SDES packet size calculation ([PR #1236](https://github.com/versatica/mediasoup/pull/1236) based on PR [PR #1234](https://github.com/versatica/mediasoup/pull/1234) by @ybybwdwd).
 
 
