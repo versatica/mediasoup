@@ -101,7 +101,8 @@ ifeq ($(wildcard $(PIP_DIR)),)
 	# fallback to command without `--system` if the first one fails.
 	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
 		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
-		echo "Installation failed, likely because PIP is unavailable, if you are on Debian/Ubuntu or derivative please install the python3-pip package"
+		(echo "update of pip or setuptools failed, likely because pip is not installed (if you are on Debian/Ubuntu or derivative please install the python3-pip package)" >&2)
+
 	# Install `meson` and `ninja` using `pip` into custom location, so we don't
 	# depend on system-wide installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson==$(MESON_VERSION) ninja==$(NINJA_VERSION)
@@ -113,8 +114,8 @@ setup: meson-ninja
 ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 	$(MESON) setup \
 		--prefix $(INSTALL_DIR) \
-		--bindir '' \
-		--libdir '' \
+		--bindir "" \
+		--libdir "" \
 		--buildtype release \
 		-Db_ndebug=true \
 		-Db_pie=true \
@@ -124,8 +125,8 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 		$(BUILD_DIR) || \
 		$(MESON) setup \
 			--prefix $(INSTALL_DIR) \
-			--bindir '' \
-			--libdir '' \
+			--bindir "" \
+			--libdir "" \
 			--buildtype release \
 			-Db_ndebug=true \
 			-Db_pie=true \
@@ -136,8 +137,8 @@ else
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 	$(MESON) setup \
 		--prefix $(INSTALL_DIR) \
-		--bindir '' \
-		--libdir '' \
+		--bindir "" \
+		--libdir "" \
 		--buildtype debug \
 		-Db_pie=true \
 		-Db_staticpic=true \
@@ -146,8 +147,8 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 		$(BUILD_DIR) || \
 		$(MESON) setup \
 			--prefix $(INSTALL_DIR) \
-			--bindir '' \
-			--libdir '' \
+			--bindir "" \
+			--libdir "" \
 			--buildtype debug \
 			-Db_pie=true \
 			-Db_staticpic=true \
@@ -156,8 +157,8 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 else
 	$(MESON) setup \
 		--prefix $(INSTALL_DIR) \
-		--bindir '' \
-		--libdir '' \
+		--bindir "" \
+		--libdir "" \
 		--buildtype $(MEDIASOUP_BUILDTYPE) \
 		-Db_ndebug=if-release \
 		-Db_pie=true \
@@ -167,8 +168,8 @@ else
 		$(BUILD_DIR) || \
 		$(MESON) setup \
 			--prefix $(INSTALL_DIR) \
-			--bindir '' \
-			--libdir '' \
+			--bindir "" \
+			--libdir "" \
 			--buildtype $(MEDIASOUP_BUILDTYPE) \
 			-Db_ndebug=if-release \
 			-Db_pie=true \
@@ -243,7 +244,7 @@ tidy:
 	$(PYTHON) ./scripts/clang-tidy.py \
 		-clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy \
 		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
-		-header-filter='(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)' \
+		-header-filter="(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)" \
 		-p=$(BUILD_DIR) \
 		-j=$(CORES) \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
