@@ -2,15 +2,14 @@ import process from 'node:process';
 import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
 
 const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
-const IS_FREEBSD = os.platform() === 'freebsd';
 const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
-const MAKE = process.env.MAKE || (IS_FREEBSD ? 'gmake' : 'make');
+const INVOKE = process.env.INVOKE || 'invoke';
 const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
@@ -142,7 +141,7 @@ async function run()
 
 		case 'format:worker':
 		{
-			executeCmd(`${MAKE} format -C worker`);
+			executeCmd(`${INVOKE} -r worker format`);
 
 			break;
 		}
@@ -311,22 +310,7 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
-	if (IS_WINDOWS)
-	{
-		if (!fs.existsSync('worker/out/msys/bin/make.exe'))
-		{
-			installMsysMake();
-		}
-
-		const msysPath = `${process.cwd()}\\worker\\out\\msys\\bin`;
-
-		if (!process.env.PATH.includes(msysPath))
-		{
-			process.env.PATH = `${msysPath};${process.env.PATH}`;
-		}
-	}
-
-	executeCmd(`${MAKE} -C worker`);
+	executeCmd(`${INVOKE} -r worker`);
 }
 
 function cleanWorkerArtifacts()
@@ -334,11 +318,11 @@ function cleanWorkerArtifacts()
 	logInfo('cleanWorkerArtifacts()');
 
 	// Clean build artifacts except `mediasoup-worker`.
-	executeCmd(`${MAKE} clean-build -C worker`);
+	executeCmd(`${INVOKE} -r worker clean-build`);
 	// Clean downloaded dependencies.
-	executeCmd(`${MAKE} clean-subprojects -C worker`);
+	executeCmd(`${INVOKE} -r worker clean-subprojects`);
 	// Clean PIP/Meson/Ninja.
-	executeCmd(`${MAKE} clean-pip -C worker`);
+	executeCmd(`${INVOKE} -r worker clean-pip`);
 
 	if (IS_WINDOWS)
 	{
@@ -360,7 +344,7 @@ function lintWorker()
 {
 	logInfo('lintWorker()');
 
-	executeCmd(`${MAKE} lint -C worker`);
+	executeCmd(`${INVOKE} -r worker lint`);
 }
 
 function flatcNode()
@@ -368,7 +352,7 @@ function flatcNode()
 	logInfo('flatcNode()');
 
 	// Build flatc if needed.
-	executeCmd(`${MAKE} -C worker flatc`);
+	executeCmd(`${INVOKE} -r worker flatc`);
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
@@ -393,7 +377,7 @@ function flatcWorker()
 {
 	logInfo('flatcWorker()');
 
-	executeCmd(`${MAKE} -C worker flatc`);
+	executeCmd(`${INVOKE} -r worker flatc`);
 }
 
 function testNode()
@@ -414,7 +398,7 @@ function testWorker()
 {
 	logInfo('testWorker()');
 
-	executeCmd(`${MAKE} test -C worker`);
+	executeCmd(`${INVOKE} -r worker test`);
 }
 
 function installNodeDeps()
@@ -439,42 +423,6 @@ function checkRelease()
 	lintWorker();
 	testNode();
 	testWorker();
-}
-
-function installMsysMake()
-{
-	logInfo('installMsysMake()');
-
-	let pythonPath;
-
-	// If PYTHON environment variable is given, use it.
-	if (process.env.PYTHON)
-	{
-		pythonPath = process.env.PYTHON;
-	}
-	// Otherwise ensure python3.exe is available in the PATH.
-	else
-	{
-		let res = spawnSync('where', [ 'python3.exe' ]);
-
-		if (res.status !== 0)
-		{
-			res = spawnSync('where', [ 'python.exe' ]);
-
-			if (res.status !== 0)
-			{
-				logError('`installMsysMake() | cannot find Python executable');
-
-				exitWithError();
-			}
-		}
-
-		pythonPath = String(res.stdout).trim();
-	}
-
-	const dir = path.resolve('worker/out/msys');
-
-	executeCmd(`${pythonPath} worker\\scripts\\getmake.py --dir="${dir}"`);
 }
 
 function ensureDir(dir)

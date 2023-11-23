@@ -16,8 +16,8 @@ MEDIASOUP_BUILDTYPE ?= Release
 LCOV = $(WORKER_DIR)/deps/lcov/bin/lcov
 DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
-INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
-BUILD_DIR ?= $(INSTALL_DIR)/build
+MEDIASOUP_INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
+BUILD_DIR ?= $(MEDIASOUP_INSTALL_DIR)/build
 MESON ?= $(PIP_DIR)/bin/meson
 MESON_VERSION ?= 1.2.1
 # `MESON_ARGS` can be used to provide extra configuration parameters to Meson,
@@ -113,7 +113,7 @@ setup: meson-ninja
 # https://github.com/ninja-build/ninja/issues/1997
 ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 	$(MESON) setup \
-		--prefix $(INSTALL_DIR) \
+		--prefix $(MEDIASOUP_INSTALL_DIR) \
 		--bindir "" \
 		--libdir "" \
 		--buildtype release \
@@ -124,7 +124,7 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 		$(MESON_ARGS) \
 		$(BUILD_DIR) || \
 		$(MESON) setup \
-			--prefix $(INSTALL_DIR) \
+			--prefix $(MEDIASOUP_INSTALL_DIR) \
 			--bindir "" \
 			--libdir "" \
 			--buildtype release \
@@ -136,7 +136,7 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Release)
 else
 ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 	$(MESON) setup \
-		--prefix $(INSTALL_DIR) \
+		--prefix $(MEDIASOUP_INSTALL_DIR) \
 		--bindir "" \
 		--libdir "" \
 		--buildtype debug \
@@ -146,7 +146,7 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 		$(MESON_ARGS) \
 		$(BUILD_DIR) || \
 		$(MESON) setup \
-			--prefix $(INSTALL_DIR) \
+			--prefix $(MEDIASOUP_INSTALL_DIR) \
 			--bindir "" \
 			--libdir "" \
 			--buildtype debug \
@@ -156,7 +156,7 @@ ifeq ($(MEDIASOUP_BUILDTYPE),Debug)
 			$(BUILD_DIR)
 else
 	$(MESON) setup \
-		--prefix $(INSTALL_DIR) \
+		--prefix $(MEDIASOUP_INSTALL_DIR) \
 		--bindir "" \
 		--libdir "" \
 		--buildtype $(MEDIASOUP_BUILDTYPE) \
@@ -167,7 +167,7 @@ else
 		$(MESON_ARGS) \
 		$(BUILD_DIR) || \
 		$(MESON) setup \
-			--prefix $(INSTALL_DIR) \
+			--prefix $(MEDIASOUP_INSTALL_DIR) \
 			--bindir "" \
 			--libdir "" \
 			--buildtype $(MEDIASOUP_BUILDTYPE) \
@@ -180,7 +180,7 @@ endif
 endif
 
 clean:
-	$(RM) -rf $(INSTALL_DIR)
+	$(RM) -rf $(MEDIASOUP_INSTALL_DIR)
 
 clean-build:
 	$(RM) -rf $(BUILD_DIR)
@@ -269,7 +269,7 @@ docker-run:
 		--name=mediasoupDocker -it --rm \
 		--privileged \
 		--cap-add SYS_PTRACE \
-		-v $(shell pwd)/../:/mediasoup \
+		-v $(WORKER_DIR)/../:/mediasoup \
 		mediasoup/docker:latest
 
 docker-alpine:
@@ -284,5 +284,5 @@ docker-alpine-run:
 		--name=mediasoupDockerAlpine -it --rm \
 		--privileged \
 		--cap-add SYS_PTRACE \
-		-v $(shell pwd)/../:/mediasoup \
+		-v $(WORKER_DIR)/../:/mediasoup \
 		mediasoup/docker-alpine:latest

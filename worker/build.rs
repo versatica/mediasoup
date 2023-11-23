@@ -45,14 +45,8 @@ fn main() {
     )
     .expect("Failed to write generated Rust flatbuffers into fbs.rs");
 
-    // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`.
+    // Force forward slashes on Windows too so that is plays well with our tasks.py.
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
-
-    // Store original PATH so we make `make clean-all` use it. This is because, in Windows,
-    // we may need to fetch `make` and we store it in out/msys and then we add out/msys/bin
-    // to the PATH, and that folder may contain rm.exe, so `make clean-all` would use
-    // that rm.exe and delete itself and make the task fail.
-    let original_path = env::var("PATH").unwrap();
 
     // Add C++ std lib
     #[cfg(target_os = "linux")]
@@ -110,62 +104,14 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=c++");
         println!("cargo:rustc-link-lib=dylib=c++abi");
     }
-    #[cfg(target_os = "windows")]
-    {
-        if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
-            let python = if let Ok(python) = env::var("PYTHON") {
-                python
-            } else if Command::new("where")
-                .arg("python3")
-                .status()
-                .expect("Failed to start")
-                .success()
-            {
-                "python3".to_string()
-            } else {
-                "python".to_string()
-            };
-
-            let dir = format!("{}/msys", mediasoup_out_dir.replace('\\', "/"));
-
-            if !Command::new(python)
-                .arg("scripts\\getmake.py")
-                .arg("--dir")
-                .arg(dir.clone())
-                .status()
-                .expect("Failed to start")
-                .success()
-            {
-                panic!("Failed to install MSYS/make")
-            }
-
-            env::set_var(
-                "PATH",
-                format!("{}\\bin;{}", dir, env::var("PATH").unwrap()),
-            );
-        }
-
-        env::set_var(
-            "PATH",
-            format!(
-                "{}\\worker\\out\\msys\\bin;{}",
-                env::current_dir()
-                    .unwrap()
-                    .into_os_string()
-                    .into_string()
-                    .unwrap(),
-                env::var("PATH").unwrap()
-            ),
-        );
-    }
 
     // Build
-    if !Command::new("make")
+    if !Command::new("invoke")
         .arg("libmediasoup-worker")
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
         .env("MEDIASOUP_BUILDTYPE", build_type)
         // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
-        .env("INSTALL_DIR", &out_dir.replace('\\', "/"))
+        .env("MEDIASOUP_INSTALL_DIR", &out_dir.replace('\\', "/"))
         .spawn()
         .expect("Failed to start")
         .wait()
@@ -205,9 +151,8 @@ fn main() {
 
     if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
         // Clean
-        if !Command::new("make")
+        if !Command::new("invoke")
             .arg("clean-all")
-            .env("PATH", original_path)
             .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
             .spawn()
             .expect("Failed to start")
