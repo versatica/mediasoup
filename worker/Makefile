@@ -4,8 +4,8 @@
 
 # We need Python 3 here.
 PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
-ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-CORES ?= $(shell ${ROOT_DIR}/scripts/cpu_cores.sh || echo 4)
+WORKER_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+NUM_CORES ?= $(shell ${WORKER_DIR}/scripts/cpu_cores.sh || echo 4)
 MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
 # Controls build types, `Release` and `Debug` are presets optimized for those
 # use cases. Other build types are possible too, but they are not presets and
@@ -13,7 +13,7 @@ MEDIASOUP_OUT_DIR ?= $(shell pwd)/out
 # Check the meaning of useful macros in the `worker/include/Logger.hpp` header
 # file if you want to enable tracing or other debug information.
 MEDIASOUP_BUILDTYPE ?= Release
-LCOV = ./deps/lcov/bin/lcov
+LCOV = $(WORKER_DIR)/deps/lcov/bin/lcov
 DOCKER ?= docker
 PIP_DIR = $(MEDIASOUP_OUT_DIR)/pip
 INSTALL_DIR ?= $(MEDIASOUP_OUT_DIR)/$(MEDIASOUP_BUILDTYPE)
@@ -203,12 +203,12 @@ update-wrap-file: meson-ninja
 
 mediasoup-worker: setup flatc
 ifeq ($(MEDIASOUP_WORKER_BIN),)
-	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker
+	$(MESON) compile -C $(BUILD_DIR) -j $(NUM_CORES) mediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker
 endif
 
 libmediasoup-worker: setup flatc
-	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) libmediasoup-worker
+	$(MESON) compile -C $(BUILD_DIR) -j $(NUM_CORES) libmediasoup-worker
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags libmediasoup-worker
 
 flatc: setup
@@ -224,7 +224,7 @@ format:
 	$(NPM) run format --prefix scripts/
 
 test: setup flatc
-	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test
+	$(MESON) compile -C $(BUILD_DIR) -j $(NUM_CORES) mediasoup-worker-test
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test
 ifeq ($(OS),Windows_NT)
 	# On Windows lcov doesn't work (at least not yet) and we need to add `.exe` to
@@ -236,7 +236,7 @@ else
 endif
 
 test-asan: setup flatc
-	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-test-asan
+	$(MESON) compile -C $(BUILD_DIR) -j $(NUM_CORES) mediasoup-worker-test-asan
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-test-asan
 	ASAN_OPTIONS=detect_leaks=1 $(BUILD_DIR)/mediasoup-worker-test-asan --invisibles --use-colour=yes $(MEDIASOUP_TEST_TAGS)
 
@@ -246,12 +246,12 @@ tidy:
 		-clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements \
 		-header-filter="(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)" \
 		-p=$(BUILD_DIR) \
-		-j=$(CORES) \
+		-j=$(NUM_CORES) \
 		-checks=$(MEDIASOUP_TIDY_CHECKS) \
 		-quiet
 
 fuzzer: setup flatc
-	$(MESON) compile -C $(BUILD_DIR) -j $(CORES) mediasoup-worker-fuzzer
+	$(MESON) compile -C $(BUILD_DIR) -j $(NUM_CORES) mediasoup-worker-fuzzer
 	$(MESON) install -C $(BUILD_DIR) --no-rebuild --tags mediasoup-worker-fuzzer
 
 fuzzer-run-all:

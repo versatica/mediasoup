@@ -9,7 +9,7 @@ case "${OS}" in
 	Linux*)           NUM_CORES=$(nproc);;
 	Darwin*|FreeBSD)  NUM_CORES=$(sysctl -n hw.ncpu);;
 	MINGW*)           NUM_CORES=$NUMBER_OF_PROCESSORS;;
-	*)                NUM_CORES=1;;
+	*)                NUM_CORES=4;;
 esac
 
 if [ -n "${MEDIASOUP_MAX_CORES}" ]; then

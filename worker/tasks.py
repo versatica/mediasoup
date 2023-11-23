@@ -20,6 +20,8 @@ import sys;
 import os;
 import inspect;
 import shutil;
+import subprocess;
+import re;
 from invoke import task;
 
 
@@ -32,6 +34,10 @@ OUT_DIR = os.getenv('OUT_DIR') or f'{WORKER_DIR}/out';
 INSTALL_DIR = os.getenv('INSTALL_DIR') or f'{OUT_DIR}/{MEDIASOUP_BUILDTYPE}';
 BUILD_DIR = os.getenv('BUILD_DIR') or f'{INSTALL_DIR}/build';
 PIP_DIR = f'{OUT_DIR}/pip';
+
+NUM_CORES = re.findall(
+    r'\b\d+\b', subprocess.check_output(f'{WORKER_DIR}/scripts/cpu_cores.sh', text=True)
+)[0];
 
 PYTHON = os.getenv('PYTHON') or sys.executable;
 MESON = os.getenv('MESON') or f'{PIP_DIR}/bin/meson';
@@ -55,6 +61,29 @@ MESON_ARGS = '';
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
+NPM = os.getenv('NPM') or 'npm';
+LCOV = os.getenv('LCOV') or f'{WORKER_DIR}/deps/lcov/bin/lcov';
+
+# Disable `*.pyc` files creation.
+os.environ['PYTHONDONTWRITEBYTECODE'] = 'true';
+
+# Instruct meson where to look for ninja binary.
+if os.name == 'nt':
+    # Windows is, of course, special.
+    os.environ['NINJA'] = f'{PIP_DIR}/bin/ninja.exe';
+else:
+    os.environ['NINJA'] = f'{PIP_DIR}/bin/ninja';
+
+# Instruct Python where to look for modules it needs, such that meson actually
+# runs from installed location.
+# NOTE: For some reason on Windows adding `:${PYTHONPATH}` breaks things.
+PYTHONPATH = os.getenv('PYTHONPATH') or '';
+if os.name == 'nt':
+    os.environ['PYTHONPATH'] = PIP_DIR;
+else:
+    os.environ['PYTHONPATH'] = f'{PIP_DIR}:{PYTHONPATH}';
+
+# TODO: MESON_ARGS stuff (if not done above).
 
 # TODO: Remove.
 print('WORKER_DIR:', WORKER_DIR);
@@ -62,6 +91,7 @@ print('OUT_DIR:', OUT_DIR);
 print('INSTALL_DIR:', INSTALL_DIR);
 print('BUILD_DIR:', BUILD_DIR);
 print('PIP_DIR:', PIP_DIR);
+print('NUM_CORES:', NUM_CORES);
 print('PYTHON:', PYTHON);
 print('MESON:', MESON);
 
@@ -69,9 +99,8 @@ print('MESON:', MESON);
 @task
 def meson_ninja(ctx):
     """
-    Installs meson and ninja (also updates Python pip and setuptools packages)
+    Install meson and ninja (also update Python pip and setuptools packages)
     """
-
     if os.path.isdir(PIP_DIR):
         return;
 
@@ -109,9 +138,8 @@ def meson_ninja(ctx):
 @task(pre=[meson_ninja])
 def setup(ctx):
     """
-    Runs meson setup
+    Run meson setup
     """
-
     # We try to call `--reconfigure` first as a workaround for this issue:
     # https://github.com/ninja-build/ninja/issues/1997
     if MEDIASOUP_BUILDTYPE == 'Release':
@@ -158,9 +186,8 @@ def setup(ctx):
 @task
 def clean(ctx):
     """
-    Cleans the installation directory
+    Clean the installation directory
     """
-
     try:
         shutil.rmtree(INSTALL_DIR);
     except:
@@ -170,9 +197,8 @@ def clean(ctx):
 @task
 def clean_build(ctx):
     """
-    Cleans the build directory
+    Clean the build directory
     """
-
     try:
         shutil.rmtree(BUILD_DIR);
     except:
@@ -182,9 +208,8 @@ def clean_build(ctx):
 @task
 def clean_pip(ctx):
     """
-    Cleans the local pip directory
+    Clean the local pip directory
     """
-
     try:
         shutil.rmtree(PIP_DIR);
     except:
@@ -194,9 +219,8 @@ def clean_pip(ctx):
 @task(pre=[meson_ninja])
 def clean_subprojects(ctx):
     """
-    Cleans meson subprojects
+    Clean meson subprojects
     """
-
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{MESON} subprojects purge --include-cache --confirm',
@@ -207,9 +231,8 @@ def clean_subprojects(ctx):
 @task
 def clean_all(ctx):
     """
-    Cleans meson subprojects and all installed/built artificats
+    Clean meson subprojects and all installed/built artificats
     """
-
     with ctx.cd(WORKER_DIR):
         try:
             ctx.run(
@@ -226,9 +249,147 @@ def clean_all(ctx):
 
 
 @task(pre=[meson_ninja])
+def update_wrap_file(ctx, subproject):
+    """
+    Update the wrap file of a subproject
+    """
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} subprojects update --reset {subproject}',
+            echo=True
+        );
+
+
+@task(pre=[setup])
+def flatc(ctx):
+    """
+    Compile FlatBuffers FBS files
+    """
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} compile -C {BUILD_DIR} flatbuffers-generator',
+            echo=True
+        );
+
+
+@task(pre=[setup, flatc])
+def mediasoup_worker(ctx):
+    """
+    Compile mediasoup-worker binary
+    """
+    if os.getenv('MEDIASOUP_WORKER_BIN'):
+        printf('skipping mediasoup-worker compilation due to the existence of the MEDIASOUP_WORKER_BIN environment variable');
+        return;
+
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} mediasoup-worker',
+            echo=True
+        );
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} compile -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker',
+            echo=True
+        );
+
+
+@task(pre=[setup, flatc])
+def libmediasoup_worker(ctx):
+    """
+    Compile libmediasoup-worker library
+    """
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} libmediasoup-worker',
+            echo=True
+        );
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} compile -C {BUILD_DIR} --no-rebuild --tags libmediasoup-worker',
+            echo=True
+        );
+
+
+@task(pre=[setup, flatc])
+def xcode(ctx):
+    """
+    Setup Xcode project
+    """
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} setup --buildtype {MEDIASOUP_BUILDTYPE} --backend xcode {MEDIASOUP_OUT_DIR}/xcode',
+            echo=True
+        );
+
+
+@task
+def lint(ctx):
+    """
+    Lint source code
+    """
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{NPM} run lint --prefix scripts/',
+            echo=True
+        );
+
+
+@task
+def format(ctx):
+    """
+    Format source code according to lint rules
+    """
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{NPM} run format --prefix scripts/',
+            echo=True
+        );
+
+
+@task(pre=[setup, flatc])
+def test(ctx):
+    """
+    Run worker tests
+    """
+    ctx.run('echo $MEDIASOUP_LOCAL_DEV', echo=True);
+
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} mediasoup-worker-test',
+            echo=True
+        );
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{MESON} install -C {BUILD_DIR}  --no-rebuild --tags mediasoup-worker-test',
+            echo=True
+        );
+
+    MEDIASOUP_TEST_TAGS = os.getenv('MEDIASOUP_TEST_TAGS') or '';
+
+    # On Windows lcov doesn't work (at least not yet) and we need to add .exe to
+    # the binary path.
+    if os.name == 'nt':
+        with ctx.cd(WORKER_DIR):
+            ctx.run(
+                f'{BUILD_DIR}/mediasoup-worker-test.exe --invisibles --use-colour=yes {MEDIASOUP_TEST_TAGS}',
+                echo=True
+            );
+    else:
+        ctx.run(
+            f'{LCOV} --directory {WORKER_DIR} --zerocounters',
+            echo=True
+        );
+        with ctx.cd(WORKER_DIR):
+            ctx.run(
+                f'{BUILD_DIR}/mediasoup-worker-test --invisibles --use-colour=yes {MEDIASOUP_TEST_TAGS}',
+                echo=True
+            );
+
+
+@task(pre=[meson_ninja], default=True)
 def foo(ctx):
     """
-    Foo things (until I figure out how to define a default task)
+    Foo things
     """
 
     print('foo!');
