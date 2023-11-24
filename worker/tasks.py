@@ -86,7 +86,7 @@ def meson_ninja(ctx):
     """
     Install meson and ninja (also update Python pip and setuptools packages)
     """
-    if os.path.isdir(PIP_DIR):
+    if os.path.isfile(MESON):
         return;
 
     # Updated pip and setuptools are needed for meson.
