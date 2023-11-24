@@ -33,6 +33,8 @@ BUILD_DIR = os.getenv('BUILD_DIR') or f'{MEDIASOUP_INSTALL_DIR}/build';
 # Custom pip folder for meson and ninja packages.
 PIP_MESON_NINJA_DIR = f'{MEDIASOUP_OUT_DIR}/pip_meson_ninja';
 # Custom pip folder for pylint package.
+# NOTE: We do this because using --target and --upgrade in `pip install` is not
+# supported and a latter invokation entirely replaces the bin folder.
 PIP_PYLINT_DIR = f'{MEDIASOUP_OUT_DIR}/pip_pylint';
 # If available (only on some *nix systems), os.sched_getaffinity(0) gets set of
 # CPUs the calling thread is restricted to. Instead, os.cpu_count() returns the
@@ -76,7 +78,7 @@ else:
 
 # Instruct Python where to look for modules it needs, such that meson actually
 # runs from installed location.
-# NOTE: On Windows we must use ; isntead of : to separate paths.
+# NOTE: On Windows we must use ; instead of : to separate paths.
 PYTHONPATH = os.getenv('PYTHONPATH') or '';
 if os.name == 'nt':
     os.environ['PYTHONPATH'] = f'{PIP_MESON_NINJA_DIR};{PIP_PYLINT_DIR};{PYTHONPATH}';
