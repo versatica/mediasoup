@@ -37,9 +37,7 @@ MESON_VERSION = os.getenv('MESON_VERSION') or '1.2.1';
 # worker with tracing and enabled.
 # NOTE: On Windows make sure to add `--vsenv` or have MSVS environment already
 # active if you override this parameter.
-MESON_ARGS = '';
-if os.name == 'nt' and not os.getenv('MESON_ARGS'):
-    MESON_ARGS = '--vsenv';
+MESON_ARGS = '--vsenv' if os.name == 'nt' and not os.getenv('MESON_ARGS') else '';
 # Let's use a specific version of ninja to avoid buggy version 1.11.1:
 # https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
 # https://github.com/ninja-build/ninja/issues/2211
@@ -69,22 +67,6 @@ else:
     os.environ['PYTHONPATH'] = f'{PIP_DIR}:{PYTHONPATH}';
 
 
-# Utils.
-
-def get_num_cpus():
-    # If available (only on some *nix systems), os.sched_getaffinity(0) gets
-    # accurate set of CPUs the calling thread is restricted to.
-    #
-    if hasattr(os, 'sched_getaffinity'):
-        return len(os.sched_getaffinity(0));
-    # Instead, os.cpu_count() returns the count of the total CPUs in a system
-    # (it doesn't take into account how many of them the calling thread can use).
-    else:
-        return os.cpu_info();
-
-
-# Tasks.
-
 @task
 def meson_ninja(ctx):
     """
@@ -112,15 +94,12 @@ def meson_ninja(ctx):
 
     # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
     # https://github.com/NixOS/nixpkgs/issues/142383.
-    PIP_BUILD_BINARIES = '';
-
-    if os.path.isfile('/etc/NIXOS') or os.path.isdir('/etc/guix'):
-        PIP_BUILD_BINARIES = '--no-binary :all:';
+    pip_build_binaries = '--no-binary :all:' if os.path.isfile('/etc/NIXOS') or os.path.isdir('/etc/guix') else '';
 
     # Install meson and ninja using pip into our custom location, so we don't
     # depend on system-wide installation.
     ctx.run(
-        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {PIP_BUILD_BINARIES} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
+        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
         echo=True,
         pty=True
     );
@@ -131,7 +110,7 @@ def setup(ctx):
     """
     Run meson setup
     """
-    # We try to call `--reconfigure` first as a workaround for this issue:
+    # We add --reconfigure first as a workaround for this issue:
     # https://github.com/ninja-build/ninja/issues/1997
     if MEDIASOUP_BUILDTYPE == 'Release':
         try:
@@ -279,7 +258,7 @@ def mediasoup_worker(ctx):
     Compile mediasoup-worker binary
     """
     if os.getenv('MEDIASOUP_WORKER_BIN'):
-        printf('skipping mediasoup-worker compilation due to the existence of the MEDIASOUP_WORKER_BIN environment variable');
+        print('skipping mediasoup-worker compilation due to the existence of the MEDIASOUP_WORKER_BIN environment variable');
         return;
 
     with ctx.cd(WORKER_DIR):
@@ -372,14 +351,14 @@ def test(ctx):
             pty=True
         );
 
-    MEDIASOUP_TEST_TAGS = os.getenv('MEDIASOUP_TEST_TAGS') or '';
+    mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
     # On Windows lcov doesn't work (at least not yet) and we need to add .exe to
     # the binary path.
     if os.name == 'nt':
         with ctx.cd(WORKER_DIR):
             ctx.run(
-                f'{BUILD_DIR}/mediasoup-worker-test.exe --invisibles --use-colour=yes {MEDIASOUP_TEST_TAGS}',
+                f'{BUILD_DIR}/mediasoup-worker-test.exe --invisibles --use-colour=yes {mediasoup_test_tags}',
                 echo=True,
                 pty=True
             );
@@ -391,7 +370,7 @@ def test(ctx):
         );
         with ctx.cd(WORKER_DIR):
             ctx.run(
-                f'{BUILD_DIR}/mediasoup-worker-test --invisibles --use-colour=yes {MEDIASOUP_TEST_TAGS}',
+                f'{BUILD_DIR}/mediasoup-worker-test --invisibles --use-colour=yes {mediasoup_test_tags}',
                 echo=True,
                 pty=True
             );
@@ -415,11 +394,11 @@ def test_asan(ctx):
             pty=True
         );
 
-    MEDIASOUP_TEST_TAGS = os.getenv('MEDIASOUP_TEST_TAGS') or '';
+    mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
     with ctx.cd(WORKER_DIR):
         ctx.run(
-            f'ASAN_OPTIONS=detect_leaks=1 {BUILD_DIR}/mediasoup-worker-test-asan --invisibles --use-colour=yes {MEDIASOUP_TEST_TAGS}',
+            f'ASAN_OPTIONS=detect_leaks=1 {BUILD_DIR}/mediasoup-worker-test-asan --invisibles --use-colour=yes {mediasoup_test_tags}',
             echo=True,
             pty=True
         );
@@ -430,11 +409,11 @@ def tidy(ctx):
     """
     Perform C++ checks with clang-tidy
     """
-    MEDIASOUP_TIDY_CHECKS = os.getenv('MEDIASOUP_TIDY_CHECKS') or '';
+    mediasoup_tidy_checks = os.getenv('MEDIASOUP_TIDY_CHECKS') or '';
 
     with ctx.cd(WORKER_DIR):
         ctx.run(
-            f'{PYTHON} ./scripts/clang-tidy.py -clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy -clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements -header-filter="(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)" -p={BUILD_DIR} -j={NUM_CORES} -checks={MEDIASOUP_TIDY_CHECKS} -quiet',
+            f'{PYTHON} ./scripts/clang-tidy.py -clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy -clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements -header-filter="(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)" -p={BUILD_DIR} -j={NUM_CORES} -checks={mediasoup_tidy_checks} -quiet',
             echo=True,
             pty=True
         );
@@ -460,7 +439,7 @@ def fuzzer(ctx):
 
 
 @task
-def fuzzer(ctx):
+def fuzzer_run_all(ctx):
     """
     Run all fuzzer cases
     """
