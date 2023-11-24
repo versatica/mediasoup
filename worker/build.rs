@@ -110,8 +110,6 @@ fn main() {
     let invoke_version = "2.2.0";
     let python = env::var("PYTHON").unwrap_or("python3".to_string());
 
-    println!("--- pip_invoke_dir={pip_invoke_dir}");
-
     if !Command::new(&python)
         .arg("-m")
         .arg("pip")
