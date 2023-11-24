@@ -50,13 +50,14 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      # TODO: Temporal until we decide how to deal with pip invoke requirement.
-      - name: pip install invoke
-        run: python3 -m pip install invoke
-
       # We need to install some NPM production deps for npm-scripts.mjs to work.
       - name: npm ci
         run: npm ci --ignore-scripts --omit=dev
+
+      # However we also need to install pip invoke by manually invoking the NPM
+      # 'preinstall' script (since `--ignore-scripts` above made it not run).
+      - name: npm run preinstall
+        run: npm run preinstall
 
       - name: npm run worker:build
         run: npm run worker:build
