@@ -64,14 +64,6 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      # TODO: TMP: REMOVE
-      - name: python3 --version
-        run: python3 --version
-
-      # TODO: TMP: REMOVE
-      - name: pip3 --version
-        run: pip3 --version
-
       # We need to install some NPM production deps for npm-scripts.mjs to work.
       - name: npm ci
         run: npm ci --ignore-scripts --omit=dev
