@@ -22,10 +22,6 @@ import inspect;
 import shutil;
 from invoke import task;
 
-# TODO: Temporal to check if we can prevent issue in Windows with pty=True. # pylint: disable=fixme
-print('-------- sys.stdout.isatty():', sys.stdout.isatty());
-
-
 MEDIASOUP_BUILDTYPE = os.getenv('MEDIASOUP_BUILDTYPE') or 'Release';
 WORKER_DIR = os.path.dirname(os.path.abspath(
     inspect.getframeinfo(inspect.currentframe()).filename
@@ -60,6 +56,10 @@ PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
 LCOV = os.getenv('LCOV') or f'{WORKER_DIR}/deps/lcov/bin/lcov';
 DOCKER = os.getenv('DOCKER') or 'docker';
+# pty=True in ctx.run() is not available on Windows so if stdout is not a TTY
+# let's assume PTY is not supported. Related issue in invoke project:
+# https://github.com/pyinvoke/invoke/issues/561
+PTY_SUPPORTED = sys.stdout.isatty();
 
 # Disable `*.pyc` files creation.
 os.environ['PYTHONDONTWRITEBYTECODE'] = 'true';
@@ -103,7 +103,7 @@ def meson_ninja(ctx):
         ctx.run(
             f'{PYTHON} -m pip install --target={PIP_DIR} pip setuptools',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
     # Workaround for NixOS and Guix that don't work with pre-built binaries, see:
@@ -115,7 +115,7 @@ def meson_ninja(ctx):
     ctx.run(
         f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION} pylint=={PYLINT_VERSION}',
         echo=True,
-        pty=True
+        pty=PTY_SUPPORTED
     );
 
 
@@ -132,14 +132,14 @@ def setup(ctx):
                 ctx.run(
                     f'{MESON} setup --prefix {MEDIASOUP_INSTALL_DIR} --bindir "" --libdir "" --buildtype release -Db_ndebug=true -Db_pie=true -Db_staticpic=true --reconfigure {MESON_ARGS} {BUILD_DIR}',
                     echo=True,
-                    pty=True
+                    pty=PTY_SUPPORTED
                 );
         except:
             with ctx.cd(WORKER_DIR):
                 ctx.run(
                     f'{MESON} setup --prefix {MEDIASOUP_INSTALL_DIR} --bindir "" --libdir "" --buildtype release -Db_ndebug=true -Db_pie=true -Db_staticpic=true {MESON_ARGS} {BUILD_DIR}',
                     echo=True,
-                    pty=True
+                    pty=PTY_SUPPORTED
                 );
     elif MEDIASOUP_BUILDTYPE == 'Debug':
         try:
@@ -147,14 +147,14 @@ def setup(ctx):
                 ctx.run(
                     f'{MESON} setup --prefix {MEDIASOUP_INSTALL_DIR} --bindir "" --libdir "" --buildtype debug -Db_pie=true -Db_staticpic=true --reconfigure {MESON_ARGS} {BUILD_DIR}',
                     echo=True,
-                    pty=True
+                    pty=PTY_SUPPORTED
                 );
         except:
             with ctx.cd(WORKER_DIR):
                 ctx.run(
                     f'{MESON} setup --prefix {MEDIASOUP_INSTALL_DIR} --bindir "" --libdir "" --buildtype debug -Db_pie=true -Db_staticpic=true {MESON_ARGS} {BUILD_DIR}',
                     echo=True,
-                    pty=True
+                    pty=PTY_SUPPORTED
                 );
     else:
         try:
@@ -162,14 +162,14 @@ def setup(ctx):
                 ctx.run(
                     f'{MESON} setup --prefix {MEDIASOUP_INSTALL_DIR} --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release -Db_pie=true -Db_staticpic=true --reconfigure {MESON_ARGS} {BUILD_DIR}',
                     echo=True,
-                    pty=True
+                    pty=PTY_SUPPORTED
                 );
         except:
             with ctx.cd(WORKER_DIR):
                 ctx.run(
                     f'{MESON} setup --prefix {MEDIASOUP_INSTALL_DIR} --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release -Db_pie=true -Db_staticpic=true {MESON_ARGS} {BUILD_DIR}',
                     echo=True,
-                    pty=True
+                    pty=PTY_SUPPORTED
                 );
 
 
@@ -215,7 +215,7 @@ def clean_subprojects(ctx):
         ctx.run(
             f'{MESON} subprojects purge --include-cache --confirm',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -229,7 +229,7 @@ def clean_all(ctx):
             ctx.run(
                 f'{MESON} subprojects purge --include-cache --confirm',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
         except:
             pass;
@@ -249,7 +249,7 @@ def update_wrap_file(ctx, subproject):
         ctx.run(
             f'{MESON} subprojects update --reset {subproject}',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -262,7 +262,7 @@ def flatc(ctx):
         ctx.run(
             f'{MESON} compile -C {BUILD_DIR} flatbuffers-generator',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -279,13 +279,13 @@ def mediasoup_worker(ctx):
         ctx.run(
             f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} mediasoup-worker',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -298,13 +298,13 @@ def libmediasoup_worker(ctx):
         ctx.run(
             f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} libmediasoup-worker',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags libmediasoup-worker',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -317,7 +317,7 @@ def xcode(ctx):
         ctx.run(
             f'{MESON} setup --buildtype {MEDIASOUP_BUILDTYPE} --backend xcode {MEDIASOUP_OUT_DIR}/xcode',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -330,13 +330,13 @@ def lint(ctx):
         ctx.run(
             f'{NPM} run lint --prefix scripts/',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{PYLINT} tasks.py',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -349,7 +349,7 @@ def format(ctx):
         ctx.run(
             f'{NPM} run format --prefix scripts/',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -362,13 +362,13 @@ def test(ctx):
         ctx.run(
             f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} mediasoup-worker-test',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker-test',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
@@ -380,19 +380,19 @@ def test(ctx):
             ctx.run(
                 f'{BUILD_DIR}/mediasoup-worker-test.exe --invisibles --use-colour=yes {mediasoup_test_tags}',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
     else:
         ctx.run(
             f'{LCOV} --directory {WORKER_DIR} --zerocounters',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
         with ctx.cd(WORKER_DIR):
             ctx.run(
                 f'{BUILD_DIR}/mediasoup-worker-test --invisibles --use-colour=yes {mediasoup_test_tags}',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
 
 
@@ -405,13 +405,13 @@ def test_asan(ctx):
         ctx.run(
             f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} mediasoup-worker-test-asan',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker-test-asan',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
@@ -420,7 +420,7 @@ def test_asan(ctx):
         ctx.run(
             f'ASAN_OPTIONS=detect_leaks=1 {BUILD_DIR}/mediasoup-worker-test-asan --invisibles --use-colour=yes {mediasoup_test_tags}',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -435,7 +435,7 @@ def tidy(ctx):
         ctx.run(
             f'{PYTHON} ./scripts/clang-tidy.py -clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy -clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements -header-filter="(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)" -p={BUILD_DIR} -j={NUM_CORES} -checks={mediasoup_tidy_checks} -quiet',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -448,13 +448,13 @@ def fuzzer(ctx):
         ctx.run(
             f'{MESON} compile -C {BUILD_DIR} -j {NUM_CORES} mediasoup-worker-fuzzer',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{MESON} install -C {BUILD_DIR} --no-rebuild --tags mediasoup-worker-fuzzer',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -467,7 +467,7 @@ def fuzzer_run_all(ctx):
         ctx.run(
             f'LSAN_OPTIONS=verbosity=1:log_threads=1 {BUILD_DIR}/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus',
             echo=True,
-            pty=True
+            pty=PTY_SUPPORTED
         );
 
 
@@ -481,14 +481,14 @@ def docker(ctx):
             ctx.run(
                 f'{DOCKER} build -f Dockerfile --no-cache --tag mediasoup/docker:latest .',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
     else:
         with ctx.cd(WORKER_DIR):
             ctx.run(
                 f'{DOCKER} build -f Dockerfile --tag mediasoup/docker:latest .',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
 
 
@@ -515,14 +515,14 @@ def docker_alpine(ctx):
             ctx.run(
                 f'{DOCKER} build -f Dockerfile.alpine --no-cache --tag mediasoup/docker-alpine:latest .',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
     else:
         with ctx.cd(WORKER_DIR):
             ctx.run(
                 f'{DOCKER} build -f Dockerfile.alpine --tag mediasoup/docker-alpine:latest .',
                 echo=True,
-                pty=True
+                pty=PTY_SUPPORTED
             );
 
 
