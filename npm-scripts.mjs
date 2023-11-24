@@ -301,7 +301,7 @@ function installInvoke()
 	{
 		try
 		{
-			execSync('python3 -version', { stdio: [ 'ignore', 'ignore', 'ignore' ] });
+			execSync('python3 --version', { stdio: [ 'ignore', 'ignore', 'ignore' ] });
 			python = 'python3';
 		}
 		catch (error)
