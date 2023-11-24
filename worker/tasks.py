@@ -1,3 +1,12 @@
+# Ignore these pylint warnings, concentions and refactoring messages:
+# - W0301: Unnecessary semicolon (unnecessary-semicolon)
+# - W0622: Redefining built-in 'format' (redefined-builtin)
+# - W0702: No exception type(s) specified (bare-except)
+# - C0114: Missing module docstring (missing-module-docstring)
+# - C0301: Line too long (line-too-long)
+#
+# pylint: disable=W0301,W0622,W0702,C0114,C0301
+
 #
 # This is a tasks.py file for the pip invoke package: https://docs.pyinvoke.org/.
 #
@@ -43,6 +52,8 @@ MESON_ARGS = '--vsenv' if os.name == 'nt' and not os.getenv('MESON_ARGS') else '
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
+PYLINT = os.getenv('PYLINT') or f'{PIP_DIR}/bin/pylint';
+PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
 LCOV = os.getenv('LCOV') or f'{WORKER_DIR}/deps/lcov/bin/lcov';
 DOCKER = os.getenv('DOCKER') or 'docker';
@@ -96,10 +107,10 @@ def meson_ninja(ctx):
     # https://github.com/NixOS/nixpkgs/issues/142383.
     pip_build_binaries = '--no-binary :all:' if os.path.isfile('/etc/NIXOS') or os.path.isdir('/etc/guix') else '';
 
-    # Install meson and ninja using pip into our custom location, so we don't
-    # depend on system-wide installation.
+    # Install meson, ninja and pylint using pip into our custom location, so we
+    # don't depend on system-wide installation.
     ctx.run(
-        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
+        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION} pylint=={PYLINT_VERSION}',
         echo=True,
         pty=True
     );
@@ -160,7 +171,7 @@ def setup(ctx):
 
 
 @task
-def clean(ctx):
+def clean(ctx): # pylint: disable=unused-argument
     """
     Clean the installation directory
     """
@@ -171,7 +182,7 @@ def clean(ctx):
 
 
 @task
-def clean_build(ctx):
+def clean_build(ctx): # pylint: disable=unused-argument
     """
     Clean the build directory
     """
@@ -182,7 +193,7 @@ def clean_build(ctx):
 
 
 @task
-def clean_pip(ctx):
+def clean_pip(ctx): # pylint: disable=unused-argument
     """
     Clean the local pip directory
     """
@@ -307,7 +318,7 @@ def xcode(ctx):
         );
 
 
-@task
+@task(pre=[meson_ninja])
 def lint(ctx):
     """
     Lint source code
@@ -315,6 +326,12 @@ def lint(ctx):
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{NPM} run lint --prefix scripts/',
+            echo=True,
+            pty=True
+        );
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'{PYLINT} tasks.py',
             echo=True,
             pty=True
         );
