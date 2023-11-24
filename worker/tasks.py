@@ -45,16 +45,16 @@ MESON_VERSION = os.getenv('MESON_VERSION') or '1.2.1';
 # worker with tracing and enabled.
 # NOTE: On Windows make sure to add `--vsenv` or have MSVS environment already
 # active if you override this parameter.
-MESON_ARGS = '--vsenv' if os.name == 'nt' and not os.getenv('MESON_ARGS') else '';
+MESON_ARGS = os.getenv('MESON_ARGS') if os.getenv('MESON_ARGS') else '--vsenv' if os.name == 'nt' else '';
 # Let's use a specific version of ninja to avoid buggy version 1.11.1:
 # https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
-PYLINT = os.getenv('PYLINT') or f'{PIP_DIR}/bin/pylint';
+PYLINT = f'{PIP_DIR}/bin/pylint';
 PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
-LCOV = os.getenv('LCOV') or f'{WORKER_DIR}/deps/lcov/bin/lcov';
+LCOV = f'{WORKER_DIR}/deps/lcov/bin/lcov';
 DOCKER = os.getenv('DOCKER') or 'docker';
 # pty=True in ctx.run() is not available on Windows so if stdout is not a TTY
 # let's assume PTY is not supported. Related issue in invoke project:
@@ -110,10 +110,10 @@ def meson_ninja(ctx):
     # https://github.com/NixOS/nixpkgs/issues/142383.
     pip_build_binaries = '--no-binary :all:' if os.path.isfile('/etc/NIXOS') or os.path.isdir('/etc/guix') else '';
 
-    # Install meson, ninja and pylint using pip into our custom location, so we
-    # don't depend on system-wide installation.
+    # Install meson and ninja using pip into our custom location, so we don't
+    # depend on system-wide installation.
     ctx.run(
-        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION} pylint=={PYLINT_VERSION}',
+        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
         echo=True,
         pty=PTY_SUPPORTED
     );
@@ -332,6 +332,15 @@ def lint(ctx):
             echo=True,
             pty=PTY_SUPPORTED
         );
+
+    if not os.path.isfile(PYLINT):
+        # Install pylint using pip into our custom location.
+        ctx.run(
+            f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} pylint=={PYLINT_VERSION}',
+            echo=True,
+            pty=PTY_SUPPORTED
+        );
+
     with ctx.cd(WORKER_DIR):
         ctx.run(
             f'{PYLINT} tasks.py',
