@@ -9,7 +9,9 @@ import tar from 'tar';
 const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
-const INVOKE = process.env.INVOKE || 'invoke';
+const PIP_INVOKE_DIR = 'worker/pip_invoke';
+const INVOKE = `${PIP_INVOKE_DIR}/bin/invoke`;
+const INVOKE_VERSION = process.env.INVOKE_VERSION ?? '2.0.0';
 const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
@@ -21,6 +23,17 @@ const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
 const task = process.argv.slice(2).join(' ');
+
+// PYTHONPATH env must be updated now so all invoke calls below will find the
+// pip invoke module.
+if (IS_WINDOWS)
+{
+	process.env.PYTHONPATH = `${PIP_INVOKE_DIR};${process.env.PYTHONPATH}`;
+}
+else
+{
+	process.env.PYTHONPATH = `${PIP_INVOKE_DIR}:${process.env.PYTHONPATH}`;
+}
 
 run();
 
@@ -273,6 +286,37 @@ async function run()
 	}
 }
 
+function installInvoke()
+{
+	if (fs.existsSync(PIP_INVOKE_DIR))
+	{
+		return;
+	}
+
+	logInfo('installInvoke()');
+
+	let python = process.env.PYTHON;
+
+	if (!python)
+	{
+		try
+		{
+			execSync('python3 -version', { stdio: [ 'ignore', 'ignore', 'ignore' ] });
+			python = 'python3';
+		}
+		catch (error)
+		{
+			python = 'python';
+		}
+	}
+
+	// Install `invoke` into custom location, so we don't depend on system-wide
+	// installation.
+	executeCmd(
+		`${python} -m pip install --upgrade --target=${PIP_INVOKE_DIR} invoke==${INVOKE_VERSION}`, /* exitOnError */ true
+	);
+}
+
 function deleteNodeLib()
 {
 	if (!fs.existsSync('node/lib'))
@@ -310,6 +354,7 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
+	installInvoke();
 	executeCmd(`${INVOKE} -r worker`);
 }
 

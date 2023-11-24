@@ -26,11 +26,6 @@ ENV LANG="C.UTF-8"
 ENV CC="clang"
 ENV CXX="clang++"
 
-# Install pip invoke package.
-# TODO: Temporal.
-RUN set -x \
-	&& pip3 install invoke
-
 WORKDIR /mediasoup
 
 CMD ["bash"]

@@ -47,10 +47,6 @@ jobs:
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 
-      # TODO: Temporal until we decide how to deal with pip invoke requirement.
-      - name: pip install invoke
-        run: python3 -m pip install invoke
-
       # NOTE: Add --force since otherwise `npm ci` fails in Node 16 because
       # @octokit/auth-token dev dependency requires Node >= 16.
       - name: npm ci

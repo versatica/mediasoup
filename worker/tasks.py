@@ -20,7 +20,8 @@ import sys;
 import os;
 import inspect;
 import shutil;
-from invoke import task;
+# We import this from a custom location and pylint doesn't know.
+from invoke import task; # pylint: disable=import-error
 
 MEDIASOUP_BUILDTYPE = os.getenv('MEDIASOUP_BUILDTYPE') or 'Release';
 WORKER_DIR = os.path.dirname(os.path.abspath(
