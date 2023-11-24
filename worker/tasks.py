@@ -22,7 +22,7 @@ import inspect;
 import shutil;
 from invoke import task;
 
-# TODO: Temporal to check if we can prevent issue in Windows with pty=True.
+# TODO: Temporal to check if we can prevent issue in Windows with pty=True. # pylint: disable=fixme
 print('-------- sys.stdout.isatty():', sys.stdout.isatty());
 
 
