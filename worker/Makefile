@@ -7,7 +7,7 @@
 # We need Python 3 here.
 PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 PIP_INVOKE_DIR = $(shell pwd)/pip_invoke
-INVOKE_VERSION ?= 2.1.0
+INVOKE_VERSION ?= 2.2.0
 
 # Instruct Python where to look for invoke module.
 ifeq ($(OS),Windows_NT)
