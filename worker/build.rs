@@ -109,6 +109,17 @@ fn main() {
     let pip_invoke_dir = format!("{out_dir}/pip_invoke");
     let invoke_version = "2.2.0";
     let python = env::var("PYTHON").unwrap_or("python3".to_string());
+    let mut pythonpath = if env::var("PYTHONPATH").is_ok() {
+        let original_pythonpath = env::var("PYTHONPATH").unwrap();
+        format!("{pip_invoke_dir}:{original_pythonpath}")
+    } else {
+        pip_invoke_dir.clone()
+    };
+
+    // Force ";" in PYTHONPATH on Windows.
+    if cfg!(target_os = "windows") {
+        pythonpath = pythonpath.replace(':', ";");
+    }
 
     if !Command::new(&python)
         .arg("-m")
@@ -131,8 +142,7 @@ fn main() {
         .arg("-m")
         .arg("invoke")
         .arg("libmediasoup-worker")
-        // TODO: Should keep existing PYTHONPATH (with ":" or ";" if Windows).
-        .env("PYTHONPATH", &pip_invoke_dir)
+        .env("PYTHONPATH", &pythonpath)
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
         .env("MEDIASOUP_BUILDTYPE", build_type)
         // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
@@ -180,8 +190,7 @@ fn main() {
             .arg("-m")
             .arg("invoke")
             .arg("clean-all")
-            // TODO: Should keep existing PYTHONPATH (with ":" or ";" if Windows).
-            .env("PYTHONPATH", pip_invoke_dir)
+            .env("PYTHONPATH", &pythonpath)
             .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
             .spawn()
             .expect("Failed to start")
