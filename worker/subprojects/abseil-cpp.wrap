@@ -3,11 +3,11 @@ directory = abseil-cpp-20230802.0
 source_url = https://github.com/abseil/abseil-cpp/archive/20230802.0.tar.gz
 source_filename = abseil-cpp-20230802.0.tar.gz
 source_hash = 59d2976af9d6ecf001a81a35749a6e551a335b949d34918cfade07737b9d93c5
-patch_filename = abseil-cpp_20230802.0-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/abseil-cpp_20230802.0-1/get_patch
-patch_hash = d0d038004c11e29e099ea5e6becd24e9fda4015ab8167748d5888c63387d0fd4
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/abseil-cpp_20230802.0-1/abseil-cpp-20230802.0.tar.gz
-wrapdb_version = 20230802.0-1
+patch_filename = abseil-cpp_20230802.0-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/abseil-cpp_20230802.0-2/get_patch
+patch_hash = 6f5309cf428ad274e9dad7b6327c466df8441a88d039fb00fa445c13273028d8
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/abseil-cpp_20230802.0-2/abseil-cpp-20230802.0.tar.gz
+wrapdb_version = 20230802.0-2
 
 [provide]
 absl_base = absl_base_dep
