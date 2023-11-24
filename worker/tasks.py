@@ -22,6 +22,9 @@ import inspect;
 import shutil;
 from invoke import task;
 
+# TODO: Temporal to check if we can prevent issue in Windows with pty=True.
+print('-------- sys.stdout.isatty():', sys.stdout.isatty());
+
 
 MEDIASOUP_BUILDTYPE = os.getenv('MEDIASOUP_BUILDTYPE') or 'Release';
 WORKER_DIR = os.path.dirname(os.path.abspath(
