@@ -1,16 +1,18 @@
 FROM alpine
 
 # Install dependencies.
-RUN \
-	set -x \
-	&& apk add \
-		nodejs-current npm python3 py3-pip \
-		make gcc g++
+RUN set -x \
+	&& apk add gcc g++ nodejs-current npm python3 py3-pip
 
 # Make CC and CXX point to gcc/g++.
 ENV LANG="C.UTF-8"
 ENV CC="gcc"
 ENV CXX="g++"
+
+# Install pip invoke package.
+# TODO: Temporal.
+RUN set -x \
+	&& pip3 install invoke
 
 WORKDIR /mediasoup
 
