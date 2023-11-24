@@ -323,25 +323,10 @@ function installInvoke()
 
 	logInfo('installInvoke()');
 
-	let python = process.env.PYTHON;
-
-	if (!python)
-	{
-		try
-		{
-			execSync('python3 --version', { stdio: [ 'ignore', 'ignore', 'ignore' ] });
-			python = 'python3';
-		}
-		catch (error)
-		{
-			python = 'python';
-		}
-	}
-
 	// Install `invoke` into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`${python} -m pip install --upgrade --target=${PIP_INVOKE_DIR} invoke==${INVOKE_VERSION}`, /* exitOnError */ true
+		`${PTYHON} -m pip install --upgrade --target=${PIP_INVOKE_DIR} invoke==${INVOKE_VERSION}`, /* exitOnError */ true
 	);
 }
 
