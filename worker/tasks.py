@@ -30,14 +30,17 @@ WORKER_DIR = os.path.dirname(os.path.abspath(
 MEDIASOUP_OUT_DIR = os.getenv('MEDIASOUP_OUT_DIR') or f'{WORKER_DIR}/out';
 MEDIASOUP_INSTALL_DIR = os.getenv('MEDIASOUP_INSTALL_DIR') or f'{MEDIASOUP_OUT_DIR}/{MEDIASOUP_BUILDTYPE}';
 BUILD_DIR = os.getenv('BUILD_DIR') or f'{MEDIASOUP_INSTALL_DIR}/build';
-PIP_DIR = f'{MEDIASOUP_OUT_DIR}/pip';
+# Custom pip folder for meson and ninja packages.
+PIP_MESON_NINJA_DIR = f'{MEDIASOUP_OUT_DIR}/pip_meson_ninja';
+# Custom pip folder for pylint package.
+PIP_PYLINT_DIR = f'{MEDIASOUP_OUT_DIR}/pip_pylint';
 # If available (only on some *nix systems), os.sched_getaffinity(0) gets set of
 # CPUs the calling thread is restricted to. Instead, os.cpu_count() returns the
 # total number of CPUs in a system (it doesn't take into account how many of them
 # the calling thread can use).
 NUM_CORES = len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else os.cpu_count();
 PYTHON = os.getenv('PYTHON') or sys.executable;
-MESON = os.getenv('MESON') or f'{PIP_DIR}/bin/meson';
+MESON = os.getenv('MESON') or f'{PIP_MESON_NINJA_DIR}/bin/meson';
 MESON_VERSION = os.getenv('MESON_VERSION') or '1.2.1';
 # MESON_ARGS can be used to provide extra configuration parameters to meson,
 # such as adding defines or changing optimization options. For instance, use
@@ -51,7 +54,7 @@ MESON_ARGS = os.getenv('MESON_ARGS') if os.getenv('MESON_ARGS') else '--vsenv' i
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
-PYLINT = f'{PIP_DIR}/bin/pylint';
+PYLINT = f'{PIP_PYLINT_DIR}/bin/pylint';
 PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
 LCOV = f'{WORKER_DIR}/deps/lcov/bin/lcov';
@@ -67,18 +70,18 @@ os.environ['PYTHONDONTWRITEBYTECODE'] = 'true';
 # Instruct meson where to look for ninja binary.
 if os.name == 'nt':
     # Windows is, of course, special.
-    os.environ['NINJA'] = f'{PIP_DIR}/bin/ninja.exe';
+    os.environ['NINJA'] = f'{PIP_MESON_NINJA_DIR}/bin/ninja.exe';
 else:
-    os.environ['NINJA'] = f'{PIP_DIR}/bin/ninja';
+    os.environ['NINJA'] = f'{PIP_MESON_NINJA_DIR}/bin/ninja';
 
 # Instruct Python where to look for modules it needs, such that meson actually
 # runs from installed location.
-# NOTE: For some reason on Windows adding `:{PYTHONPATH}` breaks things.
+# NOTE: On Windows we must use ; isntead of : to separate paths.
+PYTHONPATH = os.getenv('PYTHONPATH') or '';
 if os.name == 'nt':
-    os.environ['PYTHONPATH'] = PIP_DIR;
+    os.environ['PYTHONPATH'] = f'{PIP_MESON_NINJA_DIR};{PIP_PYLINT_DIR};{PYTHONPATH}';
 else:
-    PYTHONPATH = os.getenv('PYTHONPATH') or '';
-    os.environ['PYTHONPATH'] = f'{PIP_DIR}:{PYTHONPATH}';
+    os.environ['PYTHONPATH'] = f'{PIP_MESON_NINJA_DIR}:{PIP_PYLINT_DIR}:{PYTHONPATH}';
 
 
 @task
@@ -95,13 +98,13 @@ def meson_ninja(ctx):
     # fallback to command without `--system` if the first one fails.
     try:
         ctx.run(
-            f'{PYTHON} -m pip install --system --target={PIP_DIR} pip setuptools',
+            f'{PYTHON} -m pip install --system --target={PIP_MESON_NINJA_DIR} pip setuptools',
             echo=True,
             hide=True
         );
     except:
         ctx.run(
-            f'{PYTHON} -m pip install --target={PIP_DIR} pip setuptools',
+            f'{PYTHON} -m pip install --target={PIP_MESON_NINJA_DIR} pip setuptools',
             echo=True,
             pty=PTY_SUPPORTED
         );
@@ -113,7 +116,7 @@ def meson_ninja(ctx):
     # Install meson and ninja using pip into our custom location, so we don't
     # depend on system-wide installation.
     ctx.run(
-        f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
+        f'{PYTHON} -m pip install --upgrade --target={PIP_MESON_NINJA_DIR} {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
         echo=True,
         pty=PTY_SUPPORTED
     );
@@ -198,10 +201,15 @@ def clean_build(ctx): # pylint: disable=unused-argument
 @task
 def clean_pip(ctx): # pylint: disable=unused-argument
     """
-    Clean the local pip directory
+    Clean the local pip setup
     """
     try:
-        shutil.rmtree(PIP_DIR);
+        shutil.rmtree(PIP_MESON_NINJA_DIR);
+    except:
+        pass;
+
+    try:
+        shutil.rmtree(PIP_PYLINT_DIR);
     except:
         pass;
 
@@ -336,7 +344,7 @@ def lint(ctx):
     if not os.path.isfile(PYLINT):
         # Install pylint using pip into our custom location.
         ctx.run(
-            f'{PYTHON} -m pip install --upgrade --target={PIP_DIR} pylint=={PYLINT_VERSION}',
+            f'{PYTHON} -m pip install --upgrade --target={PIP_PYLINT_DIR} pylint=={PYLINT_VERSION}',
             echo=True,
             pty=PTY_SUPPORTED
         );
