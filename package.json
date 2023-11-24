@@ -50,6 +50,7 @@
     "nodejs"
   ],
   "scripts": {
+    "preinstall": "node npm-scripts.mjs preinstall",
     "prepare": "node npm-scripts.mjs prepare",
     "postinstall": "node npm-scripts.mjs postinstall",
     "typescript:build": "node npm-scripts.mjs typescript:build",

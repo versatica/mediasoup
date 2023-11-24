@@ -64,10 +64,6 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      # TODO: Temporal until we decide how to deal with pip invoke requirement.
-      - name: pip install invoke
-        run: python3 -m pip install invoke
-
       # We need to install some NPM production deps for npm-scripts.mjs to work.
       - name: npm ci
         run: npm ci --ignore-scripts --omit=dev

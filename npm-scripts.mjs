@@ -41,6 +41,13 @@ async function run()
 {
 	switch (task)
 	{
+		case 'preinstall':
+		{
+			installInvoke();
+
+			break;
+		}
+
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
 		// `prepare` script:
 		//
@@ -354,7 +361,6 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
-	installInvoke();
 	executeCmd(`${INVOKE} -r worker`);
 }
 
