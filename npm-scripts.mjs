@@ -11,7 +11,6 @@ const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = 'worker/pip_invoke';
-const INVOKE = `${PIP_INVOKE_DIR}/bin/invoke`;
 const INVOKE_VERSION = process.env.INVOKE_VERSION ?? '2.0.0';
 const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
@@ -162,7 +161,7 @@ async function run()
 
 		case 'format:worker':
 		{
-			executeCmd(`${PYTHON} ${INVOKE} -r worker format`);
+			executeCmd(`${PYTHON} -m invoke -r worker format`);
 
 			break;
 		}
@@ -323,10 +322,10 @@ function installInvoke()
 
 	logInfo('installInvoke()');
 
-	// Install `invoke` into custom location, so we don't depend on system-wide
+	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`${PTYHON} -m pip install --upgrade --target=${PIP_INVOKE_DIR} invoke==${INVOKE_VERSION}`, /* exitOnError */ true
+		`${PYTHON} -m pip install --upgrade --target=${PIP_INVOKE_DIR} invoke==${INVOKE_VERSION}`, /* exitOnError */ true
 	);
 }
 
@@ -367,7 +366,7 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
-	executeCmd(`${PYTHON} ${INVOKE} -r worker`);
+	executeCmd(`${PYTHON} -m invoke -r worker`);
 }
 
 function cleanWorkerArtifacts()
@@ -375,11 +374,11 @@ function cleanWorkerArtifacts()
 	logInfo('cleanWorkerArtifacts()');
 
 	// Clean build artifacts except `mediasoup-worker`.
-	executeCmd(`${PYTHON} ${INVOKE} -r worker clean-build`);
+	executeCmd(`${PYTHON} -m invoke -r worker clean-build`);
 	// Clean downloaded dependencies.
-	executeCmd(`${PYTHON} ${INVOKE} -r worker clean-subprojects`);
+	executeCmd(`${PYTHON} -m invoke -r worker clean-subprojects`);
 	// Clean PIP/Meson/Ninja.
-	executeCmd(`${PYTHON} ${INVOKE} -r worker clean-pip`);
+	executeCmd(`${PYTHON} -m invoke -r worker clean-pip`);
 
 	if (IS_WINDOWS)
 	{
@@ -401,7 +400,7 @@ function lintWorker()
 {
 	logInfo('lintWorker()');
 
-	executeCmd(`${PYTHON} ${INVOKE} -r worker lint`);
+	executeCmd(`${PYTHON} -m invoke -r worker lint`);
 }
 
 function flatcNode()
@@ -409,7 +408,7 @@ function flatcNode()
 	logInfo('flatcNode()');
 
 	// Build flatc if needed.
-	executeCmd(`${PYTHON} ${INVOKE} -r worker flatc`);
+	executeCmd(`${PYTHON} -m invoke -r worker flatc`);
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
@@ -434,7 +433,7 @@ function flatcWorker()
 {
 	logInfo('flatcWorker()');
 
-	executeCmd(`${PYTHON} ${INVOKE} -r worker flatc`);
+	executeCmd(`${PYTHON} -m invoke -r worker flatc`);
 }
 
 function testNode()
@@ -455,7 +454,7 @@ function testWorker()
 {
 	logInfo('testWorker()');
 
-	executeCmd(`${PYTHON} ${INVOKE} -r worker test`);
+	executeCmd(`${PYTHON} -m invoke -r worker test`);
 }
 
 function installNodeDeps()
