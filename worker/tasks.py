@@ -352,7 +352,7 @@ def xcode(ctx):
         );
 
 
-@task(pre=[meson_ninja])
+@task
 def lint(ctx):
     """
     Lint source code
