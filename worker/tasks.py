@@ -352,7 +352,7 @@ def xcode(ctx):
         );
 
 
-@task(pre=[meson_ninja])
+@task
 def lint(ctx):
     """
     Lint source code
@@ -376,7 +376,7 @@ def lint(ctx):
 
     with ctx.cd(WORKER_DIR):
         ctx.run(
-            f'{PYLINT} tasks.py',
+            f'{PYTHON} -m pylint tasks.py',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL

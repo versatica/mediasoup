@@ -7,8 +7,8 @@ fn main() {
         return;
     }
 
-    // On Windows Rust always links against release version of MSVC runtime, thus requires Release
-    // build here.
+    // On Windows Rust always links against release version of MSVC runtime, thus requires
+    // Release build here
     let build_type = if cfg!(all(debug_assertions, not(windows))) {
         "Debug"
     } else {
@@ -45,7 +45,7 @@ fn main() {
     )
     .expect("Failed to write generated Rust flatbuffers into fbs.rs");
 
-    // Force forward slashes on Windows too so that is plays well with our tasks.py.
+    // Force forward slashes on Windows too so that is plays well with our tasks.py
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 
     // Add C++ std lib
@@ -105,9 +105,44 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=c++abi");
     }
 
+    // Install Python invoke package in custom folder
+    let pip_invoke_dir = format!("{out_dir}/pip_invoke");
+    let invoke_version = "2.2.0";
+    let python = env::var("PYTHON").unwrap_or("python3".to_string());
+    let mut pythonpath = if env::var("PYTHONPATH").is_ok() {
+        let original_pythonpath = env::var("PYTHONPATH").unwrap();
+        format!("{pip_invoke_dir}:{original_pythonpath}")
+    } else {
+        pip_invoke_dir.clone()
+    };
+
+    // Force ";" in PYTHONPATH on Windows
+    if cfg!(target_os = "windows") {
+        pythonpath = pythonpath.replace(':', ";");
+    }
+
+    if !Command::new(&python)
+        .arg("-m")
+        .arg("pip")
+        .arg("install")
+        .arg("--upgrade")
+        .arg(format!("--target={pip_invoke_dir}"))
+        .arg(format!("invoke=={invoke_version}"))
+        .spawn()
+        .expect("Failed to start")
+        .wait()
+        .expect("Wasn't running")
+        .success()
+    {
+        panic!("Failed to install Python invoke package")
+    }
+
     // Build
-    if !Command::new("invoke")
+    if !Command::new(&python)
+        .arg("-m")
+        .arg("invoke")
         .arg("libmediasoup-worker")
+        .env("PYTHONPATH", &pythonpath)
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
         .env("MEDIASOUP_BUILDTYPE", build_type)
         // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
@@ -151,8 +186,11 @@ fn main() {
 
     if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
         // Clean
-        if !Command::new("invoke")
+        if !Command::new(python)
+            .arg("-m")
+            .arg("invoke")
             .arg("clean-all")
+            .env("PYTHONPATH", &pythonpath)
             .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
             .spawn()
             .expect("Failed to start")
