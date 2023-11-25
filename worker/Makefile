@@ -1,10 +1,9 @@
 #
 # make tasks for mediasoup-worker.
 #
-# NOTE: This Makefile is a proxy to pip invoke commands.
+# NOTE: This Makefile is a proxy to pip invoke commands (see tasks.py).
 #
 
-# We need Python 3 here.
 PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 PIP_INVOKE_DIR = $(shell pwd)/pip_invoke
 INVOKE_VERSION ?= 2.2.0
@@ -47,7 +46,8 @@ default: mediasoup-worker
 
 invoke:
 ifeq ($(wildcard $(PIP_INVOKE_DIR)),)
-	# Install pip invoke into custom location, so we don't depend on system-wide installation.
+	# Install pip invoke into custom location, so we don't depend on system-wide
+	# installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_INVOKE_DIR) invoke==$(INVOKE_VERSION)
 endif
 
