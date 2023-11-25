@@ -41,13 +41,6 @@ async function run()
 {
 	switch (task)
 	{
-		case 'preinstall':
-		{
-			installInvoke();
-
-			break;
-		}
-
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
 		// `prepare` script:
 		//
@@ -92,6 +85,7 @@ async function run()
 			{
 				logInfo('skipping mediasoup-worker prebuilt download, building it locally');
 
+				installInvoke();
 				buildWorker();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV)
@@ -104,6 +98,7 @@ async function run()
 			{
 				logInfo(`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`);
 
+				installInvoke();
 				buildWorker();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV)
@@ -379,14 +374,6 @@ function cleanWorkerArtifacts()
 	executeCmd(`${PYTHON} -m invoke -r worker clean-subprojects`);
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`${PYTHON} -m invoke -r worker clean-pip`);
-
-	if (IS_WINDOWS)
-	{
-		if (fs.existsSync('worker/out/msys'))
-		{
-			executeCmd('rd /s /q worker\\out\\msys');
-		}
-	}
 }
 
 function lintNode()
@@ -406,9 +393,6 @@ function lintWorker()
 function flatcNode()
 {
 	logInfo('flatcNode()');
-
-	// Build flatc if needed.
-	executeCmd(`${PYTHON} -m invoke -r worker flatc`);
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
