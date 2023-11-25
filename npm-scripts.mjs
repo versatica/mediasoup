@@ -379,14 +379,6 @@ function cleanWorkerArtifacts()
 	executeCmd(`${PYTHON} -m invoke -r worker clean-subprojects`);
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`${PYTHON} -m invoke -r worker clean-pip`);
-
-	if (IS_WINDOWS)
-	{
-		if (fs.existsSync('worker/out/msys'))
-		{
-			executeCmd('rd /s /q worker\\out\\msys');
-		}
-	}
 }
 
 function lintNode()
