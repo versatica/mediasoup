@@ -7,7 +7,8 @@
 # We need Python 3 here.
 PYTHON ?= $(shell command -v python3 2> /dev/null || echo python)
 PIP_INVOKE_DIR = $(shell pwd)/pip_invoke
-INVOKE_VERSION ?= 2.2.0
+INVOKE = $(PIP_INVOKE_DIR)/bin/invoke
+INVOKE_VERSION ?= 2.0.0
 
 # Instruct Python where to look for invoke module.
 ifeq ($(OS),Windows_NT)
@@ -47,76 +48,88 @@ default: mediasoup-worker
 
 invoke:
 ifeq ($(wildcard $(PIP_INVOKE_DIR)),)
-	# Install pip invoke into custom location, so we don't depend on system-wide installation.
+	# Install `invoke` into custom location, so we don't depend on system-wide installation.
 	$(PYTHON) -m pip install --upgrade --target=$(PIP_INVOKE_DIR) invoke==$(INVOKE_VERSION)
 endif
 
 meson-ninja: invoke
-	$(PYTHON) -m invoke meson-ninja
+ifeq ($(wildcard $(PIP_DIR)),)
+	# Updated pip and setuptools are needed for meson.
+	# `--system` is not present everywhere and is only needed as workaround for
+	# Debian-specific issue (copied from https://github.com/gluster/gstatus/pull/33),
+	# fallback to command without `--system` if the first one fails.
+	$(PYTHON) -m pip install --system --target=$(PIP_DIR) pip setuptools || \
+		$(PYTHON) -m pip install --target=$(PIP_DIR) pip setuptools || \
+		(echo "update of pip or setuptools failed, likely because pip is not installed (if you are on Debian/Ubuntu or derivative please install the python3-pip package)" >&2)
+
+	# Install `meson` and `ninja` using `pip` into custom location, so we don't
+	# depend on system-wide installation.
+	$(PYTHON) -m pip install --upgrade --target=$(PIP_DIR) $(PIP_BUILD_BINARIES) meson==$(MESON_VERSION) ninja==$(NINJA_VERSION)
+endif
 
 setup: invoke
-	$(PYTHON) -m invoke setup
+	$(INVOKE) setup
 
 clean: invoke
-	$(PYTHON) -m invoke clean
+	$(INVOKE) clean
 
 clean-build: invoke
-	$(PYTHON) -m invoke clean-build
+	$(INVOKE) clean-build
 
 clean-pip: invoke
-	$(PYTHON) -m invoke clean-pip
+	$(INVOKE) clean-pip
 
 clean-subprojects: invoke
-	$(PYTHON) -m invoke clean-subprojects
+	$(INVOKE) clean-subprojects
 
 clean-all: invoke
-	$(PYTHON) -m invoke clean-all
+	$(INVOKE) clean-all
 
 # It requires the SUBPROJECT environment variable.
 update-wrap-file: invoke
-	$(PYTHON) -m invoke subprojects $(SUBPROJECT)
+	$(INVOKE) subprojects $(SUBPROJECT)
 
 mediasoup-worker: invoke
-	$(PYTHON) -m invoke mediasoup-worker
+	$(INVOKE) mediasoup-worker
 
 libmediasoup-worker: invoke
-	$(PYTHON) -m invoke libmediasoup-worker
+	$(INVOKE) libmediasoup-worker
 
 flatc: invoke
-	$(PYTHON) -m invoke flatc
+	$(INVOKE) flatc
 
 xcode: invoke
-	$(PYTHON) -m invoke xcode
+	$(INVOKE) xcode
 
 lint: invoke
-	$(PYTHON) -m invoke lint
+	$(INVOKE) lint
 
 format: invoke
-	$(PYTHON) -m invoke format
+	$(INVOKE) format
 
 test: invoke
-	$(PYTHON) -m invoke test
+	$(INVOKE) test
 
 test-asan: invoke
-	$(PYTHON) -m invoke test-asan
+	$(INVOKE) test-asan
 
 tidy: invoke
-	$(PYTHON) -m invoke tidy
+	$(INVOKE) tidy
 
 fuzzer: invoke
-	$(PYTHON) -m invoke fuzzer
+	$(INVOKE) fuzzer
 
 fuzzer-run-all: invoke
-	$(PYTHON) -m invoke fuzzer-run-all
+	$(INVOKE) fuzzer-run-all
 
 docker: invoke
-	$(PYTHON) -m invoke docker
+	$(INVOKE) docker
 
 docker-run: invoke
-	$(PYTHON) -m invoke docker-run
+	$(INVOKE) docker-run
 
 docker-alpine: invoke
-	$(PYTHON) -m invoke docker-alpine
+	$(INVOKE) docker-alpine
 
 docker-alpine-run: invoke
-	$(PYTHON) -m invoke docker-alpine-run
+	$(INVOKE) docker-alpine-run
