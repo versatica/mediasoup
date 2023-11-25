@@ -38,6 +38,10 @@ jobs:
             ~/.cargo/git
           key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
+      # TODO: Temporal until we decide how to deal with pip invoke requirement.
+      - name: pip install invoke
+        run: python3 -m pip install invoke
+
       - name: cargo fmt
         run: cargo fmt --all -- --check
 
