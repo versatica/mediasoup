@@ -55,9 +55,9 @@ jobs:
         # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
-    # We need to install pip invoke by manually invoking the NPM 'preinstall' script.
-    - name: npm run preinstall
-      run: npm run preinstall
+    # We need to install pip invoke library.
+    - name: pip3 install invoke
+      run: pip3 install invoke
         
     # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
