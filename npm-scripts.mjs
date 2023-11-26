@@ -366,7 +366,7 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
-	executeCmd(`${PYTHON} -m invoke -r worker`);
+	executeCmd(`${PYTHON} -m invoke -r worker mediasoup-worker`);
 }
 
 function cleanWorkerArtifacts()
