@@ -126,7 +126,7 @@ fn main() {
         .arg("pip")
         .arg("install")
         .arg("--upgrade")
-        .arg(format!("--target=\"{pip_invoke_dir}\""))
+        .arg(format!("--target={pip_invoke_dir}"))
         .arg(format!("invoke=={invoke_version}"))
         .spawn()
         .expect("Failed to start")
