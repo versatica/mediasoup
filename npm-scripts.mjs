@@ -161,7 +161,7 @@ async function run()
 
 		case 'format:worker':
 		{
-			executeCmd(`${PYTHON} -m invoke -r worker format`);
+			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 
 			break;
 		}
@@ -325,7 +325,7 @@ function installInvoke()
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`${PYTHON} -m pip install --upgrade --target=${PIP_INVOKE_DIR} invoke==${INVOKE_VERSION}`, /* exitOnError */ true
+		`"${PYTHON}" -m pip install --upgrade --target="${PIP_INVOKE_DIR}" invoke==${INVOKE_VERSION}`, /* exitOnError */ true
 	);
 }
 
@@ -366,7 +366,7 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
-	executeCmd(`${PYTHON} -m invoke -r worker mediasoup-worker`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
 }
 
 function cleanWorkerArtifacts()
@@ -374,11 +374,11 @@ function cleanWorkerArtifacts()
 	logInfo('cleanWorkerArtifacts()');
 
 	// Clean build artifacts except `mediasoup-worker`.
-	executeCmd(`${PYTHON} -m invoke -r worker clean-build`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker clean-build`);
 	// Clean downloaded dependencies.
-	executeCmd(`${PYTHON} -m invoke -r worker clean-subprojects`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker clean-subprojects`);
 	// Clean PIP/Meson/Ninja.
-	executeCmd(`${PYTHON} -m invoke -r worker clean-pip`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker clean-pip`);
 }
 
 function lintNode()
@@ -392,7 +392,7 @@ function lintWorker()
 {
 	logInfo('lintWorker()');
 
-	executeCmd(`${PYTHON} -m invoke -r worker lint`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker lint`);
 }
 
 function flatcNode()
@@ -400,24 +400,24 @@ function flatcNode()
 	logInfo('flatcNode()');
 
 	// Build flatc if needed.
-	executeCmd(`${PYTHON} -m invoke -r worker flatc`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
 	const flatc = path.resolve(path.join(
 		'worker', 'out', buildType, 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
-	const src = path.resolve(path.join('worker', 'fbs', '*.fbs'));
 	const out = path.resolve(path.join('node', 'src'));
-	const options = '--ts-no-import-ext --gen-object-api';
-	const command = `${flatc} --ts ${options} -o ${out} `;
 
-	if (IS_WINDOWS)
+	for (const dirent of fs.readdirSync(path.join('worker', 'fbs'), { withFileTypes: true }))
 	{
-		executeCmd(`for %f in (${src}) do ${command} %f`);
-	}
-	else
-	{
-		executeCmd(`for file in ${src}; do ${command} \$\{file\}; done`);
+		if (!dirent.isFile() || path.parse(dirent.name).ext !== '.fbs')
+		{
+			continue;
+		}
+
+		const filePath = path.resolve(path.join('worker', 'fbs', dirent.name));
+
+		executeCmd(`"${flatc}" --ts --ts-no-import-ext --gen-object-api -o "${out}" "${filePath}"`);
 	}
 }
 
@@ -425,7 +425,7 @@ function flatcWorker()
 {
 	logInfo('flatcWorker()');
 
-	executeCmd(`${PYTHON} -m invoke -r worker flatc`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 }
 
 function testNode()
@@ -438,7 +438,7 @@ function testNode()
 	}
 	else
 	{
-		executeCmd(`jest --testPathPattern ${process.env.TEST_FILE}`);
+		executeCmd(`jest --testPathPattern "${process.env.TEST_FILE}"`);
 	}
 }
 
@@ -446,7 +446,7 @@ function testWorker()
 {
 	logInfo('testWorker()');
 
-	executeCmd(`${PYTHON} -m invoke -r worker test`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
 function installNodeDeps()
