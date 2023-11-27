@@ -66,14 +66,6 @@ Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/
 
 Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
 
-### `npm run install-deps:node`
-
-Installs NPM dependencies and updates `package-lock.json`.
-
-### `npm run install-worker-dev-tools`
-
-Installs worker NPM packages needed for local development.
-
 ### `npm run release:check`
 
 Runs linters and tests in Node and C++ code.
@@ -91,6 +83,12 @@ mediasoup uses Python [Invoke](https://www.pyinvoke.org/) library for managing a
 Tasks are defined in `worker/tasks.py`. For development purposes, developers or contributors can install `Invoke` using `pip3 install invoke` and run tasks below within the `worker` folder.
 
 See all the tasks by running `invoke --list` within the `worker` folder.
+
+*NOTE:* For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
+
+```bash
+npm ci --prefix worker/scripts
+```
 
 ### `invoke` (default task)
 

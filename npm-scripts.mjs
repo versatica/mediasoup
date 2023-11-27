@@ -204,20 +204,6 @@ async function run()
 			break;
 		}
 
-		case 'install-deps:node':
-		{
-			installNodeDeps();
-
-			break;
-		}
-
-		case 'install-worker-dev-tools':
-		{
-			executeCmd('npm ci --prefix worker/scripts');
-
-			break;
-		}
-
 		case 'release:check':
 		{
 			checkRelease();
