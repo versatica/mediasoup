@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Replace make + Makefile file with Python Invoke library + tasks.py file ([PR #1239](https://github.com/versatica/mediasoup/pull/1239)).
+* Replace make + Makefile with Python Invoke library + tasks.py (also fix installation under path with whitespaces) ([PR #1239](https://github.com/versatica/mediasoup/pull/1239)).
 
 
 ### 3.13.5
