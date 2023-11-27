@@ -7,7 +7,7 @@ DEP=$1
 
 current_dir_name=${WORKER_PWD##*/}
 if [ "${current_dir_name}" != "worker" ] ; then
-	echo ">>> [ERROR] $(basename $0) must be called from mediasoup/worker/ directory" >&2
+	echo ">>> [ERROR] $(basename $0) must be called from mediasoup/worker directory" >&2
 	exit 1
 fi
 

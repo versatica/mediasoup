@@ -64,25 +64,25 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      # We need to install some NPM production deps for npm-scripts.mjs to work.
-      - name: npm ci
-        run: npm ci --ignore-scripts --omit=dev
+      # We need to install pip invoke manually.
+      - name: pip3 install invoke
+        run: pip3 install invoke
 
-      # We need to install deps on worker/scripts/package.json.
-      - name: npm run install-worker-dev-tools
-        run: npm run install-worker-dev-tools
+      # We need to install npm deps of worker/scripts/package.json.
+      - name: npm ci --prefix worker/scripts
+        run: npm ci --prefix worker/scripts
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
 
-      - name: npm run lint:worker
-        run: npm run lint:worker
+      - name: invoke -r worker lint
+        run: invoke -r worker lint
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
 
-      - name: npm run worker:build
-        run: npm run worker:build
+      - name: invoke -r worker mediasoup-worker
+        run: invoke -r worker mediasoup-worker
 
-      - name: npm run test:worker
-        run: npm run test:worker
+      - name: invoke -r worker test
+        run: invoke -r worker test
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
