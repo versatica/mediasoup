@@ -20,10 +20,11 @@
 # Flatc generated files.
 /worker/include/FBS
 /worker/prebuild
-# Vistual Studio generated Stuff.
+# Python invoke.
+/worker/pip_invoke
+# Build artifacts.
 /worker/**/Debug
 /worker/**/Release
-/worker/.vs
 # clang-fuzzer stuff is too big.
 /worker/deps/clang-fuzzer
 # Ignore all fuzzer generated test inputs.

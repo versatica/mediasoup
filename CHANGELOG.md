@@ -6,6 +6,11 @@
 * Enable `liburing` usage for Linux (kernel versions >= 6) ([PR #1218](https://github.com/versatica/mediasoup/pull/1218)).
 
 
+### 3.13.6
+
+* Replace make + Makefile with Python Invoke library + tasks.py (also fix installation under path with whitespaces) ([PR #1239](https://github.com/versatica/mediasoup/pull/1239)).
+
+
 ### 3.13.5
 
 * Fix RTCP SDES packet size calculation ([PR #1236](https://github.com/versatica/mediasoup/pull/1236) based on PR [PR #1234](https://github.com/versatica/mediasoup/pull/1234) by @ybybwdwd).

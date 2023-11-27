@@ -54,6 +54,11 @@ jobs:
       - name: npm ci
         run: npm ci --ignore-scripts --omit=dev
 
+      # However we also need to install pip invoke manually (since
+      # `--ignore-scripts` prevented invoke from being installed).
+      - name: pip3 install invoke
+        run: pip3 install invoke
+
       - name: npm run worker:build
         run: npm run worker:build
 
