@@ -318,7 +318,7 @@ function installInvoke()
 	// installation.
 	executeCmd(
 		`"${PYTHON}" -m pip install --upgrade --target="${PIP_INVOKE_DIR}" invoke`,
-		 /* exitOnError */ true
+		/* exitOnError */ true
 	);
 }
 
