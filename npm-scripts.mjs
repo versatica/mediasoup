@@ -2,7 +2,7 @@ import process from 'node:process';
 import os from 'node:os';
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
 
@@ -132,7 +132,7 @@ async function run()
 		case 'typescript:watch':
 		{
 			deleteNodeLib();
-			spawnCmd('tsc', [ '--project', 'node', '--watch' ]);
+			executeCmd('tsc --project node --watch');
 
 			break;
 		}
@@ -167,7 +167,7 @@ async function run()
 
 		case 'format:worker':
 		{
-			spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'format' ]);
+			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 
 			break;
 		}
@@ -204,8 +204,8 @@ async function run()
 		case 'coverage:node':
 		{
 			buildTypescript({ force: false });
-			spawnCmd('jest', [ '--coverage' ]);
-			spawnCmd('open-cli', [ 'coverage/lcov-report/index.html' ]);
+			executeCmd('jest --coverage');
+			executeCmd('open-cli coverage/lcov-report/index.html');
 
 			break;
 		}
@@ -235,10 +235,10 @@ async function run()
 			}
 
 			checkRelease();
-			spawnCmd('git', [ 'commit', '-am', PKG.version ]);
-			spawnCmd('git', [ 'tag', '-a', PKG.version, '-m', PKG.version ]);
-			spawnCmd('git', [ 'push', 'origin', `v${MAYOR_VERSION}` ]);
-			spawnCmd('git', [ 'push', 'origin', PKG.version ]);
+			executeCmd(`git commit -am '${PKG.version}'`);
+			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
+			executeCmd(`git push origin v${MAYOR_VERSION}`);
+			executeCmd(`git push origin '${PKG.version}'`);
 
 			logInfo('creating release in GitHub');
 
@@ -262,7 +262,7 @@ async function run()
 				await uploadMacArmPrebuiltWorker();
 			}
 
-			spawnCmd('npm', [ 'publish' ]);
+			executeCmd('npm publish');
 
 			break;
 		}
@@ -316,9 +316,9 @@ function installInvoke()
 
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
-	spawnCmd(
-		PYTHON,
-		[ '-m', 'pip', 'install', '--upgrade', '--target', PIP_INVOKE_DIR, 'invoke' ]
+	executeCmd(
+		`"${PYTHON}" -m pip install --upgrade --target="${PIP_INVOKE_DIR}" invoke`,
+		 /* exitOnError */ true
 	);
 }
 
@@ -344,16 +344,14 @@ function buildTypescript({ force = false } = { force: false })
 	logInfo('buildTypescript()');
 
 	deleteNodeLib();
-	// TODO: REMOVE
 	executeCmd('tsc --project node');
-	spawnCmd('tsc', [ '--project', 'node' ]);
 }
 
 function buildWorker()
 {
 	logInfo('buildWorker()');
 
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'mediasoup-worker' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
 }
 
 function cleanWorkerArtifacts()
@@ -361,28 +359,25 @@ function cleanWorkerArtifacts()
 	logInfo('cleanWorkerArtifacts()');
 
 	// Clean build artifacts except `mediasoup-worker`.
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'clean-build' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker clean-build`);
 	// Clean downloaded dependencies.
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'clean-subprojects' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker clean-subprojects`);
 	// Clean PIP/Meson/Ninja.
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'clean-pip' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker clean-pip`);
 }
 
 function lintNode()
 {
 	logInfo('lintNode()');
 
-	spawnCmd(
-		'eslint',
-		[ '-c', 'node/.eslintrc.js', '--ignore-path', 'node/.eslintignore', '--max-warnings', '0', 'node/src', 'node/.eslintrc.js', 'npm-scripts.mjs', 'worker/scripts/clang-format.mjs' ]
-	);
+	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/clang-format.mjs');
 }
 
 function lintWorker()
 {
 	logInfo('lintWorker()');
 
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'lint' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker lint`);
 }
 
 function flatcNode()
@@ -390,7 +385,7 @@ function flatcNode()
 	logInfo('flatcNode()');
 
 	// Build flatc if needed.
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'flatc' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
@@ -407,10 +402,7 @@ function flatcNode()
 
 		const filePath = path.resolve(path.join('worker', 'fbs', dirent.name));
 
-		spawnCmd(
-			flatc,
-			[ '--ts', '--ts-no-import-ext', '--gen-object-api', '-o', out, filePath ]
-		);
+		executeCmd(`"${flatc}" --ts --ts-no-import-ext --gen-object-api -o "${out}" "${filePath}"`);
 	}
 }
 
@@ -418,7 +410,7 @@ function flatcWorker()
 {
 	logInfo('flatcWorker()');
 
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'flatc' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 }
 
 function testNode()
@@ -427,11 +419,11 @@ function testNode()
 
 	if (!process.env.TEST_FILE)
 	{
-		spawnCmd('jest');
+		executeCmd('jest');
 	}
 	else
 	{
-		spawnCmd('jest', [ '--testPathPattern', process.env.TEST_FILE ]);
+		executeCmd(`jest --testPathPattern "${process.env.TEST_FILE}"`);
 	}
 }
 
@@ -439,7 +431,7 @@ function testWorker()
 {
 	logInfo('testWorker()');
 
-	spawnCmd(PYTHON, [ '-m', 'invoke', '-r', 'worker', 'test' ]);
+	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
 function installNodeDeps()
@@ -447,9 +439,9 @@ function installNodeDeps()
 	logInfo('installNodeDeps()');
 
 	// Install/update Node deps.
-	spawnCmd('npm', [ 'ci', '--ignore-scripts' ]);
+	executeCmd('npm ci --ignore-scripts');
 	// Update package-lock.json.
-	spawnCmd('npm', [ 'install', '--package-lock-only', '--ignore-scripts' ]);
+	executeCmd('npm install --package-lock-only --ignore-scripts');
 }
 
 function checkRelease()
@@ -707,45 +699,6 @@ async function getVersionChanges()
 	throw new Error(`no entry found in CHANGELOG.md for version '${PKG.version}'`);
 }
 
-function spawnCmd(command, args = [], exitOnError = true)
-{
-	logInfo(`spawnCmd(): ${command} ${args.join(' ')}`);
-
-	const result = spawnSync(
-		command, args, { stdio: [ 'ignore', process.stdout, process.stderr ] }
-	);
-
-	if (result.status === 0)
-	{
-		return;
-	}
-	else if (exitOnError)
-	{
-		logError(
-			`spawnCmd() failed, exiting [status:${result.status}, signal:${result.signal}]`
-		);
-
-		if (result.error)
-		{
-			logError(result.error);
-		}
-
-		exitWithError();
-	}
-	else
-	{
-		logInfo(
-			`spawnCmd() failed, ignoring [status:${result.status}, signal:${result.signal}]`
-		);
-
-		if (result.error)
-		{
-			logInfo(result.error);
-		}
-	}
-}
-
-// TODO: REMOVE
 function executeCmd(command, exitOnError = true)
 {
 	logInfo(`executeCmd(): ${command}`);
