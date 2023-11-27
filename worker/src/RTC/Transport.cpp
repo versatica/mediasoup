@@ -2,6 +2,10 @@
 #define MS_CLASS "RTC::Transport"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/Transport.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -19,7 +23,6 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
-#include "RTC/Transport.hpp"
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
@@ -2151,6 +2154,11 @@ namespace RTC
 
 		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
 
+#ifdef MS_LIBURING_SUPPORTED
+		// Activate liburing usage.
+		DepLibUring::SetActive();
+#endif
+
 		for (auto& kv : this->mapConsumers)
 		{
 			auto* consumer = kv.second;
@@ -2194,6 +2202,11 @@ namespace RTC
 		{
 			SendRtcpCompoundPacket(packet.get());
 		}
+
+#ifdef MS_LIBURING_SUPPORTED
+		// Submit all prepared submission entries.
+		DepLibUring::Submit();
+#endif
 	}
 
 	void Transport::DistributeAvailableOutgoingBitrate()

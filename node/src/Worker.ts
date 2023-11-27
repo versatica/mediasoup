@@ -192,6 +192,12 @@ export type WorkerDump =
 		channelRequestHandlers : string[];
 		channelNotificationHandlers : string[];
 	};
+	liburing? :
+	{
+		sqeProcessCount: number;
+		sqeMissCount: number;
+		userDataMissCount: number;
+	};
 };
 
 export type WorkerEvents =
@@ -814,7 +820,7 @@ export function parseWorkerDumpResponse(
 	binary: FbsWorker.DumpResponse
 ): WorkerDump
 {
-	return {
+	const dump: WorkerDump = {
 		pid                    : binary.pid()!,
 		webRtcServerIds        : parseVector(binary, 'webRtcServerIds'),
 		routerIds              : parseVector(binary, 'routerIds'),
@@ -824,4 +830,16 @@ export function parseWorkerDumpResponse(
 			channelNotificationHandlers : parseVector(binary.channelMessageHandlers()!, 'channelNotificationHandlers')
 		}
 	};
+
+	if (binary.liburing())
+	{
+		dump.liburing =
+		{
+			sqeProcessCount   : Number(binary.liburing()!.sqeProcessCount()),
+			sqeMissCount      : Number(binary.liburing()!.sqeMissCount()),
+			userDataMissCount : Number(binary.liburing()!.userDataMissCount())
+		};
+	}
+
+	return dump;
 }

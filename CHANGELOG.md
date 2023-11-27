@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Enable `liburing` usage for Linux (kernel versions >= 6) ([PR #1218](https://github.com/versatica/mediasoup/pull/1218)).
+
+
 ### 3.13.6
 
 * Replace make + Makefile with Python Invoke library + tasks.py (also fix installation under path with whitespaces) ([PR #1239](https://github.com/versatica/mediasoup/pull/1239)).

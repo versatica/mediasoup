@@ -1,3 +1,4 @@
+include "liburing.fbs";
 include "transport.fbs";
 
 namespace FBS.Worker;
@@ -12,6 +13,7 @@ table DumpResponse {
     web_rtc_server_ids: [string] (required);
     router_ids: [string] (required);
     channel_message_handlers: ChannelMessageHandlers (required);
+    liburing: FBS.LibUring.Dump;
 }
 
 table ResourceUsageResponse {
