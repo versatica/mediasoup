@@ -331,15 +331,7 @@ function deleteNodeLib()
 
 	logInfo('deleteNodeLib()');
 
-	if (!IS_WINDOWS)
-	{
-		spawnCmd('rm', [ '-rf', 'node/lib' ]);
-	}
-	else
-	{
-		// NOTE: This command fails in Windows if the dir doesn't exist.
-		spawnCmd('rmdir', [ '/s', '/q', '"node/lib"' ], /* exitOnError */ false);
-	}
+	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
 function buildTypescript({ force = false } = { force: false })
