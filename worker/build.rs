@@ -107,10 +107,8 @@ fn main() {
 
     // Install Python invoke package in custom folder
     let pip_invoke_dir = format!("{out_dir}/pip_invoke");
-    let invoke_version = "2.2.0";
     let python = env::var("PYTHON").unwrap_or("python3".to_string());
-    let mut pythonpath = if env::var("PYTHONPATH").is_ok() {
-        let original_pythonpath = env::var("PYTHONPATH").unwrap();
+    let mut pythonpath = if let Ok(original_pythonpath) = env::var("PYTHONPATH") {
         format!("{pip_invoke_dir}:{original_pythonpath}")
     } else {
         pip_invoke_dir.clone()
@@ -126,8 +124,9 @@ fn main() {
         .arg("pip")
         .arg("install")
         .arg("--upgrade")
-        .arg(format!("--target={pip_invoke_dir}"))
-        .arg(format!("invoke=={invoke_version}"))
+        .arg("--target")
+        .arg(pip_invoke_dir)
+        .arg("invoke")
         .spawn()
         .expect("Failed to start")
         .wait()

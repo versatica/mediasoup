@@ -11,7 +11,6 @@ const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
-const INVOKE_VERSION = process.env.INVOKE_VERSION ?? '2.2.0';
 const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
@@ -318,7 +317,8 @@ function installInvoke()
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`"${PYTHON}" -m pip install --upgrade --target="${PIP_INVOKE_DIR}" invoke==${INVOKE_VERSION}`, /* exitOnError */ true
+		`"${PYTHON}" -m pip install --upgrade --target="${PIP_INVOKE_DIR}" invoke`,
+		/* exitOnError */ true
 	);
 }
 
@@ -331,15 +331,7 @@ function deleteNodeLib()
 
 	logInfo('deleteNodeLib()');
 
-	if (!IS_WINDOWS)
-	{
-		executeCmd('rm -rf node/lib');
-	}
-	else
-	{
-		// NOTE: This command fails in Windows if the dir doesn't exist.
-		executeCmd('rmdir /s /q "node/lib"', /* exitOnError */ false);
-	}
+	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
 function buildTypescript({ force = false } = { force: false })
@@ -584,7 +576,7 @@ async function downloadPrebuiltWorker()
 					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
 
 					execSync(
-						resolvedBinPath,
+						`"${resolvedBinPath}"`,
 						{
 							stdio : [ 'ignore', 'ignore', 'ignore' ],
 							// Ensure no env is passed to avoid accidents.
