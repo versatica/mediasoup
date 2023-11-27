@@ -64,10 +64,6 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      # We need to install some NPM production deps for npm-scripts.mjs to work.
-      - name: npm ci
-        run: npm ci --ignore-scripts --omit=dev
-
       # We need to install pip invoke manually.
       - name: pip3 install invoke
         run: pip3 install invoke
