@@ -338,7 +338,7 @@ function deleteNodeLib()
 	else
 	{
 		// NOTE: This command fails in Windows if the dir doesn't exist.
-		spawnCmd('rmdir', [ '/s', '/q', 'node/lib' ], /* exitOnError */ false);
+		spawnCmd('rmdir', [ '/s', '/q', '"node/lib"' ], /* exitOnError */ false);
 	}
 }
 
