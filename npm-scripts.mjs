@@ -344,7 +344,7 @@ function buildTypescript({ force = false } = { force: false })
 	logInfo('buildTypescript()');
 
 	deleteNodeLib();
-	console.log('REMOVE');
+	// TODO: REMOVE
 	executeCmd('tsc --project node');
 	spawnCmd('tsc', [ '--project', 'node' ]);
 }
@@ -722,16 +722,26 @@ function spawnCmd(command, args = [], exitOnError = true)
 	else if (exitOnError)
 	{
 		logError(
-			`spawnCmd() failed, exiting [status:${result.status}, signal:${result.signal}, error:${result.error}]`
+			`spawnCmd() failed, exiting [status:${result.status}, signal:${result.signal}]`
 		);
+
+		if (result.error)
+		{
+			logError(result.error);
+		}
 
 		exitWithError();
 	}
 	else
 	{
 		logInfo(
-			`spawnCmd() failed, ignoring [status:${result.status}, signal:${result.signal}, error:${result.error}]`
+			`spawnCmd() failed, ignoring [status:${result.status}, signal:${result.signal}]`
 		);
+
+		if (result.error)
+		{
+			logInfo(result.error);
+		}
 	}
 }
 
