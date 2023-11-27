@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.13.6
 
 * Replace make + Makefile with Python Invoke library + tasks.py (also fix installation under path with whitespaces) ([PR #1239](https://github.com/versatica/mediasoup/pull/1239)).
 
