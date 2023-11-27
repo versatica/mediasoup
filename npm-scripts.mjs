@@ -10,7 +10,7 @@ const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
 const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const PYTHON = getPython();
-const PIP_INVOKE_DIR = 'worker/pip_invoke';
+const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const INVOKE_VERSION = process.env.INVOKE_VERSION ?? '2.2.0';
 const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
@@ -26,13 +26,20 @@ const task = process.argv.slice(2).join(' ');
 
 // PYTHONPATH env must be updated now so all invoke calls below will find the
 // pip invoke module.
-if (IS_WINDOWS)
+if (process.env.PYTHONPATH)
 {
-	process.env.PYTHONPATH = `${PIP_INVOKE_DIR};${process.env.PYTHONPATH}`;
+	if (IS_WINDOWS)
+	{
+		process.env.PYTHONPATH = `${PIP_INVOKE_DIR};${process.env.PYTHONPATH}`;
+	}
+	else
+	{
+		process.env.PYTHONPATH = `${PIP_INVOKE_DIR}:${process.env.PYTHONPATH}`;
+	}
 }
 else
 {
-	process.env.PYTHONPATH = `${PIP_INVOKE_DIR}:${process.env.PYTHONPATH}`;
+	process.env.PYTHONPATH = PIP_INVOKE_DIR;
 }
 
 run();

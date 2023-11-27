@@ -31,6 +31,8 @@ WORKER_DIR = os.path.dirname(os.path.abspath(
 MEDIASOUP_OUT_DIR = os.getenv('MEDIASOUP_OUT_DIR') or f'{WORKER_DIR}/out';
 MEDIASOUP_INSTALL_DIR = os.getenv('MEDIASOUP_INSTALL_DIR') or f'{MEDIASOUP_OUT_DIR}/{MEDIASOUP_BUILDTYPE}';
 BUILD_DIR = os.getenv('BUILD_DIR') or f'{MEDIASOUP_INSTALL_DIR}/build';
+# Custom pip folder for invoke package.
+PIP_INVOKE_DIR = f'{MEDIASOUP_OUT_DIR}/pip_invoke';
 # Custom pip folder for meson and ninja packages.
 PIP_MESON_NINJA_DIR = f'{MEDIASOUP_OUT_DIR}/pip_meson_ninja';
 # Custom pip folder for pylint package.
@@ -57,7 +59,6 @@ MESON_ARGS = os.getenv('MESON_ARGS') if os.getenv('MESON_ARGS') else '--vsenv' i
 # https://github.com/ninja-build/ninja/issues/2211
 # https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
-PYLINT = f'{PIP_PYLINT_DIR}/bin/pylint';
 PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
 LCOV = f'{WORKER_DIR}/deps/lcov/bin/lcov';
@@ -84,9 +85,9 @@ else:
 # NOTE: On Windows we must use ; instead of : to separate paths.
 PYTHONPATH = os.getenv('PYTHONPATH') or '';
 if os.name == 'nt':
-    os.environ['PYTHONPATH'] = f'{PIP_MESON_NINJA_DIR};{PIP_PYLINT_DIR};{PYTHONPATH}';
+    os.environ['PYTHONPATH'] = f'{PIP_INVOKE_DIR};{PIP_MESON_NINJA_DIR};{PIP_PYLINT_DIR};{PYTHONPATH}';
 else:
-    os.environ['PYTHONPATH'] = f'{PIP_MESON_NINJA_DIR}:{PIP_PYLINT_DIR}:{PYTHONPATH}';
+    os.environ['PYTHONPATH'] = f'{PIP_INVOKE_DIR}:{PIP_MESON_NINJA_DIR}:{PIP_PYLINT_DIR}:{PYTHONPATH}';
 
 
 @task
@@ -365,7 +366,7 @@ def lint(ctx):
             shell=SHELL
         );
 
-    if not os.path.isfile(PYLINT):
+    if not os.path.isdir(PIP_PYLINT_DIR):
         # Install pylint using pip into our custom location.
         ctx.run(
             f'"{PYTHON}" -m pip install --upgrade --target="{PIP_PYLINT_DIR}" pylint=={PYLINT_VERSION}',
