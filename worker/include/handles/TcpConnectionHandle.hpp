@@ -143,6 +143,10 @@ private:
 	uv_tcp_t* uvHandle{ nullptr };
 	// Others.
 	struct sockaddr_storage* localAddr{ nullptr };
+#ifdef MS_LIBURING_SUPPORTED
+	// Local file descriptor for io_uring.
+	uv_os_fd_t fd{ 0u };
+#endif
 	bool closed{ false };
 	size_t recvBytes{ 0u };
 	size_t sentBytes{ 0u };

@@ -3,12 +3,23 @@
 
 ### NEXT
 
-* Update worker dependencies:
-    * abseil-cpp 20230802.0-2.
-    * libuv 1.46.0-1
-    * OpenSSL 3.0.8-2.
-    * usrsctp snapshot ebb18adac6501bad4501b1f6dccb67a1c85cc299.
+* Update worker dependencies ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)):
+  * abseil-cpp 20230802.0-2
+  * libuv 1.46.0-1
+  * OpenSSL 3.0.8-2
+  * usrsctp snapshot ebb18adac6501bad4501b1f6dccb67a1c85cc299
+* Enable `liburing` usage for Linux (kernel versions >= 6) ([PR #1218](https://github.com/versatica/mediasoup/pull/1218)).
+
+
+### 3.13.6
+
+* Replace make + Makefile with Python Invoke library + tasks.py (also fix installation under path with whitespaces) ([PR #1239](https://github.com/versatica/mediasoup/pull/1239)).
+
+
+### 3.13.5
+
 * Fix RTCP SDES packet size calculation ([PR #1236](https://github.com/versatica/mediasoup/pull/1236) based on PR [PR #1234](https://github.com/versatica/mediasoup/pull/1234) by @ybybwdwd).
+* RTCP Compound Packet: Use a single DLRR report to hold all ssrc info sub-blocks ([PR #1237](https://github.com/versatica/mediasoup/pull/1237)).
 
 
 ### 3.13.4

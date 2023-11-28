@@ -3,6 +3,9 @@
 
 #include "common.hpp"
 #include "DepLibSRTP.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "DepLibUV.hpp"
 #include "DepLibWebRTC.hpp"
 #include "DepOpenSSL.hpp"
@@ -124,6 +127,9 @@ extern "C" int mediasoup_worker_run(
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
 		DepUsrSCTP::ClassInit();
+#ifdef MS_LIBURING_SUPPORTED
+		DepLibUring::ClassInit();
+#endif
 		DepLibWebRTC::ClassInit();
 		Utils::Crypto::ClassInit();
 		RTC::DtlsTransport::ClassInit();
@@ -141,6 +147,9 @@ extern "C" int mediasoup_worker_run(
 		DepLibSRTP::ClassDestroy();
 		Utils::Crypto::ClassDestroy();
 		DepLibWebRTC::ClassDestroy();
+#ifdef MS_LIBURING_SUPPORTED
+		DepLibUring::ClassDestroy();
+#endif
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
 		DepLibUV::ClassDestroy();

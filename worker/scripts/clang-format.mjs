@@ -25,7 +25,7 @@ async function run()
 		case 'lint':
 		{
 			executeCmd(
-				`${clangFormatNativeBinary} --Werror --dry-run ${workerFiles.join(' ')}`
+				`"${clangFormatNativeBinary}" --Werror --dry-run ${workerFiles.join(' ')}`
 			);
 
 			break;
@@ -34,7 +34,7 @@ async function run()
 		case 'format':
 		{
 			executeCmd(
-				`${clangFormatNativeBinary} --Werror -i ${workerFiles.join(' ')}`
+				`"${clangFormatNativeBinary}" --Werror -i ${workerFiles.join(' ')}`
 			);
 
 			break;

@@ -795,18 +795,10 @@ namespace RTC
 		// Build SDES chunk for this sender.
 		auto* sdesChunk = this->rtpStream->GetRtcpSdesChunk();
 
-		RTC::RTCP::DelaySinceLastRr* delaySinceLastRrReport{ nullptr };
-
-		auto* dlrr = this->rtpStream->GetRtcpXrDelaySinceLastRr(nowMs);
-
-		if (dlrr)
-		{
-			delaySinceLastRrReport = new RTC::RTCP::DelaySinceLastRr();
-			delaySinceLastRrReport->AddSsrcInfo(dlrr);
-		}
+		auto* delaySinceLastRrSsrcInfo = this->rtpStream->GetRtcpXrDelaySinceLastRrSsrcInfo(nowMs);
 
 		// RTCP Compound packet buffer cannot hold the data.
-		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrReport))
+		if (!packet->Add(senderReport, sdesChunk, delaySinceLastRrSsrcInfo))
 		{
 			return false;
 		}

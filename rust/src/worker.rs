@@ -278,6 +278,14 @@ pub struct ChannelMessageHandlers {
     pub channel_notification_handlers: Vec<Uuid>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+#[doc(hidden)]
+pub struct LibUringDump {
+    pub sqe_process_count: u64,
+    pub sqe_miss_count: u64,
+    pub user_data_miss_count: u64,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -288,6 +296,7 @@ pub struct WorkerDump {
     #[serde(rename = "webRtcServerIds")]
     pub webrtc_server_ids: Vec<WebRtcServerId>,
     pub channel_message_handlers: ChannelMessageHandlers,
+    pub liburing: Option<LibUringDump>,
 }
 
 /// Error that caused [`Worker::create_webrtc_server`] to fail.

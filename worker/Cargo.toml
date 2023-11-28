@@ -21,9 +21,9 @@ include = [
     "/test/src",
     "/build.rs",
     "/Cargo.toml",
-    "/Makefile",
     "/meson.build",
     "/meson_options.txt",
+    "/tasks.py"
 ]
 
 [package.metadata.docs.rs]

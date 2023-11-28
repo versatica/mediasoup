@@ -3,6 +3,9 @@
 
 #include "handles/TcpConnectionHandle.hpp"
 #include "DepLibUV.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
@@ -199,6 +202,15 @@ void TcpConnectionHandle::Start()
 	{
 		MS_THROW_ERROR("error setting peer IP and port");
 	}
+
+#ifdef MS_LIBURING_SUPPORTED
+	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+	if (err != 0)
+	{
+		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+	}
+#endif
 }
 
 void TcpConnectionHandle::Write(
@@ -232,6 +244,30 @@ void TcpConnectionHandle::Write(
 		return;
 	}
 
+#ifdef MS_LIBURING_SUPPORTED
+	{
+		if (!DepLibUring::IsActive())
+		{
+			goto write_libuv;
+		}
+
+		// Prepare the data to be sent.
+		// NOTE: If all SQEs are currently in use or no UserData entry is available we'll
+		// fall back to libuv.
+		auto prepared = DepLibUring::PrepareWrite(this->fd, data1, len1, data2, len2, cb);
+
+		if (!prepared)
+		{
+			MS_DEBUG_DEV("cannot write via liburing, fallback to libuv");
+
+			goto write_libuv;
+		}
+
+		return;
+	}
+#endif
+
+write_libuv:
 	const size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
 	int written{ 0 };
