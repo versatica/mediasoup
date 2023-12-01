@@ -2,6 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "DepUsrSCTP.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <usrsctp.h>
