@@ -35,11 +35,6 @@ namespace Channel
 		}
 
 		this->eventCStr = eventCStrIt->second;
-
-		// Handler ID is optional.
-		if (flatbuffers::IsFieldPresent(this->data, FBS::Notification::Notification::VT_HANDLERID))
-		{
-			this->handlerId = this->data->handlerId()->str();
-		}
+		this->handlerId = this->data->handlerId()->str();
 	}
 } // namespace Channel

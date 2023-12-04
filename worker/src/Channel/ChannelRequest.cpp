@@ -106,12 +106,7 @@ namespace Channel
 		}
 
 		this->methodCStr = methodCStrIt->second;
-
-		// Handler ID is optional.
-		if (flatbuffers::IsFieldPresent(this->data, FBS::Request::Request::VT_HANDLERID))
-		{
-			this->handlerId = this->data->handlerId()->str();
-		}
+		this->handlerId  = this->data->handlerId()->str();
 	}
 
 	void ChannelRequest::Accept()
