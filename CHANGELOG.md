@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.13.7
 
 * Update worker dependencies ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)):
   * abseil-cpp 20230802.0-2
