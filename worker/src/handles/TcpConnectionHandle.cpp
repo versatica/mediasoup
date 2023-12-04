@@ -265,16 +265,17 @@ void TcpConnectionHandle::Write(
 
 		return;
 	}
-#endif
 
 write_libuv:
+#endif
+
+	// First try uv_try_write(). In case it can not directly write all the given
+	// data then build a uv_req_t and use uv_write().
+
 	const size_t totalLen = len1 + len2;
 	uv_buf_t buffers[2];
 	int written{ 0 };
 	int err;
-
-	// First try uv_try_write(). In case it can not directly write all the given
-	// data then build a uv_req_t and use uv_write().
 
 	buffers[0] = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data1)), len1);
 	buffers[1] = uv_buf_init(reinterpret_cast<char*>(const_cast<uint8_t*>(data2)), len2);
