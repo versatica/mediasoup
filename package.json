@@ -91,7 +91,8 @@
       "node/src/fbs",
       "node/src/tests"
     ],
-    "cacheDirectory": ".cache/jest"
+    "cacheDirectory": ".cache/jest",
+    "modulePathIgnorePatterns": ["worker/", "rust/"]
   },
   "dependencies": {
     "debug": "^4.3.4",
