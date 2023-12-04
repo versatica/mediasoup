@@ -190,6 +190,8 @@ void UdpSocketHandle::Send(
 
 		return;
 	}
+#else
+	goto send_libuv;
 #endif
 
 send_libuv:

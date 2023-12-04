@@ -265,6 +265,8 @@ void TcpConnectionHandle::Write(
 
 		return;
 	}
+#else
+	goto write_libuv;
 #endif
 
 write_libuv:
