@@ -1,8 +1,13 @@
 # Changelog
 
 
-### NEXT
+### 3.13.7
 
+* Update worker dependencies ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)):
+  * abseil-cpp 20230802.0-2
+  * libuv 1.47.0-1
+  * OpenSSL 3.0.8-2
+  * usrsctp snapshot ebb18adac6501bad4501b1f6dccb67a1c85cc299
 * Enable `liburing` usage for Linux (kernel versions >= 6) ([PR #1218](https://github.com/versatica/mediasoup/pull/1218)).
 
 
