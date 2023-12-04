@@ -190,11 +190,10 @@ void UdpSocketHandle::Send(
 
 		return;
 	}
-#else
-	goto send_libuv;
-#endif
 
 send_libuv:
+#endif
+
 	// First try uv_udp_try_send(). In case it can not directly send the datagram
 	// then build a uv_req_t and use uv_udp_send().
 
