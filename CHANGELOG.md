@@ -1,6 +1,11 @@
 # Changelog
 
 
+### Next
+
+* LibUring: Enable liburing usage for SCTP data delivery ([PR 1249](https://github.com/versatica/mediasoup/pull/1249)).
+
+
 ### 3.13.7
 
 * Update worker dependencies ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)):
