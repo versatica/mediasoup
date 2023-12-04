@@ -174,6 +174,10 @@ fn main() {
         println!("cargo:rustc-link-lib=iphlpapi");
         println!("cargo:rustc-link-lib=userenv");
         println!("cargo:rustc-link-lib=ws2_32");
+        println!("cargo:rustc-link-lib=dbghelp");
+        println!("cargo:rustc-link-lib=ole32");
+        println!("cargo:rustc-link-lib=uuid");
+        println!("cargo:rustc-link-lib=shell32");
 
         // These are required by OpenSSL on Windows
         println!("cargo:rustc-link-lib=ws2_32");
