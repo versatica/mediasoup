@@ -199,6 +199,7 @@ abseil_cpp_proj = subproject(
   'abseil-cpp',
   default_options: [
     'warning_level=0',
+    'cpp_std=c++17',
   ],
 )
 catch2_proj = subproject(
