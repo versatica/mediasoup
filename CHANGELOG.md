@@ -4,6 +4,7 @@
 ### Next
 
 * LibUring: Enable liburing usage for SCTP data delivery ([PR 1249](https://github.com/versatica/mediasoup/pull/1249)).
+* LibUring: Disable by default ([PR 1253](https://github.com/versatica/mediasoup/pull/1253)).
 
 
 ### 3.13.7
