@@ -3,6 +3,9 @@
 
 #include "RTC/SrtpSession.hpp"
 #include "DepLibSRTP.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset(), std::memcpy()
@@ -198,9 +201,30 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(EncryptBuffer, *data, *len);
+		uint8_t* encryptBuffer = EncryptBuffer;
 
-		const srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(EncryptBuffer), len);
+#ifdef MS_LIBURING_SUPPORTED
+		{
+			if (!DepLibUring::IsActive())
+			{
+				goto protect;
+			}
+
+			// Use a preallocated buffer, if available.
+			auto* sendBuffer = DepLibUring::GetSendBuffer();
+
+			if (sendBuffer)
+			{
+				encryptBuffer = sendBuffer;
+			}
+		}
+
+	protect:
+#endif
+
+		std::memcpy(encryptBuffer, *data, *len);
+
+		const srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(encryptBuffer), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -210,7 +234,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const uint8_t*)EncryptBuffer;
+		*data = const_cast<const uint8_t*>(encryptBuffer);
 
 		return true;
 	}
