@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.13.9
 
 * Update worker liburing dependency to 2.4-2 ([PR #1254](https://github.com/versatica/mediasoup/pull/1254)).
 * liburing: Enable by default ([PR 1255](https://github.com/versatica/mediasoup/pull/1255)).
