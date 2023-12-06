@@ -1,4 +1,4 @@
-# Ignore these pylint warnings, concentions and refactoring messages:
+# Ignore these pylint warnings, conventions and refactoring messages:
 # - W0301: Unnecessary semicolon (unnecessary-semicolon)
 # - W0622: Redefining built-in 'format' (redefined-builtin)
 # - W0702: No exception type(s) specified (bare-except)
@@ -8,11 +8,13 @@
 # pylint: disable=W0301,W0622,W0702,C0114,C0301
 
 #
-# This is a tasks.py file for the pip invoke package: https://docs.pyinvoke.org/.
+# This is a tasks.py file for the Python invoke package:
+# https://docs.pyinvoke.org/.
 #
 # It's a replacement of our Makefile with same tasks.
 #
 # Usage:
+#   pip install invoke
 #   invoke --list
 #
 
