@@ -258,7 +258,7 @@ if host_machine.system() == 'windows'
   ]
 endif
 
-if host_machine.system() == 'linux' and get_option('ms_enable_liburing')
+if host_machine.system() == 'linux' and not get_option('ms_disable_liburing')
   kernel_version = run_command('uname', '-r').stdout().strip()
 
   # Enable liburing for kernel versions greather than or equal to 6.
