@@ -3,13 +3,14 @@
 
 ### NEXT
 
-* Update worker liburing dependency to 2.4-2 ([PR #1254](https://github.com/versatica/mediasoup/pull/1254)):
+* Update worker liburing dependency to 2.4-2 ([PR #1254](https://github.com/versatica/mediasoup/pull/1254)).
+* liburing: Enable by default ([PR 1255](https://github.com/versatica/mediasoup/pull/1255)).
 
 
 ### 3.13.8
 
-* LibUring: Enable liburing usage for SCTP data delivery ([PR 1249](https://github.com/versatica/mediasoup/pull/1249)).
-* LibUring: Disable by default ([PR 1253](https://github.com/versatica/mediasoup/pull/1253)).
+* liburing: Enable liburing usage for SCTP data delivery ([PR 1249](https://github.com/versatica/mediasoup/pull/1249)).
+* liburing: Disable by default ([PR 1253](https://github.com/versatica/mediasoup/pull/1253)).
 
 
 ### 3.13.7
