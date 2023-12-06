@@ -3,7 +3,7 @@
 
 ### NEXT
 
-* Update worker liburing dependency to 2.4-2 ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)):
+* Update worker liburing dependency to 2.4-2 ([PR #1254](https://github.com/versatica/mediasoup/pull/1254)):
 
 
 ### 3.13.8
