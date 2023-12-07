@@ -1,7 +1,7 @@
 # Changelog
 
 
-### NEXT
+### 3.13.10
 
 * `tasks.py`: Always include `--no-user` in `pip install` commands to avoid the "can not combine --user and --target" error in Windows ([PR #1257](https://github.com/versatica/mediasoup/pull/1257)).
 
