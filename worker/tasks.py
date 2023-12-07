@@ -34,6 +34,8 @@ MEDIASOUP_OUT_DIR = os.getenv('MEDIASOUP_OUT_DIR') or f'{WORKER_DIR}/out';
 MEDIASOUP_INSTALL_DIR = os.getenv('MEDIASOUP_INSTALL_DIR') or f'{MEDIASOUP_OUT_DIR}/{MEDIASOUP_BUILDTYPE}';
 BUILD_DIR = os.getenv('BUILD_DIR') or f'{MEDIASOUP_INSTALL_DIR}/build';
 # Custom pip folder for invoke package.
+# NOTE: We invoke `pip install` always with `--no-user` to make it not complain
+# about "can not combine --user and --target".
 PIP_INVOKE_DIR = f'{MEDIASOUP_OUT_DIR}/pip_invoke';
 # Custom pip folder for meson and ninja packages.
 PIP_MESON_NINJA_DIR = f'{MEDIASOUP_OUT_DIR}/pip_meson_ninja';
@@ -106,14 +108,14 @@ def meson_ninja(ctx):
     # fallback to command without `--system` if the first one fails.
     try:
         ctx.run(
-            f'"{PYTHON}" -m pip install --system --upgrade --target="{PIP_MESON_NINJA_DIR}" pip setuptools',
+            f'"{PYTHON}" -m pip install --system --upgrade --no-user --target="{PIP_MESON_NINJA_DIR}" pip setuptools',
             echo=True,
             hide=True,
             shell=SHELL
         );
     except:
         ctx.run(
-            f'"{PYTHON}" -m pip install --upgrade --target="{PIP_MESON_NINJA_DIR}" pip setuptools',
+            f'"{PYTHON}" -m pip install --upgrade --no-user --target="{PIP_MESON_NINJA_DIR}" pip setuptools',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
@@ -126,7 +128,7 @@ def meson_ninja(ctx):
     # Install meson and ninja using pip into our custom location, so we don't
     # depend on system-wide installation.
     ctx.run(
-        f'"{PYTHON}" -m pip install --upgrade --target="{PIP_MESON_NINJA_DIR}" {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
+        f'"{PYTHON}" -m pip install --upgrade --no-user --target="{PIP_MESON_NINJA_DIR}" {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
         echo=True,
         pty=PTY_SUPPORTED,
         shell=SHELL
@@ -371,7 +373,7 @@ def lint(ctx):
     if not os.path.isdir(PIP_PYLINT_DIR):
         # Install pylint using pip into our custom location.
         ctx.run(
-            f'"{PYTHON}" -m pip install --upgrade --target="{PIP_PYLINT_DIR}" pylint=={PYLINT_VERSION}',
+            f'"{PYTHON}" -m pip install --upgrade --no-user --target="{PIP_PYLINT_DIR}" pylint=={PYLINT_VERSION}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
