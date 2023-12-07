@@ -47,7 +47,7 @@ invoke:
 ifeq ($(wildcard $(PIP_INVOKE_DIR)),)
 	# Install pip invoke into custom location, so we don't depend on system-wide
 	# installation.
-	$(PYTHON) -m pip install --upgrade --target="$(PIP_INVOKE_DIR)" invoke
+	$(PYTHON) -m pip install --upgrade --no-user --target="$(PIP_INVOKE_DIR)" invoke
 endif
 
 meson-ninja: invoke
