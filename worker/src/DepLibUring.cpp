@@ -335,7 +335,7 @@ uint8_t* DepLibUring::LibUring::GetSendBuffer()
 
 	if (this->availableUserDataEntries.empty())
 	{
-		MS_WARN_DEV("no user data entry available");
+		MS_DEBUG_DEV("no user data entry available");
 
 		return nullptr;
 	}
@@ -354,7 +354,7 @@ bool DepLibUring::LibUring::PrepareSend(
 
 	if (!userData)
 	{
-		MS_WARN_DEV("no user data entry available");
+		MS_DEBUG_DEV("no user data entry available");
 
 		this->userDataMissCount++;
 
@@ -365,7 +365,7 @@ bool DepLibUring::LibUring::PrepareSend(
 
 	if (!sqe)
 	{
-		MS_WARN_DEV("no sqe available");
+		MS_DEBUG_DEV("no sqe available");
 
 		this->sqeMissCount++;
 
@@ -413,7 +413,7 @@ bool DepLibUring::LibUring::PrepareWrite(
 
 	if (!userData)
 	{
-		MS_WARN_DEV("no user data entry available");
+		MS_DEBUG_DEV("no user data entry available");
 
 		this->userDataMissCount++;
 
@@ -424,7 +424,7 @@ bool DepLibUring::LibUring::PrepareWrite(
 
 	if (!sqe)
 	{
-		MS_WARN_DEV("no sqe available");
+		MS_DEBUG_DEV("no sqe available");
 
 		this->sqeMissCount++;
 
