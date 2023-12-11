@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* liburing: avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
+
+
 ### 3.13.7
 
 * Update worker dependencies ([PR #1201](https://github.com/versatica/mediasoup/pull/1201)):
