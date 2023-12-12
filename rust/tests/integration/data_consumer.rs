@@ -322,6 +322,31 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+fn set_subchannels() {
+    future::block_on(async move {
+        let (_worker, _router, transport1, data_producer) = init().await;
+
+        let data_consumer = transport1
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_life_time(
+                data_producer.id(),
+                4000,
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        data_consumer
+            .set_subchannels([999, 999, 998, 0].to_vec())
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        let mut sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [0, 998, 999]);
+    });
+}
+
+#[test]
 fn consume_data_on_direct_transport_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;

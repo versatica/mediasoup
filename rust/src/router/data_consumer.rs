@@ -381,6 +381,7 @@ impl fmt::Debug for RegularDataConsumer {
             .field("data_producer_id", &self.inner.data_producer_id)
             .field("paused", &self.inner.paused)
             .field("data_producer_paused", &self.inner.data_producer_paused)
+            .field("subchannels", &self.inner.subchannels)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -411,6 +412,7 @@ impl fmt::Debug for DirectDataConsumer {
             .field("data_producer_id", &self.inner.data_producer_id)
             .field("paused", &self.inner.paused)
             .field("data_producer_paused", &self.inner.data_producer_paused)
+            .field("subchannels", &self.inner.subchannels)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
@@ -788,6 +790,19 @@ impl DataConsumer {
             .await
     }
 
+    /// Sets subchannels to the worker DataConsumer.
+    pub async fn set_subchannels(&self, subchannels: Vec<u16>) -> Result<(), RequestError> {
+        let response = self
+            .inner()
+            .channel
+            .request(self.id(), DataConsumerSetSubchannelsRequest { subchannels })
+            .await?;
+
+        *self.inner().subchannels.lock() = response.subchannels;
+
+        Ok(())
+    }
+
     /// Callback is called when a message has been received from the corresponding data producer.
     ///
     /// # Notes on usage
@@ -917,22 +932,6 @@ impl DirectDataConsumer {
                 },
             )
             .await
-    }
-
-    /// Sets subchannels to the worker DataConsumer.
-    pub async fn set_subchannels(&self, subchannels: Vec<u16>) -> Result<(), RequestError> {
-        let response = self
-            .inner
-            .channel
-            .request(
-                self.inner.id,
-                DataConsumerSetSubchannelsRequest { subchannels },
-            )
-            .await?;
-
-        *self.inner.subchannels.lock() = response.subchannels;
-
-        Ok(())
     }
 }
 
