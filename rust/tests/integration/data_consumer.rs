@@ -153,11 +153,7 @@ fn consume_data_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
-
-        let mut sorted_subchannels = data_consumer.subchannels();
-        sorted_subchannels.sort();
-
-        assert_eq!(sorted_subchannels, [0, 1, 2, 100, 65535]);
+        assert_eq!(data_consumer.subchannels(), [0, 1, 2, 100, 65535]);
         assert_eq!(
             data_consumer
                 .app_data()
@@ -318,6 +314,32 @@ fn get_stats_succeeds() {
         assert_eq!(&stats[0].protocol, data_consumer.protocol());
         assert_eq!(stats[0].messages_sent, 0);
         assert_eq!(stats[0].bytes_sent, 0);
+    });
+}
+
+#[test]
+fn set_subchannels() {
+    future::block_on(async move {
+        let (_worker, router, transport1, data_producer) = init().await;
+
+        let data_consumer = transport1
+            .consume_data({
+                let options = DataConsumerOptions::new_sctp_unordered_with_life_time(
+                    data_producer.id(),
+                    4000,
+                );
+
+                options
+            })
+            .await
+            .expect("Failed to consume data");
+
+        data_consumer
+            .set_subchannels([ 999, 999, 998, 65536 ].to_vec())
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        assert_eq!(data_consumer.subchannels(), [ 0, 998, 999 ]);
     });
 }
 
