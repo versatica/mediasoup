@@ -335,11 +335,11 @@ fn set_subchannels() {
             .expect("Failed to consume data");
 
         data_consumer
-            .set_subchannels([ 999, 999, 998, 0 ].to_vec())
+            .set_subchannels([999, 999, 998, 0].to_vec())
             .await
             .expect("Failed to set data consumer subchannels");
 
-        assert_eq!(data_consumer.subchannels(), [ 0, 998, 999 ]);
+        assert_eq!(data_consumer.subchannels(), [0, 998, 999]);
     });
 }
 

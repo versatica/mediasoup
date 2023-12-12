@@ -791,20 +791,17 @@ impl DataConsumer {
     }
 
     /// Sets subchannels to the worker DataConsumer.
-        pub async fn set_subchannels(&self, subchannels: Vec<u16>) -> Result<(), RequestError> {
-            let response = self
-                .inner()
-                .channel
-                .request(
-                    self.id(),
-                    DataConsumerSetSubchannelsRequest { subchannels },
-                )
-                .await?;
+    pub async fn set_subchannels(&self, subchannels: Vec<u16>) -> Result<(), RequestError> {
+        let response = self
+            .inner()
+            .channel
+            .request(self.id(), DataConsumerSetSubchannelsRequest { subchannels })
+            .await?;
 
-            *self.inner().subchannels.lock() = response.subchannels;
+        *self.inner().subchannels.lock() = response.subchannels;
 
-            Ok(())
-        }
+        Ok(())
+    }
 
     /// Callback is called when a message has been received from the corresponding data producer.
     ///
