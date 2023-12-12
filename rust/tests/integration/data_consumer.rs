@@ -322,6 +322,117 @@ fn get_stats_succeeds() {
 }
 
 #[test]
+fn set_subchannels() {
+    future::block_on(async move {
+        let (_worker, _router, transport1, data_producer) = init().await;
+
+        let data_consumer = transport1
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_life_time(
+                data_producer.id(),
+                4000,
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        data_consumer
+            .set_subchannels([999, 999, 998, 0].to_vec())
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        let mut sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [0, 998, 999]);
+    });
+}
+
+#[test]
+fn add_and_remove_subchannel() {
+    future::block_on(async move {
+        let (_worker, _router, transport1, data_producer) = init().await;
+
+        let data_consumer = transport1
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_life_time(
+                data_producer.id(),
+                4000,
+            ))
+            .await
+            .expect("Failed to consume data");
+
+        data_consumer
+            .set_subchannels([].to_vec())
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        assert_eq!(data_consumer.subchannels(), []);
+
+        data_consumer
+            .add_subchannel(5)
+            .await
+            .expect("Failed to add data consumer subchannel");
+
+        assert_eq!(data_consumer.subchannels(), [5]);
+
+        data_consumer
+            .add_subchannel(10)
+            .await
+            .expect("Failed to add data consumer subchannel");
+
+        let mut sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [5, 10]);
+
+        data_consumer
+            .add_subchannel(5)
+            .await
+            .expect("Failed to add data consumer subchannel");
+
+        sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [5, 10]);
+
+        data_consumer
+            .remove_subchannel(666)
+            .await
+            .expect("Failed to remove data consumer subchannel");
+
+        sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [5, 10]);
+
+        data_consumer
+            .remove_subchannel(5)
+            .await
+            .expect("Failed to remove data consumer subchannel");
+
+        sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [10]);
+
+        data_consumer
+            .add_subchannel(5)
+            .await
+            .expect("Failed to add data consumer subchannel");
+
+        sorted_subchannels = data_consumer.subchannels();
+        sorted_subchannels.sort();
+
+        assert_eq!(sorted_subchannels, [5, 10]);
+
+        data_consumer
+            .set_subchannels([].to_vec())
+            .await
+            .expect("Failed to set data consumer subchannels");
+
+        assert_eq!(data_consumer.subchannels(), []);
+    });
+}
+
+#[test]
 fn consume_data_on_direct_transport_succeeds() {
     future::block_on(async move {
         let (_worker, router, _transport1, data_producer) = init().await;

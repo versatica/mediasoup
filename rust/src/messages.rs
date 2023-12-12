@@ -3260,6 +3260,106 @@ impl Request for DataConsumerSetSubchannelsRequest {
     }
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct DataConsumerAddSubchannelRequest {
+    pub(crate) subchannel: u16,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct DataConsumerAddSubchannelResponse {
+    pub(crate) subchannels: Vec<u16>,
+}
+
+impl Request for DataConsumerAddSubchannelRequest {
+    const METHOD: request::Method = request::Method::DataconsumerAddSubchannel;
+    type HandlerId = DataConsumerId;
+    type Response = DataConsumerAddSubchannelResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = data_consumer::AddSubchannelRequest::create(&mut builder, self.subchannel);
+        let request_body =
+            request::Body::create_data_consumer_add_subchannel_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::BodyRef<'_>>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::BodyRef::DataConsumerAddSubchannelResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        let data = data_consumer::AddSubchannelResponse::try_from(data)?;
+
+        Ok(DataConsumerAddSubchannelResponse {
+            subchannels: data.subchannels,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct DataConsumerRemoveSubchannelRequest {
+    pub(crate) subchannel: u16,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct DataConsumerRemoveSubchannelResponse {
+    pub(crate) subchannels: Vec<u16>,
+}
+
+impl Request for DataConsumerRemoveSubchannelRequest {
+    const METHOD: request::Method = request::Method::DataconsumerRemoveSubchannel;
+    type HandlerId = DataConsumerId;
+    type Response = DataConsumerRemoveSubchannelResponse;
+
+    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let data = data_consumer::RemoveSubchannelRequest::create(&mut builder, self.subchannel);
+        let request_body =
+            request::Body::create_data_consumer_remove_subchannel_request(&mut builder, data);
+
+        let request = request::Request::create(
+            &mut builder,
+            id,
+            Self::METHOD,
+            handler_id.to_string(),
+            Some(request_body),
+        );
+        let message_body = message::Body::create_request(&mut builder, request);
+        let message = message::Message::create(&mut builder, message_body);
+
+        builder.finish(message, None).to_vec()
+    }
+
+    fn convert_response(
+        response: Option<response::BodyRef<'_>>,
+    ) -> Result<Self::Response, Box<dyn Error>> {
+        let Some(response::BodyRef::DataConsumerRemoveSubchannelResponse(data)) = response else {
+            panic!("Wrong message from worker: {response:?}");
+        };
+
+        let data = data_consumer::RemoveSubchannelResponse::try_from(data)?;
+
+        Ok(DataConsumerRemoveSubchannelResponse {
+            subchannels: data.subchannels,
+        })
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct RtpObserverCloseRequest {
     pub(crate) rtp_observer_id: RtpObserverId,
