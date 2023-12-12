@@ -4,6 +4,7 @@
 ### NEXT
 
 * liburing: avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
+* libsrtp: use our own fork ([PR #1260](https://github.com/versatica/mediasoup/pull/1260)).
 
 
 ### 3.13.10
