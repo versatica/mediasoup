@@ -6,7 +6,7 @@
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
-#include <absl/container/btree_set.h>
+#include <absl/container/flat_hash_set.h>
 #include <string>
 
 namespace RTC
@@ -126,7 +126,7 @@ namespace RTC
 		RTC::SctpStreamParameters sctpStreamParameters;
 		std::string label;
 		std::string protocol;
-		absl::btree_set<uint16_t> subchannels;
+		absl::flat_hash_set<uint16_t> subchannels;
 		bool transportConnected{ false };
 		bool sctpAssociationConnected{ false };
 		bool paused{ false };
