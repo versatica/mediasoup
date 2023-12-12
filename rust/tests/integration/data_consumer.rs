@@ -320,7 +320,7 @@ fn get_stats_succeeds() {
 #[test]
 fn set_subchannels() {
     future::block_on(async move {
-        let (_worker, router, transport1, data_producer) = init().await;
+        let (_worker, _router, transport1, data_producer) = init().await;
 
         let data_consumer = transport1
             .consume_data({
@@ -335,7 +335,7 @@ fn set_subchannels() {
             .expect("Failed to consume data");
 
         data_consumer
-            .set_subchannels([ 999, 999, 998, 65536 ].to_vec())
+            .set_subchannels([ 999, 999, 998, 0 ].to_vec())
             .await
             .expect("Failed to set data consumer subchannels");
 
