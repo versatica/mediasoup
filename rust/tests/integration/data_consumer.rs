@@ -327,12 +327,10 @@ fn set_subchannels() {
         let (_worker, _router, transport1, data_producer) = init().await;
 
         let data_consumer = transport1
-            .consume_data({
-                DataConsumerOptions::new_sctp_unordered_with_life_time(
-                    data_producer.id(),
-                    4000,
-                );
-            })
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_life_time(
+                data_producer.id(),
+                4000,
+            ))
             .await
             .expect("Failed to consume data");
 
