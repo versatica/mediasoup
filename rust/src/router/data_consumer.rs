@@ -381,6 +381,7 @@ impl fmt::Debug for RegularDataConsumer {
             .field("data_producer_id", &self.inner.data_producer_id)
             .field("paused", &self.inner.paused)
             .field("data_producer_paused", &self.inner.data_producer_paused)
+            .field("subchannels", &self.inner.subchannels)
             .field("transport", &self.inner.transport)
             .field("closed", &self.inner.closed)
             .finish()
