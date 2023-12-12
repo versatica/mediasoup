@@ -47,6 +47,22 @@ table SetSubchannelsResponse {
     subchannels: [uint16] (required);
 }
 
+table AddSubchannelRequest {
+    subchannel: uint16;
+}
+
+table AddSubchannelResponse {
+    subchannels: [uint16] (required);
+}
+
+table RemoveSubchannelRequest {
+    subchannel: uint16;
+}
+
+table RemoveSubchannelResponse {
+    subchannels: [uint16] (required);
+}
+
 // Notifications from Worker.
 
 table BufferedAmountLowNotification {

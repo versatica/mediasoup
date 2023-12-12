@@ -339,6 +339,54 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::Method::DATACONSUMER_ADD_SUBCHANNEL:
+			{
+				const auto* body = request->data->body_as<FBS::DataConsumer::AddSubchannelRequest>();
+
+				this->subchannels.insert(body->subchannel());
+
+				std::vector<uint16_t> subchannels;
+
+				subchannels.reserve(this->subchannels.size());
+
+				for (auto subchannel : this->subchannels)
+				{
+					subchannels.emplace_back(subchannel);
+				}
+
+				// Create response.
+				auto responseOffset = FBS::DataConsumer::CreateAddSubchannelResponseDirect(
+				  request->GetBufferBuilder(), std::addressof(subchannels));
+
+				request->Accept(FBS::Response::Body::DataConsumer_AddSubchannelResponse, responseOffset);
+
+				break;
+			}
+
+			case Channel::ChannelRequest::Method::DATACONSUMER_REMOVE_SUBCHANNEL:
+			{
+				const auto* body = request->data->body_as<FBS::DataConsumer::RemoveSubchannelRequest>();
+
+				this->subchannels.erase(body->subchannel());
+
+				std::vector<uint16_t> subchannels;
+
+				subchannels.reserve(this->subchannels.size());
+
+				for (auto subchannel : this->subchannels)
+				{
+					subchannels.emplace_back(subchannel);
+				}
+
+				// Create response.
+				auto responseOffset = FBS::DataConsumer::CreateRemoveSubchannelResponseDirect(
+				  request->GetBufferBuilder(), std::addressof(subchannels));
+
+				request->Accept(FBS::Response::Body::DataConsumer_RemoveSubchannelResponse, responseOffset);
+
+				break;
+			}
+
 			default:
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->methodCStr);

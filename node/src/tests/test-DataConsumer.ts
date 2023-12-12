@@ -137,6 +137,30 @@ test('dataConsumer.setSubchannels() succeeds', async () =>
 	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 0, 998, 999 ]);
 }, 2000);
 
+test('dataConsumer.addSubchannel() and .removeSubchannel() succeed', async () =>
+{
+	await dataConsumer1.setSubchannels([ ]);
+	expect(dataConsumer1.subchannels).toEqual([ ]);
+
+	await dataConsumer1.addSubchannel(5);
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 5 ]);
+
+	await dataConsumer1.addSubchannel(10);
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 5, 10 ]);
+
+	await dataConsumer1.addSubchannel(5);
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 5, 10 ]);
+
+	await dataConsumer1.removeSubchannel(666);
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 5, 10 ]);
+
+	await dataConsumer1.removeSubchannel(5);
+	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 10 ]);
+
+	await dataConsumer1.setSubchannels([ ]);
+	expect(dataConsumer1.subchannels).toEqual([ ]);
+}, 2000);
+
 test('transport.consumeData() on a DirectTransport succeeds', async () =>
 {
 	const onObserverNewDataConsumer = jest.fn();

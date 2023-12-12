@@ -586,6 +586,61 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#subchannels = utils.parseVector(data, 'subchannels');
 	}
 
+	/**
+	 * Add a subchannel.
+	 */
+	async addSubchannel(subchannel: number): Promise<void>
+	{
+		logger.debug('addSubchannel()');
+
+		/* Build Request. */
+		const requestOffset =
+			FbsDataConsumer.AddSubchannelRequest.createAddSubchannelRequest(
+				this.#channel.bufferBuilder, subchannel);
+
+		const response = await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_ADD_SUBCHANNEL,
+			FbsRequest.Body.DataConsumer_AddSubchannelRequest,
+			requestOffset,
+			this.#internal.dataConsumerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDataConsumer.AddSubchannelResponse();
+
+		response.body(data);
+
+		// Update subchannels.
+		this.#subchannels = utils.parseVector(data, 'subchannels');
+	}
+
+	/**
+	 * Remove a subchannel.
+	 */
+	async removeSubchannel(subchannel: number): Promise<void>
+	{
+		logger.debug('removeSubchannel()');
+
+		/* Build Request. */
+		const requestOffset = FbsDataConsumer.RemoveSubchannelRequest.
+			createRemoveSubchannelRequest(this.#channel.bufferBuilder, subchannel);
+
+		const response = await this.#channel.request(
+			FbsRequest.Method.DATACONSUMER_REMOVE_SUBCHANNEL,
+			FbsRequest.Body.DataConsumer_RemoveSubchannelRequest,
+			requestOffset,
+			this.#internal.dataConsumerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsDataConsumer.RemoveSubchannelResponse();
+
+		response.body(data);
+
+		// Update subchannels.
+		this.#subchannels = utils.parseVector(data, 'subchannels');
+	}
+
 	private handleWorkerNotifications(): void
 	{
 		this.#channel.on(this.#internal.dataConsumerId, (event: Event, data?: Notification) =>

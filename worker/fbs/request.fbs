@@ -72,6 +72,8 @@ enum Method: uint8 {
     DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
     DATACONSUMER_SEND,
     DATACONSUMER_SET_SUBCHANNELS,
+    DATACONSUMER_ADD_SUBCHANNEL,
+    DATACONSUMER_REMOVE_SUBCHANNEL,
     RTPOBSERVER_PAUSE,
     RTPOBSERVER_RESUME,
     RTPOBSERVER_ADD_PRODUCER,
@@ -114,6 +116,8 @@ union Body {
     DataConsumer_SetBufferedAmountLowThresholdRequest: FBS.DataConsumer.SetBufferedAmountLowThresholdRequest,
     DataConsumer_SendRequest: FBS.DataConsumer.SendRequest,
     DataConsumer_SetSubchannelsRequest: FBS.DataConsumer.SetSubchannelsRequest,
+    DataConsumer_AddSubchannelRequest: FBS.DataConsumer.AddSubchannelRequest,
+    DataConsumer_RemoveSubchannelRequest: FBS.DataConsumer.RemoveSubchannelRequest,
     RtpObserver_AddProducerRequest: FBS.RtpObserver.AddProducerRequest,
     RtpObserver_RemoveProducerRequest: FBS.RtpObserver.RemoveProducerRequest,
 }

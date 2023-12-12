@@ -5,6 +5,7 @@
 
 * liburing: avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
 * libsrtp: use our own fork ([PR #1260](https://github.com/versatica/mediasoup/pull/1260)).
+* `DataConsumer`: Add `addSubchannel()` and `removeSubchannel()` methods ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 
 ### 3.13.10
