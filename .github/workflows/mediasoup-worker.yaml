@@ -70,7 +70,7 @@ jobs:
 
       # We need to install npm deps of worker/scripts/package.json.
       - name: npm ci --prefix worker/scripts
-        run: npm ci --prefix worker/scripts
+        run: npm ci --prefix worker/scripts --foreground-scripts
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
 
