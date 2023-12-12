@@ -71,7 +71,7 @@ test('transport.consumeData() succeeds', async () =>
 	expect(dataConsumer1.label).toBe('foo');
 	expect(dataConsumer1.protocol).toBe('bar');
 	expect(dataConsumer1.paused).toBe(false);
-	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 0, 1, 2, 100, 65535 ]);
+	expect(dataConsumer1.subchannels).toEqual([ 0, 1, 2, 100, 65535 ]);
 	expect(dataConsumer1.appData).toEqual({ baz: 'LOL' });
 
 	const dump = await router.dump();
@@ -132,9 +132,17 @@ test('dataConsumer.getStats() succeeds', async () =>
 
 test('dataConsumer.setSubchannels() succeeds', async () =>
 {
-	await dataConsumer1.setSubchannels([ 999, 999, 998, 65536 ]);
+	const expectedSubchannels = [ 0, 998, 999 ];
 
-	expect(dataConsumer1.subchannels.sort((a, b) => a - b)).toEqual([ 0, 998, 999 ]);
+	const promise = dataConsumer1.setSubchannels([ 999, 999, 998, 65536 ]);
+
+	// Before even subchannels are updated in worker side, its value in Node must
+	// already be updated.
+	expect(dataConsumer1.subchannels).toEqual(expectedSubchannels);
+
+	// And also once the promise resolves.
+	await promise;
+	expect(dataConsumer1.subchannels).toEqual(expectedSubchannels);
 }, 2000);
 
 test('transport.consumeData() on a DirectTransport succeeds', async () =>

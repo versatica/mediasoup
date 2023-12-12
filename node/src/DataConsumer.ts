@@ -565,6 +565,18 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	{
 		logger.debug('setSubchannels()');
 
+		// Optimistic subchannels update. We do this to make the |subchannels|
+		// getter be immediately updated with given values. Later it will be
+		// updated again with the response from the worker.
+		const subchannelsSet = new Set<number>();
+
+		for (const subchannel of subchannels)
+		{
+			subchannelsSet.add(Math.abs(subchannel % 65536));
+		}
+
+		this.#subchannels = Array.from(subchannelsSet).sort();
+
 		/* Build Request. */
 		const requestOffset = new FbsDataConsumer.SetSubchannelsRequestT(
 			subchannels

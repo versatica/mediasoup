@@ -4,6 +4,7 @@
 ### NEXT
 
 * liburing: avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
+* Make subchannels be ordered ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 
 ### 3.13.10

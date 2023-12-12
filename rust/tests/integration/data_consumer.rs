@@ -153,11 +153,7 @@ fn consume_data_succeeds() {
         }
         assert_eq!(data_consumer.label().as_str(), "foo");
         assert_eq!(data_consumer.protocol().as_str(), "bar");
-
-        let mut sorted_subchannels = data_consumer.subchannels();
-        sorted_subchannels.sort();
-
-        assert_eq!(sorted_subchannels, [0, 1, 2, 100, 65535]);
+        assert_eq!(data_consumer.subchannels(), [0, 1, 2, 100, 65535]);
         assert_eq!(
             data_consumer
                 .app_data()
