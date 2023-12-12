@@ -151,8 +151,17 @@ void DepLibUring::StopPollingCQEs()
 	DepLibUring::liburing->StopPollingCQEs();
 }
 
+uint8_t* DepLibUring::GetSendBuffer()
+{
+	MS_TRACE();
+
+	MS_ASSERT(DepLibUring::liburing, "DepLibUring::liburing is not set");
+
+	return DepLibUring::liburing->GetSendBuffer();
+}
+
 bool DepLibUring::PrepareSend(
-  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
+  int sockfd, const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -162,7 +171,7 @@ bool DepLibUring::PrepareSend(
 }
 
 bool DepLibUring::PrepareWrite(
-  int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb)
+  int sockfd, const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -246,6 +255,7 @@ DepLibUring::LibUring::LibUring()
 	// Initialize available UserData entries.
 	for (size_t i{ 0 }; i < DepLibUring::QueueDepth; ++i)
 	{
+		this->userDatas[i].store = this->sendBuffers[i];
 		this->availableUserDataEntries.push(i);
 	}
 }
@@ -319,8 +329,24 @@ void DepLibUring::LibUring::StopPollingCQEs()
 	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseFd));
 }
 
+uint8_t* DepLibUring::LibUring::GetSendBuffer()
+{
+	MS_TRACE();
+
+	if (this->availableUserDataEntries.empty())
+	{
+		MS_DEBUG_DEV("no user data entry available");
+
+		return nullptr;
+	}
+
+	auto idx = this->availableUserDataEntries.front();
+
+	return this->userDatas[idx].store;
+}
+
 bool DepLibUring::LibUring::PrepareSend(
-  int sockfd, const void* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
+  int sockfd, const uint8_t* data, size_t len, const struct sockaddr* addr, onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -328,7 +354,7 @@ bool DepLibUring::LibUring::PrepareSend(
 
 	if (!userData)
 	{
-		MS_WARN_DEV("no user data entry available");
+		MS_DEBUG_DEV("no user data entry available");
 
 		this->userDataMissCount++;
 
@@ -339,15 +365,24 @@ bool DepLibUring::LibUring::PrepareSend(
 
 	if (!sqe)
 	{
-		MS_WARN_DEV("no sqe available");
+		MS_DEBUG_DEV("no sqe available");
 
 		this->sqeMissCount++;
 
 		return false;
 	}
 
-	std::memcpy(userData->store, data, len);
 	userData->cb = cb;
+
+	// The send data buffer belongs to us, no need to memcpy.
+	if (this->IsDataInSendBuffers(data))
+	{
+		MS_ASSERT(data == userData->store, "send buffer does not match userData store");
+	}
+	else
+	{
+		std::memcpy(userData->store, data, len);
+	}
 
 	io_uring_sqe_set_data(sqe, userData);
 
@@ -370,7 +405,7 @@ bool DepLibUring::LibUring::PrepareSend(
 }
 
 bool DepLibUring::LibUring::PrepareWrite(
-  int sockfd, const void* data1, size_t len1, const void* data2, size_t len2, onSendCallback* cb)
+  int sockfd, const uint8_t* data1, size_t len1, const uint8_t* data2, size_t len2, onSendCallback* cb)
 {
 	MS_TRACE();
 
@@ -378,7 +413,7 @@ bool DepLibUring::LibUring::PrepareWrite(
 
 	if (!userData)
 	{
-		MS_WARN_DEV("no user data entry available");
+		MS_DEBUG_DEV("no user data entry available");
 
 		this->userDataMissCount++;
 
@@ -389,19 +424,43 @@ bool DepLibUring::LibUring::PrepareWrite(
 
 	if (!sqe)
 	{
-		MS_WARN_DEV("no sqe available");
+		MS_DEBUG_DEV("no sqe available");
 
 		this->sqeMissCount++;
 
 		return false;
 	}
 
-	std::memcpy(userData->store, data1, len1);
-	std::memcpy(userData->store + len1, data2, len2);
+	// The send data buffer belongs to us, no need to memcpy.
+	// NOTE: data1 contains the TCP framing buffer and data2 the actual payload.
+	if (this->IsDataInSendBuffers(data2))
+	{
+		MS_ASSERT(data2 == userData->store, "send buffer does not match userData store");
+
+		// Always memcpy the frame len as it resides in the stack memory.
+		std::memcpy(userData->frameLen, data1, len1);
+
+		userData->iov[0].iov_base = userData->frameLen;
+		userData->iov[0].iov_len  = len1;
+		userData->iov[1].iov_base = userData->store;
+		userData->iov[1].iov_len  = len2;
+	}
+	else
+	{
+		std::memcpy(userData->store, data1, len1);
+		std::memcpy(userData->store + len1, data2, len2);
+
+		userData->iov[0].iov_base = userData->store;
+		userData->iov[0].iov_len  = len1;
+		userData->iov[1].iov_base = userData->store + len1;
+		userData->iov[1].iov_len  = len2;
+	}
+
 	userData->cb = cb;
 
 	io_uring_sqe_set_data(sqe, userData);
-	io_uring_prep_write(sqe, sockfd, userData->store, len1 + len2, 0);
+
+	io_uring_prep_writev(sqe, sockfd, userData->iov, 2, 0);
 
 	this->sqeProcessCount++;
 
@@ -433,8 +492,6 @@ DepLibUring::UserData* DepLibUring::LibUring::GetUserData()
 
 	if (this->availableUserDataEntries.empty())
 	{
-		MS_WARN_DEV("no user data entry available");
-
 		return nullptr;
 	}
 
@@ -442,7 +499,7 @@ DepLibUring::UserData* DepLibUring::LibUring::GetUserData()
 
 	this->availableUserDataEntries.pop();
 
-	auto* userData = std::addressof(this->userDataBuffer[idx]);
+	auto* userData = std::addressof(this->userDatas[idx]);
 	userData->idx  = idx;
 
 	return userData;
