@@ -3,7 +3,8 @@
 
 ### NEXT
 
-* liburing: avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
+* liburing: >void extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
+* libsrtp: Use our own fork ([PR #1260](https://github.com/versatica/mediasoup/pull/1260)).
 * Make subchannels be ordered ([PR #1261](https://github.com/versatica/mediasoup/pull/1261)).
 
 
