@@ -5,7 +5,7 @@
 
 * liburing: avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).
 * libsrtp: use our own fork ([PR #1260](https://github.com/versatica/mediasoup/pull/1260)).
-* Fix Rust `DataConsumer` in tests ([PR #1262](https://github.com/versatica/mediasoup/pull/1262)).
+* Fix Rust `DataConsumer` ([PR #1262](https://github.com/versatica/mediasoup/pull/1262)).
 
 
 ### 3.13.10
