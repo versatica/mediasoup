@@ -4,10 +4,10 @@ mod tests;
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
 use crate::messages::{
-    DataConsumerCloseRequest, DataConsumerDumpRequest, DataConsumerGetBufferedAmountRequest,
-    DataConsumerGetStatsRequest, DataConsumerPauseRequest, DataConsumerResumeRequest,
-    DataConsumerSendRequest, DataConsumerSetBufferedAmountLowThresholdRequest,
-    DataConsumerSetSubchannelsRequest,
+    DataConsumerAddSubchannelRequest, DataConsumerCloseRequest, DataConsumerDumpRequest,
+    DataConsumerGetBufferedAmountRequest, DataConsumerGetStatsRequest, DataConsumerPauseRequest,
+    DataConsumerRemoveSubchannelRequest, DataConsumerResumeRequest, DataConsumerSendRequest,
+    DataConsumerSetBufferedAmountLowThresholdRequest, DataConsumerSetSubchannelsRequest,
 };
 use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
@@ -796,6 +796,35 @@ impl DataConsumer {
             .inner()
             .channel
             .request(self.id(), DataConsumerSetSubchannelsRequest { subchannels })
+            .await?;
+
+        *self.inner().subchannels.lock() = response.subchannels;
+
+        Ok(())
+    }
+
+    /// Adds a subchannel to the worker DataConsumer.
+    pub async fn add_subchannel(&self, subchannel: u16) -> Result<(), RequestError> {
+        let response = self
+            .inner()
+            .channel
+            .request(self.id(), DataConsumerAddSubchannelRequest { subchannel })
+            .await?;
+
+        *self.inner().subchannels.lock() = response.subchannels;
+
+        Ok(())
+    }
+
+    /// Removes a subchannel to the worker DataConsumer.
+    pub async fn remove_subchannel(&self, subchannel: u16) -> Result<(), RequestError> {
+        let response = self
+            .inner()
+            .channel
+            .request(
+                self.id(),
+                DataConsumerRemoveSubchannelRequest { subchannel },
+            )
             .await?;
 
         *self.inner().subchannels.lock() = response.subchannels;
