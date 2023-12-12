@@ -430,7 +430,7 @@ fn send_with_subchannels_succeeds() {
             }
         };
 
-        let direct_data_consumer_2 = match &data_consumer_2 {
+        let _ = match &data_consumer_2 {
             DataConsumer::Direct(direct_data_consumer) => direct_data_consumer,
             _ => {
                 panic!("Expected direct data consumer")
@@ -514,7 +514,7 @@ fn send_with_subchannels_succeeds() {
         let mut subchannels = data_consumer_2.subchannels();
         subchannels.push(1);
 
-        direct_data_consumer_2
+        data_consumer_2
             .set_subchannels(subchannels)
             .await
             .expect("Failed to set subchannels");
