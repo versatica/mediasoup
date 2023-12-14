@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* worker: Disable RtcLogger usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).
+
+
 ### 3.13.11
 
 * liburing: Avoid extra memcpy on RTP ([PR #1258](https://github.com/versatica/mediasoup/pull/1258)).

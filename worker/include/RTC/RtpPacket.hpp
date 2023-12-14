@@ -5,7 +5,9 @@
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
+#ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
+#endif
 #include <flatbuffers/flatbuffers.h>
 #include <absl/container/flat_hash_map.h>
 #include <array>
@@ -649,8 +651,10 @@ namespace RTC
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
+#ifdef MS_RTC_LOGGER_RTP
 	public:
 		RtcLogger::RtpPacket logger;
+#endif
 
 	private:
 		void ParseExtensions();

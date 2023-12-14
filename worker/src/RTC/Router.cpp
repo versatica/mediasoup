@@ -652,7 +652,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
+#ifdef MS_RTC_LOGGER_RTP
 		packet->logger.routerId = this->id;
+#endif
 
 		auto& consumers = this->mapProducerConsumers.at(producer);
 
