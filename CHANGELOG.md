@@ -3,7 +3,8 @@
 
 ### NEXT
 
-* worker: Disable RtcLogger usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).
+* worker: Disable `RtcLogger` usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).
+* npm installation: Don't require Python if valid worker prebuilt binary is fetched ([PR #1265](https://github.com/versatica/mediasoup/pull/1265)).
 
 
 ### 3.13.11

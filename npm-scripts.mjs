@@ -47,13 +47,6 @@ async function run()
 {
 	switch (task)
 	{
-		case 'preinstall':
-		{
-			installInvoke();
-
-			break;
-		}
-
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
 		// `prepare` script:
 		//
@@ -167,6 +160,8 @@ async function run()
 
 		case 'format:worker':
 		{
+			installInvoke();
+
 			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 
 			break;
@@ -351,12 +346,16 @@ function buildWorker()
 {
 	logInfo('buildWorker()');
 
+	installInvoke();
+
 	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
 }
 
 function cleanWorkerArtifacts()
 {
 	logInfo('cleanWorkerArtifacts()');
+
+	installInvoke();
 
 	// Clean build artifacts except `mediasoup-worker`.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-build`);
@@ -377,12 +376,16 @@ function lintWorker()
 {
 	logInfo('lintWorker()');
 
+	installInvoke();
+
 	executeCmd(`"${PYTHON}" -m invoke -r worker lint`);
 }
 
 function flatcNode()
 {
 	logInfo('flatcNode()');
+
+	installInvoke();
 
 	// Build flatc if needed.
 	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
@@ -410,6 +413,8 @@ function flatcWorker()
 {
 	logInfo('flatcWorker()');
 
+	installInvoke();
+
 	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 }
 
@@ -430,6 +435,8 @@ function testNode()
 function testWorker()
 {
 	logInfo('testWorker()');
+
+	installInvoke();
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
@@ -575,6 +582,8 @@ async function downloadPrebuiltWorker()
 				{
 					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
 
+					// This will always fail on purpose, but if status code is 41 then
+					// it's good.
 					execSync(
 						`"${resolvedBinPath}"`,
 						{
@@ -583,15 +592,15 @@ async function downloadPrebuiltWorker()
 							env   : {}
 						}
 					);
-
-					logInfo(
-						'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
-					);
 				}
 				catch (error)
 				{
 					if (error.status === 41)
 					{
+						logInfo(
+							'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
+						);
+
 						resolve(true);
 					}
 					else
