@@ -52,7 +52,7 @@ export type ProducerOptions<ProducerAppData extends AppData = AppData> =
 /**
  * Valid types for 'trace' event.
  */
-export type ProducerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
+export type ProducerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir' | 'sr';
 
 /**
  * 'trace' event data.
@@ -670,6 +670,8 @@ function producerTraceEventTypeToFbs(eventType: ProducerTraceEventType)
 			return FbsProducer.TraceEventType.PLI;
 		case 'rtp':
 			return FbsProducer.TraceEventType.RTP;
+		case 'sr':
+			return FbsProducer.TraceEventType.SR;
 		default:
 			throw new TypeError(`invalid ProducerTraceEventType: ${eventType}`);
 	}
@@ -690,6 +692,8 @@ function producerTraceEventTypeFromFbs(eventType: FbsProducer.TraceEventType)
 			return 'pli';
 		case FbsProducer.TraceEventType.RTP:
 			return 'rtp';
+		case FbsProducer.TraceEventType.SR:
+			return 'sr';
 	}
 }
 

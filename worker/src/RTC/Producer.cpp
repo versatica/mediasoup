@@ -488,6 +488,12 @@ namespace RTC
 
 							break;
 						}
+						case FBS::Producer::TraceEventType::SR:
+						{
+							newTraceEventTypes.sr = true;
+
+							break;
+						}
 					}
 				}
 
@@ -705,6 +711,8 @@ namespace RTC
 			rtpStream->ReceiveRtcpSenderReport(report);
 
 			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
+
+			EmitTraceEventSRType(report);
 
 			return;
 		}
@@ -1572,6 +1580,35 @@ namespace RTC
 		  FBS::Producer::TraceEventType::NACK,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
+
+		EmitTraceEvent(notification);
+	}
+
+	inline void Producer::EmitTraceEventSRType(RTC::RTCP::SenderReport* report) const
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.sr)
+		{
+			return;
+		}
+
+		auto traceInfo = FBS::Producer::CreateSRTraceInfo(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  report->GetSsrc(),
+		  report->GetNtpSec(),
+		  report->GetNtpFrac(),
+		  report->GetRtpTs(),
+		  report->GetPacketCount(),
+		  report->GetOctetCount());
+
+		auto notification = FBS::Producer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Producer::TraceEventType::SR,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Common::TraceDirection::DIRECTION_IN,
+		  FBS::Producer::TraceInfo::SRTraceInfo,
+		  traceInfo.Union());
 
 		EmitTraceEvent(notification);
 	}
