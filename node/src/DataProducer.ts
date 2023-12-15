@@ -475,11 +475,19 @@ export function dataProducerTypeToFbs(type: DataProducerType): FbsDataProducer.T
 	switch (type)
 	{
 		case 'sctp':
+		{
 			return FbsDataProducer.Type.SCTP;
+		}
+
 		case 'direct':
+		{
 			return FbsDataProducer.Type.DIRECT;
+		}
+
 		default:
+		{
 			throw new TypeError('invalid DataConsumerType: ${type}');
+		}
 	}
 }
 
@@ -488,9 +496,14 @@ export function dataProducerTypeFromFbs(type: FbsDataProducer.Type): DataProduce
 	switch (type)
 	{
 		case FbsDataProducer.Type.SCTP:
+		{
 			return 'sctp';
+		}
+
 		case FbsDataProducer.Type.DIRECT:
+		{
 			return 'direct';
+		}
 	}
 }
 

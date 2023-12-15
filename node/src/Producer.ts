@@ -630,13 +630,24 @@ export function producerTypeFromFbs(type: FbsRtpParameters.Type): ProducerType
 	switch (type)
 	{
 		case FbsRtpParameters.Type.SIMPLE:
+		{
 			return 'simple';
+		}
+
 		case FbsRtpParameters.Type.SIMULCAST:
+		{
 			return 'simulcast';
+		}
+
 		case FbsRtpParameters.Type.SVC:
+		{
 			return 'svc';
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid FbsRtpParameters.Type: ${type}`);
+		}
 	}
 }
 
@@ -645,13 +656,19 @@ export function producerTypeToFbs(type: ProducerType): FbsRtpParameters.Type
 	switch (type)
 	{
 		case 'simple':
+		{
 			return FbsRtpParameters.Type.SIMPLE;
+		}
 
 		case 'simulcast':
+		{
 			return FbsRtpParameters.Type.SIMULCAST;
+		}
 
 		case 'svc':
+		{
 			return FbsRtpParameters.Type.SVC;
+		}
 	}
 }
 
@@ -661,17 +678,34 @@ function producerTraceEventTypeToFbs(eventType: ProducerTraceEventType)
 	switch (eventType)
 	{
 		case 'keyframe':
+		{
 			return FbsProducer.TraceEventType.KEYFRAME;
+		}
+
 		case 'fir':
+		{
 			return FbsProducer.TraceEventType.FIR;
+		}
+
 		case 'nack':
+		{
 			return FbsProducer.TraceEventType.NACK;
+		}
+
 		case 'pli':
+		{
 			return FbsProducer.TraceEventType.PLI;
+		}
+
 		case 'rtp':
+		{
 			return FbsProducer.TraceEventType.RTP;
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid ProducerTraceEventType: ${eventType}`);
+		}
 	}
 }
 
@@ -681,15 +715,29 @@ function producerTraceEventTypeFromFbs(eventType: FbsProducer.TraceEventType)
 	switch (eventType)
 	{
 		case FbsProducer.TraceEventType.KEYFRAME:
+		{
 			return 'keyframe';
+		}
+
 		case FbsProducer.TraceEventType.FIR:
+		{
 			return 'fir';
+		}
+
 		case FbsProducer.TraceEventType.NACK:
+		{
 			return 'nack';
+		}
+
 		case FbsProducer.TraceEventType.PLI:
+		{
 			return 'pli';
+		}
+
 		case FbsProducer.TraceEventType.RTP:
+		{
 			return 'rtp';
+		}
 	}
 }
 

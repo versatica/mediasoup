@@ -999,17 +999,34 @@ function consumerTraceEventTypeToFbs(eventType: ConsumerTraceEventType)
 	switch (eventType)
 	{
 		case 'keyframe':
+		{
 			return FbsConsumer.TraceEventType.KEYFRAME;
+		}
+
 		case 'fir':
+		{
 			return FbsConsumer.TraceEventType.FIR;
+		}
+
 		case 'nack':
+		{
 			return FbsConsumer.TraceEventType.NACK;
+		}
+
 		case 'pli':
+		{
 			return FbsConsumer.TraceEventType.PLI;
+		}
+
 		case 'rtp':
+		{
 			return FbsConsumer.TraceEventType.RTP;
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid ConsumerTraceEventType: ${eventType}`);
+		}
 	}
 }
 
@@ -1019,17 +1036,34 @@ function consumerTraceEventTypeFromFbs(traceType: FbsConsumer.TraceEventType)
 	switch (traceType)
 	{
 		case FbsConsumer.TraceEventType.KEYFRAME:
+		{
 			return 'keyframe';
+		}
+
 		case FbsConsumer.TraceEventType.FIR:
+		{
 			return 'fir';
+		}
+
 		case FbsConsumer.TraceEventType.NACK:
+		{
 			return 'nack';
+		}
+
 		case FbsConsumer.TraceEventType.PLI:
+		{
 			return 'pli';
+		}
+
 		case FbsConsumer.TraceEventType.RTP:
+		{
 			return 'rtp';
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid FbsConsumer.TraceEventType: ${traceType}`);
+		}
 	}
 }
 
