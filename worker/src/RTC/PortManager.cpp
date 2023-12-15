@@ -217,6 +217,29 @@ namespace RTC
 			{
 				case Transport::UDP:
 				{
+#if defined(__linux__)
+					switch (family)
+					{
+						case AF_INET:
+						{
+							uint32_t s_addr = ntohl((reinterpret_cast<const struct sockaddr_in*>(&bindAddr))->sin_addr.s_addr);
+							if (s_addr >= 0xe0000000 && s_addr <= 0xefffffff) { // multicast address.
+								flags |= UV_UDP_REUSEADDR;
+							}
+							break;
+						}
+
+						case AF_INET6:
+						{
+							uint8_t _s6_addr = (reinterpret_cast<const struct sockaddr_in6*>(&bindAddr))->sin6_addr.s6_addr[0];
+							if (_s6_addr == 0xFF) { // multicast address.
+								flags |= UV_UDP_REUSEADDR;
+							}
+							break;
+						}
+					}
+#endif
+
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
@@ -472,6 +495,29 @@ namespace RTC
 		{
 			case Transport::UDP:
 			{
+#if defined(__linux__)
+				switch (family)
+				{
+					case AF_INET:
+					{
+						uint32_t s_addr = ntohl((reinterpret_cast<const struct sockaddr_in*>(&bindAddr))->sin_addr.s_addr);
+						if (s_addr >= 0xe0000000 && s_addr <= 0xefffffff) { // multicast address.
+							flags |= UV_UDP_REUSEADDR;
+						}
+						break;
+					}
+
+					case AF_INET6:
+					{
+						uint8_t _s6_addr = (reinterpret_cast<const struct sockaddr_in6*>(&bindAddr))->sin6_addr.s6_addr[0];
+						if (_s6_addr == 0xFF) { // multicast address.
+							flags |= UV_UDP_REUSEADDR;
+						}
+						break;
+					}
+				}
+#endif
+
 				err = uv_udp_bind(
 				  reinterpret_cast<uv_udp_t*>(uvHandle),
 				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
