@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-use mediasoup_sys::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport};
+use mediasoup_sys::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport, producer};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -1233,6 +1233,37 @@ impl BweTraceInfo {
             start_bitrate: info.start_bitrate,
             max_padding_bitrate: info.max_padding_bitrate,
             available_bitrate: info.available_bitrate,
+        }
+    }
+}
+
+/// BWE info in trace event.
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SRTraceInfo {
+    /// Stream SSRC
+    ssrc: u32,
+    /// NTP : most significant word
+    ntp_sec: u32,
+    /// NTP : least significant word
+    ntp_frac: u32,
+    /// RTP timestamp
+    rtp_ts: u32,
+    /// Sender packet count
+    packet_count: u32,
+    /// Sender octet count
+    octet_count: u32,
+}
+
+impl SRTraceInfo {
+    pub(crate) fn from_fbs(info: producer::SrTraceInfo) -> Self {
+        Self {
+            ssrc: info.ssrc,
+            ntp_sec: info.ntp_sec,
+            ntp_frac: info.ntp_frac,
+            rtp_ts: info.rtp_ts,
+            packet_count: info.packet_count,
+            octet_count: info.octet_count,
         }
     }
 }

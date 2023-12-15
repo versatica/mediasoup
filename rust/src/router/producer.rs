@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::consumer::{RtpStreamParams, RtxStreamParams};
-use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
+use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection, SRTraceInfo};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
@@ -394,6 +394,15 @@ pub enum ProducerTraceEventData {
         /// SSRC info.
         info: SsrcTraceInfo,
     },
+    /// RTCP Sender report.
+    Sr {
+        /// Event timestamp.
+        timestamp: u64,
+        /// Event direction.
+        direction: TraceEventDirection,
+        /// SSRC info.
+        info: SRTraceInfo,
+    }
 }
 
 impl ProducerTraceEventData {
@@ -447,6 +456,17 @@ impl ProducerTraceEventData {
                     SsrcTraceInfo { ssrc: info.ssrc }
                 },
             },
+            producer::TraceEventType::Sr => ProducerTraceEventData::Sr {
+                timestamp: data.timestamp,
+                direction: TraceEventDirection::from_fbs(data.direction),
+                info: {
+                    let Some(producer::TraceInfo::SrTraceInfo(info)) = data.info else {
+                        panic!("Wrong message from worker: {data:?}");
+                    };
+
+                    SRTraceInfo::from_fbs(*info)
+                },
+            },
         }
     }
 }
@@ -465,6 +485,8 @@ pub enum ProducerTraceEventType {
     Pli,
     /// RTCP FIR packet.
     Fir,
+    /// RTCP Sender report.
+    SR,
 }
 
 impl ProducerTraceEventType {
@@ -475,6 +497,7 @@ impl ProducerTraceEventType {
             ProducerTraceEventType::Nack => producer::TraceEventType::Nack,
             ProducerTraceEventType::Pli => producer::TraceEventType::Pli,
             ProducerTraceEventType::Fir => producer::TraceEventType::Fir,
+            ProducerTraceEventType::SR => producer::TraceEventType::Sr,
         }
     }
 
@@ -485,6 +508,7 @@ impl ProducerTraceEventType {
             producer::TraceEventType::Nack => ProducerTraceEventType::Nack,
             producer::TraceEventType::Pli => ProducerTraceEventType::Pli,
             producer::TraceEventType::Fir => ProducerTraceEventType::Fir,
+            producer::TraceEventType::Sr => ProducerTraceEventType::SR,
         }
     }
 }
