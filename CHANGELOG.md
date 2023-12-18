@@ -1,10 +1,11 @@
 # Changelog
 
 
-### NEXT
+### 3.13.12
 
 * worker: Disable `RtcLogger` usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).
 * npm installation: Don't require Python if valid worker prebuilt binary is fetched ([PR #1265](https://github.com/versatica/mediasoup/pull/1265)).
+* Update h264-profile-level-id NPM dependency to 1.1.0.
 
 
 ### 3.13.11
