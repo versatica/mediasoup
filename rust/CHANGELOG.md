@@ -3,6 +3,7 @@
 # NEXT
 
 * Update h264-profile-level-id dependency to 0.2.0.
+* Fix docs build.
 
 # 0.13.0
 
