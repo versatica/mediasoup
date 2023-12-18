@@ -903,7 +903,10 @@ impl DataConsumer {
     }
 
     /// Callback is called when the associated data producer is resumed.
-    pub fn on_data_producer_resume<F: Fn() + Send + Sync + 'static>(&self, callback: F) -> HandlerId {
+    pub fn on_data_producer_resume<F: Fn() + Send + Sync + 'static>(
+        &self,
+        callback: F,
+    ) -> HandlerId {
         self.inner()
             .handlers
             .data_producer_resume
