@@ -155,4 +155,39 @@ namespace Utils
 			}
 		}
 	}
+
+	bool IP::IsMulticast(const struct sockaddr_storage* addr, const int& family)
+	{
+		MS_TRACE();
+
+		switch (family)
+		{
+			case AF_INET:
+			{
+				uint32_t s_addr = ntohl((reinterpret_cast<const struct sockaddr_in*>(addr))->sin_addr.s_addr);
+				if (s_addr >= 0xe0000000 && s_addr <= 0xefffffff)
+				{
+					return true;
+				}
+				break;
+			}
+
+			case AF_INET6:
+			{
+				uint8_t _s6_addr = (reinterpret_cast<const struct sockaddr_in6*>(addr))->sin6_addr.s6_addr[0];
+				if (_s6_addr == 0xFF)
+				{
+					return true;
+				}
+				break;
+			}
+
+			default:
+			{
+				MS_THROW_TYPE_ERROR("invalid family");
+			}
+		}
+
+		return false;
+	}
 } // namespace Utils
