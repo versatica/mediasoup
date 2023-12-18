@@ -3,6 +3,8 @@
 # NEXT
 
 * Update h264-profile-level-id dependency to 0.2.0.
+* Fix docs build (PR #1271).
+* Rename `data_consumer::on_producer_resume` to `data_consumer::on_data_producer_resume` (PR #1271).
 
 # 0.13.0
 
