@@ -20,13 +20,13 @@ namespace RTC
 		};
 
 	public:
-		static uv_udp_t* BindUdp(std::string& ip)
+		static uv_udp_t* BindUdp(std::string& ip, bool enableMulticast = false)
 		{
-			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip));
+			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip, enableMulticast));
 		}
-		static uv_udp_t* BindUdp(std::string& ip, uint16_t port)
+		static uv_udp_t* BindUdp(std::string& ip, uint16_t port, bool enableMulticast = false)
 		{
-			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip, port));
+			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip, port, enableMulticast));
 		}
 		static uv_tcp_t* BindTcp(std::string& ip)
 		{
@@ -46,8 +46,8 @@ namespace RTC
 		}
 
 	private:
-		static uv_handle_t* Bind(Transport transport, std::string& ip);
-		static uv_handle_t* Bind(Transport transport, std::string& ip, uint16_t port);
+		static uv_handle_t* Bind(Transport transport, std::string& ip, bool enableMulticast = false);
+		static uv_handle_t* Bind(Transport transport, std::string& ip, uint16_t port, bool enableMulticast = false);
 		static void Unbind(Transport transport, std::string& ip, uint16_t port);
 		static std::vector<bool>& GetPorts(Transport transport, const std::string& ip);
 

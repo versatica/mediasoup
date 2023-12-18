@@ -316,6 +316,18 @@ test('router.createPlainTransport() with non bindable IP rejects with Error', as
 		.toThrow(Error);
 }, 2000);
 
+test('router.createPlainTransport() with enableMulticast succeeds', async () =>
+{
+	// Use default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
+	const transport1 = await router.createPlainTransport(
+		{
+			listenIp   : '127.0.0.1',
+			enableMulticast: true
+		});
+
+	expect(typeof transport1.id).toBe('string');
+}, 2000);
+
 test('plainTransport.getStats() succeeds', async () =>
 {
 	const data = await transport.getStats();

@@ -681,6 +681,7 @@ export class Router<RouterAppData extends AppData = AppData>
 			sctpSendBufferSize = 262144,
 			enableSrtp = false,
 			srtpCryptoSuite = 'AES_CM_128_HMAC_SHA1_80',
+			enableMulticast = false,
 			appData
 		}: PlainTransportOptions<PlainTransportAppData>
 	): Promise<PlainTransport<PlainTransportAppData>>
@@ -726,6 +727,11 @@ export class Router<RouterAppData extends AppData = AppData>
 			};
 		}
 
+		if (enableMulticast)
+		{
+			logger.debug('createPlainTransport() | enableMulticast');
+		}
+
 		const transportId = generateUUIDv4();
 
 		/* Build Request. */
@@ -765,7 +771,8 @@ export class Router<RouterAppData extends AppData = AppData>
 			rtcpMux,
 			comedia,
 			enableSrtp,
-			cryptoSuiteToFbs(srtpCryptoSuite)
+			cryptoSuiteToFbs(srtpCryptoSuite),
+			enableMulticast
 		);
 
 		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(

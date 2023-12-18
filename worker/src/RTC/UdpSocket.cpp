@@ -10,16 +10,16 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	UdpSocket::UdpSocket(Listener* listener, std::string& ip)
+	UdpSocket::UdpSocket(Listener* listener, std::string& ip, bool enableMulticast)
 	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip)), listener(listener)
+	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, enableMulticast)), listener(listener)
 	{
 		MS_TRACE();
 	}
 
-	UdpSocket::UdpSocket(Listener* listener, std::string& ip, uint16_t port)
+	UdpSocket::UdpSocket(Listener* listener, std::string& ip, uint16_t port, bool enableMulticast)
 	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, port)), listener(listener),
+	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, port, enableMulticast)), listener(listener),
 	    fixedPort(true)
 	{
 		MS_TRACE();

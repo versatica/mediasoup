@@ -73,6 +73,9 @@ pub struct PlainTransportOptions {
     /// The SRTP crypto suite to be used if enableSrtp is set.
     /// Default 'AesCm128HmacSha180'.
     pub srtp_crypto_suite: SrtpCryptoSuite,
+    /// Enable Multicast.
+    /// Default false.
+    pub enable_multicast: bool,
     /// Custom application data.
     pub app_data: AppData,
 }

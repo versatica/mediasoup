@@ -12,6 +12,7 @@ table PlainTransportOptions {
     comedia: bool;
     enable_srtp: bool;
     srtp_crypto_suite: FBS.SrtpParameters.SrtpCryptoSuite = null;
+    enable_multicast: bool;
 }
 
 table ConnectRequest {

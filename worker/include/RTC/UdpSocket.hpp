@@ -21,8 +21,8 @@ namespace RTC
 		};
 
 	public:
-		UdpSocket(Listener* listener, std::string& ip);
-		UdpSocket(Listener* listener, std::string& ip, uint16_t port);
+		UdpSocket(Listener* listener, std::string& ip, bool enableMulticast = false);
+		UdpSocket(Listener* listener, std::string& ip, uint16_t port, bool enableMulticast = false);
 		~UdpSocket() override;
 
 		/* Pure virtual methods inherited from ::UdpSocketHandle. */

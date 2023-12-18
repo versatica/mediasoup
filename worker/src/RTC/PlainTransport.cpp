@@ -155,16 +155,18 @@ namespace RTC
 			this->srtpKeyBase64 = Utils::String::Base64Encode(this->srtpKey);
 		}
 
+		this->multicast = options->enableMulticast();
+
 		try
 		{
 			// This may throw.
 			if (this->listenInfo.port != 0)
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.port);
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.port, this->multicast);
 			}
 			else
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip);
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->multicast);
 			}
 
 			if (this->listenInfo.sendBufferSize != 0)
@@ -185,11 +187,11 @@ namespace RTC
 				if (this->rtcpListenInfo.port != 0)
 				{
 					this->rtcpUdpSocket =
-					  new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port);
+					  new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port, this->multicast);
 				}
 				else
 				{
-					this->rtcpUdpSocket = new RTC::UdpSocket(this, this->rtcpListenInfo.ip);
+					this->rtcpUdpSocket = new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->multicast);
 				}
 
 				if (this->rtcpListenInfo.sendBufferSize != 0)

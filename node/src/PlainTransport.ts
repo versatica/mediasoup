@@ -109,6 +109,11 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	srtpCryptoSuite?: SrtpCryptoSuite;
 
 	/**
+	 * Enable Multicast. Default false.
+	 */
+	enableMulticast?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: PlainTransportAppData;

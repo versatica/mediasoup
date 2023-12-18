@@ -38,7 +38,7 @@ namespace RTC
 
 	/* Class methods. */
 
-	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip)
+	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, bool enableMulticast)
 	{
 		MS_TRACE();
 
@@ -218,9 +218,10 @@ namespace RTC
 				case Transport::UDP:
 				{
 #if defined(__linux__)
-					if (Utils::IP::IsMulticast(&bindAddr, family))
+					if (enableMulticast && Utils::IP::IsMulticast(&bindAddr, family))
 					{
 						flags |= UV_UDP_REUSEADDR;
+						MS_DEBUG_DEV("enabling UV_UDP_REUSEADDR");
 					}
 #endif
 
@@ -363,7 +364,7 @@ namespace RTC
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
 
-	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, uint16_t port)
+	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, uint16_t port, bool enableMulticast)
 	{
 		MS_TRACE();
 
@@ -480,9 +481,10 @@ namespace RTC
 			case Transport::UDP:
 			{
 #if defined(__linux__)
-				if (Utils::IP::IsMulticast(&bindAddr, family))
+				if (enableMulticast && Utils::IP::IsMulticast(&bindAddr, family))
 				{
 					flags |= UV_UDP_REUSEADDR;
+					MS_DEBUG_DEV("enabling UV_UDP_REUSEADDR");
 				}
 #endif
 
