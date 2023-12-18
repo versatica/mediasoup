@@ -31,16 +31,24 @@ export function cryptoSuiteFromFbs(binary: FbsSrtpParameters.SrtpCryptoSuite): S
 	switch (binary)
 	{
 		case FbsSrtpParameters.SrtpCryptoSuite.AEAD_AES_256_GCM:
+		{
 			return 'AEAD_AES_256_GCM';
+		}
 
 		case FbsSrtpParameters.SrtpCryptoSuite.AEAD_AES_128_GCM:
+		{
 			return 'AEAD_AES_128_GCM';
+		}
 
 		case FbsSrtpParameters.SrtpCryptoSuite.AES_CM_128_HMAC_SHA1_80:
+		{
 			return 'AES_CM_128_HMAC_SHA1_80';
+		}
 
 		case FbsSrtpParameters.SrtpCryptoSuite.AES_CM_128_HMAC_SHA1_32:
+		{
 			return 'AES_CM_128_HMAC_SHA1_32';
+		}
 	}
 }
 
@@ -50,19 +58,29 @@ export function cryptoSuiteToFbs(cryptoSuite: SrtpCryptoSuite)
 	switch (cryptoSuite)
 	{
 		case 'AEAD_AES_256_GCM':
+		{
 			return FbsSrtpParameters.SrtpCryptoSuite.AEAD_AES_256_GCM;
+		}
 
 		case 'AEAD_AES_128_GCM':
+		{
 			return FbsSrtpParameters.SrtpCryptoSuite.AEAD_AES_128_GCM;
+		}
 
 		case 'AES_CM_128_HMAC_SHA1_80':
+		{
 			return FbsSrtpParameters.SrtpCryptoSuite.AES_CM_128_HMAC_SHA1_80;
+		}
 
 		case 'AES_CM_128_HMAC_SHA1_32':
+		{
 			return FbsSrtpParameters.SrtpCryptoSuite.AES_CM_128_HMAC_SHA1_32;
+		}
 
 		default:
+		{
 			throw new TypeError(`invalid SrtpCryptoSuite: ${cryptoSuite}`);
+		}
 	}
 }
 

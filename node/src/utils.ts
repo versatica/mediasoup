@@ -57,13 +57,19 @@ export function getRtpParametersType(
 	switch (producerType)
 	{
 		case 'simple':
+		{
 			return FbsRtpParametersType.SIMPLE;
+		}
 
 		case 'simulcast':
+		{
 			return FbsRtpParametersType.SIMULCAST;
+		}
 
 		case 'svc':
+		{
 			return FbsRtpParametersType.SVC;
+		}
 	}
 }
 
