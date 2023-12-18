@@ -1,5 +1,9 @@
 # Changelog
 
+# NEXT
+
+* Update h264-profile-level-id dependency to 0.2.0.
+
 # 0.13.0
 
 * Updates from mediasoup TypeScript `3.13.0..=3.13.7`.
