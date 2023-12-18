@@ -47,14 +47,12 @@ const eslintConfig =
 		'curly'                     : [ 2, 'all' ],
 		// Unfortunatelly `curly` does not apply to blocks in `switch` cases so
 		// this is needed.
-		// NOTE: We disable this rule since it's producing false positives:
-		// https://github.com/versatica/mediasoup/pull/1268
-		// 'no-restricted-syntax'      : [ 2,
-		// 	{
-		// 		'selector' : 'SwitchCase:has(*.consequent[type!="BlockStatement"])',
-		// 		'message'  : 'Switch cases without blocks are disallowed'
-		// 	}
-		// ],
+		'no-restricted-syntax'      : [ 2,
+			{
+				'selector' : 'SwitchCase > *.consequent[type!="BlockStatement"]',
+				'message'  : 'Switch cases without blocks are disallowed'
+			}
+		],
 		'func-call-spacing'         : 2,
 		'generator-star-spacing'    : 2,
 		'guard-for-in'              : 2,
