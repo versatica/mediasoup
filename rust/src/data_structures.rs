@@ -3,7 +3,9 @@
 #[cfg(test)]
 mod tests;
 
-use mediasoup_sys::fbs::{common, rtp_packet, sctp_association, transport, web_rtc_transport, producer};
+use mediasoup_sys::fbs::{
+    common, producer, rtp_packet, sctp_association, transport, web_rtc_transport,
+};
 use serde::de::{MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -1240,7 +1242,7 @@ impl BweTraceInfo {
 /// BWE info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SRTraceInfo {
+pub struct SrTraceInfo {
     /// Stream SSRC
     ssrc: u32,
     /// NTP : most significant word
@@ -1255,7 +1257,7 @@ pub struct SRTraceInfo {
     octet_count: u32,
 }
 
-impl SRTraceInfo {
+impl SrTraceInfo {
     pub(crate) fn from_fbs(info: producer::SrTraceInfo) -> Self {
         Self {
             ssrc: info.ssrc,

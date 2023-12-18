@@ -61,7 +61,7 @@ union TraceInfo {
     FirTraceInfo,
     PliTraceInfo,
     RtpTraceInfo,
-    SRTraceInfo,
+    SrTraceInfo,
 }
 
 table KeyFrameTraceInfo {
@@ -82,7 +82,7 @@ table RtpTraceInfo {
     is_rtx: bool;
 }
 
-table SRTraceInfo {
+table SrTraceInfo {
     ssrc: uint32;
     ntp_sec: uint32;
     ntp_frac: uint32;

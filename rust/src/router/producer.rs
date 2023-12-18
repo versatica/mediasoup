@@ -2,7 +2,9 @@
 mod tests;
 
 use crate::consumer::{RtpStreamParams, RtxStreamParams};
-use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection, SRTraceInfo};
+use crate::data_structures::{
+    AppData, RtpPacketTraceInfo, SrTraceInfo, SsrcTraceInfo, TraceEventDirection,
+};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
@@ -401,8 +403,8 @@ pub enum ProducerTraceEventData {
         /// Event direction.
         direction: TraceEventDirection,
         /// SSRC info.
-        info: SRTraceInfo,
-    }
+        info: SrTraceInfo,
+    },
 }
 
 impl ProducerTraceEventData {
@@ -464,7 +466,7 @@ impl ProducerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    SRTraceInfo::from_fbs(*info)
+                    SrTraceInfo::from_fbs(*info)
                 },
             },
         }

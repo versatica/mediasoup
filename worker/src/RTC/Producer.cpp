@@ -712,7 +712,7 @@ namespace RTC
 
 			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
 
-			EmitTraceEventSRType(report);
+			EmitTraceEventSrType(report);
 
 			return;
 		}
@@ -1584,7 +1584,7 @@ namespace RTC
 		EmitTraceEvent(notification);
 	}
 
-	inline void Producer::EmitTraceEventSRType(RTC::RTCP::SenderReport* report) const
+	inline void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
 	{
 		MS_TRACE();
 
@@ -1593,7 +1593,7 @@ namespace RTC
 			return;
 		}
 
-		auto traceInfo = FBS::Producer::CreateSRTraceInfo(
+		auto traceInfo = FBS::Producer::CreateSrTraceInfo(
 		  this->shared->channelNotifier->GetBufferBuilder(),
 		  report->GetSsrc(),
 		  report->GetNtpSec(),
@@ -1607,7 +1607,7 @@ namespace RTC
 		  FBS::Producer::TraceEventType::SR,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_IN,
-		  FBS::Producer::TraceInfo::SRTraceInfo,
+		  FBS::Producer::TraceInfo::SrTraceInfo,
 		  traceInfo.Union());
 
 		EmitTraceEvent(notification);
