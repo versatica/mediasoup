@@ -103,7 +103,7 @@ public:
 	private:
 		// io_uring instance.
 		io_uring ring;
-		// Event file descriptor to watch for completions.
+		// Event file descriptor to watch for io_uring completions.
 		int efd;
 		// libuv handle used to poll io_uring completions.
 		uv_poll_t* uvHandle{ nullptr };
@@ -115,6 +115,8 @@ public:
 		std::queue<size_t> availableUserDataEntries;
 		// Pre-allocated SendBuffer's.
 		SendBuffer sendBuffers[QueueDepth];
+		// iovec structs to be registered for Zero Copy.
+		struct iovec iovecs[QueueDepth];
 		// Submission queue entry process count.
 		uint64_t sqeProcessCount{ 0u };
 		// Submission queue entry miss count.
