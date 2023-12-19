@@ -23,17 +23,7 @@ namespace Utils
 
 		static void GetAddressInfo(const struct sockaddr* addr, int& family, std::string& ip, uint16_t& port);
 
-		static size_t GetAddressLen(const struct sockaddr* addr)
-		{
-			if (addr->sa_family == AF_INET)
-			{
-				return sizeof(struct sockaddr_in);
-			}
-			else
-			{
-				return sizeof(struct sockaddr_in6);
-			}
-		}
+		static size_t GetAddressLen(const struct sockaddr* addr);
 
 		static bool CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2)
 		{

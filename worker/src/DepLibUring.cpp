@@ -78,22 +78,22 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 			continue;
 		}
 
-		// Failed SQE.
-		if (cqe->res < 0)
-		{
-			if (userData->cb)
-			{
-				(*userData->cb)(false);
-				delete userData->cb;
-				userData->cb = nullptr;
-			}
-		}
 		// Successfull SQE.
-		else
+		if (cqe->res >= 0)
 		{
 			if (userData->cb)
 			{
 				(*userData->cb)(true);
+				delete userData->cb;
+				userData->cb = nullptr;
+			}
+		}
+		// Failed SQE.
+		else
+		{
+			if (userData->cb)
+			{
+				(*userData->cb)(false);
 				delete userData->cb;
 				userData->cb = nullptr;
 			}
