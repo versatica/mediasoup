@@ -80,6 +80,10 @@ public:
 		{
 			return this->active;
 		}
+		bool IsZeroCopyEnabled() const
+		{
+			return this->zeroCopyEnabled;
+		}
 		io_uring* GetRing()
 		{
 			return std::addressof(this->ring);
@@ -109,6 +113,8 @@ public:
 		uv_poll_t* uvHandle{ nullptr };
 		// Whether we are currently sending RTP over io_uring.
 		bool active{ false };
+		// Whether Zero Copy feature is enabled.
+		bool zeroCopyEnabled{ true };
 		// Pre-allocated UserData's.
 		UserData userDatas[QueueDepth]{};
 		// Indexes of available UserData entries.
