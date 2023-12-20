@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* worker: Do not use references for async callbacks ([PR #1274](https://github.com/versatica/mediasoup/pull/1274)).
+
+
 ### 3.13.12
 
 * worker: Disable `RtcLogger` usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).

@@ -152,7 +152,8 @@ namespace RTC
 		return this->rtpTransportControllerSend->packet_sender()->GetPacingInfo();
 	}
 
-	void TransportCongestionControlClient::PacketSent(webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs)
+	void TransportCongestionControlClient::PacketSent(
+	  const webrtc::RtpPacketSendInfo& packetInfo, int64_t nowMs)
 	{
 		MS_TRACE();
 
