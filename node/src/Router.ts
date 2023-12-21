@@ -727,11 +727,6 @@ export class Router<RouterAppData extends AppData = AppData>
 			};
 		}
 
-		if (enableMulticast)
-		{
-			logger.debug('createPlainTransport() | enableMulticast');
-		}
-
 		const transportId = generateUUIDv4();
 
 		/* Build Request. */

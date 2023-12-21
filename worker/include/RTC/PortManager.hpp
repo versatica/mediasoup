@@ -47,7 +47,8 @@ namespace RTC
 
 	private:
 		static uv_handle_t* Bind(Transport transport, std::string& ip, bool enableMulticast = false);
-		static uv_handle_t* Bind(Transport transport, std::string& ip, uint16_t port, bool enableMulticast = false);
+		static uv_handle_t* Bind(
+		  Transport transport, std::string& ip, uint16_t port, bool enableMulticast = false);
 		static void Unbind(Transport transport, std::string& ip, uint16_t port);
 		static std::vector<bool>& GetPorts(Transport transport, const std::string& ip);
 

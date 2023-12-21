@@ -109,7 +109,8 @@ export type PlainTransportOptions<PlainTransportAppData extends AppData = AppDat
 	srtpCryptoSuite?: SrtpCryptoSuite;
 
 	/**
-	 * Enable Multicast. Default false.
+	 * Enable multicast for UDP in case listening IP is a multicast valid IP.
+	 * Default false.
 	 */
 	enableMulticast?: boolean;
 
@@ -139,7 +140,7 @@ export type PlainTransportObserverEvents = TransportObserverEvents &
 {
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
-	sctpstatechange: [SctpState];	
+	sctpstatechange: [SctpState];
 };
 
 type PlainTransportConstructorOptions<PlainTransportAppData> =

@@ -85,7 +85,6 @@ namespace RTC
 		size_t srtpMasterLength{ 0 };
 		std::string srtpKeyBase64;
 		bool connectCalled{ false }; // Whether connect() was succesfully called.
-		bool multicast{ false };
 	};
 } // namespace RTC
 

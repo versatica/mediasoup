@@ -87,7 +87,7 @@ namespace Utils
 
 		static void NormalizeIp(std::string& ip);
 
-		static bool IsMulticast(const struct sockaddr_storage* addr, const int& family);
+		static bool IsMulticast(const struct sockaddr_storage* addr, const int family);
 	};
 
 	class File

@@ -73,7 +73,7 @@ pub struct PlainTransportOptions {
     /// The SRTP crypto suite to be used if enableSrtp is set.
     /// Default 'AesCm128HmacSha180'.
     pub srtp_crypto_suite: SrtpCryptoSuite,
-    /// Enable Multicast.
+    /// Enable multicast for UDP in case listening IP is a multicast valid IP.
     /// Default false.
     pub enable_multicast: bool,
     /// Custom application data.
@@ -95,6 +95,7 @@ impl PlainTransportOptions {
             sctp_send_buffer_size: 262_144,
             enable_srtp: false,
             srtp_crypto_suite: SrtpCryptoSuite::default(),
+            enable_multicast: false,
             app_data: AppData::default(),
         }
     }

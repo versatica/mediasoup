@@ -218,13 +218,13 @@ namespace RTC
 				case Transport::UDP:
 				{
 #if defined(__linux__)
-					if (enableMulticast && Utils::IP::IsMulticast(&bindAddr, family))
+					if (enableMulticast && Utils::IP::IsMulticast(std::addressof(bindAddr), family))
 					{
-						flags |= UV_UDP_REUSEADDR;
 						MS_DEBUG_DEV("enabling UV_UDP_REUSEADDR");
+
+						flags |= UV_UDP_REUSEADDR;
 					}
 #endif
-
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
@@ -481,13 +481,13 @@ namespace RTC
 			case Transport::UDP:
 			{
 #if defined(__linux__)
-				if (enableMulticast && Utils::IP::IsMulticast(&bindAddr, family))
+				if (enableMulticast && Utils::IP::IsMulticast(std::addressof(bindAddr), family))
 				{
-					flags |= UV_UDP_REUSEADDR;
 					MS_DEBUG_DEV("enabling UV_UDP_REUSEADDR");
+
+					flags |= UV_UDP_REUSEADDR;
 				}
 #endif
-
 				err = uv_udp_bind(
 				  reinterpret_cast<uv_udp_t*>(uvHandle),
 				  reinterpret_cast<const struct sockaddr*>(&bindAddr),

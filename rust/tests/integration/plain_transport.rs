@@ -265,6 +265,51 @@ fn create_succeeds() {
                 assert_eq!(transport_dump.sctp_state, transport2.sctp_state());
             }
         }
+
+        #[cfg(target_os = "linux")]
+        {
+            let transport1 = router
+                .create_plain_transport({
+                    let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                        protocol: Protocol::Udp,
+                        ip: "224.0.0.1".parse::<IpAddr>().unwrap(),
+                        announced_ip: None,
+                        port: Some(1234),
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
+                    });
+                    plain_transport_options.enable_multicast = true;
+
+                    plain_transport_options
+                })
+                .await
+                .expect("Failed to create Plain transport");
+
+            let transport2 = router
+                .create_plain_transport({
+                    let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
+                        protocol: Protocol::Udp,
+                        ip: "224.0.0.1".parse::<IpAddr>().unwrap(),
+                        announced_ip: None,
+                        port: Some(1234),
+                        send_buffer_size: None,
+                        recv_buffer_size: None,
+                    });
+                    plain_transport_options.enable_multicast = true;
+
+                    plain_transport_options
+                })
+                .await
+                .expect("Failed to create Plain transport");
+
+            let router_dump = router.dump().await.expect("Failed to dump router");
+            assert_eq!(router_dump.transport_ids, {
+                let mut set = HashedSet::default();
+                set.insert(transport1.id());
+                set.insert(transport2.id());
+                set
+            });
+        }
     });
 }
 

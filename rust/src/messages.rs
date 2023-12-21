@@ -911,6 +911,7 @@ pub(crate) struct RouterCreatePlainTransportData {
     sctp_send_buffer_size: u32,
     enable_srtp: bool,
     srtp_crypto_suite: SrtpCryptoSuite,
+    enable_multicast: bool,
     is_data_channel: bool,
 }
 
@@ -931,6 +932,7 @@ impl RouterCreatePlainTransportData {
             sctp_send_buffer_size: plain_transport_options.sctp_send_buffer_size,
             enable_srtp: plain_transport_options.enable_srtp,
             srtp_crypto_suite: plain_transport_options.srtp_crypto_suite,
+            enable_multicast: plain_transport_options.enable_multicast,
             is_data_channel: false,
         }
     }
@@ -955,6 +957,7 @@ impl RouterCreatePlainTransportData {
             comedia: self.comedia,
             enable_srtp: self.enable_srtp,
             srtp_crypto_suite: Some(SrtpCryptoSuite::to_fbs(self.srtp_crypto_suite)),
+            enable_multicast: self.enable_multicast,
         }
     }
 }

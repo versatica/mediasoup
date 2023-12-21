@@ -316,17 +316,39 @@ test('router.createPlainTransport() with non bindable IP rejects with Error', as
 		.toThrow(Error);
 }, 2000);
 
-test('router.createPlainTransport() with enableMulticast succeeds', async () =>
+if (process.platform === 'linux')
 {
-	// Use default cryptoSuite: 'AES_CM_128_HMAC_SHA1_80'.
-	const transport1 = await router.createPlainTransport(
-		{
-			listenIp   : '127.0.0.1',
-			enableMulticast: true
-		});
+	test('router.createPlainTransport() with enableMulticast succeeds', async () =>
+	{
+		let transport1: mediasoup.types.PlainTransport | undefined = undefined;
+		let transport2: mediasoup.types.PlainTransport | undefined = undefined;
 
-	expect(typeof transport1.id).toBe('string');
-}, 2000);
+		await expect(async () =>
+		{
+			transport1 = await router.createPlainTransport(
+				{
+					listenIp        : '224.0.0.1',
+					enableMulticast : true
+				});
+
+			transport2 = await router.createPlainTransport(
+				{
+					listenIp        : '224.0.0.1',
+					enableMulticast : true
+				});
+		}).not.toThrow();
+
+		if (transport1)
+		{
+			(transport1 as mediasoup.types.PlainTransport).close();
+		}
+
+		if (transport2)
+		{
+			(transport2 as mediasoup.types.PlainTransport).close();
+		}
+	}, 2000);
+}
 
 test('plainTransport.getStats() succeeds', async () =>
 {
