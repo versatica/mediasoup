@@ -313,7 +313,7 @@ DepLibUring::LibUring::LibUring()
 
 	if (err < 0)
 	{
-		if (err == ENOMEM)
+		if (err == -ENOMEM)
 		{
 			this->zeroCopyEnabled = false;
 
