@@ -1028,13 +1028,12 @@ checksum = "6fb8d784f27acf97159b40fc4db5ecd8aa23b9ad5ef69cdd136d3bc80665f0c0"
 
 [[package]]
 name = "h264-profile-level-id"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e12ebc03fc4f14b7ddc94da90cfb28ba3edee2d926798a9eef89f8a27bbdbca5"
+checksum = "45d0dbf6a9847b64c9b06938660891f983434dcc009b5ae6a58f5e34af74a649"
 dependencies = [
  "bitpattern",
  "log",
- "once_cell",
  "thiserror",
 ]
 
@@ -1355,7 +1354,7 @@ checksum = "b6e8aaa3f231bb4bd57b84b2d5dc3ae7f350265df8aa96492e0bc394a1571909"
 
 [[package]]
 name = "mediasoup"
-version = "0.13.0"
+version = "0.14.0"
 dependencies = [
  "actix",
  "actix-web",
@@ -1392,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "mediasoup-sys"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "planus",
  "planus-codegen",

@@ -47,7 +47,7 @@ impl AppData {
     }
 }
 
-/// Listening protocol, IP and port for [`WebRtcServer`] to listen on.
+/// Listening protocol, IP and port for [`WebRtcServer`](crate::webrtc_server::WebRtcServer) to listen on.
 ///
 /// # Notes on usage
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.

@@ -45,6 +45,14 @@ const eslintConfig =
 		'computed-property-spacing' : 2,
 		'constructor-super'         : 2,
 		'curly'                     : [ 2, 'all' ],
+		// Unfortunatelly `curly` does not apply to blocks in `switch` cases so
+		// this is needed.
+		'no-restricted-syntax'      : [ 2,
+			{
+				'selector' : 'SwitchCase > *.consequent[type!="BlockStatement"]',
+				'message'  : 'Switch cases without blocks are disallowed'
+			}
+		],
 		'func-call-spacing'         : 2,
 		'generator-star-spacing'    : 2,
 		'guard-for-in'              : 2,

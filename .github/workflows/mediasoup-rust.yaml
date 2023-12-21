@@ -46,3 +46,10 @@ jobs:
 
       - name: cargo test
         run: cargo test --verbose
+
+      - name: cargo doc
+        run: cargo doc --locked --all --no-deps --lib
+        env:
+          DOCS_RS: '1'
+          RUSTDOCFLAGS: '-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links'
+

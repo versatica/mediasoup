@@ -89,7 +89,7 @@ namespace RTC
 	public:
 		void TransportConnected();
 		void TransportDisconnected();
-		void RtpPacketSent(SentInfo& sentInfo);
+		void RtpPacketSent(const SentInfo& sentInfo);
 		void ReceiveRtcpTransportFeedback(const RTC::RTCP::FeedbackRtpTransportPacket* feedback);
 		void EstimateAvailableBitrate(CummulativeResult& cummulativeResult);
 		void UpdateRtt(float rtt);

@@ -164,10 +164,13 @@ export class Channel extends EnhancedEventEmitter
 						}
 
 						default:
+						{
 							// eslint-disable-next-line no-console
 							console.warn(
 								`worker[pid:${pid}] unexpected data: %s`,
-								payload.toString('utf8', 1));
+								payload.toString('utf8', 1)
+							);
+						}
 					}
 				}
 				catch (error)
@@ -432,11 +435,16 @@ export class Channel extends EnhancedEventEmitter
 			switch (response.error()!)
 			{
 				case 'TypeError':
+				{
 					sent.reject(new TypeError(response.reason()!));
+
 					break;
+				}
 
 				default:
+				{
 					sent.reject(new Error(response.reason()!));
+				}
 			}
 		}
 		else
@@ -470,24 +478,36 @@ export class Channel extends EnhancedEventEmitter
 		{
 			// 'D' (a debug log).
 			case 'D':
+			{
 				logger.debug(`[pid:${pid}] ${logData.slice(1)}`);
+
 				break;
+			}
 
 			// 'W' (a warn log).
 			case 'W':
+			{
 				logger.warn(`[pid:${pid}] ${logData.slice(1)}`);
+
 				break;
+			}
 
 			// 'E' (a error log).
 			case 'E':
+			{
 				logger.error(`[pid:${pid}] ${logData.slice(1)}`);
+
 				break;
+			}
 
 			// 'X' (a dump log).
 			case 'X':
+			{
 				// eslint-disable-next-line no-console
 				console.log(logData.slice(1));
+
 				break;
+			}
 		}
 	}
 }

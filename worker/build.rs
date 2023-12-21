@@ -2,11 +2,6 @@ use std::process::Command;
 use std::{env, fs};
 
 fn main() {
-    if env::var("DOCS_RS").is_ok() {
-        // Skip everything when building docs on docs.rs
-        return;
-    }
-
     // On Windows Rust always links against release version of MSVC runtime, thus requires
     // Release build here
     let build_type = if cfg!(all(debug_assertions, not(windows))) {
@@ -44,6 +39,11 @@ fn main() {
             .expect("Failed to generate Rust code from flatbuffers"),
     )
     .expect("Failed to write generated Rust flatbuffers into fbs.rs");
+
+    if env::var("DOCS_RS").is_ok() {
+        // Skip everything when building docs on docs.rs
+        return;
+    }
 
     // Force forward slashes on Windows too so that is plays well with our tasks.py
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));

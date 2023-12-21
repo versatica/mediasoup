@@ -650,13 +650,24 @@ function iceStateFromFbs(fbsIceState: FbsIceState): IceState
 	switch (fbsIceState)
 	{
 		case FbsIceState.NEW:
+		{
 			return 'new';
+		}
+
 		case FbsIceState.CONNECTED:
+		{
 			return 'connected';
+		}
+
 		case FbsIceState.COMPLETED:
+		{
 			return 'completed';
+		}
+
 		case FbsIceState.DISCONNECTED:
+		{
 			return 'disconnected';
+		}
 	}
 }
 
@@ -665,9 +676,14 @@ function iceRoleFromFbs(role: FbsIceRole): IceRole
 	switch (role)
 	{
 		case FbsIceRole.CONTROLLED:
+		{
 			return 'controlled';
+		}
+
 		case FbsIceRole.CONTROLLING:
+		{
 			return 'controlling';
+		}
 	}
 }
 
@@ -676,7 +692,9 @@ function iceCandidateTypeFromFbs(type: FbsIceCandidateType): IceCandidateType
 	switch (type)
 	{
 		case FbsIceCandidateType.HOST:
+		{
 			return 'host';
+		}
 	}
 }
 
@@ -685,7 +703,9 @@ function iceCandidateTcpTypeFromFbs(type: FbsIceCandidateTcpType): IceCandidateT
 	switch (type)
 	{
 		case FbsIceCandidateTcpType.PASSIVE:
+		{
 			return 'passive';
+		}
 	}
 }
 
@@ -694,15 +714,29 @@ function dtlsStateFromFbs(fbsDtlsState: FbsDtlsState): DtlsState
 	switch (fbsDtlsState)
 	{
 		case FbsDtlsState.NEW:
+		{
 			return 'new';
+		}
+
 		case FbsDtlsState.CONNECTING:
+		{
 			return 'connecting';
+		}
+
 		case FbsDtlsState.CONNECTED:
+		{
 			return 'connected';
+		}
+
 		case FbsDtlsState.FAILED:
+		{
 			return 'failed';
+		}
+
 		case FbsDtlsState.CLOSED:
+		{
 			return 'closed';
+		}
 	}
 }
 
@@ -711,11 +745,19 @@ function dtlsRoleFromFbs(role: FbsDtlsRole): DtlsRole
 	switch (role)
 	{
 		case FbsDtlsRole.AUTO:
+		{
 			return 'auto';
+		}
+
 		case FbsDtlsRole.CLIENT:
+		{
 			return 'client';
+		}
+
 		case FbsDtlsRole.SERVER:
+		{
 			return 'server';
+		}
 	}
 }
 
@@ -725,15 +767,29 @@ function fingerprintAlgorithmsFromFbs(algorithm: FbsFingerprintAlgorithm)
 	switch (algorithm)
 	{
 		case FbsFingerprintAlgorithm.SHA1:
+		{
 			return 'sha-1';
+		}
+
 		case FbsFingerprintAlgorithm.SHA224:
+		{
 			return 'sha-224';
+		}
+
 		case FbsFingerprintAlgorithm.SHA256:
+		{
 			return 'sha-256';
+		}
+
 		case FbsFingerprintAlgorithm.SHA384:
+		{
 			return 'sha-384';
+		}
+
 		case FbsFingerprintAlgorithm.SHA512:
+		{
 			return 'sha-512';
+		}
 	}
 }
 
@@ -743,17 +799,34 @@ function fingerprintAlgorithmToFbs(algorithm: FingerprintAlgorithm)
 	switch (algorithm)
 	{
 		case 'sha-1':
+		{
 			return FbsFingerprintAlgorithm.SHA1;
+		}
+
 		case 'sha-224':
+		{
 			return FbsFingerprintAlgorithm.SHA224;
+		}
+
 		case 'sha-256':
+		{
 			return FbsFingerprintAlgorithm.SHA256;
+		}
+
 		case 'sha-384':
+		{
 			return FbsFingerprintAlgorithm.SHA384;
+		}
+
 		case 'sha-512':
+		{
 			return FbsFingerprintAlgorithm.SHA512;
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid FingerprintAlgorithm: ${algorithm}`);
+		}
 	}
 }
 
@@ -762,13 +835,24 @@ function dtlsRoleToFbs(role: DtlsRole): FbsDtlsRole
 	switch (role)
 	{
 		case 'auto':
+		{
 			return FbsDtlsRole.AUTO;
+		}
+
 		case 'client':
+		{
 			return FbsDtlsRole.CLIENT;
+		}
+
 		case 'server':
+		{
 			return FbsDtlsRole.SERVER;
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid DtlsRole: ${role}`);
+		}
 	}
 }
 

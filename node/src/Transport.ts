@@ -1321,11 +1321,19 @@ function transportTraceEventTypeToFbs(eventType: TransportTraceEventType)
 	switch (eventType)
 	{
 		case 'probation':
+		{
 			return FbsTransport.TraceEventType.PROBATION;
+		}
+
 		case 'bwe':
+		{
 			return FbsTransport.TraceEventType.BWE;
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
+		}
 	}
 }
 
@@ -1335,9 +1343,15 @@ function transportTraceEventTypeFromFbs(eventType: FbsTransport.TraceEventType)
 	switch (eventType)
 	{
 		case FbsTransport.TraceEventType.PROBATION:
+		{
 			return 'probation';
+		}
+
 		case FbsTransport.TraceEventType.BWE:
+		{
 			return 'bwe';
+		}
+
 	}
 }
 
@@ -1346,17 +1360,34 @@ export function parseSctpState(fbsSctpState: FbsSctpState): SctpState
 	switch (fbsSctpState)
 	{
 		case FbsSctpState.NEW:
+		{
 			return 'new';
+		}
+
 		case FbsSctpState.CONNECTING:
+		{
 			return 'connecting';
+		}
+
 		case FbsSctpState.CONNECTED:
+		{
 			return 'connected';
+		}
+
 		case FbsSctpState.FAILED:
+		{
 			return 'failed';
+		}
+
 		case FbsSctpState.CLOSED:
+		{
 			return 'closed';
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid SctpState: ${fbsSctpState}`);
+		}
 	}
 }
 
@@ -1365,10 +1396,14 @@ export function parseProtocol(protocol: FbsTransport.Protocol): TransportProtoco
 	switch (protocol)
 	{
 		case FbsTransport.Protocol.UDP:
+		{
 			return 'udp';
+		}
 
 		case FbsTransport.Protocol.TCP:
+		{
 			return 'tcp';
+		}
 	}
 }
 
@@ -1377,10 +1412,14 @@ export function serializeProtocol(protocol: TransportProtocol): FbsTransport.Pro
 	switch (protocol)
 	{
 		case 'udp':
+		{
 			return FbsTransport.Protocol.UDP;
+		}
 
 		case 'tcp':
+		{
 			return FbsTransport.Protocol.TCP;
+		}
 	}
 }
 

@@ -709,27 +709,59 @@ export function rtpHeaderExtensionUriFromFbs(uri: FbsRtpHeaderExtensionUri): Rtp
 	switch (uri)
 	{
 		case FbsRtpHeaderExtensionUri.Mid:
+		{
 			return 'urn:ietf:params:rtp-hdrext:sdes:mid';
+		}
+
 		case FbsRtpHeaderExtensionUri.RtpStreamId:
+		{
 			return 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id';
+		}
+
 		case FbsRtpHeaderExtensionUri.RepairRtpStreamId:
+		{
 			return 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id';
+		}
+
 		case FbsRtpHeaderExtensionUri.FrameMarkingDraft07:
+		{
 			return 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07';
+		}
+
 		case FbsRtpHeaderExtensionUri.FrameMarking:
+		{
 			return 'urn:ietf:params:rtp-hdrext:framemarking';
+		}
+
 		case FbsRtpHeaderExtensionUri.AudioLevel:
+		{
 			return 'urn:ietf:params:rtp-hdrext:ssrc-audio-level';
+		}
+
 		case FbsRtpHeaderExtensionUri.VideoOrientation:
+		{
 			return 'urn:3gpp:video-orientation';
+		}
+
 		case FbsRtpHeaderExtensionUri.TimeOffset:
+		{
 			return 'urn:ietf:params:rtp-hdrext:toffset';
+		}
+
 		case FbsRtpHeaderExtensionUri.TransportWideCcDraft01:
+		{
 			return 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01';
+		}
+
 		case FbsRtpHeaderExtensionUri.AbsSendTime:
+		{
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time';
+		}
+
 		case FbsRtpHeaderExtensionUri.AbsCaptureTime:
+		{
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
+		}
 	}
 }
 
@@ -738,29 +770,64 @@ export function rtpHeaderExtensionUriToFbs(uri: RtpHeaderExtensionUri): FbsRtpHe
 	switch (uri)
 	{
 		case 'urn:ietf:params:rtp-hdrext:sdes:mid':
+		{
 			return FbsRtpHeaderExtensionUri.Mid;
+		}
+
 		case 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id':
+		{
 			return FbsRtpHeaderExtensionUri.RtpStreamId;
+		}
+
 		case 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id':
+		{
 			return FbsRtpHeaderExtensionUri.RepairRtpStreamId;
+		}
+
 		case 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07':
+		{
 			return FbsRtpHeaderExtensionUri.FrameMarkingDraft07;
+		}
+
 		case 'urn:ietf:params:rtp-hdrext:framemarking':
+		{
 			return FbsRtpHeaderExtensionUri.FrameMarking;
+		}
+
 		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level':
+		{
 			return FbsRtpHeaderExtensionUri.AudioLevel;
+		}
+
 		case 'urn:3gpp:video-orientation':
+		{
 			return FbsRtpHeaderExtensionUri.VideoOrientation;
+		}
+
 		case 'urn:ietf:params:rtp-hdrext:toffset':
+		{
 			return FbsRtpHeaderExtensionUri.TimeOffset;
+		}
+
 		case 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01':
+		{
 			return FbsRtpHeaderExtensionUri.TransportWideCcDraft01;
+		}
+
 		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time':
+		{
 			return FbsRtpHeaderExtensionUri.AbsSendTime;
+		}
+
 		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time':
+		{
 			return FbsRtpHeaderExtensionUri.AbsCaptureTime;
+		}
+
 		default:
+		{
 			throw new TypeError(`invalid RtpHeaderExtensionUri: ${uri}`);
+		}
 	}
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup"
-version = "0.13.0"
+version = "0.14.0"
 description = "Cutting Edge WebRTC Video Conferencing in Rust"
 categories = ["api-bindings", "multimedia", "network-programming"]
 authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
@@ -30,7 +30,7 @@ atomic-take = "1.0.0"
 event-listener-primitives = "2.0.1"
 fastrand = "1.8.0"
 futures-lite = "1.12.0"
-h264-profile-level-id = "0.1.1"
+h264-profile-level-id = "0.2.0"
 hash_hasher = "2.0.3"
 log = "0.4.17"
 nohash-hasher = "0.2.0"
@@ -46,7 +46,7 @@ version = "0.8.1"
 
 [dependencies.mediasoup-sys]
 path = "../worker"
-version = "0.7.0"
+version = "0.7.1"
 
 [dependencies.parking_lot]
 version = "0.12.1"
