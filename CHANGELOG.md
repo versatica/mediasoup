@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* liburing: Enable zero copy ([PR #1273](https://github.com/versatica/mediasoup/pull/1273)).
+
+
 ### 3.13.12
 
 * worker: Disable `RtcLogger` usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).

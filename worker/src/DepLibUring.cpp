@@ -313,18 +313,20 @@ DepLibUring::LibUring::LibUring()
 
 	if (err < 0)
 	{
-		if (err == -ENOMEM)
+		int errno = -err;
+
+		if (errno == ENOMEM)
 		{
 			this->zeroCopyEnabled = false;
 
 			MS_WARN_TAG(
 			  info,
 			  "io_uring_register_buffers() failed due to low memlock limit (ulimit -l), disabling zero copy",
-			  std::strerror(-err));
+			  std::strerror(errno));
 		}
 		else
 		{
-			MS_THROW_ERROR("io_uring_register_buffers() failed: %s", std::strerror(-err));
+			MS_THROW_ERROR("io_uring_register_buffers() failed: %s", std::strerror(errno));
 		}
 	}
 }
