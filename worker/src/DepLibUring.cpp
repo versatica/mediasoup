@@ -35,7 +35,7 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -1 * err;
+		int error = -err;
 
 		MS_ABORT("eventfd_read() failed: %s", std::strerror(error));
 	};
@@ -282,7 +282,7 @@ DepLibUring::LibUring::LibUring()
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -1 * err;
+		int error = -err;
 
 		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(error));
 	}
@@ -300,7 +300,7 @@ DepLibUring::LibUring::LibUring()
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -1 * err;
+		int error = -err;
 
 		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(error));
 	}
@@ -324,7 +324,7 @@ DepLibUring::LibUring::LibUring()
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -1 * err;
+		int error = -err;
 
 		if (error == ENOMEM)
 		{
@@ -352,7 +352,7 @@ DepLibUring::LibUring::~LibUring()
 	if (err != 0)
 	{
 		// Get positive errno.
-		int error = -1 * err;
+		int error = -err;
 
 		MS_ABORT("close() failed: %s", std::strerror(error));
 	}
@@ -575,7 +575,7 @@ void DepLibUring::LibUring::Submit()
 	else
 	{
 		// Get positive errno.
-		int error = -1 * err;
+		int error = -err;
 
 		MS_ERROR("io_uring_submit() failed: %s", std::strerror(error));
 	}
