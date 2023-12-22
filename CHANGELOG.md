@@ -3,6 +3,7 @@
 
 ### NEXT
 
+* worker: Do not use references for async callbacks ([PR #1274](https://github.com/versatica/mediasoup/pull/1274)).
 * liburing: Enable zero copy ([PR #1273](https://github.com/versatica/mediasoup/pull/1273)).
 
 

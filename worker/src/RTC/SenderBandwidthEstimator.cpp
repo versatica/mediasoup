@@ -47,7 +47,7 @@ namespace RTC
 		this->cummulativeResult.Reset();
 	}
 
-	void SenderBandwidthEstimator::RtpPacketSent(SentInfo& sentInfo)
+	void SenderBandwidthEstimator::RtpPacketSent(const SentInfo& sentInfo)
 	{
 		MS_TRACE();
 
