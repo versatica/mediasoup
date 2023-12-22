@@ -350,7 +350,7 @@ def xcode(ctx):
     """
     with ctx.cd(WORKER_DIR):
         ctx.run(
-            f'"{MESON}" setup --buildtype {MEDIASOUP_BUILDTYPE} --backend xcode "{MEDIASOUP_OUT_DIR}/xcode"',
+            f'"{MESON}" setup --buildtype {MEDIASOUP_BUILDTYPE.lower()} --backend xcode "{MEDIASOUP_OUT_DIR}/xcode"',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
