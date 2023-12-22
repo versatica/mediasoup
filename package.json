@@ -99,7 +99,7 @@
   "dependencies": {
     "debug": "^4.3.4",
     "flatbuffers": "^23.5.26",
-    "h264-profile-level-id": "^1.1.0",
+    "h264-profile-level-id": "^2.0.0",
     "node-fetch": "^3.3.2",
     "supports-color": "^9.4.0",
     "tar": "^6.2.0"
@@ -109,8 +109,8 @@
     "@types/debug": "^4.1.12",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.10.5",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
     "eslint-plugin-jest": "^27.6.0",
     "jest": "^29.7.0",
