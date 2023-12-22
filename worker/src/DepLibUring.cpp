@@ -4,6 +4,7 @@
 #include "DepLibUring.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include <sys/eventfd.h>
 #include <sys/utsname.h>
 
@@ -30,9 +31,13 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	// the counter in order to avoid libuv calling this callback indefinitely.
 	eventfd_t v;
 	int err = eventfd_read(liburing->GetEventFd(), std::addressof(v));
+
 	if (err < 0)
 	{
-		MS_ABORT("eventfd_read() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -err;
+
+		MS_ABORT("eventfd_read() failed: %s", std::strerror(error));
 	};
 
 	for (unsigned int i{ 0 }; i < count; ++i)
@@ -40,27 +45,69 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 		struct io_uring_cqe* cqe = cqes[i];
 		auto* userData           = static_cast<DepLibUring::UserData*>(io_uring_cqe_get_data(cqe));
 
-		if (cqe->res < 0)
+		if (liburing->IsZeroCopyEnabled())
 		{
-			MS_ERROR("sending failed: %s", std::strerror(-cqe->res));
-
-			if (userData->cb)
+			// CQE notification for a zero-copy submission.
+			if (cqe->flags & IORING_CQE_F_NOTIF)
 			{
-				(*userData->cb)(false);
-				delete userData->cb;
+				// The send buffer is now in the network card, run the send callback.
+				if (userData->cb)
+				{
+					(*userData->cb)(true);
+					delete userData->cb;
+					userData->cb = nullptr;
+				}
+
+				liburing->ReleaseUserDataEntry(userData->idx);
+				io_uring_cqe_seen(liburing->GetRing(), cqe);
+
+				continue;
+			}
+
+			// CQE for a zero-copy submission, a CQE notification will follow.
+			if (cqe->flags & IORING_CQE_F_MORE)
+			{
+				if (cqe->res < 0)
+				{
+					if (userData->cb)
+					{
+						(*userData->cb)(false);
+						delete userData->cb;
+						userData->cb = nullptr;
+					}
+				}
+
+				// NOTE: Do not release the user data as it will be done upon reception
+				// of CQE notification.
+				io_uring_cqe_seen(liburing->GetRing(), cqe);
+
+				continue;
 			}
 		}
-		else
+
+		// Successfull SQE.
+		if (cqe->res >= 0)
 		{
 			if (userData->cb)
 			{
 				(*userData->cb)(true);
 				delete userData->cb;
+				userData->cb = nullptr;
+			}
+		}
+		// Failed SQE.
+		else
+		{
+			if (userData->cb)
+			{
+				(*userData->cb)(false);
+				delete userData->cb;
+				userData->cb = nullptr;
 			}
 		}
 
-		io_uring_cqe_seen(liburing->GetRing(), cqe);
 		liburing->ReleaseUserDataEntry(userData->idx);
+		io_uring_cqe_seen(liburing->GetRing(), cqe);
 	}
 }
 
@@ -234,7 +281,10 @@ DepLibUring::LibUring::LibUring()
 
 	if (err < 0)
 	{
-		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -err;
+
+		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(error));
 	}
 
 	// Create an eventfd instance.
@@ -249,7 +299,10 @@ DepLibUring::LibUring::LibUring()
 
 	if (err < 0)
 	{
-		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -err;
+
+		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(error));
 	}
 
 	// Initialize available UserData entries.
@@ -257,6 +310,35 @@ DepLibUring::LibUring::LibUring()
 	{
 		this->userDatas[i].store = this->sendBuffers[i];
 		this->availableUserDataEntries.push(i);
+	}
+
+	// Initialize iovecs.
+	for (size_t i{ 0 }; i < DepLibUring::QueueDepth; ++i)
+	{
+		this->iovecs[i].iov_base = this->sendBuffers[i];
+		this->iovecs[i].iov_len  = DepLibUring::SendBufferSize;
+	}
+
+	err = io_uring_register_buffers(std::addressof(this->ring), this->iovecs, DepLibUring::QueueDepth);
+
+	if (err < 0)
+	{
+		// Get positive errno.
+		int error = -err;
+
+		if (error == ENOMEM)
+		{
+			this->zeroCopyEnabled = false;
+
+			MS_WARN_TAG(
+			  info,
+			  "io_uring_register_buffers() failed due to low memlock limit (ulimit -l), disabling zero copy: %s",
+			  std::strerror(error));
+		}
+		else
+		{
+			MS_THROW_ERROR("io_uring_register_buffers() failed: %s", std::strerror(error));
+		}
 	}
 }
 
@@ -269,7 +351,10 @@ DepLibUring::LibUring::~LibUring()
 
 	if (err != 0)
 	{
-		MS_ABORT("close() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -err;
+
+		MS_ABORT("close() failed: %s", std::strerror(error));
 	}
 
 	// Close the ring.
@@ -372,8 +457,6 @@ bool DepLibUring::LibUring::PrepareSend(
 		return false;
 	}
 
-	userData->cb = cb;
-
 	// The send data buffer belongs to us, no need to memcpy.
 	if (this->IsDataInSendBuffers(data))
 	{
@@ -384,20 +467,29 @@ bool DepLibUring::LibUring::PrepareSend(
 		std::memcpy(userData->store, data, len);
 	}
 
+	userData->cb = cb;
+
 	io_uring_sqe_set_data(sqe, userData);
 
-	socklen_t addrlen = 0;
+	socklen_t addrlen = Utils::IP::GetAddressLen(addr);
 
-	if (addr->sa_family == AF_INET)
+	if (this->zeroCopyEnabled)
 	{
-		addrlen = sizeof(struct sockaddr_in);
-	}
-	else if (addr->sa_family == AF_INET6)
-	{
-		addrlen = sizeof(struct sockaddr_in6);
-	}
+		auto iovec    = this->iovecs[userData->idx];
+		iovec.iov_len = len;
 
-	io_uring_prep_sendto(sqe, sockfd, userData->store, len, 0, addr, addrlen);
+		io_uring_prep_send_zc(sqe, sockfd, iovec.iov_base, iovec.iov_len, 0, 0);
+		io_uring_prep_send_set_addr(sqe, addr, addrlen);
+
+		// Tell io_uring that we are providing the already registered send buffer
+		// for zero copy.
+		sqe->ioprio |= IORING_RECVSEND_FIXED_BUF;
+		sqe->buf_index = userData->idx;
+	}
+	else
+	{
+		io_uring_prep_sendto(sqe, sockfd, userData->store, len, 0, addr, addrlen);
+	}
 
 	this->sqeProcessCount++;
 
@@ -482,7 +574,10 @@ void DepLibUring::LibUring::Submit()
 	}
 	else
 	{
-		MS_ERROR("io_uring_submit() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -err;
+
+		MS_ERROR("io_uring_submit() failed: %s", std::strerror(error));
 	}
 }
 
