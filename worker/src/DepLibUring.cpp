@@ -31,9 +31,13 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 	// the counter in order to avoid libuv calling this callback indefinitely.
 	eventfd_t v;
 	int err = eventfd_read(liburing->GetEventFd(), std::addressof(v));
+
 	if (err < 0)
 	{
-		MS_ABORT("eventfd_read() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -1 * err;
+
+		MS_ABORT("eventfd_read() failed: %s", std::strerror(error));
 	};
 
 	for (unsigned int i{ 0 }; i < count; ++i)
@@ -277,7 +281,10 @@ DepLibUring::LibUring::LibUring()
 
 	if (err < 0)
 	{
-		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -1 * err;
+
+		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(error));
 	}
 
 	// Create an eventfd instance.
@@ -292,7 +299,10 @@ DepLibUring::LibUring::LibUring()
 
 	if (err < 0)
 	{
-		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -1 * err;
+
+		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(error));
 	}
 
 	// Initialize available UserData entries.
@@ -341,7 +351,10 @@ DepLibUring::LibUring::~LibUring()
 
 	if (err != 0)
 	{
-		MS_ABORT("close() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -1 * err;
+
+		MS_ABORT("close() failed: %s", std::strerror(error));
 	}
 
 	// Close the ring.
@@ -561,7 +574,10 @@ void DepLibUring::LibUring::Submit()
 	}
 	else
 	{
-		MS_ERROR("io_uring_submit() failed: %s", std::strerror(-err));
+		// Get positive errno.
+		int error = -1 * err;
+
+		MS_ERROR("io_uring_submit() failed: %s", std::strerror(error));
 	}
 }
 
