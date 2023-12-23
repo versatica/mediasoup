@@ -39,7 +39,7 @@ jobs:
           node-version: ${{ matrix.ci.node }}
 
       - name: Configure cache
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: |
             ~/.npm
