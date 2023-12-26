@@ -503,7 +503,7 @@ namespace RTC
 		auto streamId = dataProducer->GetSctpStreamParameters().streamId;
 
 		// Send SCTP_RESET_STREAMS to the remote.
-		// https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-13#section-6.7
+		// https://tools.ietf.org/html/rfc8831#section-6.7
 		if (this->isDataChannel)
 		{
 			ResetSctpStream(streamId, StreamDirection::OUTGOING);
