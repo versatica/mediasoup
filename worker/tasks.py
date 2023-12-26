@@ -140,59 +140,30 @@ def setup(ctx):
     """
     Run meson setup
     """
-    # We add --reconfigure first as a workaround for this issue:
-    # https://github.com/ninja-build/ninja/issues/1997
     if MEDIASOUP_BUILDTYPE == 'Release':
-        try:
-            with ctx.cd(WORKER_DIR):
-                ctx.run(
-                    f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true -Db_pie=true -Db_staticpic=true --reconfigure {MESON_ARGS} "{BUILD_DIR}"',
-                    echo=True,
-                    pty=PTY_SUPPORTED,
-                    shell=SHELL
-                );
-        except:
-            with ctx.cd(WORKER_DIR):
-                ctx.run(
-                    f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
-                    echo=True,
-                    pty=PTY_SUPPORTED,
-                    shell=SHELL
-                );
+        with ctx.cd(WORKER_DIR):
+            ctx.run(
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
     elif MEDIASOUP_BUILDTYPE == 'Debug':
-        try:
-            with ctx.cd(WORKER_DIR):
-                ctx.run(
-                    f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug -Db_pie=true -Db_staticpic=true --reconfigure {MESON_ARGS} "{BUILD_DIR}"',
-                    echo=True,
-                    pty=PTY_SUPPORTED,
-                    shell=SHELL
-                );
-        except:
-            with ctx.cd(WORKER_DIR):
-                ctx.run(
-                    f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
-                    echo=True,
-                    pty=PTY_SUPPORTED,
-                    shell=SHELL
-                );
+        with ctx.cd(WORKER_DIR):
+            ctx.run(
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
     else:
-        try:
-            with ctx.cd(WORKER_DIR):
-                ctx.run(
-                    f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release -Db_pie=true -Db_staticpic=true --reconfigure {MESON_ARGS} "{BUILD_DIR}"',
-                    echo=True,
-                    pty=PTY_SUPPORTED,
-                    shell=SHELL
-                );
-        except:
-            with ctx.cd(WORKER_DIR):
-                ctx.run(
-                    f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
-                    echo=True,
-                    pty=PTY_SUPPORTED,
-                    shell=SHELL
-                );
+        with ctx.cd(WORKER_DIR):
+            ctx.run(
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
+                echo=True,
+                pty=PTY_SUPPORTED,
+                shell=SHELL
+            );
 
 
 @task
