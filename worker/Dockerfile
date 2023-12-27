@@ -26,6 +26,9 @@ ENV LANG="C.UTF-8"
 ENV CC="clang"
 ENV CXX="clang++"
 
+ENV MEDIASOUP_LOCAL_DEV=true
+ENV KEEP_BUILD_ARTIFACTS=1
+
 WORKDIR /mediasoup
 
 CMD ["bash"]
