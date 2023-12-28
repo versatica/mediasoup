@@ -44,6 +44,18 @@ if get_option('ms_rtc_logger_rtp')
   ]
 endif
 
+cpp = meson.get_compiler('cpp')
+
+# This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
+# flatbuffers project, which is needed in case the current arch doesn't support
+# strtoll_l or strtoull_l (such as musl in Alpine Linux). Problem is that
+# flatbuffers build system not only defines it for its own usage but also relies
+# on it in its include/flatbuffers/util.h file, and if such a file is included
+# by mediasoup source files (and it is included) build fails with "error:
+# 'strtoull_l' was not declared in this scope".
+# See issue: https://github.com/versatica/mediasoup/issues/1223
+add_project_arguments('-DFLATBUFFERS_LOCALE_INDEPENDENT=@0@'.format(cpp.has_function('strtoull_l')), language: 'cpp')
+
 common_sources = [
   'src/lib.cpp',
   'src/DepLibSRTP.cpp',
@@ -163,14 +175,13 @@ common_sources = [
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
 ]
 
-cpp = meson.get_compiler('cpp')
-
 openssl_proj = subproject(
   'openssl',
   default_options: [
     'warning_level=0',
   ],
 )
+
 libuv_proj = subproject(
   'libuv',
   default_options: [
@@ -179,6 +190,7 @@ libuv_proj = subproject(
     'build_benchmarks=false',
   ],
 )
+
 libsrtp2_proj = subproject(
   'libsrtp2',
   default_options: [
@@ -188,6 +200,7 @@ libsrtp2_proj = subproject(
     'tests=disabled',
   ],
 )
+
 usrsctp_proj = subproject(
   'usrsctp',
   default_options: [
@@ -195,6 +208,7 @@ usrsctp_proj = subproject(
     'sctp_build_programs=false',
   ],
 )
+
 abseil_cpp_proj = subproject(
   'abseil-cpp',
   default_options: [
@@ -202,20 +216,24 @@ abseil_cpp_proj = subproject(
     'cpp_std=c++17',
   ],
 )
+
 catch2_proj = subproject(
   'catch2',
   default_options: [
     'warning_level=0',
   ],
 )
+
 flatbuffers_proj = subproject(
   'flatbuffers',
   default_options: [
     'warning_level=0',
   ],
 )
+
 # flatbuffers schemas subdirectory.
 subdir('fbs')
+
 # Add current build directory so libwebrtc has access to FBS folder.
 libwebrtc_include_directories = include_directories('include', 'fbs')
 subdir('deps/libwebrtc')
