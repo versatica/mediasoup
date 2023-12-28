@@ -2,9 +2,12 @@ name: mediasoup-worker-prebuild
 
 on:
   push:
+    branches:
+      - v3
     # Only trigger for production releases.
-    tags:
-      - "*.*.*"
+    release:
+      types:
+        - published
 
   # Only trigger when other workflows succeeded.
   workflow_run:
