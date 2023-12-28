@@ -5,9 +5,8 @@ on:
     branches:
       - v3
     # Only trigger for production releases.
-    release:
-      types:
-        - published
+    tags:
+      - "*.*.*"
 
   # Only trigger when other workflows succeeded.
   workflow_run:
@@ -47,29 +46,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        if: startsWith(github.ref, 'refs/tags/')
 
       - name: Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+        if: startsWith(github.ref, 'refs/tags/')
 
       # We need to install some NPM production deps for npm-scripts.mjs to work.
       - name: npm ci --ignore-scripts
         run: npm ci --ignore-scripts --omit=dev --foreground-scripts
+        if: startsWith(github.ref, 'refs/tags/')
 
       # However we also need to install pip invoke manually (since
       # `--ignore-scripts` prevented invoke from being installed).
       - name: pip3 install invoke
         run: pip3 install invoke
+        if: startsWith(github.ref, 'refs/tags/')
 
       - name: npm run worker:build
         run: npm run worker:build
+        if: startsWith(github.ref, 'refs/tags/')
 
       # Publish prebuild binaries on tag.
       - name: npm run worker:prebuild
         run: npm run worker:prebuild
+        if: startsWith(github.ref, 'refs/tags/')
 
       - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v1
         with:
           files: worker/prebuild/mediasoup-worker-*.tgz
+        if: startsWith(github.ref, 'refs/tags/')
