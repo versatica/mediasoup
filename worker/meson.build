@@ -231,13 +231,6 @@ flatbuffers_proj = subproject(
   ],
 )
 
-# flatbuffers schemas subdirectory.
-subdir('fbs')
-
-# Add current build directory so libwebrtc has access to FBS folder.
-libwebrtc_include_directories = include_directories('include', 'fbs')
-subdir('deps/libwebrtc')
-
 dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
