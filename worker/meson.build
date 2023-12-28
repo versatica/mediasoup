@@ -231,6 +231,9 @@ flatbuffers_proj = subproject(
   ],
 )
 
+# flatbuffers schemas subdirectory.
+subdir('fbs')
+
 dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
