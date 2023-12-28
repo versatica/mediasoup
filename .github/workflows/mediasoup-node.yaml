@@ -12,6 +12,7 @@ jobs:
   ci:
     strategy:
       matrix:
+        fail-fast: true
         ci:
           - os: ubuntu-20.04
             node: 16
@@ -27,7 +28,7 @@ jobs:
     runs-on: ${{ matrix.ci.os }}
 
     env:
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
 
     steps:
       - name: Checkout
@@ -43,7 +44,7 @@ jobs:
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.ci.os }}-node-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.ci.os }}-node-${{ hashFiles("**/package.json") }}
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 

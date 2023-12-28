@@ -11,7 +11,7 @@ concurrency:
 jobs:
   ci:
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         build:
           - os: ubuntu-20.04
@@ -44,7 +44,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
 
     steps:
       - name: Checkout
@@ -60,7 +60,7 @@ jobs:
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.build.os }}-node-${{matrix.build.cc}}-${{ hashFiles("**/package.json") }}
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
@@ -72,12 +72,12 @@ jobs:
       - name: npm ci --prefix worker/scripts
         run: npm ci --prefix worker/scripts --foreground-scripts
         # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
+        if: runner.os != "Windows"
 
       - name: invoke -r worker lint
         run: invoke -r worker lint
         # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
+        if: runner.os != "Windows"
 
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
@@ -85,4 +85,4 @@ jobs:
       - name: invoke -r worker test
         run: invoke -r worker test
         # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
+        if: runner.os != "Windows"

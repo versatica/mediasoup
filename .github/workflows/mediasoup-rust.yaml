@@ -14,6 +14,7 @@ env:
 jobs:
   ci:
     strategy:
+      fail-fast: true
       matrix:
         os:
           - ubuntu-20.04
@@ -24,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      KEEP_BUILD_ARTIFACTS: '1'
+      KEEP_BUILD_ARTIFACTS: "1"
 
     steps:
       - name: Checkout
@@ -36,7 +37,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ matrix.os }}-cargo-${{ hashFiles("**/Cargo.toml") }}
 
       - name: cargo fmt
         run: cargo fmt --all -- --check
@@ -50,6 +51,6 @@ jobs:
       - name: cargo doc
         run: cargo doc --locked --all --no-deps --lib
         env:
-          DOCS_RS: '1'
-          RUSTDOCFLAGS: '-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links'
+          DOCS_RS: "1"
+          RUSTDOCFLAGS: "-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links"
 

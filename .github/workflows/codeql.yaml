@@ -9,16 +9,15 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: CodeQL
 
-on:
-  push:
-    branches: [ "v3" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "v3" ]
-  schedule:
-    - cron: '37 9 * * 5'
+on: [push, pull_request]
+
+concurrency:
+  # Cancel a currently running workflow from the same PR, branch or tag when a
+  # new workflow is triggered.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -32,8 +31,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'javascript', 'python' ]
-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
+        language: [ "cpp", "javascript", "python" ]
+        # CodeQL supports [ "cpp", "csharp", "go", "java", "javascript", "python", "ruby" ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     env:
