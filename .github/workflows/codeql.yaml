@@ -9,16 +9,15 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: CodeQL
 
-on:
-  push:
-    branches: [ "v3" ]
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ "v3" ]
-  schedule:
-    - cron: '37 9 * * 5'
+on: [push, pull_request]
+
+concurrency:
+  # Cancel a currently running workflow from the same PR, branch or tag when a
+  # new workflow is triggered.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -37,7 +36,7 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     env:
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
     - name: Checkout repository
@@ -77,4 +76,4 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
       with:
-        category: "/language:${{matrix.language}}"
+        category: '/language:${{matrix.language}}'

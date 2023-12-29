@@ -4,7 +4,7 @@ on:
   push:
     # Only trigger for production releases.
     tags:
-      - "*.*.*"
+      - '*.*.*'
 
   # Only trigger when other workflows succeeded.
   workflow_run:
@@ -15,7 +15,6 @@ on:
 jobs:
   ci:
     strategy:
-      fail-fast: false
       matrix:
         build:
           # For Linux let's use an old version of Ubuntu (20.04) that builds the
@@ -39,7 +38,7 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout
