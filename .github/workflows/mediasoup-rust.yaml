@@ -14,7 +14,6 @@ env:
 jobs:
   ci:
     strategy:
-      fail-fast: true
       matrix:
         os:
           - ubuntu-20.04

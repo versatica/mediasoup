@@ -12,7 +12,6 @@ jobs:
   ci:
     strategy:
       matrix:
-        fail-fast: true
         ci:
           - os: ubuntu-20.04
             node: 16
