@@ -1,16 +1,9 @@
 name: mediasoup-worker-prebuild
 
+# Only trigger on GitHub releases.
 on:
-  push:
-    # Only trigger for production releases.
-    tags:
-      - '*.*.*'
-
-  # Only trigger when other workflows succeeded.
-  workflow_run:
-    workflows: [mediasoup-worker, mediasoup-node, mediasoup-rust]
-    types:
-      - completed
+  release:
+    types: [published]
 
 jobs:
   ci:
