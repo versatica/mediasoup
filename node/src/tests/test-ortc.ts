@@ -604,6 +604,7 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 	};
 
 	expect(
-		() => ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities))
-		.toThrow(UnsupportedError);
+		() => ortc.getProducerRtpParametersMapping(
+			rtpParameters, routerRtpCapabilities
+		)).toThrow(UnsupportedError);
 });
