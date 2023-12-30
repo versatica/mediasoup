@@ -1,6 +1,11 @@
 # Changelog
 
 
+### NEXT
+
+* Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
+
+
 ### 3.13.13
 
 * worker: Do not use references for async callbacks ([PR #1274](https://github.com/versatica/mediasoup/pull/1274)).
