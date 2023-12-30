@@ -748,7 +748,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		// Clone given media codecs to not modify input data.
+		// Clone given media codecs to not modify inout data.
 		const clonedMediaCodecs =
 			utils.clone<RtpCodecCapability[] | undefined>(mediaCodecs);
 
