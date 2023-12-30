@@ -494,17 +494,20 @@ pub(super) trait TransportImpl: TransportGeneric {
         let ProducerOptions {
             id,
             kind,
-            mut rtp_parameters,
+            rtp_parameters,
             paused,
             key_frame_request_delay,
             app_data,
         } = producer_options;
 
-        ortc::validate_rtp_parameters(&rtp_parameters)
+        // Clone given RTP parameters to not modify inout data.
+        let mut cloned_rtp_parameters = rtp_parameters.clone();
+
+        ortc::validate_rtp_parameters(&cloned_rtp_parameters)
             .map_err(ProduceError::IncorrectRtpParameters)?;
 
-        if rtp_parameters.encodings.is_empty() {
-            rtp_parameters
+        if cloned_rtp_parameters.encodings.is_empty() {
+            cloned_rtp_parameters
                 .encodings
                 .push(RtpEncodingParameters::default());
         }
@@ -513,8 +516,8 @@ pub(super) trait TransportImpl: TransportGeneric {
         if transport_type != TransportType::Pipe {
             let mut cname_for_producers = self.cname_for_producers().lock();
             if let Some(cname_for_producers) = cname_for_producers.as_ref() {
-                rtp_parameters.rtcp.cname = Some(cname_for_producers.clone());
-            } else if let Some(cname) = rtp_parameters.rtcp.cname.as_ref() {
+                cloned_rtp_parameters.rtcp.cname = Some(cname_for_producers.clone());
+            } else if let Some(cname) = cloned_rtp_parameters.rtcp.cname.as_ref() {
                 // If CNAME is given and we don't have yet a CNAME for Producers in this
                 // Transport, take it.
                 cname_for_producers.replace(cname.clone());
@@ -525,19 +528,21 @@ pub(super) trait TransportImpl: TransportGeneric {
                 cname_for_producers.replace(cname.clone());
 
                 // Override Producer's CNAME.
-                rtp_parameters.rtcp.cname = Some(cname);
+                cloned_rtp_parameters.rtcp.cname = Some(cname);
             }
         }
 
         let router_rtp_capabilities = self.router().rtp_capabilities();
 
-        let rtp_mapping =
-            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, router_rtp_capabilities)
-                .map_err(ProduceError::FailedRtpParametersMapping)?;
+        let rtp_mapping = ortc::get_producer_rtp_parameters_mapping(
+            &cloned_rtp_parameters,
+            router_rtp_capabilities,
+        )
+        .map_err(ProduceError::FailedRtpParametersMapping)?;
 
         let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
             kind,
-            &rtp_parameters,
+            &cloned_rtp_parameters,
             router_rtp_capabilities,
             &rtp_mapping,
         );
@@ -553,7 +558,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                 TransportProduceRequest {
                     producer_id,
                     kind,
-                    rtp_parameters: rtp_parameters.clone(),
+                    rtp_parameters: cloned_rtp_parameters.clone(),
                     rtp_mapping,
                     key_frame_request_delay,
                     paused,
@@ -566,7 +571,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             producer_id,
             kind,
             response.r#type,
-            rtp_parameters,
+            cloned_rtp_parameters,
             consumable_rtp_parameters,
             paused,
             Arc::clone(self.executor()),
