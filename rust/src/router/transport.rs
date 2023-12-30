@@ -500,7 +500,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             app_data,
         } = producer_options;
 
-        // Clone given RTP parameters to not modify inout data.
+        // Clone given RTP parameters to not modify input data.
         let mut cloned_rtp_parameters = rtp_parameters.clone();
 
         ortc::validate_rtp_parameters(&cloned_rtp_parameters)

@@ -712,7 +712,7 @@ impl Worker {
             media_codecs,
         } = router_options;
 
-        // Clone given RTP parameters to not modify inout data.
+        // Clone given RTP parameters to not modify input data.
         let cloned_media_codecs = media_codecs.clone();
 
         let rtp_capabilities = ortc::generate_router_rtp_capabilities(cloned_media_codecs)

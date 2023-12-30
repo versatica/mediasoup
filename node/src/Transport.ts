@@ -714,7 +714,7 @@ export class Transport
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		// Clone given RTP parameters to not modify inout data.
+		// Clone given RTP parameters to not modify input data.
 		const clonedRtpParameters = utils.clone<RtpParameters>(rtpParameters);
 
 		// This may throw.
@@ -861,7 +861,7 @@ export class Transport
 			throw new TypeError('if given, mid must be non empty string');
 		}
 
-		// Clone given RTP capabilities to not modify inout data.
+		// Clone given RTP capabilities to not modify input data.
 		const clonedRtpCapabilities = utils.clone<RtpCapabilities>(rtpCapabilities);
 
 		// This may throw.
@@ -1006,7 +1006,7 @@ export class Transport
 
 		let type: DataProducerType;
 
-		// Clone given SCTP stream parameters to not modify inout data.
+		// Clone given SCTP stream parameters to not modify input data.
 		let clonedSctpStreamParameters
 			= utils.clone<SctpStreamParameters | undefined>(sctpStreamParameters);
 
