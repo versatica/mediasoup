@@ -202,19 +202,19 @@ fn send_succeeds() {
 
             move |message| {
                 let id: usize = match message {
-                    WebRtcMessage::String(string) => {
-                        recv_message_bytes.fetch_add(string.as_bytes().len(), Ordering::SeqCst);
-                        string.parse().unwrap()
+                    WebRtcMessage::String(binary) => {
+                        recv_message_bytes.fetch_add(binary.len(), Ordering::SeqCst);
+                        String::from_utf8(binary.to_vec()).unwrap().parse().unwrap()
                     }
                     WebRtcMessage::Binary(binary) => {
                         recv_message_bytes.fetch_add(binary.len(), Ordering::SeqCst);
                         String::from_utf8(binary.to_vec()).unwrap().parse().unwrap()
                     }
                     WebRtcMessage::EmptyString => {
-                        panic!("Unexpected empty messages!");
+                        panic!("Unexpected empty message!");
                     }
                     WebRtcMessage::EmptyBinary => {
-                        panic!("Unexpected empty messages!");
+                        panic!("Unexpected empty message!");
                     }
                 };
 
@@ -266,14 +266,14 @@ fn send_succeeds() {
             }
 
             let message = if id < num_messages / 2 {
-                let content = id.to_string();
+                let content = id.to_string().into_bytes();
                 sent_message_bytes += content.len();
 
                 if !data_producer.paused() && !data_consumer.paused() {
                     effectively_sent_message_bytes += content.len();
                 }
 
-                WebRtcMessage::String(content)
+                WebRtcMessage::String(Cow::from(content))
             } else {
                 let content = id.to_string().into_bytes();
                 sent_message_bytes += content.len();
@@ -388,9 +388,9 @@ fn send_with_subchannels_succeeds() {
 
             move |message| {
                 let text: String = match message {
-                    WebRtcMessage::String(string) => string.parse().unwrap(),
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
                     _ => {
-                        panic!("Unexpected empty messages!");
+                        panic!("Unexpected empty message!");
                     }
                 };
 
@@ -409,9 +409,9 @@ fn send_with_subchannels_succeeds() {
 
             move |message| {
                 let text: String = match message {
-                    WebRtcMessage::String(string) => string.parse().unwrap(),
+                    WebRtcMessage::String(binary) => String::from_utf8(binary.to_vec()).unwrap(),
                     _ => {
-                        panic!("Unexpected empty messages!");
+                        panic!("Unexpected empty message!");
                     }
                 };
 
@@ -444,13 +444,17 @@ fn send_with_subchannels_succeeds() {
 
         // Must be received by dataConsumer1 and dataConsumer2.
         direct_data_producer
-            .send(WebRtcMessage::String(both.to_string()), None, None)
+            .send(
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
+                None,
+                None,
+            )
             .expect("Failed to send message");
 
         // Must be received by dataConsumer1 and dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(both.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![1, 2]),
                 None,
             )
@@ -459,7 +463,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1 and dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(both.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![11, 22, 33]),
                 Some(666),
             )
@@ -468,7 +472,7 @@ fn send_with_subchannels_succeeds() {
         // Must not be received by neither dataConsumer1 nor dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(none.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(none.as_bytes())),
                 Some(vec![3]),
                 Some(666),
             )
@@ -477,7 +481,7 @@ fn send_with_subchannels_succeeds() {
         // Must not be received by neither dataConsumer1 nor dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(none.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(none.as_bytes())),
                 Some(vec![666]),
                 Some(3),
             )
@@ -485,18 +489,26 @@ fn send_with_subchannels_succeeds() {
 
         // Must be received by dataConsumer1.
         direct_data_producer
-            .send(WebRtcMessage::String(dc1.to_string()), Some(vec![1]), None)
-            .expect("Failed to send message");
-
-        // Must be received by dataConsumer1.
-        direct_data_producer
-            .send(WebRtcMessage::String(dc1.to_string()), Some(vec![11]), None)
+            .send(
+                WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
+                Some(vec![1]),
+                None,
+            )
             .expect("Failed to send message");
 
         // Must be received by dataConsumer1.
         direct_data_producer
             .send(
-                WebRtcMessage::String(dc1.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
+                Some(vec![11]),
+                None,
+            )
+            .expect("Failed to send message");
+
+        // Must be received by dataConsumer1.
+        direct_data_producer
+            .send(
+                WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![666]),
                 Some(11),
             )
@@ -505,7 +517,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(dc2.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(dc2.as_bytes())),
                 Some(vec![666]),
                 Some(2),
             )
@@ -522,7 +534,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(both.to_string()),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![1]),
                 Some(666),
             )
