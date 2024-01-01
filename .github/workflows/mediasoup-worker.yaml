@@ -70,18 +70,13 @@ jobs:
       # We need to install npm deps of worker/scripts/package.json.
       - name: npm ci --prefix worker/scripts
         run: npm ci --prefix worker/scripts --foreground-scripts
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
 
       - name: invoke -r worker lint
         run: invoke -r worker lint
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
 
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
 
       - name: invoke -r worker test
         run: invoke -r worker test
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
+
