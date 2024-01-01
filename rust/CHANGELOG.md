@@ -1,6 +1,6 @@
 # Changelog
 
-# NEXT
+# 0.15.0
 
 * Expose DataChannel string message as binary (PR #1289).
 
