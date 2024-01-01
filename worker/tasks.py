@@ -65,7 +65,6 @@ MESON_ARGS = os.getenv('MESON_ARGS') if os.getenv('MESON_ARGS') else '--vsenv' i
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
 PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
-LCOV = f'{WORKER_DIR}/deps/lcov/bin/lcov';
 DOCKER = os.getenv('DOCKER') or 'docker';
 # pty=True in ctx.run() is not available on Windows so if stdout is not a TTY
 # let's assume PTY is not supported. Related issue in invoke project:
@@ -395,15 +394,6 @@ def test(ctx):
 
     mediasoup_worker_test = 'mediasoup-worker-test.exe' if os.name == 'nt' else 'mediasoup-worker-test';
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
-
-    # On Windows lcov doesn't work (at least not yet).
-    if os.name != 'nt':
-        ctx.run(
-            f'"{LCOV}" --directory "{WORKER_DIR}" --zerocounters',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
 
     with ctx.cd(WORKER_DIR):
         ctx.run(
