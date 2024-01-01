@@ -445,7 +445,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1 and dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(both.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 None,
                 None,
             )
@@ -454,7 +454,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1 and dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(both.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![1, 2]),
                 None,
             )
@@ -463,7 +463,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1 and dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(both.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![11, 22, 33]),
                 Some(666),
             )
@@ -472,7 +472,7 @@ fn send_with_subchannels_succeeds() {
         // Must not be received by neither dataConsumer1 nor dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(none.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(none.as_bytes())),
                 Some(vec![3]),
                 Some(666),
             )
@@ -481,7 +481,7 @@ fn send_with_subchannels_succeeds() {
         // Must not be received by neither dataConsumer1 nor dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(none.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(none.as_bytes())),
                 Some(vec![666]),
                 Some(3),
             )
@@ -490,7 +490,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(dc1.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![1]),
                 None,
             )
@@ -499,7 +499,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(dc1.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![11]),
                 None,
             )
@@ -508,7 +508,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer1.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(dc1.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(dc1.as_bytes())),
                 Some(vec![666]),
                 Some(11),
             )
@@ -517,7 +517,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(dc2.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(dc2.as_bytes())),
                 Some(vec![666]),
                 Some(2),
             )
@@ -534,7 +534,7 @@ fn send_with_subchannels_succeeds() {
         // Must be received by dataConsumer2.
         direct_data_producer
             .send(
-                WebRtcMessage::String(std::borrow::Cow::Borrowed(both.as_bytes())),
+                WebRtcMessage::String(Cow::Borrowed(both.as_bytes())),
                 Some(vec![1]),
                 Some(666),
             )
