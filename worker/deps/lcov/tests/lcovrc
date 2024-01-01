@@ -1,8 +1,0 @@
-# lcovrc file used during tests
-
-lcov_function_coverage = 1
-lcov_branch_coverage = 1
-
-# disable feature for backward compatibility
-#  - so I don't have to modify legacy testcases (some new tests _do_ check the feature)
-derive_function_end_line = 0
