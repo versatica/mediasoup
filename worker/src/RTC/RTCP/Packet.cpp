@@ -76,14 +76,18 @@ namespace RTC
 						current = SenderReportPacket::Parse(data, packetLen);
 
 						if (!current)
+						{
 							break;
+						}
 
 						if (header->count > 0)
 						{
 							Packet* rr = ReceiverReportPacket::Parse(data, packetLen, current->GetSize());
 
 							if (!rr)
+							{
 								break;
+							}
 
 							current->SetNext(rr);
 						}
@@ -172,9 +176,13 @@ namespace RTC
 				len -= packetLen;
 
 				if (!first)
+				{
 					first = current;
+				}
 				else
+				{
 					last->SetNext(current);
+				}
 
 				last = current->GetNext() != nullptr ? current->GetNext() : current;
 			}
@@ -191,7 +199,9 @@ namespace RTC
 			auto it = Packet::type2String.find(type);
 
 			if (it == Packet::type2String.end())
+			{
 				return Unknown;
+			}
 
 			return it->second;
 		}

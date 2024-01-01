@@ -49,11 +49,11 @@ FixNamespaceComments: true
 IncludeCategories:
   - Regex:    '"common.hpp"'
     Priority: 1
-  - Regex:    '^"(Channel|PayloadChannel|RTC|Utils|handles)/'
+  - Regex:    '^"(Channel|PayloadChannel|FBS|RTC|Utils|handles)/'
     Priority: 3
   - Regex:    '"*"'
     Priority: 2
-  - Regex:    '^<(json|uv|openssl|srtp|usrsctp|libwebrtc)(.|/)'
+  - Regex:    '^<(flatbuffers|uv|openssl|srtp|usrsctp|libwebrtc)(.|/)'
     Priority: 4
   - Regex:    '<*>'
     Priority: 5
@@ -61,6 +61,7 @@ IncludeIsMainRegex: '$'
 IndentCaseLabels: true
 IndentWidth: 2
 IndentWrappedFunctionNames: false
+InsertBraces: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All

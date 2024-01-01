@@ -1,9 +1,8 @@
 [wrap-file]
-directory = libsrtp-2.5.0
-source_url = https://github.com/cisco/libsrtp/archive/refs/tags/v2.5.0.tar.gz
-source_filename = libsrtp-2.5.0.tar.gz
-source_hash = 8a43ef8e9ae2b665292591af62aa1a4ae41e468b6d98d8258f91478735da4e09
-wrapdb_version = 2.5.0-1
+directory = libsrtp-4c9f0956f2933ac0650208d69c8d897625ba6301
+source_url = https://github.com/versatica/libsrtp/archive/4c9f0956f2933ac0650208d69c8d897625ba6301.zip
+source_filename = libsrtp-4c9f0956f2933ac0650208d69c8d897625ba6301.zip
+source_hash = 4f3af61e26df398569605fc4bcf377587ca2d8bd34b2b4bf9cdb9590cadbd662
 
 [provide]
 libsrtp2 = libsrtp2_dep

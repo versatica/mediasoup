@@ -3,6 +3,9 @@
 
 #include "RTC/SrtpSession.hpp"
 #include "DepLibSRTP.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset(), std::memcpy()
@@ -25,6 +28,42 @@ namespace RTC
 		if (DepLibSRTP::IsError(err))
 		{
 			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
+		}
+	}
+
+	FBS::SrtpParameters::SrtpCryptoSuite SrtpSession::CryptoSuiteToFbs(CryptoSuite cryptoSuite)
+	{
+		switch (cryptoSuite)
+		{
+			case SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM;
+
+			case SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_128_GCM;
+
+			case SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_80;
+
+			case SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32;
+		}
+	}
+
+	SrtpSession::CryptoSuite SrtpSession::CryptoSuiteFromFbs(FBS::SrtpParameters::SrtpCryptoSuite cryptoSuite)
+	{
+		switch (cryptoSuite)
+		{
+			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM:
+				return SrtpSession::CryptoSuite::AEAD_AES_256_GCM;
+
+			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_128_GCM:
+				return SrtpSession::CryptoSuite::AEAD_AES_128_GCM;
+
+			case FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_80:
+				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80;
+
+			case FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32:
+				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32;
 		}
 	}
 
@@ -130,7 +169,9 @@ namespace RTC
 		const srtp_err_status_t err = srtp_create(&this->session, &policy);
 
 		if (DepLibSRTP::IsError(err))
+		{
 			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err));
+		}
 	}
 
 	SrtpSession::~SrtpSession()
@@ -142,7 +183,9 @@ namespace RTC
 			const srtp_err_status_t err = srtp_dealloc(this->session);
 
 			if (DepLibSRTP::IsError(err))
+			{
 				MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
+			}
 		}
 	}
 
@@ -158,9 +201,30 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(EncryptBuffer, *data, *len);
+		uint8_t* encryptBuffer = EncryptBuffer;
 
-		const srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(EncryptBuffer), len);
+#ifdef MS_LIBURING_SUPPORTED
+		{
+			if (!DepLibUring::IsActive())
+			{
+				goto protect;
+			}
+
+			// Use a preallocated buffer, if available.
+			auto* sendBuffer = DepLibUring::GetSendBuffer();
+
+			if (sendBuffer)
+			{
+				encryptBuffer = sendBuffer;
+			}
+		}
+
+	protect:
+#endif
+
+		std::memcpy(encryptBuffer, *data, *len);
+
+		const srtp_err_status_t err = srtp_protect(this->session, static_cast<void*>(encryptBuffer), len);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -170,7 +234,7 @@ namespace RTC
 		}
 
 		// Update the given data pointer.
-		*data = (const uint8_t*)EncryptBuffer;
+		*data = const_cast<const uint8_t*>(encryptBuffer);
 
 		return true;
 	}

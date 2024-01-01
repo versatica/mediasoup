@@ -2,6 +2,7 @@
 #define MS_RTC_ICE_SERVER_HPP
 
 #include "common.hpp"
+#include "FBS/webRtcTransport.h"
 #include "RTC/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include <list>
@@ -17,8 +18,12 @@ namespace RTC
 			NEW = 1,
 			CONNECTED,
 			COMPLETED,
-			DISCONNECTED
+			DISCONNECTED,
 		};
+
+	public:
+		static IceState RoleFromFbs(FBS::WebRtcTransport::IceState state);
+		static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
 	public:
 		class Listener
@@ -93,9 +98,11 @@ namespace RTC
 		}
 		bool IsValidTuple(const RTC::TransportTuple* tuple) const;
 		void RemoveTuple(RTC::TransportTuple* tuple);
-		// This should be just called in 'connected' or completed' state
-		// and the given tuple must be an already valid tuple.
-		void ForceSelectedTuple(const RTC::TransportTuple* tuple);
+		/**
+		 * This should be just called in 'connected' or 'completed' state and the
+		 * given tuple must be an already valid tuple.
+		 */
+		void MayForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
 		void HandleTuple(
@@ -122,8 +129,8 @@ namespace RTC
 		std::string password;
 		std::string oldUsernameFragment;
 		std::string oldPassword;
-		uint32_t remoteNomination{ 0u };
 		IceState state{ IceState::NEW };
+		uint32_t remoteNomination{ 0u };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 	};

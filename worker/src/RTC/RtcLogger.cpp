@@ -49,7 +49,6 @@ namespace RTC
 
 		void RtpPacket::Log() const
 		{
-#ifdef MS_RTC_LOGGER_RTP
 			MS_TRACE();
 
 			std::cout << "{";
@@ -83,7 +82,6 @@ namespace RTC
 			std::cout << ", \"dropped\": " << (this->dropped ? "true" : "false");
 			std::cout << ", \"dropReason\": '" << dropReason2String[this->dropReason] << "'";
 			std::cout << "}" << std::endl;
-#endif
 		}
 
 		void RtpPacket::Clear()

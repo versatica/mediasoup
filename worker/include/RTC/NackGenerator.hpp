@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/SeqManager.hpp"
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include <absl/container/btree_map.h>
 #include <absl/container/btree_set.h>
 #include <map>
@@ -13,7 +13,7 @@
 
 namespace RTC
 {
-	class NackGenerator : public Timer::Listener
+	class NackGenerator : public TimerHandle::Listener
 	{
 	public:
 		class Listener
@@ -69,16 +69,16 @@ namespace RTC
 		std::vector<uint16_t> GetNackBatch(NackFilter filter);
 		void MayRunTimer() const;
 
-		/* Pure virtual methods inherited from Timer::Listener. */
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
 	public:
-		void OnTimer(Timer* timer) override;
+		void OnTimer(TimerHandle* timer) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		unsigned int sendNackDelayMs{ 0u };
 		// Allocated by this.
-		Timer* timer{ nullptr };
+		TimerHandle* timer{ nullptr };
 		// Others.
 		absl::btree_map<uint16_t, NackInfo, RTC::SeqManager<uint16_t>::SeqLowerThan> nackList;
 		absl::btree_set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> keyFrameList;

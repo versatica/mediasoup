@@ -5,7 +5,6 @@
 #include "Settings.hpp"
 #include <uv.h>
 #include <absl/container/flat_hash_map.h>
-#include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
@@ -45,7 +44,6 @@ namespace RTC
 		{
 			return Unbind(Transport::TCP, ip, port);
 		}
-		static void FillJson(json& jsonObject);
 
 	private:
 		static uv_handle_t* Bind(Transport transport, std::string& ip);

@@ -71,10 +71,14 @@ namespace Utils
 		MS_TRACE();
 
 		if (Crypto::hmacSha1Ctx != nullptr)
+		{
 			EVP_MAC_CTX_free(Crypto::hmacSha1Ctx);
+		}
 
 		if (Crypto::mac != nullptr)
+		{
 			EVP_MAC_free(Crypto::mac);
+		}
 	}
 
 	const uint8_t* Crypto::GetHmacSha1(const std::string& key, const uint8_t* data, size_t len)

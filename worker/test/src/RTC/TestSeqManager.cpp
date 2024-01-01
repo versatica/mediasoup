@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "RTC/SeqManager.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>
 
@@ -45,6 +45,7 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 
 			// Covert to string because otherwise Catch will print uint8_t as char.
 			REQUIRE(std::to_string(output) == std::to_string(element.output));
+
 			if (element.maxInput != -1)
 			{
 				REQUIRE(std::to_string(element.maxInput) == std::to_string(seqManager.GetMaxInput()));

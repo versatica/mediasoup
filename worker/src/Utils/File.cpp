@@ -27,16 +27,22 @@ namespace Utils
 		err = stat(file, &fileStat);
 
 		if (err != 0)
+		{
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
+		}
 
 		// Ensure it is a regular file.
 		if (!S_ISREG(fileStat.st_mode))
+		{
 			MS_THROW_ERROR("'%s' is not a regular file", file);
+		}
 
 		// Ensure it is readable.
 		err = access(file, R_OK);
 
 		if (err != 0)
+		{
 			MS_THROW_ERROR("cannot read file '%s': %s", file, std::strerror(errno));
+		}
 	}
 } // namespace Utils

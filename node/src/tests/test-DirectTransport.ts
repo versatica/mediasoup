@@ -1,14 +1,12 @@
 import * as mediasoup from '../';
 
-const { createWorker } = mediasoup;
-
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
 let transport: mediasoup.types.DirectTransport;
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter();
 });
 
@@ -52,7 +50,7 @@ test('router.createDirectTransport() succeeds', async () =>
 	expect(data1.consumerIds).toEqual([]);
 	expect(data1.dataProducerIds).toEqual([]);
 	expect(data1.dataConsumerIds).toEqual([]);
-	expect(typeof data1.recvRtpHeaderExtensions).toBe('object');
+	expect(data1.recvRtpHeaderExtensions).toBeDefined();
 	expect(typeof data1.rtpListener).toBe('object');
 
 	transport1.close();
@@ -117,19 +115,62 @@ test('dataProducer.send() succeeds', async () =>
 			dataProducerId : dataProducer.id
 		});
 	const numMessages = 200;
-	let sentMessageBytes = 0;
-	let recvMessageBytes = 0;
-	let lastSentMessageId = 0;
-	let lastRecvMessageId = 0;
+	const pauseSendingAtMessage = 10;
+	const resumeSendingAtMessage = 20;
+	const pauseReceivingAtMessage = 40;
+	const resumeReceivingAtMessage = 60;
+	const expectedReceivedNumMessages =
+		numMessages -
+		(resumeSendingAtMessage - pauseSendingAtMessage) -
+		(resumeReceivingAtMessage - pauseReceivingAtMessage);
 
-	await new Promise<void>((resolve) =>
+	let sentMessageBytes = 0;
+	let effectivelySentMessageBytes = 0;
+	let recvMessageBytes = 0;
+	let numSentMessages = 0;
+	let numReceivedMessages = 0;
+
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async (resolve, reject) =>
 	{
-		// Send messages over the sctpSendStream created above.
-		const interval = setInterval(() =>
+		dataProducer.on('listenererror', (eventName, error) =>
 		{
-			const id = ++lastSentMessageId;
+			reject(
+				new Error(`dataProducer 'listenererror' [eventName:${eventName}]: ${error}`)
+			);
+		});
+
+		dataConsumer.on('listenererror', (eventName, error) =>
+		{
+			reject(
+				new Error(`dataConsumer 'listenererror' [eventName:${eventName}]: ${error}`)
+			);
+		});
+
+		sendNextMessage();
+
+		async function sendNextMessage(): Promise<void>
+		{
+			const id = ++numSentMessages;
 			let ppid;
 			let message;
+
+			if (id === pauseSendingAtMessage)
+			{
+				await dataProducer.pause();
+			}
+			else if (id === resumeSendingAtMessage)
+			{
+				await dataProducer.resume();
+			}
+			else if (id === pauseReceivingAtMessage)
+			{
+				await dataConsumer.pause();
+			}
+			else if (id === resumeReceivingAtMessage)
+			{
+				await dataConsumer.resume();
+			}
 
 			// Send string (WebRTC DataChannel string).
 			if (id < numMessages / 2)
@@ -143,16 +184,26 @@ test('dataProducer.send() succeeds', async () =>
 			}
 
 			dataProducer.send(message, ppid);
-			sentMessageBytes += Buffer.from(message).byteLength;
 
-			if (id === numMessages)
+			const messageSize = Buffer.from(message).byteLength;
+
+			sentMessageBytes += messageSize;
+
+			if (!dataProducer.paused && !dataConsumer.paused)
 			{
-				clearInterval(interval);
+				effectivelySentMessageBytes += messageSize;
 			}
-		}, 0);
+
+			if (id < numMessages)
+			{
+				sendNextMessage();
+			}
+		}
 
 		dataConsumer.on('message', (message, ppid) =>
 		{
+			++numReceivedMessages;
+
 			// message is always a Buffer.
 			recvMessageBytes += message.byteLength;
 
@@ -160,26 +211,28 @@ test('dataProducer.send() succeeds', async () =>
 
 			if (id === numMessages)
 			{
-				clearInterval(interval);
 				resolve();
 			}
-
-			if (id < numMessages / 2)
+			// PPID of WebRTC DataChannel string.
+			else if (id < numMessages / 2 && ppid !== 51)
 			{
-				expect(ppid).toBe(51); // PPID of WebRTC DataChannel string.
+				reject(
+					new Error(`ppid in message with id ${id} should be 51 but it is ${ppid}`)
+				);
 			}
-			else
+			// PPID of WebRTC DataChannel binary.
+			else if (id > numMessages / 2 && ppid !== 53)
 			{
-				expect(ppid).toBe(53); // PPID of WebRTC DataChannel binary.
+				reject(
+					new Error(`ppid in message with id ${id} should be 53 but it is ${ppid}`)
+				);
 			}
-
-			expect(id).toBe(++lastRecvMessageId);
 		});
 	});
 
-	expect(lastSentMessageId).toBe(numMessages);
-	expect(lastRecvMessageId).toBe(numMessages);
-	expect(recvMessageBytes).toBe(sentMessageBytes);
+	expect(numSentMessages).toBe(numMessages);
+	expect(numReceivedMessages).toBe(expectedReceivedNumMessages);
+	expect(recvMessageBytes).toBe(effectivelySentMessageBytes);
 
 	await expect(dataProducer.getStats())
 		.resolves
@@ -202,10 +255,159 @@ test('dataProducer.send() succeeds', async () =>
 					type         : 'data-consumer',
 					label        : dataConsumer.label,
 					protocol     : dataConsumer.protocol,
-					messagesSent : numMessages,
+					messagesSent : expectedReceivedNumMessages,
 					bytesSent    : recvMessageBytes
 				}
 			]);
+}, 5000);
+
+test('dataProducer.send() with subchannels succeeds', async () =>
+{
+	const transport2 = await router.createDirectTransport();
+	const dataProducer = await transport2.produceData();
+	const dataConsumer1 = await transport2.consumeData(
+		{
+			dataProducerId : dataProducer.id,
+			subchannels    : [ 1, 11, 666 ]
+		});
+	const dataConsumer2 = await transport2.consumeData(
+		{
+			dataProducerId : dataProducer.id,
+			subchannels    : [ 2, 22, 666 ]
+		});
+	const expectedReceivedNumMessages1 = 7;
+	const expectedReceivedNumMessages2 = 5;
+	const receivedMessages1: string[] = [];
+	const receivedMessages2: string[] = [];
+
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async (resolve) =>
+	{
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ undefined,
+			/* requiredSubchannel */ undefined
+		);
+
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ [ 1, 2 ],
+			/* requiredSubchannel */ undefined
+		);
+
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ [ 11, 22, 33 ],
+			/* requiredSubchannel */ 666
+		);
+
+		// Must not be received by neither dataConsumer1 nor dataConsumer2.
+		dataProducer.send(
+			'none',
+			/* ppid */ undefined,
+			/* subchannels */ [ 3 ],
+			/* requiredSubchannel */ 666
+		);
+
+		// Must not be received by neither dataConsumer1 nor dataConsumer2.
+		dataProducer.send(
+			'none',
+			/* ppid */ undefined,
+			/* subchannels */ [ 666 ],
+			/* requiredSubchannel */ 3
+		);
+
+		// Must be received by dataConsumer1.
+		dataProducer.send(
+			'dc1',
+			/* ppid */ undefined,
+			/* subchannels */ [ 1 ],
+			/* requiredSubchannel */ undefined
+		);
+
+		// Must be received by dataConsumer1.
+		dataProducer.send(
+			'dc1',
+			/* ppid */ undefined,
+			/* subchannels */ [ 11 ],
+			/* requiredSubchannel */ 1
+		);
+
+		// Must be received by dataConsumer1.
+		dataProducer.send(
+			'dc1',
+			/* ppid */ undefined,
+			/* subchannels */ [ 666 ],
+			/* requiredSubchannel */ 11
+		);
+
+		// Must be received by dataConsumer2.
+		dataProducer.send(
+			'dc2',
+			/* ppid */ undefined,
+			/* subchannels */ [ 666 ],
+			/* requiredSubchannel */ 2
+		);
+
+		// Make dataConsumer2 also subscribe to subchannel 1.
+		// NOTE: No need to await for this call.
+		void dataConsumer2.setSubchannels([ ...dataConsumer2.subchannels, 1 ]);
+
+		// Must be received by dataConsumer1 and dataConsumer2.
+		dataProducer.send(
+			'both',
+			/* ppid */ undefined,
+			/* subchannels */ [ 1 ],
+			/* requiredSubchannel */ 666
+		);
+
+		dataConsumer1.on('message', (message) =>
+		{
+			receivedMessages1.push(message.toString('utf8'));
+
+			if (
+				receivedMessages1.length === expectedReceivedNumMessages1 &&
+				receivedMessages2.length === expectedReceivedNumMessages2
+			)
+			{
+				resolve();
+			}
+		});
+
+		dataConsumer2.on('message', (message) =>
+		{
+			receivedMessages2.push(message.toString('utf8'));
+
+			if (
+				receivedMessages1.length === expectedReceivedNumMessages1 &&
+				receivedMessages2.length === expectedReceivedNumMessages2
+			)
+			{
+				resolve();
+			}
+		});
+	});
+
+	expect(receivedMessages1.length).toBe(expectedReceivedNumMessages1);
+	expect(receivedMessages2.length).toBe(expectedReceivedNumMessages2);
+
+	for (const message of receivedMessages1)
+	{
+		expect([ 'both', 'dc1' ].includes(message)).toBe(true);
+		expect([ 'dc2' ].includes(message)).toBe(false);
+	}
+
+	for (const message of receivedMessages2)
+	{
+		expect([ 'both', 'dc2' ].includes(message)).toBe(true);
+		expect([ 'dc1' ].includes(message)).toBe(false);
+	}
 }, 5000);
 
 test('DirectTransport methods reject if closed', async () =>

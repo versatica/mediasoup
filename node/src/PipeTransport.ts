@@ -1,22 +1,50 @@
-import { v4 as uuidv4 } from 'uuid';
+import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import * as ortc from './ortc';
 import {
+	BaseTransportDump,
+	BaseTransportStats,
+	parseBaseTransportDump,
+	parseBaseTransportStats,
+	parseSctpState,
+	parseTuple,
+	parseTransportTraceEventData,
 	Transport,
+	TransportListenInfo,
 	TransportListenIp,
 	TransportTuple,
-	TransportTraceEventData,
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions,
 	SctpState
 } from './Transport';
 import { Consumer, ConsumerType } from './Consumer';
+import { Producer } from './Producer';
+import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
-import { SrtpParameters } from './SrtpParameters';
-import { AppData } from './types';
+import {
+	parseSrtpParameters,
+	serializeSrtpParameters,
+	SrtpParameters
+} from './SrtpParameters';
+import { AppData, Either } from './types';
+import { generateUUIDv4 } from './utils';
+import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
+import { Event, Notification } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsPipeTransport from './fbs/pipe-transport';
 
-export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData> =
+type PipeTransportListenInfo =
+{
+	/**
+	 * Listening info.
+	 */
+	listenInfo: TransportListenInfo;
+};
+
+type PipeTransportListenIp =
 {
 	/**
 	 * Listening IP address.
@@ -28,7 +56,12 @@ export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData>
 	 * range.
 	 */
 	port?: number;
+};
 
+type PipeTransportListen = Either<PipeTransportListenInfo, PipeTransportListenIp>;
+
+export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData> =
+{
 	/**
 	 * Create a SCTP association. Default false.
 	 */
@@ -69,33 +102,11 @@ export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData>
 	 * Custom application data.
 	 */
 	appData?: PipeTransportAppData;
-};
+} & PipeTransportListen;
 
-export type PipeTransportStat =
+export type PipeTransportStat = BaseTransportStats &
 {
-	// Common to all Transports.
 	type: string;
-	transportId: string;
-	timestamp: number;
-	sctpState?: SctpState;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
-	// PipeTransport specific.
 	tuple: TransportTuple;
 };
 
@@ -133,6 +144,13 @@ export type PipeTransportData =
 	tuple: TransportTuple;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
+	rtx: boolean;
+	srtpParameters?: SrtpParameters;
+};
+
+export type PipeTransportDump = BaseTransportDump &
+{
+	tuple: TransportTuple;
 	rtx: boolean;
 	srtpParameters?: SrtpParameters;
 };
@@ -250,7 +268,19 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	{
 		logger.debug('getStats()');
 
-		return this.channel.request('transport.getStats', this.internal.transportId);
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_GET_STATS,
+			undefined,
+			undefined,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPipeTransport.GetStatsResponse();
+
+		response.body(data);
+
+		return [ parseGetStatsResponse(data) ];
 	}
 
 	/**
@@ -273,13 +303,31 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	{
 		logger.debug('connect()');
 
-		const reqData = { ip, port, srtpParameters };
+		const requestOffset = createConnectRequest({
+			builder : this.channel.bufferBuilder,
+			ip,
+			port,
+			srtpParameters
+		});
 
-		const data =
-			await this.channel.request('transport.connect', this.internal.transportId, reqData);
+		// Wait for response.
+		const response = await this.channel.request(
+			FbsRequest.Method.PIPETRANSPORT_CONNECT,
+			FbsRequest.Body.PipeTransport_ConnectRequest,
+			requestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const data = new FbsPipeTransport.ConnectResponse();
+
+		response.body(data);
 
 		// Update data.
-		this.#data.tuple = data.tuple;
+		if (data.tuple())
+		{
+			this.#data.tuple = parseTuple(data.tuple()!);
+		}
 	}
 
 	/**
@@ -320,18 +368,28 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 			}
 		);
 
-		const reqData =
-		{
-			consumerId             : uuidv4(),
-			producerId,
-			kind                   : producer.kind,
-			rtpParameters,
-			type                   : 'pipe',
-			consumableRtpEncodings : producer.consumableRtpParameters.encodings
-		};
+		const consumerId = generateUUIDv4();
 
-		const status =
-			await this.channel.request('transport.consume', this.internal.transportId, reqData);
+		const consumeRequestOffset = createConsumeRequest({
+			builder : this.channel.bufferBuilder,
+			consumerId,
+			producer,
+			rtpParameters
+		});
+
+		const response = await this.channel.request(
+			FbsRequest.Method.TRANSPORT_CONSUME,
+			FbsRequest.Body.Transport_ConsumeRequest,
+			consumeRequestOffset,
+			this.internal.transportId
+		);
+
+		/* Decode Response. */
+		const consumeResponse = new FbsTransport.ConsumeResponse();
+
+		response.body(consumeResponse);
+
+		const status = consumeResponse.unpack();
 
 		const data =
 		{
@@ -346,11 +404,10 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 				internal :
 				{
 					...this.internal,
-					consumerId : reqData.consumerId
+					consumerId
 				},
 				data,
 				channel        : this.channel,
-				payloadChannel : this.payloadChannel,
 				appData,
 				paused         : status.paused,
 				producerPaused : status.producerPaused
@@ -368,13 +425,17 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 
 	private handleWorkerNotifications(): void
 	{
-		this.channel.on(this.internal.transportId, (event: string, data?: any) =>
+		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
 		{
 			switch (event)
 			{
-				case 'sctpstatechange':
+				case Event.TRANSPORT_SCTP_STATE_CHANGE:
 				{
-					const sctpState = data.sctpState as SctpState;
+					const notification = new FbsTransport.SctpStateChangeNotification();
+
+					data!.body(notification);
+
+					const sctpState = parseSctpState(notification.sctpState());
 
 					this.#data.sctpState = sctpState;
 
@@ -386,9 +447,13 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 					break;
 				}
 
-				case 'trace':
+				case Event.TRANSPORT_TRACE:
 				{
-					const trace = data as TransportTraceEventData;
+					const notification = new FbsTransport.TraceNotification();
+
+					data!.body(notification);
+
+					const trace = parseTransportTraceEventData(notification);
 
 					this.safeEmit('trace', trace);
 
@@ -405,4 +470,137 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 			}
 		});
 	}
+}
+
+/*
+ * flatbuffers helpers.
+ */
+
+export function parsePipeTransportDumpResponse(
+	binary: FbsPipeTransport.DumpResponse
+): PipeTransportDump
+{
+	// Retrieve BaseTransportDump.
+	const baseTransportDump = parseBaseTransportDump(binary.base()!);
+	// Retrieve RTP Tuple.
+	const tuple = parseTuple(binary.tuple()!);
+
+	// Retrieve SRTP Parameters.
+	let srtpParameters: SrtpParameters | undefined;
+
+	if (binary.srtpParameters())
+	{
+		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
+	}
+
+	return {
+		...baseTransportDump,
+		tuple          : tuple,
+		rtx            : binary.rtx(),
+		srtpParameters : srtpParameters
+	};
+}
+
+function parseGetStatsResponse(
+	binary: FbsPipeTransport.GetStatsResponse
+):PipeTransportStat
+{
+	const base = parseBaseTransportStats(binary.base()!);
+
+	return {
+		...base,
+		type  : 'pipe-transport',
+		tuple : parseTuple(binary.tuple()!)
+	};
+}
+
+function createConsumeRequest({
+	builder,
+	consumerId,
+	producer,
+	rtpParameters
+} : {
+	builder: flatbuffers.Builder;
+	consumerId: string;
+	producer: Producer;
+	rtpParameters: RtpParameters;
+}): number
+{
+	// Build the request.
+	const producerIdOffset = builder.createString(producer.id);
+	const consumerIdOffset = builder.createString(consumerId);
+	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
+	let consumableRtpEncodingsOffset: number | undefined;
+
+	if (producer.consumableRtpParameters.encodings)
+	{
+		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
+			builder, producer.consumableRtpParameters.encodings
+		);
+	}
+
+	const ConsumeRequest = FbsTransport.ConsumeRequest;
+
+	// Create Consume Request.
+	ConsumeRequest.startConsumeRequest(builder);
+	ConsumeRequest.addConsumerId(builder, consumerIdOffset);
+	ConsumeRequest.addProducerId(builder, producerIdOffset);
+	ConsumeRequest.addKind(
+		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
+	ConsumeRequest.addType(builder, FbsRtpParameters.Type.PIPE);
+
+	if (consumableRtpEncodingsOffset)
+	{
+		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+	}
+
+	return ConsumeRequest.endConsumeRequest(builder);
+}
+
+function createConnectRequest(
+	{
+		builder,
+		ip,
+		port,
+		srtpParameters
+	}:
+	{
+		builder: flatbuffers.Builder;
+		ip?: string;
+		port?: number;
+		srtpParameters?: SrtpParameters;
+	}
+): number
+{
+	let ipOffset = 0;
+	let srtpParametersOffset = 0;
+
+	if (ip)
+	{
+		ipOffset = builder.createString(ip);
+	}
+
+	// Serialize SrtpParameters.
+	if (srtpParameters)
+	{
+		srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
+	}
+
+	// Create PlainTransportConnectData.
+	FbsPipeTransport.ConnectRequest.startConnectRequest(builder);
+	FbsPipeTransport.ConnectRequest.addIp(builder, ipOffset);
+
+	if (typeof port === 'number')
+	{
+		FbsPipeTransport.ConnectRequest.addPort(builder, port);
+	}
+	if (srtpParameters)
+	{
+		FbsPipeTransport.ConnectRequest.addSrtpParameters(
+			builder, srtpParametersOffset
+		);
+	}
+
+	return FbsPipeTransport.ConnectRequest.endConnectRequest(builder);
 }

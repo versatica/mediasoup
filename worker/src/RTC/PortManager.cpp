@@ -12,9 +12,16 @@
 
 /* Static methods for UV callbacks. */
 
-static inline void onClose(uv_handle_t* handle)
+// NOTE: We have different onCloseXxx() callbacks to avoid an ASAN warning by
+// ensuring that we call `delete xxx` with same type as `new xxx` before.
+static inline void onCloseUdp(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_udp_t*>(handle);
+}
+
+static inline void onCloseTcp(uv_handle_t* handle)
+{
+	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
 inline static void onFakeConnection(uv_stream_t* /*handle*/, int /*status*/)
@@ -68,7 +75,9 @@ namespace RTC
 				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+				}
 
 				break;
 			}
@@ -78,7 +87,9 @@ namespace RTC
 				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+				}
 
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
@@ -161,30 +172,44 @@ namespace RTC
 			switch (transport)
 			{
 				case Transport::UDP:
+				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 					err      = uv_udp_init_ex(
             DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+
 					break;
+				}
 
 				case Transport::TCP:
+				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
 					err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
+
 					break;
+				}
 			}
 
 			if (err != 0)
 			{
-				delete uvHandle;
-
 				switch (transport)
 				{
 					case Transport::UDP:
+					{
+						delete reinterpret_cast<uv_udp_t*>(uvHandle);
+
 						MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
+
 						break;
+					}
 
 					case Transport::TCP:
+					{
+						delete reinterpret_cast<uv_tcp_t*>(uvHandle);
+
 						MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
+
 						break;
+					}
 				}
 			}
 
@@ -256,10 +281,27 @@ namespace RTC
 
 			// If it succeeded, exit the loop here.
 			if (err == 0)
+			{
 				break;
+			}
 
 			// If it failed, close the handle and check the reason.
-			uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
+
+					break;
+				};
+
+				case Transport::TCP:
+				{
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+
+					break;
+				}
+			}
 
 			switch (err)
 			{
@@ -346,7 +388,9 @@ namespace RTC
 				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+				}
 
 				break;
 			}
@@ -356,7 +400,9 @@ namespace RTC
 				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
 
 				if (err != 0)
+				{
 					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+				}
 
 				// Don't also bind into IPv4 when listening in IPv6.
 				flags |= UV_UDP_IPV6ONLY;
@@ -400,17 +446,25 @@ namespace RTC
 
 		if (err != 0)
 		{
-			delete uvHandle;
-
 			switch (transport)
 			{
 				case Transport::UDP:
+				{
+					delete reinterpret_cast<uv_udp_t*>(uvHandle);
+
 					MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
+
 					break;
+				}
 
 				case Transport::TCP:
+				{
+					delete reinterpret_cast<uv_tcp_t*>(uvHandle);
+
 					MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
+
 					break;
+				}
 			}
 		}
 
@@ -426,7 +480,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
 
 					MS_THROW_ERROR(
 					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -449,7 +503,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
 					  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -469,7 +523,7 @@ namespace RTC
 				if (err != 0)
 				{
 					// If it failed, close the handle and check the reason.
-					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onClose));
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
 					  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
@@ -514,7 +568,9 @@ namespace RTC
 				auto it = PortManager::mapUdpIpPorts.find(ip);
 
 				if (it == PortManager::mapUdpIpPorts.end())
+				{
 					return;
+				}
 
 				auto& ports = it->second;
 
@@ -529,7 +585,9 @@ namespace RTC
 				auto it = PortManager::mapTcpIpPorts.find(ip);
 
 				if (it == PortManager::mapTcpIpPorts.end())
+				{
 					return;
+				}
 
 				auto& ports = it->second;
 
@@ -607,56 +665,5 @@ namespace RTC
 		}
 
 		return emptyPorts;
-	}
-
-	void PortManager::FillJson(json& jsonObject)
-	{
-		MS_TRACE();
-
-		// Add udp.
-		jsonObject["udp"] = json::object();
-		auto jsonUdpIt    = jsonObject.find("udp");
-
-		for (auto& kv : PortManager::mapUdpIpPorts)
-		{
-			const auto& ip = kv.first;
-			auto& ports    = kv.second;
-
-			(*jsonUdpIt)[ip] = json::array();
-			auto jsonIpIt    = jsonUdpIt->find(ip);
-
-			for (size_t i{ 0 }; i < ports.size(); ++i)
-			{
-				if (!ports[i])
-					continue;
-
-				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
-
-				jsonIpIt->push_back(port);
-			}
-		}
-
-		// Add tcp.
-		jsonObject["tcp"] = json::object();
-		auto jsonTcpIt    = jsonObject.find("tcp");
-
-		for (auto& kv : PortManager::mapTcpIpPorts)
-		{
-			const auto& ip = kv.first;
-			auto& ports    = kv.second;
-
-			(*jsonTcpIt)[ip] = json::array();
-			auto jsonIpIt    = jsonTcpIt->find(ip);
-
-			for (size_t i{ 0 }; i < ports.size(); ++i)
-			{
-				if (!ports[i])
-					continue;
-
-				auto port = static_cast<uint16_t>(i + Settings::configuration.rtcMinPort);
-
-				jsonIpIt->emplace_back(port);
-			}
-		}
 	}
 } // namespace RTC

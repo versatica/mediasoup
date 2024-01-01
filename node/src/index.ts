@@ -1,11 +1,10 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Worker, WorkerSettings } from './Worker';
+import { workerBin, Worker, WorkerSettings } from './Worker';
 import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
 import * as types from './types';
-import { AppData } from './types';
 
 /**
  * Expose all types.
@@ -15,14 +14,13 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-export const version = '__MEDIASOUP_VERSION__';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const version: string = require('../../package.json').version;
 
 /**
  * Expose parseScalabilityMode() function.
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
-
-const logger = new Logger();
 
 export type ObserverEvents =
 {
@@ -37,9 +35,16 @@ const observer = new EnhancedEventEmitter<ObserverEvents>();
 export { observer };
 
 /**
+ * Full path of the mediasoup-worker binary.
+ */
+export { workerBin };
+
+const logger = new Logger();
+
+/**
  * Create a Worker.
  */
-export async function createWorker<WorkerAppData extends AppData = AppData>(
+export async function createWorker<WorkerAppData extends types.AppData = types.AppData>(
 	{
 		logLevel = 'error',
 		logTags,
@@ -90,5 +95,5 @@ export async function createWorker<WorkerAppData extends AppData = AppData>(
  */
 export function getSupportedRtpCapabilities(): RtpCapabilities
 {
-	return utils.clone(supportedRtpCapabilities) as RtpCapabilities;
+	return utils.clone<RtpCapabilities>(supportedRtpCapabilities);
 }

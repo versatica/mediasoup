@@ -1,15 +1,21 @@
-import * as process from 'process';
-import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
-import { v4 as uuidv4 } from 'uuid';
+import * as process from 'node:process';
+import * as path from 'node:path';
+import { spawn, ChildProcess } from 'node:child_process';
+import { version } from './';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
+import { RtpCodecCapability } from './RtpParameters';
 import { AppData } from './types';
+import * as utils from './utils';
+import { Event } from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsWorker from './fbs/worker';
+import * as FbsTransport from './fbs/transport';
+import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 
 export type WorkerLogLevel = 'debug' | 'warn' | 'error' | 'none';
 
@@ -177,9 +183,28 @@ export type WorkerResourceUsage =
 	/* eslint-enable camelcase */
 };
 
+export type WorkerDump =
+{
+	pid : number;
+	webRtcServerIds : string[];
+	routerIds : string[];
+	channelMessageHandlers :
+	{
+		channelRequestHandlers : string[];
+		channelNotificationHandlers : string[];
+	};
+	liburing? :
+	{
+		sqeProcessCount: number;
+		sqeMissCount: number;
+		userDataMissCount: number;
+	};
+};
+
 export type WorkerEvents =
 {
 	died: [Error];
+	listenererror: [string, Error];
 	// Private events.
 	'@success': [];
 	'@failure': [Error];
@@ -195,7 +220,7 @@ export type WorkerObserverEvents =
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
-const workerBin = process.env.MEDIASOUP_WORKER_BIN
+export const workerBin = process.env.MEDIASOUP_WORKER_BIN
 	? process.env.MEDIASOUP_WORKER_BIN
 	: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
 		? path.join(__dirname, '..', '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
@@ -215,9 +240,6 @@ export class Worker<WorkerAppData extends AppData = AppData>
 
 	// Channel instance.
 	readonly #channel: Channel;
-
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
 
 	// Closed flag.
 	#closed = false;
@@ -321,7 +343,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			{
 				env :
 				{
-					MEDIASOUP_VERSION : '__MEDIASOUP_VERSION__',
+					MEDIASOUP_VERSION : version,
 					// Let the worker process inherit all environment variables, useful
 					// if a custom and not in the path GCC is used so the user can set
 					// LD_LIBRARY_PATH environment variable for runtime.
@@ -335,9 +357,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 				// fd 2 (stderr)  : Same as stdout.
 				// fd 3 (channel) : Producer Channel fd.
 				// fd 4 (channel) : Consumer Channel fd.
-				// fd 5 (channel) : Producer PayloadChannel fd.
-				// fd 6 (channel) : Consumer PayloadChannel fd.
-				stdio       : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe', 'pipe' ],
+				stdio       : [ 'ignore', 'pipe', 'pipe', 'pipe', 'pipe' ],
 				windowsHide : true
 			});
 
@@ -350,23 +370,14 @@ export class Worker<WorkerAppData extends AppData = AppData>
 				pid            : this.#pid
 			});
 
-		this.#payloadChannel = new PayloadChannel(
-			{
-				// NOTE: TypeScript does not like more than 5 fds.
-				// @ts-ignore
-				producerSocket : this.#child.stdio[5],
-				// @ts-ignore
-				consumerSocket : this.#child.stdio[6]
-			});
-
 		this.#appData = appData || {} as WorkerAppData;
 
 		let spawnDone = false;
 
 		// Listen for 'running' notification.
-		this.#channel.once(String(this.#pid), (event: string) =>
+		this.#channel.once(String(this.#pid), (event: Event) =>
 		{
-			if (!spawnDone && event === 'running')
+			if (!spawnDone && event === Event.WORKER_RUNNING)
 			{
 				spawnDone = true;
 
@@ -558,9 +569,6 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		// Close the Channel instance.
 		this.#channel.close();
 
-		// Close the PayloadChannel instance.
-		this.#payloadChannel.close();
-
 		// Close every Router.
 		for (const router of this.#routers)
 		{
@@ -582,11 +590,21 @@ export class Worker<WorkerAppData extends AppData = AppData>
 	/**
 	 * Dump Worker.
 	 */
-	async dump(): Promise<any>
+	async dump(): Promise<WorkerDump>
 	{
 		logger.debug('dump()');
 
-		return this.#channel.request('worker.dump');
+		// Send the request and wait for the response.
+		const response = await this.#channel.request(
+			FbsRequest.Method.WORKER_DUMP
+		);
+
+		/* Decode Response. */
+		const dump = new FbsWorker.DumpResponse();
+
+		response.body(dump);
+
+		return parseWorkerDumpResponse(dump);
 	}
 
 	/**
@@ -596,7 +614,37 @@ export class Worker<WorkerAppData extends AppData = AppData>
 	{
 		logger.debug('getResourceUsage()');
 
-		return this.#channel.request('worker.getResourceUsage');
+		const response = await this.#channel.request(
+			FbsRequest.Method.WORKER_GET_RESOURCE_USAGE
+		);
+
+		/* Decode Response. */
+		const resourceUsage = new FbsWorker.ResourceUsageResponse();
+
+		response.body(resourceUsage);
+
+		const ru = resourceUsage.unpack();
+
+		/* eslint-disable camelcase */
+		return {
+			ru_utime    : Number(ru.ruUtime),
+			ru_stime    : Number(ru.ruStime),
+			ru_maxrss   : Number(ru.ruMaxrss),
+			ru_ixrss    : Number(ru.ruIxrss),
+			ru_idrss    : Number(ru.ruIdrss),
+			ru_isrss    : Number(ru.ruIsrss),
+			ru_minflt   : Number(ru.ruMinflt),
+			ru_majflt   : Number(ru.ruMajflt),
+			ru_nswap    : Number(ru.ruNswap),
+			ru_inblock  : Number(ru.ruInblock),
+			ru_oublock  : Number(ru.ruOublock),
+			ru_msgsnd   : Number(ru.ruMsgsnd),
+			ru_msgrcv   : Number(ru.ruMsgrcv),
+			ru_nsignals : Number(ru.ruNsignals),
+			ru_nvcsw    : Number(ru.ruNvcsw),
+			ru_nivcsw   : Number(ru.ruNivcsw)
+		};
+		/* eslint-enable camelcase */
 	}
 
 	/**
@@ -611,9 +659,15 @@ export class Worker<WorkerAppData extends AppData = AppData>
 	{
 		logger.debug('updateSettings()');
 
-		const reqData = { logLevel, logTags };
+		// Build the request.
+		const requestOffset = new FbsWorker.UpdateSettingsRequestT(logLevel, logTags)
+			.pack(this.#channel.bufferBuilder);
 
-		await this.#channel.request('worker.updateSettings', undefined, reqData);
+		await this.#channel.request(
+			FbsRequest.Method.WORKER_UPDATE_SETTINGS,
+			FbsRequest.Body.Worker_UpdateSettingsRequest,
+			requestOffset
+		);
 	}
 
 	/**
@@ -633,17 +687,38 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
-		const reqData =
-		{
-			webRtcServerId : uuidv4(),
-			listenInfos
-		};
+		// Build the request.
+		const fbsListenInfos: FbsTransport.ListenInfoT[] = [];
 
-		await this.#channel.request('worker.createWebRtcServer', undefined, reqData);
+		for (const listenInfo of listenInfos)
+		{
+			fbsListenInfos.push(new FbsTransport.ListenInfoT(
+				listenInfo.protocol === 'udp'
+					? FbsTransportProtocol.UDP
+					: FbsTransportProtocol.TCP,
+				listenInfo.ip,
+				listenInfo.announcedIp,
+				listenInfo.port,
+				listenInfo.sendBufferSize,
+				listenInfo.recvBufferSize)
+			);
+		}
+
+		const webRtcServerId = utils.generateUUIDv4();
+
+		const createWebRtcServerRequestOffset = new FbsWorker.CreateWebRtcServerRequestT(
+			webRtcServerId, fbsListenInfos
+		).pack(this.#channel.bufferBuilder);
+
+		await this.#channel.request(
+			FbsRequest.Method.WORKER_CREATE_WEBRTCSERVER,
+			FbsRequest.Body.Worker_CreateWebRtcServerRequest,
+			createWebRtcServerRequestOffset
+		);
 
 		const webRtcServer = new WebRtcServer<WebRtcServerAppData>(
 			{
-				internal : { webRtcServerId: reqData.webRtcServerId },
+				internal : { webRtcServerId },
 				channel  : this.#channel,
 				appData
 			});
@@ -673,23 +748,31 @@ export class Worker<WorkerAppData extends AppData = AppData>
 			throw new TypeError('if given, appData must be an object');
 		}
 
+		// Clone given media codecs to not modify input data.
+		const clonedMediaCodecs =
+			utils.clone<RtpCodecCapability[] | undefined>(mediaCodecs);
+
 		// This may throw.
-		const rtpCapabilities = ortc.generateRouterRtpCapabilities(mediaCodecs);
+		const rtpCapabilities = ortc.generateRouterRtpCapabilities(clonedMediaCodecs);
 
-		const reqData = { routerId: uuidv4() };
+		const routerId = utils.generateUUIDv4();
 
-		await this.#channel.request('worker.createRouter', undefined, reqData);
+		// Get flatbuffer builder.
+		const createRouterRequestOffset =
+			new FbsWorker.CreateRouterRequestT(routerId).pack(this.#channel.bufferBuilder);
+
+		await this.#channel.request(FbsRequest.Method.WORKER_CREATE_ROUTER,
+			FbsRequest.Body.Worker_CreateRouterRequest, createRouterRequestOffset);
 
 		const data = { rtpCapabilities };
 		const router = new Router<RouterAppData>(
 			{
 				internal :
 				{
-					routerId : reqData.routerId
+					routerId
 				},
 				data,
 				channel        : this.#channel,
-				payloadChannel : this.#payloadChannel,
 				appData
 			});
 
@@ -717,9 +800,6 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		// Close the Channel instance.
 		this.#channel.close();
 
-		// Close the PayloadChannel instance.
-		this.#payloadChannel.close();
-
 		// Close every Router.
 		for (const router of this.#routers)
 		{
@@ -739,4 +819,32 @@ export class Worker<WorkerAppData extends AppData = AppData>
 		// Emit observer event.
 		this.#observer.safeEmit('close');
 	}
+}
+
+export function parseWorkerDumpResponse(
+	binary: FbsWorker.DumpResponse
+): WorkerDump
+{
+	const dump: WorkerDump = {
+		pid                    : binary.pid()!,
+		webRtcServerIds        : utils.parseVector(binary, 'webRtcServerIds'),
+		routerIds              : utils.parseVector(binary, 'routerIds'),
+		channelMessageHandlers :
+		{
+			channelRequestHandlers      : utils.parseVector(binary.channelMessageHandlers()!, 'channelRequestHandlers'),
+			channelNotificationHandlers : utils.parseVector(binary.channelMessageHandlers()!, 'channelNotificationHandlers')
+		}
+	};
+
+	if (binary.liburing())
+	{
+		dump.liburing =
+		{
+			sqeProcessCount   : Number(binary.liburing()!.sqeProcessCount()),
+			sqeMissCount      : Number(binary.liburing()!.sqeMissCount()),
+			userDataMissCount : Number(binary.liburing()!.userDataMissCount())
+		};
+	}
+
+	return dump;
 }

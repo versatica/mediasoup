@@ -16,7 +16,9 @@ namespace RTC
 			MS_TRACE();
 
 			if (len < 2)
+			{
 				return nullptr;
+			}
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
@@ -47,7 +49,9 @@ namespace RTC
 
 				// Detect key frame.
 				if (frameMarking->start && frameMarking->independent)
+				{
 					payloadDescriptor->isKeyFrame = true;
+				}
 			}
 
 			// NOTE: Unfortunately libwebrtc produces wrong Frame-Marking (without i=1 in
@@ -74,7 +78,9 @@ namespace RTC
 						  H264_SVC::ParseSingleNalu(data, len, std::move(payloadDescriptor), true);
 
 						if (payloadDescriptor == nullptr)
+						{
 							return nullptr;
+						}
 
 						break;
 					}
@@ -97,8 +103,11 @@ namespace RTC
 							  (len - sizeof(naluSize)),
 							  std::move(payloadDescriptor),
 							  true);
+
 							if (payloadDescriptor == nullptr)
+							{
 								return nullptr;
+							}
 
 							if (payloadDescriptor->isKeyFrame)
 							{
@@ -107,7 +116,9 @@ namespace RTC
 
 							// Check if there is room for the indicated NAL unit size.
 							if (len < (naluSize + sizeof(naluSize)))
+							{
 								break;
+							}
 
 							offset += naluSize + sizeof(naluSize);
 							len -= naluSize + sizeof(naluSize);
@@ -128,8 +139,11 @@ namespace RTC
 							payloadDescriptor = H264_SVC::ParseSingleNalu(
 							  (data + 1), (len - 1), std::move(payloadDescriptor), (startBit == 128 ? true : false));
 						}
+
 						if (payloadDescriptor == nullptr)
+						{
 							return nullptr;
+						}
 
 						break;
 					}
@@ -174,14 +188,18 @@ namespace RTC
 					payloadDescriptor->isKeyFrame = (isStartBit && payloadDescriptor->idr) ? true : false;
 
 					if (len < ++offset + 1)
+					{
 						return nullptr;
+					}
 
 					byte                                  = data[offset];
 					payloadDescriptor->noIntLayerPredFlag = byte >> 7 & 0x01;
 					payloadDescriptor->slIndex            = byte >> 4 & 0x03;
 
 					if (len < ++offset + 1)
+					{
 						return nullptr;
+					}
 
 					byte = data[offset];
 
@@ -218,7 +236,9 @@ namespace RTC
 			  H264_SVC::Parse(data, len, frameMarking, frameMarkingLen);
 
 			if (!payloadDescriptor)
+			{
 				return;
+			}
 
 			auto* payloadDescriptorHandler = new PayloadDescriptorHandler(payloadDescriptor);
 
@@ -352,7 +372,9 @@ namespace RTC
 
 			// Filter spatial layers higher than current one (unless old packet).
 			if (packetSpatialLayer > tmpSpatialLayer && !isOldPacket)
+			{
 				return false;
+			}
 
 			// Check and handle temporal layer (unless old packet).
 			if (!isOldPacket)
@@ -402,20 +424,28 @@ namespace RTC
 
 				// Filter temporal layers higher than current one.
 				if (packetTemporalLayer > tmpTemporalLayer)
+				{
 					return false;
+				}
 			}
 
 			// Set marker bit if needed.
 			if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
+			{
 				marker = true;
+			}
 
 			// Update current spatial layer if needed.
 			if (tmpSpatialLayer != context->GetCurrentSpatialLayer())
+			{
 				context->SetCurrentSpatialLayer(tmpSpatialLayer);
+			}
 
 			// Update current temporal layer if needed.
 			if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
+			{
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
+			}
 
 			return true;
 		}

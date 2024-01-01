@@ -170,11 +170,17 @@ namespace RTC
 			  this->d,
 			  this->b);
 			if (this->hasTid)
+			{
 				MS_DUMP("  tid        : %" PRIu8, this->tid);
+			}
 			if (this->hasLid)
+			{
 				MS_DUMP("  lid        : %" PRIu8, this->lid);
+			}
 			if (this->hasTl0picidx)
+			{
 				MS_DUMP("  tl0picidx  : %" PRIu8, this->tl0picidx);
+			}
 			MS_DUMP("  isKeyFrame : %s", this->isKeyFrame ? "true" : "false");
 			MS_DUMP("</PayloadDescriptor>");
 		}
