@@ -393,32 +393,25 @@ def test(ctx):
             shell=SHELL
         );
 
+    mediasoup_worker_test = 'mediasoup-worker-test.exe' if os.name == 'nt' else 'mediasoup-worker-test';
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
-    # On Windows lcov doesn't work (at least not yet) and we need to add .exe to
-    # the binary path.
-    if os.name == 'nt':
-        with ctx.cd(WORKER_DIR):
-            ctx.run(
-                f'"{BUILD_DIR}/mediasoup-worker-test.exe" --invisibles --use-colour=yes {mediasoup_test_tags}',
-                echo=True,
-                pty=PTY_SUPPORTED,
-                shell=SHELL
-            );
-    else:
+    # On Windows lcov doesn't work (at least not yet).
+    if os.name != 'nt':
         ctx.run(
             f'"{LCOV}" --directory "{WORKER_DIR}" --zerocounters',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-        with ctx.cd(WORKER_DIR):
-            ctx.run(
-                f'"{BUILD_DIR}/mediasoup-worker-test" --invisibles --use-colour=yes {mediasoup_test_tags}',
-                echo=True,
-                pty=PTY_SUPPORTED,
-                shell=SHELL
-            );
+
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'"{BUILD_DIR}/{mediasoup_worker_test}" --invisibles --colour-mode=ansi {mediasoup_test_tags}',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
 
 
 @task(pre=[setup, flatc])
