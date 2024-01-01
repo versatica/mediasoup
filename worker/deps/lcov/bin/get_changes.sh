@@ -10,4 +10,4 @@ cd $TOOLDIR
 
 if ! git --no-pager log --no-merges --decorate=short --color=never 2>/dev/null ; then
 	cat "$TOOLDIR/../CHANGES" 2>/dev/null
-fi 
+fi

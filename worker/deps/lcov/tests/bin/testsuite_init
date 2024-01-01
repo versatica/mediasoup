@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Copyright IBM Corp. 2017
+#
+# Usage: testsuite_init
+#
+# Announce start of test suite and prepare log files.
+#
+
+TOPDIR=$(readlink -f $(dirname $0)/..) && test -d "$TOPDIR"\
+    && source "$TOPDIR/bin/common"
+
+printf "${BOLD}Starting tests${RESET}\n"
+echo "start_time $(date +%s.%N)" >"$COUNTFILE"
+exec >"$LOGFILE" 2>&1
+
+t_detail "DATE" "$(t_timestamp)"
+
+t_detail "LCOV" ""
+lcov --version 2>&1 | t_indent
+
+t_detail "GCOV" ""
+gcov --version 2>&1 | t_indent
+
+case "$OSTYPE" in
+    linux*)
+	t_detail "CPUINFO" ""
+	t_indent < /proc/cpuinfo
+
+	t_detail "MEMINFO" ""
+	t_indent < /proc/meminfo
+	;;
+    darwin*)
+	t_detail "CPUINFO" ""
+	sysctl machdep.cpu | t_indent
+
+	t_detail "MEMINFO" ""
+	vm_stat | t_indent
+	;;
+    *)
+	t_detail "CPUINFO" ""
+	echo "unknown cpu info" | t_indent
+
+	t_detail "MEMINFO" ""
+	echo "unknown mem info" | t_indent
+	;;
+esac

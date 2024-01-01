@@ -37,12 +37,12 @@
 
 int gauss_get_sum (int min, int max)
 {
-	/* This algorithm doesn't work well with invalid range specifications
-	   so we're intercepting them here. */
-	if (max < min)
-	{
-		return 0;
-	}
+        /* This algorithm doesn't work well with invalid range specifications
+           so we're intercepting them here. */
+        if (max < min)
+        {
+                return 0;
+        }
 
-	return (int) ((max + min) * (double) (max - min + 1) / 2);
+        return (int) ((max + min) * (double) (max - min + 1) / 2);
 }

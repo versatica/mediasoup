@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+#
+# Copyright IBM Corp. 2020
+#
+# Usage: checkdeps <perl-file1> [<perl-file2> ...]
+#
+# Check if all Perl modules required by the Perl programs specified on the
+# command line are available. Note that this is a simple check that will only
+# catch straight-forward use directives.
+#
+# Example:
+# $ checkdeps file.pl file2.pl
+#
+
+use strict;
+use warnings;
+
+my $verbose = 0;
+
+sub check_file($)
+{
+    my ($file) = @_;
+    my $fd;
+    my $line;
+    my $rc = 0;
+
+    open($fd, "<", $file) or die("Could not open $file: $!\n");
+    $line = <$fd>;
+
+    if (defined($line) &&
+        $line =~ /^#.*perl/) {
+        while ($line = <$fd>) {
+            my $module;
+
+            # Look for ...use...module...;
+            next if ($line !~ /^\s*use\s+(\S+).*;\s*$/);
+
+            $module = $1;
+            # skip modules we define...
+            next
+                if grep(/^$module$/,
+                        ('lcovutil', 'annotateutil',
+                         'gitversion', 'gitblame',
+                         'getp4version', 'p4annotate'));
+            print("Checking for $module\n") if ($verbose);
+            if (!eval("require $module")) {
+                warn("Error: Missing Perl module '$module' " .
+                     "required by $file\n");
+                $rc = 1;
+            }
+        }
+    }
+
+    close($fd);
+
+    return $rc;
+}
+
+sub main()
+{
+    my $rc = 0;
+
+    for my $file (@ARGV) {
+        $rc = 1 if (check_file($file));
+    }
+
+    return $rc;
+}
+
+exit(main());

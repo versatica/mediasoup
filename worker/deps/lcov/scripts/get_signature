@@ -1,0 +1,74 @@
+#!/usr/bin/env perl
+#   Copyright (c) MediaTek USA Inc., 2022
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or (at
+#   your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, see
+#   <http://www.gnu.org/licenses/>.
+#
+#
+# get_signature
+#
+#   This is a sample script which uses uses md5sum to compare file versions
+#   If the checksum is not the same - then line numbers, etc. may be different
+#   and some very strange errors may occur.
+#   md5sum is not secure - so could use sha512sum or some other program, if we
+#   really wanted to
+
+use POSIX qw(strftime);
+use Getopt::Long;
+use Cwd qw(abs_path);
+
+sub usage
+{
+    print(STDERR "usage: $0 --compare old_version new_version filename OR\n" .
+          "       $0 [--allow-missing] filename\n");
+}
+
+my $compare;
+my $allow_missing;
+my $help;
+if (!GetOptions("--compare"       => \$compare,
+                '--allow-missing' => \$allow_missing,
+                '--help'          => \$help) ||
+    $help ||
+    ($compare && scalar(@ARGV) != 3) ||
+    (!$compare && scalar(@ARGV) != 1)
+) {
+    usage();
+    exit(defined($help) ? 0 : 1);
+}
+
+my $filename = $ARGV[$compare ? 2 : 0];
+
+if ($compare) {
+    my ($old, $new) = @ARGV;
+    exit($old ne $new);    # for the moment, just look for exact match
+}
+
+unless (-e $filename) {
+    if ($allow_missing) {
+        print("\n");       # empty string
+        exit 0;
+    }
+    die("Error: $filename does not exist - perhaps you need the '--allow-missing' flag"
+    );
+}
+$pathname = abs_path($filename);
+
+#my $sum = `sha512sum $pathname`;
+my $sum = `md5sum $pathname`;
+my $rtn = $?;
+$sum =~ /^(\S+)/;
+print($1 . "\n");
+exit $rtn;
+

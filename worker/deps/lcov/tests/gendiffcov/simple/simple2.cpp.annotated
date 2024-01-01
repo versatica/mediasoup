@@ -1,0 +1,45 @@
+1|henry.cox|274|/**
+1|henry.cox|274| * @file   simple2.cpp
+1|henry.cox|274| * @author MTK50321 Henry Cox hcox@HC-EL6-4502226
+2|galahad.threepwood|28| * @date   Mon Apr 13 13:05:16 2020
+2|galahad.threepwood|28| *
+2|galahad.threepwood|28| * @brief  this is the 'new' version...
+2|galahad.threepwood|28| */
+3|rupert.psmith|26|#include <iostream>
+1|henry.cox|274|
+1|henry.cox|274|int
+1|henry.cox|274|main(int ac, char ** av)
+1|henry.cox|274|{
+1|henry.cox|274|  int cond = 0;
+4|augustus.finknottle|4|  std::cout << "this is GNC" << std::endl;
+1|henry.cox|274|  if (ac == 1)
+1|henry.cox|274|  {
+1|henry.cox|274|    std::cout << "ac == 1 - code exercised" << std::endl;// CBC
+5|augustus.finknottle|13|    cond = 3;// GNC
+1|henry.cox|274|#ifdef ADD_CODE
+1|henry.cox|274|    std::cout << " this code will be GIC" << std::endl;
+1|henry.cox|274|#endif
+6|stanley.ukeridge|274|#ifndef REMOVE_CODE
+6|stanley.ukeridge|274|    cond = 1; // when this goes away, baseline coverage is reduced
+6|stanley.ukeridge|274|    std::cout << " this code will be ECB" << std::endl;
+6|stanley.ukeridge|274|#endif
+6|stanley.ukeridge|274|  }
+1|henry.cox|274|  else
+1|henry.cox|274|  {
+7|pelham.wodehouse|122|    // this code not hit in 'regress'
+1|henry.cox|274|    cond = 2;
+1|henry.cox|274|    std::cout << "ac = " << ac << std::endl;// UBC
+5|roderick.glossop|13|    std::cout << "this is UNC" << std::endl;
+1|henry.cox|274|#ifdef ADD_CODE
+1|henry.cox|274|    std::cout << " this code will be UIC" << std::endl;
+1|henry.cox|274|#endif
+1|henry.cox|274|#ifndef REMOVE_CODE
+1|henry.cox|274|    std::cout << " this code will be EUB" << std::endl;
+1|henry.cox|274|#endif
+1|henry.cox|274|  }
+1|henry.cox|274|  if (cond == 1)
+7|roderick.glossop|122|    std::cout << "cond == " << cond << "... code exercised" << std::endl;// LBC
+1|henry.cox|274|  else if (cond == 2)
+1|henry.cox|274|    std::cout << "cond == " << cond << "... code exercised" << std::endl;
+1|henry.cox|274|  return 0;
+1|henry.cox|274|}

@@ -10,11 +10,11 @@
 #   This program is distributed in the hope that it will be useful, but
 #   WITHOUT ANY WARRANTY;  without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#   General Public License for more details.                 
+#   General Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License
-#   along with this program;  if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#   along with this program;  if not, see
+#   <http://www.gnu.org/licenses/>.
 #
 #
 # genpng
@@ -31,100 +31,92 @@
 
 use strict;
 use warnings;
-use File::Basename; 
+use File::Basename;
 use Getopt::Long;
 use Cwd qw/abs_path/;
+use FindBin;
 
+use lib "$FindBin::RealBin/../lib";
+use lcovutil qw (%tlaColor %tlaTextColor
+                 $tool_name $tool_dir $lcov_version $lcov_url
+                 die_handler warn_handler);
 
 # Constants
-our $tool_dir		= abs_path(dirname($0));
-our $lcov_version	= 'LCOV version '.`$tool_dir/get_version.sh --full`;
-our $lcov_url		= "http://ltp.sourceforge.net/coverage/lcov.php";
-our $tool_name		= basename($0);
-
+# (now imported from lcovutil.pm)
 
 # Prototypes
-sub gen_png($$$@);
+sub gen_png($$$$$@);
 sub check_and_load_module($);
 sub genpng_print_usage(*);
-sub genpng_process_file($$$$);
-sub genpng_warn_handler($);
-sub genpng_die_handler($);
-
+sub genpng_process_file($$$$$);
 
 #
 # Code entry point
 #
 
 # Check whether required module GD.pm is installed
-if (check_and_load_module("GD"))
-{
-	# Note: cannot use die() to print this message because inserting this
-	# code into another script via do() would not fail as required!
-	print(STDERR <<END_OF_TEXT)
+if (check_and_load_module("GD")) {
+    # Note: cannot use die() to print this message because inserting this
+    # code into another script via do() would not fail as required!
+    print(STDERR <<END_OF_TEXT)
 ERROR: required module GD.pm not found on this system (see www.cpan.org).
 END_OF_TEXT
-	;
-	exit(2);
+        ;
+    exit(2);
 }
 
 # Check whether we're called from the command line or from another script
-if (!caller)
-{
-	my $filename;
-	my $tab_size = 4;
-	my $width = 80;
-	my $out_filename;
-	my $help;
-	my $version;
+if (!caller) {
+    my $filename;
+    my $tab_size = 4;
+    my $width    = 80;
+    my $dark     = 0;
+    my $out_filename;
+    my $help;
+    my $version;
 
-	$SIG{__WARN__} = \&genpng_warn_handler;
-	$SIG{__DIE__} = \&genpng_die_handler;
+    $SIG{__WARN__} = \&warn_handler;
+    $SIG{__DIE__}  = \&die_handler;
 
-	# Parse command line options
-	if (!GetOptions("tab-size=i" => \$tab_size,
-			"width=i" => \$width,
-			"output-filename=s" => \$out_filename,
-			"help" => \$help,
-			"version" => \$version))
-	{
-		print(STDERR "Use $tool_name --help to get usage ".
-		      "information\n");
-		exit(1);
-	}
+    # Parse command line options
+    if (!GetOptions("tab-size=i"        => \$tab_size,
+                    "width=i"           => \$width,
+                    "output-filename=s" => \$out_filename,
+                    "dark-mode"         => \$dark,
+                    "help"              => \$help,
+                    "version"           => \$version
+    )) {
+        print(STDERR "Use $tool_name --help to get usage information\n");
+        exit(1);
+    }
 
-	$filename = $ARGV[0];
+    $filename = $ARGV[0];
 
-	# Check for help flag
-	if ($help)
-	{
-		genpng_print_usage(*STDOUT);
-		exit(0);
-	}
+    # Check for help flag
+    if ($help) {
+        genpng_print_usage(*STDOUT);
+        exit(0);
+    }
 
-	# Check for version flag
-	if ($version)
-	{
-		print("$tool_name: $lcov_version\n");
-		exit(0);
-	}
+    # Check for version flag
+    if ($version) {
+        print("$tool_name: $lcov_version\n");
+        exit(0);
+    }
 
-	# Check options
-	if (!$filename)
-	{
-		die("No filename specified\n");
-	}
+    # Check options
+    if (!$filename) {
+        die("No filename specified\n");
+    }
 
-	# Check for output filename
-	if (!$out_filename)
-	{
-		$out_filename = "$filename.png";
-	}
+    # Check for output filename
+    if (!$out_filename) {
+        $out_filename = "$filename.png";
+    }
 
-	genpng_process_file($filename, $out_filename, $width, $tab_size);
-	exit(0);
+    genpng_process_file($filename, $out_filename, $width, $tab_size, $dark);
+    exit(0);
 }
-
 
 #
 # genpng_print_usage(handle)
@@ -134,25 +126,26 @@ if (!caller)
 
 sub genpng_print_usage(*)
 {
-	local *HANDLE = $_[0];
+    local *HANDLE = $_[0];
 
-	print(HANDLE <<END_OF_USAGE)
+    print(HANDLE <<END_OF_USAGE)
 Usage: $tool_name [OPTIONS] SOURCEFILE
 
 Create an overview image for a given source code file of either plain text
 or .gcov file format.
 
+OPTIONS
   -h, --help                        Print this help, then exit
-  -v, --version                     Print version number, then exit
+      --version                     Print version number, then exit
   -t, --tab-size TABSIZE            Use TABSIZE spaces in place of tab
   -w, --width WIDTH                 Set width of output image to WIDTH pixel
+  -d, --dark-mode                   Use a light-on-dark color scheme
   -o, --output-filename FILENAME    Write image to FILENAME
 
-For more information see: $lcov_url
+For more information see the genpng man page.
 END_OF_USAGE
-	;
+        ;
 }
-
 
 #
 # check_and_load_module(module_name)
@@ -164,63 +157,54 @@ END_OF_USAGE
 
 sub check_and_load_module($)
 {
-	eval("use $_[0];");
-	return $@;
+    eval("use $_[0];");
+    return $@;
 }
 
-
 #
-# genpng_process_file(filename, out_filename, width, tab_size)
+# genpng_process_file(filename, out_filename, width, tab_size, dark)
 #
 
-sub genpng_process_file($$$$)
+sub genpng_process_file($$$$$)
 {
-	my $filename		= $_[0];
-	my $out_filename	= $_[1];
-	my $width		= $_[2];
-	my $tab_size		= $_[3];
-	local *HANDLE;
-	my @source;
+    my $filename     = $_[0];
+    my $out_filename = $_[1];
+    my $width        = $_[2];
+    my $tab_size     = $_[3];
+    my $dark         = $_[4];
+    local *HANDLE;
+    my @source;
 
-	open(HANDLE, "<", $filename)
-		or die("ERROR: cannot open $filename!\n");
+    open(HANDLE, "<", $filename) or
+        die("cannot open $filename!\n");
 
-	# Check for .gcov filename extension
-	if ($filename =~ /^(.*).gcov$/)
-	{
-		# Assume gcov text format
-		while (<HANDLE>)
-		{
-			if (/^\t\t(.*)$/)
-			{
-				# Uninstrumented line
-				push(@source, ":$1");
-			}
-			elsif (/^      ######    (.*)$/)
-			{
-				# Line with zero execution count
-				push(@source, "0:$1");
-			}
-			elsif (/^( *)(\d*)    (.*)$/)
-			{
-				# Line with positive execution count
-				push(@source, "$2:$3");
-			}
-		}
-	}
-	else
-	{
-		# Plain text file
-		while (<HANDLE>) { push(@source, ":$_"); }
-	}
-	close(HANDLE);
+    # Check for .gcov filename extension
+    if ($filename =~ /^(.*).gcov$/) {
+        # Assume gcov text format
+        while (<HANDLE>) {
+            if (/^\t\t(.*)$/) {
+                # Uninstrumented line
+                push(@source, ":$1");
+            } elsif (/^      ######    (.*)$/) {
+                # Line with zero execution count
+                push(@source, "0:$1");
+            } elsif (/^( *)(\d*)    (.*)$/) {
+                # Line with positive execution count
+                push(@source, "$2:$3");
+            }
+        }
+    } else {
+        # Plain text file
+        while (<HANDLE>) { push(@source, ":$_"); }
+    }
+    close(HANDLE) or die("unable to close $filename: $!\n");
 
-	gen_png($out_filename, $width, $tab_size, @source);
+    my $show_tla = 1;
+    gen_png($out_filename, $show_tla, $dark, $width, $tab_size, @source);
 }
 
-
 #
-# gen_png(filename, width, tab_size, source)
+# gen_png(filename, show_tla, dark, width, tab_size, source)
 #
 # Write an overview PNG file to FILENAME. Source code is defined by SOURCE
 # which is a list of lines <count>:<source code> per source code line.
@@ -232,158 +216,183 @@ sub genpng_process_file($$$$)
 # Die on error.
 #
 
-sub gen_png($$$@)
+sub gen_png($$$$$@)
 {
-	my $filename = shift(@_);	# Filename for PNG file
-	my $overview_width = shift(@_);	# Imagewidth for image
-	my $tab_size = shift(@_);	# Replacement string for tab signs
-	my @source = @_;	# Source code as passed via argument 2
-	my $height;		# Height as define by source size
-	my $overview;		# Source code overview image data
-	my $col_plain_back;	# Color for overview background
-	my $col_plain_text;	# Color for uninstrumented text
-	my $col_cov_back;	# Color for background of covered lines
-	my $col_cov_text;	# Color for text of covered lines
-	my $col_nocov_back;	# Color for background of lines which
-				# were not covered (count == 0)
-	my $col_nocov_text;	# Color for test of lines which were not
-				# covered (count == 0)
-	my $col_hi_back;	# Color for background of highlighted lines
-	my $col_hi_text;	# Color for text of highlighted lines
-	my $line;		# Current line during iteration
-	my $row = 0;		# Current row number during iteration
-	my $column;		# Current column number during iteration
-	my $color_text;		# Current text color during iteration
-	my $color_back;		# Current background color during iteration
-	my $last_count;		# Count of last processed line
-	my $count;		# Count of current line
-	my $source;		# Source code of current line
-	my $replacement;	# Replacement string for tabulator chars
-	local *PNG_HANDLE;	# Handle for output PNG file
+    my $filename       = shift(@_);    # Filename for PNG file
+    my $show_tla       = shift(@_);    # differential categories
+    my $dark_mode      = shift(@_);    # dark-on-light, if set
+    my $overview_width = shift(@_);    # Imagewidth for image
+    my $tab_size       = shift(@_);    # Replacement string for tab signs
+    my @source         = @_;           # Source code as passed via argument 2
+    my $height;            # Height as define by source size
+    my $overview;          # Source code overview image data
+    my $col_plain_back;    # Color for overview background
+    my $col_plain_text;    # Color for uninstrumented text
+    my $col_cov_back;      # Color for background of covered lines
+    my $col_cov_text;      # Color for text of covered lines
+    my $col_nocov_back;    # Color for background of lines which
+                           # were not covered (count == 0)
+    my $col_nocov_text;    # Color for test of lines which were not
+                           # covered (count == 0)
+    my $col_hi_back;       # Color for background of highlighted lines
+    my $col_hi_text;       # Color for text of highlighted lines
 
-	# Handle empty source files
-	if (!@source) {
-		@source = ( "" );
-	}
-	$height = scalar(@source);
-	# Create image
-	$overview = new GD::Image($overview_width, $height)
-		or die("ERROR: cannot allocate overview image!\n");
+    my %col_tla_back;      # Color for background of TLA lines
+    my %col_tla_text;      # Color for text of TLA lines
 
-	# Define colors
-	$col_plain_back	= $overview->colorAllocate(0xff, 0xff, 0xff);
-	$col_plain_text	= $overview->colorAllocate(0xaa, 0xaa, 0xaa);
-	$col_cov_back	= $overview->colorAllocate(0xaa, 0xa7, 0xef);
-	$col_cov_text	= $overview->colorAllocate(0x5d, 0x5d, 0xea);
-	$col_nocov_back = $overview->colorAllocate(0xff, 0x00, 0x00);
-	$col_nocov_text = $overview->colorAllocate(0xaa, 0x00, 0x00);
-	$col_hi_back = $overview->colorAllocate(0x00, 0xff, 0x00);
-	$col_hi_text = $overview->colorAllocate(0x00, 0xaa, 0x00);
+    my $line;              # Current line during iteration
+    my $row = 0;           # Current row number during iteration
+    my $column;            # Current column number during iteration
+    my $color_text;        # Current text color during iteration
+    my $color_back;        # Current background color during iteration
+    my $last_tag;          # Tag of last processed line
+    my $tag;               # Tag of current line
+    my $last_count;        # Count of last processed line
+    my $count;             # Count of current line
+    my $source;            # Source code of current line
+    my $replacement;       # Replacement string for tabulator chars
+    local *PNG_HANDLE;     # Handle for output PNG file
 
-	# Visualize each line
-	foreach $line (@source)
-	{
-		# Replace tabs with spaces to keep consistent with source
-		# code view
-		while ($line =~ /^([^\t]*)(\t)/)
-		{
-			$replacement = " "x($tab_size - ((length($1) - 1) %
-				       $tab_size));
-			$line =~ s/^([^\t]*)(\t)/$1$replacement/;
-		}
+    # Handle empty source files
+    if (!@source) {
+        @source = ("");
+    }
+    $height = scalar(@source);
+    # Create image
+    $overview = new GD::Image($overview_width, $height) or
+        die("cannot allocate overview image!\n");
 
-		# Skip lines which do not follow the <count>:<line>
-		# specification, otherwise $1 = count, $2 = source code
-		if (!($line =~ /(\*?)(\d*):(.*)$/)) { next; }
-		$count = $2;
-		$source = $3;
+    # Define colors
+    # overview->colorAllocate(red, green, blue)
+    if ($dark_mode) {
+        # just reverse foregrond and background
+        #  there is probably a better color scheme than this.
+        $col_plain_text =
+            $overview->colorAllocate(0xaa, 0xaa, 0xaa);    # light grey
+        $col_plain_back = $overview->colorAllocate(0x00, 0x00, 0x00);
+        $col_cov_text   = $overview->colorAllocate(0xaa, 0xa7, 0xef);
+        $col_cov_back   = $overview->colorAllocate(0x5d, 0x5d, 0xea);
+        $col_nocov_text = $overview->colorAllocate(0xff, 0x00, 0x00);
+        $col_nocov_back = $overview->colorAllocate(0xaa, 0x00, 0x00);
+        $col_hi_text    = $overview->colorAllocate(0x00, 0xff, 0x00);
+        $col_hi_back    = $overview->colorAllocate(0x00, 0xaa, 0x00);
+    } else {
+        $col_plain_back = $overview->colorAllocate(0xff, 0xff, 0xff);
+        $col_plain_text = $overview->colorAllocate(0xaa, 0xaa, 0xaa);
+        $col_cov_back   = $overview->colorAllocate(0xaa, 0xa7, 0xef);
+        $col_cov_text   = $overview->colorAllocate(0x5d, 0x5d, 0xea);
+        $col_nocov_back = $overview->colorAllocate(0xff, 0x00, 0x00);
+        $col_nocov_text = $overview->colorAllocate(0xaa, 0x00, 0x00);
+        $col_hi_back    = $overview->colorAllocate(0x00, 0xff, 0x00);
+        $col_hi_text    = $overview->colorAllocate(0x00, 0xaa, 0x00);
+    }
 
-		# Decide which color pair to use
+    foreach my $tla (keys(%lcovutil::tlaColor)) {
+        next if 'D' eq substr($tla, 0, 1); # skip deleted TLAs..they don't apper
 
-		# If this line was not instrumented but the one before was,
-		# take the color of that line to widen color areas in
-		# resulting image
-		if (($count eq "") && defined($last_count) &&
-		    ($last_count ne ""))
-		{
-			$count = $last_count;
-		}
+        if ($show_tla) {
+            my $text = $tlaTextColor{$tla};
+            my $back = $tlaColor{$tla};
+            $text =~ s/^#/0x/;
+            $back =~ s/^#/0x/;
+            $text = hex($text);
+            $back = hex($back);
 
-		if ($count eq "")
-		{
-			# Line was not instrumented
-			$color_text = $col_plain_text;
-			$color_back = $col_plain_back;
-		}
-		elsif ($count == 0)
-		{
-			# Line was instrumented but not executed
-			$color_text = $col_nocov_text;
-			$color_back = $col_nocov_back;
-		}
-		elsif ($1 eq "*")
-		{
-			# Line was highlighted
-			$color_text = $col_hi_text;
-			$color_back = $col_hi_back;
-		}
-		else
-		{
-			# Line was instrumented and executed
-			$color_text = $col_cov_text;
-			$color_back = $col_cov_back;
-		}
+            $col_tla_back{$tla} =
+                $overview->colorAllocate($back >> 16,
+                                         ($back >> 8) & 0xFF,
+                                         $back & 0xFF);
+            $col_tla_text{$tla} =
+                $overview->colorAllocate($text >> 16,
+                                         ($text >> 8) & 0xFF,
+                                         $text & 0xFF);
+        } else {
+            # no differential categories...use vanilla colors
+            if (grep(/^$tla$/, ("GBC", "CBC", "GIC", "GNC"))) {
+                $col_tla_back{$tla} = $col_cov_back;
+                $col_tla_text{$tla} = $col_cov_text;
+            } elsif (grep(/^$tla$/, ("ECB", "EUB"))) {
+                $col_tla_back{$tla} = $col_plain_back;
+                $col_tla_text{$tla} = $col_plain_text;
+            } else {
+                $col_tla_back{$tla} = $col_nocov_back;
+                $col_tla_text{$tla} = $col_nocov_text;
+            }
+        }
+    }
+    # Visualize each line
+    foreach $line (@source) {
+        # Replace tabs with spaces to keep consistent with source
+        # code view
+        while ($line =~ /^([^\t]*)(\t)/) {
+            $replacement = " " x ($tab_size - ((length($1) - 1) % $tab_size));
+            $line =~ s/^([^\t]*)(\t)/$1$replacement/;
+        }
+        # Skip lines which do not follow the <count>:<line>
+        # specification, otherwise $1 = count, $2 = source code
+        if (!($line =~ /([-+<>=]?)(\d*):(.*)$/)) { next; }
+        $tag    = $1;
+        $count  = $2;
+        $source = $3;
 
-		# Write one pixel for each source character
-		$column = 0;
-		foreach (split("", $source))
-		{
-			# Check for width
-			if ($column >= $overview_width) { last; }
+        # Decide which color pair to use
+        my $tla = undef;
 
-			if ($_ eq " ")
-			{
-				# Space
-				$overview->setPixel($column++, $row,
-						    $color_back);
-			}
-			else
-			{
-				# Text
-				$overview->setPixel($column++, $row,
-						    $color_text);
-			}
-		}
+        # If this line was not instrumented but the one before was,
+        # take the color of that line to widen color areas in
+        # resulting image
+        if (($count eq "") &&
+            defined($last_count) &&
+            ($last_count ne "")) {
+            $tag   = $last_tag;
+            $count = $last_count;
+        }
 
-		# Fill rest of line		
-		while ($column < $overview_width)
-		{
-			$overview->setPixel($column++, $row, $color_back);
-		}
+        if ($tag eq "" && $count eq "") {
+            # Line was not instrumented
+            $color_text = $col_plain_text;
+            $color_back = $col_plain_back;
+        } else {
+            die("unexpected PNG tag '$tag'")
+                unless exists($lcovutil::pngMap{$tag});
+            # index '1' if not covered (count is zero)
+            $tla = $lcovutil::pngMap{$tag}[$count == 0];
+        }
 
-		$last_count = $2;
+        if (defined($tla)) {
+            $color_text = $col_tla_text{$tla};
+            $color_back = $col_tla_back{$tla};
+        }
+        # Write one pixel for each source character
+        $column = 0;
+        foreach (split("", $source)) {
+            # Check for width
+            if ($column >= $overview_width) { last; }
 
-		$row++;
-	}
+            if ($_ eq " ") {
+                # Space
+                $overview->setPixel($column++, $row, $color_back);
+            } else {
+                # Text
+                $overview->setPixel($column++, $row, $color_text);
+            }
+        }
 
-	# Write PNG file
-	open (PNG_HANDLE, ">", $filename)
-		or die("ERROR: cannot write png file $filename!\n");
-	binmode(*PNG_HANDLE);
-	print(PNG_HANDLE $overview->png());
-	close(PNG_HANDLE);
-}
+        # Fill rest of line
+        while ($column < $overview_width) {
+            $overview->setPixel($column++, $row, $color_back);
+        }
 
-sub genpng_warn_handler($)
-{
-	my ($msg) = @_;
+        $last_tag   = $1;
+        $last_count = $2;
 
-	warn("$tool_name: $msg");
-}
+        $row++;
+    }
 
-sub genpng_die_handler($)
-{
-	my ($msg) = @_;
-
-	die("$tool_name: $msg");
+    # Write PNG file
+    open(PNG_HANDLE, ">", $filename) or
+        die("cannot write png file $filename!\n");
+    binmode(*PNG_HANDLE);
+    print(PNG_HANDLE $overview->png());
+    close(PNG_HANDLE) or die("unable to close $filename: $!\n");
 }

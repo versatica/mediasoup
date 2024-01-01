@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+#   Copyright (c) MediaTek USA Inc., 2022-2023
+#
+#   This program is free software;  you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or (at
+#   your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY;  without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program;  if not, see
+#   <http://www.gnu.org/licenses/>.
+#
+#
+# gitversion [--p4] [--md5] [--prefix path] pathname OR
+# gitversion [--p4] [--md5] [--prefix path] --compare old_version new_version pathname
+#
+#   If the '--p4' flag is used:
+#     we assume that the GIT repo is cloned from Perforce - and look for
+#     the line in the generated commit log message which tells us the perforce
+#     changelist ID that we actually want.
+#   If specified, 'path' is prependied to 'pathname' (as 'path/pathname')
+#     before processing.
+
+#   This is a sample script which uses git commands to determine
+#   the version of the filename parameter.
+#   Version information (if present) is used during ".info" file merging
+#   to verify that the data the user is attempting to merge is for the same
+#   source code/same version.
+#   If the version is not the same - then line numbers, etc. may be different
+#   and some very strange errors may occur.
+
+use strict;
+use Getopt::Long;
+use FindBin;
+use lib "$FindBin::RealBin";
+use gitversion qw(new usage);
+
+my $class = gitversion->new($0, @ARGV);
+# need to check if this is a --compare call or not
+my ($compare, $mapp4, $use_md5, $prefix, $allow_missing, $help);
+if (!GetOptions("--compare"       => \$compare,
+                "--md5"           => \$use_md5,
+                "--p4"            => \$mapp4,
+                '--prefix:s'      => \$prefix,
+                '--allow-missing' => \$allow_missing,
+                '--help'          => \$help) ||
+    $help ||
+    $compare && scalar(@ARGV) != 3
+) {
+    gitversion::usage($help);
+    exit $help ? 0 : 1;
+}
+
+if ($compare) {
+    print $class->compare_version(@ARGV) . "\n";
+} else {
+    print $class->extract_version(@ARGV) . "\n";
+}
+exit 0;

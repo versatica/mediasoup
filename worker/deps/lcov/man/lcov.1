@@ -1,10 +1,18 @@
-.TH lcov 1 "LCOV 1.14" 2017\-10\-10 "User Manuals"
+\" Define project URL
+.ds lcovurl https://github.com/linux\-test\-project/lcov
+
+.TH lcov 1 "LCOV 2.0" 2023\-05\-17 "User Manuals"
 .SH NAME
 lcov \- a graphical GCOV front\-end
 .SH SYNOPSIS
+
+Capture coverage data tracefile (from compiler-generated data):
+.br
+
+.RS 3
 .B lcov
 .BR \-c | \-\-capture
-.RS 5
+.RS 4
 .br
 .RB [ \-d | \-\-directory
 .IR directory ]
@@ -18,9 +26,22 @@ lcov \- a graphical GCOV front\-end
 .br
 .RB [ \-b | \-\-base\-directory
 .IR directory ]
+.br
+.RB [ \-\-build\-directory
+.IR directory ]
+.br
+.RB [ \-\-source\-directory
+.IR directory ]
+.br
 .RB [ \-i | \-\-initial ]
+.br
 .RB [ \-\-gcov\-tool
 .IR tool ]
+.br
+.RB [ \-\-branch\-coverage ]
+.br
+.RB [ \-\-demangle\-cpp
+.IR [ param ] ]
 .br
 .RB [ \-\-checksum ]
 .RB [ \-\-no\-checksum ]
@@ -29,121 +50,193 @@ lcov \- a graphical GCOV front\-end
 .br
 .RB [ \-\-compat\-libtool ]
 .RB [ \-\-no\-compat\-libtool ]
+.br
 .RB [ \-\-ignore\-errors
 .IR errors ]
 .br
+.RB [ \-\-preserve ]
 .RB [ \-\-to\-package
 .IR package ]
 .RB [ \-\-from\-package
 .IR package ]
-.RB [ \-q | \-\-quiet ]
-.br
 .RB [ \-\-no\-markers ]
 .RB [ \-\-external ]
 .RB [ \-\-no\-external ]
 .br
-.RB [ \-\-config\-file
-.IR config\-file ]
-.RB [ \-\-rc
-.IR keyword = value ]
-.br
 .RB [ \-\-compat
 .IR  mode =on|off|auto]
 .br
-.RB [ \-\-include
-.IR pattern ]
-.RB [ \-\-exclude
-.IR pattern ]
+.RB [ \-\-version\-script
+.IR script_file ]
+.br
+.RB [ \-\-resolv-\-script
+.IR script_file ]
+.br
+.RB [ \-\-comment
+.IR comment_string ]
 .br
 .RE
+.RE
 
+Generate tracefile (from compiler-generated data) with all counter values set to zero:
+.br
+
+.RS 3
 .B lcov
 .BR \-z | \-\-zerocounters
-.RS 5
+.RS 4
 .br
 .RB [ \-d | \-\-directory
 .IR directory ]
 .RB [ \-\-no\-recursion ]
 .RB [ \-f | \-\-follow ]
 .br
-.RB [ \-q | \-\-quiet ]
-.br
+.RE
 .RE
 
+Show coverage counts recorded in previously generated tracefile:
+.br
+
+.RS 3
 .B lcov
 .BR \-l | \-\-list
 .I tracefile
-.RS 5
+.RS 4
 .br
-.RB [ \-q | \-\-quiet ]
 .RB [ \-\-list\-full\-path ]
 .RB [ \-\-no\-list\-full\-path ]
 .br
-.RB [ \-\-config\-file
-.IR config\-file ]
-.RB [ \-\-rc
-.IR keyword = value ]
-.br
+.RE
 .RE
 
+Aggregate multiple coverage tracefiles into one:
+.br
+
+.RS 3
 .B lcov
 .BR \-a | \-\-add\-tracefile
-.I tracefile
-.RS 5
+.I tracefile_pattern
+.RS 4
 .br
 .RB [ \-o | \-\-output\-file
 .IR tracefile ]
+.br
+.RB [ \-\-prune\-tests ]
+.br
+.RB [ \-\-forget\-test\-names ]
+.br
+.RB [ \-\-map\-functions ]
+.br
+.RB [ \-\-branch\-coverage ]
+.br
 .RB [ \-\-checksum ]
 .RB [ \-\-no\-checksum ]
 .br
-.RB [ \-q | \-\-quiet ]
-.RB [ \-\-config\-file
-.IR config\-file ]
-.RB [ \-\-rc
-.IR keyword = value ]
-.br
 .RE
 
+Depending on your use model, it may not be necessary to create aggregate coverage data files.
+For example, if your regression tests are split into multiple suites, you may want to keep separate suite data and to compare both per-suite and aggregate results over time.
+.B genhtml
+allows you specify tracefiles via one or more glob patterns - which enables you
+generate aggregate reports without explicitly generating aggregated trace files.
+See the
+.B genhtml
+man page.
+.RE
+
+
+Generate new tracefile from existing tracefile, keeping only data from files matching pattern:
+.br
+
+.RS 3
 .B lcov
 .BR \-e | \-\-extract
 .I tracefile pattern
-.RS 5
+.RS 4
 .br
 .RB [ \-o | \-\-output\-file
 .IR tracefile ]
 .RB [ \-\-checksum ]
 .RB [ \-\-no\-checksum ]
 .br
-.RB [ \-q | \-\-quiet ]
-.RB [ \-\-config\-file
-.IR config\-file ]
-.RB [ \-\-rc
-.IR keyword = value ]
-.br
+.RE
 .RE
 
+Generate new tracefile from existing tracefile, removing data from files matching pattern:
+.br
+
+.RS 3
 .B lcov
 .BR \-r | \-\-remove
 .I tracefile pattern
-.RS 5
+.RS 4
 .br
 .RB [ \-o | \-\-output\-file
 .IR tracefile ]
 .RB [ \-\-checksum ]
 .RB [ \-\-no\-checksum ]
 .br
-.RB [ \-q | \-\-quiet ]
-.RB [ \-\-config\-file
-.IR config\-file ]
-.RB [ \-\-rc
-.IR keyword = value ]
-.br
+.RE
 .RE
 
+Generate new tracefile from exisiting tracefiles by performing set operations on coverage data:
+.br
+
+.RS 3
+.B lcov
+.BR \-\-intersect
+.I rh_glob_pattern
+.RS 4
+.br
+.RB [ \-o | \-\-output\-file
+.IR tracefile ]
+.br
+lh_glob_pattern
+
+
+The output will reflect
+.RS 2
+.I (union of files matching lh_glob_patterns)
+.I intersect
+.I (union of files matching rh_glob_patterns)
+.RE
+such that coverpoints found in both sets are merged (summed) whereas coverpoints found in only one set are dropped.
+Note that branch blocks are defined to be the same if and only if thier block ID and the associated branch expressions list are identical.
+Functions are defined to be the same if their name and location are identical.
+.RE
+.RE
+
+.RS 3
+.B lcov
+.BR \-\-subtract
+.I rh_glob_pattern
+.RS 4
+.br
+.RB [ \-o | \-\-output\-file
+.IR tracefile ]
+.br
+lh_glob_pattern
+
+The output will reflect
+.RS 2
+.I (union of files matching lh_glob_patterns)
+.I subtract
+.I (union of files matching rh_glob_patterns)
+.RE
+such that coverpoints found only in the set on the left will be retained and all others are dropped.
+.RE
+
+.RE
+
+
+Generate new tracefile from existing tracefile, modifying line numbers as indicated in diff file:
+.br
+
+.RS 3
 .B lcov
 .BR \-\-diff
 .IR "tracefile diff"
-.RS 5
+.RS 4
 .br
 .RB [ \-o | \-\-output\-file
 .IR tracefile ]
@@ -155,29 +248,88 @@ lcov \- a graphical GCOV front\-end
 .IR depth ]
 .RB [ \-\-path
 .IR path ]
+.br
+.RE
+.RE
+
+
+Summarize tracefile content:
+.br
+
+.RS 3
+.B lcov
+.BR \-\-summary
+.I tracefile
+.RS 4
+.br
+.RB [ \-\-fail-under-lines
+.IR percentage ]
+.br
+.RE
+.RE
+
+Print version or help message and exit:
+.br
+
+.RS 3
+.B lcov
+.RB [ \-h | \-\-help ]
+.RB [ \-\-version ]
+.RE
+
+Common lcov options - supported by all the above use cases:
+.br
+
+.RS 3
+.B lcov
+.RB [ \-\-keep\-going ]
+.br
+.RS 5
+.RB [ \-\-filter
+.IR type  ]
+.br
+.br
 .RB [ \-q | \-\-quiet ]
+.br
+.RB [ \-v | \-\-verbose ]
+.br
+.RB [ \-\-comment
+.IR comment_string ]
+.br
+.RB [ \-\-debug ]
+.br
+.RB [ \-\-parallel | -j
+.IR [integer] ]
+.br
+.RB [ \-\-memory
+.IR integer_num_Mb ]
+.br
+.RB [ \-\-tempdir
+.IR dirname ]
+.br
+.RB [ \-\-branch\-coverage ]
 .br
 .RB [ \-\-config\-file
 .IR config\-file ]
 .RB [ \-\-rc
 .IR keyword = value ]
 .br
+.RB [ \-\-include
+.IR glob_pattern ]
+.br
+.RB [ \-\-exclude
+.IR glob_pattern ]
+.br
+.RB [ \-\-erase\-functions
+.IR regexp_pattern ]
+.br
+.RB [ \-\-substitute
+.IR regexp_pattern ]
+.br
+.RB [ \-\-omit\-lines
+.IR regexp_pattern ]
+.br
 .RE
-
-.B lcov
-.BR \-\-summary
-.I tracefile
-.RS 5
-.br
-.RB [ \-q | \-\-quiet ]
-.br
-.RE
-
-.B lcov
-.RB [ \-h | \-\-help ]
-.RB [ \-v | \-\-version ]
-.RS 5
-.br
 .RE
 
 .SH DESCRIPTION
@@ -198,15 +350,14 @@ you have to complete the following preparation steps:
 For Linux kernel coverage:
 .RS
 Follow the setup instructions for the gcov\-kernel infrastructure:
-.I http://ltp.sourceforge.net/coverage/gcov.php
+.I https://docs.kernel.org/dev-tools/gcov.html
 .br
-
-
 .RE
+
 For user space application coverage:
-.RS
+.RS 3
 Compile the application with GCC using the options
-"\-fprofile\-arcs" and "\-ftest\-coverage".
+"\-fprofile\-arcs" and "\-ftest\-coverage" or "\-\-coverage".
 .RE
 
 Please note that this man page refers to the output format of
@@ -221,18 +372,28 @@ non-boundary value. This behavior is in accordance with that of the
 .BR gcov (1)
 tool.
 
+By default,
+.B lcov
+and related tools generate and collect line and function coverage data.
+Branch data is not collected or displayed by default; all tools support the
+.B --branch-coverage
+option to enable branch coverage - or you can permanently enable branch coverage by adding the appropriate
+settings to your personal, group, or site lcov configuration file.  See man
+.B lcovrc(5)
+for details.
+
 .SH OPTIONS
 
 
 .B \-a
-.I tracefile
+.I tracefile_pattern
 .br
 .B \-\-add\-tracefile
-.I tracefile
+.I tracefile_pattern
 .br
 .RS
-Add contents of
-.IR tracefile .
+Add contents of all files matching glob pattern
+.IR tracefile_pattern.
 
 Specify several tracefiles using the \-a switch to combine the coverage data
 contained in these files by adding up execution counts for matching test and
@@ -273,10 +434,47 @@ directory in which the source code file is located.
 Note that this option will not work in environments where multiple base
 directories are used. In that case use configuration file setting
 .B geninfo_auto_base=1
-(see
-.BR lcovrc (5)).
+(see man
+.BR lcovrc (5)
+).
+
 .RE
 
+.B \-\-build\-directory
+.I build_directory
+.br
+.RS
+search for .gcno data files from build_directory rather than
+adjacent to the corresponding .gcda file.
+
+See man
+.BR geninfo (1))
+for details.
+
+
+.RE
+.BI "\-\-source\-directory " dirname
+.RS
+Add 'dirname' to the list of places to look for source files.
+.br
+
+For relative source file paths listed in
+.I e.g.
+paths found in
+.IR tracefile,
+or found in gcov output during
+.I \-\-capture
+\- possibly after substitutions have been applied -
+.B lcov
+ will first look for the path from 'cwd' (where genhtml was
+invoked) and
+then from each alternate directory name in the order specified.
+The first location matching location is used.
+
+This option can be specified multiple times, to add more directories to the source search path.
+
+
+.RE
 .B \-c
 .br
 .B \-\-capture
@@ -291,8 +489,22 @@ option to capture counts for a user space program.
 The result of the capture operation will be written to stdout or the tracefile
 specified with \-o.
 
+See man
+.BR geninfo (1))
+for more details about the capture process and available options and parameters.
+
+
 Only one of  \-z, \-c, \-a, \-e, \-r, \-l, \-\-diff or \-\-summary may be
 specified at a time.
+.RE
+
+.B \-\-branch\-coverage
+.RS
+.br
+Collect and/or retain branch coverage data.
+
+This is equivalent to using the option "\-\-rc branch_coverage=1"; the option was added to better match the genhml interface.
+
 .RE
 
 .B \-\-checksum
@@ -300,7 +512,8 @@ specified at a time.
 .B \-\-no\-checksum
 .br
 .RS
-Specify whether to generate checksum data when writing tracefiles.
+Specify whether to generate checksum data when writing tracefiles and/or to
+verify matching checksums when combining trace files.
 
 Use \-\-checksum to enable checksum generation or \-\-no\-checksum to
 disable it. Checksum generation is
@@ -314,6 +527,10 @@ code versions.
 
 If you don't work with different source code versions, disable this option
 to speed up coverage data processing and to reduce the size of tracefiles.
+
+Note that this options is somewhat subsumed by the
+.B \-\-version\-script
+option - which does something similar, but at the 'whole file' level.
 .RE
 
 .B \-\-compat
@@ -408,6 +625,9 @@ libtool, disable this option to prevent problems when capturing coverage data.
 .br
 .RS
 Specify a configuration file to use.
+See man
+.B lcovrc(5)
+for details of the file format and options.
 
 When this option is specified, neither the system\-wide configuration file
 /etc/lcovrc, nor the per\-user configuration file ~/.lcovrc is read.
@@ -416,6 +636,9 @@ This option may be useful when there is a need to run several
 instances of
 .B lcov
 with different configuration file options in parallel.
+
+Note that this option must be specified in full - abbreviations are not supported.
+
 .RE
 
 .B \-\-convert\-filenames
@@ -497,10 +720,121 @@ command line switches. The
 will be interpreted as shell wildcard patterns (note that they may need to be
 escaped accordingly to prevent the shell from expanding them first).
 
+Note: The pattern must be specified to match the
+.B absolute
+path of each source file.
+If you specify a pattern which does not seem to be correctly applied - files that you expected to be excluded still appear in the output - you can look for warning messages in the log file.
+.B lcov
+will emit a warning for every pattern which is not applied at least once.
+
 Can be combined with the
 .B --include
 command line switch. If a given file matches both the include pattern and the
 exclude pattern, the exclude pattern will take precedence.
+.RE
+
+.B \-\-erase\-functions
+.I regexp
+.br
+.RS
+Exclude coverage data from lines which fall within a function whose name matches the supplied regexp.  Note that this is a mangled or demangled name, depending on whether the \-\-demangle\-cpp option is used or not.
+
+Note that this option requires that you use a gcc version which is new enough to support function begin/end line reports or that you configure the tool to derive the required dta - see the
+.BI derive_function_end_line
+discussion in man
+.B lcovrc(5).
+
+.RE
+.B \-\-substitute
+.I regexp_pattern
+.br
+.RS
+Apply Perl regexp
+.IR regexp_pattern
+to source file names found during processing.  This is useful when the path name reported by gcov does not match your source layout and the file is not found, or when the paths found in the extracted .info file does not match your source code layout.
+
+Use this option in situations where geninfo cannot find the correct
+path to source code files of a project. By providing a
+.I regexp_pattern
+in Perl regular expression format (see
+.BR perlre (1))
+, you can instruct geninfo to
+remove or change parts of the incorrect source path.
+
+.B Example:
+.br
+
+1. When geninfo reports that it cannot find source file
+.br
+
+    /path/to/src/.libs/file.c
+.br
+
+while the file is actually located in
+.br
+
+    /path/to/src/file.c
+.br
+
+use the following parameter:
+.br
+
+    \-\-substitute 's#/.libs##g'
+
+This will remove all "/.libs" strings from the path.
+
+2. When geninfo reports that it cannot find source file
+.br
+
+    /tmp/build/file.c
+.br
+
+while the file is actually located in
+.br
+
+    /usr/src/file.c
+.br
+
+use the following parameter:
+.br
+
+    \-\-substitute 's#/tmp/build#/usr/src#g'
+.br
+
+This will change all "/tmp/build" strings in the path to "/usr/src".
+.PP
+
+.RE
+
+.B \-\-omit\-lines
+.I regexp
+.br
+.RS
+Exclude coverage data from lines whose content matches
+.IR regexp .
+
+Use this switch if you want to exclude line and branch coverage data for some particular constructs in your code (e.g., some complicated macro).  Multiple patterns can be
+specified by using multiple
+.B --omit\-lines
+command line switches. The
+.I regexp
+will be interpreted as perl regular expressions (note that they may need to be
+escaped accordingly to prevent the shell from expanding them first).
+If you want the pattern to explicitly match from the start or end of the line, your regexp should start and/or end with "^" and/or "$".
+
+Note that the
+.B lcovrc
+config file setting
+.B lcov_excl_line = regexp
+is similar to
+.B \-\-omit\-lines.
+.B \-\-omit\-lines
+is useful if there are multiple teams each of which want to exclude certain patterns.
+.B \-\-omit\-lines
+is additive and can be specified across multiple config files whereas each call to
+.B lcov_excl_line
+overrides the previous value - and thus teams must coordinate.
+
 .RE
 
 .B \-\-external
@@ -518,6 +852,148 @@ ignore this data.
 Data for external source files is
 .B included
 by default.
+
+.RE
+
+.B \-\-forget\-test\-names
+.br
+.RS
+If non\-zero, ignore testcase names in .info file -
+.I i.e.,
+treat all coverage data as if it came from the same testcase.
+This may improve performance and reduce memory consumption if user does
+not need per-testcase coverage summary in coverage reports.
+
+This option can also be configured permanently using the configuration file
+option
+.IR forget_testcase_names .
+
+.RE
+
+.B \-\-prune\-tests
+.br
+.RS
+Determine list of unique tracefiles.
+
+Use this option to determine a list of unique tracefiles from the list
+specified by
+.BR \-\-add\-tracefile .
+A tracefile is considered to be unique if it is the only tracefile that:
+
+.RS
+
+.IP 1. 3
+contains data for a specific source file
+.br
+.PP
+.IP 2. 3
+contains data for a specific test case name
+.br
+.PP
+.IP 3. 3
+contains non-zero coverage data for a specific line, function or branch
+.br
+.PP
+
+.RE
+
+Note that the list of retained files may depend on the order they are processed.  For example, if
+.I A
+and
+.I B
+contain identical coverage data, then the first one we see will be retained and the second will be pruned.
+The file processing order is nondeterministic when the
+.BR \-\-parallel
+option is used - implying that the pruned result may differ from one execution to the next in this case.
+
+.BR \-\-prune\-tests must be specified together with
+.BR \-\-add\-tracefile .
+When specified,
+.B lcov
+will emit the list of unique files rather than combined tracefile data.
+.br
+
+.RE
+
+.B \-\-map\-functions
+.br
+.RS
+List tracefiles with non-zero coverage for each function.
+.br
+
+Use this option to determine the list of tracefiles that contain non-zero
+coverage data for each function from the list of tracefiles specified by
+.BR \-\-add\-tracefile .
+
+This option must be specified together with
+.BR \-\-add\-tracefile .
+When specified,
+.B lcov
+will emit the list of functions and associated tracefiles rather than combined tracefile data.
+.br
+
+.RE
+.B \-\-version\-script
+.I script
+.br
+.RS
+
+Use
+.I script
+to get a source file's version ID from revision control when
+extracting data and to compare version IDs for the purpose of error checking when merging .info files.
+.br
+
+See the genhtml man page for more details on the version script.
+
+.br
+
+.RE
+.B \-\-resolve\-script
+.I script
+.br
+.RS
+Use
+.I script
+to find the file path for some source file which appears in
+an input data file if the file is not found after applying
+.I \-\-substitute
+patterns and searching the
+.I \-\-source\-directory
+list.  This option is equivalent to the
+.B resolve_script
+config file option. See man
+.B lcovrc(5)
+for details.
+.RE
+
+.B \-\-comment
+.I comment_string
+.br
+.RS
+
+Append
+.I comment_string
+to list of comments emitted into output result file.
+This option may be specified multiple times.
+Comments are printed at the top of the file, in the order they were specified.
+
+Comments may be useful to document the conditions under which the trace file was
+generated:  host, date, environment,
+.I etc.
+
+Note that this option has no effect for lcov overations which do not write an
+output result file:
+.I \-\-list
+.I \-\-summary,
+.I \-\-prune\-tests,
+and
+.I \-\-map\-functions.
+
+See the
+.B geninfo
+man page for a description of the comment format in the result file.
+
 .RE
 
 .B \-e
@@ -539,6 +1015,10 @@ escaped accordingly to prevent the shell from expanding them first).
 Every file entry in
 .I tracefile
 which matches at least one of those patterns will be extracted.
+
+Note: The pattern must be specified to match the
+.B absolute
+path of each source file.
 
 The result of the extract operation will be written to stdout or the tracefile
 specified with \-o.
@@ -573,6 +1053,8 @@ want to perform the .info file creation on the build machine. See
 .br
 .RS
 Specify the location of the gcov tool.
+
+See the geninfo man page for more details.
 .RE
 
 .B \-h
@@ -598,6 +1080,13 @@ command line switches. The
 .I patterns
 will be interpreted as shell wildcard patterns (note that they may need to be
 escaped accordingly to prevent the shell from expanding them first).
+
+Note: The pattern must be specified to match the
+.B absolute
+path of each source file.
+.br
+
+If you specify a pattern which does not seem to be correctly applied - files that you expected to be included in the output do not appear - lcov will generate an error message of type 'unused'.  See the \-\-ignore\-errors option for how to make lcov ignore the error or turn it into a warning.
 .RE
 
 .B \-\-ignore\-errors
@@ -608,18 +1097,196 @@ Specify a list of errors after which to continue processing.
 
 Use this option to specify a list of one or more classes of errors after which
 lcov should continue processing instead of aborting.
+Note that the tool will generate a warning (rather than a fatal error) unless you ignore the error two (or more) times:
+.br
+.RS
+lcov ... --ignore-errors source,source ...
+.RE
 
 .I errors
 can be a comma\-separated list of the following keywords:
 
-.B gcov:
+.IP branch: 3
+branch ID (2nd field in the .info file 'BRDA' entry) does not follow expected integer sequence.
+.PP
+
+.IP callback: 3
+Version script error.
+.PP
+
+.IP child: 3
+child process returned non-zero exit code during
+.I \-\-parallel
+execution.  This typically indicates that the child encountered an error:  see the log file immediately above this message.
+In contrast:  the
+.B parallel
+error indicates an unexpected/unhandled exception in the child process - not a 'typical' lcov error.
+.PP
+
+.IP corrupt: 3
+corrupt/unreadable file found.
+.PP
+
+.IP count: 3
+An excessive number of messages of some class have been reported - subsequent messages of that type will be suppressed.
+The limit can be controlled by the 'max_message_count' variable. See man
+.B lcovrc(5).
+.PP
+
+.IP deprecated: 3
+You are using a deprecated option.
+This option will be removed in an upcoming release - so you should change your
+scripts now.
+.PP
+
+.IP empty: 3
+the .info data file is empty (e.g., because all the code was 'removed' or excluded.
+.PP
+
+.IP excessive: 3
+your coverage data contains a suspiciously large 'hit' count which is unlikely
+to be correct - possibly indicating a bug in your toolchain.
+See the
+.I excessive_count_threshold
+section in man
+.B lcovrc(5)
+for details.
+.PP
+
+.IP format: 3
+unexpected syntax found in .info file.
+.PP
+
+.IP gcov: 3
 the gcov tool returned with a non\-zero return code.
+.PP
 
-.B source:
-the source code file for a data set could not be found.
-
-.B graph:
+.IP graph: 3
 the graph file could not be found or is corrupted.
+.PP
+
+.IP internal: 3
+internal tool issue detected.  Please report this bug along with a testcase.
+.PP
+
+.IP mismatch: 3
+Inconsistent entries found in trace file:
+
+
+.RS 3
+.IP \(bu 3
+branch expression (3rd field in the .info file 'BRDA' entry) of merge data does not match, or
+.PP
+.IP \(bu 3
+function execution count (FNDA:...) but no function declaration (FN:...).
+.PP
+.RE
+.PP
+
+.IP missing: 3
+File does not exist or is not readable.
+.PP
+
+.IP negative: 3
+negative 'hit' count found.
+
+Note that negative counts may be caused by a known GCC bug - see
+
+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68080
+
+and try compiling with "-fprofile-update=atomic". You will need to recompile, re-run your tests, and re-capture coverage data.
+.PP
+
+.IP package: 3
+a required perl package is not installed on your system.  In some cases, it is possible to ignore this message and continue - however, certain features will be disabled in that case.
+.PP
+
+.IP parallel: 3
+various types of errors related to parallelism -
+.I i.e.,
+a child process died due to an error.  The corresponding error message appears in the log file immediately before the
+.I parallel
+error.
+
+If you see an error related to parallel execution that seems invalid, it may be a good idea to remove the \-\-parallel flag and try again.  If removing the flag leads to a different result, please report the issue (along with a testcase) so that the tool can be fixed.
+.PP
+
+.IP parent: 3
+the parent process exited while child was active during
+.I \-\-parallel
+execution.  This happens when the parent has encountered a fatal error -
+.I e.g.
+an error in some other child which was not ignored.  This child cannot continue working without its parent - and so will exit.
+.PP
+
+.IP range: 3
+Coverage data refers to a line number which is larger than the number of
+lines in the source file.  This can be caused by a version mismatch or
+by an issue in the
+.I gcov
+data.
+.PP
+
+.IP source: 3
+the source code file for a data set could not be found.
+.PP
+
+.IP unsupported: 3
+the requested feature is not supported for this tool configuration.  For example, function begin/end line range exclusions use some GCOV features that are not available in older GCC releases.
+.PP
+
+.IP unused: 3
+the include/exclude/erase/omit/substitute pattern did not match any file pathnames.
+.PP
+
+.IP usage: 3
+unsupported usage detected - e.g. an unsupported option combination.
+
+.PP
+
+.IP utility: 3
+a tool called during processing returned an error code (e.g., 'find' encountered an unreadable directory).
+.PP
+
+.IP version: 3
+revision control IDs of the file which we are trying to merge are not the same - line numbering and other information may be incorrect.
+.PP
+
+Also see man
+.B lcovrc(5)
+for a discussion of the 'max_message_count' parameter which can be used to control the number of warnings which are emitted before all subsequent messages are suppressed.  This can be used to reduce log file volume.
+
+
+.RE
+.BI "\-\-keep\-going "
+.RS
+Do not stop if error occurs: attempt to generate a result, however flawed.
+
+This command line option corresponds to the
+.I stop_on_error [0|1]
+lcovrc option.  See man
+.B lcovrc(5)
+for more details.
+
+.RE
+.BI "\-\-preserve "
+.RS
+Preserve intermediate data files generated by various steps in the tool - e.g., for debugging.  By default, these files are deleted.
+
+.RE
+.BI "\-\-filter "
+.I filters
+.RS
+Specify a list of coverpoint filters to apply to input data.
+See the genhtml man page for details.
+
+
+.RE
+.BI "\-\-demangle\-cpp " [param]
+.RS
+Demangle C++ function names.  See the genhtml man page for details.
+
+
 .RE
 
 .B \-i
@@ -751,16 +1418,56 @@ Use this option together with \-\-diff to tell lcov to disregard the specified
 initial path component when matching between tracefile and diff filenames.
 .RE
 
+.B \-v
+.br
+.B \-\-verbose
+.RS
+Increment informational message verbosity.  This is mainly used for script and/or flow debugging - e.g., to figure out which data file are found, where.
+Also see the \-\-quiet flag.
+
+Messages are sent to stdout unless there is no output file (i.e., if the coverage data is written to stdout rather than to a file) and to stderr otherwise.
+
+.RE
 .B \-q
 .br
 .B \-\-quiet
-.br
 .RS
-Do not print progress messages.
+Decrement informational message verbosity.
 
-This option is implied when no output filename is specified to prevent
-progress messages to mess with coverage data which is also printed to
-the standard output.
+Decreased verbosity will suppress 'progress' messages for example - while error and warning messages will continue to be printed.
+
+.RE
+.B \-\-debug
+.RS
+Increment 'debug messages' verbosity.  This is useful primarily to developers who want to enhance the lcov tool suite.
+
+.RE
+
+.BI "\-\-parallel "
+.I [ integer ]
+.br
+.BI "\-j "
+.I [ integer ]
+.RS
+Specify parallelism to use during processing (maximum number of forked child processes).  If the optional integer parallelism parameter is zero or is missing, then use to use up the number of cores on the machine.  Default is not to use a single process (no parallelism).
+
+Currently - parallelism is used with the \-\-add\-tracefile and \-\-capture options.
+
+.RE
+.BI "\-\-memory "
+.I integer
+.RS
+Specify the maximum amount of memory to use during parallel processing, in Mb.  Effectively, the process will not fork() if this limit would be exceeded.  Default is 0 (zero) - which means that there is no limit.
+
+This option may be useful if the compute farm environment imposes strict limits on resource utilization such that the job will be killed if it tries to use too many parallel children - but the user does now know a priori what the permissible maximum is.  This option enables the tool to use maximum parallelism - up to the limit imposed by the memory restriction.
+
+The configuration file
+.I memory_percentage
+option provided another way to set the maximum memory consumption.
+See man
+.B lcovrc(5)
+for details.
+
 .RE
 
 .B \-\-rc
@@ -774,7 +1481,7 @@ Use this option to specify a
 statement which overrides the corresponding configuration statement in
 the lcovrc configuration file. You can specify this option more than once
 to override multiple configuration statements.
-See
+See man
 .BR lcovrc (5)
 for a list of available keywords and their meaning.
 .RE
@@ -798,6 +1505,10 @@ escaped accordingly to prevent the shell from expanding them first).
 Every file entry in
 .I tracefile
 which matches at least one of those patterns will be removed.
+
+Note: The pattern must be specified to match the
+.B absolute
+path of each source file.
 
 The result of the remove operation will be written to stdout or the tracefile
 specified with \-o.
@@ -826,6 +1537,14 @@ Note that you may specify this option more than once.
 
 Only one of  \-z, \-c, \-a, \-e, \-r, \-l, \-\-diff or \-\-summary may be
 specified at a time.
+.RE
+
+.B \-\-fail-under-lines
+.I percentage
+.br
+.RS
+Use this option together with \-\-summary to tell lcov to exit with a status of 1 if the total
+line coverage is less than percentage.
 .RE
 
 .B \-t
@@ -884,8 +1603,6 @@ must be converted to a .info file before recompiling the program or it will
 become invalid.
 .RE
 
-.B \-v
-.br
 .B \-\-version
 .br
 .RS
@@ -906,6 +1623,13 @@ Only one of  \-z, \-c, \-a, \-e, \-r, \-l, \-\-diff or \-\-summary may be
 specified at a time.
 .RE
 
+.B \-\-tempdir
+.I dirname
+.br
+.RS
+Write temporary and intermediate data to indicated directory.  Default is "/tmp".
+.RE
+
 .SH FILES
 
 .I /etc/lcovrc
@@ -921,6 +1645,11 @@ The per\-user configuration file.
 .SH AUTHOR
 Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
 
+Henry Cox <henry.cox@mediatek.com>
+.RS
+Filtering, error management, parallel execution sections.
+.RE
+
 .SH SEE ALSO
 .BR lcovrc (5),
 .BR genhtml (1),
@@ -928,3 +1657,7 @@ Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
 .BR genpng (1),
 .BR gendesc (1),
 .BR gcov (1)
+.br
+
+.I \*[lcovurl]
+.br

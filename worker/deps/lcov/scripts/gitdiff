@@ -1,0 +1,144 @@
+#!/usr/bin/env perl
+
+use Getopt::Long;
+use strict;
+
+my $verbose = 0;
+
+sub include_me
+{
+    my ($path, $includes, $excludes) = @_;
+
+    foreach my $pat (@$excludes) {
+        if ($path =~ /$pat/) {
+            if ($verbose) {
+                print(STDERR "exclude '$path', pattern '$pat'\n");
+            }
+            return 0;
+        }
+    }
+    return 1
+        if 0 == scalar(@$includes);
+
+    foreach my $pat (@$includes) {
+        if ($path =~ /$pat/) {
+            if ($verbose) {
+                print(STDERR "include '$path', pattern '$pat'\n");
+            }
+            return 1;
+        }
+    }
+    if ($verbose > 1) {
+        print(STDERR "exclude '$path': no match\n");
+    }
+    return 0;
+}
+
+my @exclude_patterns;
+my @include_patterns;
+my $suppress_unchanged;
+my $prefix = '';
+
+if (!GetOptions("exclude=s"    => \@exclude_patterns,
+                "include=s"    => \@include_patterns,
+                'no-unchanged' => \$suppress_unchanged,
+                'prefix=s'     => \$prefix,
+                'verbose+'     => \$verbose) ||
+    (2 != scalar(@ARGV) &&
+        3 != scalar(@ARGV))
+) {
+    print(STDERR
+            "usage: [(--exclude|include) regexp[,regexp]] [dir] base_changelist current_changelist\n'exclude' wins if both exclude and include would match.\n"
+    );
+    exit(1);
+}
+
+@exclude_patterns = split(',', join(',', @exclude_patterns));
+@include_patterns = split(',', join(',', @include_patterns));
+
+if ($verbose) {
+    print(STDERR join(' ', @ARGV));
+    if (scalar(@exclude_patterns)) {
+        print(STDERR " --exclude " . join(" --exclude ", @exclude_patterns));
+    }
+    if (scalar(@include_patterns)) {
+        print(STDERR " --include " . join(" --include ", @include_patterns));
+    }
+    print(STDERR "\n");
+}
+
+$prefix .= '/' if $prefix;
+my $cmd;
+if (3 == scalar(@ARGV)) {
+    my $dir = shift @ARGV;
+    push(@include_patterns, "$dir");
+}
+my $base_sha    = shift @ARGV;
+my $current_sha = shift @ARGV;
+
+$cmd = "git diff $base_sha $current_sha";
+
+die("failed to exec git diff: $!")
+    unless (open(HANDLE, "-|", "git diff $base_sha $current_sha"));
+
+my $includeCurrentFile;
+my %allFiles;
+
+while (<HANDLE>) {
+    chomp($_);
+    s/\r//g;
+    my $line = $_;
+
+    if ($line =~ /(^diff|\+\+\+|---) /) {
+        # remove the a/b leader from the
+        $line =~ s# [ab]/# $prefix#g;
+    }
+
+    if ($line =~ /^diff --git (\S+) (\S+)/) {
+        # git diff header
+        my $fileA = $1;
+        my $fileB = $2;
+        $includeCurrentFile =
+            (include_me($fileA, \@include_patterns, \@exclude_patterns) ||
+             include_me($fileB, \@include_patterns, \@exclude_patterns));
+        $allFiles{$fileB} = $fileA
+            if ($includeCurrentFile);
+    }
+
+    printf("%s\n", $line)
+        if $includeCurrentFile;
+}
+close(HANDLE) or die("failed to close git diff pipe: $!");
+if (0 != $?) {
+    $? & 0x7F & die("git diff died from signal ", ($? & 0x7F), "\n");
+    die("git diff exited with error ", ($? >> 8), "\n");
+}
+
+exit 0 if defined($suppress_unchanged);
+
+my $p = `git rev-parse --show-prefix`;
+chomp $p;
+
+# now find the list of files in the current SHA - we can process that
+#  to find the list of all current files which were unchanged since the
+#  baseline SHA
+die("failed to exec git ls-tree")
+    unless (open(HANDLE, "-|", "git ls-tree -r --name-only $current_sha"));
+
+while (<HANDLE>) {
+    chomp($_);
+    s/\r//g;
+    my $filename = $p . $_;
+    my $path     = $prefix . $filename;
+    if (!exists($allFiles{$path}) &&
+        include_me($path, \@include_patterns, \@exclude_patterns)) {
+        printf("diff --git a/$filename b/$filename\n");
+        printf("=== $path\n");
+    }
+}
+close(HANDLE) or die("failed to close git ls-tree pipe: $!");
+if (0 != $?) {
+    $? & 0x7F & die("git ls-tree died from signal ", ($? & 0x7F), "\n");
+    die("git ls-tree exited with error ", ($? >> 8), "\n");
+}
+exit 0;

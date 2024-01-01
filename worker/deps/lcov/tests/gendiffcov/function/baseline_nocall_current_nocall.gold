@@ -1,0 +1,38 @@
+              <td class="coverFn"><a href="test.cpp.gcov.html#L19">added()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L26">added_notCalled()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L63">excluded()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L72">excluded_notCalled()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L45">included()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L54">included_notCalled()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L80">inserted()</a></td>
+              <td class="tlaUNC">UNC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L85">inserted_notCalled()</a></td>
+              <td class="tlaUNC">UNC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L90">main</a></td>
+              <td class="tlaCBC">CBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L33">removed()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L39">removed_notCalled()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L7">unchanged()</a></td>
+              <td class="tlaUBC">UBC</td>
+--
+              <td class="coverFn"><a href="test.cpp.gcov.html#L13">unchanged_notCalled()</a></td>
+              <td class="tlaUBC">UBC</td>

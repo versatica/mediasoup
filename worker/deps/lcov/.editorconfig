@@ -1,0 +1,25 @@
+# This file contains editor configuration directives that match the preferred
+# coding style for LCOV contributions.
+#
+# See https://editorconfig.org
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+tab_width = 8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.sh]
+indent_style = tab
+indent_size = 8
+tab_width = 8
+
+[{Makefile,*.mak}]
+indent_style = tab
+indent_size = 8
+tab_width = 8

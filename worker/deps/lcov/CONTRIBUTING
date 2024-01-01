@@ -8,6 +8,7 @@ example:
  * Fixes for code or documentation
  * Performance and compatibility improvements
  * Functional enhancements
+ * New and/or improved testcases
 
 There are some rules that these contributions must follow to be acceptable for
 inclusion:
@@ -16,8 +17,8 @@ inclusion:
  2. The contribution must follow a particular format.
  3. The contribution must be signed.
 
-Once you have made sure that your contribution follows these rules, send it via
-e-mail to the LTP coverage mailing list [1].
+Once you have made sure that your contribution follows these rules, open a
+pull request for the LCOV code repository [1].
 
 
 Signing your work
@@ -31,7 +32,7 @@ end of the explanation of a patch:
 By signing a patch, you certify the following:
 
   By making a contribution to the LTP GCOV extension (LCOV) on
-  http://ltp.sourceforge.net, I certify that:
+  https://github.com/linux-test-project/lcov, I certify that:
 
   a) The contribution was created by me and I have the right to submit it
      under the terms and conditions of the open source license
@@ -52,16 +53,86 @@ Project goals
 =============
 
 The goal of LCOV is to provide a set of command line tools that can be used to
-collect, process and visualize code coverage data as produced by the gcov tool
-that is part of the GNU Compiler Collection (GCC) [2].
+collect, process, and visualize code coverage data in an easy-to-use way,
+suitable for deployment in projects of a wide range of sizes - in particular,
+deployment in automated CI/CD systems and large projects implemented using
+multiple languages.
+LCOV is based on existing environment-specific profiling mechanisms including,
+but not limited to, the gcov tool that is part of the GNU Compiler Collection
+(GCC) [2].
 
 If you have an idea for a contribution but are unsure if it aligns with the
-project goals, feel free to discuss the idea on the LTP coverage mailing
-list [1].
+project goals, feel free to discuss the idea using the issue tracker on the
+LCOV code repository site [1].
 
 
 Contribution format
 ===================
+
+Coding style:
+-------------
+
+The lcov project maintainers try to adhere to a common set of code formatting
+rules.  While no one ever agrees with anyone else's choices, almost everyone
+agrees that consistency is better than its lack.
+
+To this end, the lcov project uses 'perltidy' [3] to format our code.
+Perl-Tidy-20221112 has been tested and is known to work.  Newer versions
+may also work, but some older versions are known not to.
+
+Please execute
+    make checkstyle MODE=full UPDATE=true
+on your code and verify correctness of the reformating (if any) before
+submitting a pull request.
+
+Testing:
+--------
+
+At minimum, please execute
+
+    $ make test
+
+and verify that all testcases pass, then execute
+
+    $ make clean
+
+and verify that all shrapnel has been removed - before submitting a
+pull request.
+
+It is highly, highly requested that PRs containing new features be
+accompanied by tests for those features.  Lack of tests may substantially
+delay review and/or acceptance of your contribution.
+
+It is recommended to check code coverage of your contribution.
+The lcov project currently uses Devel::Cover to measure perl code coverage.
+To generate a report:
+
+  $ make COVERAGE=1 test
+
+and then check coverage at ./tests/cover_db/coverage.html
+Note that certain version combinations of gcc, perl, and Devel::Cover
+will crash during test execution.  To work around the issue, some tests
+ignore these errors if passed the "--keep-going" flag:
+
+   $ make COVERAGE=1 TESTCASE_ARGS=--keep-going test
+
+It is more than a little ironic that the lcov project does not use lcov
+to check its own coverage.  Similarly, it is disappointing that it does
+not use differential coverage on new contributions.  (If this statement
+makes you think of a small project that you want to tackle:  excellent.)
+
+Pull requests which add tests for existing features or which enhance
+existing tests are actively encouraged.
+The lcov maintainers are painfully aware that the code coverage of the
+lcov test suite on the lcov code base is embarassingly low.
+
+Note that existing tests and/or test drivers may themselves need to be
+modified in order to work correctly on other platforms and with other
+toolchains.  Pull requests which address issues of this nature are
+also actively encouraged.
+
+Submitting a change:
+--------------------
 
 To contribute a change, please create a patch using 'git format-patch'.
 Alternatively you can use the diff utility with the following command line
@@ -87,7 +158,8 @@ With your Signed-off-by, you certify the rules stated in section
 "Signing your work".
 
 
--- 
+--
 
-[1] ltp-coverage@lists.sourceforge.net
-[2] http://gcc.gnu.org
+[1] https://github.com/linux-test-project/lcov
+[2] https://gcc.gnu.org
+[3] https://metacpan.org/dist/Perl-Tidy/view/bin/perltidy

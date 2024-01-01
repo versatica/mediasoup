@@ -1,0 +1,1 @@
+int trivial(unsigned abc) {};

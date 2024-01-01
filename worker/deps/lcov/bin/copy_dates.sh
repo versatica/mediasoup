@@ -17,7 +17,9 @@ fi
 
 [ -d "$SOURCE/.git" ] ; NOGIT=$?
 
-echo "Copying modification/commit times from $SOURCE to $TARGET"
+if [[ -n "$V" ]] && [[ "$V" -gt 0 ]] ; then
+	echo "Copying modification/commit times from $SOURCE to $TARGET"
+fi
 
 cd "$SOURCE" || exit 1
 find * -type f | while read FILENAME ; do

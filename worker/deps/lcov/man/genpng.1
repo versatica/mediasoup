@@ -1,4 +1,7 @@
-.TH genpng 1 "LCOV 1.14" 2016\-12\-19 "User Manuals"
+\" Define project URL
+.ds lcovurl https://github.com/linux\-test\-project/lcov
+
+.TH genpng 1 "LCOV 2.0" 2023\-05\-12 "User Manuals"
 .SH NAME
 genpng \- Generate an overview image from a source file
 .SH SYNOPSIS
@@ -11,6 +14,7 @@ genpng \- Generate an overview image from a source file
 .IR tabsize ]
 .RB [ \-w | \-\-width
 .IR width ]
+.RB [ \-d | \-\-dark\-mode ]
 .br
 .RB [ \-o | \-\-output\-filename
 .IR output\-filename ]
@@ -52,7 +56,7 @@ Print version number, then exit.
 .br
 .BI "\-\-tab\-size " tab\-size
 .RS
-Use 
+Use
 .I tab\-size
 spaces in place of tab.
 
@@ -66,7 +70,7 @@ by the number of spaces defined by
 .br
 .BI "\-\-width " width
 .RS
-Set width of output image to 
+Set width of output image to
 .I width
 pixel.
 
@@ -79,6 +83,12 @@ Note that source code lines which are longer than
 will be truncated.
 .RE
 
+.B \-d
+.br
+.B \-\-dark\-mode
+.RS
+Use a light-display-on-dark-background color scheme rather than the default dark-display-on-light-background.
+.RE
 
 .BI "\-o " filename
 .br
@@ -87,7 +97,7 @@ will be truncated.
 Write image to
 .IR filename .
 
-Specify a name for the resulting image file (default is 
+Specify a name for the resulting image file (default is
 .IR source\-file .png).
 .RE
 .SH AUTHOR
@@ -99,3 +109,7 @@ Peter Oberparleiter <Peter.Oberparleiter@de.ibm.com>
 .BR geninfo (1),
 .BR gendesc (1),
 .BR gcov (1)
+.br
+
+.I \*[lcovurl]
+.br

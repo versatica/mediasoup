@@ -10,11 +10,11 @@
 #   This program is distributed in the hope that it will be useful, but
 #   WITHOUT ANY WARRANTY;  without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#   General Public License for more details.                 
+#   General Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License
-#   along with this program;  if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#   along with this program;  if not, see
+#   <http://www.gnu.org/licenses/>.
 #
 #
 # gendesc
@@ -25,7 +25,7 @@
 #   For each test case:
 #     <test name><optional whitespace>
 #     <at least one whitespace character (blank/tab)><test description>
-#   
+#
 #   Actual description may consist of several lines. By default, output is
 #   written to stdout. Test names consist of alphanumeric characters
 #   including _ and -.
@@ -37,24 +37,21 @@
 
 use strict;
 use warnings;
-use File::Basename; 
+use File::Basename;
 use Getopt::Long;
 use Cwd qw/abs_path/;
+use FindBin;
 
+use lib "$FindBin::RealBin/../lib";
+use lcovutil qw ($tool_name $tool_dir $lcov_version $lcov_url
+                 die_handler warn_handler);
 
 # Constants
-our $tool_dir		= abs_path(dirname($0));
-our $lcov_version	= 'LCOV version '.`$tool_dir/get_version.sh --full`;
-our $lcov_url		= "http://ltp.sourceforge.net/coverage/lcov.php";
-our $tool_name		= basename($0);
-
+# (now imported from lcovutil.pm)
 
 # Prototypes
 sub print_usage(*);
 sub gen_desc();
-sub warn_handler($);
-sub die_handler($);
-
 
 # Global variables
 our $help;
@@ -62,51 +59,44 @@ our $version;
 our $output_filename;
 our $input_filename;
 
-
 #
 # Code entry point
 #
 
 $SIG{__WARN__} = \&warn_handler;
-$SIG{__DIE__} = \&die_handler;
+$SIG{__DIE__}  = \&die_handler;
 
 # Parse command line options
 if (!GetOptions("output-filename=s" => \$output_filename,
-		"version" =>\$version,
-		"help|?" => \$help
-		))
-{
-	print(STDERR "Use $tool_name --help to get usage information\n");
-	exit(1);
+                "version"           => \$version,
+                "help|?"            => \$help
+)) {
+    print(STDERR "Use $tool_name --help to get usage information\n");
+    exit(1);
 }
 
 $input_filename = $ARGV[0];
 
 # Check for help option
-if ($help)
-{
-	print_usage(*STDOUT);
-	exit(0);
+if ($help) {
+    print_usage(*STDOUT);
+    exit(0);
 }
 
 # Check for version option
-if ($version)
-{
-	print("$tool_name: $lcov_version\n");
-	exit(0);
+if ($version) {
+    print("$tool_name: $lcov_version\n");
+    exit(0);
 }
 
-
 # Check for input filename
-if (!$input_filename)
-{
-	die("No input filename specified\n".
-	    "Use $tool_name --help to get usage information\n");
+if (!$input_filename) {
+    die("No input filename specified\n" .
+        "Use $tool_name --help to get usage information\n");
 }
 
 # Do something
 gen_desc();
-
 
 #
 # print_usage(handle)
@@ -116,22 +106,22 @@ gen_desc();
 
 sub print_usage(*)
 {
-	local *HANDLE = $_[0];
+    local *HANDLE = $_[0];
 
-	print(HANDLE <<END_OF_USAGE)
+    print(HANDLE <<END_OF_USAGE)
 Usage: $tool_name [OPTIONS] INPUTFILE
 
 Convert a test case description file into a format as understood by genhtml.
 
+OPTIONS
   -h, --help                        Print this help, then exit
-  -v, --version                     Print version number, then exit
+      --version                     Print version number, then exit
   -o, --output-filename FILENAME    Write description to FILENAME
 
-For more information see: $lcov_url
+For more information see the gendesc man page.
 END_OF_USAGE
-	;
+        ;
 }
-
 
 #
 # gen_desc()
@@ -149,78 +139,52 @@ END_OF_USAGE
 
 sub gen_desc()
 {
-	local *INPUT_HANDLE;
-	local *OUTPUT_HANDLE;
-	my $empty_line = "ignore";
+    local *INPUT_HANDLE;
+    local *OUTPUT_HANDLE;
+    my $empty_line = "ignore";
 
-	open(INPUT_HANDLE, "<", $input_filename)
-		or die("ERROR: cannot open $input_filename!\n");
+    open(INPUT_HANDLE, "<", $input_filename) or
+        die("cannot open $input_filename!\n");
 
-	# Open output file for writing
-	if ($output_filename)
-	{
-		open(OUTPUT_HANDLE, ">", $output_filename)
-			or die("ERROR: cannot create $output_filename!\n");
-	}
-	else
-	{
-		*OUTPUT_HANDLE = *STDOUT;
-	}
+    # Open output file for writing
+    if ($output_filename) {
+        open(OUTPUT_HANDLE, ">", $output_filename) or
+            die("cannot create $output_filename!\n");
+    } else {
+        *OUTPUT_HANDLE = *STDOUT;
+    }
 
-	# Process all lines in input file
-	while (<INPUT_HANDLE>)
-	{
-		chomp($_);
+    # Process all lines in input file
+    while (<INPUT_HANDLE>) {
+        chomp($_);
 
-		if (/^(\w[\w-]*)(\s*)$/)
-		{
-			# Matched test name
-			# Name starts with alphanum or _, continues with
-			# alphanum, _ or -
-			print(OUTPUT_HANDLE "TN: $1\n");
-			$empty_line = "ignore";
-		}
-		elsif (/^(\s+)(\S.*?)\s*$/)
-		{
-			# Matched test description
-			if ($empty_line eq "insert")
-			{
-				# Write preserved empty line
-				print(OUTPUT_HANDLE "TD: \n");
-			}
-			print(OUTPUT_HANDLE "TD: $2\n");
-			$empty_line = "observe";
-		}
-		elsif (/^\s*$/)
-		{
-			# Matched empty line to preserve paragraph separation
-			# inside description text
-			if ($empty_line eq "observe")
-			{
-				$empty_line = "insert";
-			}
-		}
-	}
+        if (/^(\w[\w-]*)(\s*)$/) {
+            # Matched test name
+            # Name starts with alphanum or _, continues with
+            # alphanum, _ or -
+            print(OUTPUT_HANDLE "TN: $1\n");
+            $empty_line = "ignore";
+        } elsif (/^(\s+)(\S.*?)\s*$/) {
+            # Matched test description
+            if ($empty_line eq "insert") {
+                # Write preserved empty line
+                print(OUTPUT_HANDLE "TD: \n");
+            }
+            print(OUTPUT_HANDLE "TD: $2\n");
+            $empty_line = "observe";
+        } elsif (/^\s*$/) {
+            # Matched empty line to preserve paragraph separation
+            # inside description text
+            if ($empty_line eq "observe") {
+                $empty_line = "insert";
+            }
+        }
+    }
 
-	# Close output file if defined
-	if ($output_filename)
-	{
-		close(OUTPUT_HANDLE);
-	}
+    # Close output file if defined
+    if ($output_filename) {
+        close(OUTPUT_HANDLE);
+    }
 
-	close(INPUT_HANDLE);
-}
-
-sub warn_handler($)
-{
-	my ($msg) = @_;
-
-	warn("$tool_name: $msg");
-}
-
-sub die_handler($)
-{
-	my ($msg) = @_;
-
-	die("$tool_name: $msg");
+    close(INPUT_HANDLE);
 }

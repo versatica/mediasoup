@@ -1,0 +1,153 @@
+# This file contains perltidy configuration directives that match the preferred
+# Perl coding style for LCOV contributions.
+#
+# See https://perltidy.sourceforge.net
+
+# I/O control
+--add-terminal-newline                  # -atnl  [=default]
+--backup-file-extension="bak"           # -bext="bak"  [=default]
+--character-encoding="utf8"             # -enc="utf8"
+--format="tidy"                         # -fmt="tidy"  [=default]
+--iterations=1                          # -it=1  [=default]
+--nologfile                             # -nlog  [=default]
+--output-line-ending="unix"             # -ole="unix"
+--noquiet                               # -nq  [=default]
+--nouse-unicode-gcstring                # -ngcs  [=default]
+--nowarning-output                      # -nw  [=default]
+
+# Basic formatting options
+--nocheck-syntax                        # -nsyn  [=default]
+--default-tabsize=8                     # -dt=8  [=default]
+--extended-syntax                       # -xs  [=default]
+--indent-columns=4                      # -i=4  [=default]
+--maximum-line-length=80                # -l=80  [=default]
+--perl-syntax-check-flags="-c -T"       # -pscf="-c -T"  [=default]
+--notabs                                # -nt  [=default]
+
+# HTML options
+--html-entities                         # -hent  [=default]
+--html-table-of-contents                # -toc  [=default]
+
+# pod2html options
+--nohtml                                # --nohtml  [=default]
+--nopod2html                            # -npod
+
+# Debugging
+--fuzzy-line-length                     # -fll  [=default]
+--maximum-file-size-mb=10               # -maxfs=10  [=default]
+--maximum-level-errors=1                # -maxle=1  [=default]
+--maximum-unexpected-errors=0           # -maxue=0  [=default]
+--nomemoize                             # -nmem
+--recombine                             # --recombine  [=default]
+--short-concatenation-item-length=8     # -scl=8  [=default]
+--noshow-options                        # -nopt  [=default]
+--timestamp                             # -ts  [=default]
+
+# Code indentation control
+--nobrace-left-and-indent               # -nbli  [=default]
+--closing-brace-indentation=0           # -cbi=0  [=default]
+--closing-paren-indentation=0           # -cpi=0  [=default]
+--closing-square-bracket-indentation=0  # -csbi=0  [=default]
+--continuation-indentation=4            # -ci=4
+--noextended-continuation-indentation   # -nxci  [=default]
+--extended-line-up-parentheses          # -xlp
+--line-up-parentheses                   # -lp
+--nooutdent-labels                      # -nola
+--nooutdent-long-quotes                 # -nolq
+
+# Whitespace control
+--add-semicolons                        # -asc  [=default]
+--add-whitespace                        # -aws  [=default]
+--block-brace-tightness=0               # -bbt=0  [=default]
+--brace-tightness=2                     # -bt=2
+--delete-old-whitespace                 # -dws
+--delete-semicolons                     # -dsm  [=default]
+--function-paren-vertical-alignment     # -fpva  [=default]
+--keyword-paren-inner-tightness=1       # -kpit=1  [=default]
+--logical-padding                       # -lop  [=default]
+# HGC: prefer space around '.' operator.
+#  My eyesight is such that they disappear otherwise.
+--want-left-space="."                   # -wls="."
+--want-right-space="."                  # -wrs="."
+--paren-tightness=2                     # -pt=2
+--nospace-for-semicolon                 # -nsfs
+--space-prototype-paren=0               # -spp=0
+--nospace-terminal-semicolon            # -nsts
+--square-bracket-tightness=2            # -sbt=2
+--square-bracket-vertical-tightness=1   # -sbvt=1
+--square-bracket-vertical-tightness-closing=0  # -sbvtc=0  [=default]
+--notrim-qw                             # -ntqw
+--valign-block-comments                 # -vbc  [=default]
+--valign-code                           # -vc  [=default]
+--valign-exclusion-list="if , . : ?"    # -vxl="if , . : ?"
+--valign-side-comments                  # -vsc  [=default]
+
+# Comment controls
+--closing-side-comment-else-flag=0      # -csce=0  [=default]
+--closing-side-comment-interval=6       # -csci=6  [=default]
+--closing-side-comment-maximum-text=20  # -csct=20  [=default]
+--closing-side-comments-balanced        # -cscb  [=default]
+--code-skipping                         # -cs  [=default]
+--noformat-skipping                     # -nfs
+--hanging-side-comments                 # -hsc  [=default]
+--indent-block-comments                 # -ibc  [=default]
+--minimum-space-to-comment=4            # -msc=4  [=default]
+--non-indenting-braces                  # -nib  [=default]
+--nooutdent-long-comments               # -nolc
+--static-block-comments                 # -sbc  [=default]
+--nostatic-side-comments                # -nssc  [=default]
+
+# Linebreak controls
+--add-newlines                          # -anl  [=default]
+--block-brace-vertical-tightness=0      # -bbvt=0  [=default]
+--brace-vertical-tightness=0            # -bvt=0  [=default]
+--brace-vertical-tightness-closing=0    # -bvtc=0  [=default]
+--break-after-all-operators             # -baao
+--break-after-labels=0                  # -bal=0  [=default]
+--break-before-hash-brace=0             # -bbhb=0  [=default]
+--break-before-hash-brace-and-indent=0  # -bbhbi=0  [=default]
+--break-before-paren=0                  # -bbp=0  [=default]
+--break-before-paren-and-indent=0       # -bbpi=0  [=default]
+--break-before-square-bracket=0         # -bbsb=0  [=default]
+--break-before-square-bracket-and-indent=0  # -bbsbi=0  [=default]
+--cuddled-break-option=1                # -cbo=1  [=default]
+--cuddled-else                          # -cuddled-blocks
+--delete-old-newlines                   # -dnl  [=default]
+--one-line-block-nesting=0              # -olbn=0  [=default]
+--one-line-block-semicolons=2           # -olbs=2
+--opening-brace-always-on-right         # -bar
+--opening-sub-brace-on-new-line         # -sbl
+--paren-vertical-tightness=2            # -pvt=2
+--paren-vertical-tightness-closing=2    # -pvtc=2
+--space-backslash-quote=1               # -sbq=1  [=default]
+--weld-nested-containers                # -wn
+
+# Controlling list formatting
+--comma-arrow-breakpoints=5             # -cab=5  [=default]
+--maximum-fields-per-table=80           # -mft=80
+
+# Retaining or ignoring existing line breaks
+--break-at-old-attribute-breakpoints    # -boa  [=default]
+--break-at-old-keyword-breakpoints      # -bok  [=default]
+--break-at-old-logical-breakpoints      # -bol  [=default]
+--break-at-old-ternary-breakpoints      # -bot  [=default]
+
+# Blank line control
+--blank-lines-before-packages=1         # -blbp=1  [=default]
+--blank-lines-before-subs=1             # -blbs=1  [=default]
+--blanks-before-blocks                  # -bbb  [=default]
+--noblanks-before-comments              # -nbbc
+--keep-old-blank-lines=1                # -kbl=1  [=default]
+--keyword-group-blanks-after=1          # -kgba=1  [=default]
+--keyword-group-blanks-before=1         # -kgbb=1  [=default]
+--nokeyword-group-blanks-delete         # -nkgbd  [=default]
+--nokeyword-group-blanks-inside         # -nkgbi  [=default]
+--keyword-group-blanks-repeat-count=0   # -kgbr=0  [=default]
+--keyword-group-blanks-size=5           # -kgbs=5  [=default]
+--long-block-line-count=8               # -lbl=8  [=default]
+--maximum-consecutive-blank-lines=1     # -mbl=1  [=default]
+
+# Other controls
+--look-for-autoloader                   # -lal  [=default]
+--look-for-selfloader                   # -lsl  [=default]
+--pass-version-line                     # -pvl  [=default]

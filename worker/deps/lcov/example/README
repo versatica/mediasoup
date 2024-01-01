@@ -1,6 +1,41 @@
+To see some examples of LCOV generated HTML coverage reports,
+and point a web browser into the resulting reports:
 
-To get an example of how the LCOV generated HTML output looks like,
-type 'make output' and point a web browser to the resulting file
+Default view:
 
-  output/index.html
+  - Point your brower to
+      output/index.html
 
+Hierarchical view:
+
+  - Point your browser to
+      hierarchical/index.html
+
+  - Note that that the coverage data is the same - only the report
+    format is different:
+
+       - Follows directory structure, similar to MS file viewer
+         ('--hierarchical' flag)
+
+       - Additional navigation links also enabled
+         ('--show-navigation' flag)
+
+Differential coverage
+
+  - Point your browser to
+      exampleRepo/differential/index.html
+
+  - This example is slightly complicated because it emulates a moderately
+    realistic project in that it pretends to see project changes:
+
+       - updates to two project source files example.c and iterate.c
+
+       - change to the test suite: only one test of updated
+         code rather than 3 of the original code
+
+  - The Makefile simulates this by checking code into a git repo,
+    building an executable and then updating a few source files, rebuildling,
+    and running some tests.
+
+Feel free to edit the Makefile or to run the lcov utilities directly,
+to see the effect of other options that you find in the lcov man pages.

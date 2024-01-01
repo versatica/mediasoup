@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+
+# utility to translate Python coverage XML to lcov .info format
+# uses Coverage.py to extract coverage data
+# see https://coverage.readthedocs.io
+
+import os
+import sys
+import re
+import argparse
+import xml.etree.ElementTree as ET
+import fnmatch
+
+def process_file(fileNode, outf):
+    for node in fileNode:
+        if node.tag != 'lines':
+            #TODO: support function coverage
+            continue
+        for line in node:
+            if "branch" in line.attrib:
+                assert(line.attrib["branch"] == "true") # always true from xmlreport.py
+                assert('condition-coverage' in line.attrib) # always true from xmlreport.py
+
+                # reports line coverage for the condition statement to match coverage.py behavior
+                outf.write("DA:%s,%s\n" % (line.attrib["number"], line.attrib["hits"]))
+
+                m = re.match(r'\d+\% \((\d+)/(\d+)\)', line.attrib['condition-coverage'])
+                assert(m)
+                taken = int(m.group(1))
+                total = int(m.group(2))
+                # no information regards to which condition is taken or not
+                # set taken conditions start from 0 and followed by non-taken conditions
+                # taken conditions
+                for cond in range(0,taken):
+                    outf.write("BRDA:%s,0,%d,1\n" % (line.attrib["number"], cond))
+                # non-taken conditions
+                for cond in range(taken, total):
+                    outf.write("BRDA:%s,0,%d,0\n" % (line.attrib["number"], cond))
+            else:
+                outf.write("DA:%s,%s\n" % (line.attrib["number"], line.attrib["hits"]))
+
+def main():
+    usageString="""py2lcov: Translate Python XML coverage data to LCOV .info format.
+Please also see https://coverage.readthedocs.io
+
+Example:
+   $ export PYCOV_DATA=path/to/pydata
+     For 'coverage' versions 6.6.1 and higher (which support "--data-files"):
+   $ coverage run --data-file=${PYCOV_DATA} --append --branch `which myPthonScript.py` args_to_my_python_script
+   $ coverage xml --data-file=${PYCOV_DATA} -o pydata.xml |& tee pydata.log
+   $ py2lcov -i pydata.xml -o pydata.info
+     For older versions which don't support "--data-files":
+        use COVERAGE_FILE environment variable to specify data file
+   $ COVERAGE_FILE=${PYCOV_DATA} coverage run --append --branch `which myPthonScript.py` args_to_my_python_script
+   $ COVERAGE_FILE=${PYCOV_DATA} coverage xml -o pydata.xml |& tee pydata.log
+     # now use py2lcov to translate the XML
+   $ py2lcov -i pydata.xml -o pydata.info
+"""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=usageString)
+
+    parser.add_argument('-i', '--input', dest='input', default='coverage.xml',
+                        help="specify the input xml file from coverage.py, default(coverage.xml)")
+    parser.add_argument('-o', '--output', dest='output', default='lcov.info',
+                        help="specify the out LCOV .info file, default(lcov.info)")
+    parser.add_argument('-t', '--test-name', dest='testName', default='',
+                        help="specify the test name for the TN: entry in LCOV .info file")
+    parser.add_argument('-e', '--exclude', dest='excludePatterns', default='',
+                        help="specify the exclude file patterns seperated by ','")
+    parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true',
+                        help="print debug messages")
+
+
+    try:
+        args = parser.parse_args()
+    except IOError as err:
+        print(str(err))
+        sys.exit(2)
+
+    tree = ET.parse(args.input)
+    root = tree.getroot()
+    source_paths = []
+
+    outf = open(args.output, 'w')
+    outf.write("TN:%s\n" % args.testName)
+
+    try:
+        if(root[0].tag == 'sources'):
+            for source in root[0]:
+                source_paths.append(source.text)
+                if args.verbose:
+                    print("source: " + source.text)
+        else:
+            print("Error: parse xml fail: sources")
+            exit(1)
+        if(root[1].tag == 'packages'):
+            if (args.verbose):
+                print("packages: " + str(root[1].attrib))
+        else:
+            print("Error: parse xml fail: packages")
+            exit(1)
+    except:
+        print("Error: parse xml fail")
+        exit(1)
+
+    if(len(source_paths) > 1):
+        print("Error: Only support single source path")
+        exit(1)
+    elif (len(source_paths) == 0):
+        source_path = ''
+    else:
+        source_path = source_paths[0]
+
+    excludePatterns = args.excludePatterns.split(',') if args.excludePatterns else None
+    for package in root[1]:
+        # name="." means current directory
+        # name=".folder1.folder2" means external module or directory
+        # name="abc" means internal module or directory
+        isExternal = (package.attrib['name'].startswith('.') and package.attrib['name'] != '.')
+        for classes in package:
+            for fileNode in classes:
+                if args.excludePatterns and any([fnmatch.fnmatchcase(fileNode.attrib['filename'], ef) for ef in excludePatterns]):
+                    if args.verbose:
+                        print("%s is excluded" % fileNode.attrib['filename'])
+                    continue
+                if isExternal:
+                    outf.write("SF:%s\n" % fileNode.attrib['filename'])
+                else:
+                    outf.write("SF:%s\n" % os.path.join(source_path, fileNode.attrib['filename']))
+                process_file(fileNode, outf)
+                outf.write("end_of_record\n")
+    outf.close()
+
+
+if __name__ == '__main__':
+    main()

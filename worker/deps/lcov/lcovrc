@@ -8,18 +8,91 @@
 # Specify an external style sheet file (same as --css-file option of genhtml)
 #genhtml_css_file = gcov.css
 
-# Specify coverage rate limits (in %) for classifying file entries
+# use 'dark' mode display (light foreground, dark background) instead of default
+# same as 'genhtml --dark-mode ....'
+#genhtml_dark_mode = 1
+
+# Header text to use at top of each page
+# Default is "LCOV - (differential )? coverage report"
+#genhtml_header = Coverage report for my project
+
+# Footer text to use at the bottom of each page
+# Default is LCOV tool version
+#genhtml_footer = My footer text
+
+# Specify global coverage rate limits (in %) for classifying file entries
 # HI:   hi_limit <= rate <= 100         graph color: green
 # MED: med_limit <= rate <  hi_limit    graph color: orange
 # LO:         0  <= rate <  med_limit   graph color: red
 genhtml_hi_limit = 90
 genhtml_med_limit = 75
 
+# Specify line coverage rate limits (in %) for classifying file entries
+# HI:  ln_hi_limit  <= rate <= 100            graph color: green
+# MED: ln_med_limit <= rate <  ln_hi_limit    graph color: orange
+# LO:            0  <= rate <  ln_med_limit   graph color: red
+# genhtml_line_hi_limit = 90
+# genhtml_line_med_limit = 75
+
+# Specify function coverage rate limits (in %) for classifying file entries
+# HI:  fn_hi_limit  <= rate <= 100            graph color: green
+# MED: fn_med_limit <= rate <  fn_hi_limit    graph color: orange
+# LO:            0  <= rate <  fn_med_limit   graph color: red
+# genhtml_function_hi_limit = 90
+# genhtml_function_med_limit = 75
+
+# Specify branch coverage rate limits (in %) for classifying file entries
+# HI:  br_hi_limit  <= rate <= 100            graph color: green
+# MED: br_med_limit <= rate <  br_hi_limit    graph color: orange
+# LO:            0  <= rate <  br_med_limit   graph color: red
+# genhtml_branch_hi_limit = 90
+# genhtml_branch_med_limit = 75
+
+# Ignore some errors during geninfo/lcov/genhtml processing - comma-separated
+# string.  Same as using "--ignore-errors a,b,c" command line option.
+# See man pages for list of ignorable messsages
+#ignore_errors = empty,mismatch
+
+# Stop emitting message after this number have been printed
+# 0 == no limit
+max_message_count = 100
+
+# If set, do not stop when an 'ignorable error' occurs - try to generate
+#  a result, however flawed.  This is equivalent to the '--keep-going'
+#  command line switch.
+# Default is 1:  stop when error occurs
+# See the man pages for more detail
+#stop_on_error = 1
+
+# If set to non-zero, only issue particluar warning once per file
+# Default is 1
+#warn_once_per_file = 1
+
+# List of file extensions which should be treated as RTL code (e.g., Verilog)
+# Comma-separated list.  Default is "v,vh,sv,vhd?"
+#rtl_file_extensions = v,vh,sv,vhd?
+
+# list of file extensions which should be treated as C/C++ code
+# (comma-separated list)
+#c_file_extensions = h,c,i,C,H,I,cpp,hpp,icc,cc,hh,cxx,hxx
+
+# maxmimum number of lines to look at, when filtering bogus branch expressions
+#filter_lookahead = 5
+
+# if nonzero, bitwise operators '|', '&', '~' indicate conditional expressions
+#filter_bitwise_conditional = 1
+
 # Width of line coverage field in source code view
 genhtml_line_field_width = 12
 
 # Width of branch coverage field in source code view
 genhtml_branch_field_width = 16
+
+# width of 'owner' field in source code veiw - default is 20
+#genhtml_owner_field_width = 20
+
+# width of 'age' field in source code veiw - default is 5
+#genhtml_age_field_width = 5
 
 # Width of overview image (used by --frames option of genhtml)
 genhtml_overview_width = 80
@@ -79,13 +152,21 @@ genhtml_legend = 0
 # genhtml)
 genhtml_sort = 1
 
-# Include function coverage data display (can be disabled by the
-# --no-func-coverage option of genhtml)
-#genhtml_function_coverage = 1
+# Display coverage idata in hierarchical directory structure rather than
+# top/directory/source
+#genhtml_hierarchical = 1
 
-# Include branch coverage data display (can be disabled by the
-# --no-branch-coverage option of genhtml)
-#genhtml_branch_coverage = 1
+# Display coverage data using 'flat' view:  top-level table holds all
+#  files with no intermediate directory pages.
+#genhtml_flat_view = 1
+
+# Enable hyperlinks from coverage summary table to first source code line
+#   in corresponding category ('Hit' or "Missed') in non-differential report.
+# Feature is always enabled in differential coverage report.
+#genhtml_show_navigation = 1
+
+# If nonzero, add column to "function coverage detail" table to show the proportion of lines and branches within the function which are exercised.
+#genhtml_show_function_proportion = 0
 
 # Specify the character set of all generated HTML pages
 genhtml_charset=UTF-8
@@ -99,8 +180,29 @@ genhtml_desc_html=0
 # Show missed counts instead of hit counts
 #genhtml_missed=1
 
+# If set, suppress list of aliases in function detail table
+#suppress_function_aliases = 1
+
+# If set, derive function end line from line coverpoint data - default ON
+#derive_function_end_line = 1
+
+# If set, derive function end line from line coverpoint data - default ON
+#derive_function_end_line = 1
+
+# Maximum size of function (number lines) which will be checked by '--filter trivial'
+#trivial_function_threshold = 5
+
 # Demangle C++ symbols
-#genhtml_demangle_cpp=1
+# Call multiple times to specify command and command line arguments
+#  ('-Xlinker'-like behaviour)
+#demangle_cpp = c++filt
+
+# Name of the tool used for demangling C++ function names
+# This argument is deprecated - please use 'demangle_cpp' instead
+#genhtml_demangle_cpp_tool = c++filt
+# Specify extra parameters to be passed to the demangling tool
+# This argument is deprecated - please use 'demangle_cpp' instead
+#genhtml_demangle_cpp_params = ""
 
 # Location of the gcov tool (same as --gcov-info option of geninfo)
 #geninfo_gcov_tool = gcov
@@ -108,9 +210,12 @@ genhtml_desc_html=0
 # Adjust test names to include operating system information if non-zero
 #geninfo_adjust_testname = 0
 
+# Ignore testcase names in .info file
+#forget_testcase_names = 0
+
 # Calculate checksum for each source code line if non-zero (same as --checksum
 # option of geninfo if non-zero, same as --no-checksum if zero)
-#geninfo_checksum = 1
+#checksum = 1
 
 # Specify whether to capture coverage data for external source files (can
 # be overridden by the --external and --no-external options of geninfo/lcov)
@@ -122,6 +227,10 @@ genhtml_desc_html=0
 
 # Use gcov's --all-blocks option if non-zero
 #geninfo_gcov_all_blocks = 1
+
+# Adjust 'executed' non-zero hit count of lines which contain no branches
+# and have attribute '"unexecuted_blocks": true'
+#geninfo_unexecuted_blocks = 0
 
 # Specify compatiblity modes (same as --compat option of geninfo).
 #geninfo_compat = libtool=on, hammer=auto, split_crc=auto
@@ -136,6 +245,9 @@ geninfo_auto_base = 1
 
 # Use gcov intermediate format? Valid values are 0, 1, auto
 geninfo_intermediate = auto
+
+# Specify if exception branches should be excluded from branch coverage.
+no_exception_branch = 0
 
 # Directory containing gcov kernel files
 # lcov_gcov_dir = /proc/gcov
@@ -165,8 +277,143 @@ lcov_list_width = 80
 # lcov_list_full_path is non-zero.
 lcov_list_truncate_max = 20
 
-# Specify if function coverage data should be collected and processed.
-lcov_function_coverage = 1
+# Specify if function coverage data should be collected, processed, and displayed
+function_coverage = 1
 
-# Specify if branch coverage data should be collected and processed.
-lcov_branch_coverage = 0
+# Specify if branch coverage data should be collected, processed, and displayed
+branch_coverage = 0
+
+# Ask LCOV to return non-zero exit code if line coverage is below threshold
+# Default is 0.0 - i.e., do not check threshold.
+#lcov_fail_under_lines = 97.5
+
+# specify revision control annotation script for genhtml
+#genhtml_annotate_script = path_to_my_executable
+
+# specify the annotation popup that will appear if user hovers over source code
+# set to empy to elide tooltip
+# Substitutions:
+#  %d:  line number
+#  %C:  commit ID (from annotate callback - see --anotate-script entry in
+#       genhtml documentation)
+#  %U:  commit author abbreviated name
+#  %F:  commit author full name
+#  %D:  commit date (as returned by annotate callback)
+#  %d:  simplified commit date - yyyy-mm-dd part only (remove time of day)
+#  %A:  commit age
+#  %l:  line number
+#genhtml_annotate_tooltip = Commit ID: %C by %F on %D
+
+# specify coverage criteria script for genhtml
+#genhtml_criteria_script = path_to_my_executable
+
+# specify whether you want date and/or owner information passed to your criteria
+# callback - in addition to summary information, which is always retuned
+#criteria_callback_data = date,owner
+
+# specify when the criteria callback will be executed
+#criteria_callback_levels = top,directory,file
+
+# specify age cutpoints for genhtml date bins
+# can call option multiple times or use comma-separted list (or both)
+#genhtml_date_bins = 7
+#genhtml_date_bins = 30,180
+
+# ask geninfo/lcov/genhtml to include only certain files (glob match pattern)
+# call multiple times to specify multiple patterns
+#include = my/files/*.c
+#include = my/files/*.h
+
+# ask geninfo/lcov/genhtml to exclude certain files (glob match pattern)
+# call multiple times to specify multiple patterns
+#exclude = your/files/*.c
+#exclude = your/files/*.h
+
+# ask geninfo/lcov/genhtml to munge file pathnames when reading/writing .info files
+# call multiple times to specify multiple patterns
+#  this pattern removes "/.lib" from the pathname (see the lcov man page for details)
+#substitute = s#/.libs##g
+#  this pattern changes "/tmp/build" to "/usr/src" (see the lcov man page for details)
+#substitute = s#/tmp/build#/usr/src#g
+
+# ask geninfo/lcov/genhtml to exclude coverpoints associated with lines which match
+# the regexp.  Call multiple times to specify multiple patterns
+#   omit lines which end with "// MY_LINE_EXCLUDE_MARKER
+#omit_lines = .+?//\s*MY_LINE_EXCLUDE_MARKER\s*
+#   add another exclusion marker
+#omit_lines = .+?//\s*MY_PROJECT_EXCLUDE_MARKER\s*
+
+# ask geninfo/lcov/genhtml to exclude coverpoints whose lines are within
+#  the start/end of a function matching the regexp.
+#Call multiple times to specify multiple patterns
+#erase_functions = main
+# and another - note that this looks like a demangled C++ function
+# that the argument is a regexp - so special characters need to be escaped
+#erase_functions = debug)_.*\(int,\s*int\)
+
+# check that source file exists before calling version-script, annotate-script
+# or other callback.  If set and file does not exist, 'source' error is
+# generated.  Default: 1 (check for existence).
+#check_existence_before_callback = 1
+
+# specify path to version identification script
+#version_script = path_to_my_executable
+
+# specify path to file pathname resolution script
+#resolve_script = path_to_my_executable
+
+# Specify JSON module to use, or choose best available if set to auto
+lcov_json_module = auto
+
+# Specify maximum number of parallel slaves
+# default: 1 (no parallelism)
+#parallel = 1
+
+# Specify maximum memory to use during parallel processing, in Mb.
+# Do not fork if estimated memory consumption exceeds this number.
+# default: 0 (no limit)
+#memory = 1024
+
+# Specify a percentage of system memory to use as maximum during parallel
+# processing.
+# Do not fork if estimated memory consumption exceeds the maximum.
+# this value is used only if the maximum memory is not set.
+# default: not set
+#memory_percentage = 1024
+
+
+# Character used to split list-type parameters
+#  - for example, the list of "--ignore_errors source,mismatch"
+# default: , (comma)
+#split_char = ,
+
+# use case insensitive compare to find matching files, for include/exclude
+#  directives, etc
+#case_insensitive = 0
+
+# override line default line exclusion regexp
+#lcov_excl_line = LCOV_EXCL_LINE
+
+# overide branch exclusion regexp
+#lcov_excl_br_line = LCOV_EXCL_BR_LINE
+
+# override exception branch exclusion regexp
+#lcov_excl_exception_br_line = LCOV_EXCL_EXCEPTION_BR_LINE
+
+# override start of exclude region regexp
+#lcov_excl_start = LCOV_EXCL_START
+
+# override end of exclude region regexp
+#lcov_excl_stop = LCOV_EXCL_STOP
+
+# override start of branch exclude region regexp
+#lcov_excl_br_start = LCOV_EXCL_BR_START
+
+# override start of exclude region regexp
+#lcov_excl_br_stop = LCOV_EXCL_BR_STOP
+
+# override start of exclude region regexp
+#lcov_excl_exception_br_start = LCOV_EXCL_EXCEPTION_BR_START
+
+# override start of exclude region regexp
+#lcov_excl_exception_br_stop = LCOV_EXCL_EXCEPTION_BR_STOP
