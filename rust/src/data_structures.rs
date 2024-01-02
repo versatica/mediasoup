@@ -62,6 +62,9 @@ pub struct ListenInfo {
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
+    /// Socket flags.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub flags: Option<Vec<SocketFlag>>,
     /// Send buffer size (bytes).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub send_buffer_size: Option<u32>,
@@ -186,6 +189,26 @@ impl Protocol {
         match protocol {
             transport::Protocol::Tcp => Protocol::Tcp,
             transport::Protocol::Udp => Protocol::Udp,
+        }
+    }
+}
+
+/// Transport socket flag.
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SocketFlag {
+    /// Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
+    IpV6Only,
+    /// Make different transports bind to the same ip and port (only for UDP).
+    /// Useful for multicast scenarios with plain transport. Use with caution.
+    UdpReusePort,
+}
+
+impl SocketFlag {
+    pub(crate) fn to_fbs(self) -> transport::SocketFlag {
+        match self {
+            SocketFlag::IpV6Only => transport::SocketFlag::IPV6ONLY,
+            SocketFlag::UdpReusePort => transport::SocketFlag::UDP_REUSEPORT,
         }
     }
 }
