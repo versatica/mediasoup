@@ -370,7 +370,7 @@ if (!IS_WINDOWS)
 
 			transport1 = await router.createPlainTransport(
 				{
-					listenInfo      :
+					listenInfo :
 					{
 						protocol : 'udp',
 						ip       : multicastIp,
@@ -381,7 +381,7 @@ if (!IS_WINDOWS)
 
 			transport2 = await router.createPlainTransport(
 				{
-					listenInfo      :
+					listenInfo :
 					{
 						protocol : 'udp',
 						ip       : multicastIp,
