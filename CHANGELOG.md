@@ -4,6 +4,7 @@
 ### NEXT
 
 * Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
+* `ListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
 
 
 ### 3.13.13
