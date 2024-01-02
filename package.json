@@ -92,8 +92,9 @@
     ],
     "cacheDirectory": ".cache/jest",
     "modulePathIgnorePatterns": [
-      "worker/",
-      "rust/"
+      "worker",
+      "rust",
+      "target"
     ]
   },
   "dependencies": {
