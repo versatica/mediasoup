@@ -1,6 +1,9 @@
+import * as os from 'node:os';
 // @ts-ignore
 import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
+
+const IS_WINDOWS = os.platform() === 'win32';
 
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
@@ -316,42 +319,45 @@ test('router.createPlainTransport() with non bindable IP rejects with Error', as
 		.toThrow(Error);
 }, 2000);
 
-test('two transports listening in same IP:port succeed if UDP_REUSEPORT flag is set', async () =>
+if (!IS_WINDOWS)
 {
-	let transport1: mediasoup.types.PlainTransport | undefined;
-	let transport2: mediasoup.types.PlainTransport | undefined;
-
-	await expect(async () =>
+	test('two transports listening in same IP:port succeed if UDP_REUSEPORT flag is set', async () =>
 	{
-		const multicastIp = '224.0.0.1';
-		const port = await pickPort({ ip: multicastIp, reserveTimeout: 0 });
+		let transport1: mediasoup.types.PlainTransport | undefined;
+		let transport2: mediasoup.types.PlainTransport | undefined;
 
-		transport1 = await router.createPlainTransport(
-			{
-				listenInfo      :
+		await expect(async () =>
+		{
+			const multicastIp = '224.0.0.1';
+			const port = await pickPort({ ip: multicastIp, reserveTimeout: 0 });
+
+			transport1 = await router.createPlainTransport(
 				{
-					protocol : 'udp',
-					ip       : multicastIp,
-					port     : port,
-					flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
-				}
-			});
+					listenInfo      :
+					{
+						protocol : 'udp',
+						ip       : multicastIp,
+						port     : port,
+						flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
+					}
+				});
 
-		transport2 = await router.createPlainTransport(
-			{
-				listenInfo      :
+			transport2 = await router.createPlainTransport(
 				{
-					protocol : 'udp',
-					ip       : multicastIp,
-					port     : port,
-					flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
-				}
-			});
-	}).not.toThrow();
+					listenInfo      :
+					{
+						protocol : 'udp',
+						ip       : multicastIp,
+						port     : port,
+						flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
+					}
+				});
+		}).not.toThrow();
 
-	transport1?.close();
-	transport2?.close();
-}, 2000);
+		transport1?.close();
+		transport2?.close();
+	}, 2000);
+}
 
 test('plainTransport.getStats() succeeds', async () =>
 {
