@@ -440,6 +440,7 @@ fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succee
                     announced_ip: None,
                     port: Some(port),
                     flags: Some(SocketFlags {
+                        ipv6_only: false,
                         udp_reuse_port: true,
                     }),
                     send_buffer_size: None,
@@ -458,6 +459,7 @@ fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succee
                     announced_ip: None,
                     port: Some(port),
                     flags: Some(SocketFlags {
+                        ipv6_only: false,
                         udp_reuse_port: true,
                     }),
                     send_buffer_size: None,
@@ -487,6 +489,7 @@ fn create_two_transports_binding_to_same_ip_port_without_udp_reuse_port_flag_fai
                     announced_ip: None,
                     port: Some(port),
                     flags: Some(SocketFlags {
+                        ipv6_only: false,
                         udp_reuse_port: false,
                     }),
                     send_buffer_size: None,
@@ -505,6 +508,7 @@ fn create_two_transports_binding_to_same_ip_port_without_udp_reuse_port_flag_fai
                     announced_ip: None,
                     port: Some(port),
                     flags: Some(SocketFlags {
+                        ipv6_only: false,
                         udp_reuse_port: false,
                     }),
                     send_buffer_size: None,

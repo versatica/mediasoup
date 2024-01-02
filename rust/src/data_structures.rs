@@ -98,11 +98,11 @@ impl ListenInfo {
 pub struct SocketFlags {
     /// Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
     /// Defaults to false.
-    pub ipv6_only: Option<bool>,
+    pub ipv6_only: bool,
     /// Make different transports bind to the same ip and port (only for UDP).
     /// Useful for multicast scenarios with plain transport. Use with caution.
     /// Defaults to false.
-    pub udp_reuse_port: Option<bool>,
+    pub udp_reuse_port: bool,
 }
 
 impl SocketFlags {
