@@ -52,16 +52,6 @@ namespace RTC
 			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
 		}
 
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_FLAGS))
-		{
-			MS_DUMP("---- PRESENT !!!!!!");
-		}
-		else
-		{
-			MS_DUMP("---- NOT PRESENT !!!!!!");
-		}
-
 		this->listenInfo.port               = options->listenInfo()->port();
 		this->listenInfo.sendBufferSize     = options->listenInfo()->sendBufferSize();
 		this->listenInfo.recvBufferSize     = options->listenInfo()->recvBufferSize();

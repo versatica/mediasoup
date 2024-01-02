@@ -1,6 +1,8 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol, SctpState, TransportTuple};
+use mediasoup::data_structures::{
+    AppData, ListenInfo, Protocol, SctpState, SocketFlags, TransportTuple,
+};
 use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
@@ -411,6 +413,100 @@ fn create_non_bindable_ip() {
                     announced_ip: None,
                     port: None,
                     flags: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }))
+                .await,
+            Err(RequestError::Response { .. }),
+        ));
+    });
+}
+
+#[cfg(not(target_os = "windows"))]
+#[test]
+fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succeed() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let multicast_ip = "224.0.0.1".parse().unwrap();
+        let port = pick_unused_port().unwrap();
+
+        // Transport 1.
+        let _ = router
+            .create_plain_transport({
+                PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: multicast_ip,
+                    announced_ip: None,
+                    port: Some(port),
+                    flags: Some(SocketFlags {
+                        udp_reuse_port: true,
+                    }),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                })
+            })
+            .await
+            .expect("Failed to create first Plain transport");
+
+        // Transport 2.
+        let _ = router
+            .create_plain_transport({
+                PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: multicast_ip,
+                    announced_ip: None,
+                    port: Some(port),
+                    flags: Some(SocketFlags {
+                        udp_reuse_port: true,
+                    }),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                })
+            })
+            .await
+            .expect("Failed to create second Plain transport");
+    });
+}
+
+#[cfg(not(target_os = "windows"))]
+#[test]
+fn create_two_transports_binding_to_same_ip_port_without_udp_reuse_port_flag_fails() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let multicast_ip = "224.0.0.1".parse().unwrap();
+        let port = pick_unused_port().unwrap();
+
+        // Transport 1.
+        let _ = router
+            .create_plain_transport({
+                PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: multicast_ip,
+                    announced_ip: None,
+                    port: Some(port),
+                    flags: Some(SocketFlags {
+                        udp_reuse_port: false,
+                    }),
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                })
+            })
+            .await
+            .expect("Failed to create first Plain transport");
+
+        // Transport 2.
+        assert!(matches!(
+            router
+                .create_plain_transport(PlainTransportOptions::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: multicast_ip,
+                    announced_ip: None,
+                    port: Some(port),
+                    flags: Some(SocketFlags {
+                        udp_reuse_port: false,
+                    }),
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 }))

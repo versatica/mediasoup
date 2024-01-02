@@ -321,7 +321,7 @@ test('router.createPlainTransport() with non bindable IP rejects with Error', as
 
 if (!IS_WINDOWS)
 {
-	test('two transports listening in same IP:port succeed if UDP_REUSEPORT flag is set', async () =>
+	test('two transports binding to the same IP:port with udpReusePort flag succeed', async () =>
 	{
 		let transport1: mediasoup.types.PlainTransport | undefined;
 		let transport2: mediasoup.types.PlainTransport | undefined;
@@ -353,6 +353,43 @@ if (!IS_WINDOWS)
 					}
 				});
 		}).not.toThrow();
+
+		transport1?.close();
+		transport2?.close();
+	}, 2000);
+
+	test('two transports binding to the same IP:port without udpReusePort flag fails', async () =>
+	{
+		let transport1: mediasoup.types.PlainTransport | undefined;
+		let transport2: mediasoup.types.PlainTransport | undefined;
+
+		await expect(async () =>
+		{
+			const multicastIp = '224.0.0.1';
+			const port = await pickPort({ ip: multicastIp, reserveTimeout: 0 });
+
+			transport1 = await router.createPlainTransport(
+				{
+					listenInfo      :
+					{
+						protocol : 'udp',
+						ip       : multicastIp,
+						port     : port,
+						flags    : { udpReusePort: false }
+					}
+				});
+
+			transport2 = await router.createPlainTransport(
+				{
+					listenInfo      :
+					{
+						protocol : 'udp',
+						ip       : multicastIp,
+						port     : port,
+						flags    : { udpReusePort: false }
+					}
+				});
+		}).rejects.toThrow();
 
 		transport1?.close();
 		transport2?.close();

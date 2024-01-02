@@ -83,7 +83,7 @@ impl ListenInfo {
             ip: self.ip.to_string(),
             announced_ip: self.announced_ip.map(|ip| ip.to_string()),
             port: self.port.unwrap_or(0),
-            flags: self.flags.map(|flags| Box::new(flags.to_fbs())),
+            flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
             recv_buffer_size: self.recv_buffer_size.unwrap_or(0),
         }
@@ -91,21 +91,25 @@ impl ListenInfo {
 }
 
 /// UDP/TCP socket flags.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(
+    Default, Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct SocketFlags {
     /// Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
-    pub ipv6_only: bool,
+    /// Defaults to false.
+    pub ipv6_only: Option<bool>,
     /// Make different transports bind to the same ip and port (only for UDP).
     /// Useful for multicast scenarios with plain transport. Use with caution.
-    pub udp_reuse_port: bool,
+    /// Defaults to false.
+    pub udp_reuse_port: Option<bool>,
 }
 
 impl SocketFlags {
     pub(crate) fn to_fbs(self) -> transport::SocketFlags {
         transport::SocketFlags {
-            ipv6_only: self.ipv6_only,
-            udp_reuse_port: self.udp_reuse_port,
+            ipv6_only: self.ipv6_only.unwrap_or_else(false),
+            udp_reuse_port: self.udp_reuse_port.unwrap_or_else(Some(false)),
         }
     }
 }
