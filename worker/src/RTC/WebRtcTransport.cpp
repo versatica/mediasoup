@@ -72,11 +72,11 @@ namespace RTC
 
 					if (listenInfo->port() != 0)
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), listenInfo->flags());
 					}
 					else
 					{
-						udpSocket = new RTC::UdpSocket(this, ip);
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->flags());
 					}
 
 					this->udpSockets[udpSocket] = announcedIp;
@@ -114,11 +114,11 @@ namespace RTC
 
 					if (listenInfo->port() != 0)
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), listenInfo->flags());
 					}
 					else
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip);
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->flags());
 					}
 
 					this->tcpServers[tcpServer] = announcedIp;

@@ -13,11 +13,17 @@ enum Protocol: uint8 {
     TCP
 }
 
+enum SocketFlag: uint8 {
+    IPV6ONLY = 1,
+    UDP_REUSEPORT = 2
+}
+
 table ListenInfo {
-    protocol: FBS.Transport.Protocol = UDP;
+    protocol: Protocol = UDP;
     ip: string (required);
     announced_ip: string;
     port: uint16 = 0;
+    flags: uint8 = 0;
     send_buffer_size: uint32 = 0;
     recv_buffer_size: uint32 = 0;
 }
@@ -85,7 +91,7 @@ table Tuple {
     local_port: uint16;
     remote_ip: string;
     remote_port: uint16;
-    protocol: FBS.Transport.Protocol = UDP;
+    protocol: Protocol = UDP;
 }
 
 table RtpListener {

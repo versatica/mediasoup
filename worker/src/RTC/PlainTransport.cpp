@@ -52,19 +52,10 @@ namespace RTC
 			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
 		}
 
-		this->listenInfo.port = options->listenInfo()->port();
-
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
-		{
-			this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
-		}
-
-		if (flatbuffers::IsFieldPresent(
-		      options->listenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
-		{
-			this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
-		}
+		this->listenInfo.port           = options->listenInfo()->port();
+		this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
+		this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
+		this->listenInfo.flags          = options->listenInfo()->flags();
 
 		this->rtcpMux = options->rtcpMux();
 		this->comedia = options->comedia();
@@ -90,19 +81,10 @@ namespace RTC
 					this->rtcpListenInfo.announcedIp.assign(options->rtcpListenInfo()->announcedIp()->str());
 				}
 
-				this->rtcpListenInfo.port = options->rtcpListenInfo()->port();
-
-				if (flatbuffers::IsFieldPresent(
-				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_SENDBUFFERSIZE))
-				{
-					this->rtcpListenInfo.sendBufferSize = options->rtcpListenInfo()->sendBufferSize();
-				}
-
-				if (flatbuffers::IsFieldPresent(
-				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_RECVBUFFERSIZE))
-				{
-					this->rtcpListenInfo.recvBufferSize = options->rtcpListenInfo()->recvBufferSize();
-				}
+				this->rtcpListenInfo.port           = options->rtcpListenInfo()->port();
+				this->rtcpListenInfo.sendBufferSize = options->rtcpListenInfo()->sendBufferSize();
+				this->rtcpListenInfo.recvBufferSize = options->rtcpListenInfo()->recvBufferSize();
+				this->rtcpListenInfo.flags          = options->rtcpListenInfo()->flags();
 			}
 			// If rtcpListenInfo is not given, just clone listenInfo.
 			else
@@ -160,11 +142,12 @@ namespace RTC
 			// This may throw.
 			if (this->listenInfo.port != 0)
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.port);
+				this->udpSocket = new RTC::UdpSocket(
+				  this, this->listenInfo.ip, this->listenInfo.port, this->listenInfo.flags);
 			}
 			else
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip);
+				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.flags);
 			}
 
 			if (this->listenInfo.sendBufferSize != 0)
@@ -184,12 +167,13 @@ namespace RTC
 				// This may throw.
 				if (this->rtcpListenInfo.port != 0)
 				{
-					this->rtcpUdpSocket =
-					  new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port);
+					this->rtcpUdpSocket = new RTC::UdpSocket(
+					  this, this->rtcpListenInfo.ip, this->rtcpListenInfo.port, this->rtcpListenInfo.flags);
 				}
 				else
 				{
-					this->rtcpUdpSocket = new RTC::UdpSocket(this, this->rtcpListenInfo.ip);
+					this->rtcpUdpSocket =
+					  new RTC::UdpSocket(this, this->rtcpListenInfo.ip, this->rtcpListenInfo.flags);
 				}
 
 				if (this->rtcpListenInfo.sendBufferSize != 0)

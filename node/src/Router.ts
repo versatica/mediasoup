@@ -7,7 +7,8 @@ import {
 	Transport,
 	TransportListenInfo,
 	TransportListenIp,
-	TransportProtocol
+	TransportProtocol,
+	TransportSocketFlag
 } from './Transport';
 import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDumpResponse } from './WebRtcTransport';
 import { PlainTransport, PlainTransportOptions, parsePlainTransportDumpResponse } from './PlainTransport';
@@ -570,6 +571,7 @@ export class Router<RouterAppData extends AppData = AppData>
 					listenInfo.ip,
 					listenInfo.announcedIp,
 					listenInfo.port,
+					socketFlagsToInteger(listenInfo.flags),
 					listenInfo.sendBufferSize,
 					listenInfo.recvBufferSize
 				));
@@ -749,6 +751,7 @@ export class Router<RouterAppData extends AppData = AppData>
 				listenInfo!.ip,
 				listenInfo!.announcedIp,
 				listenInfo!.port,
+				socketFlagsToInteger(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize
 			),
@@ -759,6 +762,7 @@ export class Router<RouterAppData extends AppData = AppData>
 				rtcpListenInfo.ip,
 				rtcpListenInfo.announcedIp,
 				rtcpListenInfo.port,
+				socketFlagsToInteger(rtcpListenInfo.flags),
 				rtcpListenInfo.sendBufferSize,
 				rtcpListenInfo.recvBufferSize
 			) : undefined,
@@ -897,6 +901,7 @@ export class Router<RouterAppData extends AppData = AppData>
 				listenInfo!.ip,
 				listenInfo!.announcedIp,
 				listenInfo!.port,
+				socketFlagsToInteger(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize
 			),
@@ -1618,4 +1623,16 @@ export function parseRouterDumpResponse(
 		mapDataProducerIdDataConsumerIds : parseStringStringArrayVector(binary, 'mapDataProducerIdDataConsumerIds'),
 		mapDataConsumerIdDataProducerId  : parseStringStringVector(binary, 'mapDataConsumerIdDataProducerId')
 	};
+}
+
+function socketFlagsToInteger(flags: TransportSocketFlag[] = []): number
+{
+	let flagsInteger = 0;
+
+	for (const flag of flags)
+	{
+		flagsInteger |= flag;
+	}
+
+	return flagsInteger;
 }

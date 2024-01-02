@@ -126,6 +126,7 @@ namespace RTC
 			uint16_t port{ 0u };
 			uint32_t sendBufferSize{ 0u };
 			uint32_t recvBufferSize{ 0u };
+			uint8_t flags{ 0u };
 		};
 
 	private:

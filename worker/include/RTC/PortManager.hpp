@@ -20,21 +20,21 @@ namespace RTC
 		};
 
 	public:
-		static uv_udp_t* BindUdp(std::string& ip)
+		static uv_udp_t* BindUdp(std::string& ip, uint8_t flags)
 		{
-			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip));
+			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip, flags));
 		}
-		static uv_udp_t* BindUdp(std::string& ip, uint16_t port)
+		static uv_udp_t* BindUdp(std::string& ip, uint16_t port, uint8_t flags)
 		{
-			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip, port));
+			return reinterpret_cast<uv_udp_t*>(Bind(Transport::UDP, ip, port, flags));
 		}
-		static uv_tcp_t* BindTcp(std::string& ip)
+		static uv_tcp_t* BindTcp(std::string& ip, uint8_t flags)
 		{
-			return reinterpret_cast<uv_tcp_t*>(Bind(Transport::TCP, ip));
+			return reinterpret_cast<uv_tcp_t*>(Bind(Transport::TCP, ip, flags));
 		}
-		static uv_tcp_t* BindTcp(std::string& ip, uint16_t port)
+		static uv_tcp_t* BindTcp(std::string& ip, uint16_t port, uint8_t flags)
 		{
-			return reinterpret_cast<uv_tcp_t*>(Bind(Transport::TCP, ip, port));
+			return reinterpret_cast<uv_tcp_t*>(Bind(Transport::TCP, ip, port, flags));
 		}
 		static void UnbindUdp(std::string& ip, uint16_t port)
 		{
@@ -46,10 +46,11 @@ namespace RTC
 		}
 
 	private:
-		static uv_handle_t* Bind(Transport transport, std::string& ip);
-		static uv_handle_t* Bind(Transport transport, std::string& ip, uint16_t port);
+		static uv_handle_t* Bind(Transport transport, std::string& ip, uint8_t flags);
+		static uv_handle_t* Bind(Transport transport, std::string& ip, uint16_t port, uint8_t flags);
 		static void Unbind(Transport transport, std::string& ip, uint16_t port);
 		static std::vector<bool>& GetPorts(Transport transport, const std::string& ip);
+		static uint8_t ConvertSocketFlags(uint8_t flags);
 
 	private:
 		thread_local static absl::flat_hash_map<std::string, std::vector<bool>> mapUdpIpPorts;

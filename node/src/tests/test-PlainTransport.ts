@@ -316,6 +316,43 @@ test('router.createPlainTransport() with non bindable IP rejects with Error', as
 		.toThrow(Error);
 }, 2000);
 
+test('two transports listening in same IP:port succeed if UDP_REUSEPORT flag is set', async () =>
+{
+	let transport1: mediasoup.types.PlainTransport | undefined;
+	let transport2: mediasoup.types.PlainTransport | undefined;
+
+	await expect(async () =>
+	{
+		const multicastIp = '224.0.0.1';
+		const port = await pickPort({ ip: multicastIp, reserveTimeout: 0 });
+
+		transport1 = await router.createPlainTransport(
+			{
+				listenInfo      :
+				{
+					protocol : 'udp',
+					ip       : multicastIp,
+					port     : port,
+					flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
+				}
+			});
+
+		transport2 = await router.createPlainTransport(
+			{
+				listenInfo      :
+				{
+					protocol : 'udp',
+					ip       : multicastIp,
+					port     : port,
+					flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
+				}
+			});
+	}).not.toThrow();
+
+	transport1?.close();
+	transport2?.close();
+}, 2000);
+
 test('plainTransport.getStats() succeeds', async () =>
 {
 	const data = await transport.getStats();

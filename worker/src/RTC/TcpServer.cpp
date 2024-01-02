@@ -10,19 +10,24 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	TcpServer::TcpServer(Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip)
+	TcpServer::TcpServer(
+	  Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip, uint8_t flags)
 	  : // This may throw.
-	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip)), listener(listener),
+	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, flags)), listener(listener),
 	    connListener(connListener)
 	{
 		MS_TRACE();
 	}
 
 	TcpServer::TcpServer(
-	  Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip, uint16_t port)
+	  Listener* listener,
+	  RTC::TcpConnection::Listener* connListener,
+	  std::string& ip,
+	  uint16_t port,
+	  uint8_t flags)
 	  : // This may throw.
-	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port)), listener(listener),
-	    connListener(connListener), fixedPort(true)
+	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, port, flags)),
+	    listener(listener), connListener(connListener), fixedPort(true)
 	{
 		MS_TRACE();
 	}

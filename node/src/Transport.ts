@@ -74,6 +74,11 @@ export type TransportListenInfo =
 	port?: number;
 
 	/**
+	 * Socket flags.
+	 */
+	flags?: TransportSocketFlag[];
+
+	/**
 	 * Send buffer size (bytes).
 	 */
 	sendBufferSize?: number;
@@ -106,6 +111,25 @@ export type TransportListenIp =
  * Transport protocol.
  */
 export type TransportProtocol = 'udp' | 'tcp';
+
+/**
+ * UDP/TCP socket flag.
+ */
+// NOTE: ESLint absurdly complains about "'TransportSocketFlag' is already
+// declared in the upper scope".
+// eslint-disable-next-line no-shadow
+export enum TransportSocketFlag
+{
+	/**
+	 * Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
+	 */
+	IPV6ONLY = FbsTransport.SocketFlag.IPV6ONLY,
+	/**
+	 * Make different transports bind to the same ip and port (only for UDP).
+	 * Useful for multicast scenarios with plain transport. Use with caution.
+	 */
+	UDP_REUSEPORT = FbsTransport.SocketFlag.UDP_REUSEPORT
+}
 
 export type TransportTuple =
 {
