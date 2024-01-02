@@ -94,6 +94,7 @@ fn create_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("4.4.4.4".parse().unwrap()),
                         port: None,
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -132,6 +133,7 @@ fn create_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: Some("9.9.9.1".parse().unwrap()),
                         port: None,
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -205,6 +207,7 @@ fn create_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                         port: None,
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -215,6 +218,7 @@ fn create_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                         port: Some(rtcp_port),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -282,6 +286,7 @@ fn create_with_fixed_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: Some(port),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 })
@@ -305,6 +310,7 @@ fn weak() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -338,6 +344,7 @@ fn create_enable_srtp_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -403,6 +410,7 @@ fn create_non_bindable_ip() {
                     ip: "8.8.8.8".parse().unwrap(),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 }))
@@ -424,6 +432,7 @@ fn get_stats_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -481,6 +490,7 @@ fn connect_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -556,6 +566,7 @@ fn connect_wrong_arguments() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -596,6 +607,7 @@ fn close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("4.4.4.4".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });

@@ -103,6 +103,7 @@ async fn init() -> (Router, Router, WebRtcTransport, WebRtcTransport) {
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_ip: None,
             port: None,
+            flags: None,
             send_buffer_size: None,
             recv_buffer_size: None,
         }));

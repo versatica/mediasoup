@@ -261,6 +261,7 @@ async fn init() -> (
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_ip: None,
             port: None,
+            flags: None,
             send_buffer_size: None,
             recv_buffer_size: None,
         }));
@@ -605,6 +606,7 @@ fn weak() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -639,6 +641,7 @@ fn create_with_fixed_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 })
@@ -662,6 +665,7 @@ fn create_with_enable_rtx_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -774,6 +778,7 @@ fn create_with_enable_srtp_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -829,6 +834,7 @@ fn create_with_invalid_srtp_parameters_fails() {
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
                 port: None,
+                flags: None,
                 send_buffer_size: None,
                 recv_buffer_size: None,
             }))
@@ -1155,6 +1161,7 @@ fn pipe_to_router_called_twice_generates_single_pair() {
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_ip: None,
                 port: None,
+                flags: None,
                 send_buffer_size: None,
                 recv_buffer_size: None,
             }));
