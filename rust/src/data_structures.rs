@@ -108,8 +108,8 @@ pub struct SocketFlags {
 impl SocketFlags {
     pub(crate) fn to_fbs(self) -> transport::SocketFlags {
         transport::SocketFlags {
-            ipv6_only: self.ipv6_only.unwrap_or_else(false),
-            udp_reuse_port: self.udp_reuse_port.unwrap_or_else(Some(false)),
+            ipv6_only: self.ipv6_only,
+            udp_reuse_port: self.udp_reuse_port,
         }
     }
 }
