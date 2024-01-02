@@ -1049,7 +1049,7 @@ impl TraceEventDirection {
 #[derive(Debug, Clone)]
 pub enum WebRtcMessage<'a> {
     /// String
-    String(String),
+    String(Cow<'a, [u8]>),
     /// Binary
     Binary(Cow<'a, [u8]>),
     /// EmptyString
@@ -1072,9 +1072,7 @@ impl<'a> WebRtcMessage<'a> {
 
     pub(crate) fn new(ppid: u32, payload: Cow<'a, [u8]>) -> Result<Self, u32> {
         match ppid {
-            51 => Ok(WebRtcMessage::String(
-                String::from_utf8(payload.to_vec()).unwrap(),
-            )),
+            51 => Ok(WebRtcMessage::String(payload)),
             53 => Ok(WebRtcMessage::Binary(payload)),
             56 => Ok(WebRtcMessage::EmptyString),
             57 => Ok(WebRtcMessage::EmptyBinary),
@@ -1084,9 +1082,9 @@ impl<'a> WebRtcMessage<'a> {
 
     pub(crate) fn into_ppid_and_payload(self) -> (u32, Cow<'a, [u8]>) {
         match self {
-            WebRtcMessage::String(string) => (51_u32, Cow::from(string.into_bytes())),
+            WebRtcMessage::String(binary) => (51_u32, binary),
             WebRtcMessage::Binary(binary) => (53_u32, binary),
-            WebRtcMessage::EmptyString => (56_u32, Cow::from(b" ".as_ref())),
+            WebRtcMessage::EmptyString => (56_u32, Cow::from(vec![0_u8])),
             WebRtcMessage::EmptyBinary => (57_u32, Cow::from(vec![0_u8])),
         }
     }
@@ -1094,7 +1092,7 @@ impl<'a> WebRtcMessage<'a> {
     /// Convert to owned message
     pub fn into_owned(self) -> OwnedWebRtcMessage {
         match self {
-            WebRtcMessage::String(string) => OwnedWebRtcMessage::String(string),
+            WebRtcMessage::String(binary) => OwnedWebRtcMessage::String(binary.into_owned()),
             WebRtcMessage::Binary(binary) => OwnedWebRtcMessage::Binary(binary.into_owned()),
             WebRtcMessage::EmptyString => OwnedWebRtcMessage::EmptyString,
             WebRtcMessage::EmptyBinary => OwnedWebRtcMessage::EmptyBinary,
@@ -1107,7 +1105,7 @@ impl<'a> WebRtcMessage<'a> {
 #[derive(Debug, Clone)]
 pub enum OwnedWebRtcMessage {
     /// String
-    String(String),
+    String(Vec<u8>),
     /// Binary
     Binary(Vec<u8>),
     /// EmptyString

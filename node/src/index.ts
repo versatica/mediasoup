@@ -95,5 +95,5 @@ export async function createWorker<WorkerAppData extends types.AppData = types.A
  */
 export function getSupportedRtpCapabilities(): RtpCapabilities
 {
-	return utils.clone(supportedRtpCapabilities) as RtpCapabilities;
+	return utils.clone<RtpCapabilities>(supportedRtpCapabilities);
 }

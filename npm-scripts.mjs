@@ -16,7 +16,7 @@ const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
-const WORKER_PREBUILD_TAR = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}.tgz`;
+const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
 const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
@@ -298,6 +298,22 @@ function getPython()
 	}
 
 	return python;
+}
+
+function getWorkerPrebuildTarName()
+{
+	let name = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
+
+	// In Linux we want to know about kernel version since kernel >= 6 supports
+	// io-uring.
+	if (os.platform() === 'linux')
+	{
+		const kernelMajorVersion = Number(os.release().split('.')[0]);
+
+		name += `-kernel${kernelMajorVersion}`;
+	}
+
+	return `${name}.tgz`;
 }
 
 function installInvoke()

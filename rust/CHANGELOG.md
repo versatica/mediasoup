@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.15.0
+
+* Expose DataChannel string message as binary (PR #1289).
+
 # 0.14.0
 
 * Updates from mediasoup TypeScript `3.13.8..=3.13.12`.

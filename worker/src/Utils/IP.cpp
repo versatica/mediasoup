@@ -91,6 +91,29 @@ namespace Utils
 		ip.assign(ipBuffer);
 	}
 
+	size_t IP::GetAddressLen(const struct sockaddr* addr)
+	{
+		MS_TRACE();
+
+		switch (addr->sa_family)
+		{
+			case AF_INET:
+			{
+				return sizeof(struct sockaddr_in);
+			}
+
+			case AF_INET6:
+			{
+				return sizeof(struct sockaddr_in6);
+			}
+
+			default:
+			{
+				MS_ABORT("unknown network family: %d", static_cast<int>(addr->sa_family));
+			}
+		}
+	}
+
 	void IP::NormalizeIp(std::string& ip)
 	{
 		MS_TRACE();

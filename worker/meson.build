@@ -44,6 +44,18 @@ if get_option('ms_rtc_logger_rtp')
   ]
 endif
 
+cpp = meson.get_compiler('cpp')
+
+# This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
+# flatbuffers project, which is needed in case the current arch doesn't support
+# strtoll_l or strtoull_l (such as musl in Alpine Linux). Problem is that
+# flatbuffers build system not only defines it for its own usage but also relies
+# on it in its include/flatbuffers/util.h file, and if such a file is included
+# by mediasoup source files (and it is included) build fails with "error:
+# 'strtoull_l' was not declared in this scope".
+# See issue: https://github.com/versatica/mediasoup/issues/1223
+add_project_arguments('-DFLATBUFFERS_LOCALE_INDEPENDENT=@0@'.format(cpp.has_function('strtoull_l')), language: 'cpp')
+
 common_sources = [
   'src/lib.cpp',
   'src/DepLibSRTP.cpp',
@@ -163,14 +175,13 @@ common_sources = [
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
 ]
 
-cpp = meson.get_compiler('cpp')
-
 openssl_proj = subproject(
   'openssl',
   default_options: [
     'warning_level=0',
   ],
 )
+
 libuv_proj = subproject(
   'libuv',
   default_options: [
@@ -179,6 +190,7 @@ libuv_proj = subproject(
     'build_benchmarks=false',
   ],
 )
+
 libsrtp2_proj = subproject(
   'libsrtp2',
   default_options: [
@@ -188,6 +200,7 @@ libsrtp2_proj = subproject(
     'tests=disabled',
   ],
 )
+
 usrsctp_proj = subproject(
   'usrsctp',
   default_options: [
@@ -195,6 +208,7 @@ usrsctp_proj = subproject(
     'sctp_build_programs=false',
   ],
 )
+
 abseil_cpp_proj = subproject(
   'abseil-cpp',
   default_options: [
@@ -202,20 +216,24 @@ abseil_cpp_proj = subproject(
     'cpp_std=c++17',
   ],
 )
+
 catch2_proj = subproject(
   'catch2',
   default_options: [
     'warning_level=0',
   ],
 )
+
 flatbuffers_proj = subproject(
   'flatbuffers',
   default_options: [
     'warning_level=0',
   ],
 )
+
 # flatbuffers schemas subdirectory.
 subdir('fbs')
+
 # Add current build directory so libwebrtc has access to FBS folder.
 libwebrtc_include_directories = include_directories('include', 'fbs')
 subdir('deps/libwebrtc')
@@ -305,48 +323,48 @@ executable(
 )
 
 test_sources = [
-    'test/src/tests.cpp',
-    'test/src/RTC/TestKeyFrameRequestManager.cpp',
-    'test/src/RTC/TestNackGenerator.cpp',
-    'test/src/RTC/TestRateCalculator.cpp',
-    'test/src/RTC/TestRtpPacket.cpp',
-    'test/src/RTC/TestRtpPacketH264Svc.cpp',
-    'test/src/RTC/TestRtpRetransmissionBuffer.cpp',
-    'test/src/RTC/TestRtpStreamSend.cpp',
-    'test/src/RTC/TestRtpStreamRecv.cpp',
-    'test/src/RTC/TestSeqManager.cpp',
-    'test/src/RTC/TestTrendCalculator.cpp',
-    'test/src/RTC/TestRtpEncodingParameters.cpp',
-    'test/src/RTC/Codecs/TestVP8.cpp',
-    'test/src/RTC/Codecs/TestVP9.cpp',
-    'test/src/RTC/Codecs/TestH264.cpp',
-    'test/src/RTC/Codecs/TestH264_SVC.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsPli.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsRemb.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsRpsi.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsSli.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsTst.cpp',
-    'test/src/RTC/RTCP/TestFeedbackPsVbcm.cpp',
-    'test/src/RTC/RTCP/TestFeedbackRtpEcn.cpp',
-    'test/src/RTC/RTCP/TestFeedbackRtpNack.cpp',
-    'test/src/RTC/RTCP/TestFeedbackRtpSrReq.cpp',
-    'test/src/RTC/RTCP/TestFeedbackRtpTllei.cpp',
-    'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
-    'test/src/RTC/RTCP/TestFeedbackRtpTransport.cpp',
-    'test/src/RTC/RTCP/TestBye.cpp',
-    'test/src/RTC/RTCP/TestReceiverReport.cpp',
-    'test/src/RTC/RTCP/TestSdes.cpp',
-    'test/src/RTC/RTCP/TestSenderReport.cpp',
-    'test/src/RTC/RTCP/TestPacket.cpp',
-    'test/src/RTC/RTCP/TestXr.cpp',
-    'test/src/Utils/TestBits.cpp',
-    'test/src/Utils/TestByte.cpp',
-    'test/src/Utils/TestIP.cpp',
-    'test/src/Utils/TestString.cpp',
-    'test/src/Utils/TestTime.cpp',
+  'test/src/tests.cpp',
+  'test/src/RTC/TestKeyFrameRequestManager.cpp',
+  'test/src/RTC/TestNackGenerator.cpp',
+  'test/src/RTC/TestRateCalculator.cpp',
+  'test/src/RTC/TestRtpPacket.cpp',
+  'test/src/RTC/TestRtpPacketH264Svc.cpp',
+  'test/src/RTC/TestRtpRetransmissionBuffer.cpp',
+  'test/src/RTC/TestRtpStreamSend.cpp',
+  'test/src/RTC/TestRtpStreamRecv.cpp',
+  'test/src/RTC/TestSeqManager.cpp',
+  'test/src/RTC/TestTrendCalculator.cpp',
+  'test/src/RTC/TestRtpEncodingParameters.cpp',
+  'test/src/RTC/Codecs/TestVP8.cpp',
+  'test/src/RTC/Codecs/TestVP9.cpp',
+  'test/src/RTC/Codecs/TestH264.cpp',
+  'test/src/RTC/Codecs/TestH264_SVC.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsLei.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsPli.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsRemb.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsRpsi.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsSli.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsTst.cpp',
+  'test/src/RTC/RTCP/TestFeedbackPsVbcm.cpp',
+  'test/src/RTC/RTCP/TestFeedbackRtpEcn.cpp',
+  'test/src/RTC/RTCP/TestFeedbackRtpNack.cpp',
+  'test/src/RTC/RTCP/TestFeedbackRtpSrReq.cpp',
+  'test/src/RTC/RTCP/TestFeedbackRtpTllei.cpp',
+  'test/src/RTC/RTCP/TestFeedbackRtpTmmb.cpp',
+  'test/src/RTC/RTCP/TestFeedbackRtpTransport.cpp',
+  'test/src/RTC/RTCP/TestBye.cpp',
+  'test/src/RTC/RTCP/TestReceiverReport.cpp',
+  'test/src/RTC/RTCP/TestSdes.cpp',
+  'test/src/RTC/RTCP/TestSenderReport.cpp',
+  'test/src/RTC/RTCP/TestPacket.cpp',
+  'test/src/RTC/RTCP/TestXr.cpp',
+  'test/src/Utils/TestBits.cpp',
+  'test/src/Utils/TestByte.cpp',
+  'test/src/Utils/TestIP.cpp',
+  'test/src/Utils/TestString.cpp',
+  'test/src/Utils/TestTime.cpp',
 ]
 
 mediasoup_worker_test = executable(

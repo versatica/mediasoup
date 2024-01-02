@@ -3,7 +3,14 @@
 
 ### NEXT
 
+* Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
+
+
+### 3.13.13
+
 * worker: Do not use references for async callbacks ([PR #1274](https://github.com/versatica/mediasoup/pull/1274)).
+* liburing: Enable zero copy ([PR #1273](https://github.com/versatica/mediasoup/pull/1273)).
+* Fix build on musl based systems (such as Alpine Linux) ([PR #1279](https://github.com/versatica/mediasoup/pull/1279)).
 
 
 ### 3.13.12

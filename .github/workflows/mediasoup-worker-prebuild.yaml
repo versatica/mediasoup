@@ -1,21 +1,13 @@
 name: mediasoup-worker-prebuild
 
+# Only trigger on GitHub releases.
 on:
-  push:
-    # Only trigger for production releases.
-    tags:
-      - "*.*.*"
-
-  # Only trigger when other workflows succeeded.
-  workflow_run:
-    workflows: [mediasoup-worker, mediasoup-node, mediasoup-rust]
-    types:
-      - completed
+  release:
+    types: [published]
 
 jobs:
   ci:
     strategy:
-      fail-fast: false
       matrix:
         build:
           # For Linux let's use an old version of Ubuntu (20.04) that builds the
@@ -39,14 +31,14 @@ jobs:
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
 

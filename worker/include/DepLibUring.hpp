@@ -80,6 +80,10 @@ public:
 		{
 			return this->active;
 		}
+		bool IsZeroCopyEnabled() const
+		{
+			return this->zeroCopyEnabled;
+		}
 		io_uring* GetRing()
 		{
 			return std::addressof(this->ring);
@@ -103,18 +107,22 @@ public:
 	private:
 		// io_uring instance.
 		io_uring ring;
-		// Event file descriptor to watch for completions.
+		// Event file descriptor to watch for io_uring completions.
 		int efd;
 		// libuv handle used to poll io_uring completions.
 		uv_poll_t* uvHandle{ nullptr };
 		// Whether we are currently sending RTP over io_uring.
 		bool active{ false };
+		// Whether Zero Copy feature is enabled.
+		bool zeroCopyEnabled{ true };
 		// Pre-allocated UserData's.
 		UserData userDatas[QueueDepth]{};
 		// Indexes of available UserData entries.
 		std::queue<size_t> availableUserDataEntries;
 		// Pre-allocated SendBuffer's.
 		SendBuffer sendBuffers[QueueDepth];
+		// iovec structs to be registered for Zero Copy.
+		struct iovec iovecs[QueueDepth];
 		// Submission queue entry process count.
 		uint64_t sqeProcessCount{ 0u };
 		// Submission queue entry miss count.
