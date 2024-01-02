@@ -6,7 +6,7 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
-import { Router, RouterOptions } from './Router';
+import { Router, RouterOptions, socketFlagsToFbs } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
 import { RtpCodecCapability } from './RtpParameters';
 import { AppData } from './types';
@@ -699,6 +699,7 @@ export class Worker<WorkerAppData extends AppData = AppData>
 				listenInfo.ip,
 				listenInfo.announcedIp,
 				listenInfo.port,
+				socketFlagsToFbs(listenInfo.flags),
 				listenInfo.sendBufferSize,
 				listenInfo.recvBufferSize)
 			);

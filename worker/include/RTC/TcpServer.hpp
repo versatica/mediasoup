@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/TcpConnection.hpp"
+#include "RTC/Transport.hpp"
 #include "handles/TcpConnectionHandle.hpp"
 #include "handles/TcpServerHandle.hpp"
 #include <string>
@@ -24,13 +25,16 @@ namespace RTC
 
 	public:
 		TcpServer(
-		  Listener* listener, RTC::TcpConnection::Listener* connListener, std::string& ip, uint8_t flags);
+		  Listener* listener,
+		  RTC::TcpConnection::Listener* connListener,
+		  std::string& ip,
+		  RTC::Transport::SocketFlags& flags);
 		TcpServer(
 		  Listener* listener,
 		  RTC::TcpConnection::Listener* connListener,
 		  std::string& ip,
 		  uint16_t port,
-		  uint8_t flags);
+		  RTC::Transport::SocketFlags& flags);
 		~TcpServer() override;
 
 		/* Pure virtual methods inherited from ::TcpServerHandle. */

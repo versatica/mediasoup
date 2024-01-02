@@ -338,7 +338,7 @@ if (!IS_WINDOWS)
 						protocol : 'udp',
 						ip       : multicastIp,
 						port     : port,
-						flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
+						flags    : { udpReusePort: true }
 					}
 				});
 
@@ -349,7 +349,7 @@ if (!IS_WINDOWS)
 						protocol : 'udp',
 						ip       : multicastIp,
 						port     : port,
-						flags    : [ mediasoup.types.TransportSocketFlag.UDP_REUSEPORT ]
+						flags    : { udpReusePort: true }
 					}
 				});
 		}).not.toThrow();

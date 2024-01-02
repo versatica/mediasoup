@@ -50,10 +50,11 @@ namespace RTC
 			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
 		}
 
-		this->listenInfo.port           = options->listenInfo()->port();
-		this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
-		this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
-		this->listenInfo.flags          = options->listenInfo()->flags();
+		this->listenInfo.port               = options->listenInfo()->port();
+		this->listenInfo.sendBufferSize     = options->listenInfo()->sendBufferSize();
+		this->listenInfo.recvBufferSize     = options->listenInfo()->recvBufferSize();
+		this->listenInfo.flags.ipv6Only     = options->listenInfo()->flags()->ipv6Only();
+		this->listenInfo.flags.udpReusePort = options->listenInfo()->flags()->udpReusePort();
 
 		this->rtx = options->enableRtx();
 

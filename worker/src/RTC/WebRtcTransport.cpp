@@ -62,6 +62,11 @@ namespace RTC
 					announcedIp = listenInfo->announcedIp()->str();
 				}
 
+				RTC::Transport::SocketFlags flags;
+
+				flags.ipv6Only     = listenInfo->flags()->ipv6Only();
+				flags.udpReusePort = listenInfo->flags()->udpReusePort();
+
 				const uint16_t iceLocalPreference =
 				  IceCandidateDefaultLocalPriority - iceLocalPreferenceDecrement;
 				const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
@@ -72,11 +77,11 @@ namespace RTC
 
 					if (listenInfo->port() != 0)
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), listenInfo->flags());
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
 					else
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->flags());
+						udpSocket = new RTC::UdpSocket(this, ip, flags);
 					}
 
 					this->udpSockets[udpSocket] = announcedIp;
@@ -114,11 +119,11 @@ namespace RTC
 
 					if (listenInfo->port() != 0)
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), listenInfo->flags());
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}
 					else
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->flags());
+						tcpServer = new RTC::TcpServer(this, this, ip, flags);
 					}
 
 					this->tcpServers[tcpServer] = announcedIp;

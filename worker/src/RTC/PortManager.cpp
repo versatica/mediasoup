@@ -7,7 +7,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "FBS/transport.h"
 #include <tuple>   // std:make_tuple()
 #include <utility> // std::piecewise_construct
 
@@ -39,15 +38,12 @@ namespace RTC
 
 	/* Class methods. */
 
-	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, uint8_t flags)
+	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, RTC::Transport::SocketFlags& flags)
 	{
 		MS_TRACE();
 
 		// First normalize the IP. This may throw if invalid IP.
 		Utils::IP::NormalizeIp(ip);
-
-		// Covert given flags into libuv flags.
-		flags = ConvertSocketFlags(flags);
 
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
@@ -59,6 +55,7 @@ namespace RTC
 		uv_handle_t* uvHandle{ nullptr };
 		uint16_t port;
 		std::string transportStr;
+		uint8_t bitFlags = ConvertSocketFlags(flags);
 
 		switch (transport)
 		{
@@ -232,7 +229,7 @@ namespace RTC
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-					  flags);
+					  bitFlags);
 
 					if (err != 0)
 					{
@@ -254,7 +251,7 @@ namespace RTC
 					err = uv_tcp_bind(
 					  reinterpret_cast<uv_tcp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-					  flags);
+					  bitFlags);
 
 					if (err != 0)
 					{
@@ -368,21 +365,20 @@ namespace RTC
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
 
-	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, uint16_t port, uint8_t flags)
+	uv_handle_t* PortManager::Bind(
+	  Transport transport, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
 	{
 		MS_TRACE();
 
 		// First normalize the IP. This may throw if invalid IP.
 		Utils::IP::NormalizeIp(ip);
 
-		// Covert given flags into libuv flags.
-		flags = ConvertSocketFlags(flags);
-
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		uv_handle_t* uvHandle{ nullptr };
 		std::string transportStr;
+		uint8_t bitFlags = ConvertSocketFlags(flags);
 
 		switch (transport)
 		{
@@ -504,7 +500,7 @@ namespace RTC
 				err = uv_udp_bind(
 				  reinterpret_cast<uv_udp_t*>(uvHandle),
 				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-				  flags);
+				  bitFlags);
 
 				if (err != 0)
 				{
@@ -527,7 +523,7 @@ namespace RTC
 				err = uv_tcp_bind(
 				  reinterpret_cast<uv_tcp_t*>(uvHandle),
 				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-				  flags);
+				  bitFlags);
 
 				if (err != 0)
 				{
@@ -696,23 +692,23 @@ namespace RTC
 		return emptyPorts;
 	}
 
-	uint8_t PortManager::ConvertSocketFlags(uint8_t flags)
+	uint8_t PortManager::ConvertSocketFlags(RTC::Transport::SocketFlags& flags)
 	{
 		MS_TRACE();
 
-		uint8_t newFlags{ 0u };
+		uint8_t bitFlags{ 0b00000000 };
 
-		if (flags & static_cast<uint8_t>(FBS::Transport::SocketFlag::IPV6ONLY))
+		if (flags.ipv6Only)
 		{
-			newFlags |= UV_UDP_IPV6ONLY;
-			newFlags |= UV_TCP_IPV6ONLY; // Same flag number but anyway.
+			bitFlags |= UV_UDP_IPV6ONLY;
+			bitFlags |= UV_TCP_IPV6ONLY; // Same flag number but anyway.
 		}
 
-		if (flags & static_cast<uint8_t>(FBS::Transport::SocketFlag::UDP_REUSEPORT))
+		if (flags.udpReusePort)
 		{
-			newFlags |= UV_UDP_REUSEADDR;
+			bitFlags |= UV_UDP_REUSEADDR;
 		}
 
-		return newFlags;
+		return bitFlags;
 	}
 } // namespace RTC

@@ -13,9 +13,9 @@ enum Protocol: uint8 {
     TCP
 }
 
-enum SocketFlag: uint8 {
-    IPV6ONLY = 1,
-    UDP_REUSEPORT = 2
+table SocketFlags {
+    ipv6_only: bool = false;
+    udp_reuse_port: bool = false;
 }
 
 table ListenInfo {
@@ -23,7 +23,7 @@ table ListenInfo {
     ip: string (required);
     announced_ip: string;
     port: uint16 = 0;
-    flags: uint8 = 0;
+    flags: SocketFlags;
     send_buffer_size: uint32 = 0;
     recv_buffer_size: uint32 = 0;
 }

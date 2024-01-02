@@ -52,10 +52,11 @@ namespace RTC
 			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
 		}
 
-		this->listenInfo.port           = options->listenInfo()->port();
-		this->listenInfo.sendBufferSize = options->listenInfo()->sendBufferSize();
-		this->listenInfo.recvBufferSize = options->listenInfo()->recvBufferSize();
-		this->listenInfo.flags          = options->listenInfo()->flags();
+		this->listenInfo.port               = options->listenInfo()->port();
+		this->listenInfo.sendBufferSize     = options->listenInfo()->sendBufferSize();
+		this->listenInfo.recvBufferSize     = options->listenInfo()->recvBufferSize();
+		this->listenInfo.flags.ipv6Only     = options->listenInfo()->flags()->ipv6Only();
+		this->listenInfo.flags.udpReusePort = options->listenInfo()->flags()->udpReusePort();
 
 		this->rtcpMux = options->rtcpMux();
 		this->comedia = options->comedia();
@@ -84,7 +85,8 @@ namespace RTC
 				this->rtcpListenInfo.port           = options->rtcpListenInfo()->port();
 				this->rtcpListenInfo.sendBufferSize = options->rtcpListenInfo()->sendBufferSize();
 				this->rtcpListenInfo.recvBufferSize = options->rtcpListenInfo()->recvBufferSize();
-				this->rtcpListenInfo.flags          = options->rtcpListenInfo()->flags();
+				this->rtcpListenInfo.flags.ipv6Only = options->rtcpListenInfo()->flags()->ipv6Only();
+				this->rtcpListenInfo.flags.udpReusePort = options->rtcpListenInfo()->flags()->udpReusePort();
 			}
 			// If rtcpListenInfo is not given, just clone listenInfo.
 			else
