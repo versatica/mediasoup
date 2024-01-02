@@ -126,7 +126,7 @@ namespace RTC
 				}
 
 				// We may receive packets with sequence number lower than the one in previous
-				// tcc feedback, these packets may has been reported as lost previously,
+				// tcc feedback, these packets may have been reported as lost previously,
 				// therefore we need to reset the start sequence num for the next tcc feedback.
 
 				if (
