@@ -641,10 +641,14 @@ test('WebRtcTransport methods reject if closed', async () =>
 test('router.createWebRtcTransport() with fixed port succeeds', async () =>
 {
 
-	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const port = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
 	const webRtcTransport = await router.createWebRtcTransport(
 		{
-			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', port } ]
+			listenInfos :
+			[
+				// NOTE: udpReusePort flag will be ignored since protocol is TCP.
+				{ protocol: 'tcp', ip: '127.0.0.1', port, flags: { udpReusePort: true } }
+			]
 		});
 
 	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);

@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::PortManager"
+#define MS_CLASS "PortManager"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/PortManager.hpp"
@@ -55,7 +55,7 @@ namespace RTC
 		uv_handle_t* uvHandle{ nullptr };
 		uint16_t port;
 		std::string transportStr;
-		uint8_t bitFlags = ConvertSocketFlags(flags);
+		uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
 
 		switch (transport)
 		{
@@ -378,7 +378,7 @@ namespace RTC
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		uv_handle_t* uvHandle{ nullptr };
 		std::string transportStr;
-		uint8_t bitFlags = ConvertSocketFlags(flags);
+		uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
 
 		switch (transport)
 		{
@@ -692,19 +692,36 @@ namespace RTC
 		return emptyPorts;
 	}
 
-	uint8_t PortManager::ConvertSocketFlags(RTC::Transport::SocketFlags& flags)
+	uint8_t PortManager::ConvertSocketFlags(
+	  RTC::Transport::SocketFlags& flags, Transport transport, int family)
 	{
 		MS_TRACE();
 
 		uint8_t bitFlags{ 0b00000000 };
 
-		if (flags.ipv6Only)
+		// Ignore ipv6Only in IPv4, otherwise libuv will throw.
+		if (flags.ipv6Only && family == AF_INET6)
 		{
-			bitFlags |= UV_UDP_IPV6ONLY;
-			bitFlags |= UV_TCP_IPV6ONLY; // Same flag number but anyway.
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					bitFlags |= UV_UDP_IPV6ONLY;
+
+					break;
+				}
+
+				case Transport::TCP:
+				{
+					bitFlags |= UV_TCP_IPV6ONLY;
+
+					break;
+				}
+			}
 		}
 
-		if (flags.udpReusePort)
+		// Ignore udpReusePort in TCP, otherwise libuv will throw.
+		if (flags.udpReusePort && transport == Transport::UDP)
 		{
 			bitFlags |= UV_UDP_REUSEADDR;
 		}

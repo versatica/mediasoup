@@ -438,8 +438,9 @@ fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succee
                     ip: multicast_ip,
                     announced_ip: None,
                     port: Some(port),
+                    // NOTE: ipv6Only flag will be ignored since ip is IPv4.
                     flags: Some(SocketFlags {
-                        ipv6_only: false,
+                        ipv6_only: true,
                         udp_reuse_port: true,
                     }),
                     send_buffer_size: None,

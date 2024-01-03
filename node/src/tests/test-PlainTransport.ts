@@ -338,7 +338,8 @@ if (!IS_WINDOWS)
 						protocol : 'udp',
 						ip       : multicastIp,
 						port     : port,
-						flags    : { udpReusePort: true }
+						// NOTE: ipv6Only flag will be ignored since ip is IPv4.
+						flags    : { udpReusePort: true, ipv6Only: true }
 					}
 				});
 

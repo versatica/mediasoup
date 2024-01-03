@@ -52,7 +52,8 @@ namespace RTC
 		  Transport transport, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags);
 		static void Unbind(Transport transport, std::string& ip, uint16_t port);
 		static std::vector<bool>& GetPorts(Transport transport, const std::string& ip);
-		static uint8_t ConvertSocketFlags(RTC::Transport::SocketFlags& flags);
+		static uint8_t ConvertSocketFlags(
+		  RTC::Transport::SocketFlags& flags, Transport transport, int family);
 
 	private:
 		thread_local static absl::flat_hash_map<std::string, std::vector<bool>> mapUdpIpPorts;
