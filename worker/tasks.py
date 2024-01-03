@@ -164,6 +164,15 @@ def setup(ctx):
                 shell=SHELL
             );
 
+    # TMP to see meson build args available in current host:
+    with ctx.cd(WORKER_DIR):
+        ctx.run(
+            f'"{MESON}" configure',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
 
 @task
 def clean(ctx): # pylint: disable=unused-argument
