@@ -1,8 +1,8 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
-use mediasoup::data_structures::{
-    AppData, ListenInfo, Protocol, SctpState, SocketFlags, TransportTuple,
-};
+#[cfg(not(target_os = "windows"))]
+use mediasoup::data_structures::SocketFlags;
+use mediasoup::data_structures::{AppData, ListenInfo, Protocol, SctpState, TransportTuple};
 use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
