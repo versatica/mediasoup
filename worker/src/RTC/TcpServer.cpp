@@ -39,7 +39,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!fixedPort)
+		if (!this->fixedPort)
 		{
 			RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
 		}
