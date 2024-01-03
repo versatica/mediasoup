@@ -431,8 +431,7 @@ fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succee
         let multicast_ip = "224.0.0.1".parse().unwrap();
         let port = pick_unused_port().unwrap();
 
-        // Transport 1.
-        let _ = router
+        let transport1 = router
             .create_plain_transport({
                 PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
@@ -450,8 +449,7 @@ fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succee
             .await
             .expect("Failed to create first Plain transport");
 
-        // Transport 2.
-        let _ = router
+        let transport2 = router
             .create_plain_transport({
                 PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
@@ -468,6 +466,9 @@ fn create_two_transports_binding_to_same_ip_port_with_udp_reuse_port_flag_succee
             })
             .await
             .expect("Failed to create second Plain transport");
+
+        assert_eq!(transport1.tuple().local_port(), port);
+        assert_eq!(transport2.tuple().local_port(), port);
     });
 }
 
@@ -480,8 +481,7 @@ fn create_two_transports_binding_to_same_ip_port_without_udp_reuse_port_flag_fai
         let multicast_ip = "224.0.0.1".parse().unwrap();
         let port = pick_unused_port().unwrap();
 
-        // Transport 1.
-        let _ = router
+        let transport1 = router
             .create_plain_transport({
                 PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
@@ -499,7 +499,6 @@ fn create_two_transports_binding_to_same_ip_port_without_udp_reuse_port_flag_fai
             .await
             .expect("Failed to create first Plain transport");
 
-        // Transport 2.
         assert!(matches!(
             router
                 .create_plain_transport(PlainTransportOptions::new(ListenInfo {
@@ -517,6 +516,8 @@ fn create_two_transports_binding_to_same_ip_port_without_udp_reuse_port_flag_fai
                 .await,
             Err(RequestError::Response { .. }),
         ));
+
+        assert_eq!(transport1.tuple().local_port(), port);
     });
 }
 
