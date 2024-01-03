@@ -30,7 +30,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!fixedPort)
+		if (!this->fixedPort)
 		{
 			PortManager::UnbindUdp(this->localIp, this->localPort);
 		}
