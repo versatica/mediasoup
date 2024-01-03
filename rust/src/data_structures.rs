@@ -1265,7 +1265,7 @@ impl BweTraceInfo {
     }
 }
 
-/// BWE info in trace event.
+/// RTCP Sender Report info in trace event.
 #[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SrTraceInfo {

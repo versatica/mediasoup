@@ -396,7 +396,7 @@ pub enum ProducerTraceEventData {
         /// SSRC info.
         info: SsrcTraceInfo,
     },
-    /// RTCP Sender report.
+    /// RTCP Sender Report.
     Sr {
         /// Event timestamp.
         timestamp: u64,
@@ -487,7 +487,7 @@ pub enum ProducerTraceEventType {
     Pli,
     /// RTCP FIR packet.
     Fir,
-    /// RTCP Sender report.
+    /// RTCP Sender Report.
     SR,
 }
 

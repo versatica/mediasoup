@@ -6,6 +6,7 @@
 * Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
 * `ListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
 * Meson: Remove `-Db_pie=true -Db_staticpic=true` args ([PR #1293](https://github.com/versatica/mediasoup/pull/1293)).
+* Add RTCP Sender Report trace event ([PR #1267](https://github.com/versatica/mediasoup/pull/1267) by @GithubUser8080).
 
 
 ### 3.13.13
