@@ -244,11 +244,13 @@ eslintConfig.overrides.push(
 eslintConfig.overrides.push(
 	{
 		files : [ '*.ts' ],
-		env   : {
+		env   :
+		{
 			...eslintConfig.env,
 			'jest/globals' : true
 		},
-		plugins : [
+		plugins :
+		[
 			...eslintConfig.plugins,
 			'jest'
 		]
