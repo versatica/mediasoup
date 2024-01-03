@@ -119,11 +119,18 @@ namespace RTC
 		};
 
 	public:
+		struct SocketFlags
+		{
+			bool ipv6Only{ false };
+			bool udpReusePort{ false };
+		};
+
 		struct ListenInfo
 		{
 			std::string ip;
 			std::string announcedIp;
 			uint16_t port{ 0u };
+			SocketFlags flags;
 			uint32_t sendBufferSize{ 0u };
 			uint32_t recvBufferSize{ 0u };
 		};

@@ -38,7 +38,7 @@ namespace RTC
 
 	/* Class methods. */
 
-	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip)
+	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, RTC::Transport::SocketFlags& flags)
 	{
 		MS_TRACE();
 
@@ -49,23 +49,29 @@ namespace RTC
 		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		size_t portIdx;
-		int flags{ 0 };
 		std::vector<bool>& ports = PortManager::GetPorts(transport, ip);
 		size_t attempt{ 0u };
 		const size_t numAttempts = ports.size();
 		uv_handle_t* uvHandle{ nullptr };
 		uint16_t port;
 		std::string transportStr;
+		uint8_t bitFlags = ConvertSocketFlags(flags);
 
 		switch (transport)
 		{
 			case Transport::UDP:
+			{
 				transportStr.assign("udp");
+
 				break;
+			}
 
 			case Transport::TCP:
+			{
 				transportStr.assign("tcp");
+
 				break;
+			}
 		}
 
 		switch (family)
@@ -90,9 +96,6 @@ namespace RTC
 				{
 					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
 				}
-
-				// Don't also bind into IPv4 when listening in IPv6.
-				flags |= UV_UDP_IPV6ONLY;
 
 				break;
 			}
@@ -160,12 +163,18 @@ namespace RTC
 			switch (family)
 			{
 				case AF_INET:
+				{
 					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(port);
+
 					break;
+				}
 
 				case AF_INET6:
+				{
 					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
+
 					break;
+				}
 			}
 
 			// Try to bind on it.
@@ -220,7 +229,7 @@ namespace RTC
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-					  flags);
+					  bitFlags);
 
 					if (err != 0)
 					{
@@ -242,7 +251,7 @@ namespace RTC
 					err = uv_tcp_bind(
 					  reinterpret_cast<uv_tcp_t*>(uvHandle),
 					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-					  flags);
+					  bitFlags);
 
 					if (err != 0)
 					{
@@ -356,7 +365,8 @@ namespace RTC
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
 
-	uv_handle_t* PortManager::Bind(Transport transport, std::string& ip, uint16_t port)
+	uv_handle_t* PortManager::Bind(
+	  Transport transport, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
 	{
 		MS_TRACE();
 
@@ -366,19 +376,25 @@ namespace RTC
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
-		int flags{ 0 };
 		uv_handle_t* uvHandle{ nullptr };
 		std::string transportStr;
+		uint8_t bitFlags = ConvertSocketFlags(flags);
 
 		switch (transport)
 		{
 			case Transport::UDP:
+			{
 				transportStr.assign("udp");
+
 				break;
+			}
 
 			case Transport::TCP:
+			{
 				transportStr.assign("tcp");
+
 				break;
+			}
 		}
 
 		switch (family)
@@ -404,9 +420,6 @@ namespace RTC
 					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
 				}
 
-				// Don't also bind into IPv4 when listening in IPv6.
-				flags |= UV_UDP_IPV6ONLY;
-
 				break;
 			}
 
@@ -421,27 +434,39 @@ namespace RTC
 		switch (family)
 		{
 			case AF_INET:
+			{
 				(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(port);
+
 				break;
+			}
 
 			case AF_INET6:
+			{
 				(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
+
 				break;
+			}
 		}
 
 		// Try to bind on it.
 		switch (transport)
 		{
 			case Transport::UDP:
+			{
 				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 				err      = uv_udp_init_ex(
           DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+
 				break;
+			}
 
 			case Transport::TCP:
+			{
 				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
 				err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
+
 				break;
+			}
 		}
 
 		if (err != 0)
@@ -475,7 +500,7 @@ namespace RTC
 				err = uv_udp_bind(
 				  reinterpret_cast<uv_udp_t*>(uvHandle),
 				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-				  flags);
+				  bitFlags);
 
 				if (err != 0)
 				{
@@ -498,7 +523,7 @@ namespace RTC
 				err = uv_tcp_bind(
 				  reinterpret_cast<uv_tcp_t*>(uvHandle),
 				  reinterpret_cast<const struct sockaddr*>(&bindAddr),
-				  flags);
+				  bitFlags);
 
 				if (err != 0)
 				{
@@ -665,5 +690,25 @@ namespace RTC
 		}
 
 		return emptyPorts;
+	}
+
+	uint8_t PortManager::ConvertSocketFlags(RTC::Transport::SocketFlags& flags)
+	{
+		MS_TRACE();
+
+		uint8_t bitFlags{ 0b00000000 };
+
+		if (flags.ipv6Only)
+		{
+			bitFlags |= UV_UDP_IPV6ONLY;
+			bitFlags |= UV_TCP_IPV6ONLY; // Same flag number but anyway.
+		}
+
+		if (flags.udpReusePort)
+		{
+			bitFlags |= UV_UDP_REUSEADDR;
+		}
+
+		return bitFlags;
 	}
 } // namespace RTC

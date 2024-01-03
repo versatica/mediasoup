@@ -74,6 +74,11 @@ export type TransportListenInfo =
 	port?: number;
 
 	/**
+	 * Socket flags.
+	 */
+	flags?: TransportSocketFlags;
+
+	/**
 	 * Send buffer size (bytes).
 	 */
 	sendBufferSize?: number;
@@ -106,6 +111,22 @@ export type TransportListenIp =
  * Transport protocol.
  */
 export type TransportProtocol = 'udp' | 'tcp';
+
+/**
+ * UDP/TCP socket flags.
+ */
+export type TransportSocketFlags =
+{
+	/**
+	 * Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
+	 */
+	ipv6Only?: boolean;
+	/**
+	 * Make different transports bind to the same ip and port (only for UDP).
+	 * Useful for multicast scenarios with plain transport. Use with caution.
+	 */
+	udpReusePort?: boolean;
+};
 
 export type TransportTuple =
 {
