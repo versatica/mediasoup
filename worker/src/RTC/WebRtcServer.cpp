@@ -60,6 +60,11 @@ namespace RTC
 					announcedIp = listenInfo->announcedIp()->str();
 				}
 
+				RTC::Transport::SocketFlags flags;
+
+				flags.ipv6Only     = listenInfo->flags()->ipv6Only();
+				flags.udpReusePort = listenInfo->flags()->udpReusePort();
+
 				if (listenInfo->protocol() == FBS::Transport::Protocol::UDP)
 				{
 					// This may throw.
@@ -67,11 +72,11 @@ namespace RTC
 
 					if (listenInfo->port() != 0)
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port());
+						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
 					else
 					{
-						udpSocket = new RTC::UdpSocket(this, ip);
+						udpSocket = new RTC::UdpSocket(this, ip, flags);
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
@@ -99,11 +104,11 @@ namespace RTC
 
 					if (listenInfo->port() != 0)
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port());
+						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}
 					else
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip);
+						tcpServer = new RTC::TcpServer(this, this, ip, flags);
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);

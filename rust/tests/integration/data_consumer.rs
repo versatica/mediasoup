@@ -68,6 +68,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 }));
@@ -99,6 +100,7 @@ fn consume_data_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -208,6 +210,7 @@ fn weak() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -572,6 +575,7 @@ fn close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });

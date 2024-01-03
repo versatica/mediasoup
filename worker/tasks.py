@@ -142,7 +142,7 @@ def setup(ctx):
     if MEDIASOUP_BUILDTYPE == 'Release':
         with ctx.cd(WORKER_DIR):
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {MESON_ARGS} "{BUILD_DIR}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
@@ -150,7 +150,7 @@ def setup(ctx):
     elif MEDIASOUP_BUILDTYPE == 'Debug':
         with ctx.cd(WORKER_DIR):
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {MESON_ARGS} "{BUILD_DIR}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
@@ -158,7 +158,7 @@ def setup(ctx):
     else:
         with ctx.cd(WORKER_DIR):
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release -Db_pie=true -Db_staticpic=true {MESON_ARGS} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {MESON_ARGS} "{BUILD_DIR}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL

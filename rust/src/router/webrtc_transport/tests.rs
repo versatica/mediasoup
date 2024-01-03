@@ -57,6 +57,7 @@ fn create_with_webrtc_server_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port1),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -65,6 +66,7 @@ fn create_with_webrtc_server_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port2),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -233,6 +235,7 @@ fn router_close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some("9.9.9.1".parse().unwrap()),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 }),
@@ -274,6 +277,7 @@ fn webrtc_server_close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port1),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -282,6 +286,7 @@ fn webrtc_server_close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port2),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });

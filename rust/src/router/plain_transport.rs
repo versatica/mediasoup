@@ -837,8 +837,8 @@ impl PlainTransport {
     /// # async fn f(
     /// #     plain_transport: mediasoup::plain_transport::PlainTransport,
     /// # ) -> Result<(), Box<dyn std::error::Error>> {
-    /// // Calling connect() on a PlainTransport created with comedia unset, rtcpMux
-    /// // set and enableSrtp enabled.
+    /// // Calling connect() on a PlainTransport created with comedia unset,
+    /// // rtcp_mux set and enableSrtp enabled.
     /// plain_transport
     ///     .connect(PlainTransportRemoteParameters {
     ///         ip: Some("1.2.3.4".parse().unwrap()),
