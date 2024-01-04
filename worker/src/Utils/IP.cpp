@@ -17,7 +17,7 @@ namespace Utils
 			return AF_UNSPEC;
 		}
 
-		auto ipPtr                      = ip.c_str();
+		const auto* ipPtr               = ip.c_str();
 		char ipBuffer[INET6_ADDRSTRLEN] = { 0 };
 
 		if (uv_inet_pton(AF_INET, ipPtr, ipBuffer) == 0)

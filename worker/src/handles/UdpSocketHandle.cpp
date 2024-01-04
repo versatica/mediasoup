@@ -43,7 +43,7 @@ inline static void onSend(uv_udp_send_t* req, int status)
 	auto* sendData = static_cast<UdpSocketHandle::UvSendData*>(req->data);
 	auto* handle   = req->handle;
 	auto* socket   = static_cast<UdpSocketHandle*>(handle->data);
-	auto* cb       = sendData->cb;
+	const auto* cb = sendData->cb;
 
 	if (socket)
 	{
