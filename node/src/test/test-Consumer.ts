@@ -1129,22 +1129,39 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 
 test('Consumer emits "score"', async () =>
 {
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 1');
 	const audioConsumer = await ctx.transport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
 		});
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 2');
 	// Private API.
 	const channel = audioConsumer.channelForTesting;
 	const onScore = jest.fn();
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 3');
 	audioConsumer.on('score', onScore);
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 4');
 	// Simulate a 'score' notification coming through the channel.
 	const builder = new flatbuffers.Builder();
+
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 5');
 	const consumerScore = new FbsConsumer.ConsumerScoreT(9, 10, [ 8 ]);
+
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 6');
 	const consumerScoreNotification = new FbsConsumer.ScoreNotificationT(consumerScore);
+
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 7');
 	const notificationOffset = Notification.createNotification(
 		builder,
 		builder.createString(audioConsumer.id),
@@ -1153,19 +1170,35 @@ test('Consumer emits "score"', async () =>
 		consumerScoreNotification.pack(builder)
 	);
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 8');
 	builder.finish(notificationOffset);
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 9');
 	const notification = Notification.getRootAsNotification(
 		new flatbuffers.ByteBuffer(builder.asUint8Array())
 	);
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 10');
 	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 11');
 	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 12');
 	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
 
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 13');
 	expect(onScore).toHaveBeenCalledTimes(3);
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 14');
 	expect(audioConsumer.score).toEqual(
 		{ score: 9, producerScore: 10, producerScores: [ 8 ] });
+	// eslint-disable-next-line no-console
+	console.log('---- failing test log 15');
 }, 2000);
 
 test('consumer.close() succeeds', async () =>
