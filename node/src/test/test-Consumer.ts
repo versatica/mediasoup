@@ -1144,7 +1144,8 @@ test('Consumer emits "score"', async () =>
 	// Simulate a 'score' notification coming through the channel.
 	const builder = new flatbuffers.Builder();
 	const consumerScore = new FbsConsumer.ConsumerScoreT(9, 10, [ 8 ]);
-	const consumerScoreNotification = new FbsConsumer.ScoreNotificationT(consumerScore);
+	const consumerScoreNotification =
+		new FbsConsumer.ScoreNotificationT(consumerScore);
 	const notificationOffset = Notification.createNotification(
 		builder,
 		builder.createString(audioConsumer.id),
