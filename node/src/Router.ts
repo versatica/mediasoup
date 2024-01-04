@@ -1469,7 +1469,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			throw new TypeError('if given, interval must be an number');
 		}
-		if (appData && typeof appData !== 'object')
+		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
@@ -1539,15 +1539,15 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			throw new TypeError('if given, maxEntries must be a positive number');
 		}
-		if (typeof threshold !== 'number' || threshold < -127 || threshold > 0)
+		else if (typeof threshold !== 'number' || threshold < -127 || threshold > 0)
 		{
 			throw new TypeError('if given, threshole must be a negative number greater than -127');
 		}
-		if (typeof interval !== 'number')
+		else if (typeof interval !== 'number')
 		{
 			throw new TypeError('if given, interval must be an number');
 		}
-		if (appData && typeof appData !== 'object')
+		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
