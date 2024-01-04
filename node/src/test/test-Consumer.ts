@@ -1167,6 +1167,8 @@ test('Consumer emits "score"', async () =>
 	expect(onScore).toHaveBeenCalledTimes(3);
 	expect(audioConsumer.score).toEqual(
 		{ score: 9, producerScore: 10, producerScores: [ 8 ] });
+
+	await new Promise((resolve) => setTimeout(resolve, 5000));
 }, 2000);
 
 test('consumer.close() succeeds', async () =>
