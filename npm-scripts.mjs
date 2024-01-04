@@ -21,7 +21,8 @@ const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
-const task = process.argv.slice(2).join(' ');
+const task = process.argv[2];
+const args = process.argv.slice(3).join(' ');
 
 // PYTHONPATH env must be updated now so all invoke calls below will find the
 // pip invoke module.
@@ -45,6 +46,8 @@ run();
 
 async function run()
 {
+	logInfo(args ? `[args:"${args}"]` : '');
+
 	switch (task)
 	{
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
@@ -125,7 +128,7 @@ async function run()
 		case 'typescript:watch':
 		{
 			deleteNodeLib();
-			executeCmd('tsc --project node --watch');
+			executeCmd(`tsc --project node --watch ${args}`);
 
 			break;
 		}
@@ -199,7 +202,7 @@ async function run()
 		case 'coverage:node':
 		{
 			buildTypescript({ force: false });
-			executeCmd('jest --coverage');
+			executeCmd(`jest --coverage ${args}`);
 			executeCmd('open-cli coverage/lcov-report/index.html');
 
 			break;
@@ -438,14 +441,7 @@ function testNode()
 {
 	logInfo('testNode()');
 
-	if (!process.env.TEST_FILE)
-	{
-		executeCmd('jest');
-	}
-	else
-	{
-		executeCmd(`jest --testPathPattern "${process.env.TEST_FILE}"`);
-	}
+	executeCmd(`jest ${args}`);
 }
 
 function testWorker()

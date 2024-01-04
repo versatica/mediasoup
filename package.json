@@ -73,7 +73,7 @@
   "jest": {
     "verbose": true,
     "testEnvironment": "node",
-    "testRegex": "node/src/tests/test-.*\\.ts",
+    "testRegex": "node/src/test/test-.*\\.ts",
     "transform": {
       "^.*\\.ts$": [
         "ts-jest",
@@ -88,7 +88,7 @@
     },
     "coveragePathIgnorePatterns": [
       "node/src/fbs",
-      "node/src/tests"
+      "node/src/test"
     ],
     "cacheDirectory": ".cache/jest",
     "modulePathIgnorePatterns": [
