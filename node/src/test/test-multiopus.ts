@@ -1,34 +1,44 @@
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
+import * as utils from '../utils';
 
-let worker: mediasoup.types.Worker;
-let router: mediasoup.types.Router;
-let transport: mediasoup.types.WebRtcTransport;
-
-const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
-[
-	{
-		kind       : 'audio',
-		mimeType   : 'audio/multiopus',
-		clockRate  : 48000,
-		channels   : 6,
-		parameters :
-		{
-			useinbandfec      : 1,
-			'channel_mapping' : '0,4,1,2,3,5',
-			'num_streams'     : 4,
-			'coupled_streams' : 2
-		}
-	}
-];
-
-const audioProducerParameters: mediasoup.types.ProducerOptions =
+type TestContext =
 {
-	kind          : 'audio',
-	rtpParameters :
+	worker?: mediasoup.types.Worker;
+	router?: mediasoup.types.Router;
+	transport?: mediasoup.types.WebRtcTransport;
+	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	audioProducerParameters: mediasoup.types.ProducerOptions;
+	consumerDeviceCapabilities: mediasoup.types.RtpCapabilities;
+};
+
+const ctx: TestContext =
+{
+	mediaCodecs : utils.deepFreeze(
+		[
+			{
+				kind                 : 'audio',
+				mimeType             : 'audio/multiopus',
+				preferredPayloadType : 100,
+				clockRate            : 48000,
+				channels             : 6,
+				parameters           :
+				{
+					useinbandfec      : 1,
+					'channel_mapping' : '0,4,1,2,3,5',
+					'num_streams'     : 4,
+					'coupled_streams' : 2
+				}
+			}
+		]
+	),
+	audioProducerParameters : utils.deepFreeze(
 		{
-			mid    : 'AUDIO',
-			codecs :
+			kind          : 'audio',
+			rtpParameters :
+			{
+				mid    : 'AUDIO',
+				codecs :
 				[
 					{
 						mimeType    : 'audio/multiopus',
@@ -36,15 +46,15 @@ const audioProducerParameters: mediasoup.types.ProducerOptions =
 						clockRate   : 48000,
 						channels    : 6,
 						parameters  :
-							{
-								useinbandfec      : 1,
-								'channel_mapping' : '0,4,1,2,3,5',
-								'num_streams'     : 4,
-								'coupled_streams' : 2
-							}
+						{
+							useinbandfec      : 1,
+							'channel_mapping' : '0,4,1,2,3,5',
+							'num_streams'     : 4,
+							'coupled_streams' : 2
+						}
 					}
 				],
-			headerExtensions :
+				headerExtensions :
 				[
 					{
 						uri : 'urn:ietf:params:rtp-hdrext:sdes:mid',
@@ -55,65 +65,70 @@ const audioProducerParameters: mediasoup.types.ProducerOptions =
 						id  : 12
 					}
 				]
+			}
 		}
-};
-
-const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
-{
-	codecs :
-		[
-			{
-				mimeType             : 'audio/multiopus',
-				kind                 : 'audio',
-				preferredPayloadType : 100,
-				clockRate            : 48000,
-				channels             : 6,
-				parameters           :
+	),
+	consumerDeviceCapabilities : utils.deepFreeze(
+		{
+			codecs :
+			[
+				{
+					mimeType             : 'audio/multiopus',
+					kind                 : 'audio',
+					preferredPayloadType : 100,
+					clockRate            : 48000,
+					channels             : 6,
+					parameters           :
 					{
 						'channel_mapping' : '0,4,1,2,3,5',
 						'num_streams'     : 4,
 						'coupled_streams' : 2
 					}
-			}
-		],
-	headerExtensions :
-		[
-			{
-				kind             : 'audio',
-				uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId      : 1,
-				preferredEncrypt : false
-			},
-			{
-				kind             : 'audio',
-				uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-				preferredId      : 4,
-				preferredEncrypt : false
-			},
-			{
-				kind             : 'audio',
-				uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				preferredId      : 10,
-				preferredEncrypt : false
-			}
-		]
+				}
+			],
+			headerExtensions :
+			[
+				{
+					kind             : 'audio',
+					uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					preferredId      : 1,
+					preferredEncrypt : false
+				},
+				{
+					kind             : 'audio',
+					uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+					preferredId      : 4,
+					preferredEncrypt : false
+				},
+				{
+					kind             : 'audio',
+					uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+					preferredId      : 10,
+					preferredEncrypt : false
+				}
+			]
+		}
+	)
 };
 
-beforeAll(async () =>
+beforeEach(async () =>
 {
-	worker = await mediasoup.createWorker();
-	router = await worker.createRouter({ mediaCodecs });
-	transport = await router.createWebRtcTransport(
+	ctx.worker = await mediasoup.createWorker();
+	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
+	ctx.transport = await ctx.router.createWebRtcTransport(
 		{
-			listenIps : [ '127.0.0.1' ]
+			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1' } ]
 		});
 });
 
-afterAll(() => worker.close());
-
-test('produce/consume succeeds', async () =>
+afterEach(() =>
 {
-	const audioProducer = await transport.produce(audioProducerParameters);
+	ctx.worker?.close();
+});
+
+test('produce() and consume() succeed', async () =>
+{
+	const audioProducer = await ctx.transport!.produce(ctx.audioProducerParameters);
 
 	expect(audioProducer.rtpParameters.codecs).toEqual([
 		{
@@ -122,25 +137,26 @@ test('produce/consume succeeds', async () =>
 			clockRate   : 48000,
 			channels    : 6,
 			parameters  :
-				{
-					useinbandfec      : 1,
-					'channel_mapping' : '0,4,1,2,3,5',
-					'num_streams'     : 4,
-					'coupled_streams' : 2
-				},
+			{
+				useinbandfec      : 1,
+				'channel_mapping' : '0,4,1,2,3,5',
+				'num_streams'     : 4,
+				'coupled_streams' : 2
+			},
 			rtcpFeedback : []
 		}
 	]);
 
-	expect(router.canConsume({
-		producerId      : audioProducer.id,
-		rtpCapabilities : consumerDeviceCapabilities
-	}))
-		.toBe(true);
+	expect(ctx.router!.canConsume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : ctx.consumerDeviceCapabilities
+		})
+	).toBe(true);
 
-	const audioConsumer = await transport.consume({
+	const audioConsumer = await ctx.transport!.consume({
 		producerId      : audioProducer.id,
-		rtpCapabilities : consumerDeviceCapabilities
+		rtpCapabilities : ctx.consumerDeviceCapabilities
 	});
 
 	expect(audioConsumer.rtpParameters.codecs).toEqual([
@@ -166,7 +182,7 @@ test('produce/consume succeeds', async () =>
 
 test('fails to produce wrong parameters', async () =>
 {
-	await expect(transport.produce({
+	await expect(ctx.transport!.produce({
 		kind          : 'audio',
 		rtpParameters :
 			{
@@ -191,7 +207,7 @@ test('fails to produce wrong parameters', async () =>
 		.rejects
 		.toThrow(UnsupportedError);
 
-	await expect(transport.produce({
+	await expect(ctx.transport!.produce({
 		kind          : 'audio',
 		rtpParameters :
 			{
@@ -219,7 +235,7 @@ test('fails to produce wrong parameters', async () =>
 
 test('fails to consume wrong channels', async () =>
 {
-	const audioProducer = await transport.produce(audioProducerParameters);
+	const audioProducer = await ctx.transport!.produce(ctx.audioProducerParameters);
 
 	const localConsumerDeviceCapabilities: mediasoup.types.RtpCapabilities = {
 		codecs :
@@ -240,13 +256,13 @@ test('fails to consume wrong channels', async () =>
 			]
 	};
 
-	expect(!router.canConsume({
+	expect(!ctx.router!.canConsume({
 		producerId      : audioProducer.id,
 		rtpCapabilities : localConsumerDeviceCapabilities
 	}))
 		.toBe(true);
 
-	await expect(transport.consume({
+	await expect(ctx.transport!.consume({
 		producerId      : audioProducer.id,
 		rtpCapabilities : localConsumerDeviceCapabilities
 	}))

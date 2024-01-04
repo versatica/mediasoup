@@ -3,23 +3,33 @@ import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
 import { InvalidStateError } from '../errors';
 
-let worker: mediasoup.types.Worker;
+type TestContext =
+{
+	worker?: mediasoup.types.Worker;
+};
 
-beforeEach(() => worker && !worker.closed && worker.close());
-afterEach(() => worker && !worker.closed && worker.close());
+const ctx: TestContext = {};
+
+beforeEach(async () =>
+{
+	ctx.worker = await mediasoup.createWorker();
+});
+
+afterEach(() =>
+{
+	ctx.worker?.close();
+});
 
 test('worker.createWebRtcServer() succeeds', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	const onObserverNewWebRtcServer = jest.fn();
 
-	worker.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
+	ctx.worker!.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
 
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
 
-	const webRtcServer = await worker.createWebRtcServer<{ foo?: number }>(
+	const webRtcServer = await ctx.worker!.createWebRtcServer<{ foo?: number }>(
 		{
 			listenInfos :
 			[
@@ -44,11 +54,11 @@ test('worker.createWebRtcServer() succeeds', async () =>
 	expect(webRtcServer.closed).toBe(false);
 	expect(webRtcServer.appData).toEqual({ foo: 123 });
 
-	await expect(worker.dump())
+	await expect(ctx.worker!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				pid                    : worker.pid,
+				pid                    : ctx.worker!.pid,
 				webRtcServerIds        : [ webRtcServer.id ],
 				routerIds              : [],
 				channelMessageHandlers :
@@ -77,25 +87,23 @@ test('worker.createWebRtcServer() succeeds', async () =>
 			});
 
 	// Private API.
-	expect(worker.webRtcServersForTesting.size).toBe(1);
+	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
 
-	worker.close();
+	ctx.worker!.close();
 
 	expect(webRtcServer.closed).toBe(true);
 
 	// Private API.
-	expect(worker.webRtcServersForTesting.size).toBe(0);
+	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	const onObserverNewWebRtcServer = jest.fn();
 
-	worker.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
+	ctx.worker!.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
 
-	const webRtcServer = await worker.createWebRtcServer(
+	const webRtcServer = await ctx.worker!.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -118,11 +126,11 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 	expect(webRtcServer.closed).toBe(false);
 	expect(webRtcServer.appData).toEqual({ foo: 123 });
 
-	await expect(worker.dump())
+	await expect(ctx.worker!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				pid                    : worker.pid,
+				pid                    : ctx.worker!.pid,
 				webRtcServerIds        : [ webRtcServer.id ],
 				routerIds              : [],
 				channelMessageHandlers :
@@ -151,52 +159,47 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 			});
 
 	// Private API.
-	expect(worker.webRtcServersForTesting.size).toBe(1);
+	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
 
-	worker.close();
+	ctx.worker!.close();
 
 	expect(webRtcServer.closed).toBe(true);
 
 	// Private API.
-	expect(worker.webRtcServersForTesting.size).toBe(0);
+	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	// @ts-ignore
-	await expect(worker.createWebRtcServer({}))
+	await expect(ctx.worker!.createWebRtcServer({}))
 		.rejects
 		.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(worker.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }))
+	await expect(ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }))
 		.rejects
 		.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(worker.createWebRtcServer({ listenInfos: [ 'NOT-AN-OBJECT' ] }))
+	await expect(ctx.worker!.createWebRtcServer({ listenInfos: [ 'NOT-AN-OBJECT' ] }))
 		.rejects
 		.toThrow(Error);
 
 	// Empty listenInfos so should fail.
-	await expect(worker.createWebRtcServer({ listenInfos: [] }))
+	await expect(ctx.worker!.createWebRtcServer({ listenInfos: [] }))
 		.rejects
 		.toThrow(TypeError);
-
-	worker.close();
 }, 2000);
 
 test('worker.createWebRtcServer() with unavailable listenInfos rejects with Error', async () =>
 {
-	const worker1 = await mediasoup.createWorker();
 	const worker2 = await mediasoup.createWorker();
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 
 	// Using an unavailable listen IP.
-	await expect(worker1.createWebRtcServer(
+	await expect(ctx.worker!.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -216,7 +219,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		.toThrow(Error);
 
 	// Using the same UDP port in two listenInfos.
-	await expect(worker1.createWebRtcServer(
+	await expect(ctx.worker!.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -236,7 +239,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		.rejects
 		.toThrow(Error);
 
-	await worker1.createWebRtcServer(
+	await ctx.worker!.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -263,19 +266,16 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 		.rejects
 		.toThrow(Error);
 
-	worker1.close();
 	worker2.close();
 }, 2000);
 
 test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () =>
 {
-	worker = await mediasoup.createWorker();
-
-	worker.close();
+	ctx.worker!.close();
 
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 
-	await expect(worker.createWebRtcServer(
+	await expect(ctx.worker!.createWebRtcServer(
 		{
 			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', port } ]
 		}))
@@ -285,10 +285,8 @@ test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is cl
 
 test('webRtcServer.close() succeeds', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await worker.createWebRtcServer(
+	const webRtcServer = await ctx.worker!.createWebRtcServer(
 		{
 			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', port } ]
 		});
@@ -303,10 +301,8 @@ test('webRtcServer.close() succeeds', async () =>
 
 test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await worker.createWebRtcServer(
+	const webRtcServer = await ctx.worker!.createWebRtcServer(
 		{
 			listenInfos : [ { protocol: 'tcp', ip: '127.0.0.1', port } ]
 		});
@@ -317,7 +313,7 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		webRtcServer.on('workerclose', resolve);
-		worker.close();
+		ctx.worker!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -326,11 +322,9 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 
 test('router.createWebRtcTransport() with webRtcServer succeeds and transport is closed', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await worker.createWebRtcServer(
+	const webRtcServer = await ctx.worker!.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -345,7 +339,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	webRtcServer.observer.once('webrtctransporthandled', onObserverWebRtcTransportHandled);
 	webRtcServer.observer.once('webrtctransportunhandled', onObserverWebRtcTransportUnhandled);
 
-	const router = await worker.createRouter();
+	const router = await ctx.worker!.createRouter();
 
 	const onObserverNewTransport = jest.fn();
 
@@ -436,11 +430,9 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer is closed', async () =>
 {
-	worker = await mediasoup.createWorker();
-
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await worker.createWebRtcServer(
+	const webRtcServer = await ctx.worker!.createWebRtcServer(
 		{
 			listenInfos :
 			[
@@ -455,7 +447,7 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	webRtcServer.observer.once('webrtctransporthandled', onObserverWebRtcTransportHandled);
 	webRtcServer.observer.once('webrtctransportunhandled', onObserverWebRtcTransportUnhandled);
 
-	const router = await worker.createRouter();
+	const router = await ctx.worker!.createRouter();
 	const transport = await router.createWebRtcTransport(
 		{
 			webRtcServer,
@@ -563,11 +555,11 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
 	expect(router.transportsForTesting.size).toBe(0);
 
-	await expect(worker.dump())
+	await expect(ctx.worker!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				pid                    : worker.pid,
+				pid                    : ctx.worker!.pid,
 				webRtcServerIds        : [],
 				routerIds              : [ router.id ],
 				channelMessageHandlers :

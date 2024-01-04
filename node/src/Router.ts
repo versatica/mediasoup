@@ -10,22 +10,50 @@ import {
 	TransportProtocol,
 	TransportSocketFlags
 } from './Transport';
-import { WebRtcTransport, WebRtcTransportOptions, parseWebRtcTransportDumpResponse } from './WebRtcTransport';
-import { PlainTransport, PlainTransportOptions, parsePlainTransportDumpResponse } from './PlainTransport';
-import { PipeTransport, PipeTransportOptions, parsePipeTransportDumpResponse } from './PipeTransport';
-import { DirectTransport, DirectTransportOptions, parseDirectTransportDumpResponse } from './DirectTransport';
+import {
+	WebRtcTransport,
+	WebRtcTransportOptions,
+	parseWebRtcTransportDumpResponse
+} from './WebRtcTransport';
+import {
+	PlainTransport,
+	PlainTransportOptions,
+	parsePlainTransportDumpResponse
+} from './PlainTransport';
+import {
+	PipeTransport,
+	PipeTransportOptions,
+	parsePipeTransportDumpResponse
+} from './PipeTransport';
+import {
+	DirectTransport,
+	DirectTransportOptions,
+	parseDirectTransportDumpResponse
+} from './DirectTransport';
 import { Producer } from './Producer';
 import { Consumer } from './Consumer';
 import { DataProducer } from './DataProducer';
 import { DataConsumer } from './DataConsumer';
 import { RtpObserver } from './RtpObserver';
-import { ActiveSpeakerObserver, ActiveSpeakerObserverOptions } from './ActiveSpeakerObserver';
-import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
+import {
+	ActiveSpeakerObserver,
+	ActiveSpeakerObserverOptions
+} from './ActiveSpeakerObserver';
+import {
+	AudioLevelObserver,
+	AudioLevelObserverOptions
+} from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { cryptoSuiteToFbs } from './SrtpParameters';
 import { NumSctpStreams } from './SctpParameters';
 import { AppData, Either } from './types';
-import { generateUUIDv4, parseVector, parseStringStringVector, parseStringStringArrayVector } from './utils';
+import {
+	clone,
+	generateUUIDv4,
+	parseVector,
+	parseStringStringVector,
+	parseStringStringArrayVector
+} from './utils';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 import * as FbsRequest from './fbs/request';
@@ -1441,7 +1469,7 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			throw new TypeError('if given, interval must be an number');
 		}
-		if (appData && typeof appData !== 'object')
+		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
@@ -1511,15 +1539,15 @@ export class Router<RouterAppData extends AppData = AppData>
 		{
 			throw new TypeError('if given, maxEntries must be a positive number');
 		}
-		if (typeof threshold !== 'number' || threshold < -127 || threshold > 0)
+		else if (typeof threshold !== 'number' || threshold < -127 || threshold > 0)
 		{
 			throw new TypeError('if given, threshole must be a negative number greater than -127');
 		}
-		if (typeof interval !== 'number')
+		else if (typeof interval !== 'number')
 		{
 			throw new TypeError('if given, interval must be an number');
 		}
-		if (appData && typeof appData !== 'object')
+		else if (appData && typeof appData !== 'object')
 		{
 			throw new TypeError('if given, appData must be an object');
 		}
@@ -1596,9 +1624,14 @@ export class Router<RouterAppData extends AppData = AppData>
 			return false;
 		}
 
+		// Clone given RTP capabilities to not modify input data.
+		const clonedRtpCapabilities = clone<RtpCapabilities>(rtpCapabilities);
+
 		try
 		{
-			return ortc.canConsume(producer.consumableRtpParameters, rtpCapabilities);
+			return ortc.canConsume(
+				producer.consumableRtpParameters, clonedRtpCapabilities
+			);
 		}
 		catch (error)
 		{

@@ -1286,7 +1286,7 @@ export class Transport
 		{
 			throw new TypeError('types must be an array');
 		}
-		if (types.find((type) => typeof type !== 'string'))
+		else if (types.find((type) => typeof type !== 'string'))
 		{
 			throw new TypeError('every type must be a string');
 		}
