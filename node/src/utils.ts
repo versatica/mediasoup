@@ -199,7 +199,7 @@ export function parseStringStringArrayVector(
 }
 
 /**
- * Make make an object or array recursively immutable.
+ * Make an object or array recursively immutable.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze.
  */
 export function deepFreeze<T>(object: T): T
