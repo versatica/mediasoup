@@ -1,39 +1,50 @@
 import * as mediasoup from '../';
+import * as utils from '../utils';
 
-let worker: mediasoup.types.Worker;
-let router: mediasoup.types.Router;
-let audioLevelObserver: mediasoup.types.AudioLevelObserver;
-
-const mediaCodecs: mediasoup.types.RtpCodecCapability[] =
-[
-	{
-		kind       : 'audio',
-		mimeType   : 'audio/opus',
-		clockRate  : 48000,
-		channels   : 2,
-		parameters :
-		{
-			useinbandfec : 1,
-			foo          : 'bar'
-		}
-	}
-];
-
-beforeAll(async () =>
+type TestContext =
 {
-	worker = await mediasoup.createWorker();
-	router = await worker.createRouter({ mediaCodecs });
+	worker?: mediasoup.types.Worker;
+	router?: mediasoup.types.Router;
+	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+};
+
+const ctx: TestContext =
+{
+	mediaCodecs : utils.deepFreeze(
+		[
+			{
+				kind       : 'audio',
+				mimeType   : 'audio/opus',
+				clockRate  : 48000,
+				channels   : 2,
+				parameters :
+				{
+					useinbandfec : 1,
+					foo          : 'bar'
+				}
+			}
+		]
+	)
+};
+
+beforeEach(async () =>
+{
+	ctx.worker = await mediasoup.createWorker();
+	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
-afterAll(() => worker.close());
+afterEach(() =>
+{
+	ctx.worker?.close();
+});
 
 test('router.createAudioLevelObserver() succeeds', async () =>
 {
 	const onObserverNewRtpObserver = jest.fn();
 
-	router.observer.once('newrtpobserver', onObserverNewRtpObserver);
+	ctx.router!.observer.once('newrtpobserver', onObserverNewRtpObserver);
 
-	audioLevelObserver = await router.createAudioLevelObserver();
+	const audioLevelObserver = await ctx.router!.createAudioLevelObserver();
 
 	expect(onObserverNewRtpObserver).toHaveBeenCalledTimes(1);
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(audioLevelObserver);
@@ -42,7 +53,7 @@ test('router.createAudioLevelObserver() succeeds', async () =>
 	expect(audioLevelObserver.paused).toBe(false);
 	expect(audioLevelObserver.appData).toEqual({});
 
-	await expect(router.dump())
+	await expect(ctx.router!.dump())
 		.resolves
 		.toMatchObject(
 			{
@@ -52,32 +63,34 @@ test('router.createAudioLevelObserver() succeeds', async () =>
 
 test('router.createAudioLevelObserver() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(router.createAudioLevelObserver({ maxEntries: 0 }))
+	await expect(ctx.router!.createAudioLevelObserver({ maxEntries: 0 }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(router.createAudioLevelObserver({ maxEntries: -10 }))
-		.rejects
-		.toThrow(TypeError);
-
-	// @ts-ignore
-	await expect(router.createAudioLevelObserver({ threshold: 'foo' }))
+	await expect(ctx.router!.createAudioLevelObserver({ maxEntries: -10 }))
 		.rejects
 		.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(router.createAudioLevelObserver({ interval: false }))
+	await expect(ctx.router!.createAudioLevelObserver({ threshold: 'foo' }))
 		.rejects
 		.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(router.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' }))
+	await expect(ctx.router!.createAudioLevelObserver({ interval: false }))
+		.rejects
+		.toThrow(TypeError);
+
+	// @ts-ignore
+	await expect(ctx.router!.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);
 
 test('audioLevelObserver.pause() and resume() succeed', async () =>
 {
+	const audioLevelObserver = await ctx.router!.createAudioLevelObserver();
+
 	await audioLevelObserver.pause();
 
 	expect(audioLevelObserver.paused).toBe(true);
@@ -89,45 +102,43 @@ test('audioLevelObserver.pause() and resume() succeed', async () =>
 
 test('audioLevelObserver.close() succeeds', async () =>
 {
-	// We need different a AudioLevelObserver instance here.
-	const audioLevelObserver2 =
-		await router.createAudioLevelObserver({ maxEntries: 8 });
+	const audioLevelObserver =
+		await ctx.router!.createAudioLevelObserver({ maxEntries: 8 });
 
-	let dump = await router.dump();
-
-	expect(dump.rtpObserverIds.length).toBe(2);
-
-	audioLevelObserver2.close();
-
-	expect(audioLevelObserver2.closed).toBe(true);
-
-	dump = await router.dump();
+	let dump = await ctx.router!.dump();
 
 	expect(dump.rtpObserverIds.length).toBe(1);
 
+	audioLevelObserver.close();
+
+	expect(audioLevelObserver.closed).toBe(true);
+
+	dump = await ctx.router!.dump();
+
+	expect(dump.rtpObserverIds.length).toBe(0);
 }, 2000);
 
 test('AudioLevelObserver emits "routerclose" if Router is closed', async () =>
 {
-	// We need different Router and AudioLevelObserver instances here.
-	const router2 = await worker.createRouter({ mediaCodecs });
-	const audioLevelObserver2 = await router2.createAudioLevelObserver();
+	const audioLevelObserver = await ctx.router!.createAudioLevelObserver();
 
 	await new Promise<void>((resolve) =>
 	{
-		audioLevelObserver2.on('routerclose', resolve);
-		router2.close();
+		audioLevelObserver.on('routerclose', resolve);
+		ctx.router!.close();
 	});
 
-	expect(audioLevelObserver2.closed).toBe(true);
+	expect(audioLevelObserver.closed).toBe(true);
 }, 2000);
 
 test('AudioLevelObserver emits "routerclose" if Worker is closed', async () =>
 {
+	const audioLevelObserver = await ctx.router!.createAudioLevelObserver();
+
 	await new Promise<void>((resolve) =>
 	{
 		audioLevelObserver.on('routerclose', resolve);
-		worker.close();
+		ctx.worker!.close();
 	});
 
 	expect(audioLevelObserver.closed).toBe(true);
