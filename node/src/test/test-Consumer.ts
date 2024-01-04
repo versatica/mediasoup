@@ -1136,10 +1136,10 @@ test('Consumer emits "score"', async () =>
 		});
 
 	// Private API.
-	// const channel = audioConsumer.channelForTesting;
-	// const onScore = jest.fn();
+	const channel = audioConsumer.channelForTesting;
+	const onScore = jest.fn();
 
-	// audioConsumer.on('score', onScore);
+	audioConsumer.on('score', onScore);
 
 	// Simulate a 'score' notification coming through the channel.
 	const builder = new flatbuffers.Builder();
@@ -1156,17 +1156,17 @@ test('Consumer emits "score"', async () =>
 
 	builder.finish(notificationOffset);
 
-	// const notification = Notification.getRootAsNotification(
-	// 	new flatbuffers.ByteBuffer(builder.asUint8Array())
-	// );
+	const notification = Notification.getRootAsNotification(
+		new flatbuffers.ByteBuffer(builder.asUint8Array())
+	);
 
-	// channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
-	// channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
-	// channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
+	channel.emit(audioConsumer.id, Event.CONSUMER_SCORE, notification);
 
-	// expect(onScore).toHaveBeenCalledTimes(3);
-	// expect(audioConsumer.score).toEqual(
-	// 	{ score: 9, producerScore: 10, producerScores: [ 8 ] });
+	expect(onScore).toHaveBeenCalledTimes(3);
+	expect(audioConsumer.score).toEqual(
+		{ score: 9, producerScore: 10, producerScores: [ 8 ] });
 }, 2000);
 
 test('consumer.close() succeeds', async () =>
