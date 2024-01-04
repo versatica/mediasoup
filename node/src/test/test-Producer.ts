@@ -833,10 +833,11 @@ test('Producer emits "score"', async () =>
 
 	// Simulate a 'score' notification coming through the channel.
 	const builder = new flatbuffers.Builder();
-	const producerScoreNotification = new FbsProducer.ScoreNotificationT([
-		new FbsProducer.ScoreT(/* encodingIdx */ 0, /* ssrc */ 11, /* rid */ undefined, /* score */ 10),
-		new FbsProducer.ScoreT(/* encodingIdx */ 1, /* ssrc */ 22, /* rid */ undefined, /* score */ 9)
-	]);
+	const producerScoreNotification = new FbsProducer.ScoreNotificationT(
+		[
+			new FbsProducer.ScoreT(/* encodingIdx */ 0, /* ssrc */ 11, /* rid */ undefined, /* score */ 10),
+			new FbsProducer.ScoreT(/* encodingIdx */ 1, /* ssrc */ 22, /* rid */ undefined, /* score */ 9)
+		]);
 	const notificationOffset = Notification.createNotification(
 		builder,
 		builder.createString(videoProducer.id),
@@ -848,7 +849,8 @@ test('Producer emits "score"', async () =>
 	builder.finish(notificationOffset);
 
 	const notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+		new flatbuffers.ByteBuffer(builder.asUint8Array())
+	);
 
 	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
 	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
