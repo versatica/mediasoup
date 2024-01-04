@@ -303,7 +303,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 	{
 		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
-			auto body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
+			const auto* body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
 			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{

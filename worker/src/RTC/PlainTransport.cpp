@@ -429,7 +429,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing srtpParameters (SRTP enabled)");
 						}
 
-						const auto srtpParameters = body->srtpParameters();
+						const auto* const srtpParameters = body->srtpParameters();
 
 						// Update out SRTP crypto suite with the one used by the remote.
 						auto previousSrtpCryptoSuite = this->srtpCryptoSuite;

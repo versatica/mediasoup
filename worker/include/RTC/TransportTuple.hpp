@@ -190,7 +190,7 @@ namespace RTC
 			{
 				case AF_INET:
 				{
-					auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
+					const auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
 
 					const uint64_t address = ntohl(remoteSockAddrIn->sin_addr.s_addr);
 					const uint64_t port    = (ntohs(remoteSockAddrIn->sin_port));
@@ -204,8 +204,10 @@ namespace RTC
 
 				case AF_INET6:
 				{
-					auto* remoteSockAddrIn6 = reinterpret_cast<const struct sockaddr_in6*>(remoteSockAddr);
-					auto* a = reinterpret_cast<const uint32_t*>(std::addressof(remoteSockAddrIn6->sin6_addr));
+					const auto* remoteSockAddrIn6 =
+					  reinterpret_cast<const struct sockaddr_in6*>(remoteSockAddr);
+					const auto* a =
+					  reinterpret_cast<const uint32_t*>(std::addressof(remoteSockAddrIn6->sin6_addr));
 
 					const auto address1 = a[0] ^ a[1] ^ a[2] ^ a[3];
 					const auto address2 = a[0];
