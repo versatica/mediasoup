@@ -1111,7 +1111,8 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		audioConsumer.on('producerpause', resolve);
-		ctx.audioProducer!.pause();
+
+		ctx.audioProducer!.pause().catch(() => {});
 	});
 
 	expect(audioConsumer.paused).toBe(false);
@@ -1120,7 +1121,11 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		audioConsumer.on('producerresume', resolve);
-		ctx.audioProducer!.resume();
+
+		// Let's catch rejection since the test will complete before we get the
+		// response to this channel request, and if we don't handle that rejection
+		// it will make Jest fail any other random test.
+		ctx.audioProducer!.resume().catch(() => {});
 	});
 
 	expect(audioConsumer.paused).toBe(false);
