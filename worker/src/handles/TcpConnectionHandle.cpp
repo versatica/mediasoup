@@ -38,7 +38,7 @@ inline static void onWrite(uv_write_t* req, int status)
 	auto* writeData  = static_cast<TcpConnectionHandle::UvWriteData*>(req->data);
 	auto* handle     = req->handle;
 	auto* connection = static_cast<TcpConnectionHandle*>(handle->data);
-	auto* cb         = writeData->cb;
+	const auto* cb   = writeData->cb;
 
 	if (connection)
 	{

@@ -120,7 +120,7 @@ namespace RTC
 		{
 			// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
 
-			auto header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// clang-format off
 			return (

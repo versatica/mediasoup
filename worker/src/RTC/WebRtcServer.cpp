@@ -273,7 +273,7 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		uint16_t iceLocalPreferenceDecrement{ 0 };
 
-		for (auto& item : this->udpSocketOrTcpServers)
+		for (const auto& item : this->udpSocketOrTcpServers)
 		{
 			if (item.udpSocket && enableUdp)
 			{
