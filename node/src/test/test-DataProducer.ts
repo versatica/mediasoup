@@ -1,37 +1,19 @@
 import * as mediasoup from '../';
+import * as utils from '../utils';
 
-let worker: mediasoup.types.Worker;
-let router: mediasoup.types.Router;
-let transport1: mediasoup.types.WebRtcTransport;
-let transport2: mediasoup.types.PlainTransport;
-let dataProducer1: mediasoup.types.DataProducer;
-let dataProducer2: mediasoup.types.DataProducer;
-
-beforeAll(async () =>
+type TestContext =
 {
-	worker = await mediasoup.createWorker();
-	router = await worker.createRouter();
-	transport1 = await router.createWebRtcTransport(
-		{
-			listenIps  : [ '127.0.0.1' ],
-			enableSctp : true
-		});
-	transport2 = await router.createPlainTransport(
-		{
-			listenIp   : '127.0.0.1',
-			enableSctp : true
-		});
-});
+	dataProducerParameters1: mediasoup.types.DataProducerOptions;
+	dataProducerParameters2: mediasoup.types.DataProducerOptions;
+	worker?: mediasoup.types.Worker;
+	router?: mediasoup.types.Router;
+	transport1?: mediasoup.types.WebRtcTransport;
+	transport2?: mediasoup.types.WebRtcTransport;
+};
 
-afterAll(() => worker.close());
-
-test('transport1.produceData() succeeds', async () =>
+const ctx: TestContext =
 {
-	const onObserverNewDataProducer = jest.fn();
-
-	transport1.observer.once('newdataproducer', onObserverNewDataProducer);
-
-	dataProducer1 = await transport1.produceData(
+	dataProducerParameters1 : utils.deepFreeze(
 		{
 			sctpStreamParameters :
 			{
@@ -40,7 +22,52 @@ test('transport1.produceData() succeeds', async () =>
 			label    : 'foo',
 			protocol : 'bar',
 			appData  : { foo: 1, bar: '2' }
+		}
+	),
+	dataProducerParameters2 : utils.deepFreeze(
+		{
+			sctpStreamParameters :
+			{
+				streamId       : 777,
+				maxRetransmits : 3
+			},
+			label    : 'foo',
+			protocol : 'bar',
+			paused   : true,
+			appData  : { foo: 1, bar: '2' }
+		}
+	)
+};
+
+beforeEach(async () =>
+{
+	ctx.worker = await mediasoup.createWorker();
+	ctx.router = await ctx.worker.createRouter();
+	ctx.transport1 = await ctx.router.createWebRtcTransport(
+		{
+			listenIps  : [ '127.0.0.1' ],
+			enableSctp : true
 		});
+	ctx.transport2 = await ctx.router.createWebRtcTransport(
+		{
+			listenIps  : [ '127.0.0.1' ],
+			enableSctp : true
+		});
+});
+
+afterEach(() =>
+{
+	ctx.worker?.close();
+});
+
+test('transport1.produceData() succeeds', async () =>
+{
+	const onObserverNewDataProducer = jest.fn();
+
+	ctx.transport1!.observer.once('newdataproducer', onObserverNewDataProducer);
+
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer1);
@@ -57,7 +84,7 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.paused).toBe(false);
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
 
-	const dump = await router.dump();
+	const dump = await ctx.router!.dump();
 
 	expect(dump.mapDataProducerIdDataConsumerIds)
 		.toEqual(expect.arrayContaining([
@@ -66,11 +93,11 @@ test('transport1.produceData() succeeds', async () =>
 
 	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
-	await expect(transport1.dump())
+	await expect(ctx.transport1!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : transport1.id,
+				id              : ctx.transport1!.id,
 				dataProducerIds : [ dataProducer1.id ],
 				dataConsumerIds : []
 			});
@@ -80,20 +107,10 @@ test('transport2.produceData() succeeds', async () =>
 {
 	const onObserverNewDataProducer = jest.fn();
 
-	transport2.observer.once('newdataproducer', onObserverNewDataProducer);
+	ctx.transport2!.observer.once('newdataproducer', onObserverNewDataProducer);
 
-	dataProducer2 = await transport2.produceData(
-		{
-			sctpStreamParameters :
-			{
-				streamId       : 777,
-				maxRetransmits : 3
-			},
-			label    : 'foo',
-			protocol : 'bar',
-			paused   : true,
-			appData  : { foo: 1, bar: '2' }
-		});
+	const dataProducer2 =
+		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer2);
@@ -110,7 +127,7 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.paused).toBe(true);
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
 
-	const dump = await router.dump();
+	const dump = await ctx.router!.dump();
 
 	expect(dump.mapDataProducerIdDataConsumerIds)
 		.toEqual(expect.arrayContaining([
@@ -119,11 +136,11 @@ test('transport2.produceData() succeeds', async () =>
 
 	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
-	await expect(transport2.dump())
+	await expect(ctx.transport2!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : transport2.id,
+				id              : ctx.transport2!.id,
 				dataProducerIds : [ dataProducer2.id ],
 				dataConsumerIds : []
 			});
@@ -131,12 +148,12 @@ test('transport2.produceData() succeeds', async () =>
 
 test('transport1.produceData() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(transport1.produceData({}))
+	await expect(ctx.transport1!.produceData({}))
 		.rejects
 		.toThrow(TypeError);
 
 	// Missing or empty sctpStreamParameters.streamId.
-	await expect(transport1.produceData(
+	await expect(ctx.transport1!.produceData(
 		{
 			// @ts-ignore
 			sctpStreamParameters : { foo: 'foo' }
@@ -147,7 +164,9 @@ test('transport1.produceData() with wrong arguments rejects with TypeError', asy
 
 test('transport.produceData() with already used streamId rejects with Error', async () =>
 {
-	await expect(transport1.produceData(
+	await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+
+	await expect(ctx.transport1!.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -160,7 +179,7 @@ test('transport.produceData() with already used streamId rejects with Error', as
 
 test('transport.produceData() with ordered and maxPacketLifeTime rejects with TypeError', async () =>
 {
-	await expect(transport1.produceData(
+	await expect(ctx.transport1!.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -175,37 +194,44 @@ test('transport.produceData() with ordered and maxPacketLifeTime rejects with Ty
 
 test('dataProducer.dump() succeeds', async () =>
 {
-	let data;
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
 
-	data = await dataProducer1.dump();
+	const dump1 = await dataProducer1.dump();
 
-	expect(data.id).toBe(dataProducer1.id);
-	expect(data.type).toBe('sctp');
-	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters!.streamId).toBe(666);
-	expect(data.sctpStreamParameters!.ordered).toBe(true);
-	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
-	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
-	expect(data.label).toBe('foo');
-	expect(data.protocol).toBe('bar');
-	expect(data.paused).toBe(false);
+	expect(dump1.id).toBe(dataProducer1.id);
+	expect(dump1.type).toBe('sctp');
+	expect(typeof dump1.sctpStreamParameters).toBe('object');
+	expect(dump1.sctpStreamParameters!.streamId).toBe(666);
+	expect(dump1.sctpStreamParameters!.ordered).toBe(true);
+	expect(dump1.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(dump1.sctpStreamParameters!.maxRetransmits).toBeUndefined();
+	expect(dump1.label).toBe('foo');
+	expect(dump1.protocol).toBe('bar');
+	expect(dump1.paused).toBe(false);
 
-	data = await dataProducer2.dump();
+	const dataProducer2 =
+		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
 
-	expect(data.id).toBe(dataProducer2.id);
-	expect(data.type).toBe('sctp');
-	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters!.streamId).toBe(777);
-	expect(data.sctpStreamParameters!.ordered).toBe(false);
-	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
-	expect(data.sctpStreamParameters!.maxRetransmits).toBe(3);
-	expect(data.label).toBe('foo');
-	expect(data.protocol).toBe('bar');
-	expect(data.paused).toBe(true);
+	const dump2 = await dataProducer2.dump();
+
+	expect(dump2.id).toBe(dataProducer2.id);
+	expect(dump2.type).toBe('sctp');
+	expect(typeof dump2.sctpStreamParameters).toBe('object');
+	expect(dump2.sctpStreamParameters!.streamId).toBe(777);
+	expect(dump2.sctpStreamParameters!.ordered).toBe(false);
+	expect(dump2.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(dump2.sctpStreamParameters!.maxRetransmits).toBe(3);
+	expect(dump2.label).toBe('foo');
+	expect(dump2.protocol).toBe('bar');
+	expect(dump2.paused).toBe(true);
 }, 2000);
 
 test('dataProducer.getStats() succeeds', async () =>
 {
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+
 	await expect(dataProducer1.getStats())
 		.resolves
 		.toMatchObject(
@@ -218,6 +244,9 @@ test('dataProducer.getStats() succeeds', async () =>
 					bytesReceived    : 0
 				}
 			]);
+
+	const dataProducer2 =
+		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
 
 	await expect(dataProducer2.getStats())
 		.resolves
@@ -235,29 +264,30 @@ test('dataProducer.getStats() succeeds', async () =>
 
 test('dataProducer.pause() and resume() succeed', async () =>
 {
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+
 	const onObserverPause = jest.fn();
 	const onObserverResume = jest.fn();
 
 	dataProducer1.observer.on('pause', onObserverPause);
 	dataProducer1.observer.on('resume', onObserverResume);
 
-	let data;
-
 	await dataProducer1.pause();
 
 	expect(dataProducer1.paused).toBe(true);
 
-	data = await dataProducer1.dump();
+	const dump1 = await dataProducer1.dump();
 
-	expect(data.paused).toBe(true);
+	expect(dump1.paused).toBe(true);
 
 	await dataProducer1.resume();
 
 	expect(dataProducer1.paused).toBe(false);
 
-	data = await dataProducer1.dump();
+	const dump2 = await dataProducer1.dump();
 
-	expect(data.paused).toBe(false);
+	expect(dump2.paused).toBe(false);
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
@@ -274,15 +304,18 @@ test('dataProducer.pause() and resume() succeed', async () =>
 
 test('producer.pause() and resume() emit events', async () =>
 {
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+
 	const promises = [];
 	const events: string[] = [];
 	
-	dataProducer1.observer.once('resume', () => 
+	dataProducer1.observer.once('resume', () =>
 	{
 		events.push('resume');
 	});
 
-	dataProducer1.observer.once('pause', () => 
+	dataProducer1.observer.once('pause', () =>
 	{
 		events.push('pause');
 	});
@@ -298,6 +331,9 @@ test('producer.pause() and resume() emit events', async () =>
 
 test('dataProducer.close() succeeds', async () =>
 {
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+
 	const onObserverClose = jest.fn();
 
 	dataProducer1.observer.once('close', onObserverClose);
@@ -306,7 +342,7 @@ test('dataProducer.close() succeeds', async () =>
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataProducer1.closed).toBe(true);
 
-	await expect(router.dump())
+	await expect(ctx.router!.dump())
 		.resolves
 		.toMatchObject(
 			{
@@ -314,11 +350,11 @@ test('dataProducer.close() succeeds', async () =>
 				mapDataConsumerIdDataProducerId  : {}
 			});
 
-	await expect(transport1.dump())
+	await expect(ctx.transport1!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : transport1.id,
+				id              : ctx.transport1!.id,
 				dataProducerIds : [],
 				dataConsumerIds : []
 			});
@@ -326,6 +362,11 @@ test('dataProducer.close() succeeds', async () =>
 
 test('DataProducer methods reject if closed', async () =>
 {
+	const dataProducer1 =
+		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+
+	dataProducer1.close();
+
 	await expect(dataProducer1.dump())
 		.rejects
 		.toThrow(Error);
@@ -337,6 +378,9 @@ test('DataProducer methods reject if closed', async () =>
 
 test('DataProducer emits "transportclose" if Transport is closed', async () =>
 {
+	const dataProducer2 =
+		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
+
 	const onObserverClose = jest.fn();
 
 	dataProducer2.observer.once('close', onObserverClose);
@@ -344,7 +388,7 @@ test('DataProducer emits "transportclose" if Transport is closed', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		dataProducer2.on('transportclose', resolve);
-		transport2.close();
+		ctx.transport2!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);

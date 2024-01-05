@@ -4,12 +4,12 @@ import * as utils from '../utils';
 
 type TestContext =
 {
-	worker?: mediasoup.types.Worker;
-	router?: mediasoup.types.Router;
-	transport?: mediasoup.types.WebRtcTransport;
 	mediaCodecs: mediasoup.types.RtpCodecCapability[];
 	audioProducerParameters: mediasoup.types.ProducerOptions;
 	consumerDeviceCapabilities: mediasoup.types.RtpCapabilities;
+	worker?: mediasoup.types.Worker;
+	router?: mediasoup.types.Router;
+	transport?: mediasoup.types.WebRtcTransport;
 };
 
 const ctx: TestContext =
@@ -175,9 +175,6 @@ test('produce() and consume() succeed', async () =>
 			rtcpFeedback : []
 		}
 	]);
-
-	audioProducer.close();
-	audioConsumer.close();
 }, 2000);
 
 test('fails to produce wrong parameters', async () =>
@@ -268,6 +265,4 @@ test('fails to consume wrong channels', async () =>
 	}))
 		.rejects
 		.toThrow(Error);
-
-	audioProducer.close();
 }, 2000);
