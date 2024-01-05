@@ -1,6 +1,11 @@
 # Changelog
 
 
+### 3.13.15
+
+* Add worker prebuild binary for Linux kernel 6 ([PR #1300](https://github.com/versatica/mediasoup/pull/1300)).
+
+
 ### 3.13.14
 
 * Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
