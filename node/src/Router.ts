@@ -731,11 +731,11 @@ export class Router<RouterAppData extends AppData = AppData>
 		}
 
 		// If rtcpMux is enabled, ignore rtcpListenInfo.
-		if (rtcpMux)
+		if (rtcpMux && rtcpListenInfo)
 		{
-			logger.warn('createPlainTransport() | ignoring given rtcpListenInfo since rtcpMux is enabled');
+			logger.warn('createPlainTransport() | ignoring rtcpMux since rtcpListenInfo is given');
 
-			rtcpListenInfo = undefined;
+			rtcpMux = false;
 		}
 
 		// Convert deprecated TransportListenIps to TransportListenInfos.
