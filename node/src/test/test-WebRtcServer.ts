@@ -142,13 +142,13 @@ test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', 
 	// @ts-ignore
 	await expect(ctx.worker!.createWebRtcServer({})).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.worker!.createWebRtcServer({ listenInfos: ['NOT-AN-OBJECT'] }),
 	).rejects.toThrow(Error);
 

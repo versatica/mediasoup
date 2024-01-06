@@ -174,18 +174,18 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 		TypeError,
 	);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createWebRtcTransport({ listenIps: [123] }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' }),
 	).rejects.toThrow(TypeError);
 
@@ -484,8 +484,8 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 		TypeError,
 	);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		webRtcTransport.enableTraceEvent(['probation', 123.123]),
 	).rejects.toThrow(TypeError);
 }, 2000);

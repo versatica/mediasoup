@@ -59,18 +59,18 @@ test('router.createAudioLevelObserver() with wrong arguments rejects with TypeEr
 		ctx.router!.createAudioLevelObserver({ maxEntries: -10 }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createAudioLevelObserver({ threshold: 'foo' }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createAudioLevelObserver({ interval: false }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' }),
 	).rejects.toThrow(TypeError);
 }, 2000);

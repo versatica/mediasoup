@@ -52,8 +52,8 @@ test('router.createDirectTransport() succeeds', async () => {
 }, 2000);
 
 test('router.createDirectTransport() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router!.createDirectTransport({ maxMessageSize: 'foo' }),
 	).rejects.toThrow(TypeError);
 

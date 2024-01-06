@@ -105,8 +105,8 @@ test('worker.createRouter() with wrong arguments rejects with TypeError', async 
 		TypeError,
 	);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.worker!.createRouter({ appData: 'NOT-AN-OBJECT' }),
 	).rejects.toThrow(TypeError);
 }, 2000);

@@ -876,8 +876,8 @@ test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError'
 	// @ts-ignore
 	await expect(videoConsumer.setPreferredLayers({})).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		videoConsumer.setPreferredLayers({ foo: '123' }),
 	).rejects.toThrow(TypeError);
 
@@ -887,8 +887,8 @@ test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError'
 	);
 
 	// Missing spatialLayer.
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		videoConsumer.setPreferredLayers({ temporalLayer: 2 }),
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -975,8 +975,8 @@ test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 		TypeError,
 	);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		audioConsumer.enableTraceEvent(['fir', 123.123]),
 	).rejects.toThrow(TypeError);
 }, 2000);

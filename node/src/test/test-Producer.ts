@@ -709,8 +709,8 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 		TypeError,
 	);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		audioProducer.enableTraceEvent(['fir', 123.123]),
 	).rejects.toThrow(TypeError);
 }, 2000);

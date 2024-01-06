@@ -444,8 +444,8 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 		ctx.router1!.createPipeTransport({ listenIp: '123' }),
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
 	await expect(
+		// @ts-ignore
 		ctx.router1!.createPipeTransport({ listenIp: ['127.0.0.1'] }),
 	).rejects.toThrow(TypeError);
 
