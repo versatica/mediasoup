@@ -434,7 +434,7 @@ function flatcWorker() {
 function testNode() {
 	logInfo('testNode()');
 
-	executeCmd(`jest ${args}`);
+	executeCmd(`jest --detectOpenHandles ${args}`);
 }
 
 function testWorker() {
