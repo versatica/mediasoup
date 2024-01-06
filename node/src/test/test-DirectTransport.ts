@@ -1,116 +1,119 @@
 import * as mediasoup from '../';
 
-let worker: mediasoup.types.Worker;
-let router: mediasoup.types.Router;
-let transport: mediasoup.types.DirectTransport;
-
-beforeAll(async () =>
+type TestContext =
 {
-	worker = await mediasoup.createWorker();
-	router = await worker.createRouter();
-});
+	worker?: mediasoup.types.Worker;
+	router?: mediasoup.types.Router;
+};
 
-afterAll(() => worker.close());
+const ctx: TestContext = {};
 
 beforeEach(async () =>
 {
-	transport = await router.createDirectTransport();
+	ctx.worker = await mediasoup.createWorker();
+	ctx.router = await ctx.worker.createRouter();
 });
 
-afterEach(() => transport.close());
+afterEach(() =>
+{
+	ctx.worker?.close();
+});
 
 test('router.createDirectTransport() succeeds', async () =>
 {
-	await expect(router.dump())
-		.resolves
-		.toMatchObject({ transportIds: [ transport.id ] });
-
 	const onObserverNewTransport = jest.fn();
 
-	router.observer.once('newtransport', onObserverNewTransport);
+	ctx.router!.observer.once('newtransport', onObserverNewTransport);
 
-	// Create a separate transport here.
-	const transport1 = await router.createDirectTransport(
+	const directTransport = await ctx.router!.createDirectTransport(
 		{
 			maxMessageSize : 1024,
 			appData        : { foo: 'bar' }
 		});
 
+	await expect(ctx.router!.dump())
+		.resolves
+		.toMatchObject({ transportIds: [ directTransport.id ] });
+
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
-	expect(onObserverNewTransport).toHaveBeenCalledWith(transport1);
-	expect(typeof transport1.id).toBe('string');
-	expect(transport1.closed).toBe(false);
-	expect(transport1.appData).toEqual({ foo: 'bar' });
+	expect(onObserverNewTransport).toHaveBeenCalledWith(directTransport);
+	expect(typeof directTransport.id).toBe('string');
+	expect(directTransport.closed).toBe(false);
+	expect(directTransport.appData).toEqual({ foo: 'bar' });
 
-	const data1 = await transport1.dump();
+	const dump = await directTransport.dump();
 
-	expect(data1.id).toBe(transport1.id);
-	expect(data1.direct).toBe(true);
-	expect(data1.producerIds).toEqual([]);
-	expect(data1.consumerIds).toEqual([]);
-	expect(data1.dataProducerIds).toEqual([]);
-	expect(data1.dataConsumerIds).toEqual([]);
-	expect(data1.recvRtpHeaderExtensions).toBeDefined();
-	expect(typeof data1.rtpListener).toBe('object');
+	expect(dump.id).toBe(directTransport.id);
+	expect(dump.direct).toBe(true);
+	expect(dump.producerIds).toEqual([]);
+	expect(dump.consumerIds).toEqual([]);
+	expect(dump.dataProducerIds).toEqual([]);
+	expect(dump.dataConsumerIds).toEqual([]);
+	expect(dump.recvRtpHeaderExtensions).toBeDefined();
+	expect(typeof dump.rtpListener).toBe('object');
 
-	transport1.close();
-	expect(transport1.closed).toBe(true);
+	directTransport.close();
+	expect(directTransport.closed).toBe(true);
 }, 2000);
 
 test('router.createDirectTransport() with wrong arguments rejects with TypeError', async () =>
 {
 	// @ts-ignore
-	await expect(router.createDirectTransport({ maxMessageSize: 'foo' }))
+	await expect(ctx.router!.createDirectTransport({ maxMessageSize: 'foo' }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(router.createDirectTransport({ maxMessageSize: -2000 }))
+	await expect(ctx.router!.createDirectTransport({ maxMessageSize: -2000 }))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);
 
 test('directTransport.getStats() succeeds', async () =>
 {
-	const data = await transport.getStats();
+	const directTransport = await ctx.router!.createDirectTransport();
 
-	expect(Array.isArray(data)).toBe(true);
-	expect(data.length).toBe(1);
-	expect(data[0].type).toBe('direct-transport');
-	expect(data[0].transportId).toBe(transport.id);
-	expect(typeof data[0].timestamp).toBe('number');
-	expect(data[0].bytesReceived).toBe(0);
-	expect(data[0].recvBitrate).toBe(0);
-	expect(data[0].bytesSent).toBe(0);
-	expect(data[0].sendBitrate).toBe(0);
-	expect(data[0].rtpBytesReceived).toBe(0);
-	expect(data[0].rtpRecvBitrate).toBe(0);
-	expect(data[0].rtpBytesSent).toBe(0);
-	expect(data[0].rtpSendBitrate).toBe(0);
-	expect(data[0].rtxBytesReceived).toBe(0);
-	expect(data[0].rtxRecvBitrate).toBe(0);
-	expect(data[0].rtxBytesSent).toBe(0);
-	expect(data[0].rtxSendBitrate).toBe(0);
-	expect(data[0].probationBytesSent).toBe(0);
-	expect(data[0].probationSendBitrate).toBe(0);
+	const stats = await directTransport.getStats();
+
+	expect(Array.isArray(stats)).toBe(true);
+	expect(stats.length).toBe(1);
+	expect(stats[0].type).toBe('direct-transport');
+	expect(stats[0].transportId).toBe(directTransport.id);
+	expect(typeof stats[0].timestamp).toBe('number');
+	expect(stats[0].bytesReceived).toBe(0);
+	expect(stats[0].recvBitrate).toBe(0);
+	expect(stats[0].bytesSent).toBe(0);
+	expect(stats[0].sendBitrate).toBe(0);
+	expect(stats[0].rtpBytesReceived).toBe(0);
+	expect(stats[0].rtpRecvBitrate).toBe(0);
+	expect(stats[0].rtpBytesSent).toBe(0);
+	expect(stats[0].rtpSendBitrate).toBe(0);
+	expect(stats[0].rtxBytesReceived).toBe(0);
+	expect(stats[0].rtxRecvBitrate).toBe(0);
+	expect(stats[0].rtxBytesSent).toBe(0);
+	expect(stats[0].rtxSendBitrate).toBe(0);
+	expect(stats[0].probationBytesSent).toBe(0);
+	expect(stats[0].probationSendBitrate).toBe(0);
 }, 2000);
 
 test('directTransport.connect() succeeds', async () =>
 {
-	await expect(transport.connect())
+	const directTransport = await ctx.router!.createDirectTransport();
+
+	await expect(directTransport.connect())
 		.resolves
 		.toBeUndefined();
 }, 2000);
 
 test('dataProducer.send() succeeds', async () =>
 {
-	const transport2 = await router.createDirectTransport();
-	const dataProducer = await transport2.produceData(
+	const directTransport = await ctx.router!.createDirectTransport();
+	const dataProducer = await directTransport.produceData(
 		{
 			label    : 'foo',
 			protocol : 'bar',
 			appData  : { foo: 'bar' }
 		});
-	const dataConsumer = await transport2.consumeData(
+	const dataConsumer = await directTransport.consumeData(
 		{
 			dataProducerId : dataProducer.id
 		});
@@ -135,16 +138,16 @@ test('dataProducer.send() succeeds', async () =>
 	{
 		dataProducer.on('listenererror', (eventName, error) =>
 		{
-			reject(
-				new Error(`dataProducer 'listenererror' [eventName:${eventName}]: ${error}`)
-			);
+			reject(new Error(
+				`dataProducer 'listenererror' [eventName:${eventName}]: ${error}`
+			));
 		});
 
 		dataConsumer.on('listenererror', (eventName, error) =>
 		{
-			reject(
-				new Error(`dataConsumer 'listenererror' [eventName:${eventName}]: ${error}`)
-			);
+			reject(new Error(
+				`dataConsumer 'listenererror' [eventName:${eventName}]: ${error}`
+			));
 		});
 
 		sendNextMessage();
@@ -152,8 +155,7 @@ test('dataProducer.send() succeeds', async () =>
 		async function sendNextMessage(): Promise<void>
 		{
 			const id = ++numSentMessages;
-			let ppid;
-			let message;
+			let message: Buffer | string;
 
 			if (id === pauseSendingAtMessage)
 			{
@@ -183,7 +185,7 @@ test('dataProducer.send() succeeds', async () =>
 				message = Buffer.from(String(id));
 			}
 
-			dataProducer.send(message, ppid);
+			dataProducer.send(message);
 
 			const messageSize = Buffer.from(message).byteLength;
 
@@ -216,16 +218,16 @@ test('dataProducer.send() succeeds', async () =>
 			// PPID of WebRTC DataChannel string.
 			else if (id < numMessages / 2 && ppid !== 51)
 			{
-				reject(
-					new Error(`ppid in message with id ${id} should be 51 but it is ${ppid}`)
-				);
+				reject(new Error(
+					`ppid in message with id ${id} should be 51 but it is ${ppid}`
+				));
 			}
 			// PPID of WebRTC DataChannel binary.
 			else if (id > numMessages / 2 && ppid !== 53)
 			{
-				reject(
-					new Error(`ppid in message with id ${id} should be 53 but it is ${ppid}`)
-				);
+				reject(new Error(
+					`ppid in message with id ${id} should be 53 but it is ${ppid}`
+				));
 			}
 		});
 	});
@@ -263,14 +265,14 @@ test('dataProducer.send() succeeds', async () =>
 
 test('dataProducer.send() with subchannels succeeds', async () =>
 {
-	const transport2 = await router.createDirectTransport();
-	const dataProducer = await transport2.produceData();
-	const dataConsumer1 = await transport2.consumeData(
+	const directTransport = await ctx.router!.createDirectTransport();
+	const dataProducer = await directTransport.produceData();
+	const dataConsumer1 = await directTransport.consumeData(
 		{
 			dataProducerId : dataProducer.id,
 			subchannels    : [ 1, 11, 666 ]
 		});
-	const dataConsumer2 = await transport2.consumeData(
+	const dataConsumer2 = await directTransport.consumeData(
 		{
 			dataProducerId : dataProducer.id,
 			subchannels    : [ 2, 22, 666 ]
@@ -412,54 +414,56 @@ test('dataProducer.send() with subchannels succeeds', async () =>
 
 test('DirectTransport methods reject if closed', async () =>
 {
+	const directTransport = await ctx.router!.createDirectTransport();
 	const onObserverClose = jest.fn();
 
-	transport.observer.once('close', onObserverClose);
-	transport.close();
+	directTransport.observer.once('close', onObserverClose);
+	directTransport.close();
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(transport.closed).toBe(true);
+	expect(directTransport.closed).toBe(true);
 
-	await expect(transport.dump())
+	await expect(directTransport.dump())
 		.rejects
 		.toThrow(Error);
 
-	await expect(transport.getStats())
+	await expect(directTransport.getStats())
 		.rejects
 		.toThrow(Error);
 }, 2000);
 
 test('DirectTransport emits "routerclose" if Router is closed', async () =>
 {
-	// We need different Router and DirectTransport instances here.
-	const router2 = await worker.createRouter();
-	const transport2 = await router2.createDirectTransport();
+	const directTransport = await ctx.router!.createDirectTransport();
 	const onObserverClose = jest.fn();
 
-	transport2.observer.once('close', onObserverClose);
+	directTransport.observer.once('close', onObserverClose);
 
 	await new Promise<void>((resolve) =>
 	{
-		transport2.on('routerclose', resolve);
-		router2.close();
+		directTransport.on('routerclose', resolve);
+
+		ctx.router!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(transport2.closed).toBe(true);
+	expect(directTransport.closed).toBe(true);
 }, 2000);
 
 test('DirectTransport emits "routerclose" if Worker is closed', async () =>
 {
+	const directTransport = await ctx.router!.createDirectTransport();
 	const onObserverClose = jest.fn();
 
-	transport.observer.once('close', onObserverClose);
+	directTransport.observer.once('close', onObserverClose);
 
 	await new Promise<void>((resolve) =>
 	{
-		transport.on('routerclose', resolve);
-		worker.close();
+		directTransport.on('routerclose', resolve);
+
+		ctx.worker!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(transport.closed).toBe(true);
+	expect(directTransport.closed).toBe(true);
 }, 2000);
