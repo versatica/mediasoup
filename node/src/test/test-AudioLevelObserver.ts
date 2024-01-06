@@ -3,9 +3,9 @@ import * as utils from '../utils';
 
 type TestContext =
 {
+	mediaCodecs: mediasoup.types.RtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
 };
 
 const ctx: TestContext =
@@ -30,7 +30,9 @@ const ctx: TestContext =
 beforeEach(async () =>
 {
 	ctx.worker = await mediasoup.createWorker();
-	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
+	ctx.router = await ctx.worker.createRouter(
+		{ mediaCodecs: ctx.mediaCodecs }
+	);
 });
 
 afterEach(() =>

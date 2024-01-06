@@ -3,17 +3,17 @@ import * as utils from '../utils';
 
 type TestContext =
 {
-	dataProducerParameters1: mediasoup.types.DataProducerOptions;
-	dataProducerParameters2: mediasoup.types.DataProducerOptions;
+	dataProducerOptions1: mediasoup.types.DataProducerOptions;
+	dataProducerOptions2: mediasoup.types.DataProducerOptions;
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
-	transport1?: mediasoup.types.WebRtcTransport;
-	transport2?: mediasoup.types.WebRtcTransport;
+	webRtcTransport1?: mediasoup.types.WebRtcTransport;
+	webRtcTransport2?: mediasoup.types.WebRtcTransport;
 };
 
 const ctx: TestContext =
 {
-	dataProducerParameters1 : utils.deepFreeze(
+	dataProducerOptions1 : utils.deepFreeze(
 		{
 			sctpStreamParameters :
 			{
@@ -24,7 +24,7 @@ const ctx: TestContext =
 			appData  : { foo: 1, bar: '2' }
 		}
 	),
-	dataProducerParameters2 : utils.deepFreeze(
+	dataProducerOptions2 : utils.deepFreeze(
 		{
 			sctpStreamParameters :
 			{
@@ -43,12 +43,12 @@ beforeEach(async () =>
 {
 	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter();
-	ctx.transport1 = await ctx.router.createWebRtcTransport(
+	ctx.webRtcTransport1 = await ctx.router.createWebRtcTransport(
 		{
 			listenIps  : [ '127.0.0.1' ],
 			enableSctp : true
 		});
-	ctx.transport2 = await ctx.router.createWebRtcTransport(
+	ctx.webRtcTransport2 = await ctx.router.createWebRtcTransport(
 		{
 			listenIps  : [ '127.0.0.1' ],
 			enableSctp : true
@@ -60,14 +60,17 @@ afterEach(() =>
 	ctx.worker?.close();
 });
 
-test('transport1.produceData() succeeds', async () =>
+test('webRtcTransport1.produceData() succeeds', async () =>
 {
 	const onObserverNewDataProducer = jest.fn();
 
-	ctx.transport1!.observer.once('newdataproducer', onObserverNewDataProducer);
+	ctx.webRtcTransport1!.observer.once(
+		'newdataproducer', onObserverNewDataProducer
+	);
 
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer1);
@@ -93,24 +96,27 @@ test('transport1.produceData() succeeds', async () =>
 
 	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
-	await expect(ctx.transport1!.dump())
+	await expect(ctx.webRtcTransport1!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : ctx.transport1!.id,
+				id              : ctx.webRtcTransport1!.id,
 				dataProducerIds : [ dataProducer1.id ],
 				dataConsumerIds : []
 			});
 }, 2000);
 
-test('transport2.produceData() succeeds', async () =>
+test('webRtcTransport2.produceData() succeeds', async () =>
 {
 	const onObserverNewDataProducer = jest.fn();
 
-	ctx.transport2!.observer.once('newdataproducer', onObserverNewDataProducer);
+	ctx.webRtcTransport2!.observer.once(
+		'newdataproducer', onObserverNewDataProducer
+	);
 
-	const dataProducer2 =
-		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
+	const dataProducer2 = await ctx.webRtcTransport2!.produceData(
+		ctx.dataProducerOptions2
+	);
 
 	expect(onObserverNewDataProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataProducer).toHaveBeenCalledWith(dataProducer2);
@@ -136,24 +142,24 @@ test('transport2.produceData() succeeds', async () =>
 
 	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
-	await expect(ctx.transport2!.dump())
+	await expect(ctx.webRtcTransport2!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : ctx.transport2!.id,
+				id              : ctx.webRtcTransport2!.id,
 				dataProducerIds : [ dataProducer2.id ],
 				dataConsumerIds : []
 			});
 }, 2000);
 
-test('transport1.produceData() with wrong arguments rejects with TypeError', async () =>
+test('webRtcTransport1.produceData() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(ctx.transport1!.produceData({}))
+	await expect(ctx.webRtcTransport1!.produceData({}))
 		.rejects
 		.toThrow(TypeError);
 
 	// Missing or empty sctpStreamParameters.streamId.
-	await expect(ctx.transport1!.produceData(
+	await expect(ctx.webRtcTransport1!.produceData(
 		{
 			// @ts-ignore
 			sctpStreamParameters : { foo: 'foo' }
@@ -164,9 +170,9 @@ test('transport1.produceData() with wrong arguments rejects with TypeError', asy
 
 test('transport.produceData() with already used streamId rejects with Error', async () =>
 {
-	await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	await ctx.webRtcTransport1!.produceData(ctx.dataProducerOptions1);
 
-	await expect(ctx.transport1!.produceData(
+	await expect(ctx.webRtcTransport1!.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -179,7 +185,7 @@ test('transport.produceData() with already used streamId rejects with Error', as
 
 test('transport.produceData() with ordered and maxPacketLifeTime rejects with TypeError', async () =>
 {
-	await expect(ctx.transport1!.produceData(
+	await expect(ctx.webRtcTransport1!.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -194,8 +200,9 @@ test('transport.produceData() with ordered and maxPacketLifeTime rejects with Ty
 
 test('dataProducer.dump() succeeds', async () =>
 {
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	const dump1 = await dataProducer1.dump();
 
@@ -210,8 +217,9 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(dump1.protocol).toBe('bar');
 	expect(dump1.paused).toBe(false);
 
-	const dataProducer2 =
-		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
+	const dataProducer2 = await ctx.webRtcTransport2!.produceData(
+		ctx.dataProducerOptions2
+	);
 
 	const dump2 = await dataProducer2.dump();
 
@@ -229,8 +237,9 @@ test('dataProducer.dump() succeeds', async () =>
 
 test('dataProducer.getStats() succeeds', async () =>
 {
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	await expect(dataProducer1.getStats())
 		.resolves
@@ -245,8 +254,9 @@ test('dataProducer.getStats() succeeds', async () =>
 				}
 			]);
 
-	const dataProducer2 =
-		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
+	const dataProducer2 = await ctx.webRtcTransport2!.produceData(
+		ctx.dataProducerOptions2
+	);
 
 	await expect(dataProducer2.getStats())
 		.resolves
@@ -264,8 +274,9 @@ test('dataProducer.getStats() succeeds', async () =>
 
 test('dataProducer.pause() and resume() succeed', async () =>
 {
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	const onObserverPause = jest.fn();
 	const onObserverResume = jest.fn();
@@ -304,8 +315,9 @@ test('dataProducer.pause() and resume() succeed', async () =>
 
 test('producer.pause() and resume() emit events', async () =>
 {
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	const promises = [];
 	const events: string[] = [];
@@ -331,8 +343,9 @@ test('producer.pause() and resume() emit events', async () =>
 
 test('dataProducer.close() succeeds', async () =>
 {
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	const onObserverClose = jest.fn();
 
@@ -350,11 +363,11 @@ test('dataProducer.close() succeeds', async () =>
 				mapDataConsumerIdDataProducerId  : {}
 			});
 
-	await expect(ctx.transport1!.dump())
+	await expect(ctx.webRtcTransport1!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id              : ctx.transport1!.id,
+				id              : ctx.webRtcTransport1!.id,
 				dataProducerIds : [],
 				dataConsumerIds : []
 			});
@@ -362,8 +375,9 @@ test('dataProducer.close() succeeds', async () =>
 
 test('DataProducer methods reject if closed', async () =>
 {
-	const dataProducer1 =
-		await ctx.transport1!.produceData(ctx.dataProducerParameters1);
+	const dataProducer1 = await ctx.webRtcTransport1!.produceData(
+		ctx.dataProducerOptions1
+	);
 
 	dataProducer1.close();
 
@@ -378,8 +392,9 @@ test('DataProducer methods reject if closed', async () =>
 
 test('DataProducer emits "transportclose" if Transport is closed', async () =>
 {
-	const dataProducer2 =
-		await ctx.transport2!.produceData(ctx.dataProducerParameters2);
+	const dataProducer2 = await ctx.webRtcTransport2!.produceData(
+		ctx.dataProducerOptions2
+	);
 
 	const onObserverClose = jest.fn();
 
@@ -388,7 +403,8 @@ test('DataProducer emits "transportclose" if Transport is closed', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		dataProducer2.on('transportclose', resolve);
-		ctx.transport2!.close();
+
+		ctx.webRtcTransport2!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
