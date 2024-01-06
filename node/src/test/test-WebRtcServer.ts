@@ -3,50 +3,48 @@ import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
 import { InvalidStateError } from '../errors';
 
-type TestContext =
-{
+type TestContext = {
 	worker?: mediasoup.types.Worker;
 };
 
 const ctx: TestContext = {};
 
-beforeEach(async () =>
-{
+beforeEach(async () => {
 	ctx.worker = await mediasoup.createWorker();
 });
 
-afterEach(() =>
-{
+afterEach(() => {
 	ctx.worker?.close();
 });
 
-test('worker.createWebRtcServer() succeeds', async () =>
-{
+test('worker.createWebRtcServer() succeeds', async () => {
 	const onObserverNewWebRtcServer = jest.fn();
 
 	ctx.worker!.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
 
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
+	const port2 = await pickPort({
+		type: 'tcp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
 
-	const webRtcServer = await ctx.worker!.createWebRtcServer<{ foo?: number }>(
-		{
-			listenInfos :
-			[
-				{
-					protocol : 'udp',
-					ip       : '127.0.0.1',
-					port     : port1
-				},
-				{
-					protocol    : 'tcp',
-					ip          : '127.0.0.1',
-					announcedIp : '1.2.3.4',
-					port        : port2
-				}
-			],
-			appData : { foo: 123 }
-		});
+	const webRtcServer = await ctx.worker!.createWebRtcServer<{ foo?: number }>({
+		listenInfos: [
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				port: port1,
+			},
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedIp: '1.2.3.4',
+				port: port2,
+			},
+		],
+		appData: { foo: 123 },
+	});
 
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledWith(webRtcServer);
@@ -54,37 +52,24 @@ test('worker.createWebRtcServer() succeeds', async () =>
 	expect(webRtcServer.closed).toBe(false);
 	expect(webRtcServer.appData).toEqual({ foo: 123 });
 
-	await expect(ctx.worker!.dump())
-		.resolves
-		.toMatchObject(
-			{
-				pid                    : ctx.worker!.pid,
-				webRtcServerIds        : [ webRtcServer.id ],
-				routerIds              : [],
-				channelMessageHandlers :
-				{
-					channelRequestHandlers      : [ webRtcServer.id ],
-					channelNotificationHandlers : []
-				}
-			});
+	await expect(ctx.worker!.dump()).resolves.toMatchObject({
+		pid: ctx.worker!.pid,
+		webRtcServerIds: [webRtcServer.id],
+		routerIds: [],
+		channelMessageHandlers: {
+			channelRequestHandlers: [webRtcServer.id],
+			channelNotificationHandlers: [],
+		},
+	});
 
-	await expect(webRtcServer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id         : webRtcServer.id,
-				udpSockets :
-				[
-					{ ip: '127.0.0.1', port: port1 }
-				],
-				tcpServers :
-				[
-					{ ip: '127.0.0.1', port: port2 }
-				],
-				webRtcTransportIds        : [],
-				localIceUsernameFragments : [],
-				tupleHashes               : []
-			});
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: port1 }],
+		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
+		webRtcTransportIds: [],
+		localIceUsernameFragments: [],
+		tupleHashes: [],
+	});
 
 	// Private API.
 	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
@@ -97,28 +82,25 @@ test('worker.createWebRtcServer() succeeds', async () =>
 	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
-test('worker.createWebRtcServer() without specifying port succeeds', async () =>
-{
+test('worker.createWebRtcServer() without specifying port succeeds', async () => {
 	const onObserverNewWebRtcServer = jest.fn();
 
 	ctx.worker!.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
 
-	const webRtcServer = await ctx.worker!.createWebRtcServer(
-		{
-			listenInfos :
-			[
-				{
-					protocol : 'udp',
-					ip       : '127.0.0.1'
-				},
-				{
-					protocol    : 'tcp',
-					ip          : '127.0.0.1',
-					announcedIp : '1.2.3.4'
-				}
-			],
-			appData : { foo: 123 }
-		});
+	const webRtcServer = await ctx.worker!.createWebRtcServer({
+		listenInfos: [
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+			},
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedIp: '1.2.3.4',
+			},
+		],
+		appData: { foo: 123 },
+	});
 
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWebRtcServer).toHaveBeenCalledWith(webRtcServer);
@@ -126,37 +108,24 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 	expect(webRtcServer.closed).toBe(false);
 	expect(webRtcServer.appData).toEqual({ foo: 123 });
 
-	await expect(ctx.worker!.dump())
-		.resolves
-		.toMatchObject(
-			{
-				pid                    : ctx.worker!.pid,
-				webRtcServerIds        : [ webRtcServer.id ],
-				routerIds              : [],
-				channelMessageHandlers :
-				{
-					channelRequestHandlers      : [ webRtcServer.id ],
-					channelNotificationHandlers : []
-				}
-			});
+	await expect(ctx.worker!.dump()).resolves.toMatchObject({
+		pid: ctx.worker!.pid,
+		webRtcServerIds: [webRtcServer.id],
+		routerIds: [],
+		channelMessageHandlers: {
+			channelRequestHandlers: [webRtcServer.id],
+			channelNotificationHandlers: [],
+		},
+	});
 
-	await expect(webRtcServer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id         : webRtcServer.id,
-				udpSockets :
-				[
-					{ ip: '127.0.0.1', port: expect.any(Number) }
-				],
-				tcpServers :
-				[
-					{ ip: '127.0.0.1', port: expect.any(Number) }
-				],
-				webRtcTransportIds        : [],
-				localIceUsernameFragments : [],
-				tupleHashes               : []
-			});
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: expect.any(Number) }],
+		tcpServers: [{ ip: '127.0.0.1', port: expect.any(Number) }],
+		webRtcTransportIds: [],
+		localIceUsernameFragments: [],
+		tupleHashes: [],
+	});
 
 	// Private API.
 	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
@@ -169,127 +138,111 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
-test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () =>
-{
+test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () => {
 	// @ts-ignore
-	await expect(ctx.worker!.createWebRtcServer({}))
-		.rejects
-		.toThrow(TypeError);
+	await expect(ctx.worker!.createWebRtcServer({})).rejects.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }),
+	).rejects.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(ctx.worker!.createWebRtcServer({ listenInfos: [ 'NOT-AN-OBJECT' ] }))
-		.rejects
-		.toThrow(Error);
+	await expect(
+		ctx.worker!.createWebRtcServer({ listenInfos: ['NOT-AN-OBJECT'] }),
+	).rejects.toThrow(Error);
 
 	// Empty listenInfos so should fail.
-	await expect(ctx.worker!.createWebRtcServer({ listenInfos: [] }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		ctx.worker!.createWebRtcServer({ listenInfos: [] }),
+	).rejects.toThrow(TypeError);
 }, 2000);
 
-test('worker.createWebRtcServer() with unavailable listenInfos rejects with Error', async () =>
-{
+test('worker.createWebRtcServer() with unavailable listenInfos rejects with Error', async () => {
 	const worker2 = await mediasoup.createWorker();
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const port2 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 
 	// Using an unavailable listen IP.
-	await expect(ctx.worker!.createWebRtcServer(
-		{
-			listenInfos :
-			[
+	await expect(
+		ctx.worker!.createWebRtcServer({
+			listenInfos: [
 				{
-					protocol : 'udp',
-					ip       : '127.0.0.1',
-					port     : port1
+					protocol: 'udp',
+					ip: '127.0.0.1',
+					port: port1,
 				},
 				{
-					protocol : 'udp',
-					ip       : '1.2.3.4',
-					port     : port2
-				}
-			]
-		}))
-		.rejects
-		.toThrow(Error);
+					protocol: 'udp',
+					ip: '1.2.3.4',
+					port: port2,
+				},
+			],
+		}),
+	).rejects.toThrow(Error);
 
 	// Using the same UDP port in two listenInfos.
-	await expect(ctx.worker!.createWebRtcServer(
-		{
-			listenInfos :
-			[
+	await expect(
+		ctx.worker!.createWebRtcServer({
+			listenInfos: [
 				{
-					protocol : 'udp',
-					ip       : '127.0.0.1',
-					port     : port1
+					protocol: 'udp',
+					ip: '127.0.0.1',
+					port: port1,
 				},
 				{
-					protocol    : 'udp',
-					ip          : '127.0.0.1',
-					announcedIp : '1.2.3.4',
-					port        : port1
-				}
-			]
-		}))
-		.rejects
-		.toThrow(Error);
+					protocol: 'udp',
+					ip: '127.0.0.1',
+					announcedIp: '1.2.3.4',
+					port: port1,
+				},
+			],
+		}),
+	).rejects.toThrow(Error);
 
-	await ctx.worker!.createWebRtcServer(
-		{
-			listenInfos :
-			[
-				{
-					protocol : 'udp',
-					ip       : '127.0.0.1',
-					port     : port1
-				}
-			]
-		});
+	await ctx.worker!.createWebRtcServer({
+		listenInfos: [
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				port: port1,
+			},
+		],
+	});
 
 	// Using the same UDP port in a second Worker.
-	await expect(worker2.createWebRtcServer(
-		{
-			listenInfos :
-			[
+	await expect(
+		worker2.createWebRtcServer({
+			listenInfos: [
 				{
-					protocol : 'udp',
-					ip       : '127.0.0.1',
-					port     : port1
-				}
-			]
-		}))
-		.rejects
-		.toThrow(Error);
+					protocol: 'udp',
+					ip: '127.0.0.1',
+					port: port1,
+				},
+			],
+		}),
+	).rejects.toThrow(Error);
 
 	worker2.close();
 }, 2000);
 
-test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () =>
-{
+test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () => {
 	ctx.worker!.close();
 
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 
-	await expect(ctx.worker!.createWebRtcServer(
-		{
-			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', port } ]
-		}))
-		.rejects
-		.toThrow(InvalidStateError);
+	await expect(
+		ctx.worker!.createWebRtcServer({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', port }],
+		}),
+	).rejects.toThrow(InvalidStateError);
 }, 2000);
 
-test('webRtcServer.close() succeeds', async () =>
-{
+test('webRtcServer.close() succeeds', async () => {
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await ctx.worker!.createWebRtcServer(
-		{
-			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1', port } ]
-		});
+	const webRtcServer = await ctx.worker!.createWebRtcServer({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', port }],
+	});
 	const onObserverClose = jest.fn();
 
 	webRtcServer.observer.once('close', onObserverClose);
@@ -299,19 +252,16 @@ test('webRtcServer.close() succeeds', async () =>
 	expect(webRtcServer.closed).toBe(true);
 }, 2000);
 
-test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
-{
+test('WebRtcServer emits "workerclose" if Worker is closed', async () => {
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await ctx.worker!.createWebRtcServer(
-		{
-			listenInfos : [ { protocol: 'tcp', ip: '127.0.0.1', port } ]
-		});
+	const webRtcServer = await ctx.worker!.createWebRtcServer({
+		listenInfos: [{ protocol: 'tcp', ip: '127.0.0.1', port }],
+	});
 	const onObserverClose = jest.fn();
 
 	webRtcServer.observer.once('close', onObserverClose);
 
-	await new Promise<void>((resolve) =>
-	{
+	await new Promise<void>(resolve => {
 		webRtcServer.on('workerclose', resolve);
 		ctx.worker!.close();
 	});
@@ -320,24 +270,31 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () =>
 	expect(webRtcServer.closed).toBe(true);
 }, 2000);
 
-test('router.createWebRtcTransport() with webRtcServer succeeds and transport is closed', async () =>
-{
+test('router.createWebRtcTransport() with webRtcServer succeeds and transport is closed', async () => {
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await ctx.worker!.createWebRtcServer(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
-				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
-			]
-		});
+	const port2 = await pickPort({
+		type: 'tcp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+	const webRtcServer = await ctx.worker!.createWebRtcServer({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
+			{ protocol: 'tcp', ip: '127.0.0.1', port: port2 },
+		],
+	});
 
 	const onObserverWebRtcTransportHandled = jest.fn();
 	const onObserverWebRtcTransportUnhandled = jest.fn();
 
-	webRtcServer.observer.once('webrtctransporthandled', onObserverWebRtcTransportHandled);
-	webRtcServer.observer.once('webrtctransportunhandled', onObserverWebRtcTransportUnhandled);
+	webRtcServer.observer.once(
+		'webrtctransporthandled',
+		onObserverWebRtcTransportHandled,
+	);
+	webRtcServer.observer.once(
+		'webrtctransportunhandled',
+		onObserverWebRtcTransportUnhandled,
+	);
 
 	const router = await ctx.worker!.createRouter();
 
@@ -345,17 +302,16 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 	router.observer.once('newtransport', onObserverNewTransport);
 
-	const transport = await router.createWebRtcTransport(
-		{
-			webRtcServer,
-			// Let's disable UDP so resulting ICE candidates should only contain TCP.
-			enableUdp : false,
-			appData   : { foo: 'bar' }
-		});
+	const transport = await router.createWebRtcTransport({
+		webRtcServer,
+		// Let's disable UDP so resulting ICE candidates should only contain TCP.
+		enableUdp: false,
+		appData: { foo: 'bar' },
+	});
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject({ transportIds: [ transport.id ] });
+	await expect(router.dump()).resolves.toMatchObject({
+		transportIds: [transport.id],
+	});
 
 	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledTimes(1);
 	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledWith(transport);
@@ -380,26 +336,16 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
 	expect(router.transportsForTesting.size).toBe(1);
 
-	await expect(webRtcServer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id         : webRtcServer.id,
-				udpSockets :
-				[
-					{ ip: '127.0.0.1', port: port1 }
-				],
-				tcpServers :
-				[
-					{ ip: '127.0.0.1', port: port2 }
-				],
-				webRtcTransportIds        : [ transport.id ],
-				localIceUsernameFragments :
-				[
-					{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id }
-				],
-				tupleHashes : []
-			});
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: port1 }],
+		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
+		webRtcTransportIds: [transport.id],
+		localIceUsernameFragments: [
+			{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
+		],
+		tupleHashes: [],
+	});
 
 	transport.close();
 
@@ -409,57 +355,54 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
 	expect(router.transportsForTesting.size).toBe(0);
 
-	await expect(webRtcServer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id         : webRtcServer.id,
-				udpSockets :
-				[
-					{ ip: '127.0.0.1', port: port1 }
-				],
-				tcpServers :
-				[
-					{ ip: '127.0.0.1', port: port2 }
-				],
-				webRtcTransportIds        : [],
-				localIceUsernameFragments : [],
-				tupleHashes               : []
-			});
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: port1 }],
+		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
+		webRtcTransportIds: [],
+		localIceUsernameFragments: [],
+		tupleHashes: [],
+	});
 }, 2000);
 
-test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer is closed', async () =>
-{
+test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer is closed', async () => {
 	const port1 = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
-	const port2 = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcServer = await ctx.worker!.createWebRtcServer(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
-				{ protocol: 'tcp', ip: '127.0.0.1', port: port2 }
-			]
-		});
+	const port2 = await pickPort({
+		type: 'tcp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+	const webRtcServer = await ctx.worker!.createWebRtcServer({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
+			{ protocol: 'tcp', ip: '127.0.0.1', port: port2 },
+		],
+	});
 
 	const onObserverWebRtcTransportHandled = jest.fn();
 	const onObserverWebRtcTransportUnhandled = jest.fn();
 
-	webRtcServer.observer.once('webrtctransporthandled', onObserverWebRtcTransportHandled);
-	webRtcServer.observer.once('webrtctransportunhandled', onObserverWebRtcTransportUnhandled);
+	webRtcServer.observer.once(
+		'webrtctransporthandled',
+		onObserverWebRtcTransportHandled,
+	);
+	webRtcServer.observer.once(
+		'webrtctransportunhandled',
+		onObserverWebRtcTransportUnhandled,
+	);
 
 	const router = await ctx.worker!.createRouter();
-	const transport = await router.createWebRtcTransport(
-		{
-			webRtcServer,
-			appData : { foo: 'bar' }
-		});
+	const transport = await router.createWebRtcTransport({
+		webRtcServer,
+		appData: { foo: 'bar' },
+	});
 
 	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledTimes(1);
 	expect(onObserverWebRtcTransportHandled).toHaveBeenCalledWith(transport);
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject({ transportIds: [ transport.id ] });
+	await expect(router.dump()).resolves.toMatchObject({
+		transportIds: [transport.id],
+	});
 
 	expect(typeof transport.id).toBe('string');
 	expect(transport.closed).toBe(false);
@@ -485,52 +428,32 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
 	expect(router.transportsForTesting.size).toBe(1);
 
-	await expect(webRtcServer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id         : webRtcServer.id,
-				udpSockets :
-				[
-					{ ip: '127.0.0.1', port: port1 }
-				],
-				tcpServers :
-				[
-					{ ip: '127.0.0.1', port: port2 }
-				],
-				webRtcTransportIds        : [ transport.id ],
-				localIceUsernameFragments :
-				[
-					{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id }
-				],
-				tupleHashes : []
-			});
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: port1 }],
+		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
+		webRtcTransportIds: [transport.id],
+		localIceUsernameFragments: [
+			{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
+		],
+		tupleHashes: [],
+	});
 
 	// Let's restart ICE in the transport so it should add a new entry in
 	// localIceUsernameFragments in the WebRtcServer.
 	await transport.restartIce();
 
-	await expect(webRtcServer.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id         : webRtcServer.id,
-				udpSockets :
-				[
-					{ ip: '127.0.0.1', port: port1 }
-				],
-				tcpServers :
-				[
-					{ ip: '127.0.0.1', port: port2 }
-				],
-				webRtcTransportIds        : [ transport.id ],
-				localIceUsernameFragments :
-				[
-					{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
-					{ /* localIceUsernameFragment: yyy, */ webRtcTransportId: transport.id }
-				],
-				tupleHashes : []
-			});
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: port1 }],
+		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
+		webRtcTransportIds: [transport.id],
+		localIceUsernameFragments: [
+			{ /* localIceUsernameFragment: xxx, */ webRtcTransportId: transport.id },
+			{ /* localIceUsernameFragment: yyy, */ webRtcTransportId: transport.id },
+		],
+		tupleHashes: [],
+	});
 
 	const onObserverClose = jest.fn();
 
@@ -555,25 +478,18 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
 	expect(router.transportsForTesting.size).toBe(0);
 
-	await expect(ctx.worker!.dump())
-		.resolves
-		.toMatchObject(
-			{
-				pid                    : ctx.worker!.pid,
-				webRtcServerIds        : [],
-				routerIds              : [ router.id ],
-				channelMessageHandlers :
-				{
-					channelRequestHandlers      : [ router.id ],
-					channelNotificationHandlers : []
-				}
-			});
+	await expect(ctx.worker!.dump()).resolves.toMatchObject({
+		pid: ctx.worker!.pid,
+		webRtcServerIds: [],
+		routerIds: [router.id],
+		channelMessageHandlers: {
+			channelRequestHandlers: [router.id],
+			channelNotificationHandlers: [],
+		},
+	});
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				id           : router.id,
-				transportIds : []
-			});
+	await expect(router.dump()).resolves.toMatchObject({
+		id: router.id,
+		transportIds: [],
+	});
 }, 2000);

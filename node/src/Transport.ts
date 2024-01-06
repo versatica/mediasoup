@@ -12,40 +12,40 @@ import {
 	Producer,
 	ProducerOptions,
 	producerTypeFromFbs,
-	producerTypeToFbs
+	producerTypeToFbs,
 } from './Producer';
 import {
 	Consumer,
 	ConsumerOptions,
 	ConsumerType,
-	ConsumerLayers
+	ConsumerLayers,
 } from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
 	DataProducerType,
 	dataProducerTypeToFbs,
-	parseDataProducerDumpResponse
+	parseDataProducerDumpResponse,
 } from './DataProducer';
 import {
 	DataConsumer,
 	DataConsumerOptions,
 	DataConsumerType,
 	dataConsumerTypeToFbs,
-	parseDataConsumerDumpResponse
+	parseDataConsumerDumpResponse,
 } from './DataConsumer';
 import {
 	MediaKind,
 	RtpCapabilities,
 	RtpParameters,
 	serializeRtpEncodingParameters,
-	serializeRtpParameters
+	serializeRtpParameters,
 } from './RtpParameters';
 import {
 	parseSctpParametersDump,
 	serializeSctpStreamParameters,
 	SctpParameters,
-	SctpStreamParameters
+	SctpStreamParameters,
 } from './SctpParameters';
 import { AppData } from './types';
 import * as utils from './utils';
@@ -60,8 +60,7 @@ import * as FbsRouter from './fbs/router';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
 
-export type TransportListenInfo =
-{
+export type TransportListenInfo = {
 	/**
 	 * Network protocol.
 	 */
@@ -103,8 +102,7 @@ export type TransportListenInfo =
  * Use TransportListenInfo instead.
  * @deprecated
  */
-export type TransportListenIp =
-{
+export type TransportListenIp = {
 	/**
 	 * Listening IPv4 or IPv6.
 	 */
@@ -125,8 +123,7 @@ export type TransportProtocol = 'udp' | 'tcp';
 /**
  * UDP/TCP socket flags.
  */
-export type TransportSocketFlags =
-{
+export type TransportSocketFlags = {
 	/**
 	 * Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
 	 */
@@ -138,8 +135,7 @@ export type TransportSocketFlags =
 	udpReusePort?: boolean;
 };
 
-export type TransportTuple =
-{
+export type TransportTuple = {
 	localIp: string;
 	localPort: number;
 	remoteIp?: string;
@@ -155,8 +151,7 @@ export type TransportTraceEventType = 'probation' | 'bwe';
 /**
  * 'trace' event data.
  */
-export type TransportTraceEventData =
-{
+export type TransportTraceEventData = {
 	/**
 	 * Trace type.
 	 */
@@ -178,10 +173,14 @@ export type TransportTraceEventData =
 	info: any;
 };
 
-export type SctpState = 'new' | 'connecting' | 'connected' | 'failed' | 'closed';
+export type SctpState =
+	| 'new'
+	| 'connecting'
+	| 'connected'
+	| 'failed'
+	| 'closed';
 
-export type TransportEvents =
-{
+export type TransportEvents = {
 	routerclose: [];
 	listenserverclose: [];
 	trace: [TransportTraceEventData];
@@ -195,8 +194,7 @@ export type TransportEvents =
 	'@listenserverclose': [];
 };
 
-export type TransportObserverEvents =
-{
+export type TransportObserverEvents = {
 	close: [];
 	newproducer: [Producer];
 	newconsumer: [Consumer];
@@ -205,8 +203,7 @@ export type TransportObserverEvents =
 	trace: [TransportTraceEventData];
 };
 
-export type TransportConstructorOptions<TransportAppData> =
-{
+export type TransportConstructorOptions<TransportAppData> = {
 	internal: TransportInternal;
 	data: TransportData;
 	channel: Channel;
@@ -216,32 +213,29 @@ export type TransportConstructorOptions<TransportAppData> =
 	getDataProducerById: (dataProducerId: string) => DataProducer | undefined;
 };
 
-export type TransportInternal = RouterInternal &
-{
+export type TransportInternal = RouterInternal & {
 	transportId: string;
 };
 
-export type BaseTransportDump =
-{
-	id : string;
-	direct : boolean;
-	producerIds : string[];
-	consumerIds : string[];
-	mapSsrcConsumerId : { key: number; value: string }[];
-	mapRtxSsrcConsumerId : { key: number; value: string }[];
-	recvRtpHeaderExtensions : RecvRtpHeaderExtensions;
+export type BaseTransportDump = {
+	id: string;
+	direct: boolean;
+	producerIds: string[];
+	consumerIds: string[];
+	mapSsrcConsumerId: { key: number; value: string }[];
+	mapRtxSsrcConsumerId: { key: number; value: string }[];
+	recvRtpHeaderExtensions: RecvRtpHeaderExtensions;
 	rtpListener: RtpListenerDump;
 	maxMessageSize: number;
-	dataProducerIds : string[];
-	dataConsumerIds : string[];
-	sctpParameters? : SctpParameters;
-	sctpState? : SctpState;
+	dataProducerIds: string[];
+	dataConsumerIds: string[];
+	sctpParameters?: SctpParameters;
+	sctpState?: SctpState;
 	sctpListener?: SctpListenerDump;
-	traceEventTypes? : string[];
+	traceEventTypes?: string[];
 };
 
-export type BaseTransportStats =
-{
+export type BaseTransportStats = {
 	transportId: string;
 	timestamp: number;
 	sctpState?: SctpState;
@@ -265,40 +259,36 @@ export type BaseTransportStats =
 };
 
 type TransportData =
-  | WebRtcTransportData
-  | PlainTransportData
-  | PipeTransportData
-  | DirectTransportData;
+	| WebRtcTransportData
+	| PlainTransportData
+	| PipeTransportData
+	| DirectTransportData;
 
-type RtpListenerDump =
-{
-	ssrcTable : {key: number; value: string}[];
-	midTable : {key: number; value: string}[];
-	ridTable : {key: number; value: string}[];
+type RtpListenerDump = {
+	ssrcTable: { key: number; value: string }[];
+	midTable: { key: number; value: string }[];
+	ridTable: { key: number; value: string }[];
 };
 
-type SctpListenerDump =
-{
-	streamIdTable : {key: number; value: string}[];
+type SctpListenerDump = {
+	streamIdTable: { key: number; value: string }[];
 };
 
-type RecvRtpHeaderExtensions =
-{
-  mid?: number;
-  rid?: number;
-  rrid?: number;
-  absSendTime?: number;
-  transportWideCc01?: number;
+type RecvRtpHeaderExtensions = {
+	mid?: number;
+	rid?: number;
+	rrid?: number;
+	absSendTime?: number;
+	transportWideCc01?: number;
 };
 
 const logger = new Logger('Transport');
 
-export class Transport
-	<TransportAppData extends AppData = AppData,
+export class Transport<
+	TransportAppData extends AppData = AppData,
 	Events extends TransportEvents = TransportEvents,
-	ObserverEvents extends TransportObserverEvents = TransportObserverEvents>
-	extends EnhancedEventEmitter<Events>
-{
+	ObserverEvents extends TransportObserverEvents = TransportObserverEvents,
+> extends EnhancedEventEmitter<Events> {
 	// Internal data.
 	protected readonly internal: TransportInternal;
 
@@ -318,11 +308,14 @@ export class Transport
 	readonly #getRouterRtpCapabilities: () => RtpCapabilities;
 
 	// Method to retrieve a Producer.
-	protected readonly getProducerById: (producerId: string) => Producer | undefined;
+	protected readonly getProducerById: (
+		producerId: string,
+	) => Producer | undefined;
 
 	// Method to retrieve a DataProducer.
-	protected readonly getDataProducerById:
-		(dataProducerId: string) => DataProducer | undefined;
+	protected readonly getDataProducerById: (
+		dataProducerId: string,
+	) => DataProducer | undefined;
 
 	// Producers map.
 	readonly #producers: Map<string, Producer> = new Map();
@@ -355,18 +348,15 @@ export class Transport
 	 * @private
 	 * @interface
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			appData,
-			getRouterRtpCapabilities,
-			getProducerById,
-			getDataProducerById
-		}: TransportConstructorOptions<TransportAppData>
-	)
-	{
+	constructor({
+		internal,
+		data,
+		channel,
+		appData,
+		getRouterRtpCapabilities,
+		getProducerById,
+		getDataProducerById,
+	}: TransportConstructorOptions<TransportAppData>) {
 		super();
 
 		logger.debug('constructor()');
@@ -374,7 +364,7 @@ export class Transport
 		this.internal = internal;
 		this.#data = data;
 		this.channel = channel;
-		this.#appData = appData || {} as TransportAppData;
+		this.#appData = appData || ({} as TransportAppData);
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
@@ -383,40 +373,35 @@ export class Transport
 	/**
 	 * Transport id.
 	 */
-	get id(): string
-	{
+	get id(): string {
 		return this.internal.transportId;
 	}
 
 	/**
 	 * Whether the Transport is closed.
 	 */
-	get closed(): boolean
-	{
+	get closed(): boolean {
 		return this.#closed;
 	}
 
 	/**
 	 * App custom data.
 	 */
-	get appData(): TransportAppData
-	{
+	get appData(): TransportAppData {
 		return this.#appData;
 	}
 
 	/**
 	 * App custom data setter.
 	 */
-	set appData(appData: TransportAppData)
-	{
+	set appData(appData: TransportAppData) {
 		this.#appData = appData;
 	}
 
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ObserverEvents>
-	{
+	get observer(): EnhancedEventEmitter<ObserverEvents> {
 		return this.#observer;
 	}
 
@@ -424,18 +409,15 @@ export class Transport
 	 * @private
 	 * Just for testing purposes.
 	 */
-	get channelForTesting(): Channel
-	{
+	get channelForTesting(): Channel {
 		return this.channel;
 	}
 
 	/**
 	 * Close the Transport.
 	 */
-	close(): void
-	{
-		if (this.#closed)
-		{
+	close(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -448,19 +430,20 @@ export class Transport
 
 		/* Build Request. */
 		const requestOffset = new FbsRouter.CloseTransportRequestT(
-			this.internal.transportId
+			this.internal.transportId,
 		).pack(this.channel.bufferBuilder);
 
-		this.channel.request(
-			FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
-			FbsRequest.Body.Router_CloseTransportRequest,
-			requestOffset,
-			this.internal.routerId
-		).catch(() => {});
+		this.channel
+			.request(
+				FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
+				FbsRequest.Body.Router_CloseTransportRequest,
+				requestOffset,
+				this.internal.routerId,
+			)
+			.catch(() => {});
 
 		// Close every Producer.
-		for (const producer of this.#producers.values())
-		{
+		for (const producer of this.#producers.values()) {
 			producer.transportClosed();
 
 			// Must tell the Router.
@@ -469,15 +452,13 @@ export class Transport
 		this.#producers.clear();
 
 		// Close every Consumer.
-		for (const consumer of this.consumers.values())
-		{
+		for (const consumer of this.consumers.values()) {
 			consumer.transportClosed();
 		}
 		this.consumers.clear();
 
 		// Close every DataProducer.
-		for (const dataProducer of this.dataProducers.values())
-		{
+		for (const dataProducer of this.dataProducers.values()) {
 			dataProducer.transportClosed();
 
 			// Must tell the Router.
@@ -486,8 +467,7 @@ export class Transport
 		this.dataProducers.clear();
 
 		// Close every DataConsumer.
-		for (const dataConsumer of this.dataConsumers.values())
-		{
+		for (const dataConsumer of this.dataConsumers.values()) {
 			dataConsumer.transportClosed();
 		}
 		this.dataConsumers.clear();
@@ -504,10 +484,8 @@ export class Transport
 	 * @private
 	 * @virtual
 	 */
-	routerClosed(): void
-	{
-		if (this.#closed)
-		{
+	routerClosed(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -519,8 +497,7 @@ export class Transport
 		this.channel.removeAllListeners(this.internal.transportId);
 
 		// Close every Producer.
-		for (const producer of this.#producers.values())
-		{
+		for (const producer of this.#producers.values()) {
 			producer.transportClosed();
 
 			// NOTE: No need to tell the Router since it already knows (it has
@@ -529,15 +506,13 @@ export class Transport
 		this.#producers.clear();
 
 		// Close every Consumer.
-		for (const consumer of this.consumers.values())
-		{
+		for (const consumer of this.consumers.values()) {
 			consumer.transportClosed();
 		}
 		this.consumers.clear();
 
 		// Close every DataProducer.
-		for (const dataProducer of this.dataProducers.values())
-		{
+		for (const dataProducer of this.dataProducers.values()) {
 			dataProducer.transportClosed();
 
 			// NOTE: No need to tell the Router since it already knows (it has
@@ -546,8 +521,7 @@ export class Transport
 		this.dataProducers.clear();
 
 		// Close every DataConsumer.
-		for (const dataConsumer of this.dataConsumers.values())
-		{
+		for (const dataConsumer of this.dataConsumers.values()) {
 			dataConsumer.transportClosed();
 		}
 		this.dataConsumers.clear();
@@ -564,10 +538,8 @@ export class Transport
 	 *
 	 * @private
 	 */
-	listenServerClosed(): void
-	{
-		if (this.#closed)
-		{
+	listenServerClosed(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -579,8 +551,7 @@ export class Transport
 		this.channel.removeAllListeners(this.internal.transportId);
 
 		// Close every Producer.
-		for (const producer of this.#producers.values())
-		{
+		for (const producer of this.#producers.values()) {
 			producer.transportClosed();
 
 			// NOTE: No need to tell the Router since it already knows (it has
@@ -589,15 +560,13 @@ export class Transport
 		this.#producers.clear();
 
 		// Close every Consumer.
-		for (const consumer of this.consumers.values())
-		{
+		for (const consumer of this.consumers.values()) {
 			consumer.transportClosed();
 		}
 		this.consumers.clear();
 
 		// Close every DataProducer.
-		for (const dataProducer of this.dataProducers.values())
-		{
+		for (const dataProducer of this.dataProducers.values()) {
 			dataProducer.transportClosed();
 
 			// NOTE: No need to tell the Router since it already knows (it has
@@ -606,8 +575,7 @@ export class Transport
 		this.dataProducers.clear();
 
 		// Close every DataConsumer.
-		for (const dataConsumer of this.dataConsumers.values())
-		{
+		for (const dataConsumer of this.dataConsumers.values()) {
 			dataConsumer.transportClosed();
 		}
 		this.dataConsumers.clear();
@@ -628,8 +596,7 @@ export class Transport
 	 *
 	 * @abstract
 	 */
-	async dump(): Promise<any>
-	{
+	async dump(): Promise<any> {
 		// Should not happen.
 		throw new Error('method implemented in the subclass');
 	}
@@ -639,8 +606,7 @@ export class Transport
 	 *
 	 * @abstract
 	 */
-	async getStats(): Promise<any[]>
-	{
+	async getStats(): Promise<any[]> {
 		// Should not happen.
 		throw new Error('method implemented in the subclass');
 	}
@@ -651,8 +617,7 @@ export class Transport
 	 * @abstract
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async connect(params: any): Promise<void>
-	{
+	async connect(params: any): Promise<void> {
 		// Should not happen.
 		throw new Error('method implemented in the subclass');
 	}
@@ -660,88 +625,80 @@ export class Transport
 	/**
 	 * Set maximum incoming bitrate for receiving media.
 	 */
-	async setMaxIncomingBitrate(bitrate: number): Promise<void>
-	{
+	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
 
 		/* Build Request. */
-		const requestOffset = FbsTransport.SetMaxIncomingBitrateRequest
-			.createSetMaxIncomingBitrateRequest(this.channel.bufferBuilder, bitrate);
+		const requestOffset =
+			FbsTransport.SetMaxIncomingBitrateRequest.createSetMaxIncomingBitrateRequest(
+				this.channel.bufferBuilder,
+				bitrate,
+			);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
 			FbsRequest.Body.Transport_SetMaxIncomingBitrateRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 	}
 
 	/**
 	 * Set maximum outgoing bitrate for sending media.
 	 */
-	async setMaxOutgoingBitrate(bitrate: number): Promise<void>
-	{
+	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
 		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
-			bitrate
+			bitrate,
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
 			FbsRequest.Body.Transport_SetMaxOutgoingBitrateRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 	}
 
 	/**
 	 * Set minimum outgoing bitrate for sending media.
 	 */
-	async setMinOutgoingBitrate(bitrate: number): Promise<void>
-	{
+	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
 		logger.debug('setMinOutgoingBitrate() [bitrate:%s]', bitrate);
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
-			bitrate
+			bitrate,
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MIN_OUTGOING_BITRATE,
 			FbsRequest.Body.Transport_SetMinOutgoingBitrateRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 	}
 
 	/**
 	 * Create a Producer.
 	 */
-	async produce<ProducerAppData extends AppData = AppData>(
-		{
-			id = undefined,
-			kind,
-			rtpParameters,
-			paused = false,
-			keyFrameRequestDelay,
-			appData
-		}: ProducerOptions<ProducerAppData>
-	): Promise<Producer<ProducerAppData>>
-	{
+	async produce<ProducerAppData extends AppData = AppData>({
+		id = undefined,
+		kind,
+		rtpParameters,
+		paused = false,
+		keyFrameRequestDelay,
+		appData,
+	}: ProducerOptions<ProducerAppData>): Promise<Producer<ProducerAppData>> {
 		logger.debug('produce()');
 
-		if (id && this.#producers.has(id))
-		{
+		if (id && this.#producers.has(id)) {
 			throw new TypeError(`a Producer with same id "${id}" already exists`);
-		}
-		else if (![ 'audio', 'video' ].includes(kind))
-		{
+		} else if (!['audio', 'video'].includes(kind)) {
 			throw new TypeError(`invalid kind "${kind}"`);
-		}
-		else if (appData && typeof appData !== 'object')
-		{
+		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
 
@@ -756,29 +713,25 @@ export class Transport
 			!clonedRtpParameters.encodings ||
 			!Array.isArray(clonedRtpParameters.encodings) ||
 			clonedRtpParameters.encodings.length === 0
-		)
-		{
-			clonedRtpParameters.encodings = [ {} ];
+		) {
+			clonedRtpParameters.encodings = [{}];
 		}
 
 		// Don't do this in PipeTransports since there we must keep CNAME value in
 		// each Producer.
-		if (this.constructor.name !== 'PipeTransport')
-		{
+		if (this.constructor.name !== 'PipeTransport') {
 			// If CNAME is given and we don't have yet a CNAME for Producers in this
 			// Transport, take it.
 			if (
 				!this.#cnameForProducers &&
 				clonedRtpParameters.rtcp &&
 				clonedRtpParameters.rtcp.cname
-			)
-			{
+			) {
 				this.#cnameForProducers = clonedRtpParameters.rtcp.cname;
 			}
 			// Otherwise if we don't have yet a CNAME for Producers and the RTP
 			// parameters do not include CNAME, create a random one.
-			else if (!this.#cnameForProducers)
-			{
+			else if (!this.#cnameForProducers) {
 				this.#cnameForProducers = utils.generateUUIDv4().substr(0, 8);
 			}
 
@@ -791,28 +744,34 @@ export class Transport
 
 		// This may throw.
 		const rtpMapping = ortc.getProducerRtpParametersMapping(
-			clonedRtpParameters, routerRtpCapabilities);
+			clonedRtpParameters,
+			routerRtpCapabilities,
+		);
 
 		// This may throw.
 		const consumableRtpParameters = ortc.getConsumableRtpParameters(
-			kind, clonedRtpParameters, routerRtpCapabilities, rtpMapping);
+			kind,
+			clonedRtpParameters,
+			routerRtpCapabilities,
+			rtpMapping,
+		);
 
 		const producerId = id || utils.generateUUIDv4();
 		const requestOffset = createProduceRequest({
-			builder       : this.channel.bufferBuilder,
+			builder: this.channel.bufferBuilder,
 			producerId,
 			kind,
-			rtpParameters : clonedRtpParameters,
+			rtpParameters: clonedRtpParameters,
 			rtpMapping,
 			keyFrameRequestDelay,
-			paused
+			paused,
 		});
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_PRODUCE,
 			FbsRequest.Body.Transport_ProduceRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -822,30 +781,26 @@ export class Transport
 
 		const status = produceResponse.unpack();
 
-		const data =
-		{
+		const data = {
 			kind,
-			rtpParameters : clonedRtpParameters,
-			type          : producerTypeFromFbs(status.type),
-			consumableRtpParameters
+			rtpParameters: clonedRtpParameters,
+			type: producerTypeFromFbs(status.type),
+			consumableRtpParameters,
 		};
 
-		const producer = new Producer<ProducerAppData>(
-			{
-				internal :
-				{
-					...this.internal,
-					producerId
-				},
-				data,
-				channel : this.channel,
-				appData,
-				paused
-			});
+		const producer = new Producer<ProducerAppData>({
+			internal: {
+				...this.internal,
+				producerId,
+			},
+			data,
+			channel: this.channel,
+			appData,
+			paused,
+		});
 
 		this.#producers.set(producer.id, producer);
-		producer.on('@close', () =>
-		{
+		producer.on('@close', () => {
 			this.#producers.delete(producer.id);
 			this.emit('@producerclose', producer);
 		});
@@ -863,32 +818,24 @@ export class Transport
 	 *
 	 * @virtual
 	 */
-	async consume<ConsumerAppData extends AppData = AppData>(
-		{
-			producerId,
-			rtpCapabilities,
-			paused = false,
-			mid,
-			preferredLayers,
-			ignoreDtx = false,
-			enableRtx,
-			pipe = false,
-			appData
-		}: ConsumerOptions<ConsumerAppData>
-	): Promise<Consumer<ConsumerAppData>>
-	{
+	async consume<ConsumerAppData extends AppData = AppData>({
+		producerId,
+		rtpCapabilities,
+		paused = false,
+		mid,
+		preferredLayers,
+		ignoreDtx = false,
+		enableRtx,
+		pipe = false,
+		appData,
+	}: ConsumerOptions<ConsumerAppData>): Promise<Consumer<ConsumerAppData>> {
 		logger.debug('consume()');
 
-		if (!producerId || typeof producerId !== 'string')
-		{
+		if (!producerId || typeof producerId !== 'string') {
 			throw new TypeError('missing producerId');
-		}
-		else if (appData && typeof appData !== 'object')
-		{
+		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
-		}
-		else if (mid && (typeof mid !== 'string' || mid.length === 0))
-		{
+		} else if (mid && (typeof mid !== 'string' || mid.length === 0)) {
 			throw new TypeError('if given, mid must be non empty string');
 		}
 
@@ -900,43 +847,35 @@ export class Transport
 
 		const producer = this.getProducerById(producerId);
 
-		if (!producer)
-		{
+		if (!producer) {
 			throw Error(`Producer with id "${producerId}" not found`);
 		}
 
 		// If enableRtx is not given, set it to true if video and false if audio.
-		if (enableRtx === undefined)
-		{
+		if (enableRtx === undefined) {
 			enableRtx = producer.kind === 'video';
 		}
 
 		// This may throw.
-		const rtpParameters = ortc.getConsumerRtpParameters(
-			{
-				consumableRtpParameters : producer.consumableRtpParameters,
-				remoteRtpCapabilities   : clonedRtpCapabilities,
-				pipe,
-				enableRtx
-			}
-		);
+		const rtpParameters = ortc.getConsumerRtpParameters({
+			consumableRtpParameters: producer.consumableRtpParameters,
+			remoteRtpCapabilities: clonedRtpCapabilities,
+			pipe,
+			enableRtx,
+		});
 
 		// Set MID.
-		if (!pipe)
-		{
-			if (mid)
-			{
+		if (!pipe) {
+			if (mid) {
 				rtpParameters.mid = mid;
-			}
-			else
-			{
+			} else {
 				rtpParameters.mid = `${this.#nextMidForConsumers++}`;
 
 				// We use up to 8 bytes for MID (string).
-				if (this.#nextMidForConsumers === 100000000)
-				{
+				if (this.#nextMidForConsumers === 100000000) {
 					logger.error(
-						`consume() | reaching max MID value "${this.#nextMidForConsumers}"`);
+						`consume() | reaching max MID value "${this.#nextMidForConsumers}"`,
+					);
 
 					this.#nextMidForConsumers = 0;
 				}
@@ -945,21 +884,21 @@ export class Transport
 
 		const consumerId = utils.generateUUIDv4();
 		const requestOffset = createConsumeRequest({
-			builder : this.channel.bufferBuilder,
+			builder: this.channel.bufferBuilder,
 			producer,
 			consumerId,
 			rtpParameters,
 			paused,
 			preferredLayers,
 			ignoreDtx,
-			pipe
+			pipe,
 		});
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.Transport_ConsumeRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -969,36 +908,34 @@ export class Transport
 
 		const status = consumeResponse.unpack();
 
-		const data =
-		{
+		const data = {
 			producerId,
-			kind : producer.kind,
+			kind: producer.kind,
 			rtpParameters,
-			type : pipe ? 'pipe' : producer.type as ConsumerType
+			type: pipe ? 'pipe' : (producer.type as ConsumerType),
 		};
 
-		const consumer = new Consumer<ConsumerAppData>(
-			{
-				internal :
-				{
-					...this.internal,
-					consumerId
-				},
-				data,
-				channel         : this.channel,
-				appData,
-				paused          : status.paused,
-				producerPaused  : status.producerPaused,
-				score           : status.score ?? undefined,
-				preferredLayers : status.preferredLayers ?
-					{
-						spatialLayer  : status.preferredLayers.spatialLayer,
-						temporalLayer : status.preferredLayers.temporalLayer !== null ?
-							status.preferredLayers.temporalLayer :
-							undefined
-					} :
-					undefined
-			});
+		const consumer = new Consumer<ConsumerAppData>({
+			internal: {
+				...this.internal,
+				consumerId,
+			},
+			data,
+			channel: this.channel,
+			appData,
+			paused: status.paused,
+			producerPaused: status.producerPaused,
+			score: status.score ?? undefined,
+			preferredLayers: status.preferredLayers
+				? {
+						spatialLayer: status.preferredLayers.spatialLayer,
+						temporalLayer:
+							status.preferredLayers.temporalLayer !== null
+								? status.preferredLayers.temporalLayer
+								: undefined,
+					}
+				: undefined,
+		});
 
 		this.consumers.set(consumer.id, consumer);
 		consumer.on('@close', () => this.consumers.delete(consumer.id));
@@ -1013,51 +950,46 @@ export class Transport
 	/**
 	 * Create a DataProducer.
 	 */
-	async produceData<DataProducerAppData extends AppData = AppData>(
-		{
-			id = undefined,
-			sctpStreamParameters,
-			label = '',
-			protocol = '',
-			paused = false,
-			appData
-		}: DataProducerOptions<DataProducerAppData> = {}
-	): Promise<DataProducer<DataProducerAppData>>
-	{
+	async produceData<DataProducerAppData extends AppData = AppData>({
+		id = undefined,
+		sctpStreamParameters,
+		label = '',
+		protocol = '',
+		paused = false,
+		appData,
+	}: DataProducerOptions<DataProducerAppData> = {}): Promise<
+		DataProducer<DataProducerAppData>
+	> {
 		logger.debug('produceData()');
 
-		if (id && this.dataProducers.has(id))
-		{
+		if (id && this.dataProducers.has(id)) {
 			throw new TypeError(`a DataProducer with same id "${id}" already exists`);
-		}
-		else if (appData && typeof appData !== 'object')
-		{
+		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
 
 		let type: DataProducerType;
 
 		// Clone given SCTP stream parameters to not modify input data.
-		let clonedSctpStreamParameters
-			= utils.clone<SctpStreamParameters | undefined>(sctpStreamParameters);
+		let clonedSctpStreamParameters = utils.clone<
+			SctpStreamParameters | undefined
+		>(sctpStreamParameters);
 
 		// If this is not a DirectTransport, sctpStreamParameters are required.
-		if (this.constructor.name !== 'DirectTransport')
-		{
+		if (this.constructor.name !== 'DirectTransport') {
 			type = 'sctp';
 
 			// This may throw.
 			ortc.validateSctpStreamParameters(clonedSctpStreamParameters!);
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be given.
-		else
-		{
+		else {
 			type = 'direct';
 
-			if (sctpStreamParameters)
-			{
+			if (sctpStreamParameters) {
 				logger.warn(
-					'produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport');
+					'produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport',
+				);
 
 				clonedSctpStreamParameters = undefined;
 			}
@@ -1065,20 +997,20 @@ export class Transport
 
 		const dataProducerId = id || utils.generateUUIDv4();
 		const requestOffset = createProduceDataRequest({
-			builder              : this.channel.bufferBuilder,
+			builder: this.channel.bufferBuilder,
 			dataProducerId,
 			type,
-			sctpStreamParameters : clonedSctpStreamParameters,
+			sctpStreamParameters: clonedSctpStreamParameters,
 			label,
 			protocol,
-			paused
+			paused,
 		});
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_PRODUCE_DATA,
 			FbsRequest.Body.Transport_ProduceDataRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -1088,28 +1020,24 @@ export class Transport
 
 		const dump = parseDataProducerDumpResponse(produceDataResponse);
 
-		const dataProducer = new DataProducer<DataProducerAppData>(
-			{
-				internal :
-				{
-					...this.internal,
-					dataProducerId
-				},
-				data :
-				{
-					type                 : dump.type,
-					sctpStreamParameters : dump.sctpStreamParameters,
-					label                : dump.label,
-					protocol             : dump.protocol
-				},
-				channel : this.channel,
-				paused,
-				appData
-			});
+		const dataProducer = new DataProducer<DataProducerAppData>({
+			internal: {
+				...this.internal,
+				dataProducerId,
+			},
+			data: {
+				type: dump.type,
+				sctpStreamParameters: dump.sctpStreamParameters,
+				label: dump.label,
+				protocol: dump.protocol,
+			},
+			channel: this.channel,
+			paused,
+			appData,
+		});
 
 		this.dataProducers.set(dataProducer.id, dataProducer);
-		dataProducer.on('@close', () =>
-		{
+		dataProducer.on('@close', () => {
 			this.dataProducers.delete(dataProducer.id);
 			this.emit('@dataproducerclose', dataProducer);
 		});
@@ -1125,33 +1053,28 @@ export class Transport
 	/**
 	 * Create a DataConsumer.
 	 */
-	async consumeData<DataConsumerAppData extends AppData = AppData>(
-		{
-			dataProducerId,
-			ordered,
-			maxPacketLifeTime,
-			maxRetransmits,
-			paused = false,
-			subchannels,
-			appData
-		}: DataConsumerOptions<DataConsumerAppData>
-	): Promise<DataConsumer<DataConsumerAppData>>
-	{
+	async consumeData<DataConsumerAppData extends AppData = AppData>({
+		dataProducerId,
+		ordered,
+		maxPacketLifeTime,
+		maxRetransmits,
+		paused = false,
+		subchannels,
+		appData,
+	}: DataConsumerOptions<DataConsumerAppData>): Promise<
+		DataConsumer<DataConsumerAppData>
+	> {
 		logger.debug('consumeData()');
 
-		if (!dataProducerId || typeof dataProducerId !== 'string')
-		{
+		if (!dataProducerId || typeof dataProducerId !== 'string') {
 			throw new TypeError('missing dataProducerId');
-		}
-		else if (appData && typeof appData !== 'object')
-		{
+		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
 
 		const dataProducer = this.getDataProducerById(dataProducerId);
 
-		if (!dataProducer)
-		{
+		if (!dataProducer) {
 			throw Error(`DataProducer with id "${dataProducerId}" not found`);
 		}
 
@@ -1161,27 +1084,24 @@ export class Transport
 
 		// If this is not a DirectTransport, use sctpStreamParameters from the
 		// DataProducer (if type 'sctp') unless they are given in method parameters.
-		if (this.constructor.name !== 'DirectTransport')
-		{
+		if (this.constructor.name !== 'DirectTransport') {
 			type = 'sctp';
 
-			sctpStreamParameters = utils.clone<SctpStreamParameters | undefined>(
-				dataProducer.sctpStreamParameters
-			) ?? {} as SctpStreamParameters;
+			sctpStreamParameters =
+				utils.clone<SctpStreamParameters | undefined>(
+					dataProducer.sctpStreamParameters,
+				) ?? ({} as SctpStreamParameters);
 
 			// Override if given.
-			if (ordered !== undefined)
-			{
+			if (ordered !== undefined) {
 				sctpStreamParameters.ordered = ordered;
 			}
 
-			if (maxPacketLifeTime !== undefined)
-			{
+			if (maxPacketLifeTime !== undefined) {
 				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
 			}
 
-			if (maxRetransmits !== undefined)
-			{
+			if (maxRetransmits !== undefined) {
 				sctpStreamParameters.maxRetransmits = maxRetransmits;
 			}
 
@@ -1192,18 +1112,17 @@ export class Transport
 			sctpStreamParameters.streamId = sctpStreamId;
 		}
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
-		else
-		{
+		else {
 			type = 'direct';
 
 			if (
 				ordered !== undefined ||
 				maxPacketLifeTime !== undefined ||
 				maxRetransmits !== undefined
-			)
-			{
+			) {
 				logger.warn(
-					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport');
+					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport',
+				);
 			}
 		}
 
@@ -1211,7 +1130,7 @@ export class Transport
 		const dataConsumerId = utils.generateUUIDv4();
 
 		const requestOffset = createConsumeDataRequest({
-			builder : this.channel.bufferBuilder,
+			builder: this.channel.bufferBuilder,
 			dataConsumerId,
 			dataProducerId,
 			type,
@@ -1219,14 +1138,14 @@ export class Transport
 			label,
 			protocol,
 			paused,
-			subchannels
+			subchannels,
 		});
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
 			FbsRequest.Body.Transport_ConsumeDataRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -1236,45 +1155,38 @@ export class Transport
 
 		const dump = parseDataConsumerDumpResponse(consumeDataResponse);
 
-		const dataConsumer = new DataConsumer<DataConsumerAppData>(
-			{
-				internal :
-				{
-					...this.internal,
-					dataConsumerId
-				},
-				data :
-				{
-					dataProducerId             : dump.dataProducerId,
-					type                       : dump.type,
-					sctpStreamParameters       : dump.sctpStreamParameters,
-					label                      : dump.label,
-					protocol                   : dump.protocol,
-					bufferedAmountLowThreshold : dump.bufferedAmountLowThreshold
-				},
-				channel            : this.channel,
-				paused             : dump.paused,
-				subchannels        : dump.subchannels,
-				dataProducerPaused : dump.dataProducerPaused,
-				appData
-			});
+		const dataConsumer = new DataConsumer<DataConsumerAppData>({
+			internal: {
+				...this.internal,
+				dataConsumerId,
+			},
+			data: {
+				dataProducerId: dump.dataProducerId,
+				type: dump.type,
+				sctpStreamParameters: dump.sctpStreamParameters,
+				label: dump.label,
+				protocol: dump.protocol,
+				bufferedAmountLowThreshold: dump.bufferedAmountLowThreshold,
+			},
+			channel: this.channel,
+			paused: dump.paused,
+			subchannels: dump.subchannels,
+			dataProducerPaused: dump.dataProducerPaused,
+			appData,
+		});
 
 		this.dataConsumers.set(dataConsumer.id, dataConsumer);
-		dataConsumer.on('@close', () =>
-		{
+		dataConsumer.on('@close', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds)
-			{
+			if (this.#sctpStreamIds) {
 				this.#sctpStreamIds[sctpStreamId] = 0;
 			}
 		});
-		dataConsumer.on('@dataproducerclose', () =>
-		{
+		dataConsumer.on('@dataproducerclose', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds)
-			{
+			if (this.#sctpStreamIds) {
 				this.#sctpStreamIds[sctpStreamId] = 0;
 			}
 		});
@@ -1288,72 +1200,60 @@ export class Transport
 	/**
 	 * Enable 'trace' event.
 	 */
-	async enableTraceEvent(types: TransportTraceEventType[] = []): Promise<void>
-	{
+	async enableTraceEvent(types: TransportTraceEventType[] = []): Promise<void> {
 		logger.debug('enableTraceEvent()');
 
-		if (!Array.isArray(types))
-		{
+		if (!Array.isArray(types)) {
 			throw new TypeError('types must be an array');
-		}
-		else if (types.find((type) => typeof type !== 'string'))
-		{
+		} else if (types.find(type => typeof type !== 'string')) {
 			throw new TypeError('every type must be a string');
 		}
 
 		// Convert event types.
 		const fbsEventTypes: FbsTransport.TraceEventType[] = [];
 
-		for (const eventType of types)
-		{
-			try
-			{
+		for (const eventType of types) {
+			try {
 				fbsEventTypes.push(transportTraceEventTypeToFbs(eventType));
-			}
-			catch (error)
-			{
+			} catch (error) {
 				// Ignore invalid event types.
 			}
 		}
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
-			fbsEventTypes
+			fbsEventTypes,
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.Transport_EnableTraceEventRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 	}
 
-	private getNextSctpStreamId(): number
-	{
+	private getNextSctpStreamId(): number {
 		if (
 			!this.#data.sctpParameters ||
 			typeof this.#data.sctpParameters.MIS !== 'number'
-		)
-		{
+		) {
 			throw new TypeError('missing sctpParameters.MIS');
 		}
 
 		const numStreams = this.#data.sctpParameters.MIS;
 
-		if (!this.#sctpStreamIds)
-		{
+		if (!this.#sctpStreamIds) {
 			this.#sctpStreamIds = Buffer.alloc(numStreams, 0);
 		}
 
 		let sctpStreamId;
 
-		for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx)
-		{
-			sctpStreamId = (this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
+		for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx) {
+			sctpStreamId =
+				(this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
 
-			if (!this.#sctpStreamIds[sctpStreamId])
-			{
+			if (!this.#sctpStreamIds[sctpStreamId]) {
 				this.#nextSctpStreamId = sctpStreamId + 1;
 
 				return sctpStreamId;
@@ -1364,143 +1264,129 @@ export class Transport
 	}
 }
 
-function transportTraceEventTypeToFbs(eventType: TransportTraceEventType)
-	: FbsTransport.TraceEventType
-{
-	switch (eventType)
-	{
-		case 'probation':
-		{
+function transportTraceEventTypeToFbs(
+	eventType: TransportTraceEventType,
+): FbsTransport.TraceEventType {
+	switch (eventType) {
+		case 'probation': {
 			return FbsTransport.TraceEventType.PROBATION;
 		}
 
-		case 'bwe':
-		{
+		case 'bwe': {
 			return FbsTransport.TraceEventType.BWE;
 		}
 
-		default:
-		{
+		default: {
 			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
 		}
 	}
 }
 
-function transportTraceEventTypeFromFbs(eventType: FbsTransport.TraceEventType)
-	: TransportTraceEventType
-{
-	switch (eventType)
-	{
-		case FbsTransport.TraceEventType.PROBATION:
-		{
+function transportTraceEventTypeFromFbs(
+	eventType: FbsTransport.TraceEventType,
+): TransportTraceEventType {
+	switch (eventType) {
+		case FbsTransport.TraceEventType.PROBATION: {
 			return 'probation';
 		}
 
-		case FbsTransport.TraceEventType.BWE:
-		{
+		case FbsTransport.TraceEventType.BWE: {
 			return 'bwe';
 		}
-
 	}
 }
 
-export function parseSctpState(fbsSctpState: FbsSctpState): SctpState
-{
-	switch (fbsSctpState)
-	{
-		case FbsSctpState.NEW:
-		{
+export function parseSctpState(fbsSctpState: FbsSctpState): SctpState {
+	switch (fbsSctpState) {
+		case FbsSctpState.NEW: {
 			return 'new';
 		}
 
-		case FbsSctpState.CONNECTING:
-		{
+		case FbsSctpState.CONNECTING: {
 			return 'connecting';
 		}
 
-		case FbsSctpState.CONNECTED:
-		{
+		case FbsSctpState.CONNECTED: {
 			return 'connected';
 		}
 
-		case FbsSctpState.FAILED:
-		{
+		case FbsSctpState.FAILED: {
 			return 'failed';
 		}
 
-		case FbsSctpState.CLOSED:
-		{
+		case FbsSctpState.CLOSED: {
 			return 'closed';
 		}
 
-		default:
-		{
+		default: {
 			throw new TypeError(`invalid SctpState: ${fbsSctpState}`);
 		}
 	}
 }
 
-export function parseProtocol(protocol: FbsTransport.Protocol): TransportProtocol
-{
-	switch (protocol)
-	{
-		case FbsTransport.Protocol.UDP:
-		{
+export function parseProtocol(
+	protocol: FbsTransport.Protocol,
+): TransportProtocol {
+	switch (protocol) {
+		case FbsTransport.Protocol.UDP: {
 			return 'udp';
 		}
 
-		case FbsTransport.Protocol.TCP:
-		{
+		case FbsTransport.Protocol.TCP: {
 			return 'tcp';
 		}
 	}
 }
 
-export function serializeProtocol(protocol: TransportProtocol): FbsTransport.Protocol
-{
-	switch (protocol)
-	{
-		case 'udp':
-		{
+export function serializeProtocol(
+	protocol: TransportProtocol,
+): FbsTransport.Protocol {
+	switch (protocol) {
+		case 'udp': {
 			return FbsTransport.Protocol.UDP;
 		}
 
-		case 'tcp':
-		{
+		case 'tcp': {
 			return FbsTransport.Protocol.TCP;
 		}
 	}
 }
 
-export function parseTuple(binary: FbsTransport.Tuple): TransportTuple
-{
+export function parseTuple(binary: FbsTransport.Tuple): TransportTuple {
 	return {
-		localIp    : binary.localIp()!,
-		localPort  : binary.localPort(),
-		remoteIp   : binary.remoteIp() ?? undefined,
-		remotePort : binary.remotePort(),
-		protocol   : parseProtocol(binary.protocol())
+		localIp: binary.localIp()!,
+		localPort: binary.localPort(),
+		remoteIp: binary.remoteIp() ?? undefined,
+		remotePort: binary.remotePort(),
+		protocol: parseProtocol(binary.protocol()),
 	};
 }
 
 export function parseBaseTransportDump(
-	binary: FbsTransport.Dump
-): BaseTransportDump
-{
+	binary: FbsTransport.Dump,
+): BaseTransportDump {
 	// Retrieve producerIds.
 	const producerIds = utils.parseVector<string>(binary, 'producerIds');
 	// Retrieve consumerIds.
 	const consumerIds = utils.parseVector<string>(binary, 'consumerIds');
 	// Retrieve map SSRC consumerId.
-	const mapSsrcConsumerId = utils.parseUint32StringVector(binary, 'mapSsrcConsumerId');
+	const mapSsrcConsumerId = utils.parseUint32StringVector(
+		binary,
+		'mapSsrcConsumerId',
+	);
 	// Retrieve map RTX SSRC consumerId.
-	const mapRtxSsrcConsumerId = utils.parseUint32StringVector(binary, 'mapRtxSsrcConsumerId');
+	const mapRtxSsrcConsumerId = utils.parseUint32StringVector(
+		binary,
+		'mapRtxSsrcConsumerId',
+	);
 	// Retrieve dataProducerIds.
 	const dataProducerIds = utils.parseVector<string>(binary, 'dataProducerIds');
 	// Retrieve dataConsumerIds.
 	const dataConsumerIds = utils.parseVector<string>(binary, 'dataConsumerIds');
 	// Retrieve recvRtpHeaderExtesions.
-	const recvRtpHeaderExtensions = parseRecvRtpHeaderExtensions(binary.recvRtpHeaderExtensions()!);
+	const recvRtpHeaderExtensions = parseRecvRtpHeaderExtensions(
+		binary.recvRtpHeaderExtensions()!,
+	);
 	// Retrieve RtpListener.
 	const rtpListener = parseRtpListenerDump(binary.rtpListener()!);
 
@@ -1508,142 +1394,149 @@ export function parseBaseTransportDump(
 	const fbsSctpParameters = binary.sctpParameters();
 	let sctpParameters: SctpParameters | undefined;
 
-	if (fbsSctpParameters)
-	{
+	if (fbsSctpParameters) {
 		sctpParameters = parseSctpParametersDump(fbsSctpParameters);
 	}
 
 	// Retrieve sctpState.
-	const sctpState = binary.sctpState() === null ? undefined : parseSctpState(binary.sctpState()!);
+	const sctpState =
+		binary.sctpState() === null
+			? undefined
+			: parseSctpState(binary.sctpState()!);
 
 	// Retrive sctpListener.
-	const sctpListener = binary.sctpListener() ?
-		parseSctpListenerDump(binary.sctpListener()!) :
-		undefined;
+	const sctpListener = binary.sctpListener()
+		? parseSctpListenerDump(binary.sctpListener()!)
+		: undefined;
 
 	// Retrieve traceEventTypes.
-	const traceEventTypes = utils.parseVector<TransportTraceEventType>(binary, 'traceEventTypes', transportTraceEventTypeFromFbs);
+	const traceEventTypes = utils.parseVector<TransportTraceEventType>(
+		binary,
+		'traceEventTypes',
+		transportTraceEventTypeFromFbs,
+	);
 
 	return {
-		id                      : binary.id()!,
-		direct                  : binary.direct(),
-		producerIds             : producerIds,
-		consumerIds             : consumerIds,
-		mapSsrcConsumerId       : mapSsrcConsumerId,
-		mapRtxSsrcConsumerId    : mapRtxSsrcConsumerId,
-		dataProducerIds         : dataProducerIds,
-		dataConsumerIds         : dataConsumerIds,
-		recvRtpHeaderExtensions : recvRtpHeaderExtensions,
-		rtpListener             : rtpListener,
-		maxMessageSize          : binary.maxMessageSize(),
-		sctpParameters          : sctpParameters,
-		sctpState               : sctpState,
-		sctpListener            : sctpListener,
-		traceEventTypes         : traceEventTypes
+		id: binary.id()!,
+		direct: binary.direct(),
+		producerIds: producerIds,
+		consumerIds: consumerIds,
+		mapSsrcConsumerId: mapSsrcConsumerId,
+		mapRtxSsrcConsumerId: mapRtxSsrcConsumerId,
+		dataProducerIds: dataProducerIds,
+		dataConsumerIds: dataConsumerIds,
+		recvRtpHeaderExtensions: recvRtpHeaderExtensions,
+		rtpListener: rtpListener,
+		maxMessageSize: binary.maxMessageSize(),
+		sctpParameters: sctpParameters,
+		sctpState: sctpState,
+		sctpListener: sctpListener,
+		traceEventTypes: traceEventTypes,
 	};
 }
 
 export function parseBaseTransportStats(
-	binary: FbsTransport.Stats
-): BaseTransportStats
-{
-	const sctpState = binary.sctpState() === null ? undefined : parseSctpState(binary.sctpState()!);
+	binary: FbsTransport.Stats,
+): BaseTransportStats {
+	const sctpState =
+		binary.sctpState() === null
+			? undefined
+			: parseSctpState(binary.sctpState()!);
 
 	return {
-		transportId              : binary.transportId()!,
-		timestamp                : Number(binary.timestamp()),
+		transportId: binary.transportId()!,
+		timestamp: Number(binary.timestamp()),
 		sctpState,
-		bytesReceived            : Number(binary.bytesReceived()),
-		recvBitrate              : Number(binary.recvBitrate()),
-		bytesSent                : Number(binary.bytesSent()),
-		sendBitrate              : Number(binary.sendBitrate()),
-		rtpBytesReceived         : Number(binary.rtpBytesReceived()),
-		rtpRecvBitrate           : Number(binary.rtpRecvBitrate()),
-		rtpBytesSent             : Number(binary.rtpBytesSent()),
-		rtpSendBitrate           : Number(binary.rtpSendBitrate()),
-		rtxBytesReceived         : Number(binary.rtxBytesReceived()),
-		rtxRecvBitrate           : Number(binary.rtxRecvBitrate()),
-		rtxBytesSent             : Number(binary.rtxBytesSent()),
-		rtxSendBitrate           : Number(binary.rtxSendBitrate()),
-		probationBytesSent       : Number(binary.probationBytesSent()),
-		probationSendBitrate     : Number(binary.probationSendBitrate()),
-		availableOutgoingBitrate : Number(binary.availableOutgoingBitrate()),
-		availableIncomingBitrate : Number(binary.availableIncomingBitrate()),
-		maxIncomingBitrate       : binary.maxIncomingBitrate() ?
-			Number(binary.maxIncomingBitrate()) :
-			undefined
+		bytesReceived: Number(binary.bytesReceived()),
+		recvBitrate: Number(binary.recvBitrate()),
+		bytesSent: Number(binary.bytesSent()),
+		sendBitrate: Number(binary.sendBitrate()),
+		rtpBytesReceived: Number(binary.rtpBytesReceived()),
+		rtpRecvBitrate: Number(binary.rtpRecvBitrate()),
+		rtpBytesSent: Number(binary.rtpBytesSent()),
+		rtpSendBitrate: Number(binary.rtpSendBitrate()),
+		rtxBytesReceived: Number(binary.rtxBytesReceived()),
+		rtxRecvBitrate: Number(binary.rtxRecvBitrate()),
+		rtxBytesSent: Number(binary.rtxBytesSent()),
+		rtxSendBitrate: Number(binary.rtxSendBitrate()),
+		probationBytesSent: Number(binary.probationBytesSent()),
+		probationSendBitrate: Number(binary.probationSendBitrate()),
+		availableOutgoingBitrate: Number(binary.availableOutgoingBitrate()),
+		availableIncomingBitrate: Number(binary.availableIncomingBitrate()),
+		maxIncomingBitrate: binary.maxIncomingBitrate()
+			? Number(binary.maxIncomingBitrate())
+			: undefined,
 	};
 }
 
 export function parseTransportTraceEventData(
-	trace: FbsTransport.TraceNotification
-): TransportTraceEventData
-{
-	switch (trace.type())
-	{
-		case FbsTransport.TraceEventType.BWE:
-		{
+	trace: FbsTransport.TraceNotification,
+): TransportTraceEventData {
+	switch (trace.type()) {
+		case FbsTransport.TraceEventType.BWE: {
 			const info = new FbsTransport.BweTraceInfo();
 
 			trace.info(info);
 
 			return {
-				type      : 'bwe',
-				timestamp : Number(trace.timestamp()),
-				direction : trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-				info      : parseBweTraceInfo(info!)
+				type: 'bwe',
+				timestamp: Number(trace.timestamp()),
+				direction:
+					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
+				info: parseBweTraceInfo(info!),
 			};
 		}
 
-		case FbsTransport.TraceEventType.PROBATION:
-		{
+		case FbsTransport.TraceEventType.PROBATION: {
 			return {
-				type      : 'probation',
-				timestamp : Number(trace.timestamp()),
-				direction : trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-				info      : {}
+				type: 'probation',
+				timestamp: Number(trace.timestamp()),
+				direction:
+					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
+				info: {},
 			};
 		}
 	}
 }
 
-function parseRecvRtpHeaderExtensions(binary: FbsTransport.RecvRtpHeaderExtensions)
-	: RecvRtpHeaderExtensions
-{
+function parseRecvRtpHeaderExtensions(
+	binary: FbsTransport.RecvRtpHeaderExtensions,
+): RecvRtpHeaderExtensions {
 	return {
-		mid               : binary.mid() !== null ? binary.mid()! : undefined,
-		rid               : binary.rid() !== null ? binary.rid()! : undefined,
-		rrid              : binary.rrid() !== null ? binary.rrid()! : undefined,
-		absSendTime       : binary.absSendTime() !== null ? binary.absSendTime()! : undefined,
-		transportWideCc01 : binary.transportWideCc01() !== null ?
-			binary.transportWideCc01()! :
-			undefined
+		mid: binary.mid() !== null ? binary.mid()! : undefined,
+		rid: binary.rid() !== null ? binary.rid()! : undefined,
+		rrid: binary.rrid() !== null ? binary.rrid()! : undefined,
+		absSendTime:
+			binary.absSendTime() !== null ? binary.absSendTime()! : undefined,
+		transportWideCc01:
+			binary.transportWideCc01() !== null
+				? binary.transportWideCc01()!
+				: undefined,
 	};
 }
 
-function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo):
-{
-  desiredBitrate:number;
-  effectiveDesiredBitrate:number;
-  minBitrate:number;
-  maxBitrate:number;
-  startBitrate:number;
-  maxPaddingBitrate:number;
-  availableBitrate:number;
-  bweType:'transport-cc' | 'remb';
-}
-{
+function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {
+	desiredBitrate: number;
+	effectiveDesiredBitrate: number;
+	minBitrate: number;
+	maxBitrate: number;
+	startBitrate: number;
+	maxPaddingBitrate: number;
+	availableBitrate: number;
+	bweType: 'transport-cc' | 'remb';
+} {
 	return {
-		desiredBitrate          : binary.desiredBitrate(),
-		effectiveDesiredBitrate : binary.effectiveDesiredBitrate(),
-		minBitrate              : binary.minBitrate(),
-		maxBitrate              : binary.maxBitrate(),
-		startBitrate            : binary.startBitrate(),
-		maxPaddingBitrate       : binary.maxPaddingBitrate(),
-		availableBitrate        : binary.availableBitrate(),
-		bweType                 : binary.bweType() === FbsTransport.BweType.TRANSPORT_CC ?
-			'transport-cc' :
-			'remb'
+		desiredBitrate: binary.desiredBitrate(),
+		effectiveDesiredBitrate: binary.effectiveDesiredBitrate(),
+		minBitrate: binary.minBitrate(),
+		maxBitrate: binary.maxBitrate(),
+		startBitrate: binary.startBitrate(),
+		maxPaddingBitrate: binary.maxPaddingBitrate(),
+		availableBitrate: binary.availableBitrate(),
+		bweType:
+			binary.bweType() === FbsTransport.BweType.TRANSPORT_CC
+				? 'transport-cc'
+				: 'remb',
 	};
 }
 
@@ -1655,8 +1548,8 @@ function createConsumeRequest({
 	paused,
 	preferredLayers,
 	ignoreDtx,
-	pipe
-} : {
+	pipe,
+}: {
 	builder: flatbuffers.Builder;
 	producer: Producer;
 	consumerId: string;
@@ -1665,34 +1558,36 @@ function createConsumeRequest({
 	preferredLayers?: ConsumerLayers;
 	ignoreDtx?: boolean;
 	pipe: boolean;
-}): number
-{
+}): number {
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
 	const consumerIdOffset = builder.createString(consumerId);
 	const producerIdOffset = builder.createString(producer.id);
 	let consumableRtpEncodingsOffset: number | undefined;
 	let preferredLayersOffset: number | undefined;
 
-	if (producer.consumableRtpParameters.encodings)
-	{
+	if (producer.consumableRtpParameters.encodings) {
 		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
-			builder, producer.consumableRtpParameters.encodings
+			builder,
+			producer.consumableRtpParameters.encodings,
 		);
 	}
 
-	if (preferredLayers)
-	{
+	if (preferredLayers) {
 		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
-		FbsConsumer.ConsumerLayers.addSpatialLayer(builder, preferredLayers.spatialLayer);
+		FbsConsumer.ConsumerLayers.addSpatialLayer(
+			builder,
+			preferredLayers.spatialLayer,
+		);
 
-		if (preferredLayers.temporalLayer !== undefined)
-		{
+		if (preferredLayers.temporalLayer !== undefined) {
 			FbsConsumer.ConsumerLayers.addTemporalLayer(
-				builder, preferredLayers.temporalLayer
+				builder,
+				preferredLayers.temporalLayer,
 			);
 		}
 
-		preferredLayersOffset = FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
+		preferredLayersOffset =
+			FbsConsumer.ConsumerLayers.endConsumerLayers(builder);
 	}
 
 	const ConsumeRequest = FbsTransport.ConsumeRequest;
@@ -1702,22 +1597,25 @@ function createConsumeRequest({
 	ConsumeRequest.addConsumerId(builder, consumerIdOffset);
 	ConsumeRequest.addProducerId(builder, producerIdOffset);
 	ConsumeRequest.addKind(
-		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+		builder,
+		producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO,
+	);
 	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
 	ConsumeRequest.addType(
 		builder,
-		pipe ? FbsRtpParameters.Type.PIPE : producerTypeToFbs(producer.type)
+		pipe ? FbsRtpParameters.Type.PIPE : producerTypeToFbs(producer.type),
 	);
 
-	if (consumableRtpEncodingsOffset)
-	{
-		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+	if (consumableRtpEncodingsOffset) {
+		ConsumeRequest.addConsumableRtpEncodings(
+			builder,
+			consumableRtpEncodingsOffset,
+		);
 	}
 
 	ConsumeRequest.addPaused(builder, paused);
 
-	if (preferredLayersOffset)
-	{
+	if (preferredLayersOffset) {
 		ConsumeRequest.addPreferredLayers(builder, preferredLayersOffset);
 	}
 
@@ -1733,17 +1631,16 @@ function createProduceRequest({
 	rtpParameters,
 	rtpMapping,
 	keyFrameRequestDelay,
-	paused
-} : {
-	builder : flatbuffers.Builder;
+	paused,
+}: {
+	builder: flatbuffers.Builder;
 	producerId: string;
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
 	rtpMapping: ortc.RtpMapping;
 	keyFrameRequestDelay?: number;
 	paused: boolean;
-}): number
-{
+}): number {
 	const producerIdOffset = builder.createString(producerId);
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
 	const rtpMappingOffset = ortc.serializeRtpMapping(builder, rtpMapping);
@@ -1751,10 +1648,15 @@ function createProduceRequest({
 	FbsTransport.ProduceRequest.startProduceRequest(builder);
 	FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);
 	FbsTransport.ProduceRequest.addKind(
-		builder, kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+		builder,
+		kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO,
+	);
 	FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
 	FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
-	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(builder, keyFrameRequestDelay ?? 0);
+	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(
+		builder,
+		keyFrameRequestDelay ?? 0,
+	);
 	FbsTransport.ProduceRequest.addPaused(builder, paused);
 
 	return FbsTransport.ProduceRequest.endProduceRequest(builder);
@@ -1767,38 +1669,40 @@ function createProduceDataRequest({
 	sctpStreamParameters,
 	label,
 	protocol,
-	paused
-} : {
-	builder : flatbuffers.Builder;
+	paused,
+}: {
+	builder: flatbuffers.Builder;
 	dataProducerId: string;
 	type: DataProducerType;
 	sctpStreamParameters?: SctpStreamParameters;
 	label: string;
 	protocol: string;
 	paused: boolean;
-}): number
-{
+}): number {
 	const dataProducerIdOffset = builder.createString(dataProducerId);
 	const labelOffset = builder.createString(label);
 	const protocolOffset = builder.createString(protocol);
 
 	let sctpStreamParametersOffset = 0;
 
-	if (sctpStreamParameters)
-	{
+	if (sctpStreamParameters) {
 		sctpStreamParametersOffset = serializeSctpStreamParameters(
-			builder, sctpStreamParameters
+			builder,
+			sctpStreamParameters,
 		);
 	}
 
 	FbsTransport.ProduceDataRequest.startProduceDataRequest(builder);
-	FbsTransport.ProduceDataRequest.addDataProducerId(builder, dataProducerIdOffset);
+	FbsTransport.ProduceDataRequest.addDataProducerId(
+		builder,
+		dataProducerIdOffset,
+	);
 	FbsTransport.ProduceDataRequest.addType(builder, dataProducerTypeToFbs(type));
 
-	if (sctpStreamParametersOffset)
-	{
+	if (sctpStreamParametersOffset) {
 		FbsTransport.ProduceDataRequest.addSctpStreamParameters(
-			builder, sctpStreamParametersOffset
+			builder,
+			sctpStreamParametersOffset,
 		);
 	}
 
@@ -1818,8 +1722,8 @@ function createConsumeDataRequest({
 	label,
 	protocol,
 	paused,
-	subchannels = []
-} : {
+	subchannels = [],
+}: {
 	builder: flatbuffers.Builder;
 	dataConsumerId: string;
 	dataProducerId: string;
@@ -1829,8 +1733,7 @@ function createConsumeDataRequest({
 	protocol: string;
 	paused: boolean;
 	subchannels?: number[];
-}): number
-{
+}): number {
 	const dataConsumerIdOffset = builder.createString(dataConsumerId);
 	const dataProducerIdOffset = builder.createString(dataProducerId);
 	const labelOffset = builder.createString(label);
@@ -1838,26 +1741,34 @@ function createConsumeDataRequest({
 
 	let sctpStreamParametersOffset = 0;
 
-	if (sctpStreamParameters)
-	{
+	if (sctpStreamParameters) {
 		sctpStreamParametersOffset = serializeSctpStreamParameters(
-			builder, sctpStreamParameters
+			builder,
+			sctpStreamParameters,
 		);
 	}
 
-	const subchannelsOffset = FbsTransport.ConsumeDataRequest.createSubchannelsVector(
-		builder, subchannels
-	);
+	const subchannelsOffset =
+		FbsTransport.ConsumeDataRequest.createSubchannelsVector(
+			builder,
+			subchannels,
+		);
 
 	FbsTransport.ConsumeDataRequest.startConsumeDataRequest(builder);
-	FbsTransport.ConsumeDataRequest.addDataConsumerId(builder, dataConsumerIdOffset);
-	FbsTransport.ConsumeDataRequest.addDataProducerId(builder, dataProducerIdOffset);
+	FbsTransport.ConsumeDataRequest.addDataConsumerId(
+		builder,
+		dataConsumerIdOffset,
+	);
+	FbsTransport.ConsumeDataRequest.addDataProducerId(
+		builder,
+		dataProducerIdOffset,
+	);
 	FbsTransport.ConsumeDataRequest.addType(builder, dataConsumerTypeToFbs(type));
 
-	if (sctpStreamParametersOffset)
-	{
+	if (sctpStreamParametersOffset) {
 		FbsTransport.ConsumeDataRequest.addSctpStreamParameters(
-			builder, sctpStreamParametersOffset
+			builder,
+			sctpStreamParametersOffset,
 		);
 	}
 
@@ -1869,8 +1780,9 @@ function createConsumeDataRequest({
 	return FbsTransport.ConsumeDataRequest.endConsumeDataRequest(builder);
 }
 
-function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
-{
+function parseRtpListenerDump(
+	binary: FbsTransport.RtpListener,
+): RtpListenerDump {
 	// Retrieve ssrcTable.
 	const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
 	// Retrieve midTable.
@@ -1881,12 +1793,13 @@ function parseRtpListenerDump(binary: FbsTransport.RtpListener): RtpListenerDump
 	return {
 		ssrcTable,
 		midTable,
-		ridTable
+		ridTable,
 	};
 }
 
-function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerDump
-{
+function parseSctpListenerDump(
+	binary: FbsTransport.SctpListener,
+): SctpListenerDump {
 	// Retrieve streamIdTable.
 	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
 

@@ -1,0 +1,12 @@
+/art/*
+/coverage/*
+/doc/*
+/rust/*
+/worker/deps/*
+/worker/fbs/*
+/worker/fuzzer/*
+/worker/include/*
+/worker/pip_invoke/*
+/worker/src/*
+/worker/subprojects/*
+/worker/test/*
