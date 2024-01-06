@@ -20,7 +20,11 @@ import {
 } from './Transport';
 import { Consumer, ConsumerType } from './Consumer';
 import { Producer } from './Producer';
-import { RtpParameters, serializeRtpEncodingParameters, serializeRtpParameters } from './RtpParameters';
+import {
+	RtpParameters,
+	serializeRtpEncodingParameters,
+	serializeRtpParameters
+} from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import {
 	parseSrtpParameters,

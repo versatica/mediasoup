@@ -296,23 +296,21 @@ test('dataConsumer.pause() and resume() succeed', async () =>
 	dataConsumer.observer.on('pause', onObserverPause);
 	dataConsumer.observer.on('resume', onObserverResume);
 
-	let data;
-
 	await dataConsumer.pause();
 
 	expect(dataConsumer.paused).toBe(true);
 
-	data = await dataConsumer.dump();
+	const dump1 = await dataConsumer.dump();
 
-	expect(data.paused).toBe(true);
+	expect(dump1.paused).toBe(true);
 
 	await dataConsumer.resume();
 
 	expect(dataConsumer.paused).toBe(false);
 
-	data = await dataConsumer.dump();
+	const dump2 = await dataConsumer.dump();
 
-	expect(data.paused).toBe(false);
+	expect(dump2.paused).toBe(false);
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.

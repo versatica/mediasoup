@@ -2,7 +2,10 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
-import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
+import {
+	SctpStreamParameters,
+	parseSctpStreamParameters
+} from './SctpParameters';
 import { AppData } from './types';
 import * as FbsTransport from './fbs/transport';
 import * as FbsNotification from './fbs/notification';
