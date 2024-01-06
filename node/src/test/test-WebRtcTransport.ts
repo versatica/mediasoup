@@ -4,7 +4,11 @@ import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import * as utils from '../utils';
 import { serializeProtocol, TransportTuple } from '../Transport';
-import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import {
+	Notification,
+	Body as NotificationBody,
+	Event
+} from '../fbs/notification';
 import * as FbsTransport from '../fbs/transport';
 import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
 

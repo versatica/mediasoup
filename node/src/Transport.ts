@@ -8,8 +8,18 @@ import { WebRtcTransportData } from './WebRtcTransport';
 import { PlainTransportData } from './PlainTransport';
 import { PipeTransportData } from './PipeTransport';
 import { DirectTransportData } from './DirectTransport';
-import { Producer, ProducerOptions, producerTypeFromFbs, producerTypeToFbs } from './Producer';
-import { Consumer, ConsumerLayers, ConsumerOptions, ConsumerType } from './Consumer';
+import {
+	Producer,
+	ProducerOptions,
+	producerTypeFromFbs,
+	producerTypeToFbs
+} from './Producer';
+import {
+	Consumer,
+	ConsumerOptions,
+	ConsumerType,
+	ConsumerLayers
+} from './Consumer';
 import {
 	DataProducer,
 	DataProducerOptions,
@@ -1880,7 +1890,5 @@ function parseSctpListenerDump(binary: FbsTransport.SctpListener): SctpListenerD
 	// Retrieve streamIdTable.
 	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
 
-	return {
-		streamIdTable
-	};
+	return { streamIdTable };
 }

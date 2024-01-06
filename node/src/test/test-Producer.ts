@@ -2,7 +2,11 @@ import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
-import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import {
+	Notification,
+	Body as NotificationBody,
+	Event
+} from '../fbs/notification';
 import * as FbsProducer from '../fbs/producer';
 
 type TestContext =
