@@ -30,8 +30,6 @@
 # Ignore all fuzzer generated test inputs.
 /worker/fuzzer/new-corpus/*
 !/worker/fuzzer/new-corpus/.placeholder
-# lcov is just for local usage.
-/worker/lcov
 
 ## Others.
 /coverage

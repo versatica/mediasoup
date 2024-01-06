@@ -10,6 +10,7 @@
 /worker/fbs
 /worker/fuzzer
 /worker/include
+/worker/prebuild
 /worker/pip_invoke
 /worker/src
 /worker/subprojects
