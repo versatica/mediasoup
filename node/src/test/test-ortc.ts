@@ -279,8 +279,9 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		}
 	};
 
-	const rtpMapping =
-		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities);
+	const rtpMapping = ortc.getProducerRtpParametersMapping(
+		rtpParameters, routerRtpCapabilities
+	);
 
 	expect(rtpMapping.codecs).toEqual(
 		[
@@ -299,7 +300,8 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(typeof rtpMapping.encodings[2].mappedSsrc).toBe('number');
 
 	const consumableRtpParameters = ortc.getConsumableRtpParameters(
-		'video', rtpParameters, routerRtpCapabilities, rtpMapping);
+		'video', rtpParameters, routerRtpCapabilities, rtpMapping
+	);
 
 	expect(consumableRtpParameters.codecs[0].mimeType).toBe('video/H264');
 	expect(consumableRtpParameters.codecs[0].payloadType).toBe(101);
@@ -510,8 +512,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		{
 			consumableRtpParameters,
 			enableRtx : false
-		}
-	);
+		});
 
 	expect(pipeConsumerRtpParameters.codecs.length).toEqual(1);
 	expect(pipeConsumerRtpParameters.codecs[0]).toEqual(
@@ -603,8 +604,7 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 		}
 	};
 
-	expect(
-		() => ortc.getProducerRtpParametersMapping(
-			rtpParameters, routerRtpCapabilities
-		)).toThrow(UnsupportedError);
+	expect(() => ortc.getProducerRtpParametersMapping(
+		rtpParameters, routerRtpCapabilities
+	)).toThrow(UnsupportedError);
 });

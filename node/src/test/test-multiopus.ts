@@ -5,11 +5,11 @@ import * as utils from '../utils';
 type TestContext =
 {
 	mediaCodecs: mediasoup.types.RtpCodecCapability[];
-	audioProducerParameters: mediasoup.types.ProducerOptions;
+	audioProducerOptions: mediasoup.types.ProducerOptions;
 	consumerDeviceCapabilities: mediasoup.types.RtpCapabilities;
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
-	transport?: mediasoup.types.WebRtcTransport;
+	webRtcTransport?: mediasoup.types.WebRtcTransport;
 };
 
 const ctx: TestContext =
@@ -32,7 +32,7 @@ const ctx: TestContext =
 			}
 		]
 	),
-	audioProducerParameters : utils.deepFreeze(
+	audioProducerOptions : utils.deepFreeze(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -114,11 +114,12 @@ const ctx: TestContext =
 beforeEach(async () =>
 {
 	ctx.worker = await mediasoup.createWorker();
-	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
-	ctx.transport = await ctx.router.createWebRtcTransport(
-		{
-			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1' } ]
-		});
+	ctx.router = await ctx.worker.createRouter(
+		{ mediaCodecs: ctx.mediaCodecs }
+	);
+	ctx.webRtcTransport = await ctx.router.createWebRtcTransport(
+		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
+	);
 });
 
 afterEach(() =>
@@ -128,7 +129,9 @@ afterEach(() =>
 
 test('produce() and consume() succeed', async () =>
 {
-	const audioProducer = await ctx.transport!.produce(ctx.audioProducerParameters);
+	const audioProducer = await ctx.webRtcTransport!.produce(
+		ctx.audioProducerOptions
+	);
 
 	expect(audioProducer.rtpParameters.codecs).toEqual([
 		{
@@ -154,10 +157,11 @@ test('produce() and consume() succeed', async () =>
 		})
 	).toBe(true);
 
-	const audioConsumer = await ctx.transport!.consume({
-		producerId      : audioProducer.id,
-		rtpCapabilities : ctx.consumerDeviceCapabilities
-	});
+	const audioConsumer = await ctx.webRtcTransport!.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : ctx.consumerDeviceCapabilities
+		});
 
 	expect(audioConsumer.rtpParameters.codecs).toEqual([
 		{
@@ -179,60 +183,64 @@ test('produce() and consume() succeed', async () =>
 
 test('fails to produce wrong parameters', async () =>
 {
-	await expect(ctx.transport!.produce({
-		kind          : 'audio',
-		rtpParameters :
-			{
-				mid    : 'AUDIO',
-				codecs :
-					[
-						{
-							mimeType    : 'audio/multiopus',
-							payloadType : 0,
-							clockRate   : 48000,
-							channels    : 6,
-							parameters  :
-								{
-									'channel_mapping' : '0,4,1,2,3,5',
-									'num_streams'     : 2,
-									'coupled_streams' : 2
-								}
-						}
-					]
-			}
-	}))
+	await expect(ctx.webRtcTransport!.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+				{
+					mid    : 'AUDIO',
+					codecs :
+						[
+							{
+								mimeType    : 'audio/multiopus',
+								payloadType : 0,
+								clockRate   : 48000,
+								channels    : 6,
+								parameters  :
+									{
+										'channel_mapping' : '0,4,1,2,3,5',
+										'num_streams'     : 2,
+										'coupled_streams' : 2
+									}
+							}
+						]
+				}
+		}))
 		.rejects
 		.toThrow(UnsupportedError);
 
-	await expect(ctx.transport!.produce({
-		kind          : 'audio',
-		rtpParameters :
-			{
-				mid    : 'AUDIO',
-				codecs :
-					[
-						{
-							mimeType    : 'audio/multiopus',
-							payloadType : 0,
-							clockRate   : 48000,
-							channels    : 6,
-							parameters  :
-								{
-									'channel_mapping' : '0,4,1,2,3,5',
-									'num_streams'     : 4,
-									'coupled_streams' : 1
-								}
-						}
-					]
-			}
-	}))
+	await expect(ctx.webRtcTransport!.produce(
+		{
+			kind          : 'audio',
+			rtpParameters :
+				{
+					mid    : 'AUDIO',
+					codecs :
+						[
+							{
+								mimeType    : 'audio/multiopus',
+								payloadType : 0,
+								clockRate   : 48000,
+								channels    : 6,
+								parameters  :
+									{
+										'channel_mapping' : '0,4,1,2,3,5',
+										'num_streams'     : 4,
+										'coupled_streams' : 1
+									}
+							}
+						]
+				}
+		}))
 		.rejects
 		.toThrow(UnsupportedError);
 }, 2000);
 
 test('fails to consume wrong channels', async () =>
 {
-	const audioProducer = await ctx.transport!.produce(ctx.audioProducerParameters);
+	const audioProducer = await ctx.webRtcTransport!.produce(
+		ctx.audioProducerOptions
+	);
 
 	const localConsumerDeviceCapabilities: mediasoup.types.RtpCapabilities = {
 		codecs :
@@ -253,16 +261,18 @@ test('fails to consume wrong channels', async () =>
 			]
 	};
 
-	expect(!ctx.router!.canConsume({
-		producerId      : audioProducer.id,
-		rtpCapabilities : localConsumerDeviceCapabilities
-	}))
+	expect(!ctx.router!.canConsume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : localConsumerDeviceCapabilities
+		}))
 		.toBe(true);
 
-	await expect(ctx.transport!.consume({
-		producerId      : audioProducer.id,
-		rtpCapabilities : localConsumerDeviceCapabilities
-	}))
+	await expect(ctx.webRtcTransport!.consume(
+		{
+			producerId      : audioProducer.id,
+			rtpCapabilities : localConsumerDeviceCapabilities
+		}))
 		.rejects
 		.toThrow(Error);
 }, 2000);

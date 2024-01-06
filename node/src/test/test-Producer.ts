@@ -2,18 +2,22 @@ import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
-import { Notification, Body as NotificationBody, Event } from '../fbs/notification';
+import {
+	Notification,
+	Body as NotificationBody,
+	Event
+} from '../fbs/notification';
 import * as FbsProducer from '../fbs/producer';
 
 type TestContext =
 {
 	mediaCodecs: mediasoup.types.RtpCodecCapability[];
-	audioProducerParameters: mediasoup.types.ProducerOptions;
-	videoProducerParameters: mediasoup.types.ProducerOptions;
+	audioProducerOptions: mediasoup.types.ProducerOptions;
+	videoProducerOptions: mediasoup.types.ProducerOptions;
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
-	transport1?: mediasoup.types.WebRtcTransport;
-	transport2?: mediasoup.types.WebRtcTransport;
+	webRtcTransport1?: mediasoup.types.WebRtcTransport;
+	webRtcTransport2?: mediasoup.types.WebRtcTransport;
 };
 
 const ctx: TestContext =
@@ -50,7 +54,7 @@ const ctx: TestContext =
 			}
 		]
 	),
-	audioProducerParameters : utils.deepFreeze(
+	audioProducerOptions : utils.deepFreeze(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -92,7 +96,7 @@ const ctx: TestContext =
 			appData : { foo: 1, bar: '2' }
 		}
 	),
-	videoProducerParameters : utils.deepFreeze(
+	videoProducerOptions : utils.deepFreeze(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -155,11 +159,11 @@ beforeEach(async () =>
 {
 	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
-	ctx.transport1 = await ctx.router.createWebRtcTransport(
+	ctx.webRtcTransport1 = await ctx.router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ]
 		});
-	ctx.transport2 = await ctx.router.createWebRtcTransport(
+	ctx.webRtcTransport2 = await ctx.router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ]
 		});
@@ -170,14 +174,14 @@ afterEach(() =>
 	ctx.worker?.close();
 });
 
-test('transport1.produce() succeeds', async () =>
+test('webRtcTransport1.produce() succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	ctx.transport1!.observer.once('newproducer', onObserverNewProducer);
+	ctx.webRtcTransport1!.observer.once('newproducer', onObserverNewProducer);
 
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewProducer).toHaveBeenCalledWith(audioProducer);
@@ -200,24 +204,24 @@ test('transport1.produce() succeeds', async () =>
 				mapConsumerIdProducerId  : []
 			});
 
-	await expect(ctx.transport1!.dump())
+	await expect(ctx.webRtcTransport1!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : ctx.transport1!.id,
+				id          : ctx.webRtcTransport1!.id,
 				producerIds : [ audioProducer.id ],
 				consumerIds : []
 			});
 }, 2000);
 
-test('transport2.produce() succeeds', async () =>
+test('webRtcTransport2.produce() succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	ctx.transport2!.observer.once('newproducer', onObserverNewProducer);
+	ctx.webRtcTransport2!.observer.once('newproducer', onObserverNewProducer);
 
 	const videoProducer =
-		await ctx.transport2!.produce(ctx.videoProducerParameters);
+		await ctx.webRtcTransport2!.produce(ctx.videoProducerOptions);
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewProducer).toHaveBeenCalledWith(videoProducer);
@@ -242,23 +246,23 @@ test('transport2.produce() succeeds', async () =>
 
 	expect(dump.mapConsumerIdProducerId.length).toBe(0);
 
-	await expect(ctx.transport2!.dump())
+	await expect(ctx.webRtcTransport2!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : ctx.transport2!.id,
+				id          : ctx.webRtcTransport2!.id,
 				producerIds : [ videoProducer.id ],
 				consumerIds : []
 			});
 }, 2000);
 
-test('transport1.produce() without header extensions and rtcp succeeds', async () =>
+test('webRtcTransport1.produce() without header extensions and rtcp succeeds', async () =>
 {
 	const onObserverNewProducer = jest.fn();
 
-	ctx.transport1!.observer.once('newproducer', onObserverNewProducer);
+	ctx.webRtcTransport1!.observer.once('newproducer', onObserverNewProducer);
 
-	const audioProducer = await ctx.transport1!.produce(
+	const audioProducer = await ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -300,9 +304,9 @@ test('transport1.produce() without header extensions and rtcp succeeds', async (
 	audioProducer.close();
 }, 2000);
 
-test('transport1.produce() with wrong arguments rejects with TypeError', async () =>
+test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', async () =>
 {
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			// @ts-ignore
 			kind          : 'chicken',
@@ -312,7 +316,7 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'audio',
 			// @ts-ignore
@@ -322,7 +326,7 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 		.toThrow(TypeError);
 
 	// Invalid ssrc.
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -338,7 +342,7 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 		.toThrow(TypeError);
 
 	// Missing or empty rtpParameters.encodings.
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -371,7 +375,7 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 		.toThrow(TypeError);
 
 	// Wrong apt in RTX codec.
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -410,9 +414,9 @@ test('transport1.produce() with wrong arguments rejects with TypeError', async (
 		.toThrow(TypeError);
 }, 2000);
 
-test('transport1.produce() with unsupported codecs rejects with UnsupportedError', async () =>
+test('webRtcTransport1.produce() with unsupported codecs rejects with UnsupportedError', async () =>
 {
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -434,7 +438,7 @@ test('transport1.produce() with unsupported codecs rejects with UnsupportedError
 		.toThrow(UnsupportedError);
 
 	// Invalid H264 profile-level-id.
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -527,22 +531,22 @@ test('transport.produce() with already used MID or SSRC rejects with Error', asy
 		}
 	};
 
-	await ctx.transport1!.produce(audioProducerOptions);
+	await ctx.webRtcTransport1!.produce(audioProducerOptions);
 
-	await expect(ctx.transport1!.produce(audioProducerOptions))
+	await expect(ctx.webRtcTransport1!.produce(audioProducerOptions))
 		.rejects
 		.toThrow(Error);
 
-	await ctx.transport2!.produce(videoProducerOptions);
+	await ctx.webRtcTransport2!.produce(videoProducerOptions);
 
-	await expect(ctx.transport2!.produce(videoProducerOptions))
+	await expect(ctx.webRtcTransport2!.produce(videoProducerOptions))
 		.rejects
 		.toThrow(Error);
 }, 2000);
 
 test('transport.produce() with no MID and with single encoding without RID or SSRC rejects with Error', async () =>
 {
-	await expect(ctx.transport1!.produce(
+	await expect(ctx.webRtcTransport1!.produce(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -566,7 +570,7 @@ test('transport.produce() with no MID and with single encoding without RID or SS
 test('producer.dump() succeeds', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	const dump1 = await audioProducer.dump();
 
@@ -616,7 +620,7 @@ test('producer.dump() succeeds', async () =>
 	expect(dump1.type).toBe('simple');
 
 	const videoProducer =
-		await ctx.transport2!.produce(ctx.videoProducerParameters);
+		await ctx.webRtcTransport2!.produce(ctx.videoProducerOptions);
 
 	const dump2 = await videoProducer.dump();
 
@@ -685,10 +689,10 @@ test('producer.dump() succeeds', async () =>
 test('producer.getStats() succeeds', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	const videoProducer =
-		await ctx.transport2!.produce(ctx.videoProducerParameters);
+		await ctx.webRtcTransport2!.produce(ctx.videoProducerOptions);
 
 	await expect(audioProducer.getStats())
 		.resolves
@@ -702,7 +706,7 @@ test('producer.getStats() succeeds', async () =>
 test('producer.pause() and resume() succeed', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	const onObserverPause = jest.fn();
 	const onObserverResume = jest.fn();
@@ -740,7 +744,7 @@ test('producer.pause() and resume() succeed', async () =>
 test('producer.pause() and resume() emit events', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	const promises = [];
 	const events: string[] = [];
@@ -767,7 +771,7 @@ test('producer.pause() and resume() emit events', async () =>
 test('producer.enableTraceEvent() succeed', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	await audioProducer.enableTraceEvent([ 'rtp', 'pli' ]);
 
@@ -802,7 +806,7 @@ test('producer.enableTraceEvent() succeed', async () =>
 test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	// @ts-ignore
 	await expect(audioProducer.enableTraceEvent(123))
@@ -823,7 +827,7 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 test('Producer emits "score"', async () =>
 {
 	const videoProducer =
-		await ctx.transport2!.produce(ctx.videoProducerParameters);
+		await ctx.webRtcTransport2!.produce(ctx.videoProducerOptions);
 
 	// Private API.
 	const channel = videoProducer.channelForTesting;
@@ -877,7 +881,7 @@ test('Producer emits "score"', async () =>
 test('producer.close() succeeds', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	const onObserverClose = jest.fn();
 
@@ -895,11 +899,11 @@ test('producer.close() succeeds', async () =>
 				mapConsumerIdProducerId  : []
 			});
 
-	await expect(ctx.transport1!.dump())
+	await expect(ctx.webRtcTransport1!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : ctx.transport1!.id,
+				id          : ctx.webRtcTransport1!.id,
 				producerIds : [],
 				consumerIds : []
 			});
@@ -908,7 +912,7 @@ test('producer.close() succeeds', async () =>
 test('Producer methods reject if closed', async () =>
 {
 	const audioProducer =
-		await ctx.transport1!.produce(ctx.audioProducerParameters);
+		await ctx.webRtcTransport1!.produce(ctx.audioProducerOptions);
 
 	audioProducer.close();
 
@@ -932,7 +936,7 @@ test('Producer methods reject if closed', async () =>
 test('Producer emits "transportclose" if Transport is closed', async () =>
 {
 	const videoProducer =
-		await ctx.transport2!.produce(ctx.videoProducerParameters);
+		await ctx.webRtcTransport2!.produce(ctx.videoProducerOptions);
 
 	const onObserverClose = jest.fn();
 
@@ -941,7 +945,7 @@ test('Producer emits "transportclose" if Transport is closed', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		videoProducer.on('transportclose', resolve);
-		ctx.transport2!.close();
+		ctx.webRtcTransport2!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);

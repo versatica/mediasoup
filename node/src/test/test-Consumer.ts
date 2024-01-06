@@ -12,13 +12,13 @@ import * as FbsConsumer from '../fbs/consumer';
 type TestContext =
 {
 	mediaCodecs: mediasoup.types.RtpCodecCapability[];
-	audioProducerParameters: mediasoup.types.ProducerOptions;
-	videoProducerParameters: mediasoup.types.ProducerOptions;
+	audioProducerOptions: mediasoup.types.ProducerOptions;
+	videoProducerOptions: mediasoup.types.ProducerOptions;
 	consumerDeviceCapabilities: mediasoup.types.RtpCapabilities;
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
-	transport1?: mediasoup.types.WebRtcTransport;
-	transport2?: mediasoup.types.WebRtcTransport;
+	webRtcTransport1?: mediasoup.types.WebRtcTransport;
+	webRtcTransport2?: mediasoup.types.WebRtcTransport;
 	audioProducer?: mediasoup.types.Producer;
 	videoProducer?: mediasoup.types.Producer;
 };
@@ -56,7 +56,7 @@ const ctx: TestContext =
 			}
 		]
 	),
-	audioProducerParameters : utils.deepFreeze(
+	audioProducerOptions : utils.deepFreeze(
 		{
 			kind          : 'audio',
 			rtpParameters :
@@ -98,7 +98,7 @@ const ctx: TestContext =
 			appData : { foo: 1, bar: '2' }
 		}
 	),
-	videoProducerParameters : utils.deepFreeze(
+	videoProducerOptions : utils.deepFreeze(
 		{
 			kind          : 'video',
 			rtpParameters :
@@ -260,16 +260,16 @@ beforeEach(async () =>
 {
 	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
-	ctx.transport1 = await ctx.router.createWebRtcTransport(
+	ctx.webRtcTransport1 = await ctx.router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ]
 		});
-	ctx.transport2 = await ctx.router.createWebRtcTransport(
+	ctx.webRtcTransport2 = await ctx.router.createWebRtcTransport(
 		{
 			listenIps : [ '127.0.0.1' ]
 		});
-	ctx.audioProducer = await ctx.transport1.produce(ctx.audioProducerParameters);
-	ctx.videoProducer = await ctx.transport1.produce(ctx.videoProducerParameters);
+	ctx.audioProducer = await ctx.webRtcTransport1.produce(ctx.audioProducerOptions);
+	ctx.videoProducer = await ctx.webRtcTransport1.produce(ctx.videoProducerOptions);
 });
 
 afterEach(() =>
@@ -281,7 +281,7 @@ test('transport.consume() succeeds', async () =>
 {
 	const onObserverNewConsumer1 = jest.fn();
 
-	ctx.transport2!.observer.once('newconsumer', onObserverNewConsumer1);
+	ctx.webRtcTransport2!.observer.once('newconsumer', onObserverNewConsumer1);
 
 	expect(ctx.router!.canConsume(
 		{
@@ -290,7 +290,7 @@ test('transport.consume() succeeds', async () =>
 		}))
 		.toBe(true);
 
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities,
@@ -345,18 +345,18 @@ test('transport.consume() succeeds', async () =>
 				{ key: audioConsumer.id, value: ctx.audioProducer!.id }
 			]));
 
-	await expect(ctx.transport2!.dump())
+	await expect(ctx.webRtcTransport2!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : ctx.transport2!.id,
+				id          : ctx.webRtcTransport2!.id,
 				producerIds : [],
 				consumerIds : [ audioConsumer.id ]
 			});
 
 	const onObserverNewConsumer2 = jest.fn();
 
-	ctx.transport2!.observer.once('newconsumer', onObserverNewConsumer2);
+	ctx.webRtcTransport2!.observer.once('newconsumer', onObserverNewConsumer2);
 
 	expect(ctx.router!.canConsume(
 		{
@@ -368,7 +368,7 @@ test('transport.consume() succeeds', async () =>
 	// Pause videoProducer.
 	ctx.videoProducer!.pause();
 
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities,
@@ -418,13 +418,15 @@ test('transport.consume() succeeds', async () =>
 	expect(videoConsumer.priority).toBe(1);
 	expect(videoConsumer.score).toEqual(
 		{ score: 10, producerScore: 0, producerScores: [ 0, 0, 0, 0 ] });
-	expect(videoConsumer.preferredLayers).toEqual({ spatialLayer: 3, temporalLayer: 0 });
+	expect(videoConsumer.preferredLayers).toEqual(
+		{ spatialLayer: 3, temporalLayer: 0 }
+	);
 	expect(videoConsumer.currentLayers).toBeUndefined();
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
 
 	const onObserverNewConsumer3 = jest.fn();
 
-	ctx.transport2!.observer.once('newconsumer', onObserverNewConsumer3);
+	ctx.webRtcTransport2!.observer.once('newconsumer', onObserverNewConsumer3);
 
 	expect(ctx.router!.canConsume(
 		{
@@ -433,7 +435,7 @@ test('transport.consume() succeeds', async () =>
 		}))
 		.toBe(true);
 
-	const videoPipeConsumer = await ctx.transport2!.consume(
+	const videoPipeConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities,
@@ -511,11 +513,11 @@ test('transport.consume() succeeds', async () =>
 				{ key: videoPipeConsumer.id, value: ctx.videoProducer!.id }
 			]));
 
-	await expect(ctx.transport2!.dump())
+	await expect(ctx.webRtcTransport2!.dump())
 		.resolves
 		.toMatchObject(
 			{
-				id          : ctx.transport2!.id,
+				id          : ctx.webRtcTransport2!.id,
 				producerIds : [],
 				consumerIds : expect.arrayContaining(
 					[
@@ -528,7 +530,7 @@ test('transport.consume() succeeds', async () =>
 
 test('transport.consume() with enableRtx succeeds', async () =>
 {
-	const audioConsumer2 = await ctx.transport2!.consume(
+	const audioConsumer2 = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities,
@@ -556,7 +558,7 @@ test('transport.consume() with enableRtx succeeds', async () =>
 
 test('transport.consume() can be created with user provided mid', async () =>
 {
-	const audioConsumer1 = await ctx.transport2!.consume(
+	const audioConsumer1 = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -565,7 +567,7 @@ test('transport.consume() can be created with user provided mid', async () =>
 	expect(audioConsumer1.rtpParameters.mid).toEqual(
 		expect.stringMatching(/^[0-9]+/));
 
-	const audioConsumer2 = await ctx.transport2!.consume(
+	const audioConsumer2 = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			mid             : 'custom-mid',
@@ -574,7 +576,7 @@ test('transport.consume() can be created with user provided mid', async () =>
 
 	expect(audioConsumer2.rtpParameters.mid).toBe('custom-mid');
 
-	const audioConsumer3 = await ctx.transport2!.consume(
+	const audioConsumer3 = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -612,7 +614,7 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 		}))
 		.toBe(false);
 
-	await expect(ctx.transport2!.consume(
+	await expect(ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : invalidDeviceCapabilities
@@ -633,7 +635,7 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 		}))
 		.toBe(false);
 
-	await expect(ctx.transport2!.consume(
+	await expect(ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : invalidDeviceCapabilities
@@ -644,7 +646,7 @@ test('transport.consume() with incompatible rtpCapabilities rejects with Unsuppo
 
 test('consumer.dump() succeeds', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -718,7 +720,7 @@ test('consumer.dump() succeeds', async () =>
 	expect(dump1.producerPaused).toBe(false);
 	expect(dump1.priority).toBe(1);
 
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities,
@@ -822,7 +824,7 @@ test('consumer.dump() succeeds', async () =>
 
 test('consumer.getStats() succeeds', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -841,7 +843,7 @@ test('consumer.getStats() succeeds', async () =>
 					})
 			]);
 
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -863,7 +865,7 @@ test('consumer.getStats() succeeds', async () =>
 
 test('consumer.pause() and resume() succeed', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -903,7 +905,7 @@ test('consumer.pause() and resume() succeed', async () =>
 
 test('producer.pause() and resume() emit events', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -935,12 +937,12 @@ test('producer.pause() and resume() emit events', async () =>
 
 test('consumer.setPreferredLayers() succeed', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
 		});
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -964,7 +966,7 @@ test('consumer.setPreferredLayers() succeed', async () =>
 
 test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError', async () =>
 {
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -994,7 +996,7 @@ test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError'
 
 test('consumer.setPriority() succeed', async () =>
 {
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1006,7 +1008,7 @@ test('consumer.setPriority() succeed', async () =>
 
 test('consumer.setPriority() with wrong arguments rejects with TypeError', async () =>
 {
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1029,7 +1031,7 @@ test('consumer.setPriority() with wrong arguments rejects with TypeError', async
 
 test('consumer.unsetPriority() succeed', async () =>
 {
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1041,7 +1043,7 @@ test('consumer.unsetPriority() succeed', async () =>
 
 test('consumer.enableTraceEvent() succeed', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1078,7 +1080,7 @@ test('consumer.enableTraceEvent() succeed', async () =>
 
 test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1102,7 +1104,7 @@ test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 
 test('Consumer emits "producerpause" and "producerresume"', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1134,7 +1136,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () =>
 
 test('Consumer emits "score"', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1176,12 +1178,12 @@ test('Consumer emits "score"', async () =>
 
 test('consumer.close() succeeds', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
 		});
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1208,12 +1210,12 @@ test('consumer.close() succeeds', async () =>
 				{ key: videoConsumer!.id, value: ctx.videoProducer!.id }
 			]);
 
-	const transportDump = await ctx.transport2!.dump();
+	const transportDump = await ctx.webRtcTransport2!.dump();
 
 	expect(transportDump)
 		.toMatchObject(
 			{
-				id          : ctx.transport2!.id,
+				id          : ctx.webRtcTransport2!.id,
 				producerIds : [],
 				consumerIds : [ videoConsumer.id ]
 			});
@@ -1221,7 +1223,7 @@ test('consumer.close() succeeds', async () =>
 
 test('Consumer methods reject if closed', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1261,7 +1263,7 @@ test('Consumer methods reject if closed', async () =>
 
 test('Consumer emits "producerclose" if Producer is closed', async () =>
 {
-	const audioConsumer = await ctx.transport2!.consume(
+	const audioConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.audioProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1282,7 +1284,7 @@ test('Consumer emits "producerclose" if Producer is closed', async () =>
 
 test('Consumer emits "transportclose" if Transport is closed', async () =>
 {
-	const videoConsumer = await ctx.transport2!.consume(
+	const videoConsumer = await ctx.webRtcTransport2!.consume(
 		{
 			producerId      : ctx.videoProducer!.id,
 			rtpCapabilities : ctx.consumerDeviceCapabilities
@@ -1295,7 +1297,7 @@ test('Consumer emits "transportclose" if Transport is closed', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		videoConsumer.on('transportclose', resolve);
-		ctx.transport2!.close();
+		ctx.webRtcTransport2!.close();
 	});
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);

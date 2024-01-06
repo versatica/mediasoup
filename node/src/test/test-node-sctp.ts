@@ -7,7 +7,7 @@ type TestContext =
 {
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
-	transport?: mediasoup.types.PlainTransport;
+	plainTransport?: mediasoup.types.PlainTransport;
 	dataProducer?: mediasoup.types.DataProducer;
 	dataConsumer?: mediasoup.types.DataConsumer;
 	udpSocket?: dgram.Socket;
@@ -25,10 +25,12 @@ beforeEach(async () =>
 
 	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter();
-	ctx.transport = await ctx.router.createPlainTransport(
+	ctx.plainTransport = await ctx.router.createPlainTransport(
 		{
-			listenIp       : '127.0.0.1', // https://github.com/nodejs/node/issues/14900
-			comedia        : true, // So we don't need to call transport.connect().
+			// https://github.com/nodejs/node/issues/14900.
+			listenIp       : '127.0.0.1',
+			// So we don't need to call plainTransport.connect().
+			comedia        : true,
 			enableSctp     : true,
 			numSctpStreams : { OS: 256, MIS: 256 }
 		});
@@ -41,9 +43,9 @@ beforeEach(async () =>
 		ctx.udpSocket!.bind(0, '127.0.0.1', resolve);
 	});
 
-	const remoteUdpIp = ctx.transport.tuple.localIp;
-	const remoteUdpPort = ctx.transport.tuple.localPort;
-	const { OS, MIS } = ctx.transport.sctpParameters!;
+	const remoteUdpIp = ctx.plainTransport.tuple.localIp;
+	const remoteUdpPort = ctx.plainTransport.tuple.localPort;
+	const { OS, MIS } = ctx.plainTransport.sctpParameters!;
 
 	await new Promise<void>((resolve, reject) =>
 	{
@@ -85,7 +87,7 @@ beforeEach(async () =>
 	ctx.sctpSendStream = ctx.sctpSocket.createStream(ctx.sctpSendStreamId);
 
 	// Create a DataProducer with the corresponding SCTP stream id.
-	ctx.dataProducer = await ctx.transport.produceData(
+	ctx.dataProducer = await ctx.plainTransport.produceData(
 		{
 			sctpStreamParameters :
 			{
@@ -97,8 +99,8 @@ beforeEach(async () =>
 		});
 
 	// Create a DataConsumer to receive messages from the DataProducer over the
-	// same transport.
-	ctx.dataConsumer = await ctx.transport.consumeData(
+	// same plainTransport.
+	ctx.dataConsumer = await ctx.plainTransport.consumeData(
 		{ dataProducerId: ctx.dataProducer.id }
 	);
 });
@@ -124,7 +126,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 	let numSentMessages = 0;
 	let numReceivedMessages = 0;
 
-	// It must be zero because it's the first DataConsumer on the transport.
+	// It must be zero because it's the first DataConsumer on the plainTransport.
 	expect(ctx.dataConsumer!.sctpStreamParameters?.streamId).toBe(0);
 
 	// eslint-disable-next-line no-async-promise-executor

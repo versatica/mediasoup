@@ -140,7 +140,10 @@ test('worker.createRouter() rejects with InvalidStateError if Worker is closed',
 
 test('router.close() succeeds', async () =>
 {
-	const router = await ctx.worker!.createRouter({ mediaCodecs: ctx.mediaCodecs });
+	const router = await ctx.worker!.createRouter(
+		{ mediaCodecs: ctx.mediaCodecs }
+	);
+
 	const onObserverClose = jest.fn();
 
 	router.observer.once('close', onObserverClose);
@@ -152,7 +155,10 @@ test('router.close() succeeds', async () =>
 
 test('Router emits "workerclose" if Worker is closed', async () =>
 {
-	const router = await ctx.worker!.createRouter({ mediaCodecs: ctx.mediaCodecs });
+	const router = await ctx.worker!.createRouter(
+		{ mediaCodecs: ctx.mediaCodecs }
+	);
+
 	const onObserverClose = jest.fn();
 
 	router.observer.once('close', onObserverClose);
@@ -160,6 +166,7 @@ test('Router emits "workerclose" if Worker is closed', async () =>
 	await new Promise<void>((resolve) =>
 	{
 		router.on('workerclose', resolve);
+
 		ctx.worker!.close();
 	});
 

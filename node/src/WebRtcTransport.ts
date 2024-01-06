@@ -899,7 +899,8 @@ function createConnectRequest(
 	// Create request.
 	return FbsWebRtcTransport.ConnectRequest.createConnectRequest(
 		builder,
-		dtlsParametersOffset);
+		dtlsParametersOffset
+	);
 }
 
 function parseGetStatsResponse(
@@ -977,13 +978,17 @@ function serializeDtlsParameters(
 		const algorithm = fingerprintAlgorithmToFbs(fingerprint.algorithm);
 		const valueOffset = builder.createString(fingerprint.value);
 		const fingerprintOffset = FbsWebRtcTransport.Fingerprint.createFingerprint(
-			builder, algorithm, valueOffset);
+			builder, algorithm, valueOffset
+		);
 
 		fingerprints.push(fingerprintOffset);
 	}
 
-	const fingerprintsOffset = FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
-		builder, fingerprints);
+	const fingerprintsOffset =
+		FbsWebRtcTransport.DtlsParameters.createFingerprintsVector(
+			builder, fingerprints
+		);
+
 	const role = dtlsParameters.role !== undefined ?
 		dtlsRoleToFbs(dtlsParameters.role) :
 		FbsWebRtcTransport.DtlsRole.AUTO;
@@ -991,5 +996,6 @@ function serializeDtlsParameters(
 	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
 		builder,
 		fingerprintsOffset,
-		role);
+		role
+	);
 }

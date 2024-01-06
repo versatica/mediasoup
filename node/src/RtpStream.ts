@@ -41,8 +41,9 @@ type BaseRtpStreamStats =
 	rtxPacketsDiscarded?: number;
 };
 
-export function parseRtpStreamStats(binary: FbsRtpStream.Stats)
-	: RtpStreamRecvStats | RtpStreamSendStats
+export function parseRtpStreamStats(
+	binary: FbsRtpStream.Stats
+) : RtpStreamRecvStats | RtpStreamSendStats
 {
 	if (binary.dataType() === FbsRtpStream.StatsData.RecvStats)
 	{

@@ -30,7 +30,9 @@ const ctx: TestContext =
 beforeEach(async () =>
 {
 	ctx.worker = await mediasoup.createWorker();
-	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
+	ctx.router = await ctx.worker.createRouter(
+		{ mediaCodecs: ctx.mediaCodecs }
+	);
 });
 
 afterEach(() =>
