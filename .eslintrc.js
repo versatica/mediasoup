@@ -109,7 +109,6 @@ const eslintConfig = {
 };
 
 const tsRules = {
-	...eslintConfig.rules,
 	'no-unused-vars': 0,
 	'@typescript-eslint/ban-types': 0,
 	'@typescript-eslint/ban-ts-comment': 0,
@@ -150,7 +149,7 @@ eslintConfig.overrides.push({
 		'plugin:@typescript-eslint/recommended',
 		...eslintConfig.extends,
 	],
-	rules: tsRules,
+	rules: { ...eslintConfig.rules, ...tsRules },
 });
 
 eslintConfig.overrides.push({
@@ -170,6 +169,7 @@ eslintConfig.overrides.push({
 	],
 	plugins: [...eslintConfig.plugins, '@typescript-eslint', 'jest'],
 	rules: {
+		...eslintConfig.rules,
 		...tsRules,
 		'jest/no-disabled-tests': 2,
 	},
