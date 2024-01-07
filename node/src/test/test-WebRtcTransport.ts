@@ -7,94 +7,83 @@ import { serializeProtocol, TransportTuple } from '../Transport';
 import {
 	Notification,
 	Body as NotificationBody,
-	Event
+	Event,
 } from '../fbs/notification';
 import * as FbsTransport from '../fbs/transport';
 import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
 
-type TestContext =
-{
+type TestContext = {
 	mediaCodecs: mediasoup.types.RtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
 };
 
-const ctx: TestContext =
-{
-	mediaCodecs : utils.deepFreeze(
-		[
-			{
-				kind       : 'audio',
-				mimeType   : 'audio/opus',
-				clockRate  : 48000,
-				channels   : 2,
-				parameters :
-				{
-					useinbandfec : 1,
-					foo          : 'bar'
-				}
+const ctx: TestContext = {
+	mediaCodecs: utils.deepFreeze([
+		{
+			kind: 'audio',
+			mimeType: 'audio/opus',
+			clockRate: 48000,
+			channels: 2,
+			parameters: {
+				useinbandfec: 1,
+				foo: 'bar',
 			},
-			{
-				kind      : 'video',
-				mimeType  : 'video/VP8',
-				clockRate : 90000
+		},
+		{
+			kind: 'video',
+			mimeType: 'video/VP8',
+			clockRate: 90000,
+		},
+		{
+			kind: 'video',
+			mimeType: 'video/H264',
+			clockRate: 90000,
+			parameters: {
+				'level-asymmetry-allowed': 1,
+				'packetization-mode': 1,
+				'profile-level-id': '4d0032',
+				foo: 'bar',
 			},
-			{
-				kind       : 'video',
-				mimeType   : 'video/H264',
-				clockRate  : 90000,
-				parameters :
-				{
-					'level-asymmetry-allowed' : 1,
-					'packetization-mode'      : 1,
-					'profile-level-id'        : '4d0032',
-					foo                       : 'bar'
-				}
-			}
-		]
-	)
+		},
+	]),
 };
 
-beforeEach(async () =>
-{
+beforeEach(async () => {
 	ctx.worker = await mediasoup.createWorker();
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
-afterEach(() =>
-{
+afterEach(() => {
 	ctx.worker?.close();
 });
 
-test('router.createWebRtcTransport() succeeds', async () =>
-{
+test('router.createWebRtcTransport() succeeds', async () => {
 	const onObserverNewTransport = jest.fn();
 
 	ctx.router!.observer.once('newtransport', onObserverNewTransport);
 
 	// Create a separate transport here.
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-				{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-				{ protocol: 'udp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
-				{ protocol: 'tcp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
-				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: undefined },
-				{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: undefined }
-			],
-			enableTcp          : true,
-			preferUdp          : true,
-			enableSctp         : true,
-			numSctpStreams     : { OS: 2048, MIS: 2048 },
-			maxSctpMessageSize : 1000000,
-			appData            : { foo: 'bar' }
-		});
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+			{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+			{ protocol: 'udp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
+			{ protocol: 'tcp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
+			{ protocol: 'udp', ip: '127.0.0.1', announcedIp: undefined },
+			{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: undefined },
+		],
+		enableTcp: true,
+		preferUdp: true,
+		enableSctp: true,
+		numSctpStreams: { OS: 2048, MIS: 2048 },
+		maxSctpMessageSize: 1000000,
+		appData: { foo: 'bar' },
+	});
 
-	await expect(ctx.router!.dump())
-		.resolves
-		.toMatchObject({ transportIds: [ webRtcTransport.id ] });
+	await expect(ctx.router!.dump()).resolves.toMatchObject({
+		transportIds: [webRtcTransport.id],
+	});
 
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
 	expect(onObserverNewTransport).toHaveBeenCalledWith(webRtcTransport);
@@ -106,13 +95,12 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(webRtcTransport.iceParameters.iceLite).toBe(true);
 	expect(typeof webRtcTransport.iceParameters.usernameFragment).toBe('string');
 	expect(typeof webRtcTransport.iceParameters.password).toBe('string');
-	expect(webRtcTransport.sctpParameters).toMatchObject(
-		{
-			port           : 5000,
-			OS             : 2048,
-			MIS            : 2048,
-			maxMessageSize : 1000000
-		});
+	expect(webRtcTransport.sctpParameters).toMatchObject({
+		port: 5000,
+		OS: 2048,
+		MIS: 2048,
+		maxMessageSize: 1000000,
+	});
 	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);
 	expect(webRtcTransport.iceCandidates.length).toBe(6);
 
@@ -180,67 +168,57 @@ test('router.createWebRtcTransport() succeeds', async () =>
 	expect(webRtcTransport.closed).toBe(true);
 }, 2000);
 
-test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () =>
-{
+test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-ignore
-	await expect(ctx.router!.createWebRtcTransport({}))
-		.rejects
-		.toThrow(TypeError);
+	await expect(ctx.router!.createWebRtcTransport({})).rejects.toThrow(
+		TypeError,
+	);
 
-	// @ts-ignore
-	await expect(ctx.router!.createWebRtcTransport({ listenIps: [ 123 ] }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		// @ts-ignore
+		ctx.router!.createWebRtcTransport({ listenIps: [123] }),
+	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
-	await expect(ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		// @ts-ignore
+		ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' }),
+	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
-	await expect(ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		// @ts-ignore
+		ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' }),
+	).rejects.toThrow(TypeError);
 
-	await expect(ctx.router!.createWebRtcTransport(
-		{
-			listenIps : [ '127.0.0.1' ],
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenIps: ['127.0.0.1'],
 			// @ts-ignore
-			appData   : 'NOT-AN-OBJECT'
-		}))
-		.rejects
-		.toThrow(TypeError);
+			appData: 'NOT-AN-OBJECT',
+		}),
+	).rejects.toThrow(TypeError);
 
-	await expect(ctx.router!.createWebRtcTransport(
-		{
-			listenIps      : [ '127.0.0.1' ],
-			enableSctp     : true,
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenIps: ['127.0.0.1'],
+			enableSctp: true,
 			// @ts-ignore
-			numSctpStreams : 'foo'
-		}))
-		.rejects
-		.toThrow(TypeError);
+			numSctpStreams: 'foo',
+		}),
+	).rejects.toThrow(TypeError);
 }, 2000);
 
-test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () =>
-{
-	await expect(ctx.router!.createWebRtcTransport(
-		{
-			listenInfos : [ { protocol: 'udp', ip: '8.8.8.8' } ]
-		}))
-		.rejects
-		.toThrow(Error);
+test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () => {
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '8.8.8.8' }],
+		}),
+	).rejects.toThrow(Error);
 }, 2000);
 
-test('webRtcTransport.getStats() succeeds', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }
-			]
-		});
+test('webRtcTransport.getStats() succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+	});
 
 	const stats = await webRtcTransport.getStats();
 
@@ -271,282 +249,251 @@ test('webRtcTransport.getStats() succeeds', async () =>
 	expect(stats[0].maxIncomingBitrate).toBeUndefined();
 }, 2000);
 
-test('webRtcTransport.connect() succeeds', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }
-			]
-		});
+test('webRtcTransport.connect() succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+	});
 
-	const dtlsRemoteParameters: mediasoup.types.DtlsParameters =
-	{
-		fingerprints :
-		[
+	const dtlsRemoteParameters: mediasoup.types.DtlsParameters = {
+		fingerprints: [
 			{
-				algorithm : 'sha-256',
-				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
-			}
+				algorithm: 'sha-256',
+				value:
+					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
+			},
 		],
-		role : 'client'
+		role: 'client',
 	};
 
-	await expect(webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+	).resolves.toBeUndefined();
 
 	// Must fail if connected.
-	await expect(webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }))
-		.rejects
-		.toThrow(Error);
+	await expect(
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+	).rejects.toThrow(Error);
 
 	expect(webRtcTransport.dtlsParameters.role).toBe('server');
 }, 2000);
 
-test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }
-			]
-		});
+test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+	});
 
 	let dtlsRemoteParameters: mediasoup.types.DtlsParameters;
 
 	// @ts-ignore
-	await expect(webRtcTransport.connect({}))
-		.rejects
-		.toThrow(TypeError);
+	await expect(webRtcTransport.connect({})).rejects.toThrow(TypeError);
 
-	dtlsRemoteParameters =
-	{
-		fingerprints :
-		[
+	dtlsRemoteParameters = {
+		fingerprints: [
 			{
 				// @ts-ignore.
-				algorithm : 'sha-256000',
-				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
-			}
+				algorithm: 'sha-256000',
+				value:
+					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
+			},
 		],
-		role : 'client'
+		role: 'client',
 	};
 
-	await expect(webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+	).rejects.toThrow(TypeError);
 
-	dtlsRemoteParameters =
-	{
-		fingerprints :
-		[
+	dtlsRemoteParameters = {
+		fingerprints: [
 			{
-				algorithm : 'sha-256',
-				value     : '82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD'
-			}
+				algorithm: 'sha-256',
+				value:
+					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
+			},
 		],
 		// @ts-ignore
-		role : 'chicken'
+		role: 'chicken',
 	};
 
-	await expect(webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+	).rejects.toThrow(TypeError);
 
-	dtlsRemoteParameters =
-	{
-		fingerprints : [],
-		role         : 'client'
+	dtlsRemoteParameters = {
+		fingerprints: [],
+		role: 'client',
 	};
 
-	await expect(webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+	).rejects.toThrow(TypeError);
 
-	await expect(webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+	).rejects.toThrow(TypeError);
 
 	expect(webRtcTransport.dtlsParameters.role).toBe('auto');
 }, 2000);
 
-test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{
-			listenInfos :
-			[
-				{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }
-			]
-		});
+test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+	});
 
-	await expect(webRtcTransport.setMaxIncomingBitrate(1000000))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMaxIncomingBitrate(1000000),
+	).resolves.toBeUndefined();
 
 	// Remove limit.
-	await expect(webRtcTransport.setMaxIncomingBitrate(0))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMaxIncomingBitrate(0),
+	).resolves.toBeUndefined();
 }, 2000);
 
-test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
-	await expect(webRtcTransport.setMaxOutgoingBitrate(2000000))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMaxOutgoingBitrate(2000000),
+	).resolves.toBeUndefined();
 
 	// Remove limit.
-	await expect(webRtcTransport.setMaxOutgoingBitrate(0))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMaxOutgoingBitrate(0),
+	).resolves.toBeUndefined();
 }, 2000);
 
-test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
-	await expect(webRtcTransport.setMinOutgoingBitrate(100000))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMinOutgoingBitrate(100000),
+	).resolves.toBeUndefined();
 
 	// Remove limit.
-	await expect(webRtcTransport.setMinOutgoingBitrate(0))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMinOutgoingBitrate(0),
+	).resolves.toBeUndefined();
 }, 2000);
 
-test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
+test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
+
+	await expect(
+		webRtcTransport.setMinOutgoingBitrate(3000000),
+	).resolves.toBeUndefined();
+
+	await expect(webRtcTransport.setMaxOutgoingBitrate(2000000)).rejects.toThrow(
+		Error,
 	);
-
-	await expect(webRtcTransport.setMinOutgoingBitrate(3000000))
-		.resolves
-		.toBeUndefined();
-
-	await expect(webRtcTransport.setMaxOutgoingBitrate(2000000))
-		.rejects
-		.toThrow(Error);
 
 	// Remove limit.
-	await expect(webRtcTransport.setMinOutgoingBitrate(0))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMinOutgoingBitrate(0),
+	).resolves.toBeUndefined();
 }, 2000);
 
-test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than current max limit', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
+test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than current max limit', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
+
+	await expect(
+		webRtcTransport.setMaxOutgoingBitrate(2000000),
+	).resolves.toBeUndefined();
+
+	await expect(webRtcTransport.setMinOutgoingBitrate(3000000)).rejects.toThrow(
+		Error,
 	);
-
-	await expect(webRtcTransport.setMaxOutgoingBitrate(2000000))
-		.resolves
-		.toBeUndefined();
-
-	await expect(webRtcTransport.setMinOutgoingBitrate(3000000))
-		.rejects
-		.toThrow(Error);
 
 	// Remove limit.
-	await expect(webRtcTransport.setMaxOutgoingBitrate(0))
-		.resolves
-		.toBeUndefined();
+	await expect(
+		webRtcTransport.setMaxOutgoingBitrate(0),
+	).resolves.toBeUndefined();
 }, 2000);
 
-test('webRtcTransport.restartIce() succeeds', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('webRtcTransport.restartIce() succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
 	const previousIceUsernameFragment =
 		webRtcTransport.iceParameters.usernameFragment;
 	const previousIcePassword = webRtcTransport.iceParameters.password;
 
-	await expect(webRtcTransport.restartIce())
-		.resolves
-		.toMatchObject(
-			{
-				usernameFragment : expect.any(String),
-				password         : expect.any(String),
-				iceLite          : true
-			});
+	await expect(webRtcTransport.restartIce()).resolves.toMatchObject({
+		usernameFragment: expect.any(String),
+		password: expect.any(String),
+		iceLite: true,
+	});
 
 	expect(typeof webRtcTransport.iceParameters.usernameFragment).toBe('string');
 	expect(typeof webRtcTransport.iceParameters.password).toBe('string');
-	expect(webRtcTransport.iceParameters.usernameFragment)
-		.not.toBe(previousIceUsernameFragment);
+	expect(webRtcTransport.iceParameters.usernameFragment).not.toBe(
+		previousIceUsernameFragment,
+	);
 	expect(webRtcTransport.iceParameters.password).not.toBe(previousIcePassword);
 }, 2000);
 
-test('transport.enableTraceEvent() succeed', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('transport.enableTraceEvent() succeed', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
 	// @ts-ignore
-	await webRtcTransport.enableTraceEvent([ 'foo', 'probation' ]);
-	await expect(webRtcTransport.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: [ 'probation' ] });
+	await webRtcTransport.enableTraceEvent(['foo', 'probation']);
+	await expect(webRtcTransport.dump()).resolves.toMatchObject({
+		traceEventTypes: ['probation'],
+	});
 
 	await webRtcTransport.enableTraceEvent([]);
-	await expect(webRtcTransport.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: [] });
+	await expect(webRtcTransport.dump()).resolves.toMatchObject({
+		traceEventTypes: [],
+	});
 
 	// @ts-ignore
-	await webRtcTransport.enableTraceEvent([ 'probation', 'FOO', 'bwe', 'BAR' ]);
-	await expect(webRtcTransport.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: [ 'probation', 'bwe' ] });
+	await webRtcTransport.enableTraceEvent(['probation', 'FOO', 'bwe', 'BAR']);
+	await expect(webRtcTransport.dump()).resolves.toMatchObject({
+		traceEventTypes: ['probation', 'bwe'],
+	});
 
 	await webRtcTransport.enableTraceEvent();
-	await expect(webRtcTransport.dump())
-		.resolves
-		.toMatchObject({ traceEventTypes: [] });
+	await expect(webRtcTransport.dump()).resolves.toMatchObject({
+		traceEventTypes: [],
+	});
 }, 2000);
 
-test('transport.enableTraceEvent() with wrong arguments rejects with TypeError', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
+test('transport.enableTraceEvent() with wrong arguments rejects with TypeError', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
+
+	// @ts-ignore
+	await expect(webRtcTransport.enableTraceEvent(123)).rejects.toThrow(
+		TypeError,
 	);
 
 	// @ts-ignore
-	await expect(webRtcTransport.enableTraceEvent(123))
-		.rejects
-		.toThrow(TypeError);
+	await expect(webRtcTransport.enableTraceEvent('probation')).rejects.toThrow(
+		TypeError,
+	);
 
-	// @ts-ignore
-	await expect(webRtcTransport.enableTraceEvent('probation'))
-		.rejects
-		.toThrow(TypeError);
-
-	// @ts-ignore
-	await expect(webRtcTransport.enableTraceEvent([ 'probation', 123.123 ]))
-		.rejects
-		.toThrow(TypeError);
+	await expect(
+		// @ts-ignore
+		webRtcTransport.enableTraceEvent(['probation', 123.123]),
+	).rejects.toThrow(TypeError);
 }, 2000);
 
-test('WebRtcTransport events succeed', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('WebRtcTransport events succeed', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
 	// Private API.
 	const channel = webRtcTransport.channelForTesting;
@@ -557,27 +504,29 @@ test('WebRtcTransport events succeed', async () =>
 	// Simulate a 'iceselectedtuplechange' notification coming through the
 	// channel.
 	const builder = new flatbuffers.Builder();
-	const iceStateChangeNotification = new FbsWebRtcTransport.IceStateChangeNotificationT(
-		FbsWebRtcTransport.IceState.COMPLETED);
+	const iceStateChangeNotification =
+		new FbsWebRtcTransport.IceStateChangeNotificationT(
+			FbsWebRtcTransport.IceState.COMPLETED,
+		);
 
 	let notificationOffset = Notification.createNotification(
 		builder,
 		builder.createString(webRtcTransport.id),
 		Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE,
 		NotificationBody.WebRtcTransport_IceStateChangeNotification,
-		iceStateChangeNotification.pack(builder)
+		iceStateChangeNotification.pack(builder),
 	);
 
 	builder.finish(notificationOffset);
 
 	let notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array())
+		new flatbuffers.ByteBuffer(builder.asUint8Array()),
 	);
 
 	channel.emit(
 		webRtcTransport.id,
 		Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE,
-		notification
+		notification,
 	);
 
 	expect(onIceStateChange).toHaveBeenCalledTimes(1);
@@ -587,13 +536,12 @@ test('WebRtcTransport events succeed', async () =>
 	builder.clear();
 
 	const onIceSelectedTuple = jest.fn();
-	const iceSelectedTuple: TransportTuple =
-	{
-		localIp    : '1.1.1.1',
-		localPort  : 1111,
-		remoteIp   : '2.2.2.2',
-		remotePort : 2222,
-		protocol   : 'udp'
+	const iceSelectedTuple: TransportTuple = {
+		localIp: '1.1.1.1',
+		localPort: 1111,
+		remoteIp: '2.2.2.2',
+		remotePort: 2222,
+		protocol: 'udp',
 	};
 
 	webRtcTransport.on('iceselectedtuplechange', onIceSelectedTuple);
@@ -606,8 +554,8 @@ test('WebRtcTransport events succeed', async () =>
 				iceSelectedTuple.localPort,
 				iceSelectedTuple.remoteIp,
 				iceSelectedTuple.remotePort,
-				serializeProtocol(iceSelectedTuple.protocol)
-			)
+				serializeProtocol(iceSelectedTuple.protocol),
+			),
 		);
 
 	notificationOffset = Notification.createNotification(
@@ -615,19 +563,19 @@ test('WebRtcTransport events succeed', async () =>
 		builder.createString(webRtcTransport.id),
 		Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
 		NotificationBody.WebRtcTransport_IceSelectedTupleChangeNotification,
-		iceSelectedTupleChangeNotification.pack(builder)
+		iceSelectedTupleChangeNotification.pack(builder),
 	);
 
 	builder.finish(notificationOffset);
 
 	notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array())
+		new flatbuffers.ByteBuffer(builder.asUint8Array()),
 	);
 
 	channel.emit(
 		webRtcTransport.id,
 		Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
-		notification
+		notification,
 	);
 
 	expect(onIceSelectedTuple).toHaveBeenCalledTimes(1);
@@ -641,26 +589,29 @@ test('WebRtcTransport events succeed', async () =>
 	webRtcTransport.on('dtlsstatechange', onDtlsStateChange);
 
 	// Simulate a 'dtlsstatechange' notification coming through the channel.
-	const dtlsStateChangeNotification = new FbsWebRtcTransport.DtlsStateChangeNotificationT(
-		FbsWebRtcTransport.DtlsState.CONNECTING);
+	const dtlsStateChangeNotification =
+		new FbsWebRtcTransport.DtlsStateChangeNotificationT(
+			FbsWebRtcTransport.DtlsState.CONNECTING,
+		);
 
 	notificationOffset = Notification.createNotification(
 		builder,
 		builder.createString(webRtcTransport.id),
 		Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
 		NotificationBody.WebRtcTransport_DtlsStateChangeNotification,
-		dtlsStateChangeNotification.pack(builder)
+		dtlsStateChangeNotification.pack(builder),
 	);
 
 	builder.finish(notificationOffset);
 
 	notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array()));
+		new flatbuffers.ByteBuffer(builder.asUint8Array()),
+	);
 
 	channel.emit(
 		webRtcTransport.id,
 		Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-		notification
+		notification,
 	);
 
 	expect(onDtlsStateChange).toHaveBeenCalledTimes(1);
@@ -668,11 +619,10 @@ test('WebRtcTransport events succeed', async () =>
 	expect(webRtcTransport.dtlsState).toBe('connecting');
 }, 2000);
 
-test('WebRtcTransport methods reject if closed', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('WebRtcTransport methods reject if closed', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
 	const onObserverClose = jest.fn();
 
@@ -686,65 +636,57 @@ test('WebRtcTransport methods reject if closed', async () =>
 	expect(webRtcTransport.dtlsState).toBe('closed');
 	expect(webRtcTransport.sctpState).toBeUndefined();
 
-	await expect(webRtcTransport.dump())
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.dump()).rejects.toThrow(Error);
 
-	await expect(webRtcTransport.getStats())
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.getStats()).rejects.toThrow(Error);
 
 	// @ts-ignore
-	await expect(webRtcTransport.connect({}))
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.connect({})).rejects.toThrow(Error);
 
-	await expect(webRtcTransport.setMaxIncomingBitrate(200000))
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.setMaxIncomingBitrate(200000)).rejects.toThrow(
+		Error,
+	);
 
-	await expect(webRtcTransport.setMaxOutgoingBitrate(200000))
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.setMaxOutgoingBitrate(200000)).rejects.toThrow(
+		Error,
+	);
 
-	await expect(webRtcTransport.setMinOutgoingBitrate(100000))
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.setMinOutgoingBitrate(100000)).rejects.toThrow(
+		Error,
+	);
 
-	await expect(webRtcTransport.restartIce())
-		.rejects
-		.toThrow(Error);
+	await expect(webRtcTransport.restartIce()).rejects.toThrow(Error);
 }, 2000);
 
-test('router.createWebRtcTransport() with fixed port succeeds', async () =>
-{
-	const port = await pickPort({ type: 'tcp', ip: '127.0.0.1', reserveTimeout: 0 });
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{
-			listenInfos :
-			[
-				// NOTE: udpReusePort flag will be ignored since protocol is TCP.
-				{ protocol: 'tcp', ip: '127.0.0.1', port, flags: { udpReusePort: true } }
-			]
-		});
+test('router.createWebRtcTransport() with fixed port succeeds', async () => {
+	const port = await pickPort({
+		type: 'tcp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			// NOTE: udpReusePort flag will be ignored since protocol is TCP.
+			{ protocol: 'tcp', ip: '127.0.0.1', port, flags: { udpReusePort: true } },
+		],
+	});
 
 	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
 
 	webRtcTransport.close();
 }, 2000);
 
-test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenIps: [ '127.0.0.1' ], enableSctp: true }
-	);
+test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenIps: ['127.0.0.1'],
+		enableSctp: true,
+	});
 
 	const onObserverClose = jest.fn();
 
 	webRtcTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>((resolve) =>
-	{
+	await new Promise<void>(resolve => {
 		webRtcTransport.on('routerclose', resolve);
 
 		ctx.router!.close();
@@ -758,18 +700,16 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () =>
 	expect(webRtcTransport.sctpState).toBe('closed');
 }, 2000);
 
-test('WebRtcTransport emits "routerclose" if Worker is closed', async () =>
-{
-	const webRtcTransport = await ctx.router!.createWebRtcTransport(
-		{ listenInfos: [ { protocol: 'udp', ip: '127.0.0.1' } ] }
-	);
+test('WebRtcTransport emits "routerclose" if Worker is closed', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+	});
 
 	const onObserverClose = jest.fn();
 
 	webRtcTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>((resolve) =>
-	{
+	await new Promise<void>(resolve => {
 		webRtcTransport.on('routerclose', resolve);
 
 		ctx.worker!.close();

@@ -34,6 +34,14 @@ Validates mediasoup JavaScript files using [ESLint](https://eslint.org).
 
 Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `invoke lint` below.
 
+### `npm run format`
+
+Runs both `npm run format:node` and `npm run format:worker`.
+
+### `npm run format:node`
+
+Format TypeScript and JavaScript code using [Prettier](https://prettier.io).
+
 ### `npm run format:worker`
 
 Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `invoke format` below.
@@ -90,7 +98,7 @@ Tasks are defined in `worker/tasks.py`. For development purposes, developers or 
 
 See all the tasks by running `invoke --list` within the `worker` folder.
 
-*NOTE:* For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
+_NOTE:_ For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
 
 ```bash
 npm ci --prefix worker/scripts
@@ -189,8 +197,8 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 
 **Requirements:**
 
-* `invoke clean` and `invoke mediasoup-worker` must have been called first.
-* [PyYAML](https://pyyaml.org) is required.
+- `invoke clean` and `invoke mediasoup-worker` must have been called first.
+- [PyYAML](https://pyyaml.org) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 
 "MEDIASOUP_TIDY_CHECKS" environment variable with a comma separated list of checks overrides the checks defined in `.clang-tidy` file.
@@ -201,9 +209,9 @@ Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.
 
 **Requirements:**
 
-* Linux with fuzzer capable clang++.
-* `CC` environment variable must point to "clang".
-* `CXX` environment variable must point to "clang++".
+- Linux with fuzzer capable clang++.
+- `CC` environment variable must point to "clang".
+- `CXX` environment variable must point to "clang++".
 
 Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 

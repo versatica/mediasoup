@@ -16,20 +16,20 @@ import {
 	TransportEvents,
 	TransportObserverEvents,
 	TransportConstructorOptions,
-	SctpState
+	SctpState,
 } from './Transport';
 import { Consumer, ConsumerType } from './Consumer';
 import { Producer } from './Producer';
 import {
 	RtpParameters,
 	serializeRtpEncodingParameters,
-	serializeRtpParameters
+	serializeRtpParameters,
 } from './RtpParameters';
 import { SctpParameters, NumSctpStreams } from './SctpParameters';
 import {
 	parseSrtpParameters,
 	serializeSrtpParameters,
-	SrtpParameters
+	SrtpParameters,
 } from './SrtpParameters';
 import { AppData, Either } from './types';
 import { generateUUIDv4 } from './utils';
@@ -40,16 +40,14 @@ import * as FbsRequest from './fbs/request';
 import * as FbsTransport from './fbs/transport';
 import * as FbsPipeTransport from './fbs/pipe-transport';
 
-type PipeTransportListenInfo =
-{
+type PipeTransportListenInfo = {
 	/**
 	 * Listening info.
 	 */
 	listenInfo: TransportListenInfo;
 };
 
-type PipeTransportListenIp =
-{
+type PipeTransportListenIp = {
 	/**
 	 * Listening IP address.
 	 */
@@ -62,10 +60,14 @@ type PipeTransportListenIp =
 	port?: number;
 };
 
-type PipeTransportListen = Either<PipeTransportListenInfo, PipeTransportListenIp>;
+type PipeTransportListen = Either<
+	PipeTransportListenInfo,
+	PipeTransportListenIp
+>;
 
-export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData> =
-{
+export type PipeTransportOptions<
+	PipeTransportAppData extends AppData = AppData,
+> = {
 	/**
 	 * Create a SCTP association. Default false.
 	 */
@@ -108,14 +110,12 @@ export type PipeTransportOptions<PipeTransportAppData extends AppData = AppData>
 	appData?: PipeTransportAppData;
 } & PipeTransportListen;
 
-export type PipeTransportStat = BaseTransportStats &
-{
+export type PipeTransportStat = BaseTransportStats & {
 	type: string;
 	tuple: TransportTuple;
 };
 
-export type PipeConsumerOptions<ConsumerAppData> =
-{
+export type PipeConsumerOptions<ConsumerAppData> = {
 	/**
 	 * The id of the Producer to consume.
 	 */
@@ -127,24 +127,20 @@ export type PipeConsumerOptions<ConsumerAppData> =
 	appData?: ConsumerAppData;
 };
 
-export type PipeTransportEvents = TransportEvents &
-{
+export type PipeTransportEvents = TransportEvents & {
 	sctpstatechange: [SctpState];
 };
 
-export type PipeTransportObserverEvents = TransportObserverEvents &
-{
+export type PipeTransportObserverEvents = TransportObserverEvents & {
 	sctpstatechange: [SctpState];
 };
 
 type PipeTransportConstructorOptions<PipeTransportAppData> =
-	TransportConstructorOptions<PipeTransportAppData> &
-	{
+	TransportConstructorOptions<PipeTransportAppData> & {
 		data: PipeTransportData;
 	};
 
-export type PipeTransportData =
-{
+export type PipeTransportData = {
 	tuple: TransportTuple;
 	sctpParameters?: SctpParameters;
 	sctpState?: SctpState;
@@ -152,8 +148,7 @@ export type PipeTransportData =
 	srtpParameters?: SrtpParameters;
 };
 
-export type PipeTransportDump = BaseTransportDump &
-{
+export type PipeTransportDump = BaseTransportDump & {
 	tuple: TransportTuple;
 	rtx: boolean;
 	srtpParameters?: SrtpParameters;
@@ -161,30 +156,32 @@ export type PipeTransportDump = BaseTransportDump &
 
 const logger = new Logger('PipeTransport');
 
-export class PipeTransport<PipeTransportAppData extends AppData = AppData>
-	extends Transport<PipeTransportAppData, PipeTransportEvents, PipeTransportObserverEvents>
-{
+export class PipeTransport<
+	PipeTransportAppData extends AppData = AppData,
+> extends Transport<
+	PipeTransportAppData,
+	PipeTransportEvents,
+	PipeTransportObserverEvents
+> {
 	// PipeTransport data.
 	readonly #data: PipeTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(options: PipeTransportConstructorOptions<PipeTransportAppData>)
-	{
+	constructor(options: PipeTransportConstructorOptions<PipeTransportAppData>) {
 		super(options);
 
 		logger.debug('constructor()');
 
 		const { data } = options;
 
-		this.#data =
-		{
-			tuple          : data.tuple,
-			sctpParameters : data.sctpParameters,
-			sctpState      : data.sctpState,
-			rtx            : data.rtx,
-			srtpParameters : data.srtpParameters
+		this.#data = {
+			tuple: data.tuple,
+			sctpParameters: data.sctpParameters,
+			sctpState: data.sctpState,
+			rtx: data.rtx,
+			srtpParameters: data.srtpParameters,
 		};
 
 		this.handleWorkerNotifications();
@@ -193,32 +190,28 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	/**
 	 * Transport tuple.
 	 */
-	get tuple(): TransportTuple
-	{
+	get tuple(): TransportTuple {
 		return this.#data.tuple;
 	}
 
 	/**
 	 * SCTP parameters.
 	 */
-	get sctpParameters(): SctpParameters | undefined
-	{
+	get sctpParameters(): SctpParameters | undefined {
 		return this.#data.sctpParameters;
 	}
 
 	/**
 	 * SCTP state.
 	 */
-	get sctpState(): SctpState | undefined
-	{
+	get sctpState(): SctpState | undefined {
 		return this.#data.sctpState;
 	}
 
 	/**
 	 * SRTP parameters.
 	 */
-	get srtpParameters(): SrtpParameters | undefined
-	{
+	get srtpParameters(): SrtpParameters | undefined {
 		return this.#data.srtpParameters;
 	}
 
@@ -227,15 +220,12 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	close(): void
-	{
-		if (this.closed)
-		{
+	close(): void {
+		if (this.closed) {
 			return;
 		}
 
-		if (this.#data.sctpState)
-		{
+		if (this.#data.sctpState) {
 			this.#data.sctpState = 'closed';
 		}
 
@@ -248,15 +238,12 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	 * @private
 	 * @override
 	 */
-	routerClosed(): void
-	{
-		if (this.closed)
-		{
+	routerClosed(): void {
+		if (this.closed) {
 			return;
 		}
 
-		if (this.#data.sctpState)
-		{
+		if (this.#data.sctpState) {
 			this.#data.sctpState = 'closed';
 		}
 
@@ -268,15 +255,14 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	async getStats(): Promise<PipeTransportStat[]>
-	{
+	async getStats(): Promise<PipeTransportStat[]> {
 		logger.debug('getStats()');
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -284,7 +270,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 
 		response.body(data);
 
-		return [ parseGetStatsResponse(data) ];
+		return [parseGetStatsResponse(data)];
 	}
 
 	/**
@@ -292,26 +278,22 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	async connect(
-		{
-			ip,
-			port,
-			srtpParameters
-		}:
-		{
-			ip: string;
-			port: number;
-			srtpParameters?: SrtpParameters;
-		}
-	): Promise<void>
-	{
+	async connect({
+		ip,
+		port,
+		srtpParameters,
+	}: {
+		ip: string;
+		port: number;
+		srtpParameters?: SrtpParameters;
+	}): Promise<void> {
 		logger.debug('connect()');
 
 		const requestOffset = createConnectRequest({
-			builder : this.channel.bufferBuilder,
+			builder: this.channel.bufferBuilder,
 			ip,
 			port,
-			srtpParameters
+			srtpParameters,
 		});
 
 		// Wait for response.
@@ -319,7 +301,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 			FbsRequest.Method.PIPETRANSPORT_CONNECT,
 			FbsRequest.Body.PipeTransport_ConnectRequest,
 			requestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -328,8 +310,7 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 		response.body(data);
 
 		// Update data.
-		if (data.tuple())
-		{
+		if (data.tuple()) {
 			this.#data.tuple = parseTuple(data.tuple()!);
 		}
 	}
@@ -339,53 +320,44 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	async consume<ConsumerAppData extends AppData = AppData>(
-		{
-			producerId,
-			appData
-		}: PipeConsumerOptions<ConsumerAppData>
-	): Promise<Consumer<ConsumerAppData>>
-	{
+	async consume<ConsumerAppData extends AppData = AppData>({
+		producerId,
+		appData,
+	}: PipeConsumerOptions<ConsumerAppData>): Promise<Consumer<ConsumerAppData>> {
 		logger.debug('consume()');
 
-		if (!producerId || typeof producerId !== 'string')
-		{
+		if (!producerId || typeof producerId !== 'string') {
 			throw new TypeError('missing producerId');
-		}
-		else if (appData && typeof appData !== 'object')
-		{
+		} else if (appData && typeof appData !== 'object') {
 			throw new TypeError('if given, appData must be an object');
 		}
 
 		const producer = this.getProducerById(producerId);
 
-		if (!producer)
-		{
+		if (!producer) {
 			throw Error(`Producer with id "${producerId}" not found`);
 		}
 
 		// This may throw.
-		const rtpParameters = ortc.getPipeConsumerRtpParameters(
-			{
-				consumableRtpParameters : producer.consumableRtpParameters,
-				enableRtx               : this.#data.rtx
-			}
-		);
+		const rtpParameters = ortc.getPipeConsumerRtpParameters({
+			consumableRtpParameters: producer.consumableRtpParameters,
+			enableRtx: this.#data.rtx,
+		});
 
 		const consumerId = generateUUIDv4();
 
 		const consumeRequestOffset = createConsumeRequest({
-			builder : this.channel.bufferBuilder,
+			builder: this.channel.bufferBuilder,
 			consumerId,
 			producer,
-			rtpParameters
+			rtpParameters,
 		});
 
 		const response = await this.channel.request(
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.Transport_ConsumeRequest,
 			consumeRequestOffset,
-			this.internal.transportId
+			this.internal.transportId,
 		);
 
 		/* Decode Response. */
@@ -395,27 +367,24 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 
 		const status = consumeResponse.unpack();
 
-		const data =
-		{
+		const data = {
 			producerId,
-			kind : producer.kind,
+			kind: producer.kind,
 			rtpParameters,
-			type : 'pipe' as ConsumerType
+			type: 'pipe' as ConsumerType,
 		};
 
-		const consumer = new Consumer<ConsumerAppData>(
-			{
-				internal :
-				{
-					...this.internal,
-					consumerId
-				},
-				data,
-				channel        : this.channel,
-				appData,
-				paused         : status.paused,
-				producerPaused : status.producerPaused
-			});
+		const consumer = new Consumer<ConsumerAppData>({
+			internal: {
+				...this.internal,
+				consumerId,
+			},
+			data,
+			channel: this.channel,
+			appData,
+			paused: status.paused,
+			producerPaused: status.producerPaused,
+		});
 
 		this.consumers.set(consumer.id, consumer);
 		consumer.on('@close', () => this.consumers.delete(consumer.id));
@@ -427,52 +396,49 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
 		return consumer;
 	}
 
-	private handleWorkerNotifications(): void
-	{
-		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
-		{
-			switch (event)
-			{
-				case Event.TRANSPORT_SCTP_STATE_CHANGE:
-				{
-					const notification = new FbsTransport.SctpStateChangeNotification();
+	private handleWorkerNotifications(): void {
+		this.channel.on(
+			this.internal.transportId,
+			(event: Event, data?: Notification) => {
+				switch (event) {
+					case Event.TRANSPORT_SCTP_STATE_CHANGE: {
+						const notification = new FbsTransport.SctpStateChangeNotification();
 
-					data!.body(notification);
+						data!.body(notification);
 
-					const sctpState = parseSctpState(notification.sctpState());
+						const sctpState = parseSctpState(notification.sctpState());
 
-					this.#data.sctpState = sctpState;
+						this.#data.sctpState = sctpState;
 
-					this.safeEmit('sctpstatechange', sctpState);
+						this.safeEmit('sctpstatechange', sctpState);
 
-					// Emit observer event.
-					this.observer.safeEmit('sctpstatechange', sctpState);
+						// Emit observer event.
+						this.observer.safeEmit('sctpstatechange', sctpState);
 
-					break;
+						break;
+					}
+
+					case Event.TRANSPORT_TRACE: {
+						const notification = new FbsTransport.TraceNotification();
+
+						data!.body(notification);
+
+						const trace = parseTransportTraceEventData(notification);
+
+						this.safeEmit('trace', trace);
+
+						// Emit observer event.
+						this.observer.safeEmit('trace', trace);
+
+						break;
+					}
+
+					default: {
+						logger.error('ignoring unknown event "%s"', event);
+					}
 				}
-
-				case Event.TRANSPORT_TRACE:
-				{
-					const notification = new FbsTransport.TraceNotification();
-
-					data!.body(notification);
-
-					const trace = parseTransportTraceEventData(notification);
-
-					this.safeEmit('trace', trace);
-
-					// Emit observer event.
-					this.observer.safeEmit('trace', trace);
-
-					break;
-				}
-
-				default:
-				{
-					logger.error('ignoring unknown event "%s"', event);
-				}
-			}
-		});
+			},
+		);
 	}
 }
 
@@ -481,9 +447,8 @@ export class PipeTransport<PipeTransportAppData extends AppData = AppData>
  */
 
 export function parsePipeTransportDumpResponse(
-	binary: FbsPipeTransport.DumpResponse
-): PipeTransportDump
-{
+	binary: FbsPipeTransport.DumpResponse,
+): PipeTransportDump {
 	// Retrieve BaseTransportDump.
 	const baseTransportDump = parseBaseTransportDump(binary.base()!);
 	// Retrieve RTP Tuple.
@@ -492,29 +457,27 @@ export function parsePipeTransportDumpResponse(
 	// Retrieve SRTP Parameters.
 	let srtpParameters: SrtpParameters | undefined;
 
-	if (binary.srtpParameters())
-	{
+	if (binary.srtpParameters()) {
 		srtpParameters = parseSrtpParameters(binary.srtpParameters()!);
 	}
 
 	return {
 		...baseTransportDump,
-		tuple          : tuple,
-		rtx            : binary.rtx(),
-		srtpParameters : srtpParameters
+		tuple: tuple,
+		rtx: binary.rtx(),
+		srtpParameters: srtpParameters,
 	};
 }
 
 function parseGetStatsResponse(
-	binary: FbsPipeTransport.GetStatsResponse
-):PipeTransportStat
-{
+	binary: FbsPipeTransport.GetStatsResponse,
+): PipeTransportStat {
 	const base = parseBaseTransportStats(binary.base()!);
 
 	return {
 		...base,
-		type  : 'pipe-transport',
-		tuple : parseTuple(binary.tuple()!)
+		type: 'pipe-transport',
+		tuple: parseTuple(binary.tuple()!),
 	};
 }
 
@@ -522,24 +485,23 @@ function createConsumeRequest({
 	builder,
 	consumerId,
 	producer,
-	rtpParameters
-} : {
+	rtpParameters,
+}: {
 	builder: flatbuffers.Builder;
 	consumerId: string;
 	producer: Producer;
 	rtpParameters: RtpParameters;
-}): number
-{
+}): number {
 	// Build the request.
 	const producerIdOffset = builder.createString(producer.id);
 	const consumerIdOffset = builder.createString(consumerId);
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
 	let consumableRtpEncodingsOffset: number | undefined;
 
-	if (producer.consumableRtpParameters.encodings)
-	{
+	if (producer.consumableRtpParameters.encodings) {
 		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
-			builder, producer.consumableRtpParameters.encodings
+			builder,
+			producer.consumableRtpParameters.encodings,
 		);
 	}
 
@@ -550,44 +512,42 @@ function createConsumeRequest({
 	ConsumeRequest.addConsumerId(builder, consumerIdOffset);
 	ConsumeRequest.addProducerId(builder, producerIdOffset);
 	ConsumeRequest.addKind(
-		builder, producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO);
+		builder,
+		producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO,
+	);
 	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
 	ConsumeRequest.addType(builder, FbsRtpParameters.Type.PIPE);
 
-	if (consumableRtpEncodingsOffset)
-	{
-		ConsumeRequest.addConsumableRtpEncodings(builder, consumableRtpEncodingsOffset);
+	if (consumableRtpEncodingsOffset) {
+		ConsumeRequest.addConsumableRtpEncodings(
+			builder,
+			consumableRtpEncodingsOffset,
+		);
 	}
 
 	return ConsumeRequest.endConsumeRequest(builder);
 }
 
-function createConnectRequest(
-	{
-		builder,
-		ip,
-		port,
-		srtpParameters
-	}:
-	{
-		builder: flatbuffers.Builder;
-		ip?: string;
-		port?: number;
-		srtpParameters?: SrtpParameters;
-	}
-): number
-{
+function createConnectRequest({
+	builder,
+	ip,
+	port,
+	srtpParameters,
+}: {
+	builder: flatbuffers.Builder;
+	ip?: string;
+	port?: number;
+	srtpParameters?: SrtpParameters;
+}): number {
 	let ipOffset = 0;
 	let srtpParametersOffset = 0;
 
-	if (ip)
-	{
+	if (ip) {
 		ipOffset = builder.createString(ip);
 	}
 
 	// Serialize SrtpParameters.
-	if (srtpParameters)
-	{
+	if (srtpParameters) {
 		srtpParametersOffset = serializeSrtpParameters(builder, srtpParameters);
 	}
 
@@ -595,14 +555,13 @@ function createConnectRequest(
 	FbsPipeTransport.ConnectRequest.startConnectRequest(builder);
 	FbsPipeTransport.ConnectRequest.addIp(builder, ipOffset);
 
-	if (typeof port === 'number')
-	{
+	if (typeof port === 'number') {
 		FbsPipeTransport.ConnectRequest.addPort(builder, port);
 	}
-	if (srtpParameters)
-	{
+	if (srtpParameters) {
 		FbsPipeTransport.ConnectRequest.addSrtpParameters(
-			builder, srtpParametersOffset
+			builder,
+			srtpParametersOffset,
 		);
 	}
 

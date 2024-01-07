@@ -5,41 +5,34 @@ const logger = new Logger('EnhancedEventEmitter');
 
 type Events = Record<string, any[]>;
 
-export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitter
-{
-	constructor()
-	{
+export class EnhancedEventEmitter<
+	E extends Events = Events,
+> extends EventEmitter {
+	constructor() {
 		super();
 		this.setMaxListeners(Infinity);
 	}
 
-	emit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean
-	{
+	emit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean {
 		return super.emit(eventName, ...args);
 	}
 
 	/**
 	 * Special addition to the EventEmitter API.
 	 */
-	safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean
-	{
-		try
-		{
+	safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean {
+		try {
 			return super.emit(eventName, ...args);
-		}
-		catch (error)
-		{
+		} catch (error) {
 			logger.error(
 				'safeEmit() | event listener threw an error [eventName:%s]:%o',
-				eventName, error
+				eventName,
+				error,
 			);
 
-			try
-			{
+			try {
 				super.emit('listenererror', eventName, error);
-			}
-			catch (error2)
-			{
+			} catch (error2) {
 				// Ignore it.
 			}
 
@@ -49,9 +42,8 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	on<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.on(eventName, listener as (...args: any[]) => void);
 
 		return this;
@@ -59,9 +51,8 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	off<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.off(eventName, listener as (...args: any[]) => void);
 
 		return this;
@@ -69,9 +60,8 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	addListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.on(eventName, listener as (...args: any[]) => void);
 
 		return this;
@@ -79,9 +69,8 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	prependListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.prependListener(eventName, listener as (...args: any[]) => void);
 
 		return this;
@@ -89,9 +78,8 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	once<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.once(eventName, listener as (...args: any[]) => void);
 
 		return this;
@@ -99,9 +87,8 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	prependOnceListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.prependOnceListener(eventName, listener as (...args: any[]) => void);
 
 		return this;
@@ -109,33 +96,28 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 
 	removeListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
-	): this
-	{
+		listener: (...args: E[K]) => void,
+	): this {
 		super.off(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	removeAllListeners<K extends keyof E & string>(eventName?: K): this
-	{
+	removeAllListeners<K extends keyof E & string>(eventName?: K): this {
 		super.removeAllListeners(eventName);
 
 		return this;
 	}
 
-	listenerCount<K extends keyof E & string>(eventName: K): number
-	{
+	listenerCount<K extends keyof E & string>(eventName: K): number {
 		return super.listenerCount(eventName);
 	}
 
-	listeners<K extends keyof E & string>(eventName: K): Function[]
-	{
+	listeners<K extends keyof E & string>(eventName: K): Function[] {
 		return super.listeners(eventName);
 	}
 
-	rawListeners<K extends keyof E & string>(eventName: K): Function[]
-	{
+	rawListeners<K extends keyof E & string>(eventName: K): Function[] {
 		return super.rawListeners(eventName);
 	}
 }
