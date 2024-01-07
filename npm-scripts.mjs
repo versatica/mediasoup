@@ -355,7 +355,7 @@ function lintNode() {
 
 	// Ensure there are no rules that are unnecessary or conflict with Prettier
 	// rules.
-	executeCmd('npx eslint-config-prettier .eslintrc.js');
+	executeCmd('eslint-config-prettier .eslintrc.js');
 
 	executeCmd(
 		`eslint -c .eslintrc.js --ignore-path .eslintignore --max-warnings 0 ${paths.join(
