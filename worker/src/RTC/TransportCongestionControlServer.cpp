@@ -149,7 +149,7 @@ namespace RTC
 				this->transportCcFeedbackSenderSsrc = 0u;
 				this->transportCcFeedbackMediaSsrc  = packet->GetSsrc();
 
-				MaySendLimitationRembFeedback();
+				MaySendLimitationRembFeedback(nowMs);
 
 				break;
 			}
@@ -243,7 +243,9 @@ namespace RTC
 			// This is to ensure that we send N REMB packets with bitrate 0 (unlimited).
 			this->unlimitedRembCounter = UnlimitedRembNumPackets;
 
-			MaySendLimitationRembFeedback();
+			auto nowMs = DepLibUV::GetTimeMs();
+
+			MaySendLimitationRembFeedback(nowMs);
 		}
 	}
 
@@ -295,6 +297,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Ignore nowMs value if it's smaller than 500 in order to avoid negative values
+		// (Should never happen) and return early if the condition is met.
 		if (nowMs >= PacketArrivalTimestampWindow)
 		{
 			auto expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
@@ -310,11 +314,9 @@ namespace RTC
 		}
 	}
 
-	inline void TransportCongestionControlServer::MaySendLimitationRembFeedback()
+	inline void TransportCongestionControlServer::MaySendLimitationRembFeedback(uint64_t nowMs)
 	{
 		MS_TRACE();
-
-		auto nowMs = DepLibUV::GetTimeMs();
 
 		// May fix unlimitedRembCounter.
 		if (this->unlimitedRembCounter > 0u && this->maxIncomingBitrate != 0u)

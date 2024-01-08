@@ -60,7 +60,7 @@ namespace RTC
 		void SendTransportCcFeedback();
 		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
 		void FillAndSendTransportCcFeedback();
-		void MaySendLimitationRembFeedback();
+		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
