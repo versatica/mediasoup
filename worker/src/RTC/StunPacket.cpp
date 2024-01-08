@@ -4,7 +4,6 @@
 #include "RTC/StunPacket.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include <cstddef>
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy()
 
