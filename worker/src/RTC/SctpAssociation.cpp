@@ -117,14 +117,7 @@ namespace RTC
 	  bool isDataChannel)
 	  : id(DepUsrSCTP::GetNextSctpAssociationId()), listener(listener), os(os), mis(mis),
 	    maxSctpMessageSize(maxSctpMessageSize), sctpSendBufferSize(sctpSendBufferSize),
-	    isDataChannel(isDataChannel), socket(usrsctp_socket(
-	                                    AF_CONN,
-	                                    SOCK_STREAM,
-	                                    IPPROTO_SCTP,
-	                                    onRecvSctpData,
-	                                    onSendSctpData,
-	                                    SendBufferThreshold,
-	                                    reinterpret_cast<void*>(this->id)))
+	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
 
@@ -133,6 +126,15 @@ namespace RTC
 		usrsctp_register_address(reinterpret_cast<void*>(this->id));
 
 		int ret;
+
+		this->socket = usrsctp_socket(
+		  AF_CONN,
+		  SOCK_STREAM,
+		  IPPROTO_SCTP,
+		  onRecvSctpData,
+		  onSendSctpData,
+		  SendBufferThreshold,
+		  reinterpret_cast<void*>(this->id));
 
 		if (!this->socket)
 		{
