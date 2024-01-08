@@ -613,9 +613,9 @@ async function downloadPrebuiltWorker() {
 
 async function uploadMacArmPrebuiltWorker() {
 	if (os.platform() !== 'darwin' || os.arch() !== 'arm64') {
-		logWarn('uploadMacArmPrebuiltWorker() | invalid platform or architecture');
+		logError('uploadMacArmPrebuiltWorker() | invalid platform or architecture');
 
-		return;
+		exitWithError();
 	}
 
 	const octokit = await getOctokit();
