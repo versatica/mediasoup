@@ -247,7 +247,7 @@ namespace RTC
 		// Others.
 		struct sockaddr_storage udpRemoteAddrStorage
 		{
-		}; // NOLINT
+		};
 		Protocol protocol;
 	};
 } // namespace RTC

@@ -77,7 +77,7 @@ namespace RTC
 		ListenInfo listenInfo;
 		struct sockaddr_storage remoteAddrStorage
 		{
-		}; // NOLINT
+		};
 		bool rtx{ false };
 		std::string srtpKey;
 		std::string srtpKeyBase64;

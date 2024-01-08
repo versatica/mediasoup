@@ -96,7 +96,7 @@ protected:
 protected:
 	struct sockaddr_storage localAddr
 	{
-	}; // NOLINT
+	};
 	std::string localIp;
 	uint16_t localPort{ 0u };
 

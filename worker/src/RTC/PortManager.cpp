@@ -49,7 +49,7 @@ namespace RTC
 		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr
 		{
-		}; // NOLINT
+		};
 		size_t portIdx;
 		std::vector<bool>& ports = PortManager::GetPorts(transport, ip);
 		size_t attempt{ 0u };
@@ -379,7 +379,7 @@ namespace RTC
 		const int family = Utils::IP::GetFamily(ip);
 		struct sockaddr_storage bindAddr
 		{
-		}; // NOLINT
+		};
 		uv_handle_t* uvHandle{ nullptr };
 		std::string transportStr;
 		const uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);

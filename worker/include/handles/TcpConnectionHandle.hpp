@@ -133,7 +133,7 @@ protected:
 	uint16_t localPort{ 0u };
 	struct sockaddr_storage peerAddr
 	{
-	}; // NOLINT
+	};
 	std::string peerIp;
 	uint16_t peerPort{ 0u };
 

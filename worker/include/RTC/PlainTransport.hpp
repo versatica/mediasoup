@@ -78,10 +78,10 @@ namespace RTC
 		bool comedia{ false };
 		struct sockaddr_storage remoteAddrStorage
 		{
-		}; // NOLINT
+		};
 		struct sockaddr_storage rtcpRemoteAddrStorage
 		{
-		}; // NOLINT
+		};
 		RTC::SrtpSession::CryptoSuite srtpCryptoSuite{
 			RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
 		};
