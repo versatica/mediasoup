@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #ifdef _WIN32
 #include <winsock2.h>
@@ -10,6 +10,7 @@
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
+
 using namespace Utils;
 
 SCENARIO("Utils::IP::GetFamily()")

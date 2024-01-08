@@ -1,7 +1,5 @@
 import * as mediasoup from '../';
 
-const { createWorker } = mediasoup;
-
 let worker: mediasoup.types.Worker;
 let router: mediasoup.types.Router;
 let transport1: mediasoup.types.WebRtcTransport;
@@ -11,7 +9,7 @@ let dataProducer2: mediasoup.types.DataProducer;
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter();
 	transport1 = await router.createWebRtcTransport(
 		{
@@ -56,15 +54,17 @@ test('transport1.produceData() succeeds', async () =>
 	expect(dataProducer1.sctpStreamParameters?.maxRetransmits).toBeUndefined();
 	expect(dataProducer1.label).toBe('foo');
 	expect(dataProducer1.protocol).toBe('bar');
+	expect(dataProducer1.paused).toBe(false);
 	expect(dataProducer1.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer1.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer1.id, values: [ ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
 	await expect(transport1.dump())
 		.resolves
@@ -91,6 +91,7 @@ test('transport2.produceData() succeeds', async () =>
 			},
 			label    : 'foo',
 			protocol : 'bar',
+			paused   : true,
 			appData  : { foo: 1, bar: '2' }
 		});
 
@@ -106,15 +107,17 @@ test('transport2.produceData() succeeds', async () =>
 	expect(dataProducer2.sctpStreamParameters?.maxRetransmits).toBe(3);
 	expect(dataProducer2.label).toBe('foo');
 	expect(dataProducer2.protocol).toBe('bar');
+	expect(dataProducer2.paused).toBe(true);
 	expect(dataProducer2.appData).toEqual({ foo: 1, bar: '2' });
 
-	await expect(router.dump())
-		.resolves
-		.toMatchObject(
-			{
-				mapDataProducerIdDataConsumerIds : { [dataProducer2.id]: [] },
-				mapDataConsumerIdDataProducerId  : {}
-			});
+	const dump = await router.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds)
+		.toEqual(expect.arrayContaining([
+			{ key: dataProducer2.id, values: [ ] }
+		]));
+
+	expect(dump.mapDataConsumerIdDataProducerId.length).toBe(0);
 
 	await expect(transport2.dump())
 		.resolves
@@ -179,24 +182,26 @@ test('dataProducer.dump() succeeds', async () =>
 	expect(data.id).toBe(dataProducer1.id);
 	expect(data.type).toBe('sctp');
 	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters.streamId).toBe(666);
-	expect(data.sctpStreamParameters.ordered).toBe(true);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
-	expect(data.sctpStreamParameters.maxRetransmits).toBeUndefined();
+	expect(data.sctpStreamParameters!.streamId).toBe(666);
+	expect(data.sctpStreamParameters!.ordered).toBe(true);
+	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(data.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
+	expect(data.paused).toBe(false);
 
 	data = await dataProducer2.dump();
 
 	expect(data.id).toBe(dataProducer2.id);
 	expect(data.type).toBe('sctp');
 	expect(typeof data.sctpStreamParameters).toBe('object');
-	expect(data.sctpStreamParameters.streamId).toBe(777);
-	expect(data.sctpStreamParameters.ordered).toBe(false);
-	expect(data.sctpStreamParameters.maxPacketLifeTime).toBeUndefined();
-	expect(data.sctpStreamParameters.maxRetransmits).toBe(3);
+	expect(data.sctpStreamParameters!.streamId).toBe(777);
+	expect(data.sctpStreamParameters!.ordered).toBe(false);
+	expect(data.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(data.sctpStreamParameters!.maxRetransmits).toBe(3);
 	expect(data.label).toBe('foo');
 	expect(data.protocol).toBe('bar');
+	expect(data.paused).toBe(true);
 }, 2000);
 
 test('dataProducer.getStats() succeeds', async () =>
@@ -226,6 +231,69 @@ test('dataProducer.getStats() succeeds', async () =>
 					bytesReceived    : 0
 				}
 			]);
+}, 2000);
+
+test('dataProducer.pause() and resume() succeed', async () =>
+{
+	const onObserverPause = jest.fn();
+	const onObserverResume = jest.fn();
+
+	dataProducer1.observer.on('pause', onObserverPause);
+	dataProducer1.observer.on('resume', onObserverResume);
+
+	let data;
+
+	await dataProducer1.pause();
+
+	expect(dataProducer1.paused).toBe(true);
+
+	data = await dataProducer1.dump();
+
+	expect(data.paused).toBe(true);
+
+	await dataProducer1.resume();
+
+	expect(dataProducer1.paused).toBe(false);
+
+	data = await dataProducer1.dump();
+
+	expect(data.paused).toBe(false);
+
+	// Even if we don't await for pause()/resume() completion, the observer must
+	// fire 'pause' and 'resume' events if state was the opposite.
+	dataProducer1.pause();
+	dataProducer1.resume();
+	dataProducer1.pause();
+	dataProducer1.pause();
+	dataProducer1.pause();
+	await dataProducer1.resume();
+
+	expect(onObserverPause).toHaveBeenCalledTimes(3);
+	expect(onObserverResume).toHaveBeenCalledTimes(3);
+}, 2000);
+
+test('producer.pause() and resume() emit events', async () =>
+{
+	const promises = [];
+	const events: string[] = [];
+	
+	dataProducer1.observer.once('resume', () => 
+	{
+		events.push('resume');
+	});
+
+	dataProducer1.observer.once('pause', () => 
+	{
+		events.push('pause');
+	});
+
+	promises.push(dataProducer1.pause());
+	promises.push(dataProducer1.resume());
+
+	await Promise.all(promises);
+	
+	expect(events).toEqual([ 'pause', 'resume' ]);
+	expect(dataProducer1.paused).toBe(false);
 }, 2000);
 
 test('dataProducer.close() succeeds', async () =>

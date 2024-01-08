@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import { Logger } from './Logger';
 
 const logger = new Logger('EnhancedEventEmitter');
@@ -23,8 +23,6 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 	 */
 	safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean
 	{
-		const numListeners = super.listenerCount(eventName);
-
 		try
 		{
 			return super.emit(eventName, ...args);
@@ -33,9 +31,19 @@ export class EnhancedEventEmitter<E extends Events = Events> extends EventEmitte
 		{
 			logger.error(
 				'safeEmit() | event listener threw an error [eventName:%s]:%o',
-				eventName, error);
+				eventName, error
+			);
 
-			return Boolean(numListeners);
+			try
+			{
+				super.emit('listenererror', eventName, error);
+			}
+			catch (error2)
+			{
+				// Ignore it.
+			}
+
+			return Boolean(super.listenerCount(eventName));
 		}
 	}
 

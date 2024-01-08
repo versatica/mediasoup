@@ -1,23 +1,32 @@
-import * as os from 'os';
-import * as process from 'process';
-import * as path from 'path';
+import * as os from 'node:os';
+import * as process from 'node:process';
+import * as path from 'node:path';
 import * as mediasoup from '../';
 import { InvalidStateError } from '../errors';
-
-const { createWorker, observer } = mediasoup;
 
 let worker: mediasoup.types.Worker;
 
 beforeEach(() => worker && !worker.closed && worker.close());
 afterEach(() => worker && !worker.closed && worker.close());
 
+test('Worker.workerBin matches mediasoup-worker absolute path', async () =>
+{
+	const workerBin = process.env.MEDIASOUP_WORKER_BIN
+		? process.env.MEDIASOUP_WORKER_BIN
+		: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
+			? path.join(__dirname, '..', '..', '..', 'worker', 'out', 'Debug', 'mediasoup-worker')
+			: path.join(__dirname, '..', '..', '..', 'worker', 'out', 'Release', 'mediasoup-worker');
+
+	expect(mediasoup.workerBin).toBe(workerBin);
+});
+
 test('createWorker() succeeds', async () =>
 {
 	const onObserverNewWorker = jest.fn();
 
-	observer.once('newworker', onObserverNewWorker);
+	mediasoup.observer.once('newworker', onObserverNewWorker);
 
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	expect(onObserverNewWorker).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWorker).toHaveBeenCalledWith(worker);
@@ -32,7 +41,7 @@ test('createWorker() succeeds', async () =>
 	expect(worker.died).toBe(false);
 
 	// eslint-disable-next-line require-atomic-updates
-	worker = await createWorker<{ foo: number; bar?: string }>(
+	worker = await mediasoup.createWorker<{ foo: number; bar?: string }>(
 		{
 			logLevel             : 'debug',
 			logTags              : [ 'info' ],
@@ -58,36 +67,36 @@ test('createWorker() succeeds', async () =>
 test('createWorker() with wrong settings rejects with TypeError', async () =>
 {
 	// @ts-ignore
-	await expect(createWorker({ logLevel: 'chicken' }))
+	await expect(mediasoup.createWorker({ logLevel: 'chicken' }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(createWorker({ rtcMinPort: 1000, rtcMaxPort: 999 }))
+	await expect(mediasoup.createWorker({ rtcMinPort: 1000, rtcMaxPort: 999 }))
 		.rejects
 		.toThrow(TypeError);
 
 	// Port is from 0 to 65535.
-	await expect(createWorker({ rtcMinPort: 1000, rtcMaxPort: 65536 }))
+	await expect(mediasoup.createWorker({ rtcMinPort: 1000, rtcMaxPort: 65536 }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(createWorker({ dtlsCertificateFile: '/notfound/cert.pem' }))
+	await expect(mediasoup.createWorker({ dtlsCertificateFile: '/notfound/cert.pem' }))
 		.rejects
 		.toThrow(TypeError);
 
-	await expect(createWorker({ dtlsPrivateKeyFile: '/notfound/priv.pem' }))
+	await expect(mediasoup.createWorker({ dtlsPrivateKeyFile: '/notfound/priv.pem' }))
 		.rejects
 		.toThrow(TypeError);
 
 	// @ts-ignore
-	await expect(createWorker({ appData: 'NOT-AN-OBJECT' }))
+	await expect(mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' }))
 		.rejects
 		.toThrow(TypeError);
 }, 2000);
 
 test('worker.updateSettings() succeeds', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	await expect(worker.updateSettings({ logLevel: 'debug', logTags: [ 'ice' ] }))
 		.resolves
@@ -98,7 +107,7 @@ test('worker.updateSettings() succeeds', async () =>
 
 test('worker.updateSettings() with wrong settings rejects with TypeError', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	// @ts-ignore
 	await expect(worker.updateSettings({ logLevel: 'chicken' }))
@@ -110,7 +119,7 @@ test('worker.updateSettings() with wrong settings rejects with TypeError', async
 
 test('worker.updateSettings() rejects with InvalidStateError if closed', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	worker.close();
 
 	await expect(worker.updateSettings({ logLevel: 'error' }))
@@ -122,20 +131,19 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 
 test('worker.dump() succeeds', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	await expect(worker.dump())
 		.resolves
-		.toEqual(
+		.toMatchObject(
 			{
 				pid                    : worker.pid,
 				webRtcServerIds        : [],
 				routerIds              : [],
 				channelMessageHandlers :
 				{
-					channelRequestHandlers             : [],
-					payloadChannelRequestHandlers      : [],
-					payloadChannelNotificationHandlers : []
+					channelRequestHandlers      : [],
+					channelNotificationHandlers : []
 				}
 			});
 
@@ -144,7 +152,7 @@ test('worker.dump() succeeds', async () =>
 
 test('worker.dump() rejects with InvalidStateError if closed', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	worker.close();
 
 	await expect(worker.dump())
@@ -156,7 +164,7 @@ test('worker.dump() rejects with InvalidStateError if closed', async () =>
 
 test('worker.getResourceUsage() succeeds', async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 
 	await expect(worker.getResourceUsage())
 		.resolves
@@ -167,7 +175,7 @@ test('worker.getResourceUsage() succeeds', async () =>
 
 test('worker.close() succeeds', async () =>
 {
-	worker = await createWorker({ logLevel: 'warn' });
+	worker = await mediasoup.createWorker({ logLevel: 'warn' });
 
 	const onObserverClose = jest.fn();
 
@@ -184,7 +192,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	let onDied: ReturnType<typeof jest.fn>;
 	let onObserverClose: ReturnType<typeof jest.fn>;
 
-	worker = await createWorker({ logLevel: 'warn' });
+	worker = await mediasoup.createWorker({ logLevel: 'warn' });
 	onDied = jest.fn();
 	onObserverClose = jest.fn();
 
@@ -220,7 +228,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	expect(worker.died).toBe(true);
 
 	// eslint-disable-next-line require-atomic-updates
-	worker = await createWorker({ logLevel: 'warn' });
+	worker = await mediasoup.createWorker({ logLevel: 'warn' });
 	onDied = jest.fn();
 	onObserverClose = jest.fn();
 
@@ -256,7 +264,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () =>
 	expect(worker.died).toBe(true);
 
 	// eslint-disable-next-line require-atomic-updates
-	worker = await createWorker({ logLevel: 'warn' });
+	worker = await mediasoup.createWorker({ logLevel: 'warn' });
 	onDied = jest.fn();
 	onObserverClose = jest.fn();
 
@@ -301,7 +309,7 @@ test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () =
 		return;
 	}
 
-	worker = await createWorker({ logLevel: 'warn' });
+	worker = await mediasoup.createWorker({ logLevel: 'warn' });
 
 	await new Promise<void>((resolve, reject) =>
 	{

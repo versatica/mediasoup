@@ -59,7 +59,9 @@ void DepLibSRTP::ClassInit()
 			const srtp_err_status_t err = srtp_init();
 
 			if (DepLibSRTP::IsError(err))
+			{
 				MS_THROW_ERROR("srtp_init() failed: %s", DepLibSRTP::GetErrorString(err));
+			}
 		}
 
 		++globalInstances;

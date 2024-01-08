@@ -1,9 +1,7 @@
-import * as dgram from 'dgram';
+import * as dgram from 'node:dgram';
 // @ts-ignore
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
-
-const { createWorker } = mediasoup;
 
 // Set node-sctp default PMTU to 1200.
 sctp.defaults({ PMTU: 1200 });
@@ -20,7 +18,7 @@ let sctpSendStream: any;
 
 beforeAll(async () =>
 {
-	worker = await createWorker();
+	worker = await mediasoup.createWorker();
 	router = await worker.createRouter();
 	transport = await router.createPlainTransport(
 		{
@@ -116,11 +114,16 @@ beforeAll(async () =>
 	dataConsumer = await transport.consumeData({ dataProducerId: dataProducer.id });
 });
 
-afterAll(() =>
+afterAll(async () =>
 {
 	udpSocket.close();
 	sctpSocket.end();
 	worker.close();
+
+	// NOTE: For some reason we have to wait a bit for the SCTP stuff to release
+	// internal things, otherwise Jest reports open handles. We don't care much
+	// honestly.
+	await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () =>
@@ -129,18 +132,20 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 	const numMessages = 200;
 	let sentMessageBytes = 0;
 	let recvMessageBytes = 0;
-	let lastSentMessageId = 0;
-	let lastRecvMessageId = 0;
+	let numSentMessages = 0;
+	let numReceivedMessages = 0;
 
 	// It must be zero because it's the first DataConsumer on the transport.
 	expect(dataConsumer.sctpStreamParameters?.streamId).toBe(0);
 
-	await new Promise<void>((resolve) =>
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async (resolve, reject) =>
 	{
-		// Send SCTP messages over the sctpSendStream created above.
-		const interval = setInterval(() =>
+		sendNextMessage();
+
+		async function sendNextMessage(): Promise<void>
 		{
-			const id = ++lastSentMessageId;
+			const id = ++numSentMessages;
 			const data = Buffer.from(String(id));
 
 			// Set ppid of type WebRTC DataChannel string.
@@ -159,11 +164,11 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			sctpSendStream.write(data);
 			sentMessageBytes += data.byteLength;
 
-			if (id === numMessages)
+			if (id < numMessages)
 			{
-				clearInterval(interval);
+				sendNextMessage();
 			}
-		}, 10);
+		}
 
 		sctpSocket.on('stream', onStream);
 
@@ -173,40 +178,54 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 		{
 			// It must be zero because it's the first SCTP incoming stream (so first
 			// DataConsumer).
-			expect(streamId).toBe(0);
+			if (streamId !== 0)
+			{
+				reject(new Error(`streamId should be 0 but it is ${streamId}`));
+
+				return;
+			}
 
 			// @ts-ignore
 			stream.on('data', (data: Buffer) =>
 			{
+				++numReceivedMessages;
 				recvMessageBytes += data.byteLength;
 
 				const id = Number(data.toString('utf8'));
+				// @ts-ignore
+				const ppid = data.ppid;
 
-				if (id === numMessages)
+				if (id !== numReceivedMessages)
 				{
-					clearInterval(interval);
+					reject(
+						new Error(`id ${id} in message should match numReceivedMessages ${numReceivedMessages}`)
+					);
+				}
+				else if (id === numMessages)
+				{
 					resolve();
 				}
-
-				if (id < numMessages / 2)
+				else if (id < numMessages / 2 && ppid !== sctp.PPID.WEBRTC_STRING)
 				{
-					// @ts-ignore
-					expect(data.ppid).toBe(sctp.PPID.WEBRTC_STRING);
+					reject(
+						new Error(`ppid in message with id ${id} should be ${sctp.PPID.WEBRTC_STRING} but it is ${ppid}`)
+					);
 				}
-				else
+				else if (id > numMessages / 2 && ppid !== sctp.PPID.WEBRTC_BINARY)
 				{
-					// @ts-ignore
-					expect(data.ppid).toBe(sctp.PPID.WEBRTC_BINARY);
-				}
+					reject(
+						new Error(`ppid in message with id ${id} should be ${sctp.PPID.WEBRTC_BINARY} but it is ${ppid}`)
+					);
 
-				expect(id).toBe(++lastRecvMessageId);
+					return;
+				}
 			});
 		});
 	});
 
 	expect(onStream).toHaveBeenCalledTimes(1);
-	expect(lastSentMessageId).toBe(numMessages);
-	expect(lastRecvMessageId).toBe(numMessages);
+	expect(numSentMessages).toBe(numMessages);
+	expect(numReceivedMessages).toBe(numMessages);
 	expect(recvMessageBytes).toBe(sentMessageBytes);
 
 	await expect(dataProducer.getStats())

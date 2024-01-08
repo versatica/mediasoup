@@ -13,13 +13,13 @@ const eslintConfig =
 	settings      : {},
 	parserOptions :
 	{
-		ecmaVersion  : 2018,
+		ecmaVersion  : 2022,
 		sourceType   : 'module',
 		ecmaFeatures :
 		{
 			impliedStrict : true
 		},
-		lib     : [ 'es2018' ],
+		lib     : [ 'es2022' ],
 		project : 'node/tsconfig.json'
 	},
 	globals :
@@ -45,6 +45,14 @@ const eslintConfig =
 		'computed-property-spacing' : 2,
 		'constructor-super'         : 2,
 		'curly'                     : [ 2, 'all' ],
+		// Unfortunatelly `curly` does not apply to blocks in `switch` cases so
+		// this is needed.
+		'no-restricted-syntax'      : [ 2,
+			{
+				'selector' : 'SwitchCase > *.consequent[type!="BlockStatement"]',
+				'message'  : 'Switch cases without blocks are disallowed'
+			}
+		],
 		'func-call-spacing'         : 2,
 		'generator-star-spacing'    : 2,
 		'guard-for-in'              : 2,
@@ -78,7 +86,7 @@ const eslintConfig =
 		'max-len' : [ 2, 100,
 			{
 				tabWidth               : 2,
-				comments               : 84,
+				comments               : 88,
 				ignoreUrls             : true,
 				ignoreStrings          : true,
 				ignoreTemplateLiterals : true,
@@ -166,7 +174,12 @@ const eslintConfig =
 		'prefer-rest-params'            : 2,
 		'prefer-spread'                 : 2,
 		'prefer-template'               : 2,
-		'quotes'                        : [ 2, 'single', { avoidEscape: true } ],
+		'quotes'                        : [ 2, 'single',
+			{
+				avoidEscape           : true,
+				allowTemplateLiterals : true
+			}
+		],
 		'semi'                          : [ 2, 'always' ],
 		'semi-spacing'                  : 2,
 		'space-before-blocks'           : 2,
@@ -178,6 +191,7 @@ const eslintConfig =
 			}
 		],
 		'space-in-parens' : [ 2, 'never' ],
+		'space-infix-ops' : [ 2, { 'int32Hint': false } ],
 		'spaced-comment'  : [ 2, 'always' ],
 		'strict'          : 2,
 		'valid-typeof'    : 2,

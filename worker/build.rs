@@ -1,14 +1,9 @@
-use std::env;
 use std::process::Command;
+use std::{env, fs};
 
 fn main() {
-    if env::var("DOCS_RS").is_ok() {
-        // Skip everything when building docs on docs.rs
-        return;
-    }
-
-    // On Windows Rust always links against release version of MSVC runtime, thus requires Release
-    // build here.
+    // On Windows Rust always links against release version of MSVC runtime, thus requires
+    // Release build here
     let build_type = if cfg!(all(debug_assertions, not(windows))) {
         "Debug"
     } else {
@@ -16,7 +11,41 @@ fn main() {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    // Force forward slashes on Windows too so that is plays well with our dumb `Makefile`
+
+    // Compile Rust flatbuffers
+    let flatbuffers_declarations = planus_translation::translate_files(
+        &fs::read_dir("fbs")
+            .expect("Failed to read `fbs` directory")
+            .filter_map(|maybe_entry| {
+                maybe_entry
+                    .map(|entry| {
+                        let path = entry.path();
+                        if path.extension() == Some("fbs".as_ref()) {
+                            Some(path)
+                        } else {
+                            None
+                        }
+                    })
+                    .transpose()
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .expect("Failed to collect flatbuffers files"),
+    )
+    .expect("Failed to translate flatbuffers files");
+
+    fs::write(
+        format!("{out_dir}/fbs.rs"),
+        planus_codegen::generate_rust(&flatbuffers_declarations)
+            .expect("Failed to generate Rust code from flatbuffers"),
+    )
+    .expect("Failed to write generated Rust flatbuffers into fbs.rs");
+
+    if env::var("DOCS_RS").is_ok() {
+        // Skip everything when building docs on docs.rs
+        return;
+    }
+
+    // Force forward slashes on Windows too so that is plays well with our tasks.py
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));
 
     // Add C++ std lib
@@ -75,51 +104,48 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=c++");
         println!("cargo:rustc-link-lib=dylib=c++abi");
     }
-    #[cfg(target_os = "windows")]
+
+    // Install Python invoke package in custom folder
+    let pip_invoke_dir = format!("{out_dir}/pip_invoke");
+    let python = env::var("PYTHON").unwrap_or("python3".to_string());
+    let mut pythonpath = if let Ok(original_pythonpath) = env::var("PYTHONPATH") {
+        format!("{pip_invoke_dir}:{original_pythonpath}")
+    } else {
+        pip_invoke_dir.clone()
+    };
+
+    // Force ";" in PYTHONPATH on Windows
+    if cfg!(target_os = "windows") {
+        pythonpath = pythonpath.replace(':', ";");
+    }
+
+    if !Command::new(&python)
+        .arg("-m")
+        .arg("pip")
+        .arg("install")
+        .arg("--upgrade")
+        .arg("--target")
+        .arg(pip_invoke_dir)
+        .arg("invoke")
+        .spawn()
+        .expect("Failed to start")
+        .wait()
+        .expect("Wasn't running")
+        .success()
     {
-        if !std::path::Path::new("worker/out/msys/bin/make.exe").exists() {
-            let python = if Command::new("where")
-                .arg("python3.exe")
-                .status()
-                .expect("Failed to start")
-                .success()
-            {
-                "python3"
-            } else {
-                "python"
-            };
-
-            if !Command::new(python)
-                .arg("scripts\\getmake.py")
-                .status()
-                .expect("Failed to start")
-                .success()
-            {
-                panic!("Failed to install MSYS/make")
-            }
-        }
-
-        env::set_var(
-            "PATH",
-            format!(
-                "{}\\worker\\out\\msys\\bin;{}",
-                env::current_dir()
-                    .unwrap()
-                    .into_os_string()
-                    .into_string()
-                    .unwrap(),
-                env::var("PATH").unwrap()
-            ),
-        );
+        panic!("Failed to install Python invoke package")
     }
 
     // Build
-    if !Command::new("make")
+    if !Command::new(&python)
+        .arg("-m")
+        .arg("invoke")
         .arg("libmediasoup-worker")
+        .env("PYTHONPATH", &pythonpath)
         .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
         .env("MEDIASOUP_BUILDTYPE", build_type)
         // Force forward slashes on Windows too, otherwise Meson thinks path is not absolute 🤷
-        .env("INSTALL_DIR", &out_dir.replace('\\', "/"))
+        .env("MEDIASOUP_INSTALL_DIR", &out_dir.replace('\\', "/"))
         .spawn()
         .expect("Failed to start")
         .wait()
@@ -148,6 +174,10 @@ fn main() {
         println!("cargo:rustc-link-lib=iphlpapi");
         println!("cargo:rustc-link-lib=userenv");
         println!("cargo:rustc-link-lib=ws2_32");
+        println!("cargo:rustc-link-lib=dbghelp");
+        println!("cargo:rustc-link-lib=ole32");
+        println!("cargo:rustc-link-lib=uuid");
+        println!("cargo:rustc-link-lib=shell32");
 
         // These are required by OpenSSL on Windows
         println!("cargo:rustc-link-lib=ws2_32");
@@ -159,8 +189,11 @@ fn main() {
 
     if env::var("KEEP_BUILD_ARTIFACTS") != Ok("1".to_string()) {
         // Clean
-        if !Command::new("make")
+        if !Command::new(python)
+            .arg("-m")
+            .arg("invoke")
             .arg("clean-all")
+            .env("PYTHONPATH", &pythonpath)
             .env("MEDIASOUP_OUT_DIR", &mediasoup_out_dir)
             .spawn()
             .expect("Failed to start")

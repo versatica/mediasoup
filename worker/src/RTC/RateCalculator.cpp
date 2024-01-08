@@ -13,7 +13,9 @@ namespace RTC
 
 		// Ignore too old data. Should never happen.
 		if (nowMs < this->oldestItemStartTime)
+		{
 			return;
+		}
 
 		// Increase bytes.
 		this->bytes += size;
@@ -26,8 +28,11 @@ namespace RTC
 		{
 			this->newestItemIndex++;
 			this->newestItemStartTime = nowMs;
+
 			if (this->newestItemIndex >= this->windowItems)
+			{
 				this->newestItemIndex = 0;
+			}
 
 			MS_ASSERT(
 			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
@@ -65,7 +70,9 @@ namespace RTC
 		MS_TRACE();
 
 		if (nowMs == this->lastTime)
+		{
 			return this->lastRate;
+		}
 
 		RemoveOldData(nowMs);
 
@@ -83,13 +90,17 @@ namespace RTC
 
 		// No item set.
 		if (this->newestItemIndex < 0 || this->oldestItemIndex < 0)
+		{
 			return;
+		}
 
 		const uint64_t newOldestTime = nowMs - this->windowSizeMs;
 
 		// Oldest item already removed.
 		if (newOldestTime < this->oldestItemStartTime)
+		{
 			return;
+		}
 
 		// A whole window size time has elapsed since last entry. Reset the buffer.
 		if (newOldestTime >= this->newestItemStartTime)
@@ -107,7 +118,9 @@ namespace RTC
 			oldestItem.time  = 0u;
 
 			if (++this->oldestItemIndex >= this->windowItems)
+			{
 				this->oldestItemIndex = 0;
+			}
 
 			const BufferItem& newOldestItem = this->buffer[this->oldestItemIndex];
 			this->oldestItemStartTime       = newOldestItem.time;

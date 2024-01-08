@@ -2,10 +2,12 @@
 Checks: "*,\
  -altera*,\
  -boost-use-to-string,\
+ -bugprone-easily-swappable-parameters,\
  -cert-*,\
  -clang-analyzer-optin.osx.*,\
  -clang-analyzer-osx.*,\
  -cppcoreguidelines-avoid-c-arrays,\
+ -cppcoreguidelines-avoid-do-while,\
  -cppcoreguidelines-avoid-goto,\
  -cppcoreguidelines-avoid-magic-numbers,\
  -cppcoreguidelines-init-variables,\

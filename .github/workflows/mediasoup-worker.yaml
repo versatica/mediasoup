@@ -1,6 +1,6 @@
 name: mediasoup-worker
 
-on: [push, pull_request]
+on: [pull_request, workflow_dispatch]
 
 concurrency:
   # Cancel a currently running workflow from the same PR, branch or tag when a
@@ -11,7 +11,6 @@ concurrency:
 jobs:
   ci:
     strategy:
-      fail-fast: false
       matrix:
         build:
           - os: ubuntu-20.04
@@ -37,29 +36,23 @@ jobs:
             cxx: cl
         # A single Node.js version should be fine for C++.
         node:
-          - 18
+          - 20
 
     runs-on: ${{ matrix.build.os }}
 
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-
-      - run: npm run install-clang-tools
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
-      - run: npm run lint:worker
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
 
       - name: Configure cache
         uses: actions/cache@v3
@@ -70,7 +63,25 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      - run: npm run worker:build
-      - run: npm run test:worker
+      # We need to install pip invoke manually.
+      - name: pip3 install invoke
+        run: pip3 install invoke
+
+      # We need to install npm deps of worker/scripts/package.json.
+      - name: npm ci --prefix worker/scripts
+        run: npm ci --prefix worker/scripts --foreground-scripts
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+
+      - name: invoke -r worker lint
+        run: invoke -r worker lint
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+
+      - name: invoke -r worker mediasoup-worker
+        run: invoke -r worker mediasoup-worker
+
+      - name: invoke -r worker test
+        run: invoke -r worker test
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'

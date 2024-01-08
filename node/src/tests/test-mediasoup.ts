@@ -1,9 +1,21 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import * as mediasoup from '../';
 
+const PKG = JSON.parse(fs.readFileSync(
+	path.join(__dirname, '..', '..', '..', 'package.json'), { encoding: 'utf-8' })
+);
+
 const {
+	version,
 	getSupportedRtpCapabilities,
 	parseScalabilityMode
 } = mediasoup;
+
+test('mediasoup.version matches version field in package.json', () =>
+{
+	expect(version).toBe(PKG.version);
+});
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () =>
 {
@@ -19,7 +31,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	const rtpCapabilities2 = getSupportedRtpCapabilities();
 
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
-}, 500);
+});
 
 test('parseScalabilityMode() works', () =>
 {
@@ -52,4 +64,4 @@ test('parseScalabilityMode() works', () =>
 
 	expect(parseScalabilityMode('L4T7_KEY_SHIFT'))
 		.toEqual({ spatialLayers: 4, temporalLayers: 7, ksvc: true });
-}, 500);
+});

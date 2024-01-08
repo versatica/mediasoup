@@ -39,7 +39,7 @@ namespace RTC
 				this->transportCcFeedbackPacket->SetFeedbackPacketCount(this->transportCcFeedbackPacketCount);
 
 				// Create the feedback send periodic timer.
-				this->transportCcFeedbackSendPeriodicTimer = new Timer(this);
+				this->transportCcFeedbackSendPeriodicTimer = new TimerHandle(this);
 
 				break;
 			}
@@ -126,7 +126,7 @@ namespace RTC
 				}
 
 				// We may receive packets with sequence number lower than the one in previous
-				// tcc feedback, these packets may has been reported as lost previously,
+				// tcc feedback, these packets may have been reported as lost previously,
 				// therefore we need to reset the start sequence num for the next tcc feedback.
 
 				if (
@@ -424,7 +424,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
 	}
 
-	inline void TransportCongestionControlServer::OnTimer(Timer* timer)
+	inline void TransportCongestionControlServer::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 

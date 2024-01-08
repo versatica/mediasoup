@@ -1,0 +1,64 @@
+name: mediasoup-worker-prebuild
+
+# Only trigger on GitHub releases.
+on:
+  release:
+    types: [published]
+
+jobs:
+  ci:
+    strategy:
+      matrix:
+        build:
+          # For Linux let's use an old version of Ubuntu (20.04) that builds the
+          # mediasoup-worker binary using an old version of GLib, so it will work
+          # on Linux hosts running more modern GLib versions.
+          # See https://github.com/versatica/mediasoup/issues/1089.
+          - os: ubuntu-20.04
+            cc: gcc
+            cxx: g++
+          - os: macos-12
+            cc: clang
+            cxx: clang++
+          - os: windows-2022
+            cc: cl
+            cxx: cl
+        node:
+          - 20
+
+    runs-on: ${{ matrix.build.os }}
+
+    env:
+      CC: ${{ matrix.build.cc }}
+      CXX: ${{ matrix.build.cxx }}
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # We need to install some NPM production deps for npm-scripts.mjs to work.
+      - name: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --omit=dev --foreground-scripts
+
+      # However we also need to install pip invoke manually (since
+      # `--ignore-scripts` prevented invoke from being installed).
+      - name: pip3 install invoke
+        run: pip3 install invoke
+
+      - name: npm run worker:build
+        run: npm run worker:build
+
+      # Publish prebuild binaries on tag.
+      - name: npm run worker:prebuild
+        run: npm run worker:prebuild
+
+      - name: Upload mediasoup-worker prebuilt binary
+        uses: softprops/action-gh-release@v1
+        with:
+          files: worker/prebuild/mediasoup-worker-*.tgz

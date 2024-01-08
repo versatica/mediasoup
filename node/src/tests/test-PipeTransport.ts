@@ -2,8 +2,6 @@
 import * as pickPort from 'pick-port';
 import * as mediasoup from '../';
 
-const { createWorker } = mediasoup;
-
 let worker1: mediasoup.types.Worker;
 let worker2: mediasoup.types.Worker;
 let router1: mediasoup.types.Router;
@@ -190,14 +188,14 @@ const consumerDeviceCapabilities: mediasoup.types.RtpCapabilities =
 
 beforeAll(async () =>
 {
-	worker1 = await createWorker();
-	worker2 = await createWorker();
+	worker1 = await mediasoup.createWorker();
+	worker2 = await mediasoup.createWorker();
 	router1 = await worker1.createRouter({ mediaCodecs });
 	router2 = await worker2.createRouter({ mediaCodecs });
 	transport1 = await router1.createWebRtcTransport(
 		{
-			listenIps  : [ '127.0.0.1' ],
-			enableSctp : true
+			listenInfos : [ { protocol: 'udp', ip: '127.0.0.1' } ],
+			enableSctp  : true
 		});
 	transport2 = await router2.createWebRtcTransport(
 		{
@@ -466,27 +464,45 @@ test('router.pipeToRouter() succeeds with video', async () =>
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
-test('router.pipeToRouter() fails if both Routers belong to the same Worker', async () =>
+test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () =>
 {
-	const router1bis = await worker1.createRouter({ mediaCodecs });
+	// @ts-ignore
+	await expect(router1.createPipeTransport({}))
+		.rejects
+		.toThrow(TypeError);
 
-	await expect(router1.pipeToRouter(
+	await expect(router1.createPipeTransport({ listenIp: '123' }))
+		.rejects
+		.toThrow(TypeError);
+
+	// @ts-ignore
+	await expect(router1.createPipeTransport({ listenIp: [ '127.0.0.1' ] }))
+		.rejects
+		.toThrow(TypeError);
+
+	await expect(router1.createPipeTransport(
 		{
-			producerId : videoProducer.id,
-			router     : router1bis
+			listenInfo : { protocol: 'tcp', ip: '127.0.0.1' }
 		}))
 		.rejects
-		.toThrow(Error);
+		.toThrow(TypeError);
 
-	router1bis.close();
+	await expect(router1.createPipeTransport(
+		{
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1' },
+			// @ts-ignore
+			appData    : 'NOT-AN-OBJECT'
+		}))
+		.rejects
+		.toThrow(TypeError);
 }, 2000);
 
 test('router.createPipeTransport() with enableRtx succeeds', async () =>
 {
 	const pipeTransport = await router1.createPipeTransport(
 		{
-			listenIp  : '127.0.0.1',
-			enableRtx : true
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1' },
+			enableRtx  : true
 		});
 
 	const pipeConsumer =
@@ -564,12 +580,41 @@ test('router.createPipeTransport() with enableRtx succeeds', async () =>
 	pipeTransport.close();
 }, 2000);
 
-test('router.createPipeTransport() with invalid srtpParameters must fail', async () =>
+test('pipeTransport.connect() with valid SRTP parameters succeeds', async () =>
 {
 	const pipeTransport = await router1.createPipeTransport(
 		{
-			listenIp  : '127.0.0.1',
-			enableRtx : true
+			listenIp   : '127.0.0.1',
+			enableSrtp : true
+		});
+
+	expect(typeof pipeTransport.srtpParameters).toBe('object');
+	// The master length of AEAD_AES_256_GCM.
+	expect(pipeTransport.srtpParameters?.keyBase64.length).toBe(60);
+
+	// Valid srtpParameters.
+	await expect(pipeTransport.connect(
+		{
+			ip             : '127.0.0.2',
+			port           : 9999,
+			srtpParameters :
+			{
+				cryptoSuite : 'AEAD_AES_256_GCM',
+				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
+			}
+		}))
+		.resolves
+		.toBeUndefined();
+
+	pipeTransport.close();
+}, 2000);
+
+test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset', async () =>
+{
+	const pipeTransport = await router1.createPipeTransport(
+		{
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1' },
+			enableRtx  : true
 		});
 
 	expect(pipeTransport.srtpParameters).toBeUndefined();
@@ -602,7 +647,7 @@ test('router.createPipeTransport() with invalid srtpParameters must fail', async
 	pipeTransport.close();
 });
 
-test('router.createPipeTransport() with enableSrtp succeeds', async () =>
+test('pipeTransport.connect() with invalid srtpParameters fails', async () =>
 {
 	const pipeTransport = await router1.createPipeTransport(
 		{
@@ -708,20 +753,6 @@ test('router.createPipeTransport() with enableSrtp succeeds', async () =>
 		.rejects
 		.toThrow(TypeError);
 
-	// Valid srtpParameters.
-	await expect(pipeTransport.connect(
-		{
-			ip             : '127.0.0.2',
-			port           : 9999,
-			srtpParameters :
-			{
-				cryptoSuite : 'AEAD_AES_256_GCM',
-				keyBase64   : 'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo='
-			}
-		}))
-		.resolves
-		.toBeUndefined();
-
 	pipeTransport.close();
 }, 2000);
 
@@ -730,8 +761,7 @@ test('router.createPipeTransport() with fixed port succeeds', async () =>
 	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
 	const pipeTransport = await router1.createPipeTransport(
 		{
-			listenIp : '127.0.0.1',
-			port
+			listenInfo : { protocol: 'udp', ip: '127.0.0.1', port }
 		});
 
 	expect(pipeTransport.tuple.localPort).toEqual(port);
@@ -843,6 +873,21 @@ test('producer.close() is transmitted to pipe Consumer', async () =>
 	}
 
 	expect(videoConsumer.closed).toBe(true);
+}, 2000);
+
+test('router.pipeToRouter() fails if both Routers belong to the same Worker', async () =>
+{
+	const router1bis = await worker1.createRouter({ mediaCodecs });
+
+	await expect(router1.pipeToRouter(
+		{
+			producerId : videoProducer.id,
+			router     : router1bis
+		}))
+		.rejects
+		.toThrow(Error);
+
+	router1bis.close();
 }, 2000);
 
 test('router.pipeToRouter() succeeds with data', async () =>
