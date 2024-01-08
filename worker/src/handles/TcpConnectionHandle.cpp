@@ -187,7 +187,7 @@ void TcpConnectionHandle::Start()
 		return;
 	}
 
-	const int err = uv_read_start(
+	int err = uv_read_start(
 	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
 	  static_cast<uv_alloc_cb>(onAlloc),
 	  static_cast<uv_read_cb>(onRead));
