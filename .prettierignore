@@ -1,3 +1,5 @@
+# NOTE: This file and .prettierignore must contain same paths.
+
 /.cache
 /art
 /coverage
@@ -16,3 +18,4 @@
 /worker/subprojects
 /worker/test
 /worker/out
+/NO_GIT
