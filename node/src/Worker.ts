@@ -575,7 +575,6 @@ export class Worker<
 		this.#closed = true;
 
 		// Kill the worker process.
-		this.#child.unref();
 		this.#child.kill('SIGTERM');
 
 		// Close the Channel instance.
