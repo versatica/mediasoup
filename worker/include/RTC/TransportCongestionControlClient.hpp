@@ -58,7 +58,7 @@ namespace RTC
 		  uint32_t initialAvailableBitrate,
 		  uint32_t maxOutgoingBitrate,
 		  uint32_t minOutgoingBitrate);
-		virtual ~TransportCongestionControlClient();
+		~TransportCongestionControlClient() override;
 
 	public:
 		RTC::BweType GetBweType() const

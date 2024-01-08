@@ -112,6 +112,10 @@ namespace RTC
 			);
 			// clang-format on
 		}
+		static std::vector<Fingerprint>& GetLocalFingerprints()
+		{
+			return DtlsTransport::localFingerprints;
+		}
 
 	private:
 		static void GenerateCertificateAndPrivateKey();
@@ -137,10 +141,6 @@ namespace RTC
 	public:
 		void Dump() const;
 		void Run(Role localRole);
-		std::vector<Fingerprint>& GetLocalFingerprints() const
-		{
-			return DtlsTransport::localFingerprints;
-		}
 		bool SetRemoteFingerprint(const Fingerprint& fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);
 		DtlsState GetState() const

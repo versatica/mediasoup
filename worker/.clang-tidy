@@ -3,6 +3,8 @@ Checks: "*,\
  -altera*,\
  -boost-use-to-string,\
  -bugprone-easily-swappable-parameters,\
+ -bugprone-lambda-function-name,\
+ -bugprone-macro-parentheses,\
  -cert-*,\
  -clang-analyzer-optin.osx.*,\
  -clang-analyzer-osx.*,\
@@ -37,11 +39,15 @@ Checks: "*,\
  -hicpp-uppercase-literal-suffix,\
  -hicpp-vararg,\
  -llvm-include-order,\
+ -llvm-header-guard,\
+ -llvm-else-after-return,\
  -llvmlibc-*,\
  -misc-non-private-member-variables-in-classes,\
  -modernize-avoid-c-arrays,\
+ -modernize-concat-nested-namespaces,\
  -modernize-make-unique,\
  -modernize-pass-by-value,\
+ -modernize-use-nodiscard, \
  -modernize-use-trailing-return-type,\
  -readability-else-after-return,\
  -readability-function-cognitive-complexity,\
@@ -49,22 +55,22 @@ Checks: "*,\
  -readability-implicit-bool-cast,\
  -readability-implicit-bool-conversion,\
  -readability-magic-numbers,\
+ -readability-redundant-access-specifiers, \
  -readability-uppercase-literal-suffix,\
  "
 
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
 User: mediasoup
-
-# Old clang-tidy does not support this option which indicates to take the
-# format options from .clang-format when applying fixes.
-#FormatStyle: file
+FormatStyle: file
 
 CheckOptions:
   - key:             cppcoreguidelines-pro-bounds-constant-array-index.GslHeader
     value:           ''
   - key:             cppcoreguidelines-pro-bounds-constant-array-index.IncludeStyle
     value:           '0'
+  - key:             cppcoreguidelines-macro-usage.AllowedRegexp
+    value:           ^MS_*
   - key:             misc-assert-side-effect.AssertMacros
     value:           assert
   - key:             misc-assert-side-effect.CheckFunctionCalls
@@ -98,7 +104,7 @@ CheckOptions:
   - key:             readability-identifier-naming.ClassCase
     value:           CamelCase
   - key:             readability-identifier-naming.ClassConstantCase
-    value:           camelBack
+    value:           CamelCase
   - key:             readability-identifier-naming.ClassConstantPrefix
     value:           ''
   - key:             readability-identifier-naming.ClassConstantSuffix
@@ -156,9 +162,9 @@ CheckOptions:
   - key:             readability-identifier-naming.ConstexprVariableSuffix
     value:           ''
   - key:             readability-identifier-naming.EnumCase
-    value:           aNy_Case
+    value:           aNy_CasE
   - key:             readability-identifier-naming.EnumConstantCase
-    value:           aNy_Case
+    value:           aNy_CasE
   - key:             readability-identifier-naming.EnumConstantPrefix
     value:           ''
   - key:             readability-identifier-naming.EnumConstantSuffix
@@ -194,7 +200,7 @@ CheckOptions:
   - key:             readability-identifier-naming.IgnoreFailedSplit
     value:           '0'
   - key:             readability-identifier-naming.InlineNamespaceCase
-    value:           aNy_Case
+    value:           aNy_CasE
   - key:             readability-identifier-naming.InlineNamespacePrefix
     value:           ''
   - key:             readability-identifier-naming.InlineNamespaceSuffix
@@ -224,7 +230,7 @@ CheckOptions:
   - key:             readability-identifier-naming.MethodSuffix
     value:           ''
   - key:             readability-identifier-naming.NamespaceCase
-    value:           aNy_Case
+    value:           aNy_CasE
   - key:             readability-identifier-naming.NamespacePrefix
     value:           ''
   - key:             readability-identifier-naming.NamespaceSuffix

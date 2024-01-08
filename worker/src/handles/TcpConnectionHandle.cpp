@@ -74,11 +74,11 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 /* Instance methods. */
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-TcpConnectionHandle::TcpConnectionHandle(size_t bufferSize) : bufferSize(bufferSize)
+TcpConnectionHandle::TcpConnectionHandle(size_t bufferSize)
+  : bufferSize(bufferSize), uvHandle(new uv_tcp_t)
 {
 	MS_TRACE();
 
-	this->uvHandle       = new uv_tcp_t;
 	this->uvHandle->data = static_cast<void*>(this);
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().

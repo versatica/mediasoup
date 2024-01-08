@@ -158,10 +158,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->buffer)
-		{
-			delete[] this->buffer;
-		}
+		delete[] this->buffer;
 	}
 
 	void RtpPacket::Dump() const
@@ -840,14 +837,7 @@ namespace RTC
 			return true;
 		}
 
-		if (this->payloadDescriptorHandler->Process(context, this->payload, marker))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return this->payloadDescriptorHandler->Process(context, this->payload, marker);
 	}
 
 	void RtpPacket::RestorePayload()

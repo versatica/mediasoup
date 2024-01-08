@@ -71,14 +71,13 @@ inline static long onSslBioOut(
   int ret,
   size_t* /*processed*/)
 {
-	long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
+	const long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
 
 	if (operationType == BIO_CB_WRITE && argp && len > 0)
 	{
 		MS_DEBUG_DEV("%zu bytes of DTLS data ready to be sent", len);
 
-		RTC::DtlsTransport* dtlsTransport =
-		  reinterpret_cast<RTC::DtlsTransport*>(BIO_get_callback_arg(bio));
+		auto* dtlsTransport = reinterpret_cast<RTC::DtlsTransport*>(BIO_get_callback_arg(bio));
 
 		dtlsTransport->SendDtlsData(reinterpret_cast<const uint8_t*>(argp), len);
 	}
@@ -333,7 +332,7 @@ namespace RTC
 
 		int ret{ 0 };
 		X509_NAME* certName{ nullptr };
-		std::string subject =
+		const std::string subject =
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
 		// Create key with curve.
@@ -618,8 +617,8 @@ namespace RTC
 
 		for (auto& kv : DtlsTransport::string2FingerprintAlgorithm)
 		{
-			const std::string& algorithmString = kv.first;
-			FingerprintAlgorithm algorithm     = kv.second;
+			const std::string& algorithmString   = kv.first;
+			const FingerprintAlgorithm algorithm = kv.second;
 			uint8_t binaryFingerprint[EVP_MAX_MD_SIZE];
 			unsigned int size{ 0 };
 			char hexFingerprint[(EVP_MAX_MD_SIZE * 3) + 1];
@@ -693,13 +692,10 @@ namespace RTC
 
 	/* Instance methods. */
 
-	DtlsTransport::DtlsTransport(Listener* listener) : listener(listener)
+	DtlsTransport::DtlsTransport(Listener* listener)
+	  : listener(listener), ssl(SSL_new(DtlsTransport::sslCtx))
 	{
 		MS_TRACE();
-
-		/* Set SSL. */
-
-		this->ssl = SSL_new(DtlsTransport::sslCtx);
 
 		if (!this->ssl)
 		{

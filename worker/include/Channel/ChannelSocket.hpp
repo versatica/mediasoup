@@ -24,7 +24,7 @@ namespace Channel
 
 	public:
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
-		~ConsumerSocket();
+		~ConsumerSocket() override;
 
 		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
 	public:
@@ -75,7 +75,7 @@ namespace Channel
 		class Listener : public RequestHandler, public NotificationHandler
 		{
 		public:
-			virtual ~Listener() = default;
+			~Listener() override = default;
 
 		public:
 			virtual void OnChannelClosed(Channel::ChannelSocket* channel) = 0;
@@ -88,13 +88,13 @@ namespace Channel
 		  ChannelReadCtx channelReadCtx,
 		  ChannelWriteFn channelWriteFn,
 		  ChannelWriteCtx channelWriteCtx);
-		virtual ~ChannelSocket();
+		~ChannelSocket() override;
 
 	public:
 		void Close();
 		void SetListener(Listener* listener);
-		void Send(const uint8_t* message, uint32_t messageLen);
-		void SendLog(const char* message, uint32_t messageLen);
+		void Send(const uint8_t* data, uint32_t dataLen);
+		void SendLog(const char* data, uint32_t dataLen);
 		bool CallbackRead();
 
 	private:

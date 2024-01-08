@@ -2320,7 +2320,7 @@ namespace RTC
 		this->tccClient->SetDesiredBitrate(totalDesiredBitrate, forceBitrate);
 	}
 
-	inline void Transport::EmitTraceEventProbationType(RTC::RtpPacket* packet) const
+	inline void Transport::EmitTraceEventProbationType(RTC::RtpPacket* /*packet*/) const
 	{
 		MS_TRACE();
 
@@ -2893,10 +2893,10 @@ namespace RTC
 		// Pass the SCTP message to the corresponding DataProducer.
 		try
 		{
-			static std::vector<uint16_t> EmptySubchannels;
+			static std::vector<uint16_t> emptySubchannels;
 
 			dataProducer->ReceiveMessage(
-			  msg, len, ppid, EmptySubchannels, /*requiredSubchannel*/ std::nullopt);
+			  msg, len, ppid, emptySubchannels, /*requiredSubchannel*/ std::nullopt);
 		}
 		catch (std::exception& error)
 		{
@@ -2936,7 +2936,7 @@ namespace RTC
 	}
 
 	inline void Transport::OnTransportCongestionControlClientSendRtpPacket(
-	  RTC::TransportCongestionControlClient* tccClient,
+	  RTC::TransportCongestionControlClient* /*tccClient*/,
 	  RTC::RtpPacket* packet,
 	  const webrtc::PacedPacketInfo& pacingInfo)
 	{

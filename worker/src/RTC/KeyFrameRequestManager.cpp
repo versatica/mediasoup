@@ -9,11 +9,10 @@ static constexpr uint32_t KeyFrameRetransmissionWaitTime{ 1000 };
 /* PendingKeyFrameInfo methods. */
 
 RTC::PendingKeyFrameInfo::PendingKeyFrameInfo(PendingKeyFrameInfo::Listener* listener, uint32_t ssrc)
-  : listener(listener), ssrc(ssrc)
+  : listener(listener), ssrc(ssrc), timer(new TimerHandle(this))
 {
 	MS_TRACE();
 
-	this->timer = new TimerHandle(this);
 	this->timer->Start(KeyFrameRetransmissionWaitTime);
 }
 
@@ -39,11 +38,10 @@ inline void RTC::PendingKeyFrameInfo::OnTimer(TimerHandle* timer)
 
 RTC::KeyFrameRequestDelayer::KeyFrameRequestDelayer(
   KeyFrameRequestDelayer::Listener* listener, uint32_t ssrc, uint32_t delay)
-  : listener(listener), ssrc(ssrc)
+  : listener(listener), ssrc(ssrc), timer(new TimerHandle(this))
 {
 	MS_TRACE();
 
-	this->timer = new TimerHandle(this);
 	this->timer->Start(delay);
 }
 

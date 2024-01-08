@@ -11,9 +11,8 @@ public:
 	/* Struct for the data field of uv_req_t when writing data. */
 	struct UvWriteData
 	{
-		explicit UvWriteData(size_t storeSize)
+		explicit UvWriteData(size_t storeSize) : store(new uint8_t[storeSize])
 		{
-			this->store = new uint8_t[storeSize];
 		}
 
 		// Disable copy constructor because of the dynamically allocated data (store).
@@ -24,7 +23,7 @@ public:
 			delete[] this->store;
 		}
 
-		uv_write_t req;
+		uv_write_t req{};
 		uint8_t* store{ nullptr };
 	};
 

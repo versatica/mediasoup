@@ -23,7 +23,7 @@ namespace RTC
 		public:
 			Speaker();
 			void EvalActivityScores();
-			double GetActivityScore(uint8_t interval);
+			double GetActivityScore(uint8_t interval) const;
 			void LevelChanged(uint32_t level, uint64_t now);
 			void LevelTimedOut(uint64_t now);
 
@@ -95,7 +95,7 @@ namespace RTC
 		void OnTimer(TimerHandle* timer) override;
 
 	private:
-		double relativeSpeachActivities[RelativeSpeachActivitiesLen];
+		double relativeSpeachActivities[RelativeSpeachActivitiesLen]{};
 		std::string dominantId;
 		TimerHandle* periodicTimer{ nullptr };
 		uint16_t interval{ 300u };

@@ -20,7 +20,9 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		struct stat fileStat; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct stat fileStat
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		int err;
 
 		// Ensure the given file exists.

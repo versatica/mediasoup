@@ -280,7 +280,7 @@ namespace RTC
 
 				const auto* body    = request->data->body_as<FBS::DataConsumer::SendRequest>();
 				const uint8_t* data = body->data()->Data();
-				size_t len          = body->data()->size();
+				const size_t len    = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{
@@ -303,9 +303,9 @@ namespace RTC
 					  }
 				  });
 
-				static std::vector<uint16_t> EmptySubchannels;
+				static std::vector<uint16_t> emptySubchannels;
 
-				SendMessage(data, len, body->ppid(), EmptySubchannels, std::nullopt, cb);
+				SendMessage(data, len, body->ppid(), emptySubchannels, std::nullopt, cb);
 
 				break;
 			}
@@ -543,7 +543,7 @@ namespace RTC
 
 		// If subchannels are given, verify that this data consumer is subscribed
 		// to at least one of them.
-		if (subchannels.size() > 0)
+		if (!subchannels.empty())
 		{
 			bool subchannelMatched{ false };
 

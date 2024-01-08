@@ -32,6 +32,10 @@ namespace RTC
 			uint8_t sentTimes{ 0u };
 		};
 
+	private:
+		static Item* FillItem(
+		  Item* item, RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+
 	public:
 		RtpRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
 		~RtpRetransmissionBuffer();
@@ -48,8 +52,6 @@ namespace RTC
 		void RemoveOldest(uint16_t numItems);
 		bool ClearTooOldByTimestamp(uint32_t newestTimestamp);
 		bool IsTooOldTimestamp(uint32_t timestamp, uint32_t newestTimestamp) const;
-		Item* FillItem(
-		  Item* item, RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) const;
 
 	protected:
 		// Make buffer protected for testing purposes.

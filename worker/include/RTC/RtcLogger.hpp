@@ -40,17 +40,17 @@ namespace RTC
 			void Clear();
 
 		public:
-			uint64_t timestamp;
+			uint64_t timestamp{};
 			std::string recvTransportId{};
 			std::string sendTransportId{};
 			std::string routerId{};
 			std::string producerId{};
 			std::string consumerId{};
-			uint32_t recvRtpTimestamp;
-			uint32_t sendRtpTimestamp;
-			uint16_t recvSeqNumber;
-			uint16_t sendSeqNumber;
-			bool dropped;
+			uint32_t recvRtpTimestamp{};
+			uint32_t sendRtpTimestamp{};
+			uint16_t recvSeqNumber{};
+			uint16_t sendSeqNumber{};
+			bool dropped{};
 			DropReason dropReason{ DropReason::NONE };
 		};
 	}; // namespace RtcLogger
