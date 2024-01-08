@@ -28,7 +28,7 @@ When creating a Pull Request for mediasoup:
 
 Once all changes are done, run the following commands to verify that the code in your PR conforms to the code syntax of the project, it does not break existing funtionality and tests pass:
 
-- `npm run lint`: Check TypeScript and C++ linting rules. Formatting errors can be automatically fixed by running `npm run format`.
+- `npm run lint`: Check TypeScript and C++ linting rules. Formating errors can be automatically fixed by running `npm run format`.
 - `npm run typescript:build`: Compile TypeScript code (under `src` folder) into JavaScript code (under `lib` folder).
 - `npm run test`: Run JavaScript and C++ test units.
 - Instead, you can run `npm run release:check` which will run all those steps.
