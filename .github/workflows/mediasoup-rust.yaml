@@ -52,4 +52,3 @@ jobs:
         env:
           DOCS_RS: '1'
           RUSTDOCFLAGS: '-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links'
-
