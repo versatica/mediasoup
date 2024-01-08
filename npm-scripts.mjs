@@ -346,21 +346,12 @@ function cleanWorkerArtifacts() {
 function lintNode() {
 	logInfo('lintNode()');
 
-	const paths = [
-		'npm-scripts.mjs',
-		'.eslintrc.js',
-		'node/src',
-		'worker/scripts/clang-format.mjs',
-	];
-
 	// Ensure there are no rules that are unnecessary or conflict with Prettier
 	// rules.
 	executeCmd('eslint-config-prettier .eslintrc.js');
 
 	executeCmd(
-		`eslint -c .eslintrc.js --ignore-path .eslintignore --max-warnings 0 ${paths.join(
-			' ',
-		)}`,
+		'eslint -c .eslintrc.js --ignore-path .eslintignore --max-warnings 0 .',
 	);
 }
 
@@ -375,14 +366,7 @@ function lintWorker() {
 function formatNode() {
 	logInfo('formatNode()');
 
-	const paths = [
-		'npm-scripts.mjs',
-		'.eslintrc.js',
-		'node/src',
-		'worker/scripts/clang-format.mjs',
-	];
-
-	executeCmd(`prettier ${paths.join(' ')} --write`);
+	executeCmd('prettier . --write');
 }
 
 function flatcNode() {
@@ -461,6 +445,7 @@ function checkRelease() {
 	flatcNode();
 	buildTypescript({ force: true });
 	buildWorker();
+	formatNode(); // Will also format Markdown files.
 	lintNode();
 	lintWorker();
 	testNode();
