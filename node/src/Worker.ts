@@ -467,7 +467,7 @@ export class Worker<
 
 		this.#child.on('close', (code, signal) => {
 			logger.debug(
-				'worker process closed [pid:%s, code:%s, signal:%s]',
+				'worker subprocess closed [pid:%s, code:%s, signal:%s]',
 				this.#pid,
 				code,
 				signal,

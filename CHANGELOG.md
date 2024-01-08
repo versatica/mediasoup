@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Node: Add new `worker.on('subprocessclose')` event ([PR #1307](https://github.com/versatica/mediasoup/pull/1307)).
+
 ### 3.13.15
 
 - Add worker prebuild binary for Linux kernel 6 ([PR #1300](https://github.com/versatica/mediasoup/pull/1300)).
