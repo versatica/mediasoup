@@ -200,8 +200,14 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 - `invoke clean` and `invoke mediasoup-worker` must have been called first.
 - [PyYAML](https://pyyaml.org) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
+- [clang-tools-extra](https://clang.llvm.org/extra/index.html) is required.
+  - In OSX install it with `brew install clang-tools-extra`.
+  - In linux the package name is `clang-tools-extra`.
 
-"MEDIASOUP_TIDY_CHECKS" environment variable with a comma separated list of checks overrides the checks defined in `.clang-tidy` file.
+**Environment variables**
+
+- "MEDIASOUP_TIDY_CHECKS": comma separated list of checks. Overrides the checks defined in `.clang-tidy` file.
+- "MEDIASOUP_CLANG_TIDY_DIR": path to directory containing clang tools (run-clang-tidy, clang-tidy, clang-apply-replacements).
 
 ### `invoke fuzzer`
 

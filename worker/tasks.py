@@ -441,10 +441,15 @@ def tidy(ctx):
     Perform C++ checks with clang-tidy
     """
     mediasoup_tidy_checks = os.getenv('MEDIASOUP_TIDY_CHECKS') or '';
+    mediasoup_clang_tidy_dir = os.getenv('MEDIASOUP_CLANG_TIDY_DIR');
+
+    if not mediasoup_clang_tidy_dir:
+        print('missing MEDIASOUP_CLANG_TIDY_DIR env varialbe');
+        return;
 
     with ctx.cd(f'"{WORKER_DIR}"'):
         ctx.run(
-            f'"{PYTHON}" ./scripts/clang-tidy.py -clang-tidy-binary=./scripts/node_modules/.bin/clang-tidy -clang-apply-replacements-binary=./scripts/node_modules/.bin/clang-apply-replacements -header-filter="(Channel/**/*.hpp|DepLibSRTP.hpp|DepLibUV.hpp|DepLibWebRTC.hpp|DepOpenSSL.hpp|DepUsrSCTP.hpp|LogLevel.hpp|Logger.hpp|MediaSoupError.hpp|RTC/**/*.hpp|Settings.hpp|Utils.hpp|Worker.hpp|common.hpp|handles/**/*.hpp)" -p="{BUILD_DIR}" -j={NUM_CORES} -checks={mediasoup_tidy_checks} -quiet',
+            f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p=./ -j={NUM_CORES} -fix -checks={mediasoup_tidy_checks} src/*.cpp src/**/*.cpp src/**/**.cpp',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL

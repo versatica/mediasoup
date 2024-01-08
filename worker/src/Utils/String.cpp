@@ -77,7 +77,7 @@ namespace Utils
 			*pos++ = '=';
 		}
 
-		return std::string(reinterpret_cast<const char*>(out), pos - out);
+		return { reinterpret_cast<const char*>(out), static_cast<size_t>(pos - out) };
 	}
 
 	std::string Utils::String::Base64Encode(const std::string& str)

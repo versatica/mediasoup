@@ -66,11 +66,10 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 {
 	MS_TRACE();
 
-	int err;
-
 	this->uvHandle->data = static_cast<void*>(this);
 
-	err = uv_udp_recv_start(
+	// NOLINTNEXTLINE(misc-const-correctness)
+	int err = uv_udp_recv_start(
 	  this->uvHandle, static_cast<uv_alloc_cb>(onAlloc), static_cast<uv_udp_recv_cb>(onRecv));
 
 	if (err != 0)

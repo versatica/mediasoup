@@ -127,6 +127,7 @@ namespace RTC
 
 		int ret;
 
+		// NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
 		this->socket = usrsctp_socket(
 		  AF_CONN,
 		  SOCK_STREAM,
