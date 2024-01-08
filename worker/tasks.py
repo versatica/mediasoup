@@ -107,14 +107,14 @@ def meson_ninja(ctx):
     # fallback to command without `--system` if the first one fails.
     try:
         ctx.run(
-            f'"{PYTHON}" -m pip install --system --upgrade --no-user --target="{PIP_MESON_NINJA_DIR}" pip setuptools',
+            f'"{PYTHON}" -m pip install --system --upgrade --no-user --target "{PIP_MESON_NINJA_DIR}" pip setuptools',
             echo=True,
             hide=True,
             shell=SHELL
         );
     except:
         ctx.run(
-            f'"{PYTHON}" -m pip install --upgrade --no-user --target="{PIP_MESON_NINJA_DIR}" pip setuptools',
+            f'"{PYTHON}" -m pip install --upgrade --no-user --target "{PIP_MESON_NINJA_DIR}" pip setuptools',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
@@ -127,7 +127,7 @@ def meson_ninja(ctx):
     # Install meson and ninja using pip into our custom location, so we don't
     # depend on system-wide installation.
     ctx.run(
-        f'"{PYTHON}" -m pip install --upgrade --no-user --target="{PIP_MESON_NINJA_DIR}" {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
+        f'"{PYTHON}" -m pip install --upgrade --no-user --target "{PIP_MESON_NINJA_DIR}" {pip_build_binaries} meson=={MESON_VERSION} ninja=={NINJA_VERSION}',
         echo=True,
         pty=PTY_SUPPORTED,
         shell=SHELL

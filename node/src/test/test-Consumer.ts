@@ -241,8 +241,14 @@ beforeEach(async () => {
 	);
 });
 
-afterEach(() => {
+afterEach(async () => {
 	ctx.worker?.close();
+
+	if (ctx.worker?.subprocessClosed === false) {
+		await new Promise<void>(
+			resolve => ctx.worker?.on('subprocessclose', resolve),
+		);
+	}
 });
 
 test('transport.consume() succeeds', async () => {
@@ -330,7 +336,7 @@ test('transport.consume() succeeds', async () => {
 	).toBe(true);
 
 	// Pause videoProducer.
-	ctx.videoProducer!.pause();
+	await ctx.videoProducer!.pause();
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
 		producerId: ctx.videoProducer!.id,
@@ -987,22 +993,25 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	await new Promise<void>(resolve => {
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async resolve => {
 		audioConsumer.on('producerpause', resolve);
 
-		ctx.audioProducer!.pause().catch(() => {});
+		// Let's await for pause() to resolve to avoid aborted channel requests
+		// due to worker closure.
+		await ctx.audioProducer!.pause();
 	});
 
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(true);
 
-	await new Promise<void>(resolve => {
+	// eslint-disable-next-line no-async-promise-executor
+	await new Promise<void>(async resolve => {
 		audioConsumer.on('producerresume', resolve);
 
-		// Let's catch rejection since the test will complete before we get the
-		// response to this channel request, and if we don't handle that rejection
-		// it will make Jest fail any other random test.
-		ctx.audioProducer!.resume().catch(() => {});
+		// Let's await for resume() to resolve to avoid aborted channel requests
+		// due to worker closure.
+		await ctx.audioProducer!.resume();
 	});
 
 	expect(audioConsumer.paused).toBe(false);

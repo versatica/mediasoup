@@ -195,9 +195,21 @@ beforeEach(async () => {
 	);
 });
 
-afterEach(() => {
+afterEach(async () => {
 	ctx.worker1?.close();
 	ctx.worker2?.close();
+
+	if (ctx.worker1?.subprocessClosed === false) {
+		await new Promise<void>(
+			resolve => ctx.worker1?.on('subprocessclose', resolve),
+		);
+	}
+
+	if (ctx.worker2?.subprocessClosed === false) {
+		await new Promise<void>(
+			resolve => ctx.worker2?.on('subprocessclose', resolve),
+		);
+	}
 });
 
 test('router.pipeToRouter() succeeds with audio', async () => {

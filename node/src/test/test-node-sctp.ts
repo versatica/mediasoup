@@ -99,10 +99,16 @@ afterEach(async () => {
 	ctx.sctpSocket?.end();
 	ctx.worker?.close();
 
+	if (ctx.worker?.subprocessClosed === false) {
+		await new Promise<void>(
+			resolve => ctx.worker?.on('subprocessclose', resolve),
+		);
+	}
+
 	// NOTE: For some reason we have to wait a bit for the SCTP stuff to release
 	// internal things, otherwise Jest reports open handles. We don't care much
 	// honestly.
-	await new Promise(resolve => setTimeout(resolve, 2000));
+	await new Promise(resolve => setTimeout(resolve, 1000));
 });
 
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
