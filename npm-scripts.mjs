@@ -346,6 +346,8 @@ function cleanWorkerArtifacts() {
 function lintNode() {
 	logInfo('lintNode()');
 
+	executeCmd('prettier . --check');
+
 	// Ensure there are no rules that are unnecessary or conflict with Prettier
 	// rules.
 	executeCmd('eslint-config-prettier .eslintrc.js');
@@ -445,7 +447,6 @@ function checkRelease() {
 	flatcNode();
 	buildTypescript({ force: true });
 	buildWorker();
-	formatNode(); // Will also format Markdown files.
 	lintNode();
 	lintWorker();
 	testNode();
