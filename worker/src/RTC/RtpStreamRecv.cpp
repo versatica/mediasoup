@@ -27,7 +27,7 @@ namespace RTC
 		{
 			for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
 			{
-				spatialLayerCounter.emplace_back(RTC::RtpDataCounter(windowSize));
+				spatialLayerCounter.emplace_back(windowSize);
 			}
 		}
 	}
@@ -561,7 +561,7 @@ namespace RTC
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 
 		// Update info about last Sender Report.
-		Utils::Time::Ntp ntp; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		Utils::Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		ntp.seconds   = report->GetNtpSec();
 		ntp.fractions = report->GetNtpFrac();
@@ -900,7 +900,7 @@ namespace RTC
 
 			while (it != end)
 			{
-				uint16_t shift = *it - seq - 1;
+				const uint16_t shift = *it - seq - 1;
 
 				if (shift > 15)
 				{

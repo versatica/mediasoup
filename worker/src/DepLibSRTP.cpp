@@ -8,8 +8,8 @@
 
 /* Static variables. */
 
-static std::mutex globalSyncMutex;
-static size_t globalInstances = 0;
+static std::mutex GlobalSyncMutex;
+static size_t GlobalInstances = 0;
 
 // clang-format off
 std::vector<const char*> DepLibSRTP::errors =
@@ -50,9 +50,9 @@ void DepLibSRTP::ClassInit()
 	MS_TRACE();
 
 	{
-		std::lock_guard<std::mutex> lock(globalSyncMutex);
+		const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
-		if (globalInstances == 0)
+		if (GlobalInstances == 0)
 		{
 			MS_DEBUG_TAG(info, "libsrtp version: \"%s\"", srtp_get_version_string());
 
@@ -64,7 +64,7 @@ void DepLibSRTP::ClassInit()
 			}
 		}
 
-		++globalInstances;
+		++GlobalInstances;
 	}
 }
 
@@ -73,10 +73,10 @@ void DepLibSRTP::ClassDestroy()
 	MS_TRACE();
 
 	{
-		std::lock_guard<std::mutex> lock(globalSyncMutex);
-		--globalInstances;
+		const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+		--GlobalInstances;
 
-		if (globalInstances == 0)
+		if (GlobalInstances == 0)
 		{
 			srtp_shutdown();
 		}

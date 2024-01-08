@@ -98,7 +98,7 @@ namespace RTC
 		  const std::string& id,
 		  RTC::Producer::Listener* listener,
 		  const FBS::Transport::ProduceRequest* data);
-		virtual ~Producer();
+		~Producer() override;
 
 	public:
 		flatbuffers::Offset<FBS::Producer::DumpResponse> FillBuffer(

@@ -86,7 +86,7 @@ namespace RTC
 
 					this->udpSockets[udpSocket] = announcedIp;
 
-					if (announcedIp.size() == 0)
+					if (announcedIp.empty())
 					{
 						this->iceCandidates.emplace_back(udpSocket, icePriority);
 					}
@@ -128,7 +128,7 @@ namespace RTC
 
 					this->tcpServers[tcpServer] = announcedIp;
 
-					if (announcedIp.size() == 0)
+					if (announcedIp.empty())
 					{
 						this->iceCandidates.emplace_back(tcpServer, icePriority);
 					}
@@ -341,7 +341,7 @@ namespace RTC
 		// Add dtlsParameters.fingerprints.
 		std::vector<flatbuffers::Offset<FBS::WebRtcTransport::Fingerprint>> fingerprints;
 
-		for (const auto& fingerprint : this->dtlsTransport->GetLocalFingerprints())
+		for (const auto& fingerprint : RTC::DtlsTransport::GetLocalFingerprints())
 		{
 			auto algorithm    = DtlsTransport::AlgorithmToFbs(fingerprint.algorithm);
 			const auto& value = fingerprint.value;

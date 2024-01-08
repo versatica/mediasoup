@@ -1713,7 +1713,7 @@ namespace RTC
 	}
 
 	inline void SimulcastConsumer::OnRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t score, uint8_t /*previousScore*/)
+	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 

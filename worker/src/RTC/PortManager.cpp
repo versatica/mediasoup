@@ -47,7 +47,9 @@ namespace RTC
 
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
-		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sockaddr_storage bindAddr
+		{
+		}; // NOLINT
 		size_t portIdx;
 		std::vector<bool>& ports = PortManager::GetPorts(transport, ip);
 		size_t attempt{ 0u };
@@ -55,7 +57,7 @@ namespace RTC
 		uv_handle_t* uvHandle{ nullptr };
 		uint16_t port;
 		std::string transportStr;
-		uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
+		const uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
 
 		switch (transport)
 		{
@@ -375,10 +377,12 @@ namespace RTC
 
 		int err;
 		const int family = Utils::IP::GetFamily(ip);
-		struct sockaddr_storage bindAddr; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sockaddr_storage bindAddr
+		{
+		}; // NOLINT
 		uv_handle_t* uvHandle{ nullptr };
 		std::string transportStr;
-		uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
+		const uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
 
 		switch (transport)
 		{

@@ -20,7 +20,7 @@ namespace RTC
 
 	public:
 		PendingKeyFrameInfo(Listener* listener, uint32_t ssrc);
-		~PendingKeyFrameInfo();
+		~PendingKeyFrameInfo() override;
 
 		uint32_t GetSsrc() const
 		{
@@ -64,7 +64,7 @@ namespace RTC
 
 	public:
 		KeyFrameRequestDelayer(Listener* listener, uint32_t ssrc, uint32_t delay);
-		~KeyFrameRequestDelayer();
+		~KeyFrameRequestDelayer() override;
 
 		uint32_t GetSsrc() const
 		{
@@ -105,7 +105,7 @@ namespace RTC
 
 	public:
 		explicit KeyFrameRequestManager(Listener* listener, uint32_t keyFrameRequestDelay);
-		virtual ~KeyFrameRequestManager();
+		~KeyFrameRequestManager() override;
 
 		void KeyFrameNeeded(uint32_t ssrc);
 		void ForceKeyFrameNeeded(uint32_t ssrc);

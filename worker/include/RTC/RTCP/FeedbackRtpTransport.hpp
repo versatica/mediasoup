@@ -209,13 +209,13 @@ namespace RTC
 			{
 			}
 			FeedbackRtpTransportPacket(CommonHeader* commonHeader, size_t availableLen);
-			~FeedbackRtpTransportPacket();
+			~FeedbackRtpTransportPacket() override;
 
 		public:
 			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			// Just for locally generated packets.
 			void Finish();
-			bool IsFull()
+			bool IsFull() const
 			{
 				// NOTE: Since AddPendingChunks() is called at the end, we cannot track
 				// the exact ongoing value of packetStatusCount. Hence, let's reserve 7
@@ -224,7 +224,7 @@ namespace RTC
 			}
 			bool IsSerializable() const
 			{
-				return this->deltas.size() > 0;
+				return !this->deltas.empty();
 			}
 			bool IsCorrect() const // Just for locally generated packets.
 			{

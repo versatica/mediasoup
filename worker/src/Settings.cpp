@@ -18,7 +18,7 @@ extern "C"
 
 /* Static. */
 
-static std::mutex globalSyncMutex;
+static std::mutex GlobalSyncMutex;
 
 /* Class variables. */
 
@@ -69,7 +69,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Parse command line options. */
 
 	// getopt_long_only() is not thread-safe
-	std::lock_guard<std::mutex> lock(globalSyncMutex);
+	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.

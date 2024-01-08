@@ -110,7 +110,8 @@ uint32_t TcpServerHandle::GetSendBufferSize() const
 	MS_TRACE();
 
 	int size{ 0 };
-	int err = uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+	const int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
 	if (err)
 	{
@@ -124,15 +125,15 @@ void TcpServerHandle::SetSendBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
-	auto size_int = static_cast<int>(size);
+	auto sizeInt = static_cast<int>(size);
 
-	if (size_int <= 0)
+	if (sizeInt <= 0)
 	{
-		MS_THROW_TYPE_ERROR("invalid size: %d", size_int);
+		MS_THROW_TYPE_ERROR("invalid size: %d", sizeInt);
 	}
 
-	int err =
-	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+	const int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(sizeInt));
 
 	if (err)
 	{
@@ -145,7 +146,8 @@ uint32_t TcpServerHandle::GetRecvBufferSize() const
 	MS_TRACE();
 
 	int size{ 0 };
-	int err = uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+	const int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
 	if (err)
 	{
@@ -159,15 +161,15 @@ void TcpServerHandle::SetRecvBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
-	auto size_int = static_cast<int>(size);
+	auto sizeInt = static_cast<int>(size);
 
-	if (size_int <= 0)
+	if (sizeInt <= 0)
 	{
-		MS_THROW_TYPE_ERROR("invalid size: %d", size_int);
+		MS_THROW_TYPE_ERROR("invalid size: %d", sizeInt);
 	}
 
-	int err =
-	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+	const int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(sizeInt));
 
 	if (err)
 	{

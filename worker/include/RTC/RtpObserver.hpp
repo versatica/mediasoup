@@ -27,7 +27,7 @@ namespace RTC
 
 	public:
 		RtpObserver(RTC::Shared* shared, const std::string& id, RTC::RtpObserver::Listener* listener);
-		virtual ~RtpObserver();
+		~RtpObserver() override;
 
 	public:
 		void Pause();

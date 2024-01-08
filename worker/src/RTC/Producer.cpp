@@ -32,12 +32,9 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Producer::Listener* listener,
 	  const FBS::Transport::ProduceRequest* data)
-	  : id(id), shared(shared), listener(listener)
+	  : id(id), shared(shared), listener(listener), kind(RTC::Media::Kind(data->kind()))
 	{
 		MS_TRACE();
-
-		// This may throw.
-		this->kind = RTC::Media::Kind(data->kind());
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());

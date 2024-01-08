@@ -245,7 +245,9 @@ namespace RTC
 		RTC::TcpConnection* tcpConnection{ nullptr };
 		std::string localAnnouncedIp;
 		// Others.
-		struct sockaddr_storage udpRemoteAddrStorage;
+		struct sockaddr_storage udpRemoteAddrStorage
+		{
+		}; // NOLINT
 		Protocol protocol;
 	};
 } // namespace RTC
