@@ -312,7 +312,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 			{
 				const auto* const body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
 
-				std::string webRtcServerId = body->webRtcServerId()->str();
+				const std::string webRtcServerId = body->webRtcServerId()->str();
 
 				CheckNoWebRtcServer(webRtcServerId);
 
