@@ -1,7 +1,7 @@
 ---
 Checks: "*,\
   -altera*,\
-  -android-cloexec-fopen,\
+  -android*,\
   -boost-use-to-string,\
   -bugprone-easily-swappable-parameters,\
   -bugprone-implicit-widening-of-multiplication-result,\
