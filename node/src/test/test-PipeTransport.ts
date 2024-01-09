@@ -1,5 +1,4 @@
-// @ts-ignore
-import * as pickPort from 'pick-port';
+import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import * as utils from '../utils';
 
@@ -709,7 +708,11 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 }, 2000);
 
 test('router.createPipeTransport() with fixed port succeeds', async () => {
-	const port = await pickPort({ ip: '127.0.0.1', reserveTimeout: 0 });
+	const port = await pickPort({
+		type: 'udp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
 	const pipeTransport = await ctx.router1!.createPipeTransport({
 		listenInfo: { protocol: 'udp', ip: '127.0.0.1', port },
 	});

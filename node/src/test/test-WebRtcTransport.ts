@@ -1,5 +1,4 @@
-// @ts-ignore
-import * as pickPort from 'pick-port';
+import { pickPort } from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import * as utils from '../utils';
