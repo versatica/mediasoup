@@ -30,7 +30,7 @@ private:
 	RTC::WebRtcServer* GetWebRtcServer(const std::string& webRtcServerId) const;
 	RTC::Router* GetRouter(const std::string& routerId) const;
 	void CheckNoWebRtcServer(const std::string& webRtcServerId) const;
-	void CheckNoRouter(const std::string& webRtcServerId) const;
+	void CheckNoRouter(const std::string& routerId) const;
 
 	/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 public:
