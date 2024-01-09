@@ -447,6 +447,9 @@ def tidy(ctx):
         print('missing MEDIASOUP_CLANG_TIDY_DIR env varialbe');
         return;
 
+    if mediasoup_tidy_checks:
+        mediasoup_tidy_checks = "-*," + mediasoup_tidy_checks;
+
     with ctx.cd(f'"{WORKER_DIR}"'):
         ctx.run(
             f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p=./ -j={NUM_CORES} -fix -checks={mediasoup_tidy_checks} src/*.cpp src/**/*.cpp src/**/**.cpp',
