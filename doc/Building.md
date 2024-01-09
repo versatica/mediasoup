@@ -207,6 +207,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 **Environment variables**
 
 - "MEDIASOUP_TIDY_CHECKS": comma separated list of checks. Overrides the checks defined in `.clang-tidy` file.
+- "MEDIASOUP_TIDY_FILES": space separated source files to process, including their path. All .cpp files will be processes by default.
 - "MEDIASOUP_CLANG_TIDY_DIR": path to directory containing clang tools (run-clang-tidy, clang-tidy, clang-apply-replacements).
 
 ### `invoke fuzzer`
