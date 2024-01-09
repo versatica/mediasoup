@@ -53,7 +53,7 @@ namespace Channel
 		void TypeError(const char* reason = nullptr);
 
 	private:
-		void Send(uint8_t* buffer, size_t size);
+		void Send(uint8_t* buffer, size_t size) const;
 		void SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response);
 
 	public:

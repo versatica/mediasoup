@@ -54,8 +54,8 @@ namespace RTC
 					return first;
 				}
 
-				auto* header     = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-				size_t packetLen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
+				auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
+				const size_t packetLen = static_cast<size_t>(ntohs(header->length) + 1) * 4;
 
 				if (len < packetLen)
 				{

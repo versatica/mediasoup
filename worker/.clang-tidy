@@ -1,21 +1,26 @@
 ---
 Checks: "*,\
   -altera*,\
+  -android*,\
   -boost-use-to-string,\
   -bugprone-easily-swappable-parameters,\
+  -bugprone-implicit-widening-of-multiplication-result,\
   -bugprone-lambda-function-name,\
   -bugprone-macro-parentheses,\
+  -bugprone-reserved-identifier,\
   -cert-*,\
   -clang-analyzer-optin.osx.*,\
   -clang-analyzer-osx.*,\
   -cppcoreguidelines-avoid-c-arrays,\
   -cppcoreguidelines-avoid-do-while,\
   -cppcoreguidelines-avoid-goto,\
+  -cppcoreguidelines-avoid-non-const-global-variables,\
   -cppcoreguidelines-avoid-magic-numbers,\
   -cppcoreguidelines-init-variables,\
   -cppcoreguidelines-no-malloc,\
   -cppcoreguidelines-non-private-member-variables-in-classes,\
   -cppcoreguidelines-owning-memory,\
+  -cppcoreguidelines-prefer-member-initializer,\
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,\
   -cppcoreguidelines-pro-bounds-constant-array-index,\
   -cppcoreguidelines-pro-bounds-pointer-arithmetic,\
@@ -27,9 +32,11 @@ Checks: "*,\
   -cppcoreguidelines-special-member-functions,\
   -fuchsia-default-arguments-calls,\
   -fuchsia-default-arguments-declarations,\
+  -fuchsia-overloaded-operator,\
   -google-default-arguments,\
   -google-readability-*,\
   -google-runtime-references,\
+  -google-upgrade-googletest-case,\
   -hicpp-avoid-c-arrays,\
   -hicpp-avoid-goto,\
   -hicpp-braces-around-statements,\
@@ -42,7 +49,9 @@ Checks: "*,\
   -llvm-header-guard,\
   -llvm-else-after-return,\
   -llvmlibc-*,\
+  -misc-confusable-identifiers,\
   -misc-non-private-member-variables-in-classes,\
+  -misc-use-anonymous-namespace,\
   -modernize-avoid-c-arrays,\
   -modernize-concat-nested-namespaces,\
   -modernize-make-unique,\
@@ -59,7 +68,6 @@ Checks: "*,\
   -readability-uppercase-literal-suffix,\
   "
 
-HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
 User: mediasoup
 FormatStyle: file
@@ -332,7 +340,7 @@ CheckOptions:
   - key: readability-identifier-naming.UnionSuffix
     value: ''
   - key: readability-identifier-naming.ValueTemplateParameterCase
-    value: camelBack
+    value: CamelCase
   - key: readability-identifier-naming.ValueTemplateParameterPrefix
     value: ''
   - key: readability-identifier-naming.ValueTemplateParameterSuffix
