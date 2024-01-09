@@ -228,15 +228,13 @@ export class Channel extends EnhancedEventEmitter {
 		this.#producerSocket.removeAllListeners('error');
 		this.#producerSocket.on('error', () => {});
 
-		// Destroy the socket after a while to allow pending incoming messages.
-		setTimeout(() => {
-			try {
-				this.#producerSocket.destroy();
-			} catch (error) {}
-			try {
-				this.#consumerSocket.destroy();
-			} catch (error) {}
-		}, 200);
+		// Destroy the sockets.
+		try {
+			this.#producerSocket.destroy();
+		} catch (error) {}
+		try {
+			this.#consumerSocket.destroy();
+		} catch (error) {}
 	}
 
 	/**

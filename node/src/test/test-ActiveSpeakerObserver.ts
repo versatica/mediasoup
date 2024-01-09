@@ -27,8 +27,14 @@ beforeEach(async () => {
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
-afterEach(() => {
+afterEach(async () => {
 	ctx.worker?.close();
+
+	if (ctx.worker?.subprocessClosed === false) {
+		await new Promise<void>(
+			resolve => ctx.worker?.on('subprocessclose', resolve),
+		);
+	}
 });
 
 test('router.createActiveSpeakerObserver() succeeds', async () => {

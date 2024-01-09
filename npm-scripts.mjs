@@ -296,7 +296,7 @@ function installInvoke() {
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`"${PYTHON}" -m pip install --upgrade --no-user --target="${PIP_INVOKE_DIR}" invoke`,
+		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`,
 		/* exitOnError */ true,
 	);
 }
@@ -420,7 +420,7 @@ function flatcWorker() {
 function testNode() {
 	logInfo('testNode()');
 
-	executeCmd(`jest --detectOpenHandles ${args}`);
+	executeCmd(`jest --silent false --detectOpenHandles ${args}`);
 }
 
 function testWorker() {

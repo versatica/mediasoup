@@ -200,6 +200,7 @@ export type WorkerDump = {
 
 export type WorkerEvents = {
 	died: [Error];
+	subprocessclose: [];
 	listenererror: [string, Error];
 	// Private events.
 	'@success': [];
@@ -244,7 +245,7 @@ export class Worker<
 	WorkerAppData extends AppData = AppData,
 > extends EnhancedEventEmitter<WorkerEvents> {
 	// mediasoup-worker child process.
-	#child?: ChildProcess;
+	#child: ChildProcess;
 
 	// Worker process PID.
 	readonly #pid: number;
@@ -257,6 +258,9 @@ export class Worker<
 
 	// Died dlag.
 	#died = false;
+
+	// Worker subprocess closed flag.
+	#subprocessClosed = false;
 
 	// Custom app data.
 	#appData: WorkerAppData;
@@ -389,7 +393,10 @@ export class Worker<
 		});
 
 		this.#child.on('exit', (code, signal) => {
-			this.#child = undefined;
+			// If killed by ourselves, do nothing.
+			if (this.#child.killed) {
+				return;
+			}
 
 			if (!spawnDone) {
 				spawnDone = true;
@@ -431,7 +438,10 @@ export class Worker<
 		});
 
 		this.#child.on('error', error => {
-			this.#child = undefined;
+			// If killed by ourselves, do nothing.
+			if (this.#child.killed) {
+				return;
+			}
 
 			if (!spawnDone) {
 				spawnDone = true;
@@ -453,6 +463,19 @@ export class Worker<
 
 				this.workerDied(error);
 			}
+		});
+
+		this.#child.on('close', (code, signal) => {
+			logger.debug(
+				'worker subprocess closed [pid:%s, code:%s, signal:%s]',
+				this.#pid,
+				code,
+				signal,
+			);
+
+			this.#subprocessClosed = true;
+
+			this.safeEmit('subprocessclose');
 		});
 
 		// Be ready for 3rd party worker libraries logging to stdout.
@@ -493,6 +516,13 @@ export class Worker<
 	 */
 	get died(): boolean {
 		return this.#died;
+	}
+
+	/**
+	 * Whether the Worker subprocess is closed.
+	 */
+	get subprocessClosed(): boolean {
+		return this.#subprocessClosed;
 	}
 
 	/**
@@ -545,15 +575,7 @@ export class Worker<
 		this.#closed = true;
 
 		// Kill the worker process.
-		if (this.#child) {
-			// Remove event listeners but leave a fake 'error' hander to avoid
-			// propagation.
-			this.#child.removeAllListeners('exit');
-			this.#child.removeAllListeners('error');
-			this.#child.on('error', () => {});
-			this.#child.kill('SIGTERM');
-			this.#child = undefined;
-		}
+		this.#child.kill('SIGTERM');
 
 		// Close the Channel instance.
 		this.#channel.close();
