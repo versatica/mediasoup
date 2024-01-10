@@ -41,6 +41,7 @@ jobs:
 
     env:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_LOCAL_DEV: 'true'
 
     steps:
       - name: Checkout repository
@@ -60,14 +61,10 @@ jobs:
           # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
           # queries: security-extended,security-and-quality
 
-      # We need to install pip invoke library.
-      - name: pip3 install invoke
-        run: pip3 install invoke
-
       # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      # - name: Autobuild
+      #   uses: github/codeql-action/autobuild@v3
 
       # ℹ️ Command-line programs to run using the OS shell.
       # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -79,6 +76,11 @@ jobs:
       # - run: |
       #   echo "Run, Build Application using script"
       #   ./location_of_script_within_repo/buildscript.sh
+
+      # Use npm ci to build mediasoup Node and worker instead of relying on
+      # Autobuild.
+      - name: npm ci
+        run: npm ci --foreground-scripts
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
