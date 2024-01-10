@@ -84,10 +84,8 @@ private:
 
 	/* Callbacks fired by UV events. */
 public:
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void OnUvRecvAlloc(size_t suggestedSize, uv_buf_t* buf);
 	void OnUvRecv(ssize_t nread, const uv_buf_t* buf, const struct sockaddr* addr, unsigned int flags);
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void OnUvSend(int status, UdpSocketHandle::onSendCallback* cb);
 
 	/* Pure virtual methods that must be implemented by the subclass. */

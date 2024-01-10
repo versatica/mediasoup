@@ -363,6 +363,7 @@ bool UdpSocketHandle::SetLocalAddress()
 	return true;
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 inline void UdpSocketHandle::OnUvRecvAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE();
@@ -408,6 +409,7 @@ inline void UdpSocketHandle::OnUvRecv(
 	}
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 inline void UdpSocketHandle::OnUvSend(int status, UdpSocketHandle::onSendCallback* cb)
 {
 	MS_TRACE();
