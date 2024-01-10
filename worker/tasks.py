@@ -444,9 +444,10 @@ def tidy(ctx):
     mediasoup_tidy_files = os.getenv('MEDIASOUP_TIDY_FILES') or '';
     mediasoup_clang_tidy_dir = os.getenv('MEDIASOUP_CLANG_TIDY_DIR');
 
+    # MEDIASOUP_CLANG_TIDY_DIR env variable is mandatory.
+    # NOTE: sys.exit(text) exists the program with status code 1.
     if not mediasoup_clang_tidy_dir:
-        print('missing MEDIASOUP_CLANG_TIDY_DIR env varialbe');
-        return;
+        sys.exit('missing MEDIASOUP_CLANG_TIDY_DIR env variable');
 
     if mediasoup_tidy_checks:
         mediasoup_tidy_checks = '-*,' + mediasoup_tidy_checks;
