@@ -3,7 +3,6 @@
 
 #include "RTC/RTCP/Feedback.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsFir.hpp"
 #include "RTC/RTCP/FeedbackPsLei.hpp"

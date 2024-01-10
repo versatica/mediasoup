@@ -4,7 +4,6 @@
 #include "RTC/RTCP/FeedbackRtpTmmb.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include <cstring>
 
 namespace RTC
 {

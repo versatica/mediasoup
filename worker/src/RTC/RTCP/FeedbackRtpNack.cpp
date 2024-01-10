@@ -3,8 +3,8 @@
 
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "Logger.hpp"
-#include <bitset> // std::bitset()
-#include <cstring>
+#include <bitset>  // std::bitset()
+#include <cstring> // std::memcpy
 
 namespace RTC
 {

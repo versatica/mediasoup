@@ -26,7 +26,6 @@
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
-#include <sstream>                                               // std::ostringstream
 
 namespace RTC
 {

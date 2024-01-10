@@ -5,8 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
-#include <limits> // std::numeric_limits()
-#include <sstream>
+#include <sstream> // std::ostringstream
 
 namespace RTC
 {

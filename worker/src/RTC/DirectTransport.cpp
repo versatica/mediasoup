@@ -3,7 +3,6 @@
 
 #include "RTC/DirectTransport.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {
