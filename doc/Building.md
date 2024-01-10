@@ -200,7 +200,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 - `invoke clean` and `invoke mediasoup-worker` must have been called first.
 - [PyYAML](https://pyyaml.org) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
-- [clang-tools-extra](https://clang.llvm.org/extra/index.html) is required.
+- [clang-tools-extra](https://clang.llvm.org/extra) is required.
   - In OSX install it with `brew install clang-tools-extra`.
   - In linux the package name is `clang-tools-extra`.
 
