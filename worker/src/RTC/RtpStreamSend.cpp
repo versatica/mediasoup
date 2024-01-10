@@ -8,7 +8,6 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {

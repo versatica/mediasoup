@@ -3,7 +3,7 @@
 
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "Logger.hpp"
-#include <cstring>
+#include <cstring> // std::memcpy
 
 namespace RTC
 {

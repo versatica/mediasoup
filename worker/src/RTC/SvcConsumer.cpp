@@ -5,7 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
 namespace RTC

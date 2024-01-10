@@ -5,9 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/SctpAssociation.hpp"
-#include <stdexcept>
 
 namespace RTC
 {

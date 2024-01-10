@@ -4,7 +4,7 @@
 #include "RTC/RTCP/Sdes.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include <cstring>
+#include <cstring> // std::memcpy
 
 namespace RTC
 {
