@@ -201,7 +201,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 - [PyYAML](https://pyyaml.org) is required.
   - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
 - [clang-tools-extra](https://clang.llvm.org/extra) is required.
-  - In OSX install it with `brew install clang-tools-extra`.
+  - In OSX install it with `brew install llvm`.
   - In linux the package name is `clang-tools-extra`.
 
 **Environment variables:**
