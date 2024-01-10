@@ -204,11 +204,11 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
   - In OSX install it with `brew install clang-tools-extra`.
   - In linux the package name is `clang-tools-extra`.
 
-**Environment variables**
+**Environment variables:**
 
-- "MEDIASOUP_TIDY_CHECKS": comma separated list of checks. Overrides the checks defined in `.clang-tidy` file.
-- "MEDIASOUP_TIDY_FILES": space separated source files to process, including their path. All .cpp files will be processes by default.
-- "MEDIASOUP_CLANG_TIDY_DIR": path to directory containing clang tools (run-clang-tidy, clang-tidy, clang-apply-replacements).
+- "MEDIASOUP_TIDY_CHECKS": Comma separated list of checks. Overrides the checks defined in `worker/.clang-tidy` file.
+- "MEDIASOUP_TIDY_FILES": Space separated source files to process, including their path. All `.cpp` files will be processes by default.
+- "MEDIASOUP_CLANG_TIDY_DIR": Path to directory containing clang tools (`run-clang-tidy`, `clang-tidy`, `clang-apply-replacements`).
 
 ### `invoke fuzzer`
 
