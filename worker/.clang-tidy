@@ -11,6 +11,7 @@ Checks: "*,\
   -cert-*,\
   -clang-analyzer-optin.osx.*,\
   -clang-analyzer-osx.*,\
+  -concurrency-mt-unsafe,\
   -cppcoreguidelines-avoid-c-arrays,\
   -cppcoreguidelines-avoid-do-while,\
   -cppcoreguidelines-avoid-goto,\
