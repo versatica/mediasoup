@@ -111,7 +111,7 @@
 		"@octokit/rest": "^20.0.2",
 		"@types/debug": "^4.1.12",
 		"@types/jest": "^29.5.11",
-		"@types/node": "^20.10.8",
+		"@types/node": "^20.11.0",
 		"@typescript-eslint/eslint-plugin": "^6.18.1",
 		"@typescript-eslint/parser": "^6.18.1",
 		"eslint": "^8.56.0",
