@@ -11,7 +11,7 @@
 	"homepage": "https://mediasoup.org",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/versatica/mediasoup.git"
+		"url": "git+https://github.com/versatica/mediasoup.git"
 	},
 	"funding": {
 		"type": "opencollective",
