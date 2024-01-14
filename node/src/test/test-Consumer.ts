@@ -1,4 +1,4 @@
-import {once} from 'node:events';
+import { once } from 'node:events';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { UnsupportedError } from '../errors';
@@ -999,8 +999,8 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 
 		// Let's await for pause() to resolve to avoid aborted channel requests
 		// due to worker closure.
-		ctx.audioProducer!.pause()
-	])
+		ctx.audioProducer!.pause(),
+	]);
 
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(true);
@@ -1010,8 +1010,8 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 
 		// Let's await for resume() to resolve to avoid aborted channel requests
 		// due to worker closure.
-		ctx.audioProducer!.resume()
-	])
+		ctx.audioProducer!.resume(),
+	]);
 
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);

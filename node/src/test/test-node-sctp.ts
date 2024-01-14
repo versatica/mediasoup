@@ -1,5 +1,4 @@
 import * as dgram from 'node:dgram';
-import {once} from 'node:events';
 // @ts-ignore
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
