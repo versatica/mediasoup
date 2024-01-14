@@ -126,8 +126,45 @@ test('dataProducer.send() succeeds', async () => {
 	let numSentMessages = 0;
 	let numReceivedMessages = 0;
 
-	// eslint-disable-next-line no-async-promise-executor
-	await new Promise<void>(async (resolve, reject) => {
+	async function sendNextMessage(): Promise<void> {
+		const id = ++numSentMessages;
+		let message: Buffer | string;
+
+		if (id === pauseSendingAtMessage) {
+			await dataProducer.pause();
+		} else if (id === resumeSendingAtMessage) {
+			await dataProducer.resume();
+		} else if (id === pauseReceivingAtMessage) {
+			await dataConsumer.pause();
+		} else if (id === resumeReceivingAtMessage) {
+			await dataConsumer.resume();
+		}
+
+		// Send string (WebRTC DataChannel string).
+		if (id < numMessages / 2) {
+			message = String(id);
+		}
+		// Send string (WebRTC DataChannel binary).
+		else {
+			message = Buffer.from(String(id));
+		}
+
+		dataProducer.send(message);
+
+		const messageSize = Buffer.from(message).byteLength;
+
+		sentMessageBytes += messageSize;
+
+		if (!dataProducer.paused && !dataConsumer.paused) {
+			effectivelySentMessageBytes += messageSize;
+		}
+
+		if (id < numMessages) {
+			void sendNextMessage();
+		}
+	}
+
+	await new Promise<void>((resolve, reject) => {
 		dataProducer.on('listenererror', (eventName, error) => {
 			reject(
 				new Error(
@@ -143,46 +180,6 @@ test('dataProducer.send() succeeds', async () => {
 				),
 			);
 		});
-
-		await sendNextMessage();
-
-		async function sendNextMessage(): Promise<void> {
-			const id = ++numSentMessages;
-			let message: Buffer | string;
-
-			if (id === pauseSendingAtMessage) {
-				await dataProducer.pause();
-			} else if (id === resumeSendingAtMessage) {
-				await dataProducer.resume();
-			} else if (id === pauseReceivingAtMessage) {
-				await dataConsumer.pause();
-			} else if (id === resumeReceivingAtMessage) {
-				await dataConsumer.resume();
-			}
-
-			// Send string (WebRTC DataChannel string).
-			if (id < numMessages / 2) {
-				message = String(id);
-			}
-			// Send string (WebRTC DataChannel binary).
-			else {
-				message = Buffer.from(String(id));
-			}
-
-			dataProducer.send(message);
-
-			const messageSize = Buffer.from(message).byteLength;
-
-			sentMessageBytes += messageSize;
-
-			if (!dataProducer.paused && !dataConsumer.paused) {
-				effectivelySentMessageBytes += messageSize;
-			}
-
-			if (id < numMessages) {
-				sendNextMessage();
-			}
-		}
 
 		dataConsumer.on('message', (message, ppid) => {
 			++numReceivedMessages;
@@ -212,6 +209,8 @@ test('dataProducer.send() succeeds', async () => {
 				);
 			}
 		});
+
+		void sendNextMessage();
 	});
 
 	expect(numSentMessages).toBe(numMessages);
@@ -255,8 +254,7 @@ test('dataProducer.send() with subchannels succeeds', async () => {
 	const receivedMessages1: string[] = [];
 	const receivedMessages2: string[] = [];
 
-	// eslint-disable-next-line no-async-promise-executor
-	await new Promise<void>(async resolve => {
+	await new Promise<void>(resolve => {
 		// Must be received by dataConsumer1 and dataConsumer2.
 		dataProducer.send(
 			'both',
