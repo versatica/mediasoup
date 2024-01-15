@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- C++: Update libsrtp to pre-3.0.
+
 ### 3.13.16
 
 - Node: Add new `worker.on('subprocessclose')` event ([PR #1307](https://github.com/versatica/mediasoup/pull/1307)).
