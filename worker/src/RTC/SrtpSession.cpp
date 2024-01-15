@@ -189,12 +189,12 @@ namespace RTC
 		}
 	}
 
-	bool SrtpSession::EncryptRtp(const uint8_t** data, int* len)
+	bool SrtpSession::EncryptRtp(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
 
 		// Ensure that the resulting SRTP packet fits into the encrypt buffer.
-		if (static_cast<size_t>(*len) + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
+		if (*len + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
 		{
 			MS_WARN_TAG(srtp, "cannot encrypt RTP packet, size too big (%i bytes)", *len);
 
@@ -239,7 +239,7 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::DecryptSrtp(uint8_t* data, int* len)
+	bool SrtpSession::DecryptSrtp(uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
@@ -255,12 +255,12 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::EncryptRtcp(const uint8_t** data, int* len)
+	bool SrtpSession::EncryptRtcp(const uint8_t** data, size_t* len)
 	{
 		MS_TRACE();
 
 		// Ensure that the resulting SRTCP packet fits into the encrypt buffer.
-		if (static_cast<size_t>(*len) + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
+		if (*len + SRTP_MAX_TRAILER_LEN > EncryptBufferSize)
 		{
 			MS_WARN_TAG(srtp, "cannot encrypt RTCP packet, size too big (%i bytes)", *len);
 
@@ -285,7 +285,7 @@ namespace RTC
 		return true;
 	}
 
-	bool SrtpSession::DecryptSrtcp(uint8_t* data, int* len)
+	bool SrtpSession::DecryptSrtcp(uint8_t* data, size_t* len)
 	{
 		MS_TRACE();
 
