@@ -98,7 +98,14 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			if (&input == &inputs.front())
+			{
+				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
+			}
+			else
+			{
+				packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			}
 		}
 
 		REQUIRE(packet->GetLatestSequenceNumber() == 1013);
@@ -173,7 +180,14 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			if (&input == &inputs.front())
+			{
+				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
+			}
+			else
+			{
+				packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			}
 		}
 
 		packet->Finish();
@@ -236,9 +250,17 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		packet->SetFeedbackPacketCount(1);
 
+		
 		for (auto& input : inputs)
 		{
-			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			if (&input == &inputs.front())
+			{
+				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
+			}
+			else
+			{
+				packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			}
 		}
 
 		packet->Finish();
@@ -296,7 +318,14 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			if (&input == &inputs.front())
+			{
+				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
+			}
+			else
+			{
+				packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			}
 		}
 
 		packet->Finish();
@@ -363,7 +392,14 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			if (&input == &inputs.front())
+			{
+				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
+			}
+			else
+			{
+				packet->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			}
 		}
 
 		packet->Finish();
@@ -424,7 +460,14 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs2)
 		{
-			packet2->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			if (&input == &inputs2.front())
+			{
+				packet2->SetBase(input.sequenceNumber + 1, input.timestamp);
+			}
+			else
+			{
+				packet2->AddPacket(input.sequenceNumber, input.timestamp, input.maxPacketSize);
+			}
 		}
 
 		packet2->Finish();

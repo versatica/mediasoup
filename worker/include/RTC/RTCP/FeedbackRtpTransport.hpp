@@ -213,6 +213,7 @@ namespace RTC
 
 		public:
 			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
+			void SetBase(uint16_t sequenceNumber, uint64_t timestamp);
 			// Just for locally generated packets.
 			void Finish();
 			bool IsFull()

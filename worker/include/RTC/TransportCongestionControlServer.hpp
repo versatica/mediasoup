@@ -55,11 +55,11 @@ namespace RTC
 		double GetPacketLoss() const;
 		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
+		void FillAndSendTransportCcFeedback();
 
 	private:
 		void SendTransportCcFeedback();
 		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
-		void FillAndSendTransportCcFeedback();
 		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
 

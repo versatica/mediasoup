@@ -178,56 +178,62 @@ namespace RTC
 	inline void TransportCongestionControlServer::FillAndSendTransportCcFeedback()
 	{
 		MS_TRACE();
+	
+		auto it = this->mapPacketArrivalTimes.lower_bound(this->transportCcFeedbackStartSeqNum);
 
-		for (auto it = this->mapPacketArrivalTimes.find(this->transportCcFeedbackStartSeqNum);
-		     it != this->mapPacketArrivalTimes.end();
-		     ++it)
+		if (it != this->mapPacketArrivalTimes.end())
 		{
-			auto result =
-			  this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
+			// set base sequence num and reference time
+			this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackStartSeqNum, it->second);
 
-			switch (result)
+			for (; it != this->mapPacketArrivalTimes.end(); ++it)
 			{
-				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
-				{
-					// If the feedback packet is full, send it now.
-					if (this->transportCcFeedbackPacket->IsFull())
-					{
-						MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
+				auto result =
+				  this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
 
-						SendTransportCcFeedback();
+				switch (result)
+				{
+					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
+					{
+						// If the feedback packet is full, send it now.
+						if (this->transportCcFeedbackPacket->IsFull())
+						{
+							MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
+
+							SendTransportCcFeedback();
+						}
+
+						break;
 					}
 
-					break;
-				}
+					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
+					{
+						// This should not happen
+						MS_DEBUG_DEV("transport-cc feedback packet is exceeded!");
+						// Create a new feedback packet.
+						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+					}
 
-				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
-				{
-					// This should not happen
-					MS_DEBUG_DEV("transport-cc feedback packet is exceeded!");
-					// Create a new feedback packet.
-					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
-				}
+					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
+					{
+						// Create a new feedback packet.
+						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
 
-				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
-				{
-					// Create a new feedback packet.
-					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+						// Use current packet count.
+						// NOTE: Do not increment it since the previous ongoing feedback
+						// packet was not sent.
+						this->transportCcFeedbackPacket->SetFeedbackPacketCount(
+						  this->transportCcFeedbackPacketCount);
 
-					// Use current packet count.
-					// NOTE: Do not increment it since the previous ongoing feedback
-					// packet was not sent.
-					this->transportCcFeedbackPacket->SetFeedbackPacketCount(
-					  this->transportCcFeedbackPacketCount);
-
-					break;
+						break;
+					}
 				}
 			}
-		}
 
-		SendTransportCcFeedback();
+			SendTransportCcFeedback();
+		}
 	}
 
 	void TransportCongestionControlServer::SetMaxIncomingBitrate(uint32_t bitrate)
@@ -289,7 +295,7 @@ namespace RTC
 
 		// Increment packet count.
 		this->transportCcFeedbackPacket->SetFeedbackPacketCount(++this->transportCcFeedbackPacketCount);
-		this->transportCcFeedbackStartSeqNum = latestWideSeqNumber;
+		this->transportCcFeedbackStartSeqNum = latestWideSeqNumber + 1;
 	}
 
 	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(
