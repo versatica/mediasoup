@@ -178,7 +178,7 @@ namespace RTC
 	inline void TransportCongestionControlServer::FillAndSendTransportCcFeedback()
 	{
 		MS_TRACE();
-	
+
 		auto it = this->mapPacketArrivalTimes.lower_bound(this->transportCcFeedbackStartSeqNum);
 
 		if (it != this->mapPacketArrivalTimes.end())

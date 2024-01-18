@@ -247,9 +247,8 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		/* clang-format on */
 
 		auto* packet = new FeedbackRtpTransportPacket(senderSsrc, mediaSsrc);
-
+		
 		packet->SetFeedbackPacketCount(1);
-
 		
 		for (auto& input : inputs)
 		{
