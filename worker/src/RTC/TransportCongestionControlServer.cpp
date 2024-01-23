@@ -125,10 +125,15 @@ namespace RTC
 					break;
 				}
 
+				// Only insert the packet when receiving it for the first time.
+				if (!this->mapPacketArrivalTimes.try_emplace(wideSeqNumber, nowMs).second)
+				{
+					break;
+				}
+
 				// We may receive packets with sequence number lower than the one in previous
 				// tcc feedback, these packets may have been reported as lost previously,
 				// therefore we need to reset the start sequence num for the next tcc feedback.
-
 				if (
 				  !this->receivedTransportWideSeqNumber ||
 				  RTC::SeqManager<uint16_t>::IsSeqLowerThan(
@@ -138,12 +143,7 @@ namespace RTC
 				}
 				this->receivedTransportWideSeqNumber = true;
 
-				auto result = this->mapPacketArrivalTimes.emplace(wideSeqNumber, nowMs);
-
-				if (result.second)
-				{
-					MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
-				}
+				MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
 
 				// Update the RTCP media SSRC of the ongoing Transport-CC Feedback packet.
 				this->transportCcFeedbackSenderSsrc = 0u;
