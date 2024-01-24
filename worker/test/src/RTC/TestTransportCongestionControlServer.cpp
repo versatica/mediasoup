@@ -203,7 +203,6 @@ SCENARIO("TransportCongestionControlServer", "[rtc]")
 				{ 3u,  true, 1150u },
 			},
 			{
-				{ 3u,  true, 1150u },
 				{ 4u,  true, 1250u },
 			},
 		};
