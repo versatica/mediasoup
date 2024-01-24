@@ -175,7 +175,7 @@ namespace RTC
 		}
 	}
 
-	inline void TransportCongestionControlServer::FillAndSendTransportCcFeedback()
+	void TransportCongestionControlServer::FillAndSendTransportCcFeedback()
 	{
 		MS_TRACE();
 
