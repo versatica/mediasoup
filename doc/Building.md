@@ -134,11 +134,12 @@ Cleans built objects and binaries, `meson` and `ninja` installed in local prefix
 
 ### `invoke update-wrap-file [subproject]`
 
-Updates the wrap file of a subproject (those in `worker/subprojects` folder) with Meson. Usage example:
+Updates the wrap file of a subproject (those in `worker/subprojects` folder) with Meson. After updating it, `invoke setup` must be called by passing `MESON_ARGS="--reconfigure"` environment variable. Usage example:
 
 ```bash
 cd worker
 invoke update-wrap-file openssl
+MESON_ARGS="--reconfigure" invoke setup
 ```
 
 ### `invoke mediasoup-worker`

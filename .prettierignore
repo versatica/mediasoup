@@ -3,7 +3,6 @@
 /.cache
 /art
 /coverage
-/doc
 /node/lib
 /node/src/fbs
 /rust
