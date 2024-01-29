@@ -8,7 +8,9 @@
 #include "RTC/RtpPacket.hpp"
 #include "handles/TimerHandle.hpp"
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
+#include <libwebrtc/rtc_base/numerics/sequence_number_util.h>
 #include <deque>
+using namespace webrtc;
 
 namespace RTC
 {
@@ -59,6 +61,13 @@ namespace RTC
 		void SendTransportCcFeedback();
 		void MaySendLimitationRembFeedback();
 		void UpdatePacketLoss(double packetLoss);
+		void OnPacketArrival(uint16_t sequence_number, uint64_t arrival_time);
+		void SendPeriodicFeedbacks();
+		int64_t BuildFeedbackPacket(
+		  int64_t base_sequence_number,
+		  std::map<int64_t, uint64_t>::const_iterator begin_iterator, // |begin_iterator| is inclusive.
+		  std::map<int64_t, uint64_t>::const_iterator end_iterator    // |end_iterator| is exclusive.
+		);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
 	public:
@@ -89,6 +98,12 @@ namespace RTC
 		uint8_t unlimitedRembCounter{ 0u };
 		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
+		SeqNumUnwrapper<uint16_t> unwrapper;
+		absl::optional<int64_t> periodicWindowStartSeq;
+		// Map unwrapped seq -> time.
+		std::map<int64_t, uint64_t> packetArrivalTimes;
+		// Use buffer policy similar to webrtc
+		bool useBufferPolicy{ true };
 	};
 } // namespace RTC
 
