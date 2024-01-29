@@ -8,13 +8,13 @@
 		"strict": true,
 		"outDir": "lib",
 		"declaration": true,
-		"declarationMap": true
+		"declarationMap": true,
 	},
 	"include": ["src"],
 	"watchOptions": {
 		"watchFile": "useFsEvents",
 		"watchDirectory": "useFsEvents",
 		"fallbackPolling": "dynamicPriority",
-		"synchronousWatchDirectory": true
-	}
+		"synchronousWatchDirectory": true,
+	},
 }

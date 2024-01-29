@@ -170,14 +170,14 @@ export class WebRtcServer<
 
 		// Build the request.
 		const requestOffset = new FbsWorker.CloseWebRtcServerRequestT(
-			this.#internal.webRtcServerId,
+			this.#internal.webRtcServerId
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel
 			.request(
 				Method.WORKER_WEBRTCSERVER_CLOSE,
 				RequestBody.Worker_CloseWebRtcServerRequest,
-				requestOffset,
+				requestOffset
 			)
 			.catch(() => {});
 
@@ -230,7 +230,7 @@ export class WebRtcServer<
 			Method.WEBRTCSERVER_DUMP,
 			undefined,
 			undefined,
-			this.#internal.webRtcServerId,
+			this.#internal.webRtcServerId
 		);
 
 		/* Decode Response. */
@@ -267,7 +267,7 @@ function parseIpPort(binary: FbsWebRtcServer.IpPort): IpPort {
 }
 
 function parseIceUserNameFragment(
-	binary: FbsWebRtcServer.IceUserNameFragment,
+	binary: FbsWebRtcServer.IceUserNameFragment
 ): IceUserNameFragment {
 	return {
 		localIceUsernameFragment: binary.localIceUsernameFragment()!,
@@ -283,7 +283,7 @@ function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash {
 }
 
 function parseWebRtcServerDump(
-	data: FbsWebRtcServer.DumpResponse,
+	data: FbsWebRtcServer.DumpResponse
 ): WebRtcServerDump {
 	return {
 		id: data.id()!,
@@ -293,7 +293,7 @@ function parseWebRtcServerDump(
 		localIceUsernameFragments: utils.parseVector(
 			data,
 			'localIceUsernameFragments',
-			parseIceUserNameFragment,
+			parseIceUserNameFragment
 		),
 		tupleHashes: utils.parseVector(data, 'tupleHashes', parseTupleHash),
 	};

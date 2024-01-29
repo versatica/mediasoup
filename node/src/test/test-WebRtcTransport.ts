@@ -57,8 +57,8 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(
-			resolve => ctx.worker?.on('subprocessclose', resolve),
+		await new Promise<void>(resolve =>
+			ctx.worker?.on('subprocessclose', resolve)
 		);
 	}
 });
@@ -176,22 +176,22 @@ test('router.createWebRtcTransport() succeeds', async () => {
 test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-ignore
 	await expect(ctx.router!.createWebRtcTransport({})).rejects.toThrow(
-		TypeError,
+		TypeError
 	);
 
 	await expect(
 		// @ts-ignore
-		ctx.router!.createWebRtcTransport({ listenIps: [123] }),
+		ctx.router!.createWebRtcTransport({ listenIps: [123] })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		// @ts-ignore
-		ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' }),
+		ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		// @ts-ignore
-		ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' }),
+		ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
@@ -199,7 +199,7 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 			listenIps: ['127.0.0.1'],
 			// @ts-ignore
 			appData: 'NOT-AN-OBJECT',
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	await expect(
@@ -208,7 +208,7 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 			enableSctp: true,
 			// @ts-ignore
 			numSctpStreams: 'foo',
-		}),
+		})
 	).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -216,7 +216,7 @@ test('router.createWebRtcTransport() with non bindable IP rejects with Error', a
 	await expect(
 		ctx.router!.createWebRtcTransport({
 			listenInfos: [{ protocol: 'udp', ip: '8.8.8.8' }],
-		}),
+		})
 	).rejects.toThrow(Error);
 }, 2000);
 
@@ -271,12 +271,12 @@ test('webRtcTransport.connect() succeeds', async () => {
 	};
 
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
 	).resolves.toBeUndefined();
 
 	// Must fail if connected.
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
 	).rejects.toThrow(Error);
 
 	expect(webRtcTransport.dtlsParameters.role).toBe('server');
@@ -305,7 +305,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 	};
 
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
 	).rejects.toThrow(TypeError);
 
 	dtlsRemoteParameters = {
@@ -321,7 +321,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 	};
 
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
 	).rejects.toThrow(TypeError);
 
 	dtlsRemoteParameters = {
@@ -330,11 +330,11 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 	};
 
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters }),
+		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
 	).rejects.toThrow(TypeError);
 
 	expect(webRtcTransport.dtlsParameters.role).toBe('auto');
@@ -346,12 +346,12 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () => {
 	});
 
 	await expect(
-		webRtcTransport.setMaxIncomingBitrate(1000000),
+		webRtcTransport.setMaxIncomingBitrate(1000000)
 	).resolves.toBeUndefined();
 
 	// Remove limit.
 	await expect(
-		webRtcTransport.setMaxIncomingBitrate(0),
+		webRtcTransport.setMaxIncomingBitrate(0)
 	).resolves.toBeUndefined();
 }, 2000);
 
@@ -361,12 +361,12 @@ test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () => {
 	});
 
 	await expect(
-		webRtcTransport.setMaxOutgoingBitrate(2000000),
+		webRtcTransport.setMaxOutgoingBitrate(2000000)
 	).resolves.toBeUndefined();
 
 	// Remove limit.
 	await expect(
-		webRtcTransport.setMaxOutgoingBitrate(0),
+		webRtcTransport.setMaxOutgoingBitrate(0)
 	).resolves.toBeUndefined();
 }, 2000);
 
@@ -376,12 +376,12 @@ test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () => {
 	});
 
 	await expect(
-		webRtcTransport.setMinOutgoingBitrate(100000),
+		webRtcTransport.setMinOutgoingBitrate(100000)
 	).resolves.toBeUndefined();
 
 	// Remove limit.
 	await expect(
-		webRtcTransport.setMinOutgoingBitrate(0),
+		webRtcTransport.setMinOutgoingBitrate(0)
 	).resolves.toBeUndefined();
 }, 2000);
 
@@ -391,16 +391,16 @@ test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than curre
 	});
 
 	await expect(
-		webRtcTransport.setMinOutgoingBitrate(3000000),
+		webRtcTransport.setMinOutgoingBitrate(3000000)
 	).resolves.toBeUndefined();
 
 	await expect(webRtcTransport.setMaxOutgoingBitrate(2000000)).rejects.toThrow(
-		Error,
+		Error
 	);
 
 	// Remove limit.
 	await expect(
-		webRtcTransport.setMinOutgoingBitrate(0),
+		webRtcTransport.setMinOutgoingBitrate(0)
 	).resolves.toBeUndefined();
 }, 2000);
 
@@ -410,16 +410,16 @@ test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than curr
 	});
 
 	await expect(
-		webRtcTransport.setMaxOutgoingBitrate(2000000),
+		webRtcTransport.setMaxOutgoingBitrate(2000000)
 	).resolves.toBeUndefined();
 
 	await expect(webRtcTransport.setMinOutgoingBitrate(3000000)).rejects.toThrow(
-		Error,
+		Error
 	);
 
 	// Remove limit.
 	await expect(
-		webRtcTransport.setMaxOutgoingBitrate(0),
+		webRtcTransport.setMaxOutgoingBitrate(0)
 	).resolves.toBeUndefined();
 }, 2000);
 
@@ -441,7 +441,7 @@ test('webRtcTransport.restartIce() succeeds', async () => {
 	expect(typeof webRtcTransport.iceParameters.usernameFragment).toBe('string');
 	expect(typeof webRtcTransport.iceParameters.password).toBe('string');
 	expect(webRtcTransport.iceParameters.usernameFragment).not.toBe(
-		previousIceUsernameFragment,
+		previousIceUsernameFragment
 	);
 	expect(webRtcTransport.iceParameters.password).not.toBe(previousIcePassword);
 }, 2000);
@@ -481,17 +481,17 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 
 	// @ts-ignore
 	await expect(webRtcTransport.enableTraceEvent(123)).rejects.toThrow(
-		TypeError,
+		TypeError
 	);
 
 	// @ts-ignore
 	await expect(webRtcTransport.enableTraceEvent('probation')).rejects.toThrow(
-		TypeError,
+		TypeError
 	);
 
 	await expect(
 		// @ts-ignore
-		webRtcTransport.enableTraceEvent(['probation', 123.123]),
+		webRtcTransport.enableTraceEvent(['probation', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -511,7 +511,7 @@ test('WebRtcTransport events succeed', async () => {
 	const builder = new flatbuffers.Builder();
 	const iceStateChangeNotification =
 		new FbsWebRtcTransport.IceStateChangeNotificationT(
-			FbsWebRtcTransport.IceState.COMPLETED,
+			FbsWebRtcTransport.IceState.COMPLETED
 		);
 
 	let notificationOffset = Notification.createNotification(
@@ -519,19 +519,19 @@ test('WebRtcTransport events succeed', async () => {
 		builder.createString(webRtcTransport.id),
 		Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE,
 		NotificationBody.WebRtcTransport_IceStateChangeNotification,
-		iceStateChangeNotification.pack(builder),
+		iceStateChangeNotification.pack(builder)
 	);
 
 	builder.finish(notificationOffset);
 
 	let notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array()),
+		new flatbuffers.ByteBuffer(builder.asUint8Array())
 	);
 
 	channel.emit(
 		webRtcTransport.id,
 		Event.WEBRTCTRANSPORT_ICE_STATE_CHANGE,
-		notification,
+		notification
 	);
 
 	expect(onIceStateChange).toHaveBeenCalledTimes(1);
@@ -559,8 +559,8 @@ test('WebRtcTransport events succeed', async () => {
 				iceSelectedTuple.localPort,
 				iceSelectedTuple.remoteIp,
 				iceSelectedTuple.remotePort,
-				serializeProtocol(iceSelectedTuple.protocol),
-			),
+				serializeProtocol(iceSelectedTuple.protocol)
+			)
 		);
 
 	notificationOffset = Notification.createNotification(
@@ -568,19 +568,19 @@ test('WebRtcTransport events succeed', async () => {
 		builder.createString(webRtcTransport.id),
 		Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
 		NotificationBody.WebRtcTransport_IceSelectedTupleChangeNotification,
-		iceSelectedTupleChangeNotification.pack(builder),
+		iceSelectedTupleChangeNotification.pack(builder)
 	);
 
 	builder.finish(notificationOffset);
 
 	notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array()),
+		new flatbuffers.ByteBuffer(builder.asUint8Array())
 	);
 
 	channel.emit(
 		webRtcTransport.id,
 		Event.WEBRTCTRANSPORT_ICE_SELECTED_TUPLE_CHANGE,
-		notification,
+		notification
 	);
 
 	expect(onIceSelectedTuple).toHaveBeenCalledTimes(1);
@@ -596,7 +596,7 @@ test('WebRtcTransport events succeed', async () => {
 	// Simulate a 'dtlsstatechange' notification coming through the channel.
 	const dtlsStateChangeNotification =
 		new FbsWebRtcTransport.DtlsStateChangeNotificationT(
-			FbsWebRtcTransport.DtlsState.CONNECTING,
+			FbsWebRtcTransport.DtlsState.CONNECTING
 		);
 
 	notificationOffset = Notification.createNotification(
@@ -604,19 +604,19 @@ test('WebRtcTransport events succeed', async () => {
 		builder.createString(webRtcTransport.id),
 		Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
 		NotificationBody.WebRtcTransport_DtlsStateChangeNotification,
-		dtlsStateChangeNotification.pack(builder),
+		dtlsStateChangeNotification.pack(builder)
 	);
 
 	builder.finish(notificationOffset);
 
 	notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array()),
+		new flatbuffers.ByteBuffer(builder.asUint8Array())
 	);
 
 	channel.emit(
 		webRtcTransport.id,
 		Event.WEBRTCTRANSPORT_DTLS_STATE_CHANGE,
-		notification,
+		notification
 	);
 
 	expect(onDtlsStateChange).toHaveBeenCalledTimes(1);
@@ -649,15 +649,15 @@ test('WebRtcTransport methods reject if closed', async () => {
 	await expect(webRtcTransport.connect({})).rejects.toThrow(Error);
 
 	await expect(webRtcTransport.setMaxIncomingBitrate(200000)).rejects.toThrow(
-		Error,
+		Error
 	);
 
 	await expect(webRtcTransport.setMaxOutgoingBitrate(200000)).rejects.toThrow(
-		Error,
+		Error
 	);
 
 	await expect(webRtcTransport.setMinOutgoingBitrate(100000)).rejects.toThrow(
-		Error,
+		Error
 	);
 
 	await expect(webRtcTransport.restartIce()).rejects.toThrow(Error);

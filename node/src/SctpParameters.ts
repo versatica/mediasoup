@@ -104,7 +104,7 @@ export type SctpParametersDump = {
 };
 
 export function parseSctpParametersDump(
-	binary: FbsSctpParameters.SctpParameters,
+	binary: FbsSctpParameters.SctpParameters
 ): SctpParametersDump {
 	return {
 		port: binary.port(),
@@ -119,7 +119,7 @@ export function parseSctpParametersDump(
 
 export function serializeSctpStreamParameters(
 	builder: flatbuffers.Builder,
-	parameters: SctpStreamParameters,
+	parameters: SctpStreamParameters
 ): number {
 	return FbsSctpParameters.SctpStreamParameters.createSctpStreamParameters(
 		builder,
@@ -130,12 +130,12 @@ export function serializeSctpStreamParameters(
 			: null,
 		typeof parameters.maxRetransmits === 'number'
 			? parameters.maxRetransmits
-			: null,
+			: null
 	);
 }
 
 export function parseSctpStreamParameters(
-	parameters: FbsSctpParameters.SctpStreamParameters,
+	parameters: FbsSctpParameters.SctpStreamParameters
 ): SctpStreamParameters {
 	return {
 		streamId: parameters.streamId(),

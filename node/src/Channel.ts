@@ -78,7 +78,7 @@ export class Channel extends EnhancedEventEmitter {
 			} else {
 				this.#recvBuffer = Buffer.concat(
 					[this.#recvBuffer, buffer],
-					this.#recvBuffer.length + buffer.length,
+					this.#recvBuffer.length + buffer.length
 				);
 			}
 
@@ -104,7 +104,7 @@ export class Channel extends EnhancedEventEmitter {
 
 				const dataView = new DataView(
 					this.#recvBuffer.buffer,
-					this.#recvBuffer.byteOffset + msgStart,
+					this.#recvBuffer.byteOffset + msgStart
 				);
 				const msgLen = dataView.getUint32(0, IS_LITTLE_ENDIAN);
 
@@ -115,7 +115,7 @@ export class Channel extends EnhancedEventEmitter {
 
 				const payload = this.#recvBuffer.subarray(
 					msgStart + 4,
-					msgStart + 4 + msgLen,
+					msgStart + 4 + msgLen
 				);
 
 				msgStart += 4 + msgLen;
@@ -160,14 +160,14 @@ export class Channel extends EnhancedEventEmitter {
 							console.warn(
 								`worker[pid:${pid}] unexpected data: ${payload.toString(
 									'utf8',
-									1,
-								)}`,
+									1
+								)}`
 							);
 						}
 					}
 				} catch (error) {
 					logger.error(
-						`received invalid message from the worker process: ${error}`,
+						`received invalid message from the worker process: ${error}`
 					);
 				}
 			}
@@ -178,19 +178,19 @@ export class Channel extends EnhancedEventEmitter {
 		});
 
 		this.#consumerSocket.on('end', () =>
-			logger.debug('Consumer Channel ended by the worker process'),
+			logger.debug('Consumer Channel ended by the worker process')
 		);
 
 		this.#consumerSocket.on('error', error =>
-			logger.error(`Consumer Channel error: ${error}`),
+			logger.error(`Consumer Channel error: ${error}`)
 		);
 
 		this.#producerSocket.on('end', () =>
-			logger.debug('Producer Channel ended by the worker process'),
+			logger.debug('Producer Channel ended by the worker process')
 		);
 
 		this.#producerSocket.on('error', error =>
-			logger.error(`Producer Channel error: ${error}`),
+			logger.error(`Producer Channel error: ${error}`)
 		);
 	}
 
@@ -244,13 +244,13 @@ export class Channel extends EnhancedEventEmitter {
 		event: Event,
 		bodyType?: NotificationBody,
 		bodyOffset?: number,
-		handlerId?: string,
+		handlerId?: string
 	): void {
 		logger.debug(`notify() [event:${Event[event]}]`);
 
 		if (this.#closed) {
 			throw new InvalidStateError(
-				`Channel closed, cannot send notification [event:${Event[event]}]`,
+				`Channel closed, cannot send notification [event:${Event[event]}]`
 			);
 		}
 
@@ -264,7 +264,7 @@ export class Channel extends EnhancedEventEmitter {
 				handlerIdOffset,
 				event,
 				bodyType,
-				bodyOffset,
+				bodyOffset
 			);
 		} else {
 			notificationOffset = Notification.createNotification(
@@ -272,14 +272,14 @@ export class Channel extends EnhancedEventEmitter {
 				handlerIdOffset,
 				event,
 				NotificationBody.NONE,
-				0,
+				0
 			);
 		}
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
 			MessageBody.Notification,
-			notificationOffset,
+			notificationOffset
 		);
 
 		// Finalizes the buffer and adds a 4 byte prefix with the size of the buffer.
@@ -310,13 +310,13 @@ export class Channel extends EnhancedEventEmitter {
 		method: Method,
 		bodyType?: RequestBody,
 		bodyOffset?: number,
-		handlerId?: string,
+		handlerId?: string
 	): Promise<Response> {
 		logger.debug(`request() [method:${Method[method]}]`);
 
 		if (this.#closed) {
 			throw new InvalidStateError(
-				`Channel closed, cannot send request [method:${Method[method]}]`,
+				`Channel closed, cannot send request [method:${Method[method]}]`
 			);
 		}
 
@@ -335,7 +335,7 @@ export class Channel extends EnhancedEventEmitter {
 				method,
 				handlerIdOffset,
 				bodyType,
-				bodyOffset,
+				bodyOffset
 			);
 		} else {
 			requestOffset = Request.createRequest(
@@ -344,14 +344,14 @@ export class Channel extends EnhancedEventEmitter {
 				method,
 				handlerIdOffset,
 				RequestBody.NONE,
-				0,
+				0
 			);
 		}
 
 		const messageOffset = Message.createMessage(
 			this.#bufferBuilder,
 			MessageBody.Request,
-			requestOffset,
+			requestOffset
 		);
 
 		// Finalizes the buffer and adds a 4 byte prefix with the size of the buffer.
@@ -392,8 +392,8 @@ export class Channel extends EnhancedEventEmitter {
 				close: () => {
 					pReject(
 						new InvalidStateError(
-							`Channel closed, pending request aborted [method:${Method[method]}, id:${id}]`,
-						),
+							`Channel closed, pending request aborted [method:${Method[method]}, id:${id}]`
+						)
 					);
 				},
 			};
@@ -408,7 +408,7 @@ export class Channel extends EnhancedEventEmitter {
 
 		if (!sent) {
 			logger.error(
-				`received response does not match any sent request [id:${response.id}]`,
+				`received response does not match any sent request [id:${response.id}]`
 			);
 
 			return;
@@ -422,7 +422,7 @@ export class Channel extends EnhancedEventEmitter {
 			logger.warn(
 				`request failed [method:${sent.method}, id:${
 					sent.id
-				}]: ${response.reason()}`,
+				}]: ${response.reason()}`
 			);
 
 			switch (response.error()!) {
@@ -438,7 +438,7 @@ export class Channel extends EnhancedEventEmitter {
 			}
 		} else {
 			logger.error(
-				`received response is not accepted nor rejected [method:${sent.method}, id:${sent.id}]`,
+				`received response is not accepted nor rejected [method:${sent.method}, id:${sent.id}]`
 			);
 		}
 	}
@@ -451,7 +451,7 @@ export class Channel extends EnhancedEventEmitter {
 		// here.
 		// See https://github.com/versatica/mediasoup/issues/510
 		setImmediate(() =>
-			this.emit(notification.handlerId()!, notification.event(), notification),
+			this.emit(notification.handlerId()!, notification.event(), notification)
 		);
 	}
 

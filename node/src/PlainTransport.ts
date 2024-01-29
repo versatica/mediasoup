@@ -175,7 +175,7 @@ export class PlainTransport<
 	 * @private
 	 */
 	constructor(
-		options: PlainTransportConstructorOptions<PlainTransportAppData>,
+		options: PlainTransportConstructorOptions<PlainTransportAppData>
 	) {
 		super(options);
 
@@ -276,7 +276,7 @@ export class PlainTransport<
 			FbsRequest.Method.TRANSPORT_DUMP,
 			undefined,
 			undefined,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -299,7 +299,7 @@ export class PlainTransport<
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -341,7 +341,7 @@ export class PlainTransport<
 			FbsRequest.Method.PLAINTRANSPORT_CONNECT,
 			FbsRequest.Body.PlainTransport_ConnectRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -438,13 +438,13 @@ export class PlainTransport<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }
 
 export function parsePlainTransportDumpResponse(
-	binary: FbsPlainTransport.DumpResponse,
+	binary: FbsPlainTransport.DumpResponse
 ): PlainTransportDump {
 	// Retrieve BaseTransportDump.
 	const baseTransportDump = parseBaseTransportDump(binary.base()!);
@@ -476,7 +476,7 @@ export function parsePlainTransportDumpResponse(
 }
 
 function parseGetStatsResponse(
-	binary: FbsPlainTransport.GetStatsResponse,
+	binary: FbsPlainTransport.GetStatsResponse
 ): PlainTransportStat {
 	const base = parseBaseTransportStats(binary.base()!);
 
@@ -528,7 +528,7 @@ function createConnectRequest({
 	if (srtpParameters) {
 		FbsPlainTransport.ConnectRequest.addSrtpParameters(
 			builder,
-			srtpParametersOffset,
+			srtpParametersOffset
 		);
 	}
 

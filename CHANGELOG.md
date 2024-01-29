@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- C++: Update libsrtp to v3.0-alpha.
+- libsrtp: Update to v3.0-alpha version in our fork.
 
 ### 3.13.16
 

@@ -16,8 +16,8 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(
-			resolve => ctx.worker?.on('subprocessclose', resolve),
+		await new Promise<void>(resolve =>
+			ctx.worker?.on('subprocessclose', resolve)
 		);
 	}
 });
@@ -153,17 +153,17 @@ test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', 
 
 	await expect(
 		// @ts-ignore
-		ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' }),
+		ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		// @ts-ignore
-		ctx.worker!.createWebRtcServer({ listenInfos: ['NOT-AN-OBJECT'] }),
+		ctx.worker!.createWebRtcServer({ listenInfos: ['NOT-AN-OBJECT'] })
 	).rejects.toThrow(Error);
 
 	// Empty listenInfos so should fail.
 	await expect(
-		ctx.worker!.createWebRtcServer({ listenInfos: [] }),
+		ctx.worker!.createWebRtcServer({ listenInfos: [] })
 	).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -195,7 +195,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 					port: port2,
 				},
 			],
-		}),
+		})
 	).rejects.toThrow(Error);
 
 	// Using the same UDP port in two listenInfos.
@@ -214,7 +214,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 					port: port1,
 				},
 			],
-		}),
+		})
 	).rejects.toThrow(Error);
 
 	await ctx.worker!.createWebRtcServer({
@@ -237,7 +237,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 					port: port1,
 				},
 			],
-		}),
+		})
 	).rejects.toThrow(Error);
 
 	worker2.close();
@@ -255,7 +255,7 @@ test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is cl
 	await expect(
 		ctx.worker!.createWebRtcServer({
 			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', port }],
-		}),
+		})
 	).rejects.toThrow(InvalidStateError);
 }, 2000);
 
@@ -322,11 +322,11 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 	webRtcServer.observer.once(
 		'webrtctransporthandled',
-		onObserverWebRtcTransportHandled,
+		onObserverWebRtcTransportHandled
 	);
 	webRtcServer.observer.once(
 		'webrtctransportunhandled',
-		onObserverWebRtcTransportUnhandled,
+		onObserverWebRtcTransportUnhandled
 	);
 
 	const router = await ctx.worker!.createRouter();
@@ -421,11 +421,11 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 
 	webRtcServer.observer.once(
 		'webrtctransporthandled',
-		onObserverWebRtcTransportHandled,
+		onObserverWebRtcTransportHandled
 	);
 	webRtcServer.observer.once(
 		'webrtctransportunhandled',
-		onObserverWebRtcTransportUnhandled,
+		onObserverWebRtcTransportUnhandled
 	);
 
 	const router = await ctx.worker!.createRouter();

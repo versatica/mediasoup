@@ -64,7 +64,7 @@ export class RtpObserver<
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (
-		producerId: string,
+		producerId: string
 	) => Producer | undefined;
 
 	// Observer instance.
@@ -149,7 +149,7 @@ export class RtpObserver<
 
 		/* Build Request. */
 		const requestOffset = new FbsRouter.CloseRtpObserverRequestT(
-			this.internal.rtpObserverId,
+			this.internal.rtpObserverId
 		).pack(this.channel.bufferBuilder);
 
 		this.channel
@@ -157,7 +157,7 @@ export class RtpObserver<
 				FbsRequest.Method.ROUTER_CLOSE_RTPOBSERVER,
 				FbsRequest.Body.Router_CloseRtpObserverRequest,
 				requestOffset,
-				this.internal.routerId,
+				this.internal.routerId
 			)
 			.catch(() => {});
 
@@ -202,7 +202,7 @@ export class RtpObserver<
 			FbsRequest.Method.RTPOBSERVER_PAUSE,
 			undefined,
 			undefined,
-			this.internal.rtpObserverId,
+			this.internal.rtpObserverId
 		);
 
 		this.#paused = true;
@@ -225,7 +225,7 @@ export class RtpObserver<
 			FbsRequest.Method.RTPOBSERVER_RESUME,
 			undefined,
 			undefined,
-			this.internal.rtpObserverId,
+			this.internal.rtpObserverId
 		);
 
 		this.#paused = false;
@@ -251,14 +251,14 @@ export class RtpObserver<
 		}
 
 		const requestOffset = new FbsRtpObserver.AddProducerRequestT(
-			producerId,
+			producerId
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.RTPOBSERVER_ADD_PRODUCER,
 			FbsRequest.Body.RtpObserver_AddProducerRequest,
 			requestOffset,
-			this.internal.rtpObserverId,
+			this.internal.rtpObserverId
 		);
 
 		// Emit observer event.
@@ -280,14 +280,14 @@ export class RtpObserver<
 		}
 
 		const requestOffset = new FbsRtpObserver.RemoveProducerRequestT(
-			producerId,
+			producerId
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.RTPOBSERVER_REMOVE_PRODUCER,
 			FbsRequest.Body.RtpObserver_RemoveProducerRequest,
 			requestOffset,
-			this.internal.rtpObserverId,
+			this.internal.rtpObserverId
 		);
 
 		// Emit observer event.

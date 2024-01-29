@@ -293,7 +293,7 @@ export class DataConsumer<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.CloseDataConsumerRequestT(
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel
@@ -301,7 +301,7 @@ export class DataConsumer<
 				FbsRequest.Method.TRANSPORT_CLOSE_DATACONSUMER,
 				FbsRequest.Body.Transport_CloseDataConsumerRequest,
 				requestOffset,
-				this.#internal.transportId,
+				this.#internal.transportId
 			)
 			.catch(() => {});
 
@@ -344,7 +344,7 @@ export class DataConsumer<
 			FbsRequest.Method.DATACONSUMER_DUMP,
 			undefined,
 			undefined,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		/* Decode Response. */
@@ -365,7 +365,7 @@ export class DataConsumer<
 			FbsRequest.Method.DATACONSUMER_GET_STATS,
 			undefined,
 			undefined,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		/* Decode Response. */
@@ -386,7 +386,7 @@ export class DataConsumer<
 			FbsRequest.Method.DATACONSUMER_PAUSE,
 			undefined,
 			undefined,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		const wasPaused = this.#paused;
@@ -409,7 +409,7 @@ export class DataConsumer<
 			FbsRequest.Method.DATACONSUMER_RESUME,
 			undefined,
 			undefined,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		const wasPaused = this.#paused;
@@ -432,14 +432,14 @@ export class DataConsumer<
 		const requestOffset =
 			FbsDataConsumer.SetBufferedAmountLowThresholdRequest.createSetBufferedAmountLowThresholdRequest(
 				this.#channel.bufferBuilder,
-				threshold,
+				threshold
 			);
 
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
 			FbsRequest.Body.DataConsumer_SetBufferedAmountLowThresholdRequest,
 			requestOffset,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 	}
 
@@ -498,14 +498,14 @@ export class DataConsumer<
 		const requestOffset = FbsDataConsumer.SendRequest.createSendRequest(
 			builder,
 			ppid,
-			dataOffset,
+			dataOffset
 		);
 
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SEND,
 			FbsRequest.Body.DataConsumer_SendRequest,
 			requestOffset,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 	}
 
@@ -519,7 +519,7 @@ export class DataConsumer<
 			FbsRequest.Method.DATACONSUMER_GET_BUFFERED_AMOUNT,
 			undefined,
 			undefined,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		const data = new FbsDataConsumer.GetBufferedAmountResponse();
@@ -537,14 +537,14 @@ export class DataConsumer<
 
 		/* Build Request. */
 		const requestOffset = new FbsDataConsumer.SetSubchannelsRequestT(
-			subchannels,
+			subchannels
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SET_SUBCHANNELS,
 			FbsRequest.Body.DataConsumer_SetSubchannelsRequest,
 			requestOffset,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		/* Decode Response. */
@@ -566,14 +566,14 @@ export class DataConsumer<
 		const requestOffset =
 			FbsDataConsumer.AddSubchannelRequest.createAddSubchannelRequest(
 				this.#channel.bufferBuilder,
-				subchannel,
+				subchannel
 			);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_ADD_SUBCHANNEL,
 			FbsRequest.Body.DataConsumer_AddSubchannelRequest,
 			requestOffset,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		/* Decode Response. */
@@ -595,14 +595,14 @@ export class DataConsumer<
 		const requestOffset =
 			FbsDataConsumer.RemoveSubchannelRequest.createRemoveSubchannelRequest(
 				this.#channel.bufferBuilder,
-				subchannel,
+				subchannel
 			);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_REMOVE_SUBCHANNEL,
 			FbsRequest.Body.DataConsumer_RemoveSubchannelRequest,
 			requestOffset,
-			this.#internal.dataConsumerId,
+			this.#internal.dataConsumerId
 		);
 
 		/* Decode Response. */
@@ -703,7 +703,7 @@ export class DataConsumer<
 						this.safeEmit(
 							'message',
 							Buffer.from(notification.dataArray()!),
-							notification.ppid(),
+							notification.ppid()
 						);
 
 						break;
@@ -712,17 +712,17 @@ export class DataConsumer<
 					default: {
 						logger.error(
 							'ignoring unknown event "%s" in channel listener',
-							event,
+							event
 						);
 					}
 				}
-			},
+			}
 		);
 	}
 }
 
 export function dataConsumerTypeToFbs(
-	type: DataConsumerType,
+	type: DataConsumerType
 ): FbsDataProducer.Type {
 	switch (type) {
 		case 'sctp': {
@@ -740,7 +740,7 @@ export function dataConsumerTypeToFbs(
 }
 
 export function dataConsumerTypeFromFbs(
-	type: FbsDataProducer.Type,
+	type: FbsDataProducer.Type
 ): DataConsumerType {
 	switch (type) {
 		case FbsDataProducer.Type.SCTP: {
@@ -754,7 +754,7 @@ export function dataConsumerTypeFromFbs(
 }
 
 export function parseDataConsumerDumpResponse(
-	data: FbsDataConsumer.DumpResponse,
+	data: FbsDataConsumer.DumpResponse
 ): DataConsumerDump {
 	return {
 		id: data.id()!,
@@ -774,7 +774,7 @@ export function parseDataConsumerDumpResponse(
 }
 
 function parseDataConsumerStats(
-	binary: FbsDataConsumer.GetStatsResponse,
+	binary: FbsDataConsumer.GetStatsResponse
 ): DataConsumerStat {
 	return {
 		type: 'data-consumer',

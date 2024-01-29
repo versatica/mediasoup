@@ -488,7 +488,7 @@ export class Consumer<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.CloseConsumerRequestT(
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel
@@ -496,7 +496,7 @@ export class Consumer<
 				FbsRequest.Method.TRANSPORT_CLOSE_CONSUMER,
 				FbsRequest.Body.Transport_CloseConsumerRequest,
 				requestOffset,
-				this.#internal.transportId,
+				this.#internal.transportId
 			)
 			.catch(() => {});
 
@@ -539,7 +539,7 @@ export class Consumer<
 			FbsRequest.Method.CONSUMER_DUMP,
 			undefined,
 			undefined,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 
 		/* Decode Response. */
@@ -560,7 +560,7 @@ export class Consumer<
 			FbsRequest.Method.CONSUMER_GET_STATS,
 			undefined,
 			undefined,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 
 		/* Decode Response. */
@@ -581,7 +581,7 @@ export class Consumer<
 			FbsRequest.Method.CONSUMER_PAUSE,
 			undefined,
 			undefined,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 
 		const wasPaused = this.#paused;
@@ -604,7 +604,7 @@ export class Consumer<
 			FbsRequest.Method.CONSUMER_RESUME,
 			undefined,
 			undefined,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 
 		const wasPaused = this.#paused;
@@ -639,19 +639,19 @@ export class Consumer<
 			FbsConsumer.ConsumerLayers.createConsumerLayers(
 				builder,
 				spatialLayer,
-				temporalLayer !== undefined ? temporalLayer : null,
+				temporalLayer !== undefined ? temporalLayer : null
 			);
 		const requestOffset =
 			FbsConsumer.SetPreferredLayersRequest.createSetPreferredLayersRequest(
 				builder,
-				preferredLayersOffset,
+				preferredLayersOffset
 			);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PREFERRED_LAYERS,
 			FbsRequest.Body.Consumer_SetPreferredLayersRequest,
 			requestOffset,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 
 		/* Decode Response. */
@@ -690,14 +690,14 @@ export class Consumer<
 		const requestOffset =
 			FbsConsumer.SetPriorityRequest.createSetPriorityRequest(
 				this.#channel.bufferBuilder,
-				priority,
+				priority
 			);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.CONSUMER_SET_PRIORITY,
 			FbsRequest.Body.Consumer_SetPriorityRequest,
 			requestOffset,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 
 		const data = new FbsConsumer.SetPriorityResponse();
@@ -728,7 +728,7 @@ export class Consumer<
 			FbsRequest.Method.CONSUMER_REQUEST_KEY_FRAME,
 			undefined,
 			undefined,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 	}
 
@@ -758,14 +758,14 @@ export class Consumer<
 
 		/* Build Request. */
 		const requestOffset = new FbsConsumer.EnableTraceEventRequestT(
-			fbsEventTypes,
+			fbsEventTypes
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.CONSUMER_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.Consumer_EnableTraceEventRequest,
 			requestOffset,
-			this.#internal.consumerId,
+			this.#internal.consumerId
 		);
 	}
 
@@ -902,13 +902,13 @@ export class Consumer<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }
 
 export function parseTraceEventData(
-	trace: FbsConsumer.TraceNotification,
+	trace: FbsConsumer.TraceNotification
 ): ConsumerTraceEventData {
 	let info: any;
 
@@ -930,7 +930,7 @@ export function parseTraceEventData(
 }
 
 function consumerTraceEventTypeToFbs(
-	eventType: ConsumerTraceEventType,
+	eventType: ConsumerTraceEventType
 ): FbsConsumer.TraceEventType {
 	switch (eventType) {
 		case 'keyframe': {
@@ -960,7 +960,7 @@ function consumerTraceEventTypeToFbs(
 }
 
 function consumerTraceEventTypeFromFbs(
-	traceType: FbsConsumer.TraceEventType,
+	traceType: FbsConsumer.TraceEventType
 ): ConsumerTraceEventType {
 	switch (traceType) {
 		case FbsConsumer.TraceEventType.KEYFRAME: {
@@ -1001,7 +1001,7 @@ function parseConsumerLayers(data: FbsConsumer.ConsumerLayers): ConsumerLayers {
 }
 
 function parseRtpStreamParameters(
-	data: FbsRtpStream.Params,
+	data: FbsRtpStream.Params
 ): RtpStreamParameters {
 	return {
 		encodingIdx: data.encodingIdx(),
@@ -1025,7 +1025,7 @@ function parseRtpStreamParameters(
 }
 
 function parseRtxStreamParameters(
-	data: FbsRtxStream.Params,
+	data: FbsRtxStream.Params
 ): RtxStreamParameters {
 	return {
 		ssrc: data.ssrc(),
@@ -1062,7 +1062,7 @@ function parseRtpStream(data: FbsRtpStream.Dump): RtpStreamDump {
 }
 
 function parseBaseConsumerDump(
-	data: FbsConsumer.BaseConsumerDump,
+	data: FbsConsumer.BaseConsumerDump
 ): BaseConsumerDump {
 	return {
 		id: data.id()!,
@@ -1074,17 +1074,17 @@ function parseBaseConsumerDump(
 				? utils.parseVector(
 						data,
 						'consumableRtpEncodings',
-						parseRtpEncodingParameters,
+						parseRtpEncodingParameters
 					)
 				: undefined,
 		traceEventTypes: utils.parseVector(
 			data,
 			'traceEventTypes',
-			consumerTraceEventTypeFromFbs,
+			consumerTraceEventTypeFromFbs
 		),
 		supportedCodecPayloadTypes: utils.parseVector(
 			data,
-			'supportedCodecPayloadTypes',
+			'supportedCodecPayloadTypes'
 		),
 		paused: data.paused(),
 		producerPaused: data.producerPaused(),
@@ -1093,7 +1093,7 @@ function parseBaseConsumerDump(
 }
 
 function parseSimpleConsumerDump(
-	data: FbsConsumer.ConsumerDump,
+	data: FbsConsumer.ConsumerDump
 ): SimpleConsumerDump {
 	const base = parseBaseConsumerDump(data.base()!);
 	const rtpStream = parseRtpStream(data.rtpStreams(0)!);
@@ -1106,7 +1106,7 @@ function parseSimpleConsumerDump(
 }
 
 function parseSimulcastConsumerDump(
-	data: FbsConsumer.ConsumerDump,
+	data: FbsConsumer.ConsumerDump
 ): SimulcastConsumerDump {
 	const base = parseBaseConsumerDump(data.base()!);
 	const rtpStream = parseRtpStream(data.rtpStreams(0)!);
@@ -1133,7 +1133,7 @@ function parseSvcConsumerDump(data: FbsConsumer.ConsumerDump): SvcConsumerDump {
 }
 
 function parsePipeConsumerDump(
-	data: FbsConsumer.ConsumerDump,
+	data: FbsConsumer.ConsumerDump
 ): PipeConsumerDump {
 	const base = parseBaseConsumerDump(data.base()!);
 	const rtpStreams = utils.parseVector(data, 'rtpStreams', parseRtpStream);
@@ -1146,7 +1146,7 @@ function parsePipeConsumerDump(
 }
 
 function parseConsumerDumpResponse(
-	data: FbsConsumer.DumpResponse,
+	data: FbsConsumer.DumpResponse
 ): ConsumerDump {
 	const type = data.data()!.base()!.type();
 
@@ -1190,7 +1190,7 @@ function parseConsumerDumpResponse(
 }
 
 function parseConsumerStats(
-	binary: FbsConsumer.GetStatsResponse,
+	binary: FbsConsumer.GetStatsResponse
 ): Array<ConsumerStat | ProducerStat> {
 	return utils.parseVector(binary, 'stats', parseRtpStreamStats);
 }

@@ -377,7 +377,7 @@ export type RtcpParameters = {
 
 export function serializeRtpParameters(
 	builder: flatbuffers.Builder,
-	rtpParameters: RtpParameters,
+	rtpParameters: RtpParameters
 ): number {
 	const codecs: number[] = [];
 	const headerExtensions: number[] = [];
@@ -387,7 +387,7 @@ export function serializeRtpParameters(
 		const parameters = serializeParameters(builder, codec.parameters);
 		const parametersOffset = FbsRtpCodecParameters.createParametersVector(
 			builder,
-			parameters,
+			parameters
 		);
 
 		const rtcpFeedback: number[] = [];
@@ -400,13 +400,13 @@ export function serializeRtpParameters(
 				FbsRtcpFeedback.createRtcpFeedback(
 					builder,
 					typeOffset,
-					rtcpParametersOffset,
-				),
+					rtcpParametersOffset
+				)
 			);
 		}
 		const rtcpFeedbackOffset = FbsRtpCodecParameters.createRtcpFeedbackVector(
 			builder,
-			rtcpFeedback,
+			rtcpFeedback
 		);
 
 		codecs.push(
@@ -417,8 +417,8 @@ export function serializeRtpParameters(
 				codec.clockRate,
 				Number(codec.channels),
 				parametersOffset,
-				rtcpFeedbackOffset,
-			),
+				rtcpFeedbackOffset
+			)
 		);
 	}
 	const codecsOffset = FbsRtpParameters.createCodecsVector(builder, codecs);
@@ -429,7 +429,7 @@ export function serializeRtpParameters(
 		const parameters = serializeParameters(builder, headerExtension.parameters);
 		const parametersOffset = FbsRtpCodecParameters.createParametersVector(
 			builder,
-			parameters,
+			parameters
 		);
 
 		headerExtensions.push(
@@ -438,19 +438,19 @@ export function serializeRtpParameters(
 				uri,
 				headerExtension.id,
 				Boolean(headerExtension.encrypt),
-				parametersOffset,
-			),
+				parametersOffset
+			)
 		);
 	}
 	const headerExtensionsOffset = FbsRtpParameters.createHeaderExtensionsVector(
 		builder,
-		headerExtensions,
+		headerExtensions
 	);
 
 	// RtpEncodingParameters.
 	const encodingsOffset = serializeRtpEncodingParameters(
 		builder,
-		rtpParameters.encodings ?? [],
+		rtpParameters.encodings ?? []
 	);
 
 	// RtcpParameters.
@@ -460,7 +460,7 @@ export function serializeRtpParameters(
 	const rtcpOffset = FbsRtcpParameters.createRtcpParameters(
 		builder,
 		cnameOffset,
-		Boolean(reducedSize),
+		Boolean(reducedSize)
 	);
 
 	const midOffset = builder.createString(rtpParameters.mid);
@@ -478,7 +478,7 @@ export function serializeRtpParameters(
 
 export function serializeRtpEncodingParameters(
 	builder: flatbuffers.Builder,
-	rtpEncodingParameters: RtpEncodingParameters[] = [],
+	rtpEncodingParameters: RtpEncodingParameters[] = []
 ): number {
 	const encodings: number[] = [];
 
@@ -515,7 +515,7 @@ export function serializeRtpEncodingParameters(
 		if (encoding.codecPayloadType) {
 			FbsRtpEncodingParameters.addCodecPayloadType(
 				builder,
-				encoding.codecPayloadType,
+				encoding.codecPayloadType
 			);
 		}
 
@@ -533,7 +533,7 @@ export function serializeRtpEncodingParameters(
 		if (scalabilityModeOffset) {
 			FbsRtpEncodingParameters.addScalabilityMode(
 				builder,
-				scalabilityModeOffset,
+				scalabilityModeOffset
 			);
 		}
 
@@ -551,7 +551,7 @@ export function serializeRtpEncodingParameters(
 
 export function serializeParameters(
 	builder: flatbuffers.Builder,
-	parameters: any,
+	parameters: any
 ): number[] {
 	const fbsParameters: number[] = [];
 
@@ -565,7 +565,7 @@ export function serializeParameters(
 				builder,
 				keyOffset,
 				FbsValue.Boolean,
-				value === true ? 1 : 0,
+				value === true ? 1 : 0
 			);
 		} else if (typeof value === 'number') {
 			// Integer.
@@ -576,7 +576,7 @@ export function serializeParameters(
 					builder,
 					keyOffset,
 					FbsValue.Integer32,
-					valueOffset,
+					valueOffset
 				);
 			}
 			// Float.
@@ -587,20 +587,20 @@ export function serializeParameters(
 					builder,
 					keyOffset,
 					FbsValue.Double,
-					valueOffset,
+					valueOffset
 				);
 			}
 		} else if (typeof value === 'string') {
 			const valueOffset = FbsString.createString(
 				builder,
-				builder.createString(value),
+				builder.createString(value)
 			);
 
 			parameterOffset = FbsParameter.createParameter(
 				builder,
 				keyOffset,
 				FbsValue.String,
-				valueOffset,
+				valueOffset
 			);
 		} else if (Array.isArray(value)) {
 			const valueOffset = FbsInteger32Array.createValueVector(builder, value);
@@ -609,7 +609,7 @@ export function serializeParameters(
 				builder,
 				keyOffset,
 				FbsValue.Integer32Array,
-				valueOffset,
+				valueOffset
 			);
 		} else {
 			throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
@@ -691,7 +691,7 @@ export function parseParameters(data: any): any {
 }
 
 export function parseRtpCodecParameters(
-	data: FbsRtpCodecParameters,
+	data: FbsRtpCodecParameters
 ): RtpCodecParameters {
 	const parameters = parseParameters(data);
 
@@ -712,7 +712,7 @@ export function parseRtpCodecParameters(
 }
 
 export function rtpHeaderExtensionUriFromFbs(
-	uri: FbsRtpHeaderExtensionUri,
+	uri: FbsRtpHeaderExtensionUri
 ): RtpHeaderExtensionUri {
 	switch (uri) {
 		case FbsRtpHeaderExtensionUri.Mid: {
@@ -762,7 +762,7 @@ export function rtpHeaderExtensionUriFromFbs(
 }
 
 export function rtpHeaderExtensionUriToFbs(
-	uri: RtpHeaderExtensionUri,
+	uri: RtpHeaderExtensionUri
 ): FbsRtpHeaderExtensionUri {
 	switch (uri) {
 		case 'urn:ietf:params:rtp-hdrext:sdes:mid': {
@@ -816,7 +816,7 @@ export function rtpHeaderExtensionUriToFbs(
 }
 
 export function parseRtpHeaderExtensionParameters(
-	data: FbsRtpHeaderExtensionParameters,
+	data: FbsRtpHeaderExtensionParameters
 ): RtpHeaderExtensionParameters {
 	return {
 		uri: rtpHeaderExtensionUriFromFbs(data.uri()),
@@ -827,7 +827,7 @@ export function parseRtpHeaderExtensionParameters(
 }
 
 export function parseRtpEncodingParameters(
-	data: FbsRtpEncodingParameters,
+	data: FbsRtpEncodingParameters
 ): RtpEncodingParameters {
 	return {
 		ssrc: data.ssrc() ?? undefined,
@@ -850,7 +850,7 @@ export function parseRtpParameters(data: FbsRtpParameters): RtpParameters {
 		headerExtensions = utils.parseVector(
 			data,
 			'headerExtensions',
-			parseRtpHeaderExtensionParameters,
+			parseRtpHeaderExtensionParameters
 		);
 	}
 
@@ -860,7 +860,7 @@ export function parseRtpParameters(data: FbsRtpParameters): RtpParameters {
 		encodings = utils.parseVector(
 			data,
 			'encodings',
-			parseRtpEncodingParameters,
+			parseRtpEncodingParameters
 		);
 	}
 

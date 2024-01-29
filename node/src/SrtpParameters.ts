@@ -26,7 +26,7 @@ export type SrtpCryptoSuite =
 	| 'AES_CM_128_HMAC_SHA1_32';
 
 export function cryptoSuiteFromFbs(
-	binary: FbsSrtpParameters.SrtpCryptoSuite,
+	binary: FbsSrtpParameters.SrtpCryptoSuite
 ): SrtpCryptoSuite {
 	switch (binary) {
 		case FbsSrtpParameters.SrtpCryptoSuite.AEAD_AES_256_GCM: {
@@ -48,7 +48,7 @@ export function cryptoSuiteFromFbs(
 }
 
 export function cryptoSuiteToFbs(
-	cryptoSuite: SrtpCryptoSuite,
+	cryptoSuite: SrtpCryptoSuite
 ): FbsSrtpParameters.SrtpCryptoSuite {
 	switch (cryptoSuite) {
 		case 'AEAD_AES_256_GCM': {
@@ -74,7 +74,7 @@ export function cryptoSuiteToFbs(
 }
 
 export function parseSrtpParameters(
-	binary: FbsSrtpParameters.SrtpParameters,
+	binary: FbsSrtpParameters.SrtpParameters
 ): SrtpParameters {
 	return {
 		cryptoSuite: cryptoSuiteFromFbs(binary.cryptoSuite()),
@@ -84,13 +84,13 @@ export function parseSrtpParameters(
 
 export function serializeSrtpParameters(
 	builder: flatbuffers.Builder,
-	srtpParameters: SrtpParameters,
+	srtpParameters: SrtpParameters
 ): number {
 	const keyBase64Offset = builder.createString(srtpParameters.keyBase64);
 
 	return FbsSrtpParameters.SrtpParameters.createSrtpParameters(
 		builder,
 		cryptoSuiteToFbs(srtpParameters.cryptoSuite),
-		keyBase64Offset,
+		keyBase64Offset
 	);
 }

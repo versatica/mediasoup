@@ -73,7 +73,7 @@ export class DirectTransport<
 	 * @private
 	 */
 	constructor(
-		options: DirectTransportConstructorOptions<DirectTransportAppData>,
+		options: DirectTransportConstructorOptions<DirectTransportAppData>
 	) {
 		super(options);
 
@@ -123,7 +123,7 @@ export class DirectTransport<
 			FbsRequest.Method.TRANSPORT_DUMP,
 			undefined,
 			undefined,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -146,7 +146,7 @@ export class DirectTransport<
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -172,7 +172,7 @@ export class DirectTransport<
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
-			'setMaxIncomingBitrate() not implemented in DirectTransport',
+			'setMaxIncomingBitrate() not implemented in DirectTransport'
 		);
 	}
 
@@ -182,7 +182,7 @@ export class DirectTransport<
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
-			'setMaxOutgoingBitrate() not implemented in DirectTransport',
+			'setMaxOutgoingBitrate() not implemented in DirectTransport'
 		);
 	}
 
@@ -192,7 +192,7 @@ export class DirectTransport<
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
-			'setMinOutgoingBitrate() not implemented in DirectTransport',
+			'setMinOutgoingBitrate() not implemented in DirectTransport'
 		);
 	}
 
@@ -207,19 +207,19 @@ export class DirectTransport<
 		const builder = this.channel.bufferBuilder;
 		const dataOffset = FbsTransport.SendRtcpNotification.createDataVector(
 			builder,
-			rtcpPacket,
+			rtcpPacket
 		);
 		const notificationOffset =
 			FbsTransport.SendRtcpNotification.createSendRtcpNotification(
 				builder,
-				dataOffset,
+				dataOffset
 			);
 
 		this.channel.notify(
 			FbsNotification.Event.TRANSPORT_SEND_RTCP,
 			FbsNotification.Body.Transport_SendRtcpNotification,
 			notificationOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 	}
 
@@ -261,19 +261,19 @@ export class DirectTransport<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }
 
 export function parseDirectTransportDumpResponse(
-	binary: FbsDirectTransport.DumpResponse,
+	binary: FbsDirectTransport.DumpResponse
 ): BaseTransportDump {
 	return parseBaseTransportDump(binary.base()!);
 }
 
 function parseGetStatsResponse(
-	binary: FbsDirectTransport.GetStatsResponse,
+	binary: FbsDirectTransport.GetStatsResponse
 ): DirectTransportStat {
 	const base = parseBaseTransportStats(binary.base()!);
 

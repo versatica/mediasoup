@@ -309,12 +309,12 @@ export class Transport<
 
 	// Method to retrieve a Producer.
 	protected readonly getProducerById: (
-		producerId: string,
+		producerId: string
 	) => Producer | undefined;
 
 	// Method to retrieve a DataProducer.
 	protected readonly getDataProducerById: (
-		dataProducerId: string,
+		dataProducerId: string
 	) => DataProducer | undefined;
 
 	// Producers map.
@@ -430,7 +430,7 @@ export class Transport<
 
 		/* Build Request. */
 		const requestOffset = new FbsRouter.CloseTransportRequestT(
-			this.internal.transportId,
+			this.internal.transportId
 		).pack(this.channel.bufferBuilder);
 
 		this.channel
@@ -438,7 +438,7 @@ export class Transport<
 				FbsRequest.Method.ROUTER_CLOSE_TRANSPORT,
 				FbsRequest.Body.Router_CloseTransportRequest,
 				requestOffset,
-				this.internal.routerId,
+				this.internal.routerId
 			)
 			.catch(() => {});
 
@@ -632,14 +632,14 @@ export class Transport<
 		const requestOffset =
 			FbsTransport.SetMaxIncomingBitrateRequest.createSetMaxIncomingBitrateRequest(
 				this.channel.bufferBuilder,
-				bitrate,
+				bitrate
 			);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_INCOMING_BITRATE,
 			FbsRequest.Body.Transport_SetMaxIncomingBitrateRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 	}
 
@@ -651,14 +651,14 @@ export class Transport<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
-			bitrate,
+			bitrate
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MAX_OUTGOING_BITRATE,
 			FbsRequest.Body.Transport_SetMaxOutgoingBitrateRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 	}
 
@@ -670,14 +670,14 @@ export class Transport<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
-			bitrate,
+			bitrate
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_SET_MIN_OUTGOING_BITRATE,
 			FbsRequest.Body.Transport_SetMinOutgoingBitrateRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 	}
 
@@ -745,7 +745,7 @@ export class Transport<
 		// This may throw.
 		const rtpMapping = ortc.getProducerRtpParametersMapping(
 			clonedRtpParameters,
-			routerRtpCapabilities,
+			routerRtpCapabilities
 		);
 
 		// This may throw.
@@ -753,7 +753,7 @@ export class Transport<
 			kind,
 			clonedRtpParameters,
 			routerRtpCapabilities,
-			rtpMapping,
+			rtpMapping
 		);
 
 		const producerId = id || utils.generateUUIDv4();
@@ -771,7 +771,7 @@ export class Transport<
 			FbsRequest.Method.TRANSPORT_PRODUCE,
 			FbsRequest.Body.Transport_ProduceRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -874,7 +874,7 @@ export class Transport<
 				// We use up to 8 bytes for MID (string).
 				if (this.#nextMidForConsumers === 100000000) {
 					logger.error(
-						`consume() | reaching max MID value "${this.#nextMidForConsumers}"`,
+						`consume() | reaching max MID value "${this.#nextMidForConsumers}"`
 					);
 
 					this.#nextMidForConsumers = 0;
@@ -898,7 +898,7 @@ export class Transport<
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.Transport_ConsumeRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -988,7 +988,7 @@ export class Transport<
 
 			if (sctpStreamParameters) {
 				logger.warn(
-					'produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport',
+					'produceData() | sctpStreamParameters are ignored when producing data on a DirectTransport'
 				);
 
 				clonedSctpStreamParameters = undefined;
@@ -1010,7 +1010,7 @@ export class Transport<
 			FbsRequest.Method.TRANSPORT_PRODUCE_DATA,
 			FbsRequest.Body.Transport_ProduceDataRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -1089,7 +1089,7 @@ export class Transport<
 
 			sctpStreamParameters =
 				utils.clone<SctpStreamParameters | undefined>(
-					dataProducer.sctpStreamParameters,
+					dataProducer.sctpStreamParameters
 				) ?? ({} as SctpStreamParameters);
 
 			// Override if given.
@@ -1121,7 +1121,7 @@ export class Transport<
 				maxRetransmits !== undefined
 			) {
 				logger.warn(
-					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport',
+					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport'
 				);
 			}
 		}
@@ -1145,7 +1145,7 @@ export class Transport<
 			FbsRequest.Method.TRANSPORT_CONSUME_DATA,
 			FbsRequest.Body.Transport_ConsumeDataRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -1222,14 +1222,14 @@ export class Transport<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.EnableTraceEventRequestT(
-			fbsEventTypes,
+			fbsEventTypes
 		).pack(this.channel.bufferBuilder);
 
 		await this.channel.request(
 			FbsRequest.Method.TRANSPORT_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.Transport_EnableTraceEventRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 	}
 
@@ -1265,7 +1265,7 @@ export class Transport<
 }
 
 function transportTraceEventTypeToFbs(
-	eventType: TransportTraceEventType,
+	eventType: TransportTraceEventType
 ): FbsTransport.TraceEventType {
 	switch (eventType) {
 		case 'probation': {
@@ -1283,7 +1283,7 @@ function transportTraceEventTypeToFbs(
 }
 
 function transportTraceEventTypeFromFbs(
-	eventType: FbsTransport.TraceEventType,
+	eventType: FbsTransport.TraceEventType
 ): TransportTraceEventType {
 	switch (eventType) {
 		case FbsTransport.TraceEventType.PROBATION: {
@@ -1325,7 +1325,7 @@ export function parseSctpState(fbsSctpState: FbsSctpState): SctpState {
 }
 
 export function parseProtocol(
-	protocol: FbsTransport.Protocol,
+	protocol: FbsTransport.Protocol
 ): TransportProtocol {
 	switch (protocol) {
 		case FbsTransport.Protocol.UDP: {
@@ -1339,7 +1339,7 @@ export function parseProtocol(
 }
 
 export function serializeProtocol(
-	protocol: TransportProtocol,
+	protocol: TransportProtocol
 ): FbsTransport.Protocol {
 	switch (protocol) {
 		case 'udp': {
@@ -1363,7 +1363,7 @@ export function parseTuple(binary: FbsTransport.Tuple): TransportTuple {
 }
 
 export function parseBaseTransportDump(
-	binary: FbsTransport.Dump,
+	binary: FbsTransport.Dump
 ): BaseTransportDump {
 	// Retrieve producerIds.
 	const producerIds = utils.parseVector<string>(binary, 'producerIds');
@@ -1372,12 +1372,12 @@ export function parseBaseTransportDump(
 	// Retrieve map SSRC consumerId.
 	const mapSsrcConsumerId = utils.parseUint32StringVector(
 		binary,
-		'mapSsrcConsumerId',
+		'mapSsrcConsumerId'
 	);
 	// Retrieve map RTX SSRC consumerId.
 	const mapRtxSsrcConsumerId = utils.parseUint32StringVector(
 		binary,
-		'mapRtxSsrcConsumerId',
+		'mapRtxSsrcConsumerId'
 	);
 	// Retrieve dataProducerIds.
 	const dataProducerIds = utils.parseVector<string>(binary, 'dataProducerIds');
@@ -1385,7 +1385,7 @@ export function parseBaseTransportDump(
 	const dataConsumerIds = utils.parseVector<string>(binary, 'dataConsumerIds');
 	// Retrieve recvRtpHeaderExtesions.
 	const recvRtpHeaderExtensions = parseRecvRtpHeaderExtensions(
-		binary.recvRtpHeaderExtensions()!,
+		binary.recvRtpHeaderExtensions()!
 	);
 	// Retrieve RtpListener.
 	const rtpListener = parseRtpListenerDump(binary.rtpListener()!);
@@ -1413,7 +1413,7 @@ export function parseBaseTransportDump(
 	const traceEventTypes = utils.parseVector<TransportTraceEventType>(
 		binary,
 		'traceEventTypes',
-		transportTraceEventTypeFromFbs,
+		transportTraceEventTypeFromFbs
 	);
 
 	return {
@@ -1436,7 +1436,7 @@ export function parseBaseTransportDump(
 }
 
 export function parseBaseTransportStats(
-	binary: FbsTransport.Stats,
+	binary: FbsTransport.Stats
 ): BaseTransportStats {
 	const sctpState =
 		binary.sctpState() === null
@@ -1470,7 +1470,7 @@ export function parseBaseTransportStats(
 }
 
 export function parseTransportTraceEventData(
-	trace: FbsTransport.TraceNotification,
+	trace: FbsTransport.TraceNotification
 ): TransportTraceEventData {
 	switch (trace.type()) {
 		case FbsTransport.TraceEventType.BWE: {
@@ -1500,7 +1500,7 @@ export function parseTransportTraceEventData(
 }
 
 function parseRecvRtpHeaderExtensions(
-	binary: FbsTransport.RecvRtpHeaderExtensions,
+	binary: FbsTransport.RecvRtpHeaderExtensions
 ): RecvRtpHeaderExtensions {
 	return {
 		mid: binary.mid() !== null ? binary.mid()! : undefined,
@@ -1568,7 +1568,7 @@ function createConsumeRequest({
 	if (producer.consumableRtpParameters.encodings) {
 		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
 			builder,
-			producer.consumableRtpParameters.encodings,
+			producer.consumableRtpParameters.encodings
 		);
 	}
 
@@ -1576,13 +1576,13 @@ function createConsumeRequest({
 		FbsConsumer.ConsumerLayers.startConsumerLayers(builder);
 		FbsConsumer.ConsumerLayers.addSpatialLayer(
 			builder,
-			preferredLayers.spatialLayer,
+			preferredLayers.spatialLayer
 		);
 
 		if (preferredLayers.temporalLayer !== undefined) {
 			FbsConsumer.ConsumerLayers.addTemporalLayer(
 				builder,
-				preferredLayers.temporalLayer,
+				preferredLayers.temporalLayer
 			);
 		}
 
@@ -1598,18 +1598,18 @@ function createConsumeRequest({
 	ConsumeRequest.addProducerId(builder, producerIdOffset);
 	ConsumeRequest.addKind(
 		builder,
-		producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO,
+		producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO
 	);
 	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
 	ConsumeRequest.addType(
 		builder,
-		pipe ? FbsRtpParameters.Type.PIPE : producerTypeToFbs(producer.type),
+		pipe ? FbsRtpParameters.Type.PIPE : producerTypeToFbs(producer.type)
 	);
 
 	if (consumableRtpEncodingsOffset) {
 		ConsumeRequest.addConsumableRtpEncodings(
 			builder,
-			consumableRtpEncodingsOffset,
+			consumableRtpEncodingsOffset
 		);
 	}
 
@@ -1649,13 +1649,13 @@ function createProduceRequest({
 	FbsTransport.ProduceRequest.addProducerId(builder, producerIdOffset);
 	FbsTransport.ProduceRequest.addKind(
 		builder,
-		kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO,
+		kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO
 	);
 	FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
 	FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
 	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(
 		builder,
-		keyFrameRequestDelay ?? 0,
+		keyFrameRequestDelay ?? 0
 	);
 	FbsTransport.ProduceRequest.addPaused(builder, paused);
 
@@ -1688,21 +1688,21 @@ function createProduceDataRequest({
 	if (sctpStreamParameters) {
 		sctpStreamParametersOffset = serializeSctpStreamParameters(
 			builder,
-			sctpStreamParameters,
+			sctpStreamParameters
 		);
 	}
 
 	FbsTransport.ProduceDataRequest.startProduceDataRequest(builder);
 	FbsTransport.ProduceDataRequest.addDataProducerId(
 		builder,
-		dataProducerIdOffset,
+		dataProducerIdOffset
 	);
 	FbsTransport.ProduceDataRequest.addType(builder, dataProducerTypeToFbs(type));
 
 	if (sctpStreamParametersOffset) {
 		FbsTransport.ProduceDataRequest.addSctpStreamParameters(
 			builder,
-			sctpStreamParametersOffset,
+			sctpStreamParametersOffset
 		);
 	}
 
@@ -1744,31 +1744,31 @@ function createConsumeDataRequest({
 	if (sctpStreamParameters) {
 		sctpStreamParametersOffset = serializeSctpStreamParameters(
 			builder,
-			sctpStreamParameters,
+			sctpStreamParameters
 		);
 	}
 
 	const subchannelsOffset =
 		FbsTransport.ConsumeDataRequest.createSubchannelsVector(
 			builder,
-			subchannels,
+			subchannels
 		);
 
 	FbsTransport.ConsumeDataRequest.startConsumeDataRequest(builder);
 	FbsTransport.ConsumeDataRequest.addDataConsumerId(
 		builder,
-		dataConsumerIdOffset,
+		dataConsumerIdOffset
 	);
 	FbsTransport.ConsumeDataRequest.addDataProducerId(
 		builder,
-		dataProducerIdOffset,
+		dataProducerIdOffset
 	);
 	FbsTransport.ConsumeDataRequest.addType(builder, dataConsumerTypeToFbs(type));
 
 	if (sctpStreamParametersOffset) {
 		FbsTransport.ConsumeDataRequest.addSctpStreamParameters(
 			builder,
-			sctpStreamParametersOffset,
+			sctpStreamParametersOffset
 		);
 	}
 
@@ -1781,7 +1781,7 @@ function createConsumeDataRequest({
 }
 
 function parseRtpListenerDump(
-	binary: FbsTransport.RtpListener,
+	binary: FbsTransport.RtpListener
 ): RtpListenerDump {
 	// Retrieve ssrcTable.
 	const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
@@ -1798,7 +1798,7 @@ function parseRtpListenerDump(
 }
 
 function parseSctpListenerDump(
-	binary: FbsTransport.SctpListener,
+	binary: FbsTransport.SctpListener
 ): SctpListenerDump {
 	// Retrieve streamIdTable.
 	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');

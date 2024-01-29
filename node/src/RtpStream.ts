@@ -39,7 +39,7 @@ type BaseRtpStreamStats = {
 };
 
 export function parseRtpStreamStats(
-	binary: FbsRtpStream.Stats,
+	binary: FbsRtpStream.Stats
 ): RtpStreamRecvStats | RtpStreamSendStats {
 	if (binary.dataType() === FbsRtpStream.StatsData.RecvStats) {
 		return parseRtpStreamRecvStats(binary);
@@ -49,7 +49,7 @@ export function parseRtpStreamStats(
 }
 
 export function parseRtpStreamRecvStats(
-	binary: FbsRtpStream.Stats,
+	binary: FbsRtpStream.Stats
 ): RtpStreamRecvStats {
 	const recvStats = new FbsRtpStream.RecvStats();
 	const baseStats = new FbsRtpStream.BaseStats();
@@ -71,7 +71,7 @@ export function parseRtpStreamRecvStats(
 }
 
 export function parseSendStreamStats(
-	binary: FbsRtpStream.Stats,
+	binary: FbsRtpStream.Stats
 ): RtpStreamSendStats {
 	const sendStats = new FbsRtpStream.SendStats();
 	const baseStats = new FbsRtpStream.BaseStats();
@@ -91,7 +91,7 @@ export function parseSendStreamStats(
 }
 
 function parseBaseStreamStats(
-	binary: FbsRtpStream.BaseStats,
+	binary: FbsRtpStream.BaseStats
 ): BaseRtpStreamStats {
 	return {
 		timestamp: Number(binary.timestamp()),

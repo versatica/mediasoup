@@ -72,7 +72,7 @@ export class AudioLevelObserver<
 	 * @private
 	 */
 	constructor(
-		options: AudioLevelObserverConstructorOptions<AudioLevelObserverAppData>,
+		options: AudioLevelObserverConstructorOptions<AudioLevelObserverAppData>
 	) {
 		super(options);
 
@@ -111,7 +111,7 @@ export class AudioLevelObserver<
 								}) => ({
 									producer: this.getProducerById(producerId)!,
 									volume,
-								}),
+								})
 							)
 							.filter(({ producer }: { producer: Producer }) => producer);
 
@@ -138,7 +138,7 @@ export class AudioLevelObserver<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }

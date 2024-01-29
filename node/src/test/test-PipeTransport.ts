@@ -184,13 +184,13 @@ beforeEach(async () => {
 		enableSctp: true,
 	});
 	ctx.audioProducer = await ctx.webRtcTransport1.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 	ctx.videoProducer = await ctx.webRtcTransport1.produce(
-		ctx.videoProducerOptions,
+		ctx.videoProducerOptions
 	);
 	ctx.dataProducer = await ctx.webRtcTransport1.produceData(
-		ctx.dataProducerOptions,
+		ctx.dataProducerOptions
 	);
 });
 
@@ -199,14 +199,14 @@ afterEach(async () => {
 	ctx.worker2?.close();
 
 	if (ctx.worker1?.subprocessClosed === false) {
-		await new Promise<void>(
-			resolve => ctx.worker1?.on('subprocessclose', resolve),
+		await new Promise<void>(resolve =>
+			ctx.worker1?.on('subprocessclose', resolve)
 		);
 	}
 
 	if (ctx.worker2?.subprocessClosed === false) {
-		await new Promise<void>(
-			resolve => ctx.worker2?.on('subprocessclose', resolve),
+		await new Promise<void>(resolve =>
+			ctx.worker2?.on('subprocessclose', resolve)
 		);
 	}
 });
@@ -452,18 +452,18 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);
 
 	await expect(
-		ctx.router1!.createPipeTransport({ listenIp: '123' }),
+		ctx.router1!.createPipeTransport({ listenIp: '123' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		// @ts-ignore
-		ctx.router1!.createPipeTransport({ listenIp: ['127.0.0.1'] }),
+		ctx.router1!.createPipeTransport({ listenIp: ['127.0.0.1'] })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router1!.createPipeTransport({
 			listenInfo: { protocol: 'tcp', ip: '127.0.0.1' },
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	await expect(
@@ -471,7 +471,7 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 			listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
 			// @ts-ignore
 			appData: 'NOT-AN-OBJECT',
-		}),
+		})
 	).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -575,7 +575,7 @@ test('pipeTransport.connect() with valid SRTP parameters succeeds', async () => 
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
 			},
-		}),
+		})
 	).resolves.toBeUndefined();
 }, 2000);
 
@@ -597,7 +597,7 @@ test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset',
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// No SRTP enabled so passing srtpParameters (even if invalid) must fail.
@@ -607,7 +607,7 @@ test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset',
 			port: 9999,
 			// @ts-ignore
 			srtpParameters: 'invalid',
-		}),
+		})
 	).rejects.toThrow(TypeError);
 });
 
@@ -627,7 +627,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Invalid srtpParameters.
@@ -637,7 +637,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			port: 9999,
 			// @ts-ignore
 			srtpParameters: 1,
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Missing srtpParameters.cryptoSuite.
@@ -650,7 +650,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Missing srtpParameters.keyBase64.
@@ -662,7 +662,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Invalid srtpParameters.cryptoSuite.
@@ -676,7 +676,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Invalid srtpParameters.cryptoSuite.
@@ -690,7 +690,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Invalid srtpParameters.keyBase64.
@@ -703,7 +703,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 				// @ts-ignore
 				keyBase64: [],
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -776,7 +776,7 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 	expect(typeof videoConsumer.rtpParameters.encodings?.[0].ssrc).toBe('number');
 	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx).toBe('object');
 	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc).toBe(
-		'number',
+		'number'
 	);
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(false);
@@ -808,7 +808,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 	// NOTE: Let's use a Promise since otherwise there may be race conditions
 	// between events and await lines below.
 	const promise1 = new Promise<void>(resolve =>
-		videoConsumer.once('producerresume', resolve),
+		videoConsumer.once('producerresume', resolve)
 	);
 
 	await ctx.videoProducer!.resume();
@@ -818,7 +818,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 	expect(videoConsumer.paused).toBe(false);
 
 	const promise2 = new Promise<void>(resolve =>
-		videoConsumer.once('producerpause', resolve),
+		videoConsumer.once('producerpause', resolve)
 	);
 
 	await ctx.videoProducer!.pause();
@@ -845,7 +845,7 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 
 	if (!videoConsumer.closed) {
 		await new Promise<void>(resolve =>
-			videoConsumer.once('producerclose', resolve),
+			videoConsumer.once('producerclose', resolve)
 		);
 	}
 
@@ -861,7 +861,7 @@ test('router.pipeToRouter() fails if both Routers belong to the same Worker', as
 		ctx.router1!.pipeToRouter({
 			producerId: ctx.videoProducer!.id,
 			router: router1bis,
-		}),
+		})
 	).rejects.toThrow(Error);
 }, 2000);
 
@@ -950,7 +950,7 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
 
 	if (!dataConsumer.closed) {
 		await new Promise<void>(resolve =>
-			dataConsumer.once('dataproducerclose', resolve),
+			dataConsumer.once('dataproducerclose', resolve)
 		);
 	}
 

@@ -148,8 +148,8 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(
-			resolve => ctx.worker?.on('subprocessclose', resolve),
+		await new Promise<void>(resolve =>
+			ctx.worker?.on('subprocessclose', resolve)
 		);
 	}
 });
@@ -160,7 +160,7 @@ test('webRtcTransport1.produce() succeeds', async () => {
 	ctx.webRtcTransport1!.observer.once('newproducer', onObserverNewProducer);
 
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
@@ -194,7 +194,7 @@ test('webRtcTransport2.produce() succeeds', async () => {
 	ctx.webRtcTransport2!.observer.once('newproducer', onObserverNewProducer);
 
 	const videoProducer = await ctx.webRtcTransport2!.produce(
-		ctx.videoProducerOptions,
+		ctx.videoProducerOptions
 	);
 
 	expect(onObserverNewProducer).toHaveBeenCalledTimes(1);
@@ -213,7 +213,7 @@ test('webRtcTransport2.produce() succeeds', async () => {
 	const dump = await ctx.router!.dump();
 
 	expect(dump.mapProducerIdConsumerIds).toEqual(
-		expect.arrayContaining([{ key: videoProducer.id, values: [] }]),
+		expect.arrayContaining([{ key: videoProducer.id, values: [] }])
 	);
 
 	expect(dump.mapConsumerIdProducerId.length).toBe(0);
@@ -275,7 +275,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 			kind: 'chicken',
 			// @ts-ignore
 			rtpParameters: {},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	await expect(
@@ -283,7 +283,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 			kind: 'audio',
 			// @ts-ignore
 			rtpParameters: {},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Invalid ssrc.
@@ -297,7 +297,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 				encodings: [{ ssrc: '1111' }],
 				rtcp: { cname: 'qwerty' },
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Missing or empty rtpParameters.encodings.
@@ -326,7 +326,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 				encodings: [],
 				rtcp: { cname: 'qwerty' },
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 
 	// Wrong apt in RTX codec.
@@ -357,7 +357,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 					cname: 'video-1',
 				},
 			},
-		}),
+		})
 	).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -377,7 +377,7 @@ test('webRtcTransport1.produce() with unsupported codecs rejects with Unsupporte
 				encodings: [{ ssrc: 1111 }],
 				rtcp: { cname: 'audio' },
 			},
-		}),
+		})
 	).rejects.toThrow(UnsupportedError);
 
 	// Invalid H264 profile-level-id.
@@ -405,7 +405,7 @@ test('webRtcTransport1.produce() with unsupported codecs rejects with Unsupporte
 				headerExtensions: [],
 				encodings: [{ ssrc: 6666, rtx: { ssrc: 6667 } }],
 			},
-		}),
+		})
 	).rejects.toThrow(UnsupportedError);
 }, 2000);
 
@@ -457,13 +457,13 @@ test('transport.produce() with already used MID or SSRC rejects with Error', asy
 	await ctx.webRtcTransport1!.produce(audioProducerOptions);
 
 	await expect(
-		ctx.webRtcTransport1!.produce(audioProducerOptions),
+		ctx.webRtcTransport1!.produce(audioProducerOptions)
 	).rejects.toThrow(Error);
 
 	await ctx.webRtcTransport2!.produce(videoProducerOptions);
 
 	await expect(
-		ctx.webRtcTransport2!.produce(videoProducerOptions),
+		ctx.webRtcTransport2!.produce(videoProducerOptions)
 	).rejects.toThrow(Error);
 }, 2000);
 
@@ -482,13 +482,13 @@ test('transport.produce() with no MID and with single encoding without RID or SS
 				],
 				encodings: [{}],
 			},
-		}),
+		})
 	).rejects.toThrow(Error);
 }, 2000);
 
 test('producer.dump() succeeds', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	const dump1 = await audioProducer.dump();
@@ -530,12 +530,12 @@ test('producer.dump() succeeds', async () => {
 	expect(dump1.rtpParameters.encodings![0]).toEqual(
 		expect.objectContaining({
 			codecPayloadType: 0,
-		}),
+		})
 	);
 	expect(dump1.type).toBe('simple');
 
 	const videoProducer = await ctx.webRtcTransport2!.produce(
-		ctx.videoProducerOptions,
+		ctx.videoProducerOptions
 	);
 
 	const dump2 = await videoProducer.dump();
@@ -598,11 +598,11 @@ test('producer.dump() succeeds', async () => {
 
 test('producer.getStats() succeeds', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	const videoProducer = await ctx.webRtcTransport2!.produce(
-		ctx.videoProducerOptions,
+		ctx.videoProducerOptions
 	);
 
 	await expect(audioProducer.getStats()).resolves.toEqual([]);
@@ -612,7 +612,7 @@ test('producer.getStats() succeeds', async () => {
 
 test('producer.pause() and resume() succeed', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	const onObserverPause = jest.fn();
@@ -646,7 +646,7 @@ test('producer.pause() and resume() succeed', async () => {
 
 test('producer.pause() and resume() emit events', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	const promises = [];
@@ -671,7 +671,7 @@ test('producer.pause() and resume() emit events', async () => {
 
 test('producer.enableTraceEvent() succeed', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	await audioProducer.enableTraceEvent(['rtp', 'pli']);
@@ -692,7 +692,7 @@ test('producer.enableTraceEvent() succeed', async () => {
 	const dump3 = await audioProducer.dump();
 
 	expect(dump3.traceEventTypes).toEqual(
-		expect.arrayContaining(['nack', 'fir']),
+		expect.arrayContaining(['nack', 'fir'])
 	);
 
 	await audioProducer.enableTraceEvent();
@@ -704,7 +704,7 @@ test('producer.enableTraceEvent() succeed', async () => {
 
 test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	// @ts-ignore
@@ -712,18 +712,18 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 
 	// @ts-ignore
 	await expect(audioProducer.enableTraceEvent('rtp')).rejects.toThrow(
-		TypeError,
+		TypeError
 	);
 
 	await expect(
 		// @ts-ignore
-		audioProducer.enableTraceEvent(['fir', 123.123]),
+		audioProducer.enableTraceEvent(['fir', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('Producer emits "score"', async () => {
 	const videoProducer = await ctx.webRtcTransport2!.produce(
-		ctx.videoProducerOptions,
+		ctx.videoProducerOptions
 	);
 
 	// Private API.
@@ -739,13 +739,13 @@ test('Producer emits "score"', async () => {
 			/* encodingIdx */ 0,
 			/* ssrc */ 11,
 			/* rid */ undefined,
-			/* score */ 10,
+			/* score */ 10
 		),
 		new FbsProducer.ScoreT(
 			/* encodingIdx */ 1,
 			/* ssrc */ 22,
 			/* rid */ undefined,
-			/* score */ 9,
+			/* score */ 9
 		),
 	]);
 	const notificationOffset = Notification.createNotification(
@@ -753,13 +753,13 @@ test('Producer emits "score"', async () => {
 		builder.createString(videoProducer.id),
 		Event.PRODUCER_SCORE,
 		NotificationBody.Producer_ScoreNotification,
-		producerScoreNotification.pack(builder),
+		producerScoreNotification.pack(builder)
 	);
 
 	builder.finish(notificationOffset);
 
 	const notification = Notification.getRootAsNotification(
-		new flatbuffers.ByteBuffer(builder.asUint8Array()),
+		new flatbuffers.ByteBuffer(builder.asUint8Array())
 	);
 
 	channel.emit(videoProducer.id, Event.PRODUCER_SCORE, notification);
@@ -775,7 +775,7 @@ test('Producer emits "score"', async () => {
 
 test('producer.close() succeeds', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	const onObserverClose = jest.fn();
@@ -800,7 +800,7 @@ test('producer.close() succeeds', async () => {
 
 test('Producer methods reject if closed', async () => {
 	const audioProducer = await ctx.webRtcTransport1!.produce(
-		ctx.audioProducerOptions,
+		ctx.audioProducerOptions
 	);
 
 	audioProducer.close();
@@ -816,7 +816,7 @@ test('Producer methods reject if closed', async () => {
 
 test('Producer emits "transportclose" if Transport is closed', async () => {
 	const videoProducer = await ctx.webRtcTransport2!.produce(
-		ctx.videoProducerOptions,
+		ctx.videoProducerOptions
 	);
 
 	const onObserverClose = jest.fn();

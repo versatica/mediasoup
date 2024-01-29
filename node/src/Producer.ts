@@ -333,7 +333,7 @@ export class Producer<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.CloseProducerRequestT(
-			this.#internal.producerId,
+			this.#internal.producerId
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel
@@ -341,7 +341,7 @@ export class Producer<
 				FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
 				FbsRequest.Body.Transport_CloseProducerRequest,
 				requestOffset,
-				this.#internal.transportId,
+				this.#internal.transportId
 			)
 			.catch(() => {});
 
@@ -384,7 +384,7 @@ export class Producer<
 			FbsRequest.Method.PRODUCER_DUMP,
 			undefined,
 			undefined,
-			this.#internal.producerId,
+			this.#internal.producerId
 		);
 
 		/* Decode Response. */
@@ -405,7 +405,7 @@ export class Producer<
 			FbsRequest.Method.PRODUCER_GET_STATS,
 			undefined,
 			undefined,
-			this.#internal.producerId,
+			this.#internal.producerId
 		);
 
 		/* Decode Response. */
@@ -426,7 +426,7 @@ export class Producer<
 			FbsRequest.Method.PRODUCER_PAUSE,
 			undefined,
 			undefined,
-			this.#internal.producerId,
+			this.#internal.producerId
 		);
 
 		const wasPaused = this.#paused;
@@ -449,7 +449,7 @@ export class Producer<
 			FbsRequest.Method.PRODUCER_RESUME,
 			undefined,
 			undefined,
-			this.#internal.producerId,
+			this.#internal.producerId
 		);
 
 		const wasPaused = this.#paused;
@@ -488,14 +488,14 @@ export class Producer<
 
 		/* Build Request. */
 		const requestOffset = new FbsProducer.EnableTraceEventRequestT(
-			fbsEventTypes,
+			fbsEventTypes
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT,
 			FbsRequest.Body.Producer_EnableTraceEventRequest,
 			requestOffset,
-			this.#internal.producerId,
+			this.#internal.producerId
 		);
 	}
 
@@ -510,7 +510,7 @@ export class Producer<
 		const builder = this.#channel.bufferBuilder;
 		const dataOffset = FbsProducer.SendNotification.createDataVector(
 			builder,
-			rtpPacket,
+			rtpPacket
 		);
 		const notificationOffset =
 			FbsProducer.SendNotification.createSendNotification(builder, dataOffset);
@@ -519,7 +519,7 @@ export class Producer<
 			FbsNotification.Event.PRODUCER_SEND,
 			FbsNotification.Body.Producer_SendNotification,
 			notificationOffset,
-			this.#internal.producerId,
+			this.#internal.producerId
 		);
 	}
 
@@ -536,7 +536,7 @@ export class Producer<
 						const score: ProducerScore[] = utils.parseVector(
 							notification,
 							'scores',
-							parseProducerScore,
+							parseProducerScore
 						);
 
 						this.#score = score;
@@ -586,7 +586,7 @@ export class Producer<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }
@@ -628,7 +628,7 @@ export function producerTypeToFbs(type: ProducerType): FbsRtpParameters.Type {
 }
 
 function producerTraceEventTypeToFbs(
-	eventType: ProducerTraceEventType,
+	eventType: ProducerTraceEventType
 ): FbsProducer.TraceEventType {
 	switch (eventType) {
 		case 'keyframe': {
@@ -662,7 +662,7 @@ function producerTraceEventTypeToFbs(
 }
 
 function producerTraceEventTypeFromFbs(
-	eventType: FbsProducer.TraceEventType,
+	eventType: FbsProducer.TraceEventType
 ): ProducerTraceEventType {
 	switch (eventType) {
 		case FbsProducer.TraceEventType.KEYFRAME: {
@@ -692,7 +692,7 @@ function producerTraceEventTypeFromFbs(
 }
 
 export function parseProducerDump(
-	data: FbsProducer.DumpResponse,
+	data: FbsProducer.DumpResponse
 ): ProducerDump {
 	return {
 		id: data.id()!,
@@ -707,20 +707,20 @@ export function parseProducerDump(
 		rtpStreams:
 			data.rtpStreamsLength() > 0
 				? utils.parseVector(data, 'rtpStreams', (rtpStream: any) =>
-						rtpStream.unpack(),
+						rtpStream.unpack()
 					)
 				: undefined,
 		traceEventTypes: utils.parseVector<ProducerTraceEventType>(
 			data,
 			'traceEventTypes',
-			producerTraceEventTypeFromFbs,
+			producerTraceEventTypeFromFbs
 		),
 		paused: data.paused(),
 	};
 }
 
 function parseProducerStats(
-	binary: FbsProducer.GetStatsResponse,
+	binary: FbsProducer.GetStatsResponse
 ): ProducerStat[] {
 	return utils.parseVector(binary, 'stats', parseRtpStreamRecvStats);
 }
@@ -735,7 +735,7 @@ function parseProducerScore(binary: FbsProducer.Score): ProducerScore {
 }
 
 function parseTraceEventData(
-	trace: FbsProducer.TraceNotification,
+	trace: FbsProducer.TraceNotification
 ): ProducerTraceEventData {
 	let info: any;
 

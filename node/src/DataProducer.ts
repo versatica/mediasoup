@@ -231,7 +231,7 @@ export class DataProducer<
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.CloseDataProducerRequestT(
-			this.#internal.dataProducerId,
+			this.#internal.dataProducerId
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel
@@ -239,7 +239,7 @@ export class DataProducer<
 				FbsRequest.Method.TRANSPORT_CLOSE_DATAPRODUCER,
 				FbsRequest.Body.Transport_CloseDataProducerRequest,
 				requestOffset,
-				this.#internal.transportId,
+				this.#internal.transportId
 			)
 			.catch(() => {});
 
@@ -282,7 +282,7 @@ export class DataProducer<
 			FbsRequest.Method.DATAPRODUCER_DUMP,
 			undefined,
 			undefined,
-			this.#internal.dataProducerId,
+			this.#internal.dataProducerId
 		);
 
 		/* Decode Response. */
@@ -303,7 +303,7 @@ export class DataProducer<
 			FbsRequest.Method.DATAPRODUCER_GET_STATS,
 			undefined,
 			undefined,
-			this.#internal.dataProducerId,
+			this.#internal.dataProducerId
 		);
 
 		/* Decode Response. */
@@ -324,7 +324,7 @@ export class DataProducer<
 			FbsRequest.Method.DATAPRODUCER_PAUSE,
 			undefined,
 			undefined,
-			this.#internal.dataProducerId,
+			this.#internal.dataProducerId
 		);
 
 		const wasPaused = this.#paused;
@@ -347,7 +347,7 @@ export class DataProducer<
 			FbsRequest.Method.DATAPRODUCER_RESUME,
 			undefined,
 			undefined,
-			this.#internal.dataProducerId,
+			this.#internal.dataProducerId
 		);
 
 		const wasPaused = this.#paused;
@@ -367,7 +367,7 @@ export class DataProducer<
 		message: string | Buffer,
 		ppid?: number,
 		subchannels?: number[],
-		requiredSubchannel?: number,
+		requiredSubchannel?: number
 	): void {
 		if (typeof message !== 'string' && !Buffer.isBuffer(message)) {
 			throw new TypeError('message must be a string or a Buffer');
@@ -414,7 +414,7 @@ export class DataProducer<
 		const subchannelsOffset =
 			FbsDataProducer.SendNotification.createSubchannelsVector(
 				builder,
-				subchannels ?? [],
+				subchannels ?? []
 			);
 
 		if (typeof message === 'string') {
@@ -423,7 +423,7 @@ export class DataProducer<
 
 		dataOffset = FbsDataProducer.SendNotification.createDataVector(
 			builder,
-			message,
+			message
 		);
 
 		const notificationOffset =
@@ -432,14 +432,14 @@ export class DataProducer<
 				ppid,
 				dataOffset,
 				subchannelsOffset,
-				requiredSubchannel ?? null,
+				requiredSubchannel ?? null
 			);
 
 		this.#channel.notify(
 			FbsNotification.Event.DATAPRODUCER_SEND,
 			FbsNotification.Body.DataProducer_SendNotification,
 			notificationOffset,
-			this.#internal.dataProducerId,
+			this.#internal.dataProducerId
 		);
 	}
 
@@ -449,7 +449,7 @@ export class DataProducer<
 }
 
 export function dataProducerTypeToFbs(
-	type: DataProducerType,
+	type: DataProducerType
 ): FbsDataProducer.Type {
 	switch (type) {
 		case 'sctp': {
@@ -467,7 +467,7 @@ export function dataProducerTypeToFbs(
 }
 
 export function dataProducerTypeFromFbs(
-	type: FbsDataProducer.Type,
+	type: FbsDataProducer.Type
 ): DataProducerType {
 	switch (type) {
 		case FbsDataProducer.Type.SCTP: {
@@ -481,7 +481,7 @@ export function dataProducerTypeFromFbs(
 }
 
 export function parseDataProducerDumpResponse(
-	data: FbsDataProducer.DumpResponse,
+	data: FbsDataProducer.DumpResponse
 ): DataProducerDump {
 	return {
 		id: data.id()!,
@@ -497,7 +497,7 @@ export function parseDataProducerDumpResponse(
 }
 
 function parseDataProducerStats(
-	binary: FbsDataProducer.GetStatsResponse,
+	binary: FbsDataProducer.GetStatsResponse
 ): DataProducerStat {
 	return {
 		type: 'data-producer',

@@ -131,7 +131,7 @@ test('generateRouterRtpCapabilities() with unsupported codecs throws Unsupported
 	];
 
 	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow(
-		UnsupportedError,
+		UnsupportedError
 	);
 
 	mediaCodecs = [
@@ -144,7 +144,7 @@ test('generateRouterRtpCapabilities() with unsupported codecs throws Unsupported
 	];
 
 	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow(
-		UnsupportedError,
+		UnsupportedError
 	);
 });
 
@@ -161,7 +161,7 @@ test('generateRouterRtpCapabilities() with too many codecs throws', () => {
 	}
 
 	expect(() => ortc.generateRouterRtpCapabilities(mediaCodecs)).toThrow(
-		'cannot allocate',
+		'cannot allocate'
 	);
 });
 
@@ -251,7 +251,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 
 	const rtpMapping = ortc.getProducerRtpParametersMapping(
 		rtpParameters,
-		routerRtpCapabilities,
+		routerRtpCapabilities
 	);
 
 	expect(rtpMapping.codecs).toEqual([
@@ -273,7 +273,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		'video',
 		rtpParameters,
 		routerRtpCapabilities,
-		rtpMapping,
+		rtpMapping
 	);
 
 	expect(consumableRtpParameters.codecs[0].mimeType).toBe('video/H264');
@@ -486,19 +486,19 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 	expect(typeof pipeConsumerRtpParameters.encodings?.[0].ssrc).toBe('number');
 	expect(pipeConsumerRtpParameters.encodings?.[0].rtx).toBeUndefined();
 	expect(typeof pipeConsumerRtpParameters.encodings?.[0].maxBitrate).toBe(
-		'number',
+		'number'
 	);
 	expect(pipeConsumerRtpParameters.encodings?.[0].scalabilityMode).toBe('L1T3');
 	expect(typeof pipeConsumerRtpParameters.encodings?.[1].ssrc).toBe('number');
 	expect(pipeConsumerRtpParameters.encodings?.[1].rtx).toBeUndefined();
 	expect(typeof pipeConsumerRtpParameters.encodings?.[1].maxBitrate).toBe(
-		'number',
+		'number'
 	);
 	expect(pipeConsumerRtpParameters.encodings?.[1].scalabilityMode).toBe('L1T3');
 	expect(typeof pipeConsumerRtpParameters.encodings?.[2].ssrc).toBe('number');
 	expect(pipeConsumerRtpParameters.encodings?.[2].rtx).toBeUndefined();
 	expect(typeof pipeConsumerRtpParameters.encodings?.[2].maxBitrate).toBe(
-		'number',
+		'number'
 	);
 	expect(pipeConsumerRtpParameters.encodings?.[2].scalabilityMode).toBe('L1T3');
 
@@ -549,6 +549,6 @@ test('getProducerRtpParametersMapping() with incompatible params throws Unsuppor
 	};
 
 	expect(() =>
-		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities),
+		ortc.getProducerRtpParametersMapping(rtpParameters, routerRtpCapabilities)
 	).toThrow(UnsupportedError);
 });

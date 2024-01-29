@@ -37,7 +37,7 @@ export function generateRandomNumber(): number {
  */
 export function getRtpParametersType(
 	producerType: ProducerType,
-	pipe: boolean,
+	pipe: boolean
 ): FbsRtpParametersType {
 	if (pipe) {
 		return FbsRtpParametersType.PIPE;
@@ -64,7 +64,7 @@ export function getRtpParametersType(
 export function parseVector<Type>(
 	binary: any,
 	methodName: string,
-	parseFn?: (binary2: any) => Type,
+	parseFn?: (binary2: any) => Type
 ): Type[] {
 	const array: Type[] = [];
 
@@ -84,7 +84,7 @@ export function parseVector<Type>(
  */
 export function parseStringStringVector(
 	binary: any,
-	methodName: string,
+	methodName: string
 ): { key: string; value: string }[] {
 	const array: { key: string; value: string }[] = [];
 
@@ -102,7 +102,7 @@ export function parseStringStringVector(
  */
 export function parseStringUint8Vector(
 	binary: any,
-	methodName: string,
+	methodName: string
 ): { key: string; value: number }[] {
 	const array: { key: string; value: number }[] = [];
 
@@ -120,7 +120,7 @@ export function parseStringUint8Vector(
  */
 export function parseUint16StringVector(
 	binary: any,
-	methodName: string,
+	methodName: string
 ): { key: number; value: string }[] {
 	const array: { key: number; value: string }[] = [];
 
@@ -138,7 +138,7 @@ export function parseUint16StringVector(
  */
 export function parseUint32StringVector(
 	binary: any,
-	methodName: string,
+	methodName: string
 ): { key: number; value: string }[] {
 	const array: { key: number; value: string }[] = [];
 
@@ -156,7 +156,7 @@ export function parseUint32StringVector(
  */
 export function parseStringStringArrayVector(
 	binary: any,
-	methodName: string,
+	methodName: string
 ): { key: string; values: string[] }[] {
 	const array: { key: string; values: string[] }[] = [];
 

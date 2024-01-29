@@ -340,14 +340,14 @@ export class Router<
 		this.#closed = true;
 
 		const requestOffset = new FbsWorker.CloseRouterRequestT(
-			this.#internal.routerId,
+			this.#internal.routerId
 		).pack(this.#channel.bufferBuilder);
 
 		this.#channel
 			.request(
 				FbsRequest.Method.WORKER_CLOSE_ROUTER,
 				FbsRequest.Body.Worker_CloseRouterRequest,
-				requestOffset,
+				requestOffset
 			)
 			.catch(() => {});
 
@@ -424,7 +424,7 @@ export class Router<
 			FbsRequest.Method.ROUTER_DUMP,
 			undefined,
 			undefined,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		/* Decode Response. */
@@ -466,11 +466,11 @@ export class Router<
 			!Array.isArray(listenIps)
 		) {
 			throw new TypeError(
-				'missing webRtcServer, listenInfos and listenIps (one of them is mandatory)',
+				'missing webRtcServer, listenInfos and listenIps (one of them is mandatory)'
 			);
 		} else if (webRtcServer && listenInfos && listenIps) {
 			throw new TypeError(
-				'only one of webRtcServer, listenInfos and listenIps must be given',
+				'only one of webRtcServer, listenInfos and listenIps must be given'
 			);
 		} else if (
 			numSctpStreams &&
@@ -545,7 +545,7 @@ export class Router<
 
 		if (webRtcServer) {
 			webRtcTransportListenServer = new FbsWebRtcTransport.ListenServerT(
-				webRtcServer.id,
+				webRtcServer.id
 			);
 		} else {
 			const fbsListenInfos: FbsTransport.ListenInfoT[] = [];
@@ -561,8 +561,8 @@ export class Router<
 						listenInfo.port,
 						socketFlagsToFbs(listenInfo.flags),
 						listenInfo.sendBufferSize,
-						listenInfo.recvBufferSize,
-					),
+						listenInfo.recvBufferSize
+					)
 				);
 			}
 
@@ -577,11 +577,11 @@ export class Router<
 			enableSctp,
 			new FbsSctpParameters.NumSctpStreamsT(
 				numSctpStreams.OS,
-				numSctpStreams.MIS,
+				numSctpStreams.MIS
 			),
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			true /* isDataChannel */,
+			true /* isDataChannel */
 		);
 
 		const webRtcTransportOptions =
@@ -596,12 +596,12 @@ export class Router<
 				enableUdp,
 				enableTcp,
 				preferUdp,
-				preferTcp,
+				preferTcp
 			);
 
 		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(
 			transportId,
-			webRtcTransportOptions,
+			webRtcTransportOptions
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
@@ -610,7 +610,7 @@ export class Router<
 				: FbsRequest.Method.ROUTER_CREATE_WEBRTCTRANSPORT,
 			FbsRequest.Body.Router_CreateWebRtcTransportRequest,
 			requestOffset,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		/* Decode Response. */
@@ -639,19 +639,19 @@ export class Router<
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
 		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id),
+			this.#transports.delete(transport.id)
 		);
 		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer),
+			this.#producers.set(producer.id, producer)
 		);
 		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id),
+			this.#producers.delete(producer.id)
 		);
 		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer),
+			this.#dataProducers.set(dataProducer.id, dataProducer)
 		);
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id),
+			this.#dataProducers.delete(dataProducer.id)
 		);
 
 		// Emit observer event.
@@ -688,7 +688,7 @@ export class Router<
 
 		if (!listenInfo && !listenIp) {
 			throw new TypeError(
-				'missing listenInfo and listenIp (one of them is mandatory)',
+				'missing listenInfo and listenIp (one of them is mandatory)'
 			);
 		} else if (listenInfo && listenIp) {
 			throw new TypeError('only one of listenInfo and listenIp must be given');
@@ -699,7 +699,7 @@ export class Router<
 		// If rtcpMux is enabled, ignore rtcpListenInfo.
 		if (rtcpMux && rtcpListenInfo) {
 			logger.warn(
-				'createPlainTransport() | ignoring rtcpMux since rtcpListenInfo is given',
+				'createPlainTransport() | ignoring rtcpMux since rtcpListenInfo is given'
 			);
 
 			rtcpMux = false;
@@ -730,11 +730,11 @@ export class Router<
 			enableSctp,
 			new FbsSctpParameters.NumSctpStreamsT(
 				numSctpStreams.OS,
-				numSctpStreams.MIS,
+				numSctpStreams.MIS
 			),
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			false /* isDataChannel */,
+			false /* isDataChannel */
 		);
 
 		const plainTransportOptions = new FbsPlainTransport.PlainTransportOptionsT(
@@ -748,7 +748,7 @@ export class Router<
 				listenInfo!.port,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
-				listenInfo!.recvBufferSize,
+				listenInfo!.recvBufferSize
 			),
 			rtcpListenInfo
 				? new FbsTransport.ListenInfoT(
@@ -760,25 +760,25 @@ export class Router<
 						rtcpListenInfo.port,
 						socketFlagsToFbs(rtcpListenInfo.flags),
 						rtcpListenInfo.sendBufferSize,
-						rtcpListenInfo.recvBufferSize,
+						rtcpListenInfo.recvBufferSize
 					)
 				: undefined,
 			rtcpMux,
 			comedia,
 			enableSrtp,
-			cryptoSuiteToFbs(srtpCryptoSuite),
+			cryptoSuiteToFbs(srtpCryptoSuite)
 		);
 
 		const requestOffset = new FbsRouter.CreatePlainTransportRequestT(
 			transportId,
-			plainTransportOptions,
+			plainTransportOptions
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PLAINTRANSPORT,
 			FbsRequest.Body.Router_CreatePlainTransportRequest,
 			requestOffset,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		/* Decode Response. */
@@ -807,19 +807,19 @@ export class Router<
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
 		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id),
+			this.#transports.delete(transport.id)
 		);
 		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer),
+			this.#producers.set(producer.id, producer)
 		);
 		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id),
+			this.#producers.delete(producer.id)
 		);
 		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer),
+			this.#dataProducers.set(dataProducer.id, dataProducer)
 		);
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id),
+			this.#dataProducers.delete(dataProducer.id)
 		);
 
 		// Emit observer event.
@@ -849,7 +849,7 @@ export class Router<
 
 		if (!listenInfo && !listenIp) {
 			throw new TypeError(
-				'missing listenInfo and listenIp (one of them is mandatory)',
+				'missing listenInfo and listenIp (one of them is mandatory)'
 			);
 		} else if (listenInfo && listenIp) {
 			throw new TypeError('only one of listenInfo and listenIp must be given');
@@ -882,11 +882,11 @@ export class Router<
 			enableSctp,
 			new FbsSctpParameters.NumSctpStreamsT(
 				numSctpStreams.OS,
-				numSctpStreams.MIS,
+				numSctpStreams.MIS
 			),
 			maxSctpMessageSize,
 			sctpSendBufferSize,
-			false /* isDataChannel */,
+			false /* isDataChannel */
 		);
 
 		const pipeTransportOptions = new FbsPipeTransport.PipeTransportOptionsT(
@@ -900,22 +900,22 @@ export class Router<
 				listenInfo!.port,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
-				listenInfo!.recvBufferSize,
+				listenInfo!.recvBufferSize
 			),
 			enableRtx,
-			enableSrtp,
+			enableSrtp
 		);
 
 		const requestOffset = new FbsRouter.CreatePipeTransportRequestT(
 			transportId,
-			pipeTransportOptions,
+			pipeTransportOptions
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_PIPETRANSPORT,
 			FbsRequest.Body.Router_CreatePipeTransportRequest,
 			requestOffset,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		/* Decode Response. */
@@ -944,19 +944,19 @@ export class Router<
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
 		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id),
+			this.#transports.delete(transport.id)
 		);
 		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer),
+			this.#producers.set(producer.id, producer)
 		);
 		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id),
+			this.#producers.delete(producer.id)
 		);
 		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer),
+			this.#dataProducers.set(dataProducer.id, dataProducer)
 		);
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id),
+			this.#dataProducers.delete(dataProducer.id)
 		);
 
 		// Emit observer event.
@@ -974,7 +974,7 @@ export class Router<
 			appData,
 		}: DirectTransportOptions<DirectTransportAppData> = {
 			maxMessageSize: 262144,
-		},
+		}
 	): Promise<DirectTransport<DirectTransportAppData>> {
 		logger.debug('createDirectTransport()');
 
@@ -995,7 +995,7 @@ export class Router<
 			undefined /* numSctpStreams */,
 			undefined /* maxSctpMessageSize */,
 			undefined /* sctpSendBufferSize */,
-			undefined /* isDataChannel */,
+			undefined /* isDataChannel */
 		);
 
 		const directTransportOptions =
@@ -1003,14 +1003,14 @@ export class Router<
 
 		const requestOffset = new FbsRouter.CreateDirectTransportRequestT(
 			transportId,
-			directTransportOptions,
+			directTransportOptions
 		).pack(this.#channel.bufferBuilder);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_DIRECTTRANSPORT,
 			FbsRequest.Body.Router_CreateDirectTransportRequest,
 			requestOffset,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		/* Decode Response. */
@@ -1039,19 +1039,19 @@ export class Router<
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
 		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id),
+			this.#transports.delete(transport.id)
 		);
 		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer),
+			this.#producers.set(producer.id, producer)
 		);
 		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id),
+			this.#producers.delete(producer.id)
 		);
 		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer),
+			this.#dataProducers.set(dataProducer.id, dataProducer)
 		);
 		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id),
+			this.#dataProducers.delete(dataProducer.id)
 		);
 
 		// Emit observer event.
@@ -1177,14 +1177,14 @@ export class Router<
 						localPipeTransport.observer.on('close', () => {
 							remotePipeTransport.close();
 							this.#mapRouterPairPipeTransportPairPromise.delete(
-								pipeTransportPairKey,
+								pipeTransportPairKey
 							);
 						});
 
 						remotePipeTransport.observer.on('close', () => {
 							localPipeTransport.close();
 							this.#mapRouterPairPipeTransportPairPromise.delete(
-								pipeTransportPairKey,
+								pipeTransportPairKey
 							);
 						});
 
@@ -1196,7 +1196,7 @@ export class Router<
 					.catch(error => {
 						logger.error(
 							'pipeToRouter() | error creating PipeTransport pair:%o',
-							error,
+							error
 						);
 
 						if (localPipeTransport) {
@@ -1213,7 +1213,7 @@ export class Router<
 
 			this.#mapRouterPairPipeTransportPairPromise.set(
 				pipeTransportPairKey,
-				pipeTransportPairPromise,
+				pipeTransportPairPromise
 			);
 
 			router.addPipeTransportPair(this.id, pipeTransportPairPromise);
@@ -1265,7 +1265,7 @@ export class Router<
 			} catch (error) {
 				logger.error(
 					'pipeToRouter() | error creating pipe Consumer/Producer pair:%o',
-					error,
+					error
 				);
 
 				if (pipeConsumer) {
@@ -1310,7 +1310,7 @@ export class Router<
 			} catch (error) {
 				logger.error(
 					'pipeToRouter() | error creating pipe DataConsumer/DataProducer pair:%o',
-					error,
+					error
 				);
 
 				if (pipeDataConsumer) {
@@ -1333,17 +1333,17 @@ export class Router<
 	 */
 	addPipeTransportPair(
 		pipeTransportPairKey: string,
-		pipeTransportPairPromise: Promise<PipeTransportPair>,
+		pipeTransportPairPromise: Promise<PipeTransportPair>
 	): void {
 		if (this.#mapRouterPairPipeTransportPairPromise.has(pipeTransportPairKey)) {
 			throw new Error(
-				'given pipeTransportPairKey already exists in this Router',
+				'given pipeTransportPairKey already exists in this Router'
 			);
 		}
 
 		this.#mapRouterPairPipeTransportPairPromise.set(
 			pipeTransportPairKey,
-			pipeTransportPairPromise,
+			pipeTransportPairPromise
 		);
 
 		pipeTransportPairPromise
@@ -1354,13 +1354,13 @@ export class Router<
 				// Router calling this method on us.
 				localPipeTransport.observer.on('close', () => {
 					this.#mapRouterPairPipeTransportPairPromise.delete(
-						pipeTransportPairKey,
+						pipeTransportPairKey
 					);
 				});
 			})
 			.catch(() => {
 				this.#mapRouterPairPipeTransportPairPromise.delete(
-					pipeTransportPairKey,
+					pipeTransportPairKey
 				);
 			});
 	}
@@ -1392,14 +1392,14 @@ export class Router<
 
 		const requestOffset = new FbsRouter.CreateActiveSpeakerObserverRequestT(
 			rtpObserverId,
-			activeRtpObserverOptions,
+			activeRtpObserverOptions
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_ACTIVESPEAKEROBSERVER,
 			FbsRequest.Body.Router_CreateActiveSpeakerObserverRequest,
 			requestOffset,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		const activeSpeakerObserver =
@@ -1448,7 +1448,7 @@ export class Router<
 			threshold > 0
 		) {
 			throw new TypeError(
-				'if given, threshole must be a negative number greater than -127',
+				'if given, threshole must be a negative number greater than -127'
 			);
 		} else if (typeof interval !== 'number') {
 			throw new TypeError('if given, interval must be an number');
@@ -1463,19 +1463,19 @@ export class Router<
 			new FbsAudioLevelObserver.AudioLevelObserverOptionsT(
 				maxEntries,
 				threshold,
-				interval,
+				interval
 			);
 
 		const requestOffset = new FbsRouter.CreateAudioLevelObserverRequestT(
 			rtpObserverId,
-			audioLevelObserverOptions,
+			audioLevelObserverOptions
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
 			FbsRequest.Method.ROUTER_CREATE_AUDIOLEVELOBSERVER,
 			FbsRequest.Body.Router_CreateAudioLevelObserverRequest,
 			requestOffset,
-			this.#internal.routerId,
+			this.#internal.routerId
 		);
 
 		const audioLevelObserver =
@@ -1516,7 +1516,7 @@ export class Router<
 		if (!producer) {
 			logger.error(
 				'canConsume() | Producer with id "%s" not found',
-				producerId,
+				producerId
 			);
 
 			return false;
@@ -1528,7 +1528,7 @@ export class Router<
 		try {
 			return ortc.canConsume(
 				producer.consumableRtpParameters,
-				clonedRtpCapabilities,
+				clonedRtpCapabilities
 			);
 		} catch (error) {
 			logger.error('canConsume() | unexpected error: %s', String(error));
@@ -1539,7 +1539,7 @@ export class Router<
 }
 
 export function parseRouterDumpResponse(
-	binary: FbsRouter.DumpResponse,
+	binary: FbsRouter.DumpResponse
 ): RouterDump {
 	return {
 		id: binary.id()!,
@@ -1547,32 +1547,32 @@ export function parseRouterDumpResponse(
 		rtpObserverIds: parseVector(binary, 'rtpObserverIds'),
 		mapProducerIdConsumerIds: parseStringStringArrayVector(
 			binary,
-			'mapProducerIdConsumerIds',
+			'mapProducerIdConsumerIds'
 		),
 		mapConsumerIdProducerId: parseStringStringVector(
 			binary,
-			'mapConsumerIdProducerId',
+			'mapConsumerIdProducerId'
 		),
 		mapProducerIdObserverIds: parseStringStringArrayVector(
 			binary,
-			'mapProducerIdObserverIds',
+			'mapProducerIdObserverIds'
 		),
 		mapDataProducerIdDataConsumerIds: parseStringStringArrayVector(
 			binary,
-			'mapDataProducerIdDataConsumerIds',
+			'mapDataProducerIdDataConsumerIds'
 		),
 		mapDataConsumerIdDataProducerId: parseStringStringVector(
 			binary,
-			'mapDataConsumerIdDataProducerId',
+			'mapDataConsumerIdDataProducerId'
 		),
 	};
 }
 
 export function socketFlagsToFbs(
-	flags: TransportSocketFlags = {},
+	flags: TransportSocketFlags = {}
 ): FbsTransport.SocketFlagsT {
 	return new FbsTransport.SocketFlagsT(
 		Boolean(flags.ipv6Only),
-		Boolean(flags.udpReusePort),
+		Boolean(flags.udpReusePort)
 	);
 }

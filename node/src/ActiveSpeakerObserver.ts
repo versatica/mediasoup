@@ -52,7 +52,7 @@ export class ActiveSpeakerObserver<
 	 * @private
 	 */
 	constructor(
-		options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>,
+		options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>
 	) {
 		super(options);
 
@@ -97,7 +97,7 @@ export class ActiveSpeakerObserver<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }

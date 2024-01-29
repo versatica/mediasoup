@@ -27,7 +27,7 @@ export class EnhancedEventEmitter<
 			logger.error(
 				'safeEmit() | event listener threw an error [eventName:%s]:%o',
 				eventName,
-				error,
+				error
 			);
 
 			try {
@@ -42,7 +42,7 @@ export class EnhancedEventEmitter<
 
 	on<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.on(eventName, listener as (...args: any[]) => void);
 
@@ -51,7 +51,7 @@ export class EnhancedEventEmitter<
 
 	off<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.off(eventName, listener as (...args: any[]) => void);
 
@@ -60,7 +60,7 @@ export class EnhancedEventEmitter<
 
 	addListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.on(eventName, listener as (...args: any[]) => void);
 
@@ -69,7 +69,7 @@ export class EnhancedEventEmitter<
 
 	prependListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.prependListener(eventName, listener as (...args: any[]) => void);
 
@@ -78,7 +78,7 @@ export class EnhancedEventEmitter<
 
 	once<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.once(eventName, listener as (...args: any[]) => void);
 
@@ -87,7 +87,7 @@ export class EnhancedEventEmitter<
 
 	prependOnceListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.prependOnceListener(eventName, listener as (...args: any[]) => void);
 
@@ -96,7 +96,7 @@ export class EnhancedEventEmitter<
 
 	removeListener<K extends keyof E & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void,
+		listener: (...args: E[K]) => void
 	): this {
 		super.off(eventName, listener as (...args: any[]) => void);
 

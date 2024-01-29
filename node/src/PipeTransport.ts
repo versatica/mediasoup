@@ -262,7 +262,7 @@ export class PipeTransport<
 			FbsRequest.Method.TRANSPORT_GET_STATS,
 			undefined,
 			undefined,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -301,7 +301,7 @@ export class PipeTransport<
 			FbsRequest.Method.PIPETRANSPORT_CONNECT,
 			FbsRequest.Body.PipeTransport_ConnectRequest,
 			requestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -357,7 +357,7 @@ export class PipeTransport<
 			FbsRequest.Method.TRANSPORT_CONSUME,
 			FbsRequest.Body.Transport_ConsumeRequest,
 			consumeRequestOffset,
-			this.internal.transportId,
+			this.internal.transportId
 		);
 
 		/* Decode Response. */
@@ -437,7 +437,7 @@ export class PipeTransport<
 						logger.error('ignoring unknown event "%s"', event);
 					}
 				}
-			},
+			}
 		);
 	}
 }
@@ -447,7 +447,7 @@ export class PipeTransport<
  */
 
 export function parsePipeTransportDumpResponse(
-	binary: FbsPipeTransport.DumpResponse,
+	binary: FbsPipeTransport.DumpResponse
 ): PipeTransportDump {
 	// Retrieve BaseTransportDump.
 	const baseTransportDump = parseBaseTransportDump(binary.base()!);
@@ -470,7 +470,7 @@ export function parsePipeTransportDumpResponse(
 }
 
 function parseGetStatsResponse(
-	binary: FbsPipeTransport.GetStatsResponse,
+	binary: FbsPipeTransport.GetStatsResponse
 ): PipeTransportStat {
 	const base = parseBaseTransportStats(binary.base()!);
 
@@ -501,7 +501,7 @@ function createConsumeRequest({
 	if (producer.consumableRtpParameters.encodings) {
 		consumableRtpEncodingsOffset = serializeRtpEncodingParameters(
 			builder,
-			producer.consumableRtpParameters.encodings,
+			producer.consumableRtpParameters.encodings
 		);
 	}
 
@@ -513,7 +513,7 @@ function createConsumeRequest({
 	ConsumeRequest.addProducerId(builder, producerIdOffset);
 	ConsumeRequest.addKind(
 		builder,
-		producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO,
+		producer.kind === 'audio' ? FbsMediaKind.AUDIO : FbsMediaKind.VIDEO
 	);
 	ConsumeRequest.addRtpParameters(builder, rtpParametersOffset);
 	ConsumeRequest.addType(builder, FbsRtpParameters.Type.PIPE);
@@ -521,7 +521,7 @@ function createConsumeRequest({
 	if (consumableRtpEncodingsOffset) {
 		ConsumeRequest.addConsumableRtpEncodings(
 			builder,
-			consumableRtpEncodingsOffset,
+			consumableRtpEncodingsOffset
 		);
 	}
 
@@ -561,7 +561,7 @@ function createConnectRequest({
 	if (srtpParameters) {
 		FbsPipeTransport.ConnectRequest.addSrtpParameters(
 			builder,
-			srtpParametersOffset,
+			srtpParametersOffset
 		);
 	}
 

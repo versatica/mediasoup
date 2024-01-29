@@ -81,7 +81,7 @@ async function run() {
 				!process.env.MEDIASOUP_FORCE_WORKER_PREBUILT_DOWNLOAD
 			) {
 				logInfo(
-					'skipping mediasoup-worker prebuilt download, building it locally',
+					'skipping mediasoup-worker prebuilt download, building it locally'
 				);
 
 				buildWorker();
@@ -93,7 +93,7 @@ async function run() {
 			// Attempt to download a prebuilt binary. Fallback to building locally.
 			else if (!(await downloadPrebuiltWorker())) {
 				logInfo(
-					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`,
+					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`
 				);
 
 				buildWorker();
@@ -297,7 +297,7 @@ function installInvoke() {
 	// installation.
 	executeCmd(
 		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`,
-		/* exitOnError */ true,
+		/* exitOnError */ true
 	);
 }
 
@@ -353,7 +353,7 @@ function lintNode() {
 	executeCmd('eslint-config-prettier .eslintrc.js');
 
 	executeCmd(
-		'eslint -c .eslintrc.js --ignore-path .eslintignore --max-warnings 0 .',
+		'eslint -c .eslintrc.js --ignore-path .eslintignore --max-warnings 0 .'
 	);
 }
 
@@ -389,8 +389,8 @@ function flatcNode() {
 			'build',
 			'subprojects',
 			`flatbuffers-${FLATBUFFERS_VERSION}`,
-			`flatc${extension}`,
-		),
+			`flatc${extension}`
+		)
 	);
 	const out = path.resolve(path.join('node', 'src'));
 
@@ -404,7 +404,7 @@ function flatcNode() {
 		const filePath = path.resolve(path.join('worker', 'fbs', dirent.name));
 
 		executeCmd(
-			`"${flatc}" --ts --ts-no-import-ext --gen-object-api -o "${out}" "${filePath}"`,
+			`"${flatc}" --ts --ts-no-import-ext --gen-object-api -o "${out}" "${filePath}"`
 		);
 	}
 }
@@ -475,7 +475,7 @@ async function prebuildWorker() {
 					cwd: WORKER_RELEASE_DIR,
 					gzip: true,
 				},
-				[WORKER_RELEASE_BIN],
+				[WORKER_RELEASE_BIN]
 			)
 			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
 			.on('finish', resolve)
@@ -505,20 +505,20 @@ async function downloadPrebuiltWorker() {
 
 		if (res.status === 404) {
 			logInfo(
-				'downloadPrebuiltWorker() | no available mediasoup-worker prebuilt binary for current architecture',
+				'downloadPrebuiltWorker() | no available mediasoup-worker prebuilt binary for current architecture'
 			);
 
 			return false;
 		} else if (!res.ok) {
 			logError(
-				`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${res.status} ${res.statusText}`,
+				`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${res.status} ${res.statusText}`
 			);
 
 			return false;
 		}
 	} catch (error) {
 		logError(
-			`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`,
+			`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`
 		);
 
 		return false;
@@ -533,11 +533,11 @@ async function downloadPrebuiltWorker() {
 				tar.extract({
 					newer: false,
 					cwd: WORKER_RELEASE_DIR,
-				}),
+				})
 			)
 			.on('finish', () => {
 				logInfo(
-					'downloadPrebuiltWorker() | got mediasoup-worker prebuilt binary',
+					'downloadPrebuiltWorker() | got mediasoup-worker prebuilt binary'
 				);
 
 				try {
@@ -545,7 +545,7 @@ async function downloadPrebuiltWorker() {
 					fs.chmodSync(WORKER_RELEASE_BIN_PATH, 0o775);
 				} catch (error) {
 					logWarn(
-						`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`,
+						`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`
 					);
 				}
 
@@ -556,7 +556,7 @@ async function downloadPrebuiltWorker() {
 				// expect exit code 41 (see main.cpp).
 
 				logInfo(
-					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host',
+					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
 				);
 
 				try {
@@ -572,13 +572,13 @@ async function downloadPrebuiltWorker() {
 				} catch (error) {
 					if (error.status === 41) {
 						logInfo(
-							'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host',
+							'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
 						);
 
 						resolve(true);
 					} else {
 						logError(
-							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`,
+							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
 						);
 
 						try {
@@ -591,7 +591,7 @@ async function downloadPrebuiltWorker() {
 			})
 			.on('error', error => {
 				logError(
-					`downloadPrebuiltWorker() | failed to uncompress downloaded mediasoup-worker prebuilt binary: ${error}`,
+					`downloadPrebuiltWorker() | failed to uncompress downloaded mediasoup-worker prebuilt binary: ${error}`
 				);
 
 				resolve(false);
@@ -664,7 +664,7 @@ async function getVersionChanges() {
 
 	// This should not happen (unless author forgot to update CHANGELOG).
 	throw new Error(
-		`no entry found in CHANGELOG.md for version '${PKG.version}'`,
+		`no entry found in CHANGELOG.md for version '${PKG.version}'`
 	);
 }
 
