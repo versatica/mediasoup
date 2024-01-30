@@ -98,7 +98,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			if (&input == &inputs.front())
+			if (std::addressof(input) == std::addressof(inputs.front()))
 			{
 				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
 			}
@@ -180,7 +180,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			if (&input == &inputs.front())
+			if (std::addressof(input) == std::addressof(inputs.front()))
 			{
 				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
 			}
@@ -252,7 +252,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			if (&input == &inputs.front())
+			if (std::addressof(input) == std::addressof(inputs.front()))
 			{
 				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
 			}
@@ -317,7 +317,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			if (&input == &inputs.front())
+			if (std::addressof(input) == std::addressof(inputs.front()))
 			{
 				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
 			}
@@ -391,7 +391,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs)
 		{
-			if (&input == &inputs.front())
+			if (std::addressof(input) == std::addressof(inputs.front()))
 			{
 				packet->SetBase(input.sequenceNumber + 1, input.timestamp);
 			}
@@ -459,7 +459,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		for (auto& input : inputs2)
 		{
-			if (&input == &inputs2.front())
+			if (std::addressof(input) == std::addressof(inputs2.front()))
 			{
 				packet2->SetBase(input.sequenceNumber + 1, input.timestamp);
 			}
