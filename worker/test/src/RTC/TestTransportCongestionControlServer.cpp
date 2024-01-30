@@ -27,7 +27,8 @@ public:
 	  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override
 	{
 		auto* tccPacket = dynamic_cast<RTCP::FeedbackRtpTransportPacket*>(packet);
-		if (tccPacket == nullptr)
+
+		if (!tccPacket)
 		{
 			return;
 		}
@@ -43,11 +44,13 @@ public:
 
 		auto packetResultIt = packetResults.begin();
 		auto testResultIt   = testResults.begin();
+
 		for (; packetResultIt != packetResults.end() && testResultIt != testResults.end();
 		     ++packetResultIt, ++testResultIt)
 		{
 			REQUIRE(packetResultIt->sequenceNumber == testResultIt->wideSeqNumber);
 			REQUIRE(packetResultIt->received == testResultIt->received);
+
 			if (packetResultIt->received)
 			{
 				REQUIRE(packetResultIt->receivedAtMs == testResultIt->timestamp);
@@ -86,14 +89,16 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 	TestTransportCongestionControlServerListener listener;
 	auto tccServer =
 	  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::MtuSize);
+
 	tccServer.SetMaxIncomingBitrate(150000);
 	tccServer.TransportConnected();
 
 	RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+
 	packet->SetTransportWideCc01ExtensionId(5);
 	packet->SetSequenceNumber(1);
 
-	// save results
+	// Save results.
 	listener.SetResults(results);
 
 	uint64_t startTs = inputs[0].nowMs;
@@ -101,8 +106,9 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 
 	for (auto input : inputs)
 	{
-		// Periodic sending TCC packets
+		// Periodic sending TCC packets.
 		uint64_t diffTs = input.nowMs - startTs;
+
 		if (diffTs >= TransportCcFeedbackSendInterval)
 		{
 			tccServer.FillAndSendTransportCcFeedback();
@@ -114,7 +120,6 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 	}
 
 	tccServer.FillAndSendTransportCcFeedback();
-
 	listener.Check();
 };
 

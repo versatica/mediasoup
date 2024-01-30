@@ -184,7 +184,7 @@ namespace RTC
 
 		if (it != this->mapPacketArrivalTimes.end())
 		{
-			// set base sequence num and reference time
+			// Set base sequence num and reference time.
 			this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackStartSeqNum, it->second);
 
 			for (; it != this->mapPacketArrivalTimes.end(); ++it)
@@ -305,8 +305,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Ignore nowMs value if it's smaller than 500 in order to avoid negative values
-		// (Should never happen) and return early if the condition is met.
+		// Ignore nowMs value if it's smaller than PacketArrivalTimestampWindow in
+		// order to avoid negative values (should never happen) and return early if
+		// the condition is met.
 		if (nowMs >= PacketArrivalTimestampWindow)
 		{
 			auto expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
