@@ -141,6 +141,7 @@ namespace RTC
 				{
 					this->transportCcFeedbackStartSeqNum = wideSeqNumber;
 				}
+
 				this->receivedTransportWideSeqNumber = true;
 
 				MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
