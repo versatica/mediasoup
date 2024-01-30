@@ -209,8 +209,9 @@ namespace RTC
 
 					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
 					{
-						// This should not happen
-						MS_DEBUG_DEV("transport-cc feedback packet is exceeded!");
+						// This should not happen.
+						MS_WARN_DEV("transport-cc feedback packet is exceeded");
+
 						// Create a new feedback packet.
 						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
 						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
