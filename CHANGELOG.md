@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Make transport-cc feedback works similarly to webrtc ([PR #1318](https://github.com/versatica/mediasoup/pull/1088) by @penguinol).
+
 ### 3.13.17
 
 - Fix prebuilt worker download ([PR #1319](https://github.com/versatica/mediasoup/pull/1319) by @brynrichards).
