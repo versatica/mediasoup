@@ -318,7 +318,7 @@ namespace RTC
 			void AddPendingChunks();
 
 		private:
-			// Whether baseSequenceNumber has been set
+			// Whether baseSequenceNumber has been set.
 			bool baseSet{ false };
 			uint16_t baseSequenceNumber{ 0u };
 			// 24 bits signed integer.

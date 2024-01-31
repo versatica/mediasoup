@@ -123,9 +123,9 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 	listener.Check();
 };
 
-SCENARIO("TransportCongestionControlServer", "[rtc]")
+SCENARIO("TransportCongestionControlServer", "[rtp]")
 {
-	SECTION("Normal time and sequence")
+	SECTION("normal time and sequence")
 	{
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
@@ -156,7 +156,7 @@ SCENARIO("TransportCongestionControlServer", "[rtc]")
 		validate(inputs, results);
 	}
 
-	SECTION("Lost packets")
+	SECTION("lost packets")
 	{
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
@@ -185,7 +185,7 @@ SCENARIO("TransportCongestionControlServer", "[rtc]")
 		validate(inputs, results);
 	}
 
-	SECTION("Duplicate packets")
+	SECTION("duplicate packets")
 	{
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs
@@ -216,7 +216,7 @@ SCENARIO("TransportCongestionControlServer", "[rtc]")
 		validate(inputs, results);
 	}
 
-	SECTION("Packets arrive out of order")
+	SECTION("packets arrive out of order")
 	{
 		// clang-format off
 		std::vector<TestTransportCongestionControlServerInput> inputs

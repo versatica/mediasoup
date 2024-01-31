@@ -280,6 +280,8 @@ namespace RTC
 
 		void FeedbackRtpTransportPacket::SetBase(uint16_t sequenceNumber, uint64_t timestamp)
 		{
+			MS_TRACE();
+
 			this->baseSet              = true;
 			this->baseSequenceNumber   = sequenceNumber;
 			this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
