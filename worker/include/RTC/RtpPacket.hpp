@@ -120,7 +120,7 @@ namespace RTC
 		{
 			// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
 
-			auto header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
+			auto* header = const_cast<Header*>(reinterpret_cast<const Header*>(data));
 
 			// clang-format off
 			return (
@@ -217,7 +217,7 @@ namespace RTC
 
 		bool HasHeaderExtension() const
 		{
-			return (this->headerExtension ? true : false);
+			return (this->headerExtension != nullptr);
 		}
 
 		// After calling this method, all the extension ids are reset to 0.
@@ -366,7 +366,7 @@ namespace RTC
 			return true;
 		}
 
-		bool UpdateAbsSendTime(uint64_t ms)
+		bool UpdateAbsSendTime(uint64_t ms) const
 		{
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtension(this->absSendTimeExtensionId, extenLen);
@@ -398,7 +398,7 @@ namespace RTC
 			return true;
 		}
 
-		bool UpdateTransportWideCc01(uint16_t wideSeqNumber)
+		bool UpdateTransportWideCc01(uint16_t wideSeqNumber) const
 		{
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtension(this->transportWideCc01ExtensionId, extenLen);
@@ -446,7 +446,7 @@ namespace RTC
 			}
 
 			volume = Utils::Byte::Get1Byte(extenValue, 0);
-			voice  = (volume & (1 << 7)) ? true : false;
+			voice  = (volume & (1 << 7)) != 0;
 			volume &= ~(1 << 7);
 
 			return true;
@@ -462,13 +462,13 @@ namespace RTC
 				return false;
 			}
 
-			uint8_t cvoByte       = Utils::Byte::Get1Byte(extenValue, 0);
-			uint8_t cameraValue   = ((cvoByte & 0b00001000) >> 3);
-			uint8_t flipValue     = ((cvoByte & 0b00000100) >> 2);
-			uint8_t rotationValue = (cvoByte & 0b00000011);
+			const uint8_t cvoByte       = Utils::Byte::Get1Byte(extenValue, 0);
+			const uint8_t cameraValue   = ((cvoByte & 0b00001000) >> 3);
+			const uint8_t flipValue     = ((cvoByte & 0b00000100) >> 2);
+			const uint8_t rotationValue = (cvoByte & 0b00000011);
 
-			camera = cameraValue ? true : false;
-			flip   = flipValue ? true : false;
+			camera = cameraValue != 0;
+			flip   = flipValue != 0;
 
 			// Using counter clockwise values.
 			switch (rotationValue)
@@ -517,12 +517,7 @@ namespace RTC
 				auto* extension = it->second;
 
 				// In Two-Byte extensions value length may be zero. If so, return false.
-				if (extension->len == 0u)
-				{
-					return false;
-				}
-
-				return true;
+				return extension->len != 0u;
 			}
 			else
 			{
@@ -666,7 +661,7 @@ namespace RTC
 		HeaderExtension* headerExtension{ nullptr };
 		// There might be up to 14 one-byte header extensions
 		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use std::array.
-		std::array<OneByteExtension*, 14> oneByteExtensions;
+		std::array<OneByteExtension*, 14> oneByteExtensions{};
 		absl::flat_hash_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t midExtensionId{ 0u };
 		uint8_t ridExtensionId{ 0u };

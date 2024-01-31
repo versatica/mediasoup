@@ -14,7 +14,7 @@ import {
 	RtpHeaderExtensionUri as FbsRtpHeaderExtensionUri,
 	RtpParameters as FbsRtpParameters,
 	Rtx as FbsRtx,
-	Value as FbsValue
+	Value as FbsValue,
 } from './fbs/rtp-parameters';
 import * as utils from './utils';
 
@@ -22,8 +22,7 @@ import * as utils from './utils';
  * The RTP capabilities define what mediasoup or an endpoint can receive at
  * media level.
  */
-export type RtpCapabilities =
-{
+export type RtpCapabilities = {
 	/**
 	 * Supported media and RTX codecs.
 	 */
@@ -57,8 +56,7 @@ export type MediaKind = 'audio' | 'video';
  * require preferredPayloadType field (if unset, mediasoup will choose a random
  * one). If given, make sure it's in the 96-127 range.
  */
-export type RtpCodecCapability =
-{
+export type RtpCodecCapability = {
 	/**
 	 * Media kind.
 	 */
@@ -101,7 +99,11 @@ export type RtpCodecCapability =
 /**
  * Direction of RTP header extension.
  */
-export type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'recvonly' | 'inactive';
+export type RtpHeaderExtensionDirection =
+	| 'sendrecv'
+	| 'sendonly'
+	| 'recvonly'
+	| 'inactive';
 
 /**
  * Provides information relating to supported header extensions. The list of
@@ -113,8 +115,7 @@ export type RtpHeaderExtensionDirection = 'sendrecv' | 'sendonly' | 'recvonly' |
  * router.rtpCapabilities or mediasoup.getSupportedRtpCapabilities()). It's
  * ignored if present in endpoints' RTP capabilities.
  */
-export type RtpHeaderExtension =
-{
+export type RtpHeaderExtension = {
 	/**
 	 * Media kind.
 	 */
@@ -176,8 +177,7 @@ export type RtpHeaderExtension =
  * the associated producer. This applies even if the producer's encodings have
  * rid set.
  */
-export type RtpParameters =
-{
+export type RtpParameters = {
 	/**
 	 * The MID RTP extension value as defined in the BUNDLE specification.
 	 */
@@ -209,8 +209,7 @@ export type RtpParameters =
  * of media codecs supported by mediasoup and their settings is defined in the
  * supportedRtpCapabilities.ts file.
  */
-export type RtpCodecParameters =
-{
+export type RtpCodecParameters = {
 	/**
 	 * The codec MIME media type/subtype (e.g. 'audio/opus', 'video/VP8').
 	 */
@@ -251,8 +250,7 @@ export type RtpCodecParameters =
  * messages. The list of RTCP feedbacks supported by mediasoup is defined in the
  * supportedRtpCapabilities.ts file.
  */
-export type RtcpFeedback =
-{
+export type RtcpFeedback = {
 	/**
 	 * RTCP feedback type.
 	 */
@@ -268,8 +266,7 @@ export type RtcpFeedback =
  * Provides information relating to an encoding, which represents a media RTP
  * stream and its associated RTX stream (if any).
  */
-export type RtpEncodingParameters =
-{
+export type RtpEncodingParameters = {
 	/**
 	 * The media SSRC.
 	 */
@@ -314,17 +311,17 @@ export type RtpEncodingParameters =
 };
 
 export type RtpHeaderExtensionUri =
-    'urn:ietf:params:rtp-hdrext:sdes:mid' |
-    'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id' |
-    'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id' |
-    'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07' |
-    'urn:ietf:params:rtp-hdrext:framemarking' |
-    'urn:ietf:params:rtp-hdrext:ssrc-audio-level' |
-    'urn:3gpp:video-orientation' |
-    'urn:ietf:params:rtp-hdrext:toffset' |
-    'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01' |
-    'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time' |
-    'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
+	| 'urn:ietf:params:rtp-hdrext:sdes:mid'
+	| 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id'
+	| 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id'
+	| 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07'
+	| 'urn:ietf:params:rtp-hdrext:framemarking'
+	| 'urn:ietf:params:rtp-hdrext:ssrc-audio-level'
+	| 'urn:3gpp:video-orientation'
+	| 'urn:ietf:params:rtp-hdrext:toffset'
+	| 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
+	| 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time'
+	| 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
 
 /**
  * Defines a RTP header extension within the RTP parameters. The list of RTP
@@ -334,8 +331,7 @@ export type RtpHeaderExtensionUri =
  * mediasoup does not currently support encrypted RTP header extensions and no
  * parameters are currently considered.
  */
-export type RtpHeaderExtensionParameters =
-{
+export type RtpHeaderExtensionParameters = {
 	/**
 	 * The URI of the RTP header extension, as defined in RFC 5285.
 	 */
@@ -366,8 +362,7 @@ export type RtpHeaderExtensionParameters =
  *
  * mediasoup assumes reducedSize to always be true.
  */
-export type RtcpParameters =
-{
+export type RtcpParameters = {
 	/**
 	 * The Canonical Name (CNAME) used by RTCP (e.g. in SDES messages).
 	 */
@@ -381,31 +376,38 @@ export type RtcpParameters =
 };
 
 export function serializeRtpParameters(
-	builder: flatbuffers.Builder, rtpParameters: RtpParameters
-): number
-{
+	builder: flatbuffers.Builder,
+	rtpParameters: RtpParameters
+): number {
 	const codecs: number[] = [];
 	const headerExtensions: number[] = [];
 
-	for (const codec of rtpParameters.codecs)
-	{
+	for (const codec of rtpParameters.codecs) {
 		const mimeTypeOffset = builder.createString(codec.mimeType);
 		const parameters = serializeParameters(builder, codec.parameters);
-		const parametersOffset =
-			FbsRtpCodecParameters.createParametersVector(builder, parameters);
+		const parametersOffset = FbsRtpCodecParameters.createParametersVector(
+			builder,
+			parameters
+		);
 
 		const rtcpFeedback: number[] = [];
 
-		for (const rtcp of codec.rtcpFeedback ?? [])
-		{
+		for (const rtcp of codec.rtcpFeedback ?? []) {
 			const typeOffset = builder.createString(rtcp.type);
 			const rtcpParametersOffset = builder.createString(rtcp.parameter);
 
 			rtcpFeedback.push(
-				FbsRtcpFeedback.createRtcpFeedback(builder, typeOffset, rtcpParametersOffset));
+				FbsRtcpFeedback.createRtcpFeedback(
+					builder,
+					typeOffset,
+					rtcpParametersOffset
+				)
+			);
 		}
-		const rtcpFeedbackOffset =
-			FbsRtpCodecParameters.createRtcpFeedbackVector(builder, rtcpFeedback);
+		const rtcpFeedbackOffset = FbsRtpCodecParameters.createRtcpFeedbackVector(
+			builder,
+			rtcpFeedback
+		);
 
 		codecs.push(
 			FbsRtpCodecParameters.createRtpCodecParameters(
@@ -416,17 +418,19 @@ export function serializeRtpParameters(
 				Number(codec.channels),
 				parametersOffset,
 				rtcpFeedbackOffset
-			));
+			)
+		);
 	}
 	const codecsOffset = FbsRtpParameters.createCodecsVector(builder, codecs);
 
 	// RtpHeaderExtensionParameters.
-	for (const headerExtension of rtpParameters.headerExtensions ?? [])
-	{
+	for (const headerExtension of rtpParameters.headerExtensions ?? []) {
 		const uri = rtpHeaderExtensionUriToFbs(headerExtension.uri);
 		const parameters = serializeParameters(builder, headerExtension.parameters);
-		const parametersOffset =
-			FbsRtpCodecParameters.createParametersVector(builder, parameters);
+		const parametersOffset = FbsRtpCodecParameters.createParametersVector(
+			builder,
+			parameters
+		);
 
 		headerExtensions.push(
 			FbsRtpHeaderExtensionParameters.createRtpHeaderExtensionParameters(
@@ -434,20 +438,29 @@ export function serializeRtpParameters(
 				uri,
 				headerExtension.id,
 				Boolean(headerExtension.encrypt),
-				parametersOffset));
+				parametersOffset
+			)
+		);
 	}
-	const headerExtensionsOffset =
-		FbsRtpParameters.createHeaderExtensionsVector(builder, headerExtensions);
+	const headerExtensionsOffset = FbsRtpParameters.createHeaderExtensionsVector(
+		builder,
+		headerExtensions
+	);
 
 	// RtpEncodingParameters.
-	const encodingsOffset = serializeRtpEncodingParameters(builder, rtpParameters.encodings ?? []);
+	const encodingsOffset = serializeRtpEncodingParameters(
+		builder,
+		rtpParameters.encodings ?? []
+	);
 
 	// RtcpParameters.
 	const { cname, reducedSize } = rtpParameters.rtcp ?? { reducedSize: true };
 	const cnameOffset = builder.createString(cname);
 
 	const rtcpOffset = FbsRtcpParameters.createRtcpParameters(
-		builder, cnameOffset, Boolean(reducedSize)
+		builder,
+		cnameOffset,
+		Boolean(reducedSize)
 	);
 
 	const midOffset = builder.createString(rtpParameters.mid);
@@ -464,29 +477,26 @@ export function serializeRtpParameters(
 }
 
 export function serializeRtpEncodingParameters(
-	builder: flatbuffers.Builder, rtpEncodingParameters: RtpEncodingParameters[] = []
-): number
-{
+	builder: flatbuffers.Builder,
+	rtpEncodingParameters: RtpEncodingParameters[] = []
+): number {
 	const encodings: number[] = [];
 
-	for (const encoding of rtpEncodingParameters)
-	{
+	for (const encoding of rtpEncodingParameters) {
 		// Prepare Rid.
 		const ridOffset = builder.createString(encoding.rid);
 
 		// Prepare Rtx.
 		let rtxOffset: number | undefined;
 
-		if (encoding.rtx)
-		{
+		if (encoding.rtx) {
 			rtxOffset = FbsRtx.createRtx(builder, encoding.rtx.ssrc);
 		}
 
 		// Prepare scalability mode.
 		let scalabilityModeOffset: number | undefined;
 
-		if (encoding.scalabilityMode)
-		{
+		if (encoding.scalabilityMode) {
 			scalabilityModeOffset = builder.createString(encoding.scalabilityMode);
 		}
 
@@ -494,8 +504,7 @@ export function serializeRtpEncodingParameters(
 		FbsRtpEncodingParameters.startRtpEncodingParameters(builder);
 
 		// Add SSRC.
-		if (encoding.ssrc)
-		{
+		if (encoding.ssrc) {
 			FbsRtpEncodingParameters.addSsrc(builder, encoding.ssrc);
 		}
 
@@ -503,32 +512,33 @@ export function serializeRtpEncodingParameters(
 		FbsRtpEncodingParameters.addRid(builder, ridOffset);
 
 		// Add payload type.
-		if (encoding.codecPayloadType)
-		{
-			FbsRtpEncodingParameters.addCodecPayloadType(builder, encoding.codecPayloadType);
+		if (encoding.codecPayloadType) {
+			FbsRtpEncodingParameters.addCodecPayloadType(
+				builder,
+				encoding.codecPayloadType
+			);
 		}
 
 		// Add RTX.
-		if (rtxOffset)
-		{
+		if (rtxOffset) {
 			FbsRtpEncodingParameters.addRtx(builder, rtxOffset);
 		}
 
 		// Add DTX.
-		if (encoding.dtx !== undefined)
-		{
+		if (encoding.dtx !== undefined) {
 			FbsRtpEncodingParameters.addDtx(builder, encoding.dtx);
 		}
 
 		// Add scalability ode.
-		if (scalabilityModeOffset)
-		{
-			FbsRtpEncodingParameters.addScalabilityMode(builder, scalabilityModeOffset);
+		if (scalabilityModeOffset) {
+			FbsRtpEncodingParameters.addScalabilityMode(
+				builder,
+				scalabilityModeOffset
+			);
 		}
 
 		// Add max bitrate.
-		if (encoding.maxBitrate !== undefined)
-		{
+		if (encoding.maxBitrate !== undefined) {
 			FbsRtpEncodingParameters.addMaxBitrate(builder, encoding.maxBitrate);
 		}
 
@@ -540,62 +550,68 @@ export function serializeRtpEncodingParameters(
 }
 
 export function serializeParameters(
-	builder: flatbuffers.Builder, parameters: any
-):number[]
-{
+	builder: flatbuffers.Builder,
+	parameters: any
+): number[] {
 	const fbsParameters: number[] = [];
 
-	for (const key of Object.keys(parameters))
-	{
+	for (const key of Object.keys(parameters)) {
 		const value = parameters[key];
 		const keyOffset = builder.createString(key);
 		let parameterOffset: number;
 
-		if (typeof value === 'boolean')
-		{
+		if (typeof value === 'boolean') {
 			parameterOffset = FbsParameter.createParameter(
-				builder, keyOffset, FbsValue.Boolean, value === true ? 1 : 0
+				builder,
+				keyOffset,
+				FbsValue.Boolean,
+				value === true ? 1 : 0
 			);
-		}
-		else if (typeof value === 'number')
-		{
+		} else if (typeof value === 'number') {
 			// Integer.
-			if (value % 1 === 0)
-			{
+			if (value % 1 === 0) {
 				const valueOffset = FbsInteger32.createInteger32(builder, value);
 
 				parameterOffset = FbsParameter.createParameter(
-					builder, keyOffset, FbsValue.Integer32, valueOffset
+					builder,
+					keyOffset,
+					FbsValue.Integer32,
+					valueOffset
 				);
 			}
 			// Float.
-			else
-			{
+			else {
 				const valueOffset = FbsDouble.createDouble(builder, value);
 
 				parameterOffset = FbsParameter.createParameter(
-					builder, keyOffset, FbsValue.Double, valueOffset
+					builder,
+					keyOffset,
+					FbsValue.Double,
+					valueOffset
 				);
 			}
-		}
-		else if (typeof value === 'string')
-		{
-			const valueOffset = FbsString.createString(builder, builder.createString(value));
+		} else if (typeof value === 'string') {
+			const valueOffset = FbsString.createString(
+				builder,
+				builder.createString(value)
+			);
 
 			parameterOffset = FbsParameter.createParameter(
-				builder, keyOffset, FbsValue.String, valueOffset
+				builder,
+				keyOffset,
+				FbsValue.String,
+				valueOffset
 			);
-		}
-		else if (Array.isArray(value))
-		{
+		} else if (Array.isArray(value)) {
 			const valueOffset = FbsInteger32Array.createValueVector(builder, value);
 
 			parameterOffset = FbsParameter.createParameter(
-				builder, keyOffset, FbsValue.Integer32Array, valueOffset
+				builder,
+				keyOffset,
+				FbsValue.Integer32Array,
+				valueOffset
 			);
-		}
-		else
-		{
+		} else {
 			throw new Error(`invalid parameter type [key:'${key}', value:${value}]`);
 		}
 
@@ -605,26 +621,21 @@ export function serializeParameters(
 	return fbsParameters;
 }
 
-export function parseRtcpFeedback(data: FbsRtcpFeedback): RtcpFeedback
-{
+export function parseRtcpFeedback(data: FbsRtcpFeedback): RtcpFeedback {
 	return {
-		type      : data.type()!,
-		parameter : data.parameter() ?? undefined
+		type: data.type()!,
+		parameter: data.parameter() ?? undefined,
 	};
 }
 
-export function parseParameters(data: any): any
-{
+export function parseParameters(data: any): any {
 	const parameters: any = {};
 
-	for (let i = 0; i < data.parametersLength(); i++)
-	{
+	for (let i = 0; i < data.parametersLength(); i++) {
 		const fbsParameter = data.parameters(i)!;
 
-		switch (fbsParameter.valueType())
-		{
-			case FbsValue.Boolean:
-			{
+		switch (fbsParameter.valueType()) {
+			case FbsValue.Boolean: {
 				const value = new FbsBoolean();
 
 				fbsParameter.value(value);
@@ -634,8 +645,7 @@ export function parseParameters(data: any): any
 				break;
 			}
 
-			case FbsValue.Integer32:
-			{
+			case FbsValue.Integer32: {
 				const value = new FbsInteger32();
 
 				fbsParameter.value(value);
@@ -645,8 +655,7 @@ export function parseParameters(data: any): any
 				break;
 			}
 
-			case FbsValue.Double:
-			{
+			case FbsValue.Double: {
 				const value = new FbsDouble();
 
 				fbsParameter.value(value);
@@ -656,8 +665,7 @@ export function parseParameters(data: any): any
 				break;
 			}
 
-			case FbsValue.String:
-			{
+			case FbsValue.String: {
 				const value = new FbsString();
 
 				fbsParameter.value(value);
@@ -667,8 +675,7 @@ export function parseParameters(data: any): any
 				break;
 			}
 
-			case FbsValue.Integer32Array:
-			{
+			case FbsValue.Integer32Array: {
 				const value = new FbsInteger32Array();
 
 				fbsParameter.value(value);
@@ -683,224 +690,196 @@ export function parseParameters(data: any): any
 	return parameters;
 }
 
-export function parseRtpCodecParameters(data: FbsRtpCodecParameters): RtpCodecParameters
-{
+export function parseRtpCodecParameters(
+	data: FbsRtpCodecParameters
+): RtpCodecParameters {
 	const parameters = parseParameters(data);
 
 	let rtcpFeedback: RtcpFeedback[] = [];
 
-	if (data.rtcpFeedbackLength() > 0)
-	{
+	if (data.rtcpFeedbackLength() > 0) {
 		rtcpFeedback = utils.parseVector(data, 'rtcpFeedback', parseRtcpFeedback);
 	}
 
 	return {
-		mimeType    : data.mimeType()!,
-		payloadType : data.payloadType(),
-		clockRate   : data.clockRate(),
-		channels    : data.channels() ?? undefined,
+		mimeType: data.mimeType()!,
+		payloadType: data.payloadType(),
+		clockRate: data.clockRate(),
+		channels: data.channels() ?? undefined,
 		parameters,
-		rtcpFeedback
+		rtcpFeedback,
 	};
 }
 
-export function rtpHeaderExtensionUriFromFbs(uri: FbsRtpHeaderExtensionUri): RtpHeaderExtensionUri
-{
-	switch (uri)
-	{
-		case FbsRtpHeaderExtensionUri.Mid:
-		{
+export function rtpHeaderExtensionUriFromFbs(
+	uri: FbsRtpHeaderExtensionUri
+): RtpHeaderExtensionUri {
+	switch (uri) {
+		case FbsRtpHeaderExtensionUri.Mid: {
 			return 'urn:ietf:params:rtp-hdrext:sdes:mid';
 		}
 
-		case FbsRtpHeaderExtensionUri.RtpStreamId:
-		{
+		case FbsRtpHeaderExtensionUri.RtpStreamId: {
 			return 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id';
 		}
 
-		case FbsRtpHeaderExtensionUri.RepairRtpStreamId:
-		{
+		case FbsRtpHeaderExtensionUri.RepairRtpStreamId: {
 			return 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id';
 		}
 
-		case FbsRtpHeaderExtensionUri.FrameMarkingDraft07:
-		{
+		case FbsRtpHeaderExtensionUri.FrameMarkingDraft07: {
 			return 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07';
 		}
 
-		case FbsRtpHeaderExtensionUri.FrameMarking:
-		{
+		case FbsRtpHeaderExtensionUri.FrameMarking: {
 			return 'urn:ietf:params:rtp-hdrext:framemarking';
 		}
 
-		case FbsRtpHeaderExtensionUri.AudioLevel:
-		{
+		case FbsRtpHeaderExtensionUri.AudioLevel: {
 			return 'urn:ietf:params:rtp-hdrext:ssrc-audio-level';
 		}
 
-		case FbsRtpHeaderExtensionUri.VideoOrientation:
-		{
+		case FbsRtpHeaderExtensionUri.VideoOrientation: {
 			return 'urn:3gpp:video-orientation';
 		}
 
-		case FbsRtpHeaderExtensionUri.TimeOffset:
-		{
+		case FbsRtpHeaderExtensionUri.TimeOffset: {
 			return 'urn:ietf:params:rtp-hdrext:toffset';
 		}
 
-		case FbsRtpHeaderExtensionUri.TransportWideCcDraft01:
-		{
+		case FbsRtpHeaderExtensionUri.TransportWideCcDraft01: {
 			return 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01';
 		}
 
-		case FbsRtpHeaderExtensionUri.AbsSendTime:
-		{
+		case FbsRtpHeaderExtensionUri.AbsSendTime: {
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time';
 		}
 
-		case FbsRtpHeaderExtensionUri.AbsCaptureTime:
-		{
+		case FbsRtpHeaderExtensionUri.AbsCaptureTime: {
 			return 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time';
 		}
 	}
 }
 
-export function rtpHeaderExtensionUriToFbs(uri: RtpHeaderExtensionUri): FbsRtpHeaderExtensionUri
-{
-	switch (uri)
-	{
-		case 'urn:ietf:params:rtp-hdrext:sdes:mid':
-		{
+export function rtpHeaderExtensionUriToFbs(
+	uri: RtpHeaderExtensionUri
+): FbsRtpHeaderExtensionUri {
+	switch (uri) {
+		case 'urn:ietf:params:rtp-hdrext:sdes:mid': {
 			return FbsRtpHeaderExtensionUri.Mid;
 		}
 
-		case 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id':
-		{
+		case 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id': {
 			return FbsRtpHeaderExtensionUri.RtpStreamId;
 		}
 
-		case 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id':
-		{
+		case 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id': {
 			return FbsRtpHeaderExtensionUri.RepairRtpStreamId;
 		}
 
-		case 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07':
-		{
+		case 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07': {
 			return FbsRtpHeaderExtensionUri.FrameMarkingDraft07;
 		}
 
-		case 'urn:ietf:params:rtp-hdrext:framemarking':
-		{
+		case 'urn:ietf:params:rtp-hdrext:framemarking': {
 			return FbsRtpHeaderExtensionUri.FrameMarking;
 		}
 
-		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level':
-		{
+		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level': {
 			return FbsRtpHeaderExtensionUri.AudioLevel;
 		}
 
-		case 'urn:3gpp:video-orientation':
-		{
+		case 'urn:3gpp:video-orientation': {
 			return FbsRtpHeaderExtensionUri.VideoOrientation;
 		}
 
-		case 'urn:ietf:params:rtp-hdrext:toffset':
-		{
+		case 'urn:ietf:params:rtp-hdrext:toffset': {
 			return FbsRtpHeaderExtensionUri.TimeOffset;
 		}
 
-		case 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01':
-		{
+		case 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01': {
 			return FbsRtpHeaderExtensionUri.TransportWideCcDraft01;
 		}
 
-		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time':
-		{
+		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time': {
 			return FbsRtpHeaderExtensionUri.AbsSendTime;
 		}
 
-		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time':
-		{
+		case 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time': {
 			return FbsRtpHeaderExtensionUri.AbsCaptureTime;
 		}
 
-		default:
-		{
+		default: {
 			throw new TypeError(`invalid RtpHeaderExtensionUri: ${uri}`);
 		}
 	}
 }
 
 export function parseRtpHeaderExtensionParameters(
-	data: FbsRtpHeaderExtensionParameters): RtpHeaderExtensionParameters
-{
+	data: FbsRtpHeaderExtensionParameters
+): RtpHeaderExtensionParameters {
 	return {
-		uri        : rtpHeaderExtensionUriFromFbs(data.uri()),
-		id         : data.id(),
-		encrypt    : data.encrypt(),
-		parameters : parseParameters(data)
+		uri: rtpHeaderExtensionUriFromFbs(data.uri()),
+		id: data.id(),
+		encrypt: data.encrypt(),
+		parameters: parseParameters(data),
 	};
 }
 
 export function parseRtpEncodingParameters(
-	data: FbsRtpEncodingParameters): RtpEncodingParameters
-{
+	data: FbsRtpEncodingParameters
+): RtpEncodingParameters {
 	return {
-		ssrc             : data.ssrc() ?? undefined,
-		rid              : data.rid() ?? undefined,
-		codecPayloadType : data.codecPayloadType() !== null ?
-			data.codecPayloadType()! :
-			undefined,
-		rtx : data.rtx() ?
-			{ ssrc: data.rtx()!.ssrc()! } :
-			undefined,
-		dtx             : data.dtx(),
-		scalabilityMode : data.scalabilityMode() ?? undefined,
-		maxBitrate      : data.maxBitrate() !== null ? data.maxBitrate()! : undefined
+		ssrc: data.ssrc() ?? undefined,
+		rid: data.rid() ?? undefined,
+		codecPayloadType:
+			data.codecPayloadType() !== null ? data.codecPayloadType()! : undefined,
+		rtx: data.rtx() ? { ssrc: data.rtx()!.ssrc()! } : undefined,
+		dtx: data.dtx(),
+		scalabilityMode: data.scalabilityMode() ?? undefined,
+		maxBitrate: data.maxBitrate() !== null ? data.maxBitrate()! : undefined,
 	};
 }
 
-export function parseRtpParameters(data: FbsRtpParameters): RtpParameters
-{
+export function parseRtpParameters(data: FbsRtpParameters): RtpParameters {
 	const codecs = utils.parseVector(data, 'codecs', parseRtpCodecParameters);
 
 	let headerExtensions: RtpHeaderExtensionParameters[] = [];
 
-	if (data.headerExtensionsLength() > 0)
-	{
+	if (data.headerExtensionsLength() > 0) {
 		headerExtensions = utils.parseVector(
 			data,
 			'headerExtensions',
-			parseRtpHeaderExtensionParameters);
+			parseRtpHeaderExtensionParameters
+		);
 	}
 
 	let encodings: RtpEncodingParameters[] = [];
 
-	if (data.encodingsLength() > 0)
-	{
+	if (data.encodingsLength() > 0) {
 		encodings = utils.parseVector(
 			data,
 			'encodings',
-			parseRtpEncodingParameters);
+			parseRtpEncodingParameters
+		);
 	}
 
 	let rtcp: RtcpParameters | undefined;
 
-	if (data.rtcp())
-	{
+	if (data.rtcp()) {
 		const fbsRtcp = data.rtcp()!;
 
 		rtcp = {
-			cname       : fbsRtcp.cname() ?? undefined,
-			reducedSize : fbsRtcp.reducedSize()
+			cname: fbsRtcp.cname() ?? undefined,
+			reducedSize: fbsRtcp.reducedSize(),
 		};
 	}
 
 	return {
-		mid : data.mid() ?? undefined,
+		mid: data.mid() ?? undefined,
 		codecs,
 		headerExtensions,
 		encodings,
-		rtcp
+		rtcp,
 	};
 }

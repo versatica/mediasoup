@@ -47,75 +47,75 @@ invoke:
 ifeq ($(wildcard $(PIP_INVOKE_DIR)),)
 	# Install pip invoke into custom location, so we don't depend on system-wide
 	# installation.
-	$(PYTHON) -m pip install --upgrade --no-user --target="$(PIP_INVOKE_DIR)" invoke
+	"$(PYTHON)" -m pip install --upgrade --no-user --target "$(PIP_INVOKE_DIR)" invoke
 endif
 
 meson-ninja: invoke
-	$(PYTHON) -m invoke meson-ninja
+	"$(PYTHON)" -m invoke meson-ninja
 
 setup: invoke
-	$(PYTHON) -m invoke setup
+	"$(PYTHON)" -m invoke setup
 
 clean: invoke
-	$(PYTHON) -m invoke clean
+	"$(PYTHON)" -m invoke clean
 
 clean-build: invoke
-	$(PYTHON) -m invoke clean-build
+	"$(PYTHON)" -m invoke clean-build
 
 clean-pip: invoke
-	$(PYTHON) -m invoke clean-pip
+	"$(PYTHON)" -m invoke clean-pip
 
 clean-subprojects: invoke
-	$(PYTHON) -m invoke clean-subprojects
+	"$(PYTHON)" -m invoke clean-subprojects
 
 clean-all: invoke
-	$(PYTHON) -m invoke clean-all
+	"$(PYTHON)" -m invoke clean-all
 
 # It requires the SUBPROJECT environment variable.
 update-wrap-file: invoke
-	$(PYTHON) -m invoke subprojects $(SUBPROJECT)
+	"$(PYTHON)" -m invoke subprojects $(SUBPROJECT)
 
 mediasoup-worker: invoke
-	$(PYTHON) -m invoke mediasoup-worker
+	"$(PYTHON)" -m invoke mediasoup-worker
 
 libmediasoup-worker: invoke
-	$(PYTHON) -m invoke libmediasoup-worker
+	"$(PYTHON)" -m invoke libmediasoup-worker
 
 flatc: invoke
-	$(PYTHON) -m invoke flatc
+	"$(PYTHON)" -m invoke flatc
 
 xcode: invoke
-	$(PYTHON) -m invoke xcode
+	"$(PYTHON)" -m invoke xcode
 
 lint: invoke
-	$(PYTHON) -m invoke lint
+	"$(PYTHON)" -m invoke lint
 
 format: invoke
-	$(PYTHON) -m invoke format
+	"$(PYTHON)" -m invoke format
 
 test: invoke
-	$(PYTHON) -m invoke test
+	"$(PYTHON)" -m invoke test
 
 test-asan: invoke
-	$(PYTHON) -m invoke test-asan
+	"$(PYTHON)" -m invoke test-asan
 
 tidy: invoke
-	$(PYTHON) -m invoke tidy
+	"$(PYTHON)" -m invoke tidy
 
 fuzzer: invoke
-	$(PYTHON) -m invoke fuzzer
+	"$(PYTHON)" -m invoke fuzzer
 
 fuzzer-run-all: invoke
-	$(PYTHON) -m invoke fuzzer-run-all
+	"$(PYTHON)" -m invoke fuzzer-run-all
 
 docker: invoke
-	$(PYTHON) -m invoke docker
+	"$(PYTHON)" -m invoke docker
 
 docker-run: invoke
-	$(PYTHON) -m invoke docker-run
+	"$(PYTHON)" -m invoke docker-run
 
 docker-alpine: invoke
-	$(PYTHON) -m invoke docker-alpine
+	"$(PYTHON)" -m invoke docker-alpine
 
 docker-alpine-run: invoke
-	$(PYTHON) -m invoke docker-alpine-run
+	"$(PYTHON)" -m invoke docker-alpine-run

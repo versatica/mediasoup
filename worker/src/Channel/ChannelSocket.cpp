@@ -43,13 +43,12 @@ namespace Channel
 	  ChannelWriteFn channelWriteFn,
 	  ChannelWriteCtx channelWriteCtx)
 	  : channelReadFn(channelReadFn), channelReadCtx(channelReadCtx), channelWriteFn(channelWriteFn),
-	    channelWriteCtx(channelWriteCtx)
+	    channelWriteCtx(channelWriteCtx), uvReadHandle(new uv_async_t)
 	{
 		MS_TRACE_STD();
 
 		int err;
 
-		this->uvReadHandle       = new uv_async_t;
 		this->uvReadHandle->data = static_cast<void*>(this);
 
 		err =
@@ -122,7 +121,7 @@ namespace Channel
 		this->listener = listener;
 	}
 
-	void ChannelSocket::Send(const uint8_t* message, uint32_t messageLen)
+	void ChannelSocket::Send(const uint8_t* data, uint32_t dataLen)
 	{
 		MS_TRACE_STD();
 
@@ -131,17 +130,17 @@ namespace Channel
 			return;
 		}
 
-		if (messageLen > PayloadMaxLen)
+		if (dataLen > PayloadMaxLen)
 		{
 			MS_ERROR_STD("message too big");
 
 			return;
 		}
 
-		SendImpl(reinterpret_cast<const uint8_t*>(message), messageLen);
+		SendImpl(reinterpret_cast<const uint8_t*>(data), dataLen);
 	}
 
-	void ChannelSocket::SendLog(const char* msg, uint32_t messageLen)
+	void ChannelSocket::SendLog(const char* data, uint32_t dataLen)
 	{
 		MS_TRACE_STD();
 
@@ -150,14 +149,14 @@ namespace Channel
 			return;
 		}
 
-		if (messageLen > PayloadMaxLen)
+		if (dataLen > PayloadMaxLen)
 		{
 			MS_ERROR_STD("message too big");
 
 			return;
 		}
 
-		auto log = FBS::Log::CreateLogDirect(this->bufferBuilder, msg);
+		auto log = FBS::Log::CreateLogDirect(this->bufferBuilder, data);
 		auto message =
 		  FBS::Message::CreateMessage(this->bufferBuilder, FBS::Message::Body::Log, log.Union());
 
@@ -263,7 +262,8 @@ namespace Channel
 		}
 	}
 
-	void ChannelSocket::OnConsumerSocketMessage(ConsumerSocket* /*consumerSocket*/, char* msg, size_t msgLen)
+	void ChannelSocket::OnConsumerSocketMessage(
+	  ConsumerSocket* /*consumerSocket*/, char* msg, size_t /*msgLen*/)
 	{
 		MS_TRACE();
 
@@ -356,7 +356,7 @@ namespace Channel
 				return;
 			}
 
-			size_t readLen = this->bufferDataLen - msgStart;
+			const size_t readLen = this->bufferDataLen - msgStart;
 
 			if (readLen < sizeof(uint32_t))
 			{

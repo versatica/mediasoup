@@ -156,7 +156,7 @@ namespace Channel
 		this->SendResponse(response);
 	}
 
-	void ChannelRequest::Send(uint8_t* buffer, size_t size)
+	void ChannelRequest::Send(uint8_t* buffer, size_t size) const
 	{
 		this->channel->Send(buffer, size);
 	}

@@ -47,7 +47,7 @@ namespace RTC
 		  RTC::RtpStream::Params& params,
 		  unsigned int sendNackDelayMs,
 		  bool useRtpInactivityCheck);
-		~RtpStreamRecv();
+		~RtpStreamRecv() override;
 
 		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;

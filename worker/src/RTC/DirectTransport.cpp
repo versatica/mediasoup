@@ -3,7 +3,6 @@
 
 #include "RTC/DirectTransport.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {
@@ -213,7 +212,11 @@ namespace RTC
 	}
 
 	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer,
+	  const uint8_t* msg,
+	  size_t len,
+	  uint32_t ppid,
+	  onQueuedCallback* /*cb*/)
 	{
 		MS_TRACE();
 

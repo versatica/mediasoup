@@ -66,7 +66,7 @@ namespace RTC
 		  RTC::Consumer::Listener* listener,
 		  const FBS::Transport::ConsumeRequest* data,
 		  RTC::RtpParameters::Type type);
-		virtual ~Consumer();
+		~Consumer() override;
 
 	public:
 		flatbuffers::Offset<FBS::Consumer::BaseConsumerDump> FillBuffer(
@@ -74,7 +74,7 @@ namespace RTC
 		virtual flatbuffers::Offset<FBS::Consumer::GetStatsResponse> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) = 0;
 		virtual flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
-		  flatbuffers::FlatBufferBuilder& builder) const
+		  flatbuffers::FlatBufferBuilder& /*builder*/) const
 		{
 			return 0;
 		};

@@ -18,20 +18,20 @@ extern "C"
 
 /* Static. */
 
-static std::mutex globalSyncMutex;
+static std::mutex GlobalSyncMutex;
 
 /* Class variables. */
 
 thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
-absl::flat_hash_map<std::string, LogLevel> Settings::string2LogLevel =
+absl::flat_hash_map<std::string, LogLevel> Settings::String2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  }
 };
-absl::flat_hash_map<LogLevel, std::string> Settings::logLevel2String =
+absl::flat_hash_map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
@@ -69,7 +69,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Parse command line options. */
 
 	// getopt_long_only() is not thread-safe
-	std::lock_guard<std::mutex> lock(globalSyncMutex);
+	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.
@@ -275,7 +275,7 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(
 	  info,
 	  "  logLevel             : %s",
-	  Settings::logLevel2String[Settings::configuration.logLevel].c_str());
+	  Settings::LogLevel2String[Settings::configuration.logLevel].c_str());
 	MS_DEBUG_TAG(info, "  logTags              : %s", logTagsStream.str().c_str());
 	MS_DEBUG_TAG(info, "  rtcMinPort           : %" PRIu16, Settings::configuration.rtcMinPort);
 	MS_DEBUG_TAG(info, "  rtcMaxPort           : %" PRIu16, Settings::configuration.rtcMaxPort);
@@ -303,7 +303,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 	{
 		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
-			auto body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
+			const auto* body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
 			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{
@@ -348,12 +348,12 @@ void Settings::SetLogLevel(std::string& level)
 	// Lowcase given level.
 	Utils::String::ToLowerCase(level);
 
-	if (Settings::string2LogLevel.find(level) == Settings::string2LogLevel.end())
+	if (Settings::String2LogLevel.find(level) == Settings::String2LogLevel.end())
 	{
 		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
 	}
 
-	Settings::configuration.logLevel = Settings::string2LogLevel[level];
+	Settings::configuration.logLevel = Settings::String2LogLevel[level];
 }
 
 void Settings::SetLogTags(const std::vector<std::string>& tags)

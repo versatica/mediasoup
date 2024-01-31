@@ -3,7 +3,6 @@
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <cstdlib> // std::abort()
 
 /* Static variables. */
 

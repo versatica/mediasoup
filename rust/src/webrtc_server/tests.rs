@@ -38,6 +38,7 @@ fn worker_close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 },

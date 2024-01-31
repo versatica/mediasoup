@@ -3,7 +3,6 @@
 #include "RTC/ActiveSpeakerObserver.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 
 namespace RTC
@@ -67,8 +66,8 @@ namespace RTC
 	inline bool ComputeBigs(
 	  const std::vector<uint8_t>& littles, std::vector<uint8_t>& bigs, uint8_t threashold)
 	{
-		uint32_t littleLen             = littles.size();
-		uint32_t bigLen                = bigs.size();
+		const uint32_t littleLen       = littles.size();
+		const uint32_t bigLen          = bigs.size();
 		const uint32_t littleLenPerBig = littleLen / bigLen;
 		bool changed{ false };
 
@@ -99,11 +98,9 @@ namespace RTC
 	  const std::string& id,
 	  RTC::RtpObserver::Listener* listener,
 	  const FBS::ActiveSpeakerObserver::ActiveSpeakerObserverOptions* options)
-	  : RTC::RtpObserver(shared, id, listener)
+	  : RTC::RtpObserver(shared, id, listener), interval(options->interval())
 	{
 		MS_TRACE();
-
-		this->interval = options->interval();
 
 		if (this->interval < 100)
 		{
@@ -231,14 +228,14 @@ namespace RTC
 			return;
 		}
 
-		uint8_t volume = 127 - level;
+		const uint8_t volume = 127 - level;
 
 		auto it = this->mapProducerSpeakers.find(producer->id);
 
 		if (it != this->mapProducerSpeakers.end())
 		{
 			auto* producerSpeaker = it->second;
-			uint64_t now          = DepLibUV::GetTimeMs();
+			const uint64_t now    = DepLibUV::GetTimeMs();
 
 			producerSpeaker->speaker->LevelChanged(volume, now);
 		}
@@ -258,7 +255,7 @@ namespace RTC
 		this->periodicTimer->Restart();
 	}
 
-	void ActiveSpeakerObserver::OnTimer(TimerHandle* timer)
+	void ActiveSpeakerObserver::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();
 
@@ -299,7 +296,7 @@ namespace RTC
 		MS_TRACE();
 
 		std::string newDominantId;
-		int32_t speakerCount = this->mapProducerSpeakers.size();
+		const int32_t speakerCount = this->mapProducerSpeakers.size();
 
 		if (speakerCount == 0)
 		{
@@ -352,9 +349,9 @@ namespace RTC
 					  speaker->GetActivityScore(interval) / dominantSpeaker->GetActivityScore(interval));
 				}
 
-				double c1 = this->relativeSpeachActivities[0];
-				double c2 = this->relativeSpeachActivities[1];
-				double c3 = this->relativeSpeachActivities[2];
+				const double c1 = this->relativeSpeachActivities[0];
+				const double c2 = this->relativeSpeachActivities[1];
+				const double c3 = this->relativeSpeachActivities[2];
 
 				if ((c1 > C1) && (c2 > C2) && (c3 > C3) && (c2 > newDominantC2))
 				{
@@ -383,7 +380,7 @@ namespace RTC
 			auto* producerSpeaker = kv.second;
 			auto* speaker         = producerSpeaker->speaker;
 			const auto& id        = producerSpeaker->producer->id;
-			uint64_t idle         = now - speaker->lastLevelChangeTime;
+			const uint64_t idle   = now - speaker->lastLevelChangeTime;
 
 			if (SpeakerIdleTimeout < idle && (this->dominantId.empty() || id != this->dominantId))
 			{
@@ -397,11 +394,10 @@ namespace RTC
 	}
 
 	ActiveSpeakerObserver::ProducerSpeaker::ProducerSpeaker(RTC::Producer* producer)
-	  : producer(producer)
+	  : producer(producer), speaker(new Speaker())
 	{
 		MS_TRACE();
 
-		this->speaker         = new Speaker();
 		this->speaker->paused = producer->IsPaused();
 	}
 
@@ -416,7 +412,7 @@ namespace RTC
 	  : immediateActivityScore(MinActivityScore), mediumActivityScore(MinActivityScore),
 	    longActivityScore(MinActivityScore), lastLevelChangeTime(DepLibUV::GetTimeMs()),
 	    minLevel(MinLevel), nextMinLevel(MinLevel), immediates(ImmediateBuffLen, 0),
-	    mediums(MediumsBuffLen, 0), longs(LongsBuffLen, 0), levels(LevelsBuffLen, 0), nextLevelIndex(0)
+	    mediums(MediumsBuffLen, 0), longs(LongsBuffLen, 0), levels(LevelsBuffLen, 0)
 	{
 		MS_TRACE();
 	}
@@ -441,7 +437,7 @@ namespace RTC
 		}
 	}
 
-	double ActiveSpeakerObserver::Speaker::GetActivityScore(uint8_t interval)
+	double ActiveSpeakerObserver::Speaker::GetActivityScore(uint8_t interval) const
 	{
 		MS_TRACE();
 
@@ -486,7 +482,7 @@ namespace RTC
 			// The algorithm expect to have an update every 20 milliseconds. If the
 			// Producer is paused, using a different packetization time or using DTX
 			// we need to update more than one sample when receiving an audio packet.
-			uint32_t intervalsUpdated =
+			const uint32_t intervalsUpdated =
 			  std::min(std::max(static_cast<uint32_t>(elapsed / 20), 1U), LevelsBuffLen);
 
 			for (uint32_t i{ 0u }; i < intervalsUpdated; ++i)
