@@ -135,14 +135,14 @@ namespace RTC
 				// tcc feedback, these packets may have been reported as lost previously,
 				// therefore we need to reset the start sequence num for the next tcc feedback.
 				if (
-				  !this->receivedTransportWideSeqNumber ||
+				  !this->transportWideSeqNumberReceived ||
 				  RTC::SeqManager<uint16_t>::IsSeqLowerThan(
-				    wideSeqNumber, this->transportCcFeedbackStartSeqNum))
+				    wideSeqNumber, this->transportCcFeedbackWideSeqNumStart))
 				{
-					this->transportCcFeedbackStartSeqNum = wideSeqNumber;
+					this->transportCcFeedbackWideSeqNumStart = wideSeqNumber;
 				}
 
-				this->receivedTransportWideSeqNumber = true;
+				this->transportWideSeqNumberReceived = true;
 
 				MayDropOldPacketArrivalTimes(wideSeqNumber, nowMs);
 
@@ -180,12 +180,17 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto it = this->mapPacketArrivalTimes.lower_bound(this->transportCcFeedbackStartSeqNum);
+		if (!this->transportWideSeqNumberReceived)
+		{
+			return;
+		}
+
+		auto it = this->mapPacketArrivalTimes.lower_bound(this->transportCcFeedbackWideSeqNumStart);
 
 		if (it != this->mapPacketArrivalTimes.end())
 		{
-			// Set base sequence num and reference time.
-			this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackStartSeqNum, it->second);
+			// Set base sequence num and reference time
+			this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, it->second);
 
 			for (; it != this->mapPacketArrivalTimes.end(); ++it)
 			{
@@ -297,7 +302,7 @@ namespace RTC
 
 		// Increment packet count.
 		this->transportCcFeedbackPacket->SetFeedbackPacketCount(++this->transportCcFeedbackPacketCount);
-		this->transportCcFeedbackStartSeqNum = latestWideSeqNumber + 1;
+		this->transportCcFeedbackWideSeqNumStart = latestWideSeqNumber + 1;
 	}
 
 	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(
@@ -314,7 +319,7 @@ namespace RTC
 			auto it              = this->mapPacketArrivalTimes.begin();
 
 			while (it != this->mapPacketArrivalTimes.end() &&
-			       it->first != this->transportCcFeedbackStartSeqNum &&
+			       it->first != this->transportCcFeedbackWideSeqNumStart &&
 			       RTC::SeqManager<uint16_t>::IsSeqLowerThan(it->first, seqNum) &&
 			       it->second <= expiryTimestamp)
 			{

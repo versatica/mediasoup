@@ -279,11 +279,21 @@ namespace RTC
 			return offset;
 		}
 
+		void FeedbackRtpTransportPacket::SetBase(uint16_t sequenceNumber, uint64_t timestamp)
+		{
+			this->baseSet              = true;
+			this->baseSequenceNumber   = sequenceNumber;
+			this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
+			this->latestSequenceNumber = sequenceNumber - 1;
+			this->latestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
+		}
+
 		FeedbackRtpTransportPacket::AddPacketResult FeedbackRtpTransportPacket::AddPacket(
 		  uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen)
 		{
 			MS_TRACE();
 
+			MS_ASSERT(baseSet, "base not set");
 			MS_ASSERT(!IsFull(), "packet is full");
 
 			// If the wide sequence number of the new packet is lower than the latest seen,
@@ -360,14 +370,6 @@ namespace RTC
 			this->latestTimestamp      = timestamp;
 
 			return AddPacketResult::SUCCESS;
-		}
-
-		void FeedbackRtpTransportPacket::SetBase(uint16_t sequenceNumber, uint64_t timestamp)
-		{
-			this->baseSequenceNumber   = sequenceNumber;
-			this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
-			this->latestSequenceNumber = sequenceNumber - 1;
-			this->latestTimestamp      = (timestamp >> 6) * 64; // IMPORTANT: Loose precision.
 		}
 
 		void FeedbackRtpTransportPacket::Finish()

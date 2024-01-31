@@ -92,8 +92,9 @@ namespace RTC
 		uint8_t unlimitedRembCounter{ 0u };
 		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
-		bool receivedTransportWideSeqNumber{ false };
-		uint16_t transportCcFeedbackStartSeqNum{ 0u };
+		// Whether received any packet with transport wide sequence number.
+		bool transportWideSeqNumberReceived{ false };
+		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
 		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};
 } // namespace RTC
