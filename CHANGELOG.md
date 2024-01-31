@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Make transport-cc feedbac works similarly to webrtc ([PR #1088](https://github.com/versatica/mediasoup/pull/1088) by @penguinol).
+- Make transport-cc feedback works similarly to webrtc ([PR #1088](https://github.com/versatica/mediasoup/pull/1088) by @penguinol).
 
 ### 3.13.17
 

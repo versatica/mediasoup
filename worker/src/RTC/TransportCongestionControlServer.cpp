@@ -189,7 +189,7 @@ namespace RTC
 
 		if (it != this->mapPacketArrivalTimes.end())
 		{
-			// Set base sequence num and reference time
+			// Set base sequence num and reference time.
 			this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, it->second);
 
 			for (; it != this->mapPacketArrivalTimes.end(); ++it)
