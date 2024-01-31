@@ -28,6 +28,7 @@ jobs:
 
     env:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_LOCAL_DEV: 'true'
 
     steps:
       - name: Checkout
@@ -47,8 +48,7 @@ jobs:
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 
-      # NOTE: Add --force since otherwise `npm ci` fails in Node 16 because
-      # @octokit/auth-token dev dependency requires Node >= 16.
+      # NOTE: Add --force since some dev dependencies require Node >= 18.
       - name: npm ci
         run: npm ci --force --foreground-scripts
 

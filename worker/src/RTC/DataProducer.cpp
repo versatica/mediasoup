@@ -5,8 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include <stdexcept>
 #include <vector>
 
 namespace RTC
@@ -202,7 +200,7 @@ namespace RTC
 			{
 				const auto* body    = notification->data->body_as<FBS::DataProducer::SendNotification>();
 				const uint8_t* data = body->data()->Data();
-				size_t len          = body->data()->size();
+				const size_t len    = body->data()->size();
 
 				if (len > this->maxMessageSize)
 				{

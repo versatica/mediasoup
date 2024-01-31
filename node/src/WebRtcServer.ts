@@ -10,17 +10,17 @@ import * as FbsWorker from './fbs/worker';
 import * as FbsWebRtcServer from './fbs/web-rtc-server';
 
 export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
-{
-	/**
-	 * Listen infos.
-	 */
-	listenInfos: TransportListenInfo[];
+	{
+		/**
+		 * Listen infos.
+		 */
+		listenInfos: TransportListenInfo[];
 
-	/**
-	 * Custom application data.
-	 */
-	appData?: WebRtcServerAppData;
-};
+		/**
+		 * Custom application data.
+		 */
+		appData?: WebRtcServerAppData;
+	};
 
 /**
  * @deprecated
@@ -28,23 +28,20 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
  */
 export type WebRtcServerListenInfo = TransportListenInfo;
 
-export type WebRtcServerEvents =
-{
+export type WebRtcServerEvents = {
 	workerclose: [];
 	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };
 
-export type WebRtcServerObserverEvents =
-{
+export type WebRtcServerObserverEvents = {
 	close: [];
 	webrtctransporthandled: [WebRtcTransport];
 	webrtctransportunhandled: [WebRtcTransport];
 };
 
-export type WebRtcServerDump =
-{
+export type WebRtcServerDump = {
 	id: string;
 	udpSockets: IpPort[];
 	tcpServers: IpPort[];
@@ -53,34 +50,30 @@ export type WebRtcServerDump =
 	tupleHashes: TupleHash[];
 };
 
-type IpPort =
-{
+type IpPort = {
 	ip: string;
 	port: number;
 };
 
-type IceUserNameFragment =
-{
+type IceUserNameFragment = {
 	localIceUsernameFragment: string;
 	webRtcTransportId: string;
 };
 
-type TupleHash =
-{
+type TupleHash = {
 	tupleHash: number;
 	webRtcTransportId: string;
 };
 
-type WebRtcServerInternal =
-{
+type WebRtcServerInternal = {
 	webRtcServerId: string;
 };
 
 const logger = new Logger('WebRtcServer');
 
-export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<WebRtcServerEvents>
-{
+export class WebRtcServer<
+	WebRtcServerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<WebRtcServerEvents> {
 	// Internal data.
 	readonly #internal: WebRtcServerInternal;
 
@@ -102,65 +95,56 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			channel,
-			appData
-		}:
-		{
-			internal: WebRtcServerInternal;
-			channel: Channel;
-			appData?: WebRtcServerAppData;
-		}
-	)
-	{
+	constructor({
+		internal,
+		channel,
+		appData,
+	}: {
+		internal: WebRtcServerInternal;
+		channel: Channel;
+		appData?: WebRtcServerAppData;
+	}) {
 		super();
 
 		logger.debug('constructor()');
 
 		this.#internal = internal;
 		this.#channel = channel;
-		this.#appData = appData || {} as WebRtcServerAppData;
+		this.#appData = appData || ({} as WebRtcServerAppData);
 	}
 
 	/**
 	 * WebRtcServer id.
 	 */
-	get id(): string
-	{
+	get id(): string {
 		return this.#internal.webRtcServerId;
 	}
 
 	/**
 	 * Whether the WebRtcServer is closed.
 	 */
-	get closed(): boolean
-	{
+	get closed(): boolean {
 		return this.#closed;
 	}
 
 	/**
 	 * App custom data.
 	 */
-	get appData(): WebRtcServerAppData
-	{
+	get appData(): WebRtcServerAppData {
 		return this.#appData;
 	}
 
 	/**
 	 * App custom data setter.
 	 */
-	set appData(appData: WebRtcServerAppData)
-	{
+	set appData(appData: WebRtcServerAppData) {
 		this.#appData = appData;
 	}
 
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<WebRtcServerObserverEvents>
-	{
+	get observer(): EnhancedEventEmitter<WebRtcServerObserverEvents> {
 		return this.#observer;
 	}
 
@@ -168,18 +152,15 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	 * @private
 	 * Just for testing purposes.
 	 */
-	get webRtcTransportsForTesting(): Map<string, WebRtcTransport>
-	{
+	get webRtcTransportsForTesting(): Map<string, WebRtcTransport> {
 		return this.#webRtcTransports;
 	}
 
 	/**
 	 * Close the WebRtcServer.
 	 */
-	close(): void
-	{
-		if (this.#closed)
-		{
+	close(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -189,17 +170,19 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 
 		// Build the request.
 		const requestOffset = new FbsWorker.CloseWebRtcServerRequestT(
-			this.#internal.webRtcServerId).pack(this.#channel.bufferBuilder);
+			this.#internal.webRtcServerId
+		).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request(
-			Method.WORKER_WEBRTCSERVER_CLOSE,
-			RequestBody.Worker_CloseWebRtcServerRequest,
-			requestOffset)
+		this.#channel
+			.request(
+				Method.WORKER_WEBRTCSERVER_CLOSE,
+				RequestBody.Worker_CloseWebRtcServerRequest,
+				requestOffset
+			)
 			.catch(() => {});
 
 		// Close every WebRtcTransport.
-		for (const webRtcTransport of this.#webRtcTransports.values())
-		{
+		for (const webRtcTransport of this.#webRtcTransports.values()) {
 			webRtcTransport.listenServerClosed();
 
 			// Emit observer event.
@@ -218,10 +201,8 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	 *
 	 * @private
 	 */
-	workerClosed(): void
-	{
-		if (this.#closed)
-		{
+	workerClosed(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -242,12 +223,15 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	/**
 	 * Dump WebRtcServer.
 	 */
-	async dump(): Promise<WebRtcServerDump>
-	{
+	async dump(): Promise<WebRtcServerDump> {
 		logger.debug('dump()');
 
 		const response = await this.#channel.request(
-			Method.WEBRTCSERVER_DUMP, undefined, undefined, this.#internal.webRtcServerId);
+			Method.WEBRTCSERVER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.webRtcServerId
+		);
 
 		/* Decode Response. */
 		const dump = new FbsWebRtcServer.DumpResponse();
@@ -260,15 +244,13 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	/**
 	 * @private
 	 */
-	handleWebRtcTransport(webRtcTransport: WebRtcTransport): void
-	{
+	handleWebRtcTransport(webRtcTransport: WebRtcTransport): void {
 		this.#webRtcTransports.set(webRtcTransport.id, webRtcTransport);
 
 		// Emit observer event.
 		this.#observer.safeEmit('webrtctransporthandled', webRtcTransport);
 
-		webRtcTransport.on('@close', () =>
-		{
+		webRtcTransport.on('@close', () => {
 			this.#webRtcTransports.delete(webRtcTransport.id);
 
 			// Emit observer event.
@@ -277,48 +259,42 @@ export class WebRtcServer<WebRtcServerAppData extends AppData = AppData>
 	}
 }
 
-function parseIpPort(binary: FbsWebRtcServer.IpPort): IpPort
-{
+function parseIpPort(binary: FbsWebRtcServer.IpPort): IpPort {
 	return {
-		ip   : binary.ip()!,
-		port : binary.port()
+		ip: binary.ip()!,
+		port: binary.port(),
 	};
 }
 
-function parseIceUserNameFragment(binary: FbsWebRtcServer.IceUserNameFragment): IceUserNameFragment
-{
+function parseIceUserNameFragment(
+	binary: FbsWebRtcServer.IceUserNameFragment
+): IceUserNameFragment {
 	return {
-		localIceUsernameFragment : binary.localIceUsernameFragment()!,
-		webRtcTransportId        : binary.webRtcTransportId()!
+		localIceUsernameFragment: binary.localIceUsernameFragment()!,
+		webRtcTransportId: binary.webRtcTransportId()!,
 	};
 }
 
-function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash
-{
+function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash {
 	return {
-		tupleHash         : Number(binary.tupleHash()!),
-		webRtcTransportId : binary.webRtcTransportId()!
+		tupleHash: Number(binary.tupleHash()!),
+		webRtcTransportId: binary.webRtcTransportId()!,
 	};
 }
 
 function parseWebRtcServerDump(
 	data: FbsWebRtcServer.DumpResponse
-): WebRtcServerDump
-{
+): WebRtcServerDump {
 	return {
-		id                        : data.id()!,
-		udpSockets                : utils.parseVector(
-			data, 'udpSockets', parseIpPort
+		id: data.id()!,
+		udpSockets: utils.parseVector(data, 'udpSockets', parseIpPort),
+		tcpServers: utils.parseVector(data, 'tcpServers', parseIpPort),
+		webRtcTransportIds: utils.parseVector(data, 'webRtcTransportIds'),
+		localIceUsernameFragments: utils.parseVector(
+			data,
+			'localIceUsernameFragments',
+			parseIceUserNameFragment
 		),
-		tcpServers                : utils.parseVector(
-			data, 'tcpServers', parseIpPort
-		),
-		webRtcTransportIds        : utils.parseVector(data, 'webRtcTransportIds'),
-		localIceUsernameFragments : utils.parseVector(
-			data, 'localIceUsernameFragments', parseIceUserNameFragment
-		),
-		tupleHashes               : utils.parseVector(
-			data, 'tupleHashes', parseTupleHash
-		)
+		tupleHashes: utils.parseVector(data, 'tupleHashes', parseTupleHash),
 	};
 }

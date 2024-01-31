@@ -2,7 +2,10 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
-import { parseSctpStreamParameters, SctpStreamParameters } from './SctpParameters';
+import {
+	SctpStreamParameters,
+	parseSctpStreamParameters,
+} from './SctpParameters';
 import { AppData } from './types';
 import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
@@ -12,56 +15,55 @@ import * as FbsDataConsumer from './fbs/data-consumer';
 import * as FbsDataProducer from './fbs/data-producer';
 
 export type DataConsumerOptions<DataConsumerAppData extends AppData = AppData> =
-{
-	/**
-	 * The id of the DataProducer to consume.
-	 */
-	dataProducerId: string;
+	{
+		/**
+		 * The id of the DataProducer to consume.
+		 */
+		dataProducerId: string;
 
-	/**
-	 * Just if consuming over SCTP.
-	 * Whether data messages must be received in order. If true the messages will
-	 * be sent reliably. Defaults to the value in the DataProducer if it has type
-	 * 'sctp' or to true if it has type 'direct'.
-	 */
-	ordered?: boolean;
+		/**
+		 * Just if consuming over SCTP.
+		 * Whether data messages must be received in order. If true the messages will
+		 * be sent reliably. Defaults to the value in the DataProducer if it has type
+		 * 'sctp' or to true if it has type 'direct'.
+		 */
+		ordered?: boolean;
 
-	/**
-	 * Just if consuming over SCTP.
-	 * When ordered is false indicates the time (in milliseconds) after which a
-	 * SCTP packet will stop being retransmitted. Defaults to the value in the
-	 * DataProducer if it has type 'sctp' or unset if it has type 'direct'.
-	 */
-	maxPacketLifeTime?: number;
+		/**
+		 * Just if consuming over SCTP.
+		 * When ordered is false indicates the time (in milliseconds) after which a
+		 * SCTP packet will stop being retransmitted. Defaults to the value in the
+		 * DataProducer if it has type 'sctp' or unset if it has type 'direct'.
+		 */
+		maxPacketLifeTime?: number;
 
-	/**
-	 * Just if consuming over SCTP.
-	 * When ordered is false indicates the maximum number of times a packet will
-	 * be retransmitted. Defaults to the value in the DataProducer if it has type
-	 * 'sctp' or unset if it has type 'direct'.
-	 */
-	maxRetransmits?: number;
+		/**
+		 * Just if consuming over SCTP.
+		 * When ordered is false indicates the maximum number of times a packet will
+		 * be retransmitted. Defaults to the value in the DataProducer if it has type
+		 * 'sctp' or unset if it has type 'direct'.
+		 */
+		maxRetransmits?: number;
 
-	/**
-	 * Whether the data consumer must start in paused mode. Default false.
-	 */
-	paused?: boolean;
+		/**
+		 * Whether the data consumer must start in paused mode. Default false.
+		 */
+		paused?: boolean;
 
-	/**
-	 * Subchannels this data consumer initially subscribes to.
-	 * Only used in case this data consumer receives messages from a local data
-	 * producer that specifies subchannel(s) when calling send().
-	 */
-	subchannels?: number[];
+		/**
+		 * Subchannels this data consumer initially subscribes to.
+		 * Only used in case this data consumer receives messages from a local data
+		 * producer that specifies subchannel(s) when calling send().
+		 */
+		subchannels?: number[];
 
-	/**
-	 * Custom application data.
-	 */
-	appData?: DataConsumerAppData;
-};
+		/**
+		 * Custom application data.
+		 */
+		appData?: DataConsumerAppData;
+	};
 
-export type DataConsumerStat =
-{
+export type DataConsumerStat = {
 	type: string;
 	timestamp: number;
 	label: string;
@@ -76,8 +78,7 @@ export type DataConsumerStat =
  */
 export type DataConsumerType = 'sctp' | 'direct';
 
-export type DataConsumerEvents =
-{
+export type DataConsumerEvents = {
 	transportclose: [];
 	dataproducerclose: [];
 	dataproducerpause: [];
@@ -91,28 +92,24 @@ export type DataConsumerEvents =
 	'@dataproducerclose': [];
 };
 
-export type DataConsumerObserverEvents =
-{
+export type DataConsumerObserverEvents = {
 	close: [];
 	pause: [];
 	resume: [];
 };
 
-type DataConsumerDump = DataConsumerData &
-{
+type DataConsumerDump = DataConsumerData & {
 	id: string;
 	paused: boolean;
 	dataProducerPaused: boolean;
 	subchannels: number[];
 };
 
-type DataConsumerInternal = TransportInternal &
-{
+type DataConsumerInternal = TransportInternal & {
 	dataConsumerId: string;
 };
 
-type DataConsumerData =
-{
+type DataConsumerData = {
 	dataProducerId: string;
 	type: DataConsumerType;
 	sctpStreamParameters?: SctpStreamParameters;
@@ -123,9 +120,9 @@ type DataConsumerData =
 
 const logger = new Logger('DataConsumer');
 
-export class DataConsumer<DataConsumerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<DataConsumerEvents>
-{
+export class DataConsumer<
+	DataConsumerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<DataConsumerEvents> {
 	// Internal data.
 	readonly #internal: DataConsumerInternal;
 
@@ -156,27 +153,23 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			paused,
-			dataProducerPaused,
-			subchannels,
-			appData
-		}:
-		{
-			internal: DataConsumerInternal;
-			data: DataConsumerData;
-			channel: Channel;
-			paused: boolean;
-			dataProducerPaused: boolean;
-			subchannels: number[];
-			appData?: DataConsumerAppData;
-		}
-	)
-	{
+	constructor({
+		internal,
+		data,
+		channel,
+		paused,
+		dataProducerPaused,
+		subchannels,
+		appData,
+	}: {
+		internal: DataConsumerInternal;
+		data: DataConsumerData;
+		channel: Channel;
+		paused: boolean;
+		dataProducerPaused: boolean;
+		subchannels: number[];
+		appData?: DataConsumerAppData;
+	}) {
 		super();
 
 		logger.debug('constructor()');
@@ -187,7 +180,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#paused = paused;
 		this.#dataProducerPaused = dataProducerPaused;
 		this.#subchannels = subchannels;
-		this.#appData = appData || {} as DataConsumerAppData;
+		this.#appData = appData || ({} as DataConsumerAppData);
 
 		this.handleWorkerNotifications();
 	}
@@ -195,114 +188,99 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * DataConsumer id.
 	 */
-	get id(): string
-	{
+	get id(): string {
 		return this.#internal.dataConsumerId;
 	}
 
 	/**
 	 * Associated DataProducer id.
 	 */
-	get dataProducerId(): string
-	{
+	get dataProducerId(): string {
 		return this.#data.dataProducerId;
 	}
 
 	/**
 	 * Whether the DataConsumer is closed.
 	 */
-	get closed(): boolean
-	{
+	get closed(): boolean {
 		return this.#closed;
 	}
 
 	/**
 	 * DataConsumer type.
 	 */
-	get type(): DataConsumerType
-	{
+	get type(): DataConsumerType {
 		return this.#data.type;
 	}
 
 	/**
 	 * SCTP stream parameters.
 	 */
-	get sctpStreamParameters(): SctpStreamParameters | undefined
-	{
+	get sctpStreamParameters(): SctpStreamParameters | undefined {
 		return this.#data.sctpStreamParameters;
 	}
 
 	/**
 	 * DataChannel label.
 	 */
-	get label(): string
-	{
+	get label(): string {
 		return this.#data.label;
 	}
 
 	/**
 	 * DataChannel protocol.
 	 */
-	get protocol(): string
-	{
+	get protocol(): string {
 		return this.#data.protocol;
 	}
 
 	/**
 	 * Whether the DataConsumer is paused.
 	 */
-	get paused(): boolean
-	{
+	get paused(): boolean {
 		return this.#paused;
 	}
 
 	/**
 	 * Whether the associate DataProducer is paused.
 	 */
-	get dataProducerPaused(): boolean
-	{
+	get dataProducerPaused(): boolean {
 		return this.#dataProducerPaused;
 	}
 
 	/**
 	 * Get current subchannels this data consumer is subscribed to.
 	 */
-	get subchannels(): number[]
-	{
+	get subchannels(): number[] {
 		return Array.from(this.#subchannels);
 	}
 
 	/**
 	 * App custom data.
 	 */
-	get appData(): DataConsumerAppData
-	{
+	get appData(): DataConsumerAppData {
 		return this.#appData;
 	}
 
 	/**
 	 * App custom data setter.
 	 */
-	set appData(appData: DataConsumerAppData)
-	{
+	set appData(appData: DataConsumerAppData) {
 		this.#appData = appData;
 	}
 
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<DataConsumerObserverEvents>
-	{
+	get observer(): EnhancedEventEmitter<DataConsumerObserverEvents> {
 		return this.#observer;
 	}
 
 	/**
 	 * Close the DataConsumer.
 	 */
-	close(): void
-	{
-		if (this.#closed)
-		{
+	close(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -318,12 +296,14 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 			this.#internal.dataConsumerId
 		).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request(
-			FbsRequest.Method.TRANSPORT_CLOSE_DATACONSUMER,
-			FbsRequest.Body.Transport_CloseDataConsumerRequest,
-			requestOffset,
-			this.#internal.transportId
-		).catch(() => {});
+		this.#channel
+			.request(
+				FbsRequest.Method.TRANSPORT_CLOSE_DATACONSUMER,
+				FbsRequest.Body.Transport_CloseDataConsumerRequest,
+				requestOffset,
+				this.#internal.transportId
+			)
+			.catch(() => {});
 
 		this.emit('@close');
 
@@ -336,10 +316,8 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	 *
 	 * @private
 	 */
-	transportClosed(): void
-	{
-		if (this.#closed)
-		{
+	transportClosed(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -359,8 +337,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Dump DataConsumer.
 	 */
-	async dump(): Promise<DataConsumerDump>
-	{
+	async dump(): Promise<DataConsumerDump> {
 		logger.debug('dump()');
 
 		const response = await this.#channel.request(
@@ -381,8 +358,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Get DataConsumer stats.
 	 */
-	async getStats(): Promise<DataConsumerStat[]>
-	{
+	async getStats(): Promise<DataConsumerStat[]> {
 		logger.debug('getStats()');
 
 		const response = await this.#channel.request(
@@ -397,14 +373,13 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		response.body(data);
 
-		return [ parseDataConsumerStats(data) ];
+		return [parseDataConsumerStats(data)];
 	}
 
 	/**
 	 * Pause the DataConsumer.
 	 */
-	async pause(): Promise<void>
-	{
+	async pause(): Promise<void> {
 		logger.debug('pause()');
 
 		await this.#channel.request(
@@ -419,8 +394,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#paused = true;
 
 		// Emit observer event.
-		if (!wasPaused && !this.#dataProducerPaused)
-		{
+		if (!wasPaused && !this.#dataProducerPaused) {
 			this.#observer.safeEmit('pause');
 		}
 	}
@@ -428,8 +402,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Resume the DataConsumer.
 	 */
-	async resume(): Promise<void>
-	{
+	async resume(): Promise<void> {
 		logger.debug('resume()');
 
 		await this.#channel.request(
@@ -444,8 +417,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#paused = false;
 
 		// Emit observer event.
-		if (wasPaused && !this.#dataProducerPaused)
-		{
+		if (wasPaused && !this.#dataProducerPaused) {
 			this.#observer.safeEmit('resume');
 		}
 	}
@@ -453,13 +425,15 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Set buffered amount low threshold.
 	 */
-	async setBufferedAmountLowThreshold(threshold: number): Promise<void>
-	{
+	async setBufferedAmountLowThreshold(threshold: number): Promise<void> {
 		logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
 
 		/* Build Request. */
-		const requestOffset = FbsDataConsumer.SetBufferedAmountLowThresholdRequest.
-			createSetBufferedAmountLowThresholdRequest(this.#channel.bufferBuilder, threshold);
+		const requestOffset =
+			FbsDataConsumer.SetBufferedAmountLowThresholdRequest.createSetBufferedAmountLowThresholdRequest(
+				this.#channel.bufferBuilder,
+				threshold
+			);
 
 		await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_SET_BUFFERED_AMOUNT_LOW_THRESHOLD,
@@ -472,10 +446,8 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Send data.
 	 */
-	async send(message: string | Buffer, ppid?: number): Promise<void>
-	{
-		if (typeof message !== 'string' && !Buffer.isBuffer(message))
-		{
+	async send(message: string | Buffer, ppid?: number): Promise<void> {
+		if (typeof message !== 'string' && !Buffer.isBuffer(message)) {
 			throw new TypeError('message must be a string or a Buffer');
 		}
 
@@ -495,20 +467,21 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		 * +-------------------------------+----------+
 		 */
 
-		if (typeof ppid !== 'number')
-		{
-			ppid = (typeof message === 'string')
-				? message.length > 0 ? 51 : 56
-				: message.length > 0 ? 53 : 57;
+		if (typeof ppid !== 'number') {
+			ppid =
+				typeof message === 'string'
+					? message.length > 0
+						? 51
+						: 56
+					: message.length > 0
+						? 53
+						: 57;
 		}
 
 		// Ensure we honor PPIDs.
-		if (ppid === 56)
-		{
+		if (ppid === 56) {
 			message = ' ';
-		}
-		else if (ppid === 57)
-		{
+		} else if (ppid === 57) {
 			message = Buffer.alloc(1);
 		}
 
@@ -516,8 +489,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 
 		let dataOffset = 0;
 
-		if (typeof message === 'string')
-		{
+		if (typeof message === 'string') {
 			message = Buffer.from(message);
 		}
 
@@ -540,8 +512,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Get buffered amount size.
 	 */
-	async getBufferedAmount(): Promise<number>
-	{
+	async getBufferedAmount(): Promise<number> {
 		logger.debug('getBufferedAmount()');
 
 		const response = await this.#channel.request(
@@ -561,8 +532,7 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Set subchannels.
 	 */
-	async setSubchannels(subchannels: number[]): Promise<void>
-	{
+	async setSubchannels(subchannels: number[]): Promise<void> {
 		logger.debug('setSubchannels()');
 
 		/* Build Request. */
@@ -589,14 +559,15 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Add a subchannel.
 	 */
-	async addSubchannel(subchannel: number): Promise<void>
-	{
+	async addSubchannel(subchannel: number): Promise<void> {
 		logger.debug('addSubchannel()');
 
 		/* Build Request. */
 		const requestOffset =
 			FbsDataConsumer.AddSubchannelRequest.createAddSubchannelRequest(
-				this.#channel.bufferBuilder, subchannel);
+				this.#channel.bufferBuilder,
+				subchannel
+			);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_ADD_SUBCHANNEL,
@@ -617,13 +588,15 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 	/**
 	 * Remove a subchannel.
 	 */
-	async removeSubchannel(subchannel: number): Promise<void>
-	{
+	async removeSubchannel(subchannel: number): Promise<void> {
 		logger.debug('removeSubchannel()');
 
 		/* Build Request. */
-		const requestOffset = FbsDataConsumer.RemoveSubchannelRequest.
-			createRemoveSubchannelRequest(this.#channel.bufferBuilder, subchannel);
+		const requestOffset =
+			FbsDataConsumer.RemoveSubchannelRequest.createRemoveSubchannelRequest(
+				this.#channel.bufferBuilder,
+				subchannel
+			);
 
 		const response = await this.#channel.request(
 			FbsRequest.Method.DATACONSUMER_REMOVE_SUBCHANNEL,
@@ -641,154 +614,140 @@ export class DataConsumer<DataConsumerAppData extends AppData = AppData>
 		this.#subchannels = utils.parseVector(data, 'subchannels');
 	}
 
-	private handleWorkerNotifications(): void
-	{
-		this.#channel.on(this.#internal.dataConsumerId, (event: Event, data?: Notification) =>
-		{
-			switch (event)
-			{
-				case Event.DATACONSUMER_DATAPRODUCER_CLOSE:
-				{
-					if (this.#closed)
-					{
+	private handleWorkerNotifications(): void {
+		this.#channel.on(
+			this.#internal.dataConsumerId,
+			(event: Event, data?: Notification) => {
+				switch (event) {
+					case Event.DATACONSUMER_DATAPRODUCER_CLOSE: {
+						if (this.#closed) {
+							break;
+						}
+
+						this.#closed = true;
+
+						// Remove notification subscriptions.
+						this.#channel.removeAllListeners(this.#internal.dataConsumerId);
+
+						this.emit('@dataproducerclose');
+						this.safeEmit('dataproducerclose');
+
+						// Emit observer event.
+						this.#observer.safeEmit('close');
+
 						break;
 					}
 
-					this.#closed = true;
+					case Event.DATACONSUMER_DATAPRODUCER_PAUSE: {
+						if (this.#dataProducerPaused) {
+							break;
+						}
 
-					// Remove notification subscriptions.
-					this.#channel.removeAllListeners(this.#internal.dataConsumerId);
+						this.#dataProducerPaused = true;
 
-					this.emit('@dataproducerclose');
-					this.safeEmit('dataproducerclose');
+						this.safeEmit('dataproducerpause');
 
-					// Emit observer event.
-					this.#observer.safeEmit('close');
+						// Emit observer event.
+						if (!this.#paused) {
+							this.#observer.safeEmit('pause');
+						}
 
-					break;
-				}
-
-				case Event.DATACONSUMER_DATAPRODUCER_PAUSE:
-				{
-					if (this.#dataProducerPaused)
-					{
 						break;
 					}
 
-					this.#dataProducerPaused = true;
+					case Event.DATACONSUMER_DATAPRODUCER_RESUME: {
+						if (!this.#dataProducerPaused) {
+							break;
+						}
 
-					this.safeEmit('dataproducerpause');
+						this.#dataProducerPaused = false;
 
-					// Emit observer event.
-					if (!this.#paused)
-					{
-						this.#observer.safeEmit('pause');
-					}
+						this.safeEmit('dataproducerresume');
 
-					break;
-				}
+						// Emit observer event.
+						if (!this.#paused) {
+							this.#observer.safeEmit('resume');
+						}
 
-				case Event.DATACONSUMER_DATAPRODUCER_RESUME:
-				{
-					if (!this.#dataProducerPaused)
-					{
 						break;
 					}
 
-					this.#dataProducerPaused = false;
+					case Event.DATACONSUMER_SCTP_SENDBUFFER_FULL: {
+						this.safeEmit('sctpsendbufferfull');
 
-					this.safeEmit('dataproducerresume');
-
-					// Emit observer event.
-					if (!this.#paused)
-					{
-						this.#observer.safeEmit('resume');
-					}
-
-					break;
-				}
-
-				case Event.DATACONSUMER_SCTP_SENDBUFFER_FULL:
-				{
-					this.safeEmit('sctpsendbufferfull');
-
-					break;
-				}
-
-				case Event.DATACONSUMER_BUFFERED_AMOUNT_LOW:
-				{
-					const notification = new FbsDataConsumer.BufferedAmountLowNotification();
-
-					data!.body(notification);
-
-					const bufferedAmount = notification.bufferedAmount();
-
-					this.safeEmit('bufferedamountlow', bufferedAmount);
-
-					break;
-				}
-
-				case Event.DATACONSUMER_MESSAGE:
-				{
-					if (this.#closed)
-					{
 						break;
 					}
 
-					const notification = new FbsDataConsumer.MessageNotification();
+					case Event.DATACONSUMER_BUFFERED_AMOUNT_LOW: {
+						const notification =
+							new FbsDataConsumer.BufferedAmountLowNotification();
 
-					data!.body(notification);
+						data!.body(notification);
 
-					this.safeEmit(
-						'message',
-						Buffer.from(notification.dataArray()!),
-						notification.ppid()
-					);
+						const bufferedAmount = notification.bufferedAmount();
 
-					break;
-				}
+						this.safeEmit('bufferedamountlow', bufferedAmount);
 
-				default:
-				{
-					logger.error('ignoring unknown event "%s" in channel listener', event);
+						break;
+					}
+
+					case Event.DATACONSUMER_MESSAGE: {
+						if (this.#closed) {
+							break;
+						}
+
+						const notification = new FbsDataConsumer.MessageNotification();
+
+						data!.body(notification);
+
+						this.safeEmit(
+							'message',
+							Buffer.from(notification.dataArray()!),
+							notification.ppid()
+						);
+
+						break;
+					}
+
+					default: {
+						logger.error(
+							'ignoring unknown event "%s" in channel listener',
+							event
+						);
+					}
 				}
 			}
-		});
+		);
 	}
 }
 
-export function dataConsumerTypeToFbs(type: DataConsumerType): FbsDataProducer.Type
-{
-	switch (type)
-	{
-		case 'sctp':
-		{
+export function dataConsumerTypeToFbs(
+	type: DataConsumerType
+): FbsDataProducer.Type {
+	switch (type) {
+		case 'sctp': {
 			return FbsDataProducer.Type.SCTP;
 		}
 
-		case 'direct':
-		{
+		case 'direct': {
 			return FbsDataProducer.Type.DIRECT;
 		}
 
-		default:
-		{
+		default: {
 			throw new TypeError('invalid DataConsumerType: ${type}');
 		}
 	}
 }
 
-export function dataConsumerTypeFromFbs(type: FbsDataProducer.Type): DataConsumerType
-{
-	switch (type)
-	{
-		case FbsDataProducer.Type.SCTP:
-		{
+export function dataConsumerTypeFromFbs(
+	type: FbsDataProducer.Type
+): DataConsumerType {
+	switch (type) {
+		case FbsDataProducer.Type.SCTP: {
 			return 'sctp';
 		}
 
-		case FbsDataProducer.Type.DIRECT:
-		{
+		case FbsDataProducer.Type.DIRECT: {
 			return 'direct';
 		}
 	}
@@ -796,35 +755,34 @@ export function dataConsumerTypeFromFbs(type: FbsDataProducer.Type): DataConsume
 
 export function parseDataConsumerDumpResponse(
 	data: FbsDataConsumer.DumpResponse
-): DataConsumerDump
-{
+): DataConsumerDump {
 	return {
-		id                   : data.id()!,
-		dataProducerId       : data.dataProducerId()!,
-		type                 : dataConsumerTypeFromFbs(data.type()),
-		sctpStreamParameters : data.sctpStreamParameters() !== null ?
-			parseSctpStreamParameters(data.sctpStreamParameters()!) :
-			undefined,
-		label                      : data.label()!,
-		protocol                   : data.protocol()!,
-		bufferedAmountLowThreshold : data.bufferedAmountLowThreshold(),
-		paused                     : data.paused(),
-		dataProducerPaused         : data.dataProducerPaused(),
-		subchannels                : utils.parseVector(data, 'subchannels')
+		id: data.id()!,
+		dataProducerId: data.dataProducerId()!,
+		type: dataConsumerTypeFromFbs(data.type()),
+		sctpStreamParameters:
+			data.sctpStreamParameters() !== null
+				? parseSctpStreamParameters(data.sctpStreamParameters()!)
+				: undefined,
+		label: data.label()!,
+		protocol: data.protocol()!,
+		bufferedAmountLowThreshold: data.bufferedAmountLowThreshold(),
+		paused: data.paused(),
+		dataProducerPaused: data.dataProducerPaused(),
+		subchannels: utils.parseVector(data, 'subchannels'),
 	};
 }
 
 function parseDataConsumerStats(
 	binary: FbsDataConsumer.GetStatsResponse
-): DataConsumerStat
-{
+): DataConsumerStat {
 	return {
-		type           : 'data-consumer',
-		timestamp      : Number(binary.timestamp()),
-		label          : binary.label()!,
-		protocol       : binary.protocol()!,
-		messagesSent   : Number(binary.messagesSent()),
-		bytesSent      : Number(binary.bytesSent()),
-		bufferedAmount : binary.bufferedAmount()
+		type: 'data-consumer',
+		timestamp: Number(binary.timestamp()),
+		label: binary.label()!,
+		protocol: binary.protocol()!,
+		messagesSent: Number(binary.messagesSent()),
+		bytesSent: Number(binary.bytesSent()),
+		bufferedAmount: binary.bufferedAmount(),
 	};
 }

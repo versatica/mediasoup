@@ -89,7 +89,7 @@ namespace RTC
 		{
 			return this->sctpBufferedAmount;
 		}
-		void ProcessSctpData(const uint8_t* data, size_t len);
+		void ProcessSctpData(const uint8_t* data, size_t len) const;
 		void SendSctpMessage(
 		  RTC::DataConsumer* dataConsumer,
 		  const uint8_t* msg,
@@ -101,7 +101,7 @@ namespace RTC
 		void DataConsumerClosed(RTC::DataConsumer* dataConsumer);
 
 	private:
-		void ResetSctpStream(uint16_t streamId, StreamDirection);
+		void ResetSctpStream(uint16_t streamId, StreamDirection direction);
 		void AddOutgoingStreams(bool force = false);
 
 		/* Callbacks fired by usrsctp events. */

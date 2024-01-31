@@ -36,27 +36,27 @@ namespace RTC
 	public:
 		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority)
 		  : foundation("udpcandidate"), priority(priority), ip(udpSocket->GetLocalIp()),
-		    protocol(Protocol::UDP), port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
+		    protocol(Protocol::UDP), port(udpSocket->GetLocalPort())
 		{
 		}
 
 		IceCandidate(RTC::UdpSocket* udpSocket, uint32_t priority, std::string& announcedIp)
 		  : foundation("udpcandidate"), priority(priority), ip(announcedIp), protocol(Protocol::UDP),
-		    port(udpSocket->GetLocalPort()), type(CandidateType::HOST)
+		    port(udpSocket->GetLocalPort())
 		{
 		}
 
 		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority)
 		  : foundation("tcpcandidate"), priority(priority), ip(tcpServer->GetLocalIp()),
-		    protocol(Protocol::TCP), port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
-		    tcpType(TcpCandidateType::PASSIVE)
+		    protocol(Protocol::TCP), port(tcpServer->GetLocalPort())
+
 		{
 		}
 
 		IceCandidate(RTC::TcpServer* tcpServer, uint32_t priority, std::string& announcedIp)
 		  : foundation("tcpcandidate"), priority(priority), ip(announcedIp), protocol(Protocol::TCP),
-		    port(tcpServer->GetLocalPort()), type(CandidateType::HOST),
-		    tcpType(TcpCandidateType::PASSIVE)
+		    port(tcpServer->GetLocalPort())
+
 		{
 		}
 

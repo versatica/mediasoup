@@ -76,13 +76,12 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 UnixStreamSocketHandle::UnixStreamSocketHandle(
   int fd, size_t bufferSize, UnixStreamSocketHandle::Role role)
-  : bufferSize(bufferSize), role(role)
+  : uvHandle(new uv_pipe_t), bufferSize(bufferSize), role(role)
 {
 	MS_TRACE_STD();
 
 	int err;
 
-	this->uvHandle       = new uv_pipe_t;
 	this->uvHandle->data = static_cast<void*>(this);
 
 	err = uv_pipe_init(DepLibUV::GetLoop(), this->uvHandle, 0);
@@ -252,7 +251,8 @@ uint32_t UnixStreamSocketHandle::GetSendBufferSize() const
 	MS_TRACE();
 
 	int size{ 0 };
-	int err = uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+	const int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
 	if (err)
 	{
@@ -266,15 +266,15 @@ void UnixStreamSocketHandle::SetSendBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
-	auto size_int = static_cast<int>(size);
+	auto sizeInt = static_cast<int>(size);
 
-	if (size_int <= 0)
+	if (sizeInt <= 0)
 	{
-		MS_THROW_TYPE_ERROR_STD("invalid size: %d", size_int);
+		MS_THROW_TYPE_ERROR_STD("invalid size: %d", sizeInt);
 	}
 
-	int err =
-	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+	const int err =
+	  uv_send_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(sizeInt));
 
 	if (err)
 	{
@@ -287,7 +287,8 @@ uint32_t UnixStreamSocketHandle::GetRecvBufferSize() const
 	MS_TRACE();
 
 	int size{ 0 };
-	int err = uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
+	const int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size));
 
 	if (err)
 	{
@@ -301,15 +302,15 @@ void UnixStreamSocketHandle::SetRecvBufferSize(uint32_t size)
 {
 	MS_TRACE();
 
-	auto size_int = static_cast<int>(size);
+	auto sizeInt = static_cast<int>(size);
 
-	if (size_int <= 0)
+	if (sizeInt <= 0)
 	{
-		MS_THROW_TYPE_ERROR_STD("invalid size: %d", size_int);
+		MS_THROW_TYPE_ERROR_STD("invalid size: %d", sizeInt);
 	}
 
-	int err =
-	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(size_int));
+	const int err =
+	  uv_recv_buffer_size(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(sizeInt));
 
 	if (err)
 	{

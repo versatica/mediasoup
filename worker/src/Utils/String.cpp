@@ -77,14 +77,14 @@ namespace Utils
 			*pos++ = '=';
 		}
 
-		return std::string(reinterpret_cast<const char*>(out), pos - out);
+		return { reinterpret_cast<const char*>(out), static_cast<size_t>(pos - out) };
 	}
 
 	std::string Utils::String::Base64Encode(const std::string& str)
 	{
 		MS_TRACE();
 
-		auto* data = reinterpret_cast<const uint8_t*>(str.c_str());
+		const auto* data = reinterpret_cast<const uint8_t*>(str.c_str());
 
 		return Base64Encode(data, str.size());
 	}
@@ -186,7 +186,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		auto* data = reinterpret_cast<const uint8_t*>(str.c_str());
+		const auto* data = reinterpret_cast<const uint8_t*>(str.c_str());
 
 		return Base64Decode(data, str.size(), outLen);
 	}

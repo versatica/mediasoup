@@ -20,11 +20,10 @@ inline static void onCloseTimer(uv_handle_t* handle)
 
 /* Instance methods. */
 
-TimerHandle::TimerHandle(Listener* listener) : listener(listener)
+TimerHandle::TimerHandle(Listener* listener) : listener(listener), uvHandle(new uv_timer_t)
 {
 	MS_TRACE();
 
-	this->uvHandle       = new uv_timer_t;
 	this->uvHandle->data = static_cast<void*>(this);
 
 	const int err = uv_timer_init(DepLibUV::GetLoop(), this->uvHandle);

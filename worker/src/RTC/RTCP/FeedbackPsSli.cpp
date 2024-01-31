@@ -3,7 +3,6 @@
 
 #include "RTC/RTCP/FeedbackPsSli.hpp"
 #include "Logger.hpp"
-#include <cstring>
 
 namespace RTC
 {

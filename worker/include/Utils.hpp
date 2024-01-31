@@ -57,9 +57,7 @@ namespace Utils
 					  std::memcmp(
 					    std::addressof(reinterpret_cast<const struct sockaddr_in6*>(addr1)->sin6_addr),
 					    std::addressof(reinterpret_cast<const struct sockaddr_in6*>(addr2)->sin6_addr),
-					    16) == 0
-					    ? true
-					    : false);
+					    16) == 0);
 				}
 
 				default:
@@ -71,7 +69,9 @@ namespace Utils
 
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr)
 		{
-			struct sockaddr_storage copiedAddr;
+			struct sockaddr_storage copiedAddr
+			{
+			};
 
 			switch (addr->sa_family)
 			{
@@ -125,7 +125,7 @@ namespace Utils
 			auto byte0 = data[i + 2]; // The less significant byte.
 
 			// Check bit 7 (sign).
-			uint8_t extension = byte2 & 0b10000000 ? 0b11111111 : 0b00000000;
+			const uint8_t extension = byte2 & 0b10000000 ? 0b11111111 : 0b00000000;
 
 			return int32_t{ byte0 } | (int32_t{ byte1 } << 8) | (int32_t{ byte2 } << 16) |
 			       (int32_t{ extension } << 24);
@@ -252,10 +252,10 @@ namespace Utils
 			return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 		}
 
-		static const std::string GetRandomString(size_t len)
+		static std::string GetRandomString(size_t len)
 		{
 			char buffer[64];
-			static const char chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+			static const char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
 				                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 				                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
@@ -266,10 +266,10 @@ namespace Utils
 
 			for (size_t i{ 0 }; i < len; ++i)
 			{
-				buffer[i] = chars[GetRandomUInt(0, sizeof(chars) - 1)];
+				buffer[i] = Chars[GetRandomUInt(0, sizeof(Chars) - 1)];
 			}
 
-			return std::string(buffer, len);
+			return { buffer, len };
 		}
 
 		static uint32_t GetCRC32(const uint8_t* data, size_t size)
@@ -279,7 +279,7 @@ namespace Utils
 
 			while (size--)
 			{
-				crc = Crypto::crc32Table[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
+				crc = Crypto::Crc32Table[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
 			}
 
 			return crc ^ ~0U;
@@ -292,7 +292,7 @@ namespace Utils
 		thread_local static EVP_MAC* mac;
 		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
 		thread_local static uint8_t hmacSha1Buffer[];
-		static const uint32_t crc32Table[256];
+		static const uint32_t Crc32Table[256];
 	};
 
 	class String
@@ -328,7 +328,7 @@ namespace Utils
 
 		static Time::Ntp TimeMs2Ntp(uint64_t ms)
 		{
-			Time::Ntp ntp; // NOLINT(cppcoreguidelines-pro-type-member-init)
+			Time::Ntp ntp{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			ntp.seconds = ms / 1000;
 			ntp.fractions =

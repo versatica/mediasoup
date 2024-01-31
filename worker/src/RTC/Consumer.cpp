@@ -5,8 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
 
 namespace RTC
 {
@@ -19,11 +17,10 @@ namespace RTC
 	  Listener* listener,
 	  const FBS::Transport::ConsumeRequest* data,
 	  RTC::RtpParameters::Type type)
-	  : id(id), producerId(producerId), shared(shared), listener(listener), type(type)
+	  : id(id), producerId(producerId), shared(shared), listener(listener),
+	    kind(RTC::Media::Kind(data->kind())), type(type)
 	{
 		MS_TRACE();
-
-		this->kind = RTC::Media::Kind(data->kind());
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());

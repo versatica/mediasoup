@@ -3,7 +3,6 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/SctpDictionaries.hpp"
 
 namespace RTC

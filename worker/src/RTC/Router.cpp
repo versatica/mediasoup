@@ -7,7 +7,6 @@
 #endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/ActiveSpeakerObserver.hpp"
 #include "RTC/AudioLevelObserver.hpp"
 #include "RTC/DirectTransport.hpp"

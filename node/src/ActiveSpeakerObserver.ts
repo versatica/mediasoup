@@ -4,15 +4,16 @@ import {
 	RtpObserver,
 	RtpObserverEvents,
 	RtpObserverObserverEvents,
-	RtpObserverConstructorOptions
+	RtpObserverConstructorOptions,
 } from './RtpObserver';
 import { Producer } from './Producer';
 import { AppData } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
 
-export type ActiveSpeakerObserverOptions<ActiveSpeakerObserverAppData extends AppData = AppData> =
-{
+export type ActiveSpeakerObserverOptions<
+	ActiveSpeakerObserverAppData extends AppData = AppData,
+> = {
 	interval?: number;
 
 	/**
@@ -21,21 +22,18 @@ export type ActiveSpeakerObserverOptions<ActiveSpeakerObserverAppData extends Ap
 	appData?: ActiveSpeakerObserverAppData;
 };
 
-export type ActiveSpeakerObserverDominantSpeaker =
-{
+export type ActiveSpeakerObserverDominantSpeaker = {
 	/**
 	 * The audio Producer instance.
 	 */
 	producer: Producer;
 };
 
-export type ActiveSpeakerObserverEvents = RtpObserverEvents &
-{
+export type ActiveSpeakerObserverEvents = RtpObserverEvents & {
 	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 
-export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents &
-{
+export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
 	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 
@@ -44,14 +42,18 @@ type RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData> =
 
 const logger = new Logger('ActiveSpeakerObserver');
 
-export class ActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData = AppData>
-	extends RtpObserver<ActiveSpeakerObserverAppData, ActiveSpeakerObserverEvents>
-{
+export class ActiveSpeakerObserver<
+	ActiveSpeakerObserverAppData extends AppData = AppData,
+> extends RtpObserver<
+	ActiveSpeakerObserverAppData,
+	ActiveSpeakerObserverEvents
+> {
 	/**
 	 * @private
 	 */
-	constructor(options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>)
-	{
+	constructor(
+		options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>
+	) {
 		super(options);
 
 		this.handleWorkerNotifications();
@@ -60,46 +62,42 @@ export class ActiveSpeakerObserver<ActiveSpeakerObserverAppData extends AppData 
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>
-	{
+	get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents> {
 		return super.observer;
 	}
 
-	private handleWorkerNotifications(): void
-	{
-		this.channel.on(this.internal.rtpObserverId, (event: Event, data?: Notification) =>
-		{
-			switch (event)
-			{
-				case Event.ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER:
-				{
-					const notification = new FbsActiveSpeakerObserver.DominantSpeakerNotification();
+	private handleWorkerNotifications(): void {
+		this.channel.on(
+			this.internal.rtpObserverId,
+			(event: Event, data?: Notification) => {
+				switch (event) {
+					case Event.ACTIVESPEAKEROBSERVER_DOMINANT_SPEAKER: {
+						const notification =
+							new FbsActiveSpeakerObserver.DominantSpeakerNotification();
 
-					data!.body(notification);
+						data!.body(notification);
 
-					const producer = this.getProducerById(notification.producerId()!);
+						const producer = this.getProducerById(notification.producerId()!);
 
-					if (!producer)
-					{
+						if (!producer) {
+							break;
+						}
+
+						const dominantSpeaker: ActiveSpeakerObserverDominantSpeaker = {
+							producer,
+						};
+
+						this.safeEmit('dominantspeaker', dominantSpeaker);
+						this.observer.safeEmit('dominantspeaker', dominantSpeaker);
+
 						break;
 					}
 
-					const dominantSpeaker: ActiveSpeakerObserverDominantSpeaker =
-					{
-						producer
-					};
-
-					this.safeEmit('dominantspeaker', dominantSpeaker);
-					this.observer.safeEmit('dominantspeaker', dominantSpeaker);
-
-					break;
-				}
-
-				default:
-				{
-					logger.error('ignoring unknown event "%s"', event);
+					default: {
+						logger.error('ignoring unknown event "%s"', event);
+					}
 				}
 			}
-		});
+		);
 	}
 }

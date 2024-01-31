@@ -11,6 +11,7 @@ enum TraceEventType: uint8 {
     NACK,
     PLI,
     RTP,
+    SR,
 }
 
 table EnableTraceEventRequest {
@@ -60,6 +61,7 @@ union TraceInfo {
     FirTraceInfo,
     PliTraceInfo,
     RtpTraceInfo,
+    SrTraceInfo,
 }
 
 table KeyFrameTraceInfo {
@@ -78,6 +80,15 @@ table PliTraceInfo {
 table RtpTraceInfo {
     rtp_packet: FBS.RtpPacket.Dump (required);
     is_rtx: bool;
+}
+
+table SrTraceInfo {
+    ssrc: uint32;
+    ntp_sec: uint32;
+    ntp_frac: uint32;
+    rtp_ts: uint32;
+    packet_count: uint32;
+    octet_count: uint32;
 }
 
 table TraceNotification {

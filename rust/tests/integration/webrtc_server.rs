@@ -64,6 +64,7 @@ fn create_webrtc_server_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port1),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -72,6 +73,7 @@ fn create_webrtc_server_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
                     port: Some(port2),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -158,6 +160,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -166,6 +169,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
                     port: None,
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 });
@@ -239,6 +243,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                         port: Some(port1),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -247,6 +252,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4)),
                         announced_ip: None,
                         port: Some(port2),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -270,6 +276,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                         port: Some(port1),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -278,6 +285,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                         announced_ip: Some(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4))),
                         port: Some(port1),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     });
@@ -301,6 +309,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                         port: Some(port1),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     },
@@ -315,6 +324,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_ip: None,
                         port: Some(port1),
+                        flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
                     },
@@ -343,6 +353,7 @@ fn close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_ip: None,
                     port: Some(port),
+                    flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
                 },

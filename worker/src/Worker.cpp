@@ -50,7 +50,7 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 
 	// Tell the Node process that we are running.
 	this->shared->channelNotifier->Emit(
-	  std::to_string(Logger::pid), FBS::Notification::Event::WORKER_RUNNING);
+	  std::to_string(Logger::Pid), FBS::Notification::Event::WORKER_RUNNING);
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -143,7 +143,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 
 	return FBS::Worker::CreateDumpResponseDirect(
 	  builder,
-	  Logger::pid,
+	  Logger::Pid,
 	  &webRtcServerIds,
 	  &routerIds,
 	  channelMessageHandlers
@@ -310,9 +310,9 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			try
 			{
-				const auto body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
+				const auto* const body = request->data->body_as<FBS::Worker::CreateWebRtcServerRequest>();
 
-				std::string webRtcServerId = body->webRtcServerId()->str();
+				const std::string webRtcServerId = body->webRtcServerId()->str();
 
 				CheckNoWebRtcServer(webRtcServerId);
 
@@ -340,7 +340,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			RTC::WebRtcServer* webRtcServer{ nullptr };
 
-			auto body = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
+			const auto* body = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 
 			auto webRtcServerId = body->webRtcServerId()->str();
 
@@ -367,7 +367,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CREATE_ROUTER:
 		{
-			auto body = request->data->body_as<FBS::Worker::CreateRouterRequest>();
+			const auto* body = request->data->body_as<FBS::Worker::CreateRouterRequest>();
 
 			auto routerId = body->routerId()->str();
 
@@ -395,7 +395,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 		{
 			RTC::Router* router{ nullptr };
 
-			auto body = request->data->body_as<FBS::Worker::CloseRouterRequest>();
+			const auto* body = request->data->body_as<FBS::Worker::CloseRouterRequest>();
 
 			auto routerId = body->routerId()->str();
 

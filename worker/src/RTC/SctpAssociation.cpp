@@ -115,13 +115,11 @@ namespace RTC
 	  size_t maxSctpMessageSize,
 	  size_t sctpSendBufferSize,
 	  bool isDataChannel)
-	  : listener(listener), os(os), mis(mis), maxSctpMessageSize(maxSctpMessageSize),
-	    sctpSendBufferSize(sctpSendBufferSize), isDataChannel(isDataChannel)
+	  : id(DepUsrSCTP::GetNextSctpAssociationId()), listener(listener), os(os), mis(mis),
+	    maxSctpMessageSize(maxSctpMessageSize), sctpSendBufferSize(sctpSendBufferSize),
+	    isDataChannel(isDataChannel)
 	{
 		MS_TRACE();
-
-		// Get a id for this SctpAssociation.
-		this->id = DepUsrSCTP::GetNextSctpAssociationId();
 
 		// Register ourselves in usrsctp.
 		// NOTE: This must be done before calling usrsctp_bind().
@@ -129,6 +127,7 @@ namespace RTC
 
 		int ret;
 
+		// NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
 		this->socket = usrsctp_socket(
 		  AF_CONN,
 		  SOCK_STREAM,
@@ -161,7 +160,9 @@ namespace RTC
 		// This ensures that the usrsctp close call deletes the association. This
 		// prevents usrsctp from calling the global send callback with references to
 		// this class as the address.
-		struct linger lingerOpt; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct linger lingerOpt
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		lingerOpt.l_onoff  = 1;
 		lingerOpt.l_linger = 0;
@@ -176,7 +177,9 @@ namespace RTC
 		}
 
 		// Set SCTP_ENABLE_STREAM_RESET.
-		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_assoc_value av
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		av.assoc_value =
 		  SCTP_ENABLE_RESET_STREAM_REQ | SCTP_ENABLE_RESET_ASSOC_REQ | SCTP_ENABLE_CHANGE_ASSOC_REQ;
@@ -203,7 +206,9 @@ namespace RTC
 		}
 
 		// Enable events.
-		struct sctp_event event; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_event event
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&event, 0, sizeof(event));
 		event.se_on = 1;
@@ -223,7 +228,9 @@ namespace RTC
 		}
 
 		// Init message.
-		struct sctp_initmsg initmsg; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_initmsg initmsg
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&initmsg, 0, sizeof(initmsg));
 		initmsg.sinit_num_ostreams  = this->os;
@@ -239,7 +246,9 @@ namespace RTC
 		}
 
 		// Server side.
-		struct sockaddr_conn sconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sockaddr_conn sconn
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&sconn, 0, sizeof(sconn));
 		sconn.sconn_family = AF_CONN;
@@ -300,7 +309,9 @@ namespace RTC
 		try
 		{
 			int ret;
-			struct sockaddr_conn rconn; // NOLINT(cppcoreguidelines-pro-type-member-init)
+			struct sockaddr_conn rconn
+			{
+			}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			std::memset(&rconn, 0, sizeof(rconn));
 			rconn.sconn_family = AF_CONN;
@@ -318,7 +329,7 @@ namespace RTC
 			}
 
 			// Disable MTU discovery.
-			sctp_paddrparams peerAddrParams; // NOLINT(cppcoreguidelines-pro-type-member-init)
+			sctp_paddrparams peerAddrParams{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			std::memset(&peerAddrParams, 0, sizeof(peerAddrParams));
 			std::memcpy(&peerAddrParams.spp_address, &rconn, sizeof(rconn));
@@ -370,7 +381,7 @@ namespace RTC
 		  this->isDataChannel);
 	}
 
-	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len)
+	void SctpAssociation::ProcessSctpData(const uint8_t* data, size_t len) const
 	{
 		MS_TRACE();
 
@@ -396,7 +407,9 @@ namespace RTC
 		const auto& parameters = dataConsumer->GetSctpStreamParameters();
 
 		// Fill sctp_sendv_spa.
-		struct sctp_sendv_spa spa; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_sendv_spa spa
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&spa, 0, sizeof(spa));
 		spa.sendv_flags             = SCTP_SEND_SNDINFO_VALID;
@@ -436,12 +449,12 @@ namespace RTC
 		// via onSendSctpData.
 		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
 
-		int ret = usrsctp_sendv(
+		const int ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret < 0)
 		{
-			bool sctpSendBufferFull = errno == EWOULDBLOCK || errno == EAGAIN;
+			const bool sctpSendBufferFull = errno == EWOULDBLOCK || errno == EAGAIN;
 
 			// SCTP send buffer being full is legit, not an error.
 			if (sctpSendBufferFull)
@@ -535,7 +548,9 @@ namespace RTC
 		}
 
 		int ret;
-		struct sctp_assoc_value av; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_assoc_value av
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		socklen_t len = sizeof(av);
 
 		ret = usrsctp_getsockopt(this->socket, IPPROTO_SCTP, SCTP_RECONFIG_SUPPORTED, &av, &len);
@@ -633,7 +648,9 @@ namespace RTC
 			return;
 		}
 
-		struct sctp_add_streams sas; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_add_streams sas
+		{
+		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&sas, 0, sizeof(sas));
 		sas.sas_instrms  = 0;
@@ -641,7 +658,7 @@ namespace RTC
 
 		MS_DEBUG_TAG(sctp, "adding %" PRIu16 " outgoing streams", additionalOs);
 
-		int ret = usrsctp_setsockopt(
+		const int ret = usrsctp_setsockopt(
 		  this->socket, IPPROTO_SCTP, SCTP_ADD_STREAMS, &sas, static_cast<socklen_t>(sizeof(sas)));
 
 		if (ret < 0)

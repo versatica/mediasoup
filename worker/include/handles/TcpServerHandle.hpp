@@ -13,8 +13,8 @@ public:
 	/**
 	 * uvHandle must be an already initialized and binded uv_tcp_t pointer.
 	 */
-	TcpServerHandle(uv_tcp_t* uvHandle);
-	virtual ~TcpServerHandle() override;
+	explicit TcpServerHandle(uv_tcp_t* uvHandle);
+	~TcpServerHandle() override;
 
 public:
 	void Close();
@@ -64,7 +64,9 @@ public:
 	void OnTcpConnectionClosed(TcpConnectionHandle* connection) override;
 
 protected:
-	struct sockaddr_storage localAddr;
+	struct sockaddr_storage localAddr
+	{
+	};
 	std::string localIp;
 	uint16_t localPort{ 0u };
 

@@ -38,7 +38,7 @@ namespace RTC
 
 	public:
 		explicit Router(RTC::Shared* shared, const std::string& id, Listener* listener);
-		virtual ~Router();
+		~Router() override;
 
 	public:
 		flatbuffers::Offset<FBS::Router::DumpResponse> FillBuffer(
@@ -111,7 +111,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpObserver::Listener. */
 	public:
-		RTC::Producer* RtpObserverGetProducer(RTC::RtpObserver*, const std::string& id) override;
+		RTC::Producer* RtpObserverGetProducer(RTC::RtpObserver* rtpObserver, const std::string& id) override;
 		void OnRtpObserverAddProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer) override;
 		void OnRtpObserverRemoveProducer(RTC::RtpObserver* rtpObserver, RTC::Producer* producer) override;
 

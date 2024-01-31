@@ -4,7 +4,7 @@ import {
 	RtpObserver,
 	RtpObserverEvents,
 	RtpObserverObserverEvents,
-	RtpObserverConstructorOptions
+	RtpObserverConstructorOptions,
 } from './RtpObserver';
 import { Producer } from './Producer';
 import { AppData } from './types';
@@ -12,8 +12,9 @@ import * as utils from './utils';
 import { Event, Notification } from './fbs/notification';
 import * as FbsAudioLevelObserver from './fbs/audio-level-observer';
 
-export type AudioLevelObserverOptions<AudioLevelObserverAppData extends AppData = AppData> =
-{
+export type AudioLevelObserverOptions<
+	AudioLevelObserverAppData extends AppData = AppData,
+> = {
 	/**
 	 * Maximum number of entries in the 'volumes”' event. Default 1.
 	 */
@@ -36,8 +37,7 @@ export type AudioLevelObserverOptions<AudioLevelObserverAppData extends AppData 
 	appData?: AudioLevelObserverAppData;
 };
 
-export type AudioLevelObserverVolume =
-{
+export type AudioLevelObserverVolume = {
 	/**
 	 * The audio Producer instance.
 	 */
@@ -50,14 +50,12 @@ export type AudioLevelObserverVolume =
 	volume: number;
 };
 
-export type AudioLevelObserverEvents = RtpObserverEvents &
-{
+export type AudioLevelObserverEvents = RtpObserverEvents & {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
 };
 
-export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & 
-{
+export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
 };
@@ -67,14 +65,15 @@ type AudioLevelObserverConstructorOptions<AudioLevelObserverAppData> =
 
 const logger = new Logger('AudioLevelObserver');
 
-export class AudioLevelObserver<AudioLevelObserverAppData extends AppData = AppData>
-	extends RtpObserver<AudioLevelObserverAppData, AudioLevelObserverEvents>
-{
+export class AudioLevelObserver<
+	AudioLevelObserverAppData extends AppData = AppData,
+> extends RtpObserver<AudioLevelObserverAppData, AudioLevelObserverEvents> {
 	/**
 	 * @private
 	 */
-	constructor(options: AudioLevelObserverConstructorOptions<AudioLevelObserverAppData>)
-	{
+	constructor(
+		options: AudioLevelObserverConstructorOptions<AudioLevelObserverAppData>
+	) {
 		super(options);
 
 		this.handleWorkerNotifications();
@@ -83,72 +82,73 @@ export class AudioLevelObserver<AudioLevelObserverAppData extends AppData = AppD
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents>
-	{
+	get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents> {
 		return super.observer;
 	}
 
-	private handleWorkerNotifications(): void
-	{
-		this.channel.on(this.internal.rtpObserverId, (event: Event, data?: Notification) =>
-		{
-			switch (event)
-			{
-				case Event.AUDIOLEVELOBSERVER_VOLUMES:
-				{
-					const notification = new FbsAudioLevelObserver.VolumesNotification();
+	private handleWorkerNotifications(): void {
+		this.channel.on(
+			this.internal.rtpObserverId,
+			(event: Event, data?: Notification) => {
+				switch (event) {
+					case Event.AUDIOLEVELOBSERVER_VOLUMES: {
+						const notification =
+							new FbsAudioLevelObserver.VolumesNotification();
 
-					data!.body(notification);
+						data!.body(notification);
 
-					// Get the corresponding Producer instance and remove entries with
-					// no Producer (it may have been closed in the meanwhile).
-					const volumes: AudioLevelObserverVolume[] =
-						utils.parseVector(notification, 'volumes', parseVolume)
-							.map(({ producerId, volume }: { producerId: string; volume: number }) => (
-								{
-									producer : this.getProducerById(producerId)!,
-									volume
-								}
-							))
+						// Get the corresponding Producer instance and remove entries with
+						// no Producer (it may have been closed in the meanwhile).
+						const volumes: AudioLevelObserverVolume[] = utils
+							.parseVector(notification, 'volumes', parseVolume)
+							.map(
+								({
+									producerId,
+									volume,
+								}: {
+									producerId: string;
+									volume: number;
+								}) => ({
+									producer: this.getProducerById(producerId)!,
+									volume,
+								})
+							)
 							.filter(({ producer }: { producer: Producer }) => producer);
 
-					if (volumes.length > 0)
-					{
-						this.safeEmit('volumes', volumes);
+						if (volumes.length > 0) {
+							this.safeEmit('volumes', volumes);
 
-						// Emit observer event.
-						this.observer.safeEmit('volumes', volumes);
+							// Emit observer event.
+							this.observer.safeEmit('volumes', volumes);
+						}
+
+						break;
 					}
 
-					break;
-				}
+					case Event.AUDIOLEVELOBSERVER_SILENCE: {
+						this.safeEmit('silence');
 
-				case Event.AUDIOLEVELOBSERVER_SILENCE:
-				{
-					this.safeEmit('silence');
+						// Emit observer event.
+						this.observer.safeEmit('silence');
 
-					// Emit observer event.
-					this.observer.safeEmit('silence');
+						break;
+					}
 
-					break;
-				}
-
-				default:
-				{
-					logger.error('ignoring unknown event "%s"', event);
+					default: {
+						logger.error('ignoring unknown event "%s"', event);
+					}
 				}
 			}
-		});
+		);
 	}
 }
 
 function parseVolume(binary: FbsAudioLevelObserver.Volume): {
 	producerId: string;
 	volume: number;
-}
-{
+} {
 	return {
-		producerId : binary.producerId()!,
-		volume     : binary.volume()
+		producerId: binary.producerId()!,
+		volume: binary.volume(),
 	};
 }

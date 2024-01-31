@@ -89,6 +89,7 @@ namespace RTC
 			bool nack{ false };
 			bool pli{ false };
 			bool fir{ false };
+			bool sr{ false };
 		};
 
 	public:
@@ -97,7 +98,7 @@ namespace RTC
 		  const std::string& id,
 		  RTC::Producer::Listener* listener,
 		  const FBS::Transport::ProduceRequest* data);
-		virtual ~Producer();
+		~Producer() override;
 
 	public:
 		flatbuffers::Offset<FBS::Producer::DumpResponse> FillBuffer(
@@ -160,6 +161,7 @@ namespace RTC
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
+		void EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */

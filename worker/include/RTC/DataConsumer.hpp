@@ -52,7 +52,7 @@ namespace RTC
 		  RTC::DataConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeDataRequest* data,
 		  size_t maxMessageSize);
-		virtual ~DataConsumer();
+		~DataConsumer() override;
 
 	public:
 		flatbuffers::Offset<FBS::DataConsumer::DumpResponse> FillBuffer(
@@ -104,7 +104,7 @@ namespace RTC
 		  uint32_t ppid,
 		  std::vector<uint16_t>& subchannels,
 		  std::optional<uint16_t> requiredSubchannel,
-		  onQueuedCallback* = nullptr);
+		  onQueuedCallback* cb = nullptr);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
 	public:

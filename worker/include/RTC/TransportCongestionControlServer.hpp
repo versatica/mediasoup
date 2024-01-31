@@ -32,7 +32,7 @@ namespace RTC
 		  RTC::TransportCongestionControlServer::Listener* listener,
 		  RTC::BweType bweType,
 		  size_t maxRtcpPacketLen);
-		virtual ~TransportCongestionControlServer();
+		~TransportCongestionControlServer() override;
 
 	public:
 		RTC::BweType GetBweType() const

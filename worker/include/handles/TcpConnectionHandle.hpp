@@ -24,9 +24,8 @@ public:
 	/* Struct for the data field of uv_req_t when writing into the connection. */
 	struct UvWriteData
 	{
-		explicit UvWriteData(size_t storeSize)
+		explicit UvWriteData(size_t storeSize) : store(new uint8_t[storeSize])
 		{
-			this->store = new uint8_t[storeSize];
 		}
 
 		// Disable copy constructor because of the dynamically allocated data (store).
@@ -38,7 +37,7 @@ public:
 			delete this->cb;
 		}
 
-		uv_write_t req;
+		uv_write_t req{};
 		uint8_t* store{ nullptr };
 		TcpConnectionHandle::onSendCallback* cb{ nullptr };
 	};
@@ -132,7 +131,9 @@ protected:
 	size_t bufferDataLen{ 0u };
 	std::string localIp;
 	uint16_t localPort{ 0u };
-	struct sockaddr_storage peerAddr;
+	struct sockaddr_storage peerAddr
+	{
+	};
 	std::string peerIp;
 	uint16_t peerPort{ 0u };
 

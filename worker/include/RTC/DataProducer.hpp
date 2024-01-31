@@ -48,7 +48,7 @@ namespace RTC
 		  size_t maxMessageSize,
 		  RTC::DataProducer::Listener* listener,
 		  const FBS::Transport::ProduceDataRequest* data);
-		virtual ~DataProducer();
+		~DataProducer() override;
 
 	public:
 		flatbuffers::Offset<FBS::DataProducer::DumpResponse> FillBuffer(

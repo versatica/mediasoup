@@ -14,9 +14,8 @@ public:
 	/* Struct for the data field of uv_req_t when sending a datagram. */
 	struct UvSendData
 	{
-		explicit UvSendData(size_t storeSize)
+		explicit UvSendData(size_t storeSize) : store(new uint8_t[storeSize])
 		{
-			this->store = new uint8_t[storeSize];
 		}
 
 		// Disable copy constructor because of the dynamically allocated data (store).
@@ -28,7 +27,7 @@ public:
 			delete this->cb;
 		}
 
-		uv_udp_send_t req;
+		uv_udp_send_t req{};
 		uint8_t* store{ nullptr };
 		UdpSocketHandle::onSendCallback* cb{ nullptr };
 	};
@@ -95,7 +94,9 @@ protected:
 	  const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
 
 protected:
-	struct sockaddr_storage localAddr;
+	struct sockaddr_storage localAddr
+	{
+	};
 	std::string localIp;
 	uint16_t localPort{ 0u };
 

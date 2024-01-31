@@ -7,13 +7,10 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
-#include "RTC/RTCP/FeedbackPs.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <absl/container/inlined_vector.h>
-#include <cstring>  // std::memcpy()
-#include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -32,12 +29,9 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Producer::Listener* listener,
 	  const FBS::Transport::ProduceRequest* data)
-	  : id(id), shared(shared), listener(listener)
+	  : id(id), shared(shared), listener(listener), kind(RTC::Media::Kind(data->kind()))
 	{
 		MS_TRACE();
-
-		// This may throw.
-		this->kind = RTC::Media::Kind(data->kind());
 
 		// This may throw.
 		this->rtpParameters = RTC::RtpParameters(data->rtpParameters());
@@ -488,6 +482,12 @@ namespace RTC
 
 							break;
 						}
+						case FBS::Producer::TraceEventType::SR:
+						{
+							newTraceEventTypes.sr = true;
+
+							break;
+						}
 					}
 				}
 
@@ -705,6 +705,8 @@ namespace RTC
 			rtpStream->ReceiveRtcpSenderReport(report);
 
 			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
+
+			EmitTraceEventSrType(report);
 
 			return;
 		}
@@ -1572,6 +1574,35 @@ namespace RTC
 		  FBS::Producer::TraceEventType::NACK,
 		  DepLibUV::GetTimeMs(),
 		  FBS::Common::TraceDirection::DIRECTION_OUT);
+
+		EmitTraceEvent(notification);
+	}
+
+	inline void Producer::EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const
+	{
+		MS_TRACE();
+
+		if (!this->traceEventTypes.sr)
+		{
+			return;
+		}
+
+		auto traceInfo = FBS::Producer::CreateSrTraceInfo(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  report->GetSsrc(),
+		  report->GetNtpSec(),
+		  report->GetNtpFrac(),
+		  report->GetRtpTs(),
+		  report->GetPacketCount(),
+		  report->GetOctetCount());
+
+		auto notification = FBS::Producer::CreateTraceNotification(
+		  this->shared->channelNotifier->GetBufferBuilder(),
+		  FBS::Producer::TraceEventType::SR,
+		  DepLibUV::GetTimeMs(),
+		  FBS::Common::TraceDirection::DIRECTION_IN,
+		  FBS::Producer::TraceInfo::SrTraceInfo,
+		  traceInfo.Union());
 
 		EmitTraceEvent(notification);
 	}

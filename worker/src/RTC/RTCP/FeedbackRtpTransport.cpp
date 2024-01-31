@@ -5,8 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
-#include <limits> // std::numeric_limits()
-#include <sstream>
+#include <sstream> // std::ostringstream
 
 namespace RTC
 {
@@ -62,7 +61,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+			const size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
 
 			if (len > availableLen)
 			{
@@ -86,8 +85,8 @@ namespace RTC
 			// Make contentData point to the beginning of the chunks.
 			uint8_t* contentData = data + FeedbackRtpTransportPacket::fixedHeaderSize;
 			// Make contentLen be the available length for chunks.
-			size_t contentLen = len - Packet::CommonHeaderSize - FeedbackPacket::HeaderSize -
-			                    FeedbackRtpTransportPacket::fixedHeaderSize;
+			const size_t contentLen = len - Packet::CommonHeaderSize - FeedbackPacket::HeaderSize -
+			                          FeedbackRtpTransportPacket::fixedHeaderSize;
 			size_t offset{ 0u };
 			uint16_t count{ 0u };
 			uint16_t receivedPacketStatusCount{ 0u };
@@ -615,8 +614,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto bytes        = Utils::Byte::Get2Bytes(data, 0);
-			uint8_t chunkType = (bytes >> 15) & 0x01;
+			auto bytes              = Utils::Byte::Get2Bytes(data, 0);
+			const uint8_t chunkType = (bytes >> 15) & 0x01;
 
 			// Run length chunk.
 			if (chunkType == 0)
@@ -646,7 +645,7 @@ namespace RTC
 			// Vector chunk.
 			else
 			{
-				uint8_t symbolSize = data[0] & 0x40;
+				const uint8_t symbolSize = data[0] & 0x40;
 
 				if (symbolSize == 0)
 				{
@@ -747,7 +746,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			bool received = (this->status == Status::SmallDelta || this->status == Status::LargeDelta);
+			const bool received =
+			  (this->status == Status::SmallDelta || this->status == Status::LargeDelta);
 
 			for (uint16_t count{ 1u }; count <= this->count; ++count)
 			{
@@ -872,7 +872,7 @@ namespace RTC
 
 			for (auto status : this->statuses)
 			{
-				bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
+				const bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
 
 				packetResults.emplace_back(++currentSequenceNumber, received);
 			}
@@ -1012,7 +1012,7 @@ namespace RTC
 
 			for (auto status : this->statuses)
 			{
-				bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
+				const bool received = (status == Status::SmallDelta || status == Status::LargeDelta);
 
 				packetResults.emplace_back(++currentSequenceNumber, received);
 			}

@@ -6,33 +6,29 @@ const task = process.argv.slice(2).join(' ');
 
 run();
 
-async function run()
-{
+async function run() {
 	const clangFormatNativeBinary = clangFormat.getNativeBinary();
-	const workerFiles = await glob(
-		[
-			'../src/**/*.cpp',
-			'../include/**/*.hpp',
-			'../test/src/**/*.cpp',
-			'../test/include/helpers.hpp',
-			'../fuzzer/src/**/*.cpp',
-			'../fuzzer/include/**/*.hpp'
-		]
-	);
+	const workerFiles = await glob([
+		'../src/**/*.cpp',
+		'../include/**/*.hpp',
+		'../test/src/**/*.cpp',
+		'../test/include/helpers.hpp',
+		'../fuzzer/src/**/*.cpp',
+		'../fuzzer/include/**/*.hpp',
+	]);
 
-	switch (task)
-	{
-		case 'lint':
-		{
+	switch (task) {
+		case 'lint': {
 			executeCmd(
-				`"${clangFormatNativeBinary}" --Werror --dry-run ${workerFiles.join(' ')}`
+				`"${clangFormatNativeBinary}" --Werror --dry-run ${workerFiles.join(
+					' '
+				)}`
 			);
 
 			break;
 		}
 
-		case 'format':
-		{
+		case 'format': {
 			executeCmd(
 				`"${clangFormatNativeBinary}" --Werror -i ${workerFiles.join(' ')}`
 			);
@@ -40,8 +36,7 @@ async function run()
 			break;
 		}
 
-		default:
-		{
+		default: {
 			logError('unknown task');
 
 			exitWithError();
@@ -49,14 +44,10 @@ async function run()
 	}
 }
 
-function executeCmd(command)
-{
-	try
-	{
-		execSync(command, { stdio: [ 'ignore', process.stdout, process.stderr ] });
-	}
-	catch (error)
-	{
+function executeCmd(command) {
+	try {
+		execSync(command, { stdio: ['ignore', process.stdout, process.stderr] });
+	} catch (error) {
 		logError('executeCmd() failed');
 
 		exitWithError();
@@ -64,26 +55,22 @@ function executeCmd(command)
 }
 
 // eslint-disable-next-line no-unused-vars
-function logInfo(message)
-{
+function logInfo(message) {
 	// eslint-disable-next-line no-console
-	console.log(`clang-format.mjs \x1b[36m[INFO] [${task}]\x1b\[0m`, message);
+	console.log(`clang-format.mjs \x1b[36m[INFO] [${task}]\x1b[0m`, message);
 }
 
 // eslint-disable-next-line no-unused-vars
-function logWarn(message)
-{
+function logWarn(message) {
 	// eslint-disable-next-line no-console
-	console.warn(`clang-format.mjs \x1b[33m[WARN] [${task}]\x1b\[0m`, message);
+	console.warn(`clang-format.mjs \x1b[33m[WARN] [${task}]\x1b[0m`, message);
 }
 
-function logError(message)
-{
+function logError(message) {
 	// eslint-disable-next-line no-console
-	console.error(`clang-format.mjs \x1b[31m[ERROR] [${task}]\x1b\[0m`, message);
+	console.error(`clang-format.mjs \x1b[31m[ERROR] [${task}]\x1b[0m`, message);
 }
 
-function exitWithError()
-{
+function exitWithError() {
 	process.exit(1);
 }

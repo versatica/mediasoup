@@ -8,11 +8,11 @@ The `package.json` file in the main folder includes the following scripts:
 
 ### `npm run typescript:build`
 
-Compiles mediasoup TypeScript code (`lib` folder) JavaScript and places it into the `lib` directory.
+Compiles mediasoup TypeScript code (`node/src` folder) JavaScript and places it into the `node/lib` directory.
 
 ### `npm run typescript:watch`
 
-Compiles mediasoup TypeScript code (`lib` folder) JavaScript, places it into the `lib` directory an watches for changes in the TypeScript files.
+Compiles mediasoup TypeScript code (`node/src` folder) JavaScript, places it into the `node/lib` directory an watches for changes in the TypeScript files.
 
 ### `npm run worker:build`
 
@@ -33,6 +33,14 @@ Validates mediasoup JavaScript files using [ESLint](https://eslint.org).
 ### `npm run lint:worker`
 
 Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org/docs/ClangFormat.html). It invokes `invoke lint` below.
+
+### `npm run format`
+
+Runs both `npm run format:node` and `npm run format:worker`.
+
+### `npm run format:node`
+
+Format TypeScript and JavaScript code using [Prettier](https://prettier.io).
 
 ### `npm run format:worker`
 
@@ -56,11 +64,17 @@ Runs both `npm run test:node` and `npm run test:worker`.
 
 ### `npm run test:node`
 
-Runs [Jest](https://jestjs.io) test units located at `test/` folder.
+Runs [Jest](https://jestjs.io) test units located at `node/test` folder.
+
+Jest command arguments can be given using `--` as follows:
+
+```bash
+npm run test:node -- --testPathPattern "test-Worker.ts" --testNamePattern "createWorker"
+```
 
 ### `npm run test:worker`
 
-Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/test/` folder. It invokes `invoke test` below.
+Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/test` folder. It invokes `invoke test` below.
 
 ### `npm run coverage:node`
 
@@ -78,13 +92,13 @@ It is not necessary for normal usage of mediasoup as a dependency.
 
 ## Python Invoke and `tasks.py` file
 
-mediasoup uses Python [Invoke](https://www.pyinvoke.org/) library for managing and organizing tasks in the `worker` folder (mediasoup worker C++ subproject). `Invoke` is basically a replacemente of `make` + `Makefile` written in Python. mediasoup automatically installs `Invoke` in a local custom path during the installation process (in both Node and Rust) so the user doesn't need to worry about it.
+mediasoup uses Python [Invoke](https://www.pyinvoke.org) library for managing and organizing tasks in the `worker` folder (mediasoup worker C++ subproject). `Invoke` is basically a replacemente of `make` + `Makefile` written in Python. mediasoup automatically installs `Invoke` in a local custom path during the installation process (in both Node and Rust) so the user doesn't need to worry about it.
 
 Tasks are defined in `worker/tasks.py`. For development purposes, developers or contributors can install `Invoke` using `pip3 install invoke` and run tasks below within the `worker` folder.
 
 See all the tasks by running `invoke --list` within the `worker` folder.
 
-*NOTE:* For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
+_NOTE:_ For some of these tasks to work, npm dependencies of `worker/scripts/package.json` must be installed:
 
 ```bash
 npm ci --prefix worker/scripts
@@ -120,16 +134,17 @@ Cleans built objects and binaries, `meson` and `ninja` installed in local prefix
 
 ### `invoke update-wrap-file [subproject]`
 
-Updates the wrap file of a subproject (those in `worker/subprojects` folder) with Meson. Usage example:
+Updates the wrap file of a subproject (those in `worker/subprojects` folder) with Meson. After updating it, `invoke setup` must be called by passing `MESON_ARGS="--reconfigure"` environment variable. Usage example:
 
 ```bash
 cd worker
 invoke update-wrap-file openssl
+MESON_ARGS="--reconfigure" invoke setup
 ```
 
 ### `invoke mediasoup-worker`
 
-Builds the `mediasoup-worker` binary at `worker/out/Release/`.
+Builds the `mediasoup-worker` binary at `worker/out/Release`.
 
 If the "MEDIASOUP_MAX_CORES" environment variable is set, the build process will use that number of CPU cores. Otherwise it will auto-detect the number of cores in the machine.
 
@@ -139,7 +154,7 @@ Check the meaning of useful macros in the `worker/include/Logger.hpp` header fil
 
 Binary is built at `worker/out/MEDIASOUP_BUILDTYPE/build`.
 
-In order to instruct the mediasoup Node.js module to use the "Debug"` `mediasoup-worker` binary, an environment variable must be set before running the Node.js application:
+In order to instruct the mediasoup Node.js module to use the "Debug" mediasoup-worker` binary, an environment variable must be set before running the Node.js application:
 
 ```bash
 MEDIASOUP_BUILDTYPE=Debug node myapp.js
@@ -153,7 +168,7 @@ MEDIASOUP_WORKER_BIN="/home/xxx/src/foo/mediasoup-worker" node myapp.js
 
 ### `invoke libmediasoup-worker`
 
-Builds the `libmediasoup-worker` static library at `worker/out/Release/`.
+Builds the `libmediasoup-worker` static library at `worker/out/Release`.
 
 "MEDIASOUP_MAX_CORES"` and "MEDIASOUP_BUILDTYPE" environment variables from above still apply for static library build.
 
@@ -171,7 +186,7 @@ Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/
 
 ### `invoke test`
 
-Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test/` folder.
+Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release` (or at `worker/out/Debug` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test` folder.
 
 ### `invoke test-asan`
 
@@ -179,25 +194,36 @@ Run test with Address Sanitizer.
 
 ### `invoke tidy`
 
-Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy/) and performs C++ code checks following `worker/.clang-tidy` rules.
+Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code checks following `worker/.clang-tidy` rules.
 
 **Requirements:**
 
-* `invoke clean` and `invoke mediasoup-worker` must have been called first.
-* [PyYAML](https://pyyaml.org/) is required.
-  - In OSX install it with `brew install libyaml` and `sudo easy_install-X.Y pyyaml`.
+- `invoke clean` and `invoke mediasoup-worker` must have been called first.
+- [clang-tools-extra](https://clang.llvm.org/extra) is required.
+  - In OSX install it with `brew install llvm`.
+  - In linux the package name is `clang-tools-extra`.
 
-"MEDIASOUP_TIDY_CHECKS" environment variable with a comma separated list of checks overrides the checks defined in `.clang-tidy` file.
+**Environment variables:**
+
+- "MEDIASOUP_TIDY_CHECKS": Comma separated list of checks. Overrides the checks defined in `worker/.clang-tidy` file.
+- "MEDIASOUP_TIDY_FILES": Space separated source files to process, including their path. All `.cpp` files will be processes by default.
+- "MEDIASOUP_CLANG_TIDY_DIR": Path to directory containing clang tools (`run-clang-tidy`, `clang-tidy`, `clang-apply-replacements`).
+
+**Usage example in macOS:**
+
+```bash
+MEDIASOUP_CLANG_TIDY_DIR=/usr/local/opt/llvm/bin invoke tidy
+```
 
 ### `invoke fuzzer`
 
-Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release/` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
+Builds the `mediasoup-worker-fuzzer` binary (which uses [libFuzzer](http://llvm.org/docs/LibFuzzer.html)) at `worker/out/Release` (or at `worker/out/Debug/` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug").
 
 **Requirements:**
 
-* Linux with fuzzer capable clang++.
-* `CC` environment variable must point to "clang".
-* `CXX` environment variable must point to "clang++".
+- Linux with fuzzer capable clang++.
+- "CC" environment variable must point to `clang`.
+- "CXX" environment variable must point to `clang++`.
 
 Read the [Fuzzer](Fuzzer.md) documentation for detailed information.
 
@@ -218,7 +244,7 @@ scripts/get-dep.sh clang-fuzzer
 
 ### `invoke docker-run`
 
-Runs a container of the Ubuntu Docker image created with `invoke docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
+Runs a container of the Ubuntu Docker image created with `invoke docker`. It automatically executes a `bash` session in the `/mediasoup` directory, which is a Docker volume that points to the mediasoup root folder.
 
 **NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `invoke clean-all`.
 
@@ -228,7 +254,7 @@ Builds a Linux Alpine Docker image with all dependencies to run mediasoup.
 
 ### `invoke docker-alpine-run`
 
-Runs a container of the Alpine Docker image created with `invoke docker-alpine`. It automatically executes an `ash` session in the `/mediasoup` directory, which is a Docker volume that points to the real `mediasoup` directory.
+Runs a container of the Alpine Docker image created with `invoke docker-alpine`. It automatically executes an `ash` session in the `/mediasoup` directory, which is a Docker volume that points to the mediasoup root folder.
 
 **NOTE:** To install and run mediasoup in the container, previous installation (if any) must be properly cleaned by entering the `worker` directory and running `invoke clean-all`.
 

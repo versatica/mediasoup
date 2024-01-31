@@ -11,7 +11,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	const uint8_t StunPacket::magicCookie[] = { 0x21, 0x12, 0xA4, 0x42 };
+	const uint8_t StunPacket::MagicCookie[] = { 0x21, 0x12, 0xA4, 0x42 };
 
 	/* Class methods. */
 
@@ -651,7 +651,7 @@ namespace RTC
 		// Set length field.
 		Utils::Byte::Set2Bytes(buffer, 2, static_cast<uint16_t>(this->size) - 20);
 		// Set magic cookie.
-		std::memcpy(buffer + 4, StunPacket::magicCookie, 4);
+		std::memcpy(buffer + 4, StunPacket::MagicCookie, 4);
 		// Set TransactionId field.
 		std::memcpy(buffer + 8, this->transactionId, 12);
 		// Update the transaction ID pointer.
@@ -724,17 +724,17 @@ namespace RTC
 					  attrValue + 2,
 					  &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_port,
 					  2);
-					attrValue[2] ^= StunPacket::magicCookie[0];
-					attrValue[3] ^= StunPacket::magicCookie[1];
+					attrValue[2] ^= StunPacket::MagicCookie[0];
+					attrValue[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  attrValue + 4,
 					  &(reinterpret_cast<const sockaddr_in*>(this->xorMappedAddress))->sin_addr.s_addr,
 					  4);
-					attrValue[4] ^= StunPacket::magicCookie[0];
-					attrValue[5] ^= StunPacket::magicCookie[1];
-					attrValue[6] ^= StunPacket::magicCookie[2];
-					attrValue[7] ^= StunPacket::magicCookie[3];
+					attrValue[4] ^= StunPacket::MagicCookie[0];
+					attrValue[5] ^= StunPacket::MagicCookie[1];
+					attrValue[6] ^= StunPacket::MagicCookie[2];
+					attrValue[7] ^= StunPacket::MagicCookie[3];
 
 					pos += 4 + 8;
 
@@ -752,17 +752,17 @@ namespace RTC
 					  attrValue + 2,
 					  &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_port,
 					  2);
-					attrValue[2] ^= StunPacket::magicCookie[0];
-					attrValue[3] ^= StunPacket::magicCookie[1];
+					attrValue[2] ^= StunPacket::MagicCookie[0];
+					attrValue[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  attrValue + 4,
 					  &(reinterpret_cast<const sockaddr_in6*>(this->xorMappedAddress))->sin6_addr.s6_addr,
 					  16);
-					attrValue[4] ^= StunPacket::magicCookie[0];
-					attrValue[5] ^= StunPacket::magicCookie[1];
-					attrValue[6] ^= StunPacket::magicCookie[2];
-					attrValue[7] ^= StunPacket::magicCookie[3];
+					attrValue[4] ^= StunPacket::MagicCookie[0];
+					attrValue[5] ^= StunPacket::MagicCookie[1];
+					attrValue[6] ^= StunPacket::MagicCookie[2];
+					attrValue[7] ^= StunPacket::MagicCookie[3];
 					attrValue[8] ^= this->transactionId[0];
 					attrValue[9] ^= this->transactionId[1];
 					attrValue[10] ^= this->transactionId[2];

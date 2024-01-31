@@ -1,14 +1,13 @@
 {
-  "name": "mediasoup-worker-dev-tools",
-  "version": "0.0.1",
-  "description": "mediasoup worker dev tools",
-  "scripts": {
-    "lint": "node clang-format.mjs lint",
-    "format": "node clang-format.mjs format"
-  },
-  "dependencies": {
-    "clang-format": "^1.8.0",
-    "clang-tools-prebuilt": "^0.1.4",
-    "glob": "^10.3.10"
-  }
+	"name": "mediasoup-worker-dev-tools",
+	"version": "0.0.1",
+	"description": "mediasoup worker dev tools",
+	"scripts": {
+		"lint": "node clang-format.mjs lint",
+		"format": "node clang-format.mjs format"
+	},
+	"dependencies": {
+		"clang-format": "^1.8.0",
+		"glob": "^10.3.10"
+	}
 }

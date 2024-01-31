@@ -63,15 +63,15 @@ namespace RTC
 				// DOC: https://tools.ietf.org/html/draft-ietf-avtcore-rfc5764-mux-fixes
 				(data[0] < 3) &&
 				// Magic cookie must match.
-				(data[4] == StunPacket::magicCookie[0]) && (data[5] == StunPacket::magicCookie[1]) &&
-				(data[6] == StunPacket::magicCookie[2]) && (data[7] == StunPacket::magicCookie[3])
+				(data[4] == StunPacket::MagicCookie[0]) && (data[5] == StunPacket::MagicCookie[1]) &&
+				(data[6] == StunPacket::MagicCookie[2]) && (data[7] == StunPacket::MagicCookie[3])
 			);
 			// clang-format on
 		}
 		static StunPacket* Parse(const uint8_t* data, size_t len);
 
 	private:
-		static const uint8_t magicCookie[];
+		static const uint8_t MagicCookie[];
 
 	public:
 		StunPacket(
@@ -173,7 +173,7 @@ namespace RTC
 		}
 		bool HasMessageIntegrity() const
 		{
-			return (this->messageIntegrity ? true : false);
+			return (this->messageIntegrity != nullptr);
 		}
 		bool HasFingerprint() const
 		{

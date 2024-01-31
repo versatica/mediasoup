@@ -4,10 +4,8 @@
 #include "RTC/AudioLevelObserver.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <cmath> // std::lround()
-#include <map>
 
 namespace RTC
 {

@@ -38,13 +38,13 @@ namespace RTC
 		~SrtpSession();
 
 	public:
-		bool EncryptRtp(const uint8_t** data, int* len);
-		bool DecryptSrtp(uint8_t* data, int* len);
-		bool EncryptRtcp(const uint8_t** data, int* len);
-		bool DecryptSrtcp(uint8_t* data, int* len);
+		bool EncryptRtp(const uint8_t** data, size_t* len);
+		bool DecryptSrtp(uint8_t* data, size_t* len);
+		bool EncryptRtcp(const uint8_t** data, size_t* len);
+		bool DecryptSrtcp(uint8_t* data, size_t* len);
 		void RemoveStream(uint32_t ssrc)
 		{
-			srtp_remove_stream(this->session, uint32_t{ htonl(ssrc) });
+			srtp_stream_remove(this->session, uint32_t{ htonl(ssrc) });
 		}
 
 	private:

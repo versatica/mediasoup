@@ -9,7 +9,7 @@ import {
 	Transport,
 	TransportEvents,
 	TransportObserverEvents,
-	TransportConstructorOptions
+	TransportConstructorOptions,
 } from './Transport';
 import { SctpParameters } from './SctpParameters';
 import { AppData } from './types';
@@ -19,8 +19,9 @@ import * as FbsTransport from './fbs/transport';
 import * as FbsNotification from './fbs/notification';
 import * as FbsRequest from './fbs/request';
 
-export type DirectTransportOptions<DirectTransportAppData extends AppData = AppData> =
-{
+export type DirectTransportOptions<
+	DirectTransportAppData extends AppData = AppData,
+> = {
 	/**
 	 * Maximum allowed size for direct messages sent from DataProducers.
 	 * Default 262144.
@@ -35,51 +36,50 @@ export type DirectTransportOptions<DirectTransportAppData extends AppData = AppD
 
 export type DirectTransportDump = BaseTransportDump;
 
-export type DirectTransportStat = BaseTransportStats &
-{
+export type DirectTransportStat = BaseTransportStats & {
 	type: string;
 };
 
-export type DirectTransportEvents = TransportEvents &
-{
+export type DirectTransportEvents = TransportEvents & {
 	rtcp: [Buffer];
 };
 
-export type DirectTransportObserverEvents = TransportObserverEvents &
-{
+export type DirectTransportObserverEvents = TransportObserverEvents & {
 	rtcp: [Buffer];
 };
 
 type DirectTransportConstructorOptions<DirectTransportAppData> =
-	TransportConstructorOptions<DirectTransportAppData> &
-	{
+	TransportConstructorOptions<DirectTransportAppData> & {
 		data: DirectTransportData;
 	};
 
-export type DirectTransportData =
-{
+export type DirectTransportData = {
 	sctpParameters?: SctpParameters;
 };
 
 const logger = new Logger('DirectTransport');
 
-export class DirectTransport<DirectTransportAppData extends AppData = AppData>
-	extends Transport<DirectTransportAppData, DirectTransportEvents, DirectTransportObserverEvents>
-{
+export class DirectTransport<
+	DirectTransportAppData extends AppData = AppData,
+> extends Transport<
+	DirectTransportAppData,
+	DirectTransportEvents,
+	DirectTransportObserverEvents
+> {
 	// DirectTransport data.
 	readonly #data: DirectTransportData;
 
 	/**
 	 * @private
 	 */
-	constructor(options: DirectTransportConstructorOptions<DirectTransportAppData>)
-	{
+	constructor(
+		options: DirectTransportConstructorOptions<DirectTransportAppData>
+	) {
 		super(options);
 
 		logger.debug('constructor()');
 
-		this.#data =
-		{
+		this.#data = {
 			// Nothing.
 		};
 
@@ -91,10 +91,8 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	close(): void
-	{
-		if (this.closed)
-		{
+	close(): void {
+		if (this.closed) {
 			return;
 		}
 
@@ -107,10 +105,8 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	 * @private
 	 * @override
 	 */
-	routerClosed(): void
-	{
-		if (this.closed)
-		{
+	routerClosed(): void {
+		if (this.closed) {
 			return;
 		}
 
@@ -120,8 +116,7 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	/**
 	 * Dump Transport.
 	 */
-	async dump(): Promise<DirectTransportDump>
-	{
+	async dump(): Promise<DirectTransportDump> {
 		logger.debug('dump()');
 
 		const response = await this.channel.request(
@@ -144,8 +139,7 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	async getStats(): Promise<DirectTransportStat[]>
-	{
+	async getStats(): Promise<DirectTransportStat[]> {
 		logger.debug('getStats()');
 
 		const response = await this.channel.request(
@@ -160,7 +154,7 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 
 		response.body(data);
 
-		return [ parseGetStatsResponse(data) ];
+		return [parseGetStatsResponse(data)];
 	}
 
 	/**
@@ -168,8 +162,7 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	 *
 	 * @override
 	 */
-	async connect(): Promise<void>
-	{
+	async connect(): Promise<void> {
 		logger.debug('connect()');
 	}
 
@@ -177,45 +170,45 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 	 * @override
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setMaxIncomingBitrate(bitrate: number): Promise<void>
-	{
+	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
-			'setMaxIncomingBitrate() not implemented in DirectTransport');
+			'setMaxIncomingBitrate() not implemented in DirectTransport'
+		);
 	}
 
 	/**
 	 * @override
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setMaxOutgoingBitrate(bitrate: number): Promise<void>
-	{
+	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
-			'setMaxOutgoingBitrate() not implemented in DirectTransport');
+			'setMaxOutgoingBitrate() not implemented in DirectTransport'
+		);
 	}
 
 	/**
 	 * @override
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async setMinOutgoingBitrate(bitrate: number): Promise<void>
-	{
+	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
-			'setMinOutgoingBitrate() not implemented in DirectTransport');
+			'setMinOutgoingBitrate() not implemented in DirectTransport'
+		);
 	}
 
 	/**
 	 * Send RTCP packet.
 	 */
-	sendRtcp(rtcpPacket: Buffer)
-	{
-		if (!Buffer.isBuffer(rtcpPacket))
-		{
+	sendRtcp(rtcpPacket: Buffer) {
+		if (!Buffer.isBuffer(rtcpPacket)) {
 			throw new TypeError('rtcpPacket must be a Buffer');
 		}
 
 		const builder = this.channel.bufferBuilder;
-		const dataOffset =
-			FbsTransport.SendRtcpNotification.createDataVector(builder, rtcpPacket);
+		const dataOffset = FbsTransport.SendRtcpNotification.createDataVector(
+			builder,
+			rtcpPacket
+		);
 		const notificationOffset =
 			FbsTransport.SendRtcpNotification.createSendRtcpNotification(
 				builder,
@@ -228,71 +221,64 @@ export class DirectTransport<DirectTransportAppData extends AppData = AppData>
 			notificationOffset,
 			this.internal.transportId
 		);
-
 	}
 
-	private handleWorkerNotifications(): void
-	{
-		this.channel.on(this.internal.transportId, (event: Event, data?: Notification) =>
-		{
-			switch (event)
-			{
-				case Event.TRANSPORT_TRACE:
-				{
-					const notification = new FbsTransport.TraceNotification();
+	private handleWorkerNotifications(): void {
+		this.channel.on(
+			this.internal.transportId,
+			(event: Event, data?: Notification) => {
+				switch (event) {
+					case Event.TRANSPORT_TRACE: {
+						const notification = new FbsTransport.TraceNotification();
 
-					data!.body(notification);
+						data!.body(notification);
 
-					const trace = parseTransportTraceEventData(notification);
+						const trace = parseTransportTraceEventData(notification);
 
-					this.safeEmit('trace', trace);
+						this.safeEmit('trace', trace);
 
-					// Emit observer event.
-					this.observer.safeEmit('trace', trace);
+						// Emit observer event.
+						this.observer.safeEmit('trace', trace);
 
-					break;
-				}
-
-				case Event.DIRECTTRANSPORT_RTCP:
-				{
-					if (this.closed)
-					{
 						break;
 					}
 
-					const notification = new FbsDirectTransport.RtcpNotification();
+					case Event.DIRECTTRANSPORT_RTCP: {
+						if (this.closed) {
+							break;
+						}
 
-					data!.body(notification);
+						const notification = new FbsDirectTransport.RtcpNotification();
 
-					this.safeEmit('rtcp', Buffer.from(notification.dataArray()!));
+						data!.body(notification);
 
-					break;
-				}
+						this.safeEmit('rtcp', Buffer.from(notification.dataArray()!));
 
-				default:
-				{
-					logger.error('ignoring unknown event "%s"', event);
+						break;
+					}
+
+					default: {
+						logger.error('ignoring unknown event "%s"', event);
+					}
 				}
 			}
-		});
+		);
 	}
 }
 
 export function parseDirectTransportDumpResponse(
 	binary: FbsDirectTransport.DumpResponse
-): BaseTransportDump
-{
+): BaseTransportDump {
 	return parseBaseTransportDump(binary.base()!);
 }
 
 function parseGetStatsResponse(
 	binary: FbsDirectTransport.GetStatsResponse
-):DirectTransportStat
-{
+): DirectTransportStat {
 	const base = parseBaseTransportStats(binary.base()!);
 
 	return {
 		...base,
-		type : 'direct-transport'
+		type: 'direct-transport',
 	};
 }

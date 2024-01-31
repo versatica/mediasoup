@@ -1,7 +1,7 @@
-import process from 'node:process';
-import os from 'node:os';
-import fs from 'node:fs';
-import path from 'node:path';
+import * as process from 'node:process';
+import * as os from 'node:os';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
@@ -13,7 +13,9 @@ const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
-const WORKER_RELEASE_BIN = IS_WINDOWS ? 'mediasoup-worker.exe' : 'mediasoup-worker';
+const WORKER_RELEASE_BIN = IS_WINDOWS
+	? 'mediasoup-worker.exe'
+	: 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
@@ -21,32 +23,27 @@ const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
-const task = process.argv.slice(2).join(' ');
+const task = process.argv[2];
+const args = process.argv.slice(3).join(' ');
 
 // PYTHONPATH env must be updated now so all invoke calls below will find the
 // pip invoke module.
-if (process.env.PYTHONPATH)
-{
-	if (IS_WINDOWS)
-	{
+if (process.env.PYTHONPATH) {
+	if (IS_WINDOWS) {
 		process.env.PYTHONPATH = `${PIP_INVOKE_DIR};${process.env.PYTHONPATH}`;
-	}
-	else
-	{
+	} else {
 		process.env.PYTHONPATH = `${PIP_INVOKE_DIR}:${process.env.PYTHONPATH}`;
 	}
-}
-else
-{
+} else {
 	process.env.PYTHONPATH = PIP_INVOKE_DIR;
 }
 
 run();
 
-async function run()
-{
-	switch (task)
-	{
+async function run() {
+	logInfo(args ? `[args:"${args}"]` : '');
+
+	switch (task) {
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
 		// `prepare` script:
 		//
@@ -58,20 +55,17 @@ async function run()
 		//
 		// So here we generate flatbuffers definitions for TypeScript and compile
 		// TypeScript to JavaScript.
-		case 'prepare':
-		{
+		case 'prepare': {
 			flatcNode();
 			buildTypescript({ force: false });
 
 			break;
 		}
 
-		case 'postinstall':
-		{
+		case 'postinstall': {
 			// If the user/app provides us with a custom mediasoup-worker binary then
 			// don't do anything.
-			if (process.env.MEDIASOUP_WORKER_BIN)
-			{
+			if (process.env.MEDIASOUP_WORKER_BIN) {
 				logInfo('MEDIASOUP_WORKER_BIN environment variable given, skipping');
 
 				break;
@@ -81,32 +75,30 @@ async function run()
 			// (instead of via npm), and if MEDIASOUP_FORCE_PREBUILT_WORKER_DOWNLOAD env is
 			// not set, then skip mediasoup-worker prebuilt download.
 			else if (
-				(
-					process.env.MEDIASOUP_LOCAL_DEV ||
+				(process.env.MEDIASOUP_LOCAL_DEV ||
 					process.env.MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD ||
-					process.env.npm_package_resolved?.startsWith('git+ssh://')
-				) &&
+					process.env.npm_package_resolved?.startsWith('git+ssh://')) &&
 				!process.env.MEDIASOUP_FORCE_WORKER_PREBUILT_DOWNLOAD
-			)
-			{
-				logInfo('skipping mediasoup-worker prebuilt download, building it locally');
+			) {
+				logInfo(
+					'skipping mediasoup-worker prebuilt download, building it locally'
+				);
 
 				buildWorker();
 
-				if (!process.env.MEDIASOUP_LOCAL_DEV)
-				{
+				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
 				}
 			}
 			// Attempt to download a prebuilt binary. Fallback to building locally.
-			else if (!(await downloadPrebuiltWorker()))
-			{
-				logInfo(`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`);
+			else if (!(await downloadPrebuiltWorker())) {
+				logInfo(
+					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`
+				);
 
 				buildWorker();
 
-				if (!process.env.MEDIASOUP_LOCAL_DEV)
-				{
+				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
 				}
 			}
@@ -114,52 +106,51 @@ async function run()
 			break;
 		}
 
-		case 'typescript:build':
-		{
+		case 'typescript:build': {
 			installNodeDeps();
 			buildTypescript({ force: true });
 
 			break;
 		}
 
-		case 'typescript:watch':
-		{
+		case 'typescript:watch': {
 			deleteNodeLib();
-			executeCmd('tsc --project node --watch');
+			executeCmd(`tsc --project node --watch ${args}`);
 
 			break;
 		}
 
-		case 'worker:build':
-		{
+		case 'worker:build': {
 			buildWorker();
 
 			break;
 		}
 
-		case 'worker:prebuild':
-		{
+		case 'worker:prebuild': {
 			await prebuildWorker();
 
 			break;
 		}
 
-		case 'lint:node':
-		{
+		case 'lint:node': {
 			lintNode();
 
 			break;
 		}
 
-		case 'lint:worker':
-		{
+		case 'lint:worker': {
 			lintWorker();
 
 			break;
 		}
 
-		case 'format:worker':
-		{
+		case 'format:node': {
+			formatNode();
+
+			break;
+		}
+
+		case 'format:worker': {
 			installInvoke();
 
 			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
@@ -167,63 +158,53 @@ async function run()
 			break;
 		}
 
-		case 'flatc:node':
-		{
+		case 'flatc:node': {
 			flatcNode();
 
 			break;
 		}
 
-		case 'flatc:worker':
-		{
+		case 'flatc:worker': {
 			flatcWorker();
 
 			break;
 		}
 
-		case 'test:node':
-		{
+		case 'test:node': {
 			buildTypescript({ force: false });
 			testNode();
 
 			break;
 		}
 
-		case 'test:worker':
-		{
+		case 'test:worker': {
 			testWorker();
 
 			break;
 		}
 
-		case 'coverage:node':
-		{
+		case 'coverage:node': {
 			buildTypescript({ force: false });
-			executeCmd('jest --coverage');
+			executeCmd(`jest --coverage ${args}`);
 			executeCmd('open-cli coverage/lcov-report/index.html');
 
 			break;
 		}
 
-		case 'release:check':
-		{
+		case 'release:check': {
 			checkRelease();
 
 			break;
 		}
 
-		case 'release':
-		{
+		case 'release': {
 			let octokit;
 			let versionChanges;
 
-			try
-			{
+			try {
 				octokit = await getOctokit();
 				versionChanges = await getVersionChanges();
-			}
-			catch (error)
-			{
+			} catch (error) {
 				logError(error.message);
 
 				exitWithError();
@@ -237,22 +218,20 @@ async function run()
 
 			logInfo('creating release in GitHub');
 
-			await octokit.repos.createRelease(
-				{
-					owner    : GH_OWNER,
-					repo     : GH_REPO,
-					name     : PKG.version,
-					body     : versionChanges,
-					// eslint-disable-next-line camelcase
-					tag_name : PKG.version,
-					draft    : false
-				});
+			await octokit.repos.createRelease({
+				owner: GH_OWNER,
+				repo: GH_REPO,
+				name: PKG.version,
+				body: versionChanges,
+				// eslint-disable-next-line camelcase
+				tag_name: PKG.version,
+				draft: false,
+			});
 
 			// GitHub mediasoup-worker-prebuild CI action doesn't create mediasoup-worker
 			// prebuilt binary for macOS ARM. If this is a macOS ARM machine, do it here
 			// and upload it to the release.
-			if (os.platform() === 'darwin' && os.arch() === 'arm64')
-			{
+			if (os.platform() === 'darwin' && os.arch() === 'arm64') {
 				await prebuildWorker();
 				await uploadMacArmPrebuiltWorker();
 			}
@@ -262,8 +241,7 @@ async function run()
 			break;
 		}
 
-		case 'release:upload-mac-arm-prebuilt-worker':
-		{
+		case 'release:upload-mac-arm-prebuilt-worker': {
 			checkRelease();
 			await prebuildWorker();
 			await uploadMacArmPrebuiltWorker();
@@ -271,8 +249,7 @@ async function run()
 			break;
 		}
 
-		default:
-		{
+		default: {
 			logError('unknown task');
 
 			exitWithError();
@@ -280,19 +257,14 @@ async function run()
 	}
 }
 
-function getPython()
-{
+function getPython() {
 	let python = process.env.PYTHON;
 
-	if (!python)
-	{
-		try
-		{
-			execSync('python3 --version', { stdio: [ 'ignore', 'ignore', 'ignore' ] });
+	if (!python) {
+		try {
+			execSync('python3 --version', { stdio: ['ignore', 'ignore', 'ignore'] });
 			python = 'python3';
-		}
-		catch (error)
-		{
+		} catch (error) {
 			python = 'python';
 		}
 	}
@@ -300,14 +272,12 @@ function getPython()
 	return python;
 }
 
-function getWorkerPrebuildTarName()
-{
+function getWorkerPrebuildTarName() {
 	let name = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
 
 	// In Linux we want to know about kernel version since kernel >= 6 supports
 	// io-uring.
-	if (os.platform() === 'linux')
-	{
+	if (os.platform() === 'linux') {
 		const kernelMajorVersion = Number(os.release().split('.')[0]);
 
 		name += `-kernel${kernelMajorVersion}`;
@@ -316,10 +286,8 @@ function getWorkerPrebuildTarName()
 	return `${name}.tgz`;
 }
 
-function installInvoke()
-{
-	if (fs.existsSync(PIP_INVOKE_DIR))
-	{
+function installInvoke() {
+	if (fs.existsSync(PIP_INVOKE_DIR)) {
 		return;
 	}
 
@@ -328,15 +296,13 @@ function installInvoke()
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`"${PYTHON}" -m pip install --upgrade --no-user --target="${PIP_INVOKE_DIR}" invoke`,
+		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`,
 		/* exitOnError */ true
 	);
 }
 
-function deleteNodeLib()
-{
-	if (!fs.existsSync('node/lib'))
-	{
+function deleteNodeLib() {
+	if (!fs.existsSync('node/lib')) {
 		return;
 	}
 
@@ -345,10 +311,8 @@ function deleteNodeLib()
 	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
-function buildTypescript({ force = false } = { force: false })
-{
-	if (!force && fs.existsSync('node/lib'))
-	{
+function buildTypescript({ force = false } = { force: false }) {
+	if (!force && fs.existsSync('node/lib')) {
 		return;
 	}
 
@@ -358,8 +322,7 @@ function buildTypescript({ force = false } = { force: false })
 	executeCmd('tsc --project node');
 }
 
-function buildWorker()
-{
+function buildWorker() {
 	logInfo('buildWorker()');
 
 	installInvoke();
@@ -367,8 +330,7 @@ function buildWorker()
 	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
 }
 
-function cleanWorkerArtifacts()
-{
+function cleanWorkerArtifacts() {
 	logInfo('cleanWorkerArtifacts()');
 
 	installInvoke();
@@ -381,15 +343,21 @@ function cleanWorkerArtifacts()
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-pip`);
 }
 
-function lintNode()
-{
+function lintNode() {
 	logInfo('lintNode()');
 
-	executeCmd('eslint -c node/.eslintrc.js --ignore-path node/.eslintignore --max-warnings 0 node/src node/.eslintrc.js npm-scripts.mjs worker/scripts/clang-format.mjs');
+	executeCmd('prettier . --check');
+
+	// Ensure there are no rules that are unnecessary or conflict with Prettier
+	// rules.
+	executeCmd('eslint-config-prettier .eslintrc.js');
+
+	executeCmd(
+		'eslint -c .eslintrc.js --ignore-path .eslintignore --max-warnings 0 .'
+	);
 }
 
-function lintWorker()
-{
+function lintWorker() {
 	logInfo('lintWorker()');
 
 	installInvoke();
@@ -397,8 +365,13 @@ function lintWorker()
 	executeCmd(`"${PYTHON}" -m invoke -r worker lint`);
 }
 
-function flatcNode()
-{
+function formatNode() {
+	logInfo('formatNode()');
+
+	executeCmd('prettier . --write');
+}
+
+function flatcNode() {
 	logInfo('flatcNode()');
 
 	installInvoke();
@@ -408,25 +381,35 @@ function flatcNode()
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
-	const flatc = path.resolve(path.join(
-		'worker', 'out', buildType, 'build', 'subprojects', `flatbuffers-${FLATBUFFERS_VERSION}`, `flatc${extension}`));
+	const flatc = path.resolve(
+		path.join(
+			'worker',
+			'out',
+			buildType,
+			'build',
+			'subprojects',
+			`flatbuffers-${FLATBUFFERS_VERSION}`,
+			`flatc${extension}`
+		)
+	);
 	const out = path.resolve(path.join('node', 'src'));
 
-	for (const dirent of fs.readdirSync(path.join('worker', 'fbs'), { withFileTypes: true }))
-	{
-		if (!dirent.isFile() || path.parse(dirent.name).ext !== '.fbs')
-		{
+	for (const dirent of fs.readdirSync(path.join('worker', 'fbs'), {
+		withFileTypes: true,
+	})) {
+		if (!dirent.isFile() || path.parse(dirent.name).ext !== '.fbs') {
 			continue;
 		}
 
 		const filePath = path.resolve(path.join('worker', 'fbs', dirent.name));
 
-		executeCmd(`"${flatc}" --ts --ts-no-import-ext --gen-object-api -o "${out}" "${filePath}"`);
+		executeCmd(
+			`"${flatc}" --ts --ts-no-import-ext --gen-object-api -o "${out}" "${filePath}"`
+		);
 	}
 }
 
-function flatcWorker()
-{
+function flatcWorker() {
 	logInfo('flatcWorker()');
 
 	installInvoke();
@@ -434,22 +417,13 @@ function flatcWorker()
 	executeCmd(`"${PYTHON}" -m invoke -r worker flatc`);
 }
 
-function testNode()
-{
+function testNode() {
 	logInfo('testNode()');
 
-	if (!process.env.TEST_FILE)
-	{
-		executeCmd('jest');
-	}
-	else
-	{
-		executeCmd(`jest --testPathPattern "${process.env.TEST_FILE}"`);
-	}
+	executeCmd(`jest --silent false --detectOpenHandles ${args}`);
 }
 
-function testWorker()
-{
+function testWorker() {
 	logInfo('testWorker()');
 
 	installInvoke();
@@ -457,8 +431,7 @@ function testWorker()
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
-function installNodeDeps()
-{
+function installNodeDeps() {
 	logInfo('installNodeDeps()');
 
 	// Install/update Node deps.
@@ -467,8 +440,7 @@ function installNodeDeps()
 	executeCmd('npm install --package-lock-only --ignore-scripts');
 }
 
-function checkRelease()
-{
+function checkRelease() {
 	logInfo('checkRelease()');
 
 	installNodeDeps();
@@ -481,32 +453,30 @@ function checkRelease()
 	testWorker();
 }
 
-function ensureDir(dir)
-{
+function ensureDir(dir) {
 	logInfo(`ensureDir() [dir:${dir}]`);
 
-	if (!fs.existsSync(dir))
-	{
+	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, { recursive: true });
 	}
 }
 
-async function prebuildWorker()
-{
+async function prebuildWorker() {
 	logInfo('prebuildWorker()');
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
-	return new Promise((resolve, reject) =>
-	{
+	return new Promise((resolve, reject) => {
 		// Generate a gzip file which just contains mediasoup-worker binary without
 		// any folder.
-		tar.create(
-			{
-				cwd  : WORKER_RELEASE_DIR,
-				gzip : true
-			},
-			[ WORKER_RELEASE_BIN ])
+		tar
+			.create(
+				{
+					cwd: WORKER_RELEASE_DIR,
+					gzip: true,
+				},
+				[WORKER_RELEASE_BIN]
+			)
 			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
 			.on('finish', resolve)
 			.on('error', reject);
@@ -515,11 +485,12 @@ async function prebuildWorker()
 
 // Returns a Promise resolving to true if a mediasoup-worker prebuilt binary
 // was downloaded and uncompressed, false otherwise.
-async function downloadPrebuiltWorker()
-{
+async function downloadPrebuiltWorker() {
 	const releaseBase =
 		process.env.MEDIASOUP_WORKER_PREBUILT_DOWNLOAD_BASE_URL ||
-		`${PKG.repository.url.replace(/\.git$/, '')}/releases/download`;
+		`${PKG.repository.url
+			.replace(/^git\+/, '')
+			.replace(/\.git$/, '')}/releases/download`;
 
 	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
 
@@ -529,29 +500,23 @@ async function downloadPrebuiltWorker()
 
 	let res;
 
-	try
-	{
+	try {
 		res = await fetch(tarUrl);
 
-		if (res.status === 404)
-		{
+		if (res.status === 404) {
 			logInfo(
 				'downloadPrebuiltWorker() | no available mediasoup-worker prebuilt binary for current architecture'
 			);
 
 			return false;
-		}
-		else if (!res.ok)
-		{
+		} else if (!res.ok) {
 			logError(
 				`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${res.status} ${res.statusText}`
 			);
 
 			return false;
 		}
-	}
-	catch (error)
-	{
+	} catch (error) {
 		logError(
 			`downloadPrebuiltWorker() | failed to download mediasoup-worker prebuilt binary: ${error}`
 		);
@@ -561,27 +526,27 @@ async function downloadPrebuiltWorker()
 
 	ensureDir(WORKER_RELEASE_DIR);
 
-	return new Promise((resolve) =>
-	{
+	return new Promise(resolve => {
 		// Extract mediasoup-worker in the official mediasoup-worker path.
 		res.body
-			.pipe(tar.extract(
-				{
-					newer : false,
-					cwd   : WORKER_RELEASE_DIR
-				}))
-			.on('finish', () =>
-			{
-				logInfo('downloadPrebuiltWorker() | got mediasoup-worker prebuilt binary');
+			.pipe(
+				tar.extract({
+					newer: false,
+					cwd: WORKER_RELEASE_DIR,
+				})
+			)
+			.on('finish', () => {
+				logInfo(
+					'downloadPrebuiltWorker() | got mediasoup-worker prebuilt binary'
+				);
 
-				try
-				{
+				try {
 					// Give execution permission to the binary.
 					fs.chmodSync(WORKER_RELEASE_BIN_PATH, 0o775);
-				}
-				catch (error)
-				{
-					logWarn(`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`);
+				} catch (error) {
+					logWarn(
+						`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`
+					);
 				}
 
 				// Let's confirm that the fetched mediasoup-worker prebuit binary does
@@ -594,50 +559,37 @@ async function downloadPrebuiltWorker()
 					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
 				);
 
-				try
-				{
+				try {
 					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
 
 					// This will always fail on purpose, but if status code is 41 then
 					// it's good.
-					execSync(
-						`"${resolvedBinPath}"`,
-						{
-							stdio : [ 'ignore', 'ignore', 'ignore' ],
-							// Ensure no env is passed to avoid accidents.
-							env   : {}
-						}
-					);
-				}
-				catch (error)
-				{
-					if (error.status === 41)
-					{
+					execSync(`"${resolvedBinPath}"`, {
+						stdio: ['ignore', 'ignore', 'ignore'],
+						// Ensure no env is passed to avoid accidents.
+						env: {},
+					});
+				} catch (error) {
+					if (error.status === 41) {
 						logInfo(
 							'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
 						);
 
 						resolve(true);
-					}
-					else
-					{
+					} else {
 						logError(
 							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
 						);
 
-						try
-						{
+						try {
 							fs.unlinkSync(WORKER_RELEASE_BIN_PATH);
-						}
-						catch (error2)
-						{}
+						} catch (error2) {}
 
 						resolve(false);
 					}
 				}
 			})
-			.on('error', (error) =>
-			{
+			.on('error', error => {
 				logError(
 					`downloadPrebuiltWorker() | failed to uncompress downloaded mediasoup-worker prebuilt binary: ${error}`
 				);
@@ -647,59 +599,51 @@ async function downloadPrebuiltWorker()
 	});
 }
 
-async function uploadMacArmPrebuiltWorker()
-{
-	if (os.platform() !== 'darwin' || os.arch() !== 'arm64')
-	{
-		logWarn('uploadMacArmPrebuiltWorker() | invalid platform or architecture');
+async function uploadMacArmPrebuiltWorker() {
+	if (os.platform() !== 'darwin' || os.arch() !== 'arm64') {
+		logError('uploadMacArmPrebuiltWorker() | invalid platform or architecture');
 
-		return;
+		exitWithError();
 	}
 
 	const octokit = await getOctokit();
 
 	logInfo('uploadMacArmPrebuiltWorker() | getting release info');
 
-	const release = await octokit.rest.repos.getReleaseByTag(
-		{
-			owner : GH_OWNER,
-			repo  : GH_REPO,
-			tag   : PKG.version
-		});
+	const release = await octokit.rest.repos.getReleaseByTag({
+		owner: GH_OWNER,
+		repo: GH_REPO,
+		tag: PKG.version,
+	});
 
 	logInfo('uploadMacArmPrebuiltWorker() | uploading release asset');
 
-	await octokit.rest.repos.uploadReleaseAsset(
-		{
-			owner      : GH_OWNER,
-			repo       : GH_REPO,
-			// eslint-disable-next-line camelcase
-			release_id : release.data.id,
-			name       : WORKER_PREBUILD_TAR,
-			data       : fs.readFileSync(WORKER_PREBUILD_TAR_PATH)
-		});
+	await octokit.rest.repos.uploadReleaseAsset({
+		owner: GH_OWNER,
+		repo: GH_REPO,
+		// eslint-disable-next-line camelcase
+		release_id: release.data.id,
+		name: WORKER_PREBUILD_TAR,
+		data: fs.readFileSync(WORKER_PREBUILD_TAR_PATH),
+	});
 }
 
-async function getOctokit()
-{
-	if (!process.env.GITHUB_TOKEN)
-	{
+async function getOctokit() {
+	if (!process.env.GITHUB_TOKEN) {
 		throw new Error('missing GITHUB_TOKEN environment variable');
 	}
 
 	// NOTE: Load dep on demand since it's a devDependency.
 	const { Octokit } = await import('@octokit/rest');
 
-	const octokit = new Octokit(
-		{
-			auth : process.env.GITHUB_TOKEN
-		});
+	const octokit = new Octokit({
+		auth: process.env.GITHUB_TOKEN,
+	});
 
 	return octokit;
 }
 
-async function getVersionChanges()
-{
+async function getVersionChanges() {
 	logInfo('getVersionChanges()');
 
 	// NOTE: Load dep on demand since it's a devDependency.
@@ -708,12 +652,10 @@ async function getVersionChanges()
 	const changelog = fs.readFileSync('./CHANGELOG.md').toString();
 	const entries = marked.lexer(changelog);
 
-	for (let idx = 0; idx < entries.length; ++idx)
-	{
+	for (let idx = 0; idx < entries.length; ++idx) {
 		const entry = entries[idx];
 
-		if (entry.type === 'heading' && entry.text === PKG.version)
-		{
+		if (entry.type === 'heading' && entry.text === PKG.version) {
 			const changes = entries[idx + 1].raw;
 
 			return changes;
@@ -721,51 +663,42 @@ async function getVersionChanges()
 	}
 
 	// This should not happen (unless author forgot to update CHANGELOG).
-	throw new Error(`no entry found in CHANGELOG.md for version '${PKG.version}'`);
+	throw new Error(
+		`no entry found in CHANGELOG.md for version '${PKG.version}'`
+	);
 }
 
-function executeCmd(command, exitOnError = true)
-{
+function executeCmd(command, exitOnError = true) {
 	logInfo(`executeCmd(): ${command}`);
 
-	try
-	{
-		execSync(command, { stdio: [ 'ignore', process.stdout, process.stderr ] });
-	}
-	catch (error)
-	{
-		if (exitOnError)
-		{
+	try {
+		execSync(command, { stdio: ['ignore', process.stdout, process.stderr] });
+	} catch (error) {
+		if (exitOnError) {
 			logError(`executeCmd() failed, exiting: ${error}`);
 
 			exitWithError();
-		}
-		else
-		{
+		} else {
 			logInfo(`executeCmd() failed, ignoring: ${error}`);
 		}
 	}
 }
 
-function logInfo(message)
-{
+function logInfo(message) {
 	// eslint-disable-next-line no-console
-	console.log(`npm-scripts.mjs \x1b[36m[INFO] [${task}]\x1b\[0m`, message);
+	console.log(`npm-scripts.mjs \x1b[36m[INFO] [${task}]\x1b[0m`, message);
 }
 
-function logWarn(message)
-{
+function logWarn(message) {
 	// eslint-disable-next-line no-console
-	console.warn(`npm-scripts.mjs \x1b[33m[WARN] [${task}]\x1b\[0m`, message);
+	console.warn(`npm-scripts.mjs \x1b[33m[WARN] [${task}]\x1b\0m`, message);
 }
 
-function logError(message)
-{
+function logError(message) {
 	// eslint-disable-next-line no-console
-	console.error(`npm-scripts.mjs \x1b[31m[ERROR] [${task}]\x1b\[0m`, message);
+	console.error(`npm-scripts.mjs \x1b[31m[ERROR] [${task}]\x1b[0m`, message);
 }
 
-function exitWithError()
-{
+function exitWithError() {
 	process.exit(1);
 }
