@@ -1482,7 +1482,7 @@ impl Router {
             let tuple = remote_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip: tuple.local_address(),
+                ip: tuple.local_address().parse::<IpAddr>().unwrap(),
                 port: tuple.local_port(),
                 srtp_parameters: remote_pipe_transport.srtp_parameters(),
             }
@@ -1492,7 +1492,7 @@ impl Router {
             let tuple = local_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip: tuple.local_address(),
+                ip: tuple.local_address().parse::<IpAddr>().unwrap(),
                 port: tuple.local_port(),
                 srtp_parameters: local_pipe_transport.srtp_parameters(),
             }
