@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- `TransportListenInfo`: announced ip can also be a hostname ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- `TransportListenInfo`: announced ip can also be a hostname ([PR #1322](https://github.com/versatica/mediasoup/pull/1322)).
 
 ### 3.13.17
 
