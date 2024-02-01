@@ -297,14 +297,14 @@ impl IceState {
 /// `PipeTransport`, or via dynamic detection as it happens in `WebRtcTransport` (in which the
 /// remote media address is detected by ICE means), or in `PlainTransport` (when using `comedia`
 /// mode).
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransportTuple {
     /// Transport tuple with remote endpoint info.
     #[serde(rename_all = "camelCase")]
     WithRemote {
         /// Local IP address or hostname.
-        local_address: IpAddr,
+        local_address: String,
         /// Local port.
         local_port: u16,
         /// Remote IP address.
@@ -318,7 +318,7 @@ pub enum TransportTuple {
     #[serde(rename_all = "camelCase")]
     LocalOnly {
         /// Local IP address or hostname.
-        local_address: IpAddr,
+        local_address: String,
         /// Local port.
         local_port: u16,
         /// Protocol
@@ -328,7 +328,7 @@ pub enum TransportTuple {
 
 impl TransportTuple {
     /// Local IP address or hostname.
-    pub fn local_address(&self) -> IpAddr {
+    pub fn local_address(&self) -> String {
         let (Self::WithRemote { local_address, .. } | Self::LocalOnly { local_address, .. }) = self;
         *local_address
     }
