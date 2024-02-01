@@ -98,7 +98,7 @@ fn create_succeeds() {
                     WebRtcTransportListenInfos::new(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                        announced_ip: Some("9.9.9.1".to_string()),
                         port: None,
                         flags: None,
                         send_buffer_size: None,
@@ -136,7 +136,7 @@ fn create_succeeds() {
                             ListenInfo {
                                 protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                                announced_ip: Some("9.9.9.1".parse().unwrap()),
+                                announced_ip: Some("9.9.9.1".to_string()),
                                 port: None,
                                 flags: None,
                                 send_buffer_size: None,
@@ -145,7 +145,7 @@ fn create_succeeds() {
                             ListenInfo {
                                 protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
-                                announced_ip: Some("9.9.9.2".parse().unwrap()),
+                                announced_ip: Some("foo1.bar.org".to_string()),
                                 port: None,
                                 flags: None,
                                 send_buffer_size: None,
@@ -200,19 +200,19 @@ fn create_succeeds() {
             {
                 let ice_candidates = transport1.ice_candidates();
                 assert_eq!(ice_candidates.len(), 3);
-                assert_eq!(ice_candidates[0].ip, "9.9.9.1".parse::<IpAddr>().unwrap());
+                assert_eq!(ice_candidates[0].ip, "9.9.9.1");
                 assert_eq!(ice_candidates[0].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[0].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[0].tcp_type, None);
-                assert_eq!(ice_candidates[1].ip, "9.9.9.2".parse::<IpAddr>().unwrap());
+                assert_eq!(ice_candidates[1].ip, "foo1.bar.org");
                 assert_eq!(ice_candidates[1].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[1].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[1].tcp_type, None);
-                assert_eq!(ice_candidates[2].ip, "127.0.0.1".parse::<IpAddr>().unwrap());
+                assert_eq!(ice_candidates[2].ip, "127.0.0.1");
                 assert_eq!(ice_candidates[2].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[2].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[2].tcp_type, None);
-                assert_eq!(ice_candidates[2].ip, "127.0.0.1".parse::<IpAddr>().unwrap());
+                assert_eq!(ice_candidates[2].ip, "127.0.0.1");
                 assert_eq!(ice_candidates[2].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[2].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[2].tcp_type, None);
@@ -265,7 +265,7 @@ fn create_with_fixed_port_succeeds() {
                 WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: Some(port),
                     flags: None,
                     send_buffer_size: None,
@@ -289,7 +289,7 @@ fn weak() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -343,7 +343,7 @@ fn get_stats_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -395,7 +395,7 @@ fn connect_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -445,7 +445,7 @@ fn set_max_incoming_bitrate_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -478,7 +478,7 @@ fn set_max_outgoing_bitrate_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -511,7 +511,7 @@ fn set_min_outgoing_bitrate_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -544,7 +544,7 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -582,7 +582,7 @@ fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -620,7 +620,7 @@ fn restart_ice_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -656,7 +656,7 @@ fn enable_trace_event_succeeds() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -732,7 +732,7 @@ fn close_event() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,

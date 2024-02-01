@@ -68,13 +68,12 @@ test('router.createWebRtcTransport() succeeds', async () => {
 
 	ctx.router!.observer.once('newtransport', onObserverNewTransport);
 
-	// Create a separate transport here.
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
 			{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
 			{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-			{ protocol: 'udp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
-			{ protocol: 'tcp', ip: '0.0.0.0', announcedIp: '9.9.9.2' },
+			{ protocol: 'udp', ip: '0.0.0.0', announcedIp: 'foo1.bar.org' },
+			{ protocol: 'tcp', ip: '0.0.0.0', announcedIp: 'foo2.bar.org' },
 			{ protocol: 'udp', ip: '127.0.0.1', announcedIp: undefined },
 			{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: undefined },
 		],
@@ -119,11 +118,11 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(iceCandidates[1].protocol).toBe('tcp');
 	expect(iceCandidates[1].type).toBe('host');
 	expect(iceCandidates[1].tcpType).toBe('passive');
-	expect(iceCandidates[2].ip).toBe('9.9.9.2');
+	expect(iceCandidates[2].ip).toBe('foo1.bar.org');
 	expect(iceCandidates[2].protocol).toBe('udp');
 	expect(iceCandidates[2].type).toBe('host');
 	expect(iceCandidates[2].tcpType).toBeUndefined();
-	expect(iceCandidates[3].ip).toBe('9.9.9.2');
+	expect(iceCandidates[3].ip).toBe('foo2.bar.org');
 	expect(iceCandidates[3].protocol).toBe('tcp');
 	expect(iceCandidates[3].type).toBe('host');
 	expect(iceCandidates[3].tcpType).toBe('passive');

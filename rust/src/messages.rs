@@ -921,8 +921,8 @@ impl RouterCreatePlainTransportData {
     ) -> Self {
         Self {
             transport_id,
-            listen_info: plain_transport_options.listen_info,
-            rtcp_listen_info: plain_transport_options.rtcp_listen_info,
+            listen_info: plain_transport_options.listen_info.clone(),
+            rtcp_listen_info: plain_transport_options.rtcp_listen_info.clone(),
             rtcp_mux: plain_transport_options.rtcp_mux,
             comedia: plain_transport_options.comedia,
             enable_sctp: plain_transport_options.enable_sctp,
@@ -947,9 +947,10 @@ impl RouterCreatePlainTransportData {
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
                 is_data_channel: self.is_data_channel,
             }),
-            listen_info: Box::new(self.listen_info.to_fbs()),
+            listen_info: Box::new(self.listen_info.clone().to_fbs()),
             rtcp_listen_info: self
                 .rtcp_listen_info
+                .clone()
                 .map(|listen_info| Box::new(listen_info.to_fbs())),
             rtcp_mux: self.rtcp_mux,
             comedia: self.comedia,
@@ -1055,7 +1056,7 @@ impl RouterCreatePipeTransportData {
     ) -> Self {
         Self {
             transport_id,
-            listen_info: pipe_transport_options.listen_info,
+            listen_info: pipe_transport_options.listen_info.clone(),
             enable_sctp: pipe_transport_options.enable_sctp,
             num_sctp_streams: pipe_transport_options.num_sctp_streams,
             max_sctp_message_size: pipe_transport_options.max_sctp_message_size,
@@ -1078,7 +1079,7 @@ impl RouterCreatePipeTransportData {
                 sctp_send_buffer_size: self.sctp_send_buffer_size,
                 is_data_channel: self.is_data_channel,
             }),
-            listen_info: Box::new(self.listen_info.to_fbs()),
+            listen_info: Box::new(self.listen_info.clone().to_fbs()),
             enable_rtx: self.enable_rtx,
             enable_srtp: self.enable_srtp,
         }

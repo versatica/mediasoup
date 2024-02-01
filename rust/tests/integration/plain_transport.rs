@@ -94,7 +94,7 @@ fn create_succeeds() {
                     let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: Some("4.4.4.4".parse().unwrap()),
+                        announced_ip: Some("4.4.4.4".to_string()),
                         port: None,
                         flags: None,
                         send_buffer_size: None,
@@ -133,7 +133,7 @@ fn create_succeeds() {
                     let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: Some("9.9.9.1".parse().unwrap()),
+                        announced_ip: Some("9.9.9.1".to_string()),
                         port: None,
                         flags: None,
                         send_buffer_size: None,
@@ -286,7 +286,7 @@ fn create_with_fixed_port_succeeds() {
                 PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    announced_ip: Some("4.4.4.4".to_string()),
                     port: Some(port),
                     flags: None,
                     send_buffer_size: None,
@@ -310,7 +310,7 @@ fn weak() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    announced_ip: Some("4.4.4.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -344,7 +344,7 @@ fn create_enable_srtp_succeeds() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".parse().unwrap()),
+                    announced_ip: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -532,7 +532,7 @@ fn get_stats_succeeds() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    announced_ip: Some("4.4.4.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -590,7 +590,7 @@ fn connect_succeeds() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    announced_ip: Some("4.4.4.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -666,7 +666,7 @@ fn connect_wrong_arguments() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    announced_ip: Some("4.4.4.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -707,7 +707,7 @@ fn close_event() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".parse().unwrap()),
+                    announced_ip: Some("4.4.4.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
