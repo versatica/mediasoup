@@ -198,7 +198,7 @@ namespace RTC
 		for (; it != this->mapPacketArrivalTimes.end(); ++it)
 		{
 			auto result =
-				this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
+			  this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
 
 			switch (result)
 			{
@@ -222,20 +222,20 @@ namespace RTC
 
 					// Create a new feedback packet.
 					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-						this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
 				}
 
 				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
 				{
 					// Create a new feedback packet.
 					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-						this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
 
 					// Use current packet count.
 					// NOTE: Do not increment it since the previous ongoing feedback
 					// packet was not sent.
 					this->transportCcFeedbackPacket->SetFeedbackPacketCount(
-						this->transportCcFeedbackPacketCount);
+					  this->transportCcFeedbackPacketCount);
 
 					break;
 				}
