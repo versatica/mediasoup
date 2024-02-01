@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- `TransportListenInfo`: announced ip can also be a hostname ([PR #1322](https://github.com/versatica/mediasoup/pull/1322)).
+
 ### 3.13.17
 
 - Fix prebuilt worker download ([PR #1319](https://github.com/versatica/mediasoup/pull/1319) by @brynrichards).

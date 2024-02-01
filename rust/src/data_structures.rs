@@ -51,16 +51,17 @@ impl AppData {
 ///
 /// # Notes on usage
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListenInfo {
     /// Network protocol.
     pub protocol: Protocol,
     /// Listening IPv4 or IPv6.
     pub ip: IpAddr,
-    /// Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with private IP).
+    /// Announced IPv4, IPv6 or hostname (useful when running mediasoup behind
+    /// NAT with private IP).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub announced_ip: Option<IpAddr>,
+    pub announced_ip: Option<String>,
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
@@ -76,14 +77,14 @@ pub struct ListenInfo {
 }
 
 impl ListenInfo {
-    pub(crate) fn to_fbs(self) -> transport::ListenInfo {
+    pub(crate) fn to_fbs(&self) -> transport::ListenInfo {
         transport::ListenInfo {
             protocol: match self.protocol {
                 Protocol::Tcp => transport::Protocol::Tcp,
                 Protocol::Udp => transport::Protocol::Udp,
             },
             ip: self.ip.to_string(),
-            announced_ip: self.announced_ip.map(|ip| ip.to_string()),
+            announced_ip: self.announced_ip.clone().map(|ip| ip.to_string()),
             port: self.port.unwrap_or(0),
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
@@ -229,8 +230,8 @@ pub struct IceCandidate {
     pub foundation: String,
     /// The assigned priority of the candidate.
     pub priority: u32,
-    /// The IP address of the candidate.
-    pub ip: IpAddr,
+    /// The IP address or hostname of the candidate.
+    pub ip: String,
     /// The protocol of the candidate.
     pub protocol: Protocol,
     /// The port for the candidate.
@@ -247,7 +248,7 @@ impl IceCandidate {
         Self {
             foundation: candidate.foundation.clone(),
             priority: candidate.priority,
-            ip: candidate.ip.parse().expect("Error parsing IP address"),
+            ip: candidate.ip.clone(),
             protocol: Protocol::from_fbs(candidate.protocol),
             port: candidate.port,
             r#type: IceCandidateType::from_fbs(candidate.type_),

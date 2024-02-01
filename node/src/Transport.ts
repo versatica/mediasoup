@@ -72,8 +72,8 @@ export type TransportListenInfo = {
 	ip: string;
 
 	/**
-	 * Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with
-	 * private IP).
+	 * Announced IPv4, IPv6 or hostname (useful when running mediasoup behind NAT
+	 * with private IP).
 	 */
 	announcedIp?: string;
 
@@ -109,8 +109,8 @@ export type TransportListenIp = {
 	ip: string;
 
 	/**
-	 * Announced IPv4 or IPv6 (useful when running mediasoup behind NAT with
-	 * private IP).
+	 * Announced IPv4, IPv6 or hostname (useful when running mediasoup behind NAT
+	 * with private IP).
 	 */
 	announcedIp?: string;
 };

@@ -608,7 +608,7 @@ impl Router {
     ///         ListenInfo {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             announced_ip: Some("9.9.9.1".to_string()),
     ///             port: None,
     ///             flags: None,
     ///             send_buffer_size: None,
@@ -696,7 +696,7 @@ impl Router {
     ///     .create_pipe_transport(PipeTransportOptions::new(ListenInfo {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         announced_ip: Some("9.9.9.1".to_string()),
     ///         port: None,
     ///         flags: None,
     ///         send_buffer_size: None,
@@ -762,7 +762,7 @@ impl Router {
     ///     .create_plain_transport(PlainTransportOptions::new(ListenInfo {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///         announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///         announced_ip: Some("9.9.9.1".to_string()),
     ///         port: None,
     ///         flags: None,
     ///         send_buffer_size: None,
@@ -973,7 +973,7 @@ impl Router {
     ///         ListenInfo {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             announced_ip: Some("9.9.9.1".to_string()),
     ///             port: None,
     ///             flags: None,
     ///             send_buffer_size: None,
@@ -1016,7 +1016,7 @@ impl Router {
     ///         ListenInfo {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///             announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///             announced_ip: Some("9.9.9.1".to_string()),
     ///             port: None,
     ///             flags: None,
     ///             send_buffer_size: None,
@@ -1202,7 +1202,7 @@ impl Router {
     ///             ListenInfo {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///                 announced_ip: Some("9.9.9.1".to_string()),
     ///                 port: None,
     ///                 flags: None,
     ///                 send_buffer_size: None,
@@ -1234,7 +1234,7 @@ impl Router {
     ///             ListenInfo {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///                 announced_ip: Some("9.9.9.1".parse().unwrap()),
+    ///                 announced_ip: Some("9.9.9.1".to_string()),
     ///                 port: None,
     ///                 flags: None,
     ///                 send_buffer_size: None,
