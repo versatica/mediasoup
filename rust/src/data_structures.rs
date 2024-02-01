@@ -369,14 +369,14 @@ impl TransportTuple {
                 local_address: tuple
                     .local_address
                     .parse()
-                    .expect("Error parsing IP address"),
+                    .expect("Error parsing local address"),
                 local_port: tuple.local_port,
                 remote_ip: tuple
                     .remote_ip
                     .as_ref()
                     .unwrap()
                     .parse()
-                    .expect("Error parsing IP address"),
+                    .expect("Error parsing remote IP address"),
                 remote_port: tuple.remote_port,
                 protocol: Protocol::from_fbs(tuple.protocol),
             },
@@ -384,7 +384,7 @@ impl TransportTuple {
                 local_address: tuple
                     .local_address
                     .parse()
-                    .expect("Error parsing IP address"),
+                    .expect("Error parsing local address"),
                 local_port: tuple.local_port,
                 protocol: Protocol::from_fbs(tuple.protocol),
             },
