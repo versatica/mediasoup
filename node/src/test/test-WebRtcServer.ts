@@ -48,7 +48,7 @@ test('worker.createWebRtcServer() succeeds', async () => {
 			{
 				protocol: 'tcp',
 				ip: '127.0.0.1',
-				announcedIp: '1.2.3.4',
+				announcedIp: 'foo.bar.org',
 				port: port2,
 			},
 		],

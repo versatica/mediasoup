@@ -95,7 +95,7 @@ impl WebRtcServerListenInfos {
     pub(crate) fn to_fbs(&self) -> Vec<transport::ListenInfo> {
         self.0
             .iter()
-            .map(|listen_info| listen_info.to_fbs())
+            .map(|listen_info| listen_info.clone().to_fbs())
             .collect()
     }
 }
