@@ -86,7 +86,7 @@ enum IceState: uint8 {
 table IceCandidate {
     foundation: string (required);
     priority: uint32;
-    ip: string (required);
+    address: string (required);
     protocol: FBS.Transport.Protocol = UDP;
     port: uint16;
     type: IceCandidateType;

@@ -719,7 +719,7 @@ impl PipeTransport {
     ///
     /// # Notes on usage
     /// * Once the pipe transport is created, `transport.tuple()` will contain information about
-    ///   its `local_ip`, `local_port` and `protocol`.
+    ///   its `local_address`, `local_port` and `protocol`.
     /// * Information about `remote_ip` and `remote_port` will be set after calling `connect()`
     ///   method.
     #[must_use]

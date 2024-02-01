@@ -55,7 +55,7 @@ fn create_with_webrtc_server_succeeds() {
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port1),
                     flags: None,
                     send_buffer_size: None,
@@ -64,7 +64,7 @@ fn create_with_webrtc_server_succeeds() {
                 let listen_infos = listen_infos.insert(ListenInfo {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port2),
                     flags: None,
                     send_buffer_size: None,
@@ -132,7 +132,7 @@ fn create_with_webrtc_server_succeeds() {
         {
             let ice_candidates = transport.ice_candidates();
             assert_eq!(ice_candidates.len(), 1);
-            assert_eq!(ice_candidates[0].ip, "127.0.0.1");
+            assert_eq!(ice_candidates[0].address, "127.0.0.1");
             assert_eq!(ice_candidates[0].protocol, Protocol::Tcp);
             assert_eq!(ice_candidates[0].port, port2);
             assert_eq!(ice_candidates[0].r#type, IceCandidateType::Host);
@@ -233,7 +233,7 @@ fn router_close_event() {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("9.9.9.1".to_string()),
+                    announced_address: Some("9.9.9.1".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -275,7 +275,7 @@ fn webrtc_server_close_event() {
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port1),
                     flags: None,
                     send_buffer_size: None,
@@ -284,7 +284,7 @@ fn webrtc_server_close_event() {
                 let listen_infos = listen_infos.insert(ListenInfo {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port2),
                     flags: None,
                     send_buffer_size: None,

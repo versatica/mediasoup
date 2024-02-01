@@ -28,14 +28,15 @@ namespace RTC
 		struct UdpSocketOrTcpServer
 		{
 			// Expose a constructor to use vector.emplace_back().
-			UdpSocketOrTcpServer(RTC::UdpSocket* udpSocket, RTC::TcpServer* tcpServer, std::string& announcedIp)
-			  : udpSocket(udpSocket), tcpServer(tcpServer), announcedIp(announcedIp)
+			UdpSocketOrTcpServer(
+			  RTC::UdpSocket* udpSocket, RTC::TcpServer* tcpServer, std::string& announcedAddress)
+			  : udpSocket(udpSocket), tcpServer(tcpServer), announcedAddress(announcedAddress)
 			{
 			}
 
 			RTC::UdpSocket* udpSocket;
 			RTC::TcpServer* tcpServer;
-			std::string announcedIp;
+			std::string announcedAddress;
 		};
 
 	private:

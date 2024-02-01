@@ -21,7 +21,7 @@ table SocketFlags {
 table ListenInfo {
     protocol: Protocol = UDP;
     ip: string (required);
-    announced_ip: string;
+    announced_address: string;
     port: uint16 = 0;
     flags: SocketFlags (required);
     send_buffer_size: uint32 = 0;
@@ -87,7 +87,7 @@ table ConsumeDataRequest {
 }
 
 table Tuple {
-    local_ip: string (required);
+    local_address: string (required);
     local_port: uint16;
     remote_ip: string;
     remote_port: uint16;

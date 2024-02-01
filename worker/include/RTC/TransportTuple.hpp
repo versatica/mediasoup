@@ -41,7 +41,7 @@ namespace RTC
 
 		explicit TransportTuple(const TransportTuple* tuple)
 		  : hash(tuple->hash), udpSocket(tuple->udpSocket), udpRemoteAddr(tuple->udpRemoteAddr),
-		    tcpConnection(tuple->tcpConnection), localAnnouncedIp(tuple->localAnnouncedIp),
+		    tcpConnection(tuple->tcpConnection), localAnnouncedAddress(tuple->localAnnouncedAddress),
 		    protocol(tuple->protocol)
 		{
 			if (protocol == TransportTuple::Protocol::UDP)
@@ -92,9 +92,9 @@ namespace RTC
 			return this->hash == tuple->hash;
 		}
 
-		void SetLocalAnnouncedIp(std::string& localAnnouncedIp)
+		void SetLocalAnnouncedAddress(std::string& localAnnouncedAddress)
 		{
-			this->localAnnouncedIp = localAnnouncedIp;
+			this->localAnnouncedAddress = localAnnouncedAddress;
 		}
 
 		void Send(const uint8_t* data, size_t len, RTC::TransportTuple::onSendCallback* cb = nullptr)
@@ -243,7 +243,7 @@ namespace RTC
 		RTC::UdpSocket* udpSocket{ nullptr };
 		struct sockaddr* udpRemoteAddr{ nullptr };
 		RTC::TcpConnection* tcpConnection{ nullptr };
-		std::string localAnnouncedIp;
+		std::string localAnnouncedAddress;
 		// Others.
 		struct sockaddr_storage udpRemoteAddrStorage
 		{

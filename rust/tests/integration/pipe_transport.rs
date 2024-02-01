@@ -259,7 +259,7 @@ async fn init() -> (
         WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
             protocol: Protocol::Udp,
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-            announced_ip: None,
+            announced_address: None,
             port: None,
             flags: None,
             send_buffer_size: None,
@@ -604,7 +604,7 @@ fn weak() {
                 let mut options = PipeTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -639,7 +639,7 @@ fn create_with_fixed_port_succeeds() {
                 PipeTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port),
                     flags: None,
                     send_buffer_size: None,
@@ -663,7 +663,7 @@ fn create_with_enable_rtx_succeeds() {
                 let mut options = PipeTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -776,7 +776,7 @@ fn create_with_enable_srtp_succeeds() {
                 let mut options = PipeTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -832,7 +832,7 @@ fn create_with_invalid_srtp_parameters_fails() {
             .create_pipe_transport(PipeTransportOptions::new(ListenInfo {
                 protocol: Protocol::Udp,
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                announced_ip: None,
+                announced_address: None,
                 port: None,
                 flags: None,
                 send_buffer_size: None,
@@ -1159,7 +1159,7 @@ fn pipe_to_router_called_twice_generates_single_pair() {
             WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
                 protocol: Protocol::Udp,
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                announced_ip: None,
+                announced_address: None,
                 port: None,
                 flags: None,
                 send_buffer_size: None,

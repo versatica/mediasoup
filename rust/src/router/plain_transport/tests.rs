@@ -40,7 +40,7 @@ fn router_close_event() {
                 let mut plain_transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("4.4.4.4".to_string()),
+                    announced_address: Some("4.4.4.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,

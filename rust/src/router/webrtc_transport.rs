@@ -88,8 +88,8 @@ impl TryFrom<Vec<ListenInfo>> for WebRtcTransportListenInfos {
 /// # Notes on usage
 /// * Do not use "0.0.0.0" into `listen_infos`. Values in `listen_infos` must be specific bindable IPs
 ///   on the host.
-/// * If you use "0.0.0.0" or "::" into `listen_infos`, then you need to also provide `announced_ip`
-///   in the corresponding entry in `listen_infos`.
+/// * If you use "0.0.0.0" or "::" into `listen_infos`, then you need to also provide
+/// `announced_address` in the corresponding entry in `listen_infos`.
 #[derive(Debug, Clone)]
 pub enum WebRtcTransportListen {
     /// Listen on individual protocol/IP/port combinations specific to this transport.

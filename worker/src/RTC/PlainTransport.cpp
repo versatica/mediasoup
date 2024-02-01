@@ -47,9 +47,10 @@ namespace RTC
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+		if (flatbuffers::IsFieldPresent(
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
-			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
+			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
 
 		this->listenInfo.port               = options->listenInfo()->port();
@@ -77,9 +78,10 @@ namespace RTC
 				Utils::IP::NormalizeIp(this->rtcpListenInfo.ip);
 
 				if (flatbuffers::IsFieldPresent(
-				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+				      options->rtcpListenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 				{
-					this->rtcpListenInfo.announcedIp.assign(options->rtcpListenInfo()->announcedIp()->str());
+					this->rtcpListenInfo.announcedAddress.assign(
+					  options->rtcpListenInfo()->announcedAddress()->str());
 				}
 
 				this->rtcpListenInfo.port           = options->rtcpListenInfo()->port();
@@ -254,13 +256,13 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenInfo.announcedIp.empty())
+			if (this->listenInfo.announcedAddress.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
 			}
 			else
 			{
-				localIp = this->listenInfo.announcedIp;
+				localIp = this->listenInfo.announcedAddress;
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
@@ -285,13 +287,13 @@ namespace RTC
 			{
 				std::string localIp;
 
-				if (this->rtcpListenInfo.announcedIp.empty())
+				if (this->rtcpListenInfo.announcedAddress.empty())
 				{
 					localIp = this->rtcpUdpSocket->GetLocalIp();
 				}
 				else
 				{
-					localIp = this->rtcpListenInfo.announcedIp;
+					localIp = this->rtcpListenInfo.announcedAddress;
 				}
 
 				rtcpTuple = FBS::Transport::CreateTupleDirect(
@@ -336,13 +338,13 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenInfo.announcedIp.empty())
+			if (this->listenInfo.announcedAddress.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
 			}
 			else
 			{
-				localIp = this->listenInfo.announcedIp;
+				localIp = this->listenInfo.announcedAddress;
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
@@ -605,9 +607,9 @@ namespace RTC
 						this->tuple = new RTC::TransportTuple(
 						  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
-						if (!this->listenInfo.announcedIp.empty())
+						if (!this->listenInfo.announcedAddress.empty())
 						{
-							this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+							this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
 						}
 
 						if (!this->rtcpMux)
@@ -655,9 +657,9 @@ namespace RTC
 							  this->rtcpUdpSocket,
 							  reinterpret_cast<struct sockaddr*>(&this->rtcpRemoteAddrStorage));
 
-							if (!this->rtcpListenInfo.announcedIp.empty())
+							if (!this->rtcpListenInfo.announcedAddress.empty())
 							{
-								this->rtcpTuple->SetLocalAnnouncedIp(this->rtcpListenInfo.announcedIp);
+								this->rtcpTuple->SetLocalAnnouncedAddress(this->rtcpListenInfo.announcedAddress);
 							}
 						}
 					}
@@ -980,9 +982,9 @@ namespace RTC
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenInfo.announcedIp.empty())
+			if (!this->listenInfo.announcedAddress.empty())
 			{
-				this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+				this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
 			}
 
 			// If not yet connected do it now.
@@ -1045,9 +1047,9 @@ namespace RTC
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenInfo.announcedIp.empty())
+			if (!this->listenInfo.announcedAddress.empty())
 			{
-				this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+				this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
 			}
 
 			// If not yet connected do it now.
@@ -1074,9 +1076,9 @@ namespace RTC
 
 			this->rtcpTuple = new RTC::TransportTuple(tuple);
 
-			if (!this->rtcpListenInfo.announcedIp.empty())
+			if (!this->rtcpListenInfo.announcedAddress.empty())
 			{
-				this->rtcpTuple->SetLocalAnnouncedIp(this->rtcpListenInfo.announcedIp);
+				this->rtcpTuple->SetLocalAnnouncedAddress(this->rtcpListenInfo.announcedAddress);
 			}
 
 			// Notify the Node PlainTransport.
@@ -1131,9 +1133,9 @@ namespace RTC
 
 			this->tuple = new RTC::TransportTuple(tuple);
 
-			if (!this->listenInfo.announcedIp.empty())
+			if (!this->listenInfo.announcedAddress.empty())
 			{
-				this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+				this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
 			}
 
 			// If not yet connected do it now.

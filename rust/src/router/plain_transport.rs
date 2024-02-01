@@ -903,7 +903,7 @@ impl PlainTransport {
     ///
     /// # Notes on usage
     /// * Once the plain transport is created, `transport.tuple()` will contain information about
-    ///   its `local_ip`, `local_port` and `protocol`.
+    ///   its `local_address`, `local_port` and `protocol`.
     /// * Information about `remote_ip` and `remote_port` will be set:
     ///   * after calling `connect()` method, or
     ///   * via dynamic remote address detection when using `comedia` mode.
@@ -917,7 +917,7 @@ impl PlainTransport {
     ///
     /// # Notes on usage
     /// * Once the plain transport is created (with RTCP-mux disabled), `transport.rtcp_tuple()`
-    ///   will contain information about its `local_ip`, `local_port` and `protocol`.
+    ///   will contain information about its `local_address`, `local_port` and `protocol`.
     /// * Information about `remote_ip` and `remote_port` will be set:
     ///   * after calling `connect()` method, or
     ///   * via dynamic remote address detection when using `comedia` mode.

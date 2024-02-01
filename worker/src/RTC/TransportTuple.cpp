@@ -46,8 +46,6 @@ namespace RTC
 
 		Utils::IP::GetAddressInfo(GetLocalAddress(), family, localIp, localPort);
 
-		localIp = this->localAnnouncedIp.empty() ? localIp : this->localAnnouncedIp;
-
 		std::string remoteIp;
 		uint16_t remotePort;
 
@@ -56,7 +54,12 @@ namespace RTC
 		auto protocol = TransportTuple::ProtocolToFbs(GetProtocol());
 
 		return FBS::Transport::CreateTupleDirect(
-		  builder, localIp.c_str(), localPort, remoteIp.c_str(), remotePort, protocol);
+		  builder,
+		  (this->localAnnouncedAddress.empty() ? localIp : this->localAnnouncedAddress).c_str(),
+		  localPort,
+		  remoteIp.c_str(),
+		  remotePort,
+		  protocol);
 	}
 
 	void TransportTuple::Dump() const

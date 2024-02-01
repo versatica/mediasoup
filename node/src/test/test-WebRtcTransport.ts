@@ -541,7 +541,9 @@ test('WebRtcTransport events succeed', async () => {
 
 	const onIceSelectedTuple = jest.fn();
 	const iceSelectedTuple: TransportTuple = {
+		// @deprecated Use localAddress.
 		localIp: '1.1.1.1',
+		localAddress: '1.1.1.1',
 		localPort: 1111,
 		remoteIp: '2.2.2.2',
 		remotePort: 2222,
@@ -554,7 +556,7 @@ test('WebRtcTransport events succeed', async () => {
 	const iceSelectedTupleChangeNotification =
 		new FbsWebRtcTransport.IceSelectedTupleChangeNotificationT(
 			new FbsTransport.TupleT(
-				iceSelectedTuple.localIp,
+				iceSelectedTuple.localAddress,
 				iceSelectedTuple.localPort,
 				iceSelectedTuple.remoteIp,
 				iceSelectedTuple.remotePort,

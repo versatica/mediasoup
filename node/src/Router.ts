@@ -867,7 +867,7 @@ export class Router<
 			listenInfo = {
 				protocol: 'udp',
 				ip: listenIp.ip,
-				announcedIp: listenIp.announcedIp,
+				announcedAddress: listenIp.announcedIp,
 				port: port,
 			};
 		}
@@ -896,7 +896,7 @@ export class Router<
 					? FbsTransportProtocol.UDP
 					: FbsTransportProtocol.TCP,
 				listenInfo!.ip,
-				listenInfo!.announcedIp,
+				listenInfo!.announcedAddress,
 				listenInfo!.port,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
@@ -1162,12 +1162,12 @@ export class Router<
 					.then(() => {
 						return Promise.all([
 							localPipeTransport.connect({
-								ip: remotePipeTransport.tuple.localIp,
+								ip: remotePipeTransport.tuple.localAddress,
 								port: remotePipeTransport.tuple.localPort,
 								srtpParameters: remotePipeTransport.srtpParameters,
 							}),
 							remotePipeTransport.connect({
-								ip: localPipeTransport.tuple.localIp,
+								ip: localPipeTransport.tuple.localAddress,
 								port: localPipeTransport.tuple.localPort,
 								srtpParameters: localPipeTransport.srtpParameters,
 							}),

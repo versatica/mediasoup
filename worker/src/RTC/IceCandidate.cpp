@@ -69,8 +69,8 @@ namespace RTC
 		  this->foundation.c_str(),
 		  // priority.
 		  this->priority,
-		  // ip.
-		  this->ip.c_str(),
+		  // address.
+		  this->address.c_str(),
 		  // protocol.
 		  protocol,
 		  // port.

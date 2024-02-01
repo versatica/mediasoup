@@ -50,7 +50,8 @@ impl AppData {
 /// Listening protocol, IP and port for [`WebRtcServer`](crate::webrtc_server::WebRtcServer) to listen on.
 ///
 /// # Notes on usage
-/// If you use "0.0.0.0" or "::" as ip value, then you need to also provide `announced_ip`.
+/// If you use "0.0.0.0" or "::" as ip value, then you need to also provide
+/// `announced_address`.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListenInfo {
@@ -61,7 +62,7 @@ pub struct ListenInfo {
     /// Announced IPv4, IPv6 or hostname (useful when running mediasoup behind
     /// NAT with private IP).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub announced_ip: Option<String>,
+    pub announced_address: Option<String>,
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
@@ -84,7 +85,10 @@ impl ListenInfo {
                 Protocol::Udp => transport::Protocol::Udp,
             },
             ip: self.ip.to_string(),
-            announced_ip: self.announced_ip.clone().map(|ip| ip.to_string()),
+            announced_address: self
+                .announced_address
+                .clone()
+                .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
@@ -231,7 +235,7 @@ pub struct IceCandidate {
     /// The assigned priority of the candidate.
     pub priority: u32,
     /// The IP address or hostname of the candidate.
-    pub ip: String,
+    pub address: String,
     /// The protocol of the candidate.
     pub protocol: Protocol,
     /// The port for the candidate.
@@ -248,7 +252,7 @@ impl IceCandidate {
         Self {
             foundation: candidate.foundation.clone(),
             priority: candidate.priority,
-            ip: candidate.ip.clone(),
+            address: candidate.address.clone(),
             protocol: Protocol::from_fbs(candidate.protocol),
             port: candidate.port,
             r#type: IceCandidateType::from_fbs(candidate.type_),
@@ -299,8 +303,8 @@ pub enum TransportTuple {
     /// Transport tuple with remote endpoint info.
     #[serde(rename_all = "camelCase")]
     WithRemote {
-        /// Local IP address.
-        local_ip: IpAddr,
+        /// Local IP address or hostname.
+        local_address: IpAddr,
         /// Local port.
         local_port: u16,
         /// Remote IP address.
@@ -313,8 +317,8 @@ pub enum TransportTuple {
     /// Transport tuple without remote endpoint info.
     #[serde(rename_all = "camelCase")]
     LocalOnly {
-        /// Local IP address.
-        local_ip: IpAddr,
+        /// Local IP address or hostname.
+        local_address: IpAddr,
         /// Local port.
         local_port: u16,
         /// Protocol
@@ -323,10 +327,10 @@ pub enum TransportTuple {
 }
 
 impl TransportTuple {
-    /// Local IP address.
-    pub fn local_ip(&self) -> IpAddr {
-        let (Self::WithRemote { local_ip, .. } | Self::LocalOnly { local_ip, .. }) = self;
-        *local_ip
+    /// Local IP address or hostname.
+    pub fn local_address(&self) -> IpAddr {
+        let (Self::WithRemote { local_address, .. } | Self::LocalOnly { local_address, .. }) = self;
+        *local_address
     }
 
     /// Local port.
@@ -362,7 +366,10 @@ impl TransportTuple {
     pub(crate) fn from_fbs(tuple: &transport::Tuple) -> TransportTuple {
         match &tuple.remote_ip {
             Some(_remote_ip) => TransportTuple::WithRemote {
-                local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
+                local_address: tuple
+                    .local_address
+                    .parse()
+                    .expect("Error parsing IP address"),
                 local_port: tuple.local_port,
                 remote_ip: tuple
                     .remote_ip
@@ -374,7 +381,10 @@ impl TransportTuple {
                 protocol: Protocol::from_fbs(tuple.protocol),
             },
             None => TransportTuple::LocalOnly {
-                local_ip: tuple.local_ip.parse().expect("Error parsing IP address"),
+                local_address: tuple
+                    .local_address
+                    .parse()
+                    .expect("Error parsing IP address"),
                 local_port: tuple.local_port,
                 protocol: Protocol::from_fbs(tuple.protocol),
             },

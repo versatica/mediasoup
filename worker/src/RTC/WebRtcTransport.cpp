@@ -55,11 +55,11 @@ namespace RTC
 				// This may throw.
 				Utils::IP::NormalizeIp(ip);
 
-				std::string announcedIp;
+				std::string announcedAddress;
 
-				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 				{
-					announcedIp = listenInfo->announcedIp()->str();
+					announcedAddress = listenInfo->announcedAddress()->str();
 				}
 
 				RTC::Transport::SocketFlags flags;
@@ -84,15 +84,15 @@ namespace RTC
 						udpSocket = new RTC::UdpSocket(this, ip, flags);
 					}
 
-					this->udpSockets[udpSocket] = announcedIp;
+					this->udpSockets[udpSocket] = announcedAddress;
 
-					if (announcedIp.empty())
+					if (announcedAddress.empty())
 					{
 						this->iceCandidates.emplace_back(udpSocket, icePriority);
 					}
 					else
 					{
-						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedIp);
+						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedAddress);
 					}
 
 					if (listenInfo->sendBufferSize() != 0)
@@ -126,15 +126,15 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(this, this, ip, flags);
 					}
 
-					this->tcpServers[tcpServer] = announcedIp;
+					this->tcpServers[tcpServer] = announcedAddress;
 
-					if (announcedIp.empty())
+					if (announcedAddress.empty())
 					{
 						this->iceCandidates.emplace_back(tcpServer, icePriority);
 					}
 					else
 					{
-						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedIp);
+						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedAddress);
 					}
 
 					if (listenInfo->sendBufferSize() != 0)
