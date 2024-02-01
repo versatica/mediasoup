@@ -212,6 +212,7 @@ namespace RTC
 			~FeedbackRtpTransportPacket() override;
 
 		public:
+			void SetBase(uint16_t sequenceNumber, uint64_t timestamp);
 			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			// Just for locally generated packets.
 			void Finish();
@@ -317,6 +318,8 @@ namespace RTC
 			void AddPendingChunks();
 
 		private:
+			// Whether baseSequenceNumber has been set.
+			bool baseSet{ false };
 			uint16_t baseSequenceNumber{ 0u };
 			// 24 bits signed integer.
 			int32_t referenceTime{ 0 };

@@ -6,6 +6,7 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/SeqManager.hpp"
 #include "handles/TimerHandle.hpp"
 #include <libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h>
 #include <deque>
@@ -54,10 +55,12 @@ namespace RTC
 		double GetPacketLoss() const;
 		void IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet);
 		void SetMaxIncomingBitrate(uint32_t bitrate);
+		void FillAndSendTransportCcFeedback();
 
 	private:
 		void SendTransportCcFeedback();
-		void MaySendLimitationRembFeedback();
+		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
+		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
@@ -89,6 +92,10 @@ namespace RTC
 		uint8_t unlimitedRembCounter{ 0u };
 		std::deque<double> packetLossHistory;
 		double packetLoss{ 0 };
+		// Whether any packet with transport wide sequence number was received.
+		bool transportWideSeqNumberReceived{ false };
+		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
+		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};
 } // namespace RTC
 
