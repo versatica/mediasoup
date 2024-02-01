@@ -187,60 +187,62 @@ namespace RTC
 
 		auto it = this->mapPacketArrivalTimes.lower_bound(this->transportCcFeedbackWideSeqNumStart);
 
-		if (it != this->mapPacketArrivalTimes.end())
+		if (it == this->mapPacketArrivalTimes.end())
 		{
-			// Set base sequence num and reference time.
-			this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, it->second);
+			return;
+		}
 
-			for (; it != this->mapPacketArrivalTimes.end(); ++it)
+		// Set base sequence num and reference time.
+		this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, it->second);
+
+		for (; it != this->mapPacketArrivalTimes.end(); ++it)
+		{
+			auto result =
+				this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
+
+			switch (result)
 			{
-				auto result =
-				  this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
-
-				switch (result)
+				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
 				{
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::SUCCESS:
+					// If the feedback packet is full, send it now.
+					if (this->transportCcFeedbackPacket->IsFull())
 					{
-						// If the feedback packet is full, send it now.
-						if (this->transportCcFeedbackPacket->IsFull())
-						{
-							MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
+						MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
 
-							SendTransportCcFeedback();
-						}
-
-						break;
+						SendTransportCcFeedback();
 					}
 
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
-					{
-						// This should not happen.
-						MS_WARN_DEV("transport-cc feedback packet is exceeded");
+					break;
+				}
 
-						// Create a new feedback packet.
-						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
-					}
+				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
+				{
+					// This should not happen.
+					MS_WARN_DEV("transport-cc feedback packet is exceeded");
 
-					case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
-					{
-						// Create a new feedback packet.
-						this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
-						  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+					// Create a new feedback packet.
+					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+						this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+				}
 
-						// Use current packet count.
-						// NOTE: Do not increment it since the previous ongoing feedback
-						// packet was not sent.
-						this->transportCcFeedbackPacket->SetFeedbackPacketCount(
-						  this->transportCcFeedbackPacketCount);
+				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
+				{
+					// Create a new feedback packet.
+					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+						this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
 
-						break;
-					}
+					// Use current packet count.
+					// NOTE: Do not increment it since the previous ongoing feedback
+					// packet was not sent.
+					this->transportCcFeedbackPacket->SetFeedbackPacketCount(
+						this->transportCcFeedbackPacketCount);
+
+					break;
 				}
 			}
-
-			SendTransportCcFeedback();
 		}
+
+		SendTransportCcFeedback();
 	}
 
 	void TransportCongestionControlServer::SetMaxIncomingBitrate(uint32_t bitrate)
