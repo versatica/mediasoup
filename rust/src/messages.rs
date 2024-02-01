@@ -644,7 +644,7 @@ impl RouterCreateWebrtcTransportListen {
                     web_rtc_transport::ListenIndividual {
                         listen_infos: listen_infos
                             .iter()
-                            .map(|listen_info| listen_info.clone().to_fbs())
+                            .map(|listen_info| listen_info.to_fbs())
                             .collect(),
                     },
                 ))
