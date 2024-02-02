@@ -122,23 +122,25 @@ pub struct RtpListener {
 }
 
 impl RtpListener {
-    pub(crate) fn from_fbs(rtp_listener: &transport::RtpListener) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs(
+        rtp_listener: &transport::RtpListener,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             mid_table: rtp_listener
                 .mid_table
                 .iter()
                 .map(|key_value| Ok((key_value.key.to_string(), key_value.value.parse()?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             rid_table: rtp_listener
                 .rid_table
                 .iter()
                 .map(|key_value| Ok((key_value.key.to_string(), key_value.value.parse()?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             ssrc_table: rtp_listener
                 .ssrc_table
                 .iter()
                 .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
         })
     }
 }
@@ -175,13 +177,15 @@ pub struct SctpListener {
 }
 
 impl SctpListener {
-    pub(crate) fn from_fbs(listener: &transport::SctpListener) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs(
+        listener: &transport::SctpListener,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             stream_id_table: listener
                 .stream_id_table
                 .iter()
                 .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
         })
     }
 }

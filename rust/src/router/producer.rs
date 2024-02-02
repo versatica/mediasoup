@@ -108,7 +108,9 @@ pub struct RtpStreamRecv {
 }
 
 impl RtpStreamRecv {
-    pub(crate) fn from_fbs_ref(dump: rtp_stream::DumpRef<'_>) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs_ref(
+        dump: rtp_stream::DumpRef<'_>,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
             score: dump.score()?,
@@ -141,7 +143,7 @@ pub struct ProducerDump {
 impl ProducerDump {
     pub(crate) fn from_fbs_ref(
         dump: producer::DumpResponseRef<'_>,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             id: dump.id()?.parse()?,
             kind: MediaKind::from_fbs(dump.kind()?),
@@ -152,7 +154,7 @@ impl ProducerDump {
                 .rtp_streams()?
                 .iter()
                 .map(|rtp_stream| RtpStreamRecv::from_fbs_ref(rtp_stream?))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             trace_event_types: dump
                 .trace_event_types()?
                 .iter()
