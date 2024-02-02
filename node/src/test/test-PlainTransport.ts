@@ -73,7 +73,11 @@ test('router.createPlainTransport() succeeds', async () => {
 
 	// Create a separate transport here.
 	const plainTransport2 = await ctx.router!.createPlainTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			announcedAddress: '9.9.9.1',
+		},
 		enableSctp: true,
 		appData: { foo: 'bar' },
 	});

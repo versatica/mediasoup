@@ -526,7 +526,7 @@ export class Router<
 					listenInfos.push({
 						protocol: protocol,
 						ip: listenIp.ip,
-						announcedIp: listenIp.announcedIp,
+						announcedAddress: listenIp.announcedIp,
 						port: port,
 					});
 				}
@@ -557,7 +557,7 @@ export class Router<
 							? FbsTransportProtocol.UDP
 							: FbsTransportProtocol.TCP,
 						listenInfo.ip,
-						listenInfo.announcedIp,
+						listenInfo.announcedAddress ?? listenInfo.announcedIp,
 						listenInfo.port,
 						socketFlagsToFbs(listenInfo.flags),
 						listenInfo.sendBufferSize,
@@ -715,7 +715,7 @@ export class Router<
 			listenInfo = {
 				protocol: 'udp',
 				ip: listenIp.ip,
-				announcedIp: listenIp.announcedIp,
+				announcedAddress: listenIp.announcedIp,
 				port: port,
 			};
 		}
@@ -744,7 +744,7 @@ export class Router<
 					? FbsTransportProtocol.UDP
 					: FbsTransportProtocol.TCP,
 				listenInfo!.ip,
-				listenInfo!.announcedIp,
+				listenInfo!.announcedAddress ?? listenInfo!.announcedIp,
 				listenInfo!.port,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
@@ -756,7 +756,7 @@ export class Router<
 							? FbsTransportProtocol.UDP
 							: FbsTransportProtocol.TCP,
 						rtcpListenInfo.ip,
-						rtcpListenInfo.announcedIp,
+						rtcpListenInfo.announcedAddress ?? rtcpListenInfo.announcedIp,
 						rtcpListenInfo.port,
 						socketFlagsToFbs(rtcpListenInfo.flags),
 						rtcpListenInfo.sendBufferSize,
@@ -896,7 +896,7 @@ export class Router<
 					? FbsTransportProtocol.UDP
 					: FbsTransportProtocol.TCP,
 				listenInfo!.ip,
-				listenInfo!.announcedAddress,
+				listenInfo!.announcedAddress ?? listenInfo!.announcedIp,
 				listenInfo!.port,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
@@ -1105,7 +1105,7 @@ export class Router<
 			listenInfo = {
 				protocol: 'udp',
 				ip: listenIp.ip,
-				announcedIp: listenIp.announcedIp,
+				announcedAddress: listenIp.announcedIp,
 			};
 		}
 
