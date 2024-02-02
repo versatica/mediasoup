@@ -23,15 +23,7 @@ int main(int argc, char* argv[])
 	const std::string version = std::getenv("MEDIASOUP_VERSION");
 
 	auto statusCode = mediasoup_worker_run(
-	  argc,
-	  argv,
-	  version.c_str(),
-	  ConsumerChannelFd,
-	  ProducerChannelFd,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr);
+	  argc, argv, version.c_str(), ConsumerChannelFd, ProducerChannelFd, nullptr, nullptr, nullptr, nullptr);
 
 	std::_Exit(statusCode);
 }
