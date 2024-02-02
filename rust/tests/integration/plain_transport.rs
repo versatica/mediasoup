@@ -169,7 +169,7 @@ fn create_succeeds() {
                 ..
             } = transport1.tuple()
             {
-                assert_eq!(local_address, "9.9.9.1".parse::<IpAddr>().unwrap());
+                assert_eq!(local_address, "9.9.9.1");
                 assert_eq!(protocol, Protocol::Udp);
             }
             assert_eq!(transport1.rtcp_tuple(), None);
@@ -244,7 +244,7 @@ fn create_succeeds() {
                 ..
             } = transport2.tuple()
             {
-                assert_eq!(local_address, "127.0.0.1".parse::<IpAddr>().unwrap());
+                assert_eq!(local_address, "127.0.0.1");
                 assert_eq!(protocol, Protocol::Udp);
             }
             assert!(transport2.rtcp_tuple().is_some());
@@ -255,7 +255,7 @@ fn create_succeeds() {
                 ..
             } = transport2.rtcp_tuple().unwrap()
             {
-                assert_eq!(local_address, "127.0.0.1".parse::<IpAddr>().unwrap());
+                assert_eq!(local_address, "127.0.0.1");
                 assert_eq!(local_port, rtcp_port);
                 assert_eq!(protocol, Protocol::Udp);
             }
@@ -577,10 +577,10 @@ fn get_stats_succeeds() {
             local_address,
             protocol,
             ..
-        } = stats[0].tuple
+        } = &stats[0].tuple
         {
-            assert_eq!(local_address, "4.4.4.4".parse::<IpAddr>().unwrap());
-            assert_eq!(protocol, Protocol::Udp);
+            assert_eq!(local_address, "4.4.4.4");
+            assert_eq!(*protocol, Protocol::Udp);
         }
         assert_eq!(stats[0].rtcp_tuple, None);
     });

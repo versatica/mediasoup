@@ -686,12 +686,12 @@ impl PlainTransport {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Tuple { tuple } => {
-                            *data.tuple.lock() = tuple;
+                            *data.tuple.lock() = tuple.clone();
 
                             handlers.tuple.call_simple(&tuple);
                         }
                         Notification::RtcpTuple { rtcp_tuple } => {
-                            data.rtcp_tuple.lock().replace(rtcp_tuple);
+                            data.rtcp_tuple.lock().replace(rtcp_tuple.clone());
 
                             handlers.rtcp_tuple.call_simple(&rtcp_tuple);
                         }
@@ -923,7 +923,7 @@ impl PlainTransport {
     ///   * via dynamic remote address detection when using `comedia` mode.
     #[must_use]
     pub fn rtcp_tuple(&self) -> Option<TransportTuple> {
-        *self.inner.data.rtcp_tuple.lock()
+        self.inner.data.rtcp_tuple.lock().clone()
     }
 
     /// Current SCTP state. Or `None` if SCTP is not enabled.
