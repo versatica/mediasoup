@@ -167,13 +167,13 @@ impl IceParameters {
 #[serde(rename_all = "lowercase")]
 pub enum IceCandidateType {
     /// The candidate is a host candidate, whose IP address as specified in the
-    /// [`IceCandidate::ip`] property is in fact the true address of the remote peer.
+    /// [`IceCandidate::address`] property is in fact the true address of the remote peer.
     Host,
-    /// The candidate is a server reflexive candidate; the [`IceCandidate::ip`] indicates an
+    /// The candidate is a server reflexive candidate; the [`IceCandidate::address`] indicates an
     /// intermediary address assigned by the STUN server to represent the candidate's peer
     /// anonymously.
     Srflx,
-    /// The candidate is a peer reflexive candidate; the [`IceCandidate::ip`] is an intermediary
+    /// The candidate is a peer reflexive candidate; the [`IceCandidate::address`] is an intermediary
     /// address assigned by the STUN server to represent the candidate's peer anonymously.
     Prflx,
     /// The candidate is a relay candidate, obtained from a TURN server. The relay candidate's IP
