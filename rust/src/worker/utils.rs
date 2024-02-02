@@ -80,8 +80,6 @@ where
                     version.as_ptr(),
                     0,
                     0,
-                    0,
-                    0,
                     channel_read_fn,
                     channel_read_ctx,
                     channel_write_fn,

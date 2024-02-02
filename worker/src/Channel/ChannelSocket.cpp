@@ -137,7 +137,7 @@ namespace Channel
 			return;
 		}
 
-		SendImpl(reinterpret_cast<const uint8_t*>(data), dataLen);
+		SendImpl(data, dataLen);
 	}
 
 	void ChannelSocket::SendLog(const char* data, uint32_t dataLen)

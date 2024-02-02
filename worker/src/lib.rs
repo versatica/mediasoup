@@ -51,8 +51,6 @@ extern "C" {
         version: *const c_char,
         consumer_channel_fd: c_int,
         producer_channel_fd: c_int,
-        payload_consumer_channel_fd: c_int,
-        payload_producer_channel_fd: c_int,
         channel_read_fn: ChannelReadFn,
         channel_read_ctx: ChannelReadCtx,
         channel_write_fn: ChannelWriteFn,

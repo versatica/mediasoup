@@ -8,8 +8,6 @@
 
 static constexpr int ConsumerChannelFd{ 3 };
 static constexpr int ProducerChannelFd{ 4 };
-static constexpr int PayloadConsumerChannelFd{ 5 };
-static constexpr int PayloadProducerChannelFd{ 6 };
 
 int main(int argc, char* argv[])
 {
@@ -30,8 +28,6 @@ int main(int argc, char* argv[])
 	  version.c_str(),
 	  ConsumerChannelFd,
 	  ProducerChannelFd,
-	  PayloadConsumerChannelFd,
-	  PayloadProducerChannelFd,
 	  nullptr,
 	  nullptr,
 	  nullptr,
