@@ -328,9 +328,9 @@ pub enum TransportTuple {
 
 impl TransportTuple {
     /// Local IP address or hostname.
-    pub fn local_address(&self) -> String {
+    pub fn local_address(&self) -> &String {
         let (Self::WithRemote { local_address, .. } | Self::LocalOnly { local_address, .. }) = self;
-        *local_address
+        local_address
     }
 
     /// Local port.
