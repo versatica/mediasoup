@@ -724,7 +724,7 @@ impl PipeTransport {
     ///   method.
     #[must_use]
     pub fn tuple(&self) -> TransportTuple {
-        *self.inner.data.tuple.lock()
+        self.inner.data.tuple.lock().clone()
     }
 
     /// Local SCTP parameters. Or `None` if SCTP is not enabled.

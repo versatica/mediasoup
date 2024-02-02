@@ -909,7 +909,7 @@ impl PlainTransport {
     ///   * via dynamic remote address detection when using `comedia` mode.
     #[must_use]
     pub fn tuple(&self) -> TransportTuple {
-        *self.inner.data.tuple.lock()
+        self.inner.data.tuple.lock().clone()
     }
 
     /// The transport tuple for RTCP. If RTCP-mux is enabled (`rtcp_mux` is set), its value is

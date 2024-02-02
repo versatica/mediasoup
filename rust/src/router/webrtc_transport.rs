@@ -1021,7 +1021,7 @@ impl WebRtcTransport {
     /// ICE is not established (no working candidate pair was found).
     #[must_use]
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        *self.inner.data.ice_selected_tuple.lock()
+        self.inner.data.ice_selected_tuple.lock().clone()
     }
 
     /// Local DTLS parameters.
