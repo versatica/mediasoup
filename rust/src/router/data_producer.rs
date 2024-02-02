@@ -116,7 +116,9 @@ pub struct DataProducerDump {
 }
 
 impl DataProducerDump {
-    pub(crate) fn from_fbs(dump: data_producer::DumpResponse) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs(
+        dump: data_producer::DumpResponse,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             id: dump.id.parse()?,
             r#type: if dump.type_ == data_producer::Type::Sctp {

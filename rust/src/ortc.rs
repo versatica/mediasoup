@@ -80,7 +80,7 @@ impl RtpMapping {
 
     pub(crate) fn from_fbs_ref(
         mapping: rtp_parameters::RtpMappingRef<'_>,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             codecs: mapping
                 .codecs()?
@@ -91,7 +91,7 @@ impl RtpMapping {
                         mapped_payload_type: mapping?.mapped_payload_type()?,
                     })
                 })
-                .collect::<Result<Vec<_>, Box<dyn Error>>>()?,
+                .collect::<Result<Vec<_>, Box<dyn Error + Send + Sync>>>()?,
             encodings: mapping
                 .encodings()?
                 .iter()
@@ -107,7 +107,7 @@ impl RtpMapping {
                         mapped_ssrc: mapping?.mapped_ssrc()?,
                     })
                 })
-                .collect::<Result<Vec<_>, Box<dyn Error>>>()?,
+                .collect::<Result<Vec<_>, Box<dyn Error + Send + Sync>>>()?,
         })
     }
 }

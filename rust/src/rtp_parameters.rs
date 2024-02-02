@@ -789,7 +789,7 @@ pub struct RtpParameters {
 impl RtpParameters {
     pub(crate) fn from_fbs_ref(
         rtp_parameters: rtp_parameters::RtpParametersRef<'_>,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             mid: rtp_parameters.mid()?.map(|mid| mid.to_string()),
             codecs: rtp_parameters
@@ -824,7 +824,7 @@ impl RtpParameters {
                                 },
                             ))
                         })
-                        .collect::<Result<_, Box<dyn Error>>>()?;
+                        .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?;
                     let rtcp_feedback = codec?
                         .rtcp_feedback()?
                         .unwrap_or(planus::Vector::new_empty())
@@ -835,7 +835,7 @@ impl RtpParameters {
                                 rtcp_feedback?.parameter()?.unwrap_or_default(),
                             )?)
                         })
-                        .collect::<Result<_, Box<dyn Error>>>()?;
+                        .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?;
 
                     Ok(match MimeType::from_str(codec?.mime_type()?)? {
                         MimeType::Audio(mime_type) => RtpCodecParameters::Audio {
@@ -858,7 +858,7 @@ impl RtpParameters {
                         },
                     })
                 })
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             header_extensions: rtp_parameters
                 .header_extensions()?
                 .into_iter()
@@ -869,7 +869,7 @@ impl RtpParameters {
                         encrypt: header_extension_parameters?.encrypt()?,
                     })
                 })
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             encodings: rtp_parameters
                 .encodings()?
                 .into_iter()
@@ -894,7 +894,7 @@ impl RtpParameters {
                         max_bitrate: encoding?.max_bitrate()?,
                     })
                 })
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             rtcp: RtcpParameters {
                 cname: rtp_parameters
                     .rtcp()?
@@ -1310,7 +1310,7 @@ impl RtpEncodingParameters {
 
     pub(crate) fn from_fbs_ref(
         encoding_parameters: rtp_parameters::RtpEncodingParametersRef<'_>,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             ssrc: encoding_parameters.ssrc()?,
             rid: encoding_parameters.rid()?.map(|rid| rid.to_string()),
