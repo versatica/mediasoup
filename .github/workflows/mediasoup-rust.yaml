@@ -19,6 +19,7 @@ jobs:
           - ubuntu-20.04
           - ubuntu-22.04
           - macos-12
+          - macos-14
           - windows-2022
 
     runs-on: ${{ matrix.os }}
