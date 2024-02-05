@@ -5,7 +5,7 @@
 * Updates from mediasoup TypeScript `3.13.13..=3.13.17`.
 * General mediasoup changes:
   * `TransportListenInfo.announced_ip` can also be a hostname (PR #1322).
-  * `TransportListenInfo.announced_ip` is now `announced_address`, `IceCandidate.ip` is now `IceCandidate.address` and `TransportTuple.local_ip` is not `TransportTuple.local_address` (PR #1323).
+  * `TransportListenInfo.announced_ip` is now `announced_address`, `IceCandidate.ip` is now `IceCandidate.address` and `TransportTuple.local_ip` is not `TransportTuple.local_address` (PR #1324).
 
 # 0.15.0
 
