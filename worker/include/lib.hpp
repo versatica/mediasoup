@@ -6,8 +6,6 @@ extern "C" int mediasoup_worker_run(
   const char* version,
   int consumerChannelFd,
   int producerChannelFd,
-  int payloadConsumeChannelFd,
-  int payloadProduceChannelFd,
   ChannelReadFn channelReadFn,
   ChannelReadCtx channelReadCtx,
   ChannelWriteFn channelWriteFn,

@@ -25,7 +25,7 @@ namespace Channel
 		  FBS::Notification::Body type,
 		  flatbuffers::Offset<Body>& body)
 		{
-			auto& builder     = ChannelNotifier::bufferBuilder;
+			auto& builder     = this->bufferBuilder;
 			auto notification = FBS::Notification::CreateNotificationDirect(
 			  builder, targetId.c_str(), event, type, body.Union());
 
@@ -50,7 +50,6 @@ namespace Channel
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
 			builder.Reset();
 		}
-		void Emit(const FBS::Notification::Notification& notification);
 
 	private:
 		// Passed by argument.
