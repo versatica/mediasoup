@@ -69,8 +69,7 @@
 		"test:worker": "node npm-scripts.mjs test:worker",
 		"coverage:node": "node npm-scripts.mjs coverage:node",
 		"release:check": "node npm-scripts.mjs release:check",
-		"release": "node npm-scripts.mjs release",
-		"release:upload-mac-arm-prebuilt-worker": "node npm-scripts.mjs release:upload-mac-arm-prebuilt-worker"
+		"release": "node npm-scripts.mjs release"
 	},
 	"jest": {
 		"verbose": true,

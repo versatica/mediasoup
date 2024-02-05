@@ -228,23 +228,7 @@ async function run() {
 				draft: false,
 			});
 
-			// GitHub mediasoup-worker-prebuild CI action doesn't create mediasoup-worker
-			// prebuilt binary for macOS ARM. If this is a macOS ARM machine, do it here
-			// and upload it to the release.
-			if (os.platform() === 'darwin' && os.arch() === 'arm64') {
-				await prebuildWorker();
-				await uploadMacArmPrebuiltWorker();
-			}
-
 			executeCmd('npm publish');
-
-			break;
-		}
-
-		case 'release:upload-mac-arm-prebuilt-worker': {
-			checkRelease();
-			await prebuildWorker();
-			await uploadMacArmPrebuiltWorker();
 
 			break;
 		}
@@ -594,35 +578,6 @@ async function downloadPrebuiltWorker() {
 
 				resolve(false);
 			});
-	});
-}
-
-async function uploadMacArmPrebuiltWorker() {
-	if (os.platform() !== 'darwin' || os.arch() !== 'arm64') {
-		logError('uploadMacArmPrebuiltWorker() | invalid platform or architecture');
-
-		exitWithError();
-	}
-
-	const octokit = await getOctokit();
-
-	logInfo('uploadMacArmPrebuiltWorker() | getting release info');
-
-	const release = await octokit.rest.repos.getReleaseByTag({
-		owner: GH_OWNER,
-		repo: GH_REPO,
-		tag: PKG.version,
-	});
-
-	logInfo('uploadMacArmPrebuiltWorker() | uploading release asset');
-
-	await octokit.rest.repos.uploadReleaseAsset({
-		owner: GH_OWNER,
-		repo: GH_REPO,
-		// eslint-disable-next-line camelcase
-		release_id: release.data.id,
-		name: WORKER_PREBUILD_TAR,
-		data: fs.readFileSync(WORKER_PREBUILD_TAR_PATH),
 	});
 }
 
