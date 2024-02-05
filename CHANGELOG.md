@@ -1,6 +1,6 @@
 # Changelog
 
-### NEXT
+### 3.13.18
 
 - Make transport-cc feedback work similarly to libwebrtc ([PR #1088](https://github.com/versatica/mediasoup/pull/1088) by @penguinol).
 - `TransportListenInfo`: "announced ip" can also be a hostname ([PR #1322](https://github.com/versatica/mediasoup/pull/1322)).
