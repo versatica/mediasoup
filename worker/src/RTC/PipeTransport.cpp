@@ -40,14 +40,16 @@ namespace RTC
 		// This may throw.
 		Utils::IP::NormalizeIp(this->listenInfo.ip);
 
-		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+		if (flatbuffers::IsFieldPresent(
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
-			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
+			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
 
-		if (flatbuffers::IsFieldPresent(options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+		if (flatbuffers::IsFieldPresent(
+		      options->listenInfo(), FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 		{
-			this->listenInfo.announcedIp.assign(options->listenInfo()->announcedIp()->str());
+			this->listenInfo.announcedAddress.assign(options->listenInfo()->announcedAddress()->str());
 		}
 
 		this->listenInfo.port               = options->listenInfo()->port();
@@ -151,13 +153,13 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenInfo.announcedIp.empty())
+			if (this->listenInfo.announcedAddress.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
 			}
 			else
 			{
-				localIp = this->listenInfo.announcedIp;
+				localIp = this->listenInfo.announcedAddress;
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
@@ -202,13 +204,13 @@ namespace RTC
 		{
 			std::string localIp;
 
-			if (this->listenInfo.announcedIp.empty())
+			if (this->listenInfo.announcedAddress.empty())
 			{
 				localIp = this->udpSocket->GetLocalIp();
 			}
 			else
 			{
-				localIp = this->listenInfo.announcedIp;
+				localIp = this->listenInfo.announcedAddress;
 			}
 
 			tuple = FBS::Transport::CreateTupleDirect(
@@ -408,9 +410,9 @@ namespace RTC
 					this->tuple = new RTC::TransportTuple(
 					  this->udpSocket, reinterpret_cast<struct sockaddr*>(&this->remoteAddrStorage));
 
-					if (!this->listenInfo.announcedIp.empty())
+					if (!this->listenInfo.announcedAddress.empty())
 					{
-						this->tuple->SetLocalAnnouncedIp(this->listenInfo.announcedIp);
+						this->tuple->SetLocalAnnouncedAddress(this->listenInfo.announcedAddress);
 					}
 				}
 				catch (const MediaSoupError& error)

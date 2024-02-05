@@ -88,8 +88,8 @@ impl TryFrom<Vec<ListenInfo>> for WebRtcTransportListenInfos {
 /// # Notes on usage
 /// * Do not use "0.0.0.0" into `listen_infos`. Values in `listen_infos` must be specific bindable IPs
 ///   on the host.
-/// * If you use "0.0.0.0" or "::" into `listen_infos`, then you need to also provide `announced_ip`
-///   in the corresponding entry in `listen_infos`.
+/// * If you use "0.0.0.0" or "::" into `listen_infos`, then you need to also provide
+/// `announced_address` in the corresponding entry in `listen_infos`.
 #[derive(Debug, Clone)]
 pub enum WebRtcTransportListen {
     /// Listen on individual protocol/IP/port combinations specific to this transport.
@@ -809,7 +809,9 @@ impl WebRtcTransport {
                             });
                         }
                         Notification::IceSelectedTupleChange { ice_selected_tuple } => {
-                            data.ice_selected_tuple.lock().replace(ice_selected_tuple);
+                            data.ice_selected_tuple
+                                .lock()
+                                .replace(ice_selected_tuple.clone());
                             handlers
                                 .ice_selected_tuple_change
                                 .call_simple(&ice_selected_tuple);
@@ -1021,7 +1023,7 @@ impl WebRtcTransport {
     /// ICE is not established (no working candidate pair was found).
     #[must_use]
     pub fn ice_selected_tuple(&self) -> Option<TransportTuple> {
-        *self.inner.data.ice_selected_tuple.lock()
+        self.inner.data.ice_selected_tuple.lock().clone()
     }
 
     /// Local DTLS parameters.

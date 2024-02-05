@@ -145,7 +145,7 @@ impl PipeToRouterOptions {
             listen_info: ListenInfo {
                 protocol: Protocol::Udp,
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                announced_ip: None,
+                announced_address: None,
                 port: None,
                 flags: None,
                 send_buffer_size: None,
@@ -608,7 +608,7 @@ impl Router {
     ///         ListenInfo {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///             announced_ip: Some("9.9.9.1".to_string()),
+    ///             announced_address: Some("9.9.9.1".to_string()),
     ///             port: None,
     ///             flags: None,
     ///             send_buffer_size: None,
@@ -696,7 +696,7 @@ impl Router {
     ///     .create_pipe_transport(PipeTransportOptions::new(ListenInfo {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///         announced_ip: Some("9.9.9.1".to_string()),
+    ///         announced_address: Some("9.9.9.1".to_string()),
     ///         port: None,
     ///         flags: None,
     ///         send_buffer_size: None,
@@ -762,7 +762,7 @@ impl Router {
     ///     .create_plain_transport(PlainTransportOptions::new(ListenInfo {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///         announced_ip: Some("9.9.9.1".to_string()),
+    ///         announced_address: Some("9.9.9.1".to_string()),
     ///         port: None,
     ///         flags: None,
     ///         send_buffer_size: None,
@@ -973,7 +973,7 @@ impl Router {
     ///         ListenInfo {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///             announced_ip: Some("9.9.9.1".to_string()),
+    ///             announced_address: Some("9.9.9.1".to_string()),
     ///             port: None,
     ///             flags: None,
     ///             send_buffer_size: None,
@@ -1016,7 +1016,7 @@ impl Router {
     ///         ListenInfo {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///             announced_ip: Some("9.9.9.1".to_string()),
+    ///             announced_address: Some("9.9.9.1".to_string()),
     ///             port: None,
     ///             flags: None,
     ///             send_buffer_size: None,
@@ -1202,7 +1202,7 @@ impl Router {
     ///             ListenInfo {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///                 announced_ip: Some("9.9.9.1".to_string()),
+    ///                 announced_address: Some("9.9.9.1".to_string()),
     ///                 port: None,
     ///                 flags: None,
     ///                 send_buffer_size: None,
@@ -1234,7 +1234,7 @@ impl Router {
     ///             ListenInfo {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-    ///                 announced_ip: Some("9.9.9.1".to_string()),
+    ///                 announced_address: Some("9.9.9.1".to_string()),
     ///                 port: None,
     ///                 flags: None,
     ///                 send_buffer_size: None,
@@ -1482,7 +1482,7 @@ impl Router {
             let tuple = remote_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip: tuple.local_ip(),
+                ip: tuple.local_address().parse::<IpAddr>().unwrap(),
                 port: tuple.local_port(),
                 srtp_parameters: remote_pipe_transport.srtp_parameters(),
             }
@@ -1492,7 +1492,7 @@ impl Router {
             let tuple = local_pipe_transport.tuple();
 
             PipeTransportRemoteParameters {
-                ip: tuple.local_ip(),
+                ip: tuple.local_address().parse::<IpAddr>().unwrap(),
                 port: tuple.local_port(),
                 srtp_parameters: local_pipe_transport.srtp_parameters(),
             }

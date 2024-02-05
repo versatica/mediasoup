@@ -66,7 +66,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, DataProducer) {
                 WebRtcTransportOptions::new(WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -98,7 +98,7 @@ fn consume_data_succeeds() {
                 let mut transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -208,7 +208,7 @@ fn weak() {
                 let mut transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -573,7 +573,7 @@ fn close_event() {
                 let mut transport_options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,

@@ -36,7 +36,7 @@ fn worker_close_event() {
                 ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port),
                     flags: None,
                     send_buffer_size: None,

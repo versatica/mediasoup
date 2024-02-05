@@ -138,7 +138,9 @@ export type IceParameters = {
 export type IceCandidate = {
 	foundation: string;
 	priority: number;
+	// @deprecated Use |address| instead.
 	ip: string;
+	address: string;
 	protocol: TransportProtocol;
 	port: number;
 	type: IceCandidateType;
@@ -864,7 +866,8 @@ function parseIceCandidate(
 	return {
 		foundation: binary.foundation()!,
 		priority: binary.priority(),
-		ip: binary.ip()!,
+		ip: binary.address()!,
+		address: binary.address()!,
 		protocol: parseProtocol(binary.protocol()),
 		port: binary.port(),
 		type: iceCandidateTypeFromFbs(binary.type()),

@@ -48,7 +48,7 @@ test('worker.createWebRtcServer() succeeds', async () => {
 			{
 				protocol: 'tcp',
 				ip: '127.0.0.1',
-				announcedIp: 'foo.bar.org',
+				announcedAddress: 'foo.bar.org',
 				port: port2,
 			},
 		],
@@ -105,7 +105,7 @@ test('worker.createWebRtcServer() without specifying port succeeds', async () =>
 			{
 				protocol: 'tcp',
 				ip: '127.0.0.1',
-				announcedIp: '1.2.3.4',
+				announcedAddress: '1.2.3.4',
 			},
 		],
 		appData: { foo: 123 },
@@ -210,7 +210,7 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 				{
 					protocol: 'udp',
 					ip: '127.0.0.1',
-					announcedIp: '1.2.3.4',
+					announcedAddress: '1.2.3.4',
 					port: port1,
 				},
 			],

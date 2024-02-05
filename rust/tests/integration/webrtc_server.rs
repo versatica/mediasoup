@@ -62,7 +62,7 @@ fn create_webrtc_server_succeeds() {
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port1),
                     flags: None,
                     send_buffer_size: None,
@@ -71,7 +71,7 @@ fn create_webrtc_server_succeeds() {
                 let listen_infos = listen_infos.insert(ListenInfo {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("foo.bar.org".to_string()),
+                    announced_address: Some("foo.bar.org".to_string()),
                     port: Some(port2),
                     flags: None,
                     send_buffer_size: None,
@@ -158,7 +158,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -167,7 +167,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                 let listen_infos = listen_infos.insert(ListenInfo {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: Some("1.2.3.4".to_string()),
+                    announced_address: Some("1.2.3.4".to_string()),
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -241,7 +241,7 @@ fn unavailable_infos_fails() {
                     let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
+                        announced_address: None,
                         port: Some(port1),
                         flags: None,
                         send_buffer_size: None,
@@ -250,7 +250,7 @@ fn unavailable_infos_fails() {
                     let listen_infos = listen_infos.insert(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4)),
-                        announced_ip: None,
+                        announced_address: None,
                         port: Some(port2),
                         flags: None,
                         send_buffer_size: None,
@@ -274,7 +274,7 @@ fn unavailable_infos_fails() {
                     let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
+                        announced_address: None,
                         port: Some(port1),
                         flags: None,
                         send_buffer_size: None,
@@ -283,7 +283,7 @@ fn unavailable_infos_fails() {
                     let listen_infos = listen_infos.insert(ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
-                        announced_ip: Some("1.2.3.4".to_string()),
+                        announced_address: Some("1.2.3.4".to_string()),
                         port: Some(port1),
                         flags: None,
                         send_buffer_size: None,
@@ -307,7 +307,7 @@ fn unavailable_infos_fails() {
                     ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
+                        announced_address: None,
                         port: Some(port1),
                         flags: None,
                         send_buffer_size: None,
@@ -322,7 +322,7 @@ fn unavailable_infos_fails() {
                     ListenInfo {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                        announced_ip: None,
+                        announced_address: None,
                         port: Some(port1),
                         flags: None,
                         send_buffer_size: None,
@@ -351,7 +351,7 @@ fn close_event() {
                 ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: Some(port),
                     flags: None,
                     send_buffer_size: None,

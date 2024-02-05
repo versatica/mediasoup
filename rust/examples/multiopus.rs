@@ -148,7 +148,7 @@ impl EchoConnection {
                 let mut options = PlainTransportOptions::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,
@@ -198,9 +198,9 @@ impl EchoConnection {
             RTCP listening on {}:{}\n  \
             PT=100\n  \
             SSRC=1111",
-            plain_transport.tuple().local_ip(),
+            plain_transport.tuple().local_address(),
             plain_transport.tuple().local_port(),
-            plain_transport.rtcp_tuple().unwrap().local_ip(),
+            plain_transport.rtcp_tuple().unwrap().local_address(),
             plain_transport.rtcp_tuple().unwrap().local_port(),
         );
 
@@ -220,9 +220,9 @@ impl EchoConnection {
                 rtpbin.send_rtp_sink_0 \\\n  \
                 rtpbin.send_rtp_src_0 ! udpsink host={} port={} sync=false async=false \\\n  \
                 rtpbin.send_rtcp_src_0 ! udpsink host={} port={} sync=false async=false",
-                plain_transport.tuple().local_ip(),
+                plain_transport.tuple().local_address(),
                 plain_transport.tuple().local_port(),
-                plain_transport.rtcp_tuple().unwrap().local_ip(),
+                plain_transport.rtcp_tuple().unwrap().local_address(),
                 plain_transport.rtcp_tuple().unwrap().local_port(),
         );
 
@@ -234,7 +234,7 @@ impl EchoConnection {
                 WebRtcTransportListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
-                    announced_ip: None,
+                    announced_address: None,
                     port: None,
                     flags: None,
                     send_buffer_size: None,

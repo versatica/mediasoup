@@ -128,7 +128,7 @@ namespace RTC
 		struct ListenInfo
 		{
 			std::string ip;
-			std::string announcedIp;
+			std::string announcedAddress;
 			uint16_t port{ 0u };
 			SocketFlags flags;
 			uint32_t sendBufferSize{ 0u };

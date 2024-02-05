@@ -699,7 +699,7 @@ export class Worker<
 						? FbsTransportProtocol.UDP
 						: FbsTransportProtocol.TCP,
 					listenInfo.ip,
-					listenInfo.announcedIp,
+					listenInfo.announcedAddress ?? listenInfo.announcedIp,
 					listenInfo.port,
 					socketFlagsToFbs(listenInfo.flags),
 					listenInfo.sendBufferSize,

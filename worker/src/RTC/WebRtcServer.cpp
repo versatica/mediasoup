@@ -77,11 +77,11 @@ namespace RTC
 				// This may throw.
 				Utils::IP::NormalizeIp(ip);
 
-				std::string announcedIp;
+				std::string announcedAddress;
 
-				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Transport::ListenInfo::VT_ANNOUNCEDIP))
+				if (flatbuffers::IsFieldPresent(listenInfo, FBS::Transport::ListenInfo::VT_ANNOUNCEDADDRESS))
 				{
-					announcedIp = listenInfo->announcedIp()->str();
+					announcedAddress = listenInfo->announcedAddress()->str();
 				}
 
 				RTC::Transport::SocketFlags flags;
@@ -103,7 +103,7 @@ namespace RTC
 						udpSocket = new RTC::UdpSocket(this, ip, flags);
 					}
 
-					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedIp);
+					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedAddress);
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -135,7 +135,7 @@ namespace RTC
 						tcpServer = new RTC::TcpServer(this, this, ip, flags);
 					}
 
-					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedIp);
+					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedAddress);
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -310,14 +310,14 @@ namespace RTC
 
 				const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
-				if (item.announcedIp.empty())
+				if (item.announcedAddress.empty())
 				{
 					iceCandidates.emplace_back(item.udpSocket, icePriority);
 				}
 				else
 				{
 					iceCandidates.emplace_back(
-					  item.udpSocket, icePriority, const_cast<std::string&>(item.announcedIp));
+					  item.udpSocket, icePriority, const_cast<std::string&>(item.announcedAddress));
 				}
 			}
 			else if (item.tcpServer && enableTcp)
@@ -331,14 +331,14 @@ namespace RTC
 
 				const uint32_t icePriority = generateIceCandidatePriority(iceLocalPreference);
 
-				if (item.announcedIp.empty())
+				if (item.announcedAddress.empty())
 				{
 					iceCandidates.emplace_back(item.tcpServer, icePriority);
 				}
 				else
 				{
 					iceCandidates.emplace_back(
-					  item.tcpServer, icePriority, const_cast<std::string&>(item.announcedIp));
+					  item.tcpServer, icePriority, const_cast<std::string&>(item.announcedAddress));
 				}
 			}
 

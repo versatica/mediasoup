@@ -70,12 +70,12 @@ test('router.createWebRtcTransport() succeeds', async () => {
 
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-			{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: '9.9.9.1' },
-			{ protocol: 'udp', ip: '0.0.0.0', announcedIp: 'foo1.bar.org' },
-			{ protocol: 'tcp', ip: '0.0.0.0', announcedIp: 'foo2.bar.org' },
-			{ protocol: 'udp', ip: '127.0.0.1', announcedIp: undefined },
-			{ protocol: 'tcp', ip: '127.0.0.1', announcedIp: undefined },
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+			{ protocol: 'tcp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+			{ protocol: 'udp', ip: '0.0.0.0', announcedAddress: 'foo1.bar.org' },
+			{ protocol: 'tcp', ip: '0.0.0.0', announcedAddress: 'foo2.bar.org' },
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: undefined },
+			{ protocol: 'tcp', ip: '127.0.0.1', announcedAddress: undefined },
 		],
 		enableTcp: true,
 		preferUdp: true,
@@ -221,7 +221,9 @@ test('router.createWebRtcTransport() with non bindable IP rejects with Error', a
 
 test('webRtcTransport.getStats() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+		],
 	});
 
 	const stats = await webRtcTransport.getStats();
@@ -255,7 +257,9 @@ test('webRtcTransport.getStats() succeeds', async () => {
 
 test('webRtcTransport.connect() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+		],
 	});
 
 	const dtlsRemoteParameters: mediasoup.types.DtlsParameters = {
@@ -283,7 +287,9 @@ test('webRtcTransport.connect() succeeds', async () => {
 
 test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+		],
 	});
 
 	let dtlsRemoteParameters: mediasoup.types.DtlsParameters;
@@ -341,7 +347,9 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 
 test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', announcedIp: '9.9.9.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+		],
 	});
 
 	await expect(
@@ -541,7 +549,9 @@ test('WebRtcTransport events succeed', async () => {
 
 	const onIceSelectedTuple = jest.fn();
 	const iceSelectedTuple: TransportTuple = {
+		// @deprecated Use localAddress.
 		localIp: '1.1.1.1',
+		localAddress: '1.1.1.1',
 		localPort: 1111,
 		remoteIp: '2.2.2.2',
 		remotePort: 2222,
@@ -554,7 +564,7 @@ test('WebRtcTransport events succeed', async () => {
 	const iceSelectedTupleChangeNotification =
 		new FbsWebRtcTransport.IceSelectedTupleChangeNotificationT(
 			new FbsTransport.TupleT(
-				iceSelectedTuple.localIp,
+				iceSelectedTuple.localAddress,
 				iceSelectedTuple.localPort,
 				iceSelectedTuple.remoteIp,
 				iceSelectedTuple.remotePort,
