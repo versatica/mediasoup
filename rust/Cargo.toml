@@ -46,7 +46,7 @@ version = "0.8.1"
 
 [dependencies.mediasoup-sys]
 path = "../worker"
-version = "0.7.3"
+version = "0.8.0"
 
 [dependencies.parking_lot]
 version = "0.12.1"
