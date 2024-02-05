@@ -87,7 +87,7 @@ impl ListenInfo {
             ip: self.ip.to_string(),
             announced_address: self
                 .announced_address
-                .clone()
+                .as_ref()
                 .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
