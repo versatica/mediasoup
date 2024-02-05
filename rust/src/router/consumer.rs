@@ -163,7 +163,9 @@ pub struct RtpStreamParams {
 }
 
 impl RtpStreamParams {
-    pub(crate) fn from_fbs_ref(params: rtp_stream::ParamsRef<'_>) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs_ref(
+        params: rtp_stream::ParamsRef<'_>,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             clock_rate: params.clock_rate()?,
             cname: params.cname()?.to_string(),
@@ -197,7 +199,9 @@ pub struct RtxStreamParams {
 }
 
 impl RtxStreamParams {
-    pub(crate) fn from_fbs_ref(params: rtx_stream::ParamsRef<'_>) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs_ref(
+        params: rtx_stream::ParamsRef<'_>,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             clock_rate: params.clock_rate()?,
             cname: params.cname()?.to_string(),
@@ -218,7 +222,9 @@ pub struct RtpStream {
 }
 
 impl RtpStream {
-    pub(crate) fn from_fbs_ref(dump: rtp_stream::DumpRef<'_>) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs_ref(
+        dump: rtp_stream::DumpRef<'_>,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
             score: dump.score()?,
@@ -267,7 +273,7 @@ pub struct ConsumerDump {
 impl ConsumerDump {
     pub(crate) fn from_fbs_ref(
         dump: consumer::DumpResponseRef<'_>,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let dump = dump.data();
 
         Ok(Self {
@@ -286,7 +292,7 @@ impl ConsumerDump {
                 .trace_event_types()?
                 .iter()
                 .map(|trace_event_type| Ok(ConsumerTraceEventType::from_fbs(trace_event_type?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             r#type: ConsumerType::from_fbs(dump?.base()?.type_()?),
             consumable_rtp_encodings: dump?
                 .base()?
@@ -295,12 +301,12 @@ impl ConsumerDump {
                 .map(|encoding_parameters| {
                     RtpEncodingParameters::from_fbs_ref(encoding_parameters?)
                 })
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             rtp_streams: dump?
                 .rtp_streams()?
                 .iter()
                 .map(|stream| RtpStream::from_fbs_ref(stream?))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             preferred_spatial_layer: dump?.preferred_spatial_layer()?,
             target_spatial_layer: dump?.target_spatial_layer()?,
             current_spatial_layer: dump?.current_spatial_layer()?,

@@ -163,7 +163,9 @@ pub struct DataConsumerDump {
 }
 
 impl DataConsumerDump {
-    pub(crate) fn from_fbs(dump: data_consumer::DumpResponse) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs(
+        dump: data_consumer::DumpResponse,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             id: dump.id.parse()?,
             data_producer_id: dump.data_producer_id.parse()?,

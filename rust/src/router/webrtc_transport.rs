@@ -213,7 +213,9 @@ pub struct WebRtcTransportDump {
 }
 
 impl WebRtcTransportDump {
-    pub(crate) fn from_fbs(dump: web_rtc_transport::DumpResponse) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn from_fbs(
+        dump: web_rtc_transport::DumpResponse,
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             // Common to all Transports.
             id: dump.base.id.parse()?,
@@ -223,37 +225,37 @@ impl WebRtcTransportDump {
                 .producer_ids
                 .iter()
                 .map(|producer_id| Ok(producer_id.parse()?))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             consumer_ids: dump
                 .base
                 .consumer_ids
                 .iter()
                 .map(|consumer_id| Ok(consumer_id.parse()?))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             map_ssrc_consumer_id: dump
                 .base
                 .map_ssrc_consumer_id
                 .iter()
                 .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             map_rtx_ssrc_consumer_id: dump
                 .base
                 .map_rtx_ssrc_consumer_id
                 .iter()
                 .map(|key_value| Ok((key_value.key, key_value.value.parse()?)))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             data_producer_ids: dump
                 .base
                 .data_producer_ids
                 .iter()
                 .map(|data_producer_id| Ok(data_producer_id.parse()?))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             data_consumer_ids: dump
                 .base
                 .data_consumer_ids
                 .iter()
                 .map(|data_consumer_id| Ok(data_consumer_id.parse()?))
-                .collect::<Result<_, Box<dyn Error>>>()?,
+                .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             recv_rtp_header_extensions: RecvRtpHeaderExtensions::from_fbs(
                 dump.base.recv_rtp_header_extensions.as_ref(),
             ),
@@ -342,7 +344,7 @@ pub struct WebRtcTransportStat {
 impl WebRtcTransportStat {
     pub(crate) fn from_fbs(
         stats: web_rtc_transport::GetStatsResponse,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
