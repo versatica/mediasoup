@@ -172,6 +172,31 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(webRtcTransport.closed).toBe(true);
 }, 2000);
 
+test('router.createWebRtcTransport() with deprecated listenIps succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenIps: [{ ip: '127.0.0.1', announcedIp: undefined }],
+		enableUdp: true,
+		enableTcp: true,
+		preferUdp: false,
+		initialAvailableOutgoingBitrate: 1000000,
+	});
+
+	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);
+	expect(webRtcTransport.iceCandidates.length).toBe(2);
+
+	const iceCandidates = webRtcTransport.iceCandidates;
+
+	expect(iceCandidates[0].ip).toBe('127.0.0.1');
+	expect(iceCandidates[0].protocol).toBe('udp');
+	expect(iceCandidates[0].type).toBe('host');
+	expect(iceCandidates[0].tcpType).toBeUndefined();
+	expect(iceCandidates[1].ip).toBe('127.0.0.1');
+	expect(iceCandidates[1].protocol).toBe('tcp');
+	expect(iceCandidates[1].type).toBe('host');
+	expect(iceCandidates[1].tcpType).toBe('passive');
+	expect(iceCandidates[0].priority).toBeGreaterThan(iceCandidates[1].priority);
+}, 2000);
+
 test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-ignore
 	await expect(ctx.router!.createWebRtcTransport({})).rejects.toThrow(

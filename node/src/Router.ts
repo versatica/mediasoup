@@ -507,13 +507,13 @@ export class Router<
 
 			const orderedProtocols: TransportProtocol[] = [];
 
-			if (enableUdp && (!enableTcp || preferUdp)) {
+			if (enableUdp && (preferUdp || !enableTcp || !preferTcp)) {
 				orderedProtocols.push('udp');
 
 				if (enableTcp) {
 					orderedProtocols.push('tcp');
 				}
-			} else if (enableTcp && (!enableUdp || (preferTcp && !preferUdp))) {
+			} else if (enableTcp && ((preferTcp && !preferUdp) || !enableUdp)) {
 				orderedProtocols.push('tcp');
 
 				if (enableUdp) {
