@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.13.19
+
+- Node: Fix `router.createWebRtcTransport()` with `listenIps` ([PR #1330](https://github.com/versatica/mediasoup/pull/1330)).
+
 ### 3.13.18
 
 - Make transport-cc feedback work similarly to libwebrtc ([PR #1088](https://github.com/versatica/mediasoup/pull/1088) by @penguinol).
