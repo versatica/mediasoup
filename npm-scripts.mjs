@@ -223,7 +223,6 @@ async function run() {
 				repo: GH_REPO,
 				name: PKG.version,
 				body: versionChanges,
-				// eslint-disable-next-line camelcase
 				tag_name: PKG.version,
 				draft: false,
 			});
