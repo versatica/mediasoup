@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <sys/eventfd.h>
+#include <sys/resource.h>
 #include <sys/utsname.h>
 
 /* Static variables. */
@@ -330,10 +331,25 @@ DepLibUring::LibUring::LibUring()
 		{
 			this->zeroCopyEnabled = false;
 
-			MS_WARN_TAG(
-			  info,
-			  "io_uring_register_buffers() failed due to low memlock limit (ulimit -l), disabling zero copy: %s",
-			  std::strerror(error));
+			struct rlimit l = {};
+
+			if (getrlimit(RLIMIT_MEMLOCK, &l) == -1)
+			{
+				MS_WARN_TAG(info, "getrlimit() failed %s", std::strerror(errno));
+				MS_WARN_TAG(
+				  info,
+				  "io_uring_register_buffers() failed due to low RLIMIT_MEMLOCK, disabling zero copy: %s",
+				  std::strerror(error));
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  info,
+				  "io_uring_register_buffers() failed due to low RLIMIT_MEMLOCK (soft:%lu, hard:%lu), disabling zero copy: %s",
+				  l.rlim_cur,
+				  l.rlim_max,
+				  std::strerror(error));
+			}
 		}
 		else
 		{
