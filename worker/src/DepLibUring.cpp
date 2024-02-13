@@ -333,9 +333,9 @@ DepLibUring::LibUring::LibUring()
 
 			struct rlimit l = {};
 
-			if (getrlimit(RLIMIT_MEMLOCK, &l) == -1)
+			if (getrlimit(RLIMIT_MEMLOCK, std::addressof(l)) == -1)
 			{
-				MS_WARN_TAG(info, "getrlimit() failed %s", std::strerror(errno));
+				MS_WARN_TAG(info, "getrlimit() failed: %s", std::strerror(errno));
 				MS_WARN_TAG(
 				  info,
 				  "io_uring_register_buffers() failed due to low RLIMIT_MEMLOCK, disabling zero copy: %s",
