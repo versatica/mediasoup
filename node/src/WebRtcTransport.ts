@@ -150,6 +150,8 @@ export type IceCandidate = {
 export type DtlsParameters = {
 	role?: DtlsRole;
 	fingerprints: DtlsFingerprint[];
+	iceUfrag?: string;
+	icePwd?: string;
 };
 
 /**
@@ -933,6 +935,9 @@ function serializeDtlsParameters(
 			fingerprints
 		);
 
+	const iceUfragOffset = builder.createString(dtlsParameters.iceUfrag ?? '');
+	const icePwdOffset = builder.createString(dtlsParameters.icePwd ?? '');
+
 	const role =
 		dtlsParameters.role !== undefined
 			? dtlsRoleToFbs(dtlsParameters.role)
@@ -941,6 +946,8 @@ function serializeDtlsParameters(
 	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
 		builder,
 		fingerprintsOffset,
-		role
+		role,
+		iceUfragOffset,
+		icePwdOffset
 	);
 }

@@ -459,6 +459,14 @@ namespace RTC
 
 				dtlsRemoteRole = RTC::DtlsTransport::RoleFromFbs(dtlsParameters->role());
 
+				const std::string iceUsernameFragment = dtlsParameters->iceUfrag()->str();
+				const std::string icePassword         = dtlsParameters->icePwd()->str();
+
+				if (!iceUsernameFragment.empty() && !icePassword.empty())
+				{
+					this->iceServer->SetRemoteUsernameFragmentAndPassword(iceUsernameFragment, icePassword);
+				}
+
 				// Set local DTLS role.
 				switch (dtlsRemoteRole)
 				{

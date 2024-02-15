@@ -24,23 +24,21 @@ namespace RTC
 			return nullptr;
 		}
 
-		/*
-		  The message type field is decomposed further into the following
-		    structure:
-
-		    0                 1
-		    2  3  4 5 6 7 8 9 0 1 2 3 4 5
-		       +--+--+-+-+-+-+-+-+-+-+-+-+-+-+
-		       |M |M |M|M|M|C|M|M|M|C|M|M|M|M|
-		       |11|10|9|8|7|1|6|5|4|0|3|2|1|0|
-		       +--+--+-+-+-+-+-+-+-+-+-+-+-+-+
-
-		    Figure 3: Format of STUN Message Type Field
-
-		   Here the bits in the message type field are shown as most significant
-		   (M11) through least significant (M0).  M11 through M0 represent a 12-
-		   bit encoding of the method.  C1 and C0 represent a 2-bit encoding of
-		   the class.
+		/**
+		 * The message type field is decomposed further into the following
+		 * structure:
+		 *
+		 *  0                 1
+		 *  2  3  4 5 6 7 8 9 0 1 2 3 4 5
+		 * +--+--+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |M |M |M|M|M|C|M|M|M|C|M|M|M|M|
+		 * |11|10|9|8|7|1|6|5|4|0|3|2|1|0|
+		 * +--+--+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * Here the bits in the message type field are shown as most significant
+		 * (M11) through least significant (M0).  M11 through M0 represent a 12-bit
+		 * encoding of the method.  C1 and C0 represent a 2-bit encoding of the
+		 * class.
 		 */
 
 		// Get type field.
@@ -49,7 +47,8 @@ namespace RTC
 		// Get length field.
 		const uint16_t msgLength = Utils::Byte::Get2Bytes(data, 2);
 
-		// length field must be total size minus header's 20 bytes, and must be multiple of 4 Bytes.
+		// length field must be total size minus header's 20 bytes, and must be
+		// multiple of 4 Bytes.
 		if ((static_cast<size_t>(msgLength) != len - 20) || ((msgLength & 0x03) != 0))
 		{
 			MS_WARN_TAG(
@@ -67,35 +66,38 @@ namespace RTC
 		// Get STUN class.
 		const uint16_t msgClass = ((data[0] & 0x01) << 1) | ((data[1] & 0x10) >> 4);
 
-		// Create a new StunPacket (data + 8 points to the received TransactionID field).
+		// Create a new StunPacket (data + 8 points to the received TransactionID
+		// field).
 		auto* packet = new StunPacket(
 		  static_cast<Class>(msgClass), static_cast<Method>(msgMethod), data + 8, data, len);
 
-		/*
-		    STUN Attributes
-
-		    After the STUN header are zero or more attributes.  Each attribute
-		    MUST be TLV encoded, with a 16-bit type, 16-bit length, and value.
-		    Each STUN attribute MUST end on a 32-bit boundary.  As mentioned
-		    above, all fields in an attribute are transmitted most significant
-		    bit first.
-
-		        0                   1                   2                   3
-		        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-		       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		       |         Type                  |            Length             |
-		       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		       |                         Value (variable)                ....
-		       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		/**
+		 * STUN Attributes
+		 *
+		 * After the STUN header are zero or more attributes. Each attribute MUST
+		 * be TLV encoded, with a 16-bit type, 16-bit length, and value. Each STUN
+		 * attribute MUST end on a 32-bit boundary.  As mentioned above, all fields
+		 * in an attribute are transmitted most significant bit first.
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |         Type                  |            Length             |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                         Value (variable)                ....
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
 		// Start looking for attributes after STUN header (Byte #20).
 		size_t pos{ 20 };
-		// Flags (positions) for special MESSAGE-INTEGRITY and FINGERPRINT attributes.
+		// Flags (positions) for special MESSAGE-INTEGRITY and FINGERPRINT
+		// attributes.
 		bool hasMessageIntegrity{ false };
 		bool hasFingerprint{ false };
-		size_t fingerprintAttrPos; // Will point to the beginning of the attribute.
-		uint32_t fingerprint;      // Holds the value of the FINGERPRINT attribute.
+		// Will point to the beginning of the attribute.
+		size_t fingerprintAttrPos;
+		// Holds the value of the FINGERPRINT attribute.
+		uint32_t fingerprint;
 
 		// Ensure there are at least 4 remaining bytes (attribute with 0 length).
 		while (pos + 4 <= len)
@@ -285,6 +287,24 @@ namespace RTC
 					break;
 				}
 
+				case Attribute::SOFTWARE:
+				{
+					// Ensure attribute length is less than 763 bytes.
+					if (attrLength >= 763)
+					{
+						MS_WARN_TAG(
+						  ice, "attribute SOFTWARE must be less than 763 bytes length, packet discarded");
+
+						delete packet;
+						return nullptr;
+					}
+
+					packet->SetSoftware(
+					  reinterpret_cast<const char*>(attrValuePos), static_cast<size_t>(attrLength));
+
+					break;
+				}
+
 				default:;
 			}
 
@@ -406,6 +426,10 @@ namespace RTC
 		{
 			MS_DUMP("  useCandidate");
 		}
+		if (!this->software.empty())
+		{
+			MS_DUMP("  software: %s", this->software.c_str());
+		}
 		if (this->xorMappedAddress != nullptr)
 		{
 			int family;
@@ -436,7 +460,9 @@ namespace RTC
 	}
 
 	StunPacket::Authentication StunPacket::CheckAuthentication(
-	  const std::string& localUsername, const std::string& localPassword)
+	  const std::string& usernameFragment1,
+	  const std::string& usernameFragment2,
+	  const std::string& password)
 	{
 		MS_TRACE();
 
@@ -448,43 +474,70 @@ namespace RTC
 				// Both USERNAME and MESSAGE-INTEGRITY must be present.
 				if (!this->messageIntegrity || this->username.empty())
 				{
-					return Authentication::BAD_REQUEST;
+					return Authentication::BAD_MESSAGE;
 				}
 
-				// Check that USERNAME attribute begins with our local username plus ":".
-				const size_t localUsernameLen = localUsername.length();
-
-				if (
-				  this->username.length() <= localUsernameLen || this->username.at(localUsernameLen) != ':' ||
-				  (this->username.compare(0, localUsernameLen, localUsername) != 0))
+				// If we have both username fragments, do the proper check.
+				if (!usernameFragment2.empty())
 				{
-					return Authentication::UNAUTHORIZED;
+					const size_t usernameFragment1Len = usernameFragment1.length();
+					const size_t usernameFragment2Len = usernameFragment2.length();
+
+					if (
+					  this->username.length() != usernameFragment1Len + 1 + usernameFragment2Len ||
+					  this->username.at(usernameFragment1Len) != ':' ||
+					  this->username.compare(0, usernameFragment1Len, usernameFragment1) != 0 ||
+					  this->username.compare(
+					    usernameFragment1Len + 1, usernameFragment2Len, usernameFragment2) != 0)
+					{
+						return Authentication::UNAUTHORIZED;
+					}
+				}
+				// Otherwise check that USERNAME attribute begins with the first
+				// username fragment plus ":".
+				else
+				{
+					const size_t usernameFragment1Len = usernameFragment1.length();
+
+					if (
+					  this->username.length() <= usernameFragment1Len ||
+					  this->username.at(usernameFragment1Len) != ':' ||
+					  this->username.compare(0, usernameFragment1Len, usernameFragment1) != 0)
+					{
+						return Authentication::UNAUTHORIZED;
+					}
 				}
 
 				break;
 			}
-			// This method cannot check authentication in received responses (as we
-			// are ICE-Lite and don't generate requests).
+
 			case Class::SUCCESS_RESPONSE:
 			case Class::ERROR_RESPONSE:
 			{
-				MS_ERROR("cannot check authentication for a STUN response");
+				// MESSAGE-INTEGRITY must be present.
+				if (!this->messageIntegrity)
+				{
+					return Authentication::BAD_MESSAGE;
+				}
 
-				return Authentication::BAD_REQUEST;
+				break;
 			}
 		}
 
-		// If there is FINGERPRINT it must be discarded for MESSAGE-INTEGRITY calculation,
-		// so the header length field must be modified (and later restored).
+		// If there is FINGERPRINT it must be discarded for MESSAGE-INTEGRITY
+		// calculation, so the header length field must be modified (and later
+		// restored).
 		if (this->hasFingerprint)
 		{
-			// Set the header length field: full size - header length (20) - FINGERPRINT length (8).
+			// Set the header length field: full size - header length (20) -
+			// FINGERPRINT length (8).
 			Utils::Byte::Set2Bytes(this->data, 2, static_cast<uint16_t>(this->size - 20 - 8));
 		}
 
-		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY rules.
-		const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
-		  localPassword, this->data, (this->messageIntegrity - 4) - this->data);
+		// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
+		// rules.
+		const uint8_t* computedMessageIntegrity =
+		  Utils::Crypto::GetHmacSha1(password, this->data, (this->messageIntegrity - 4) - this->data);
 
 		Authentication result;
 
@@ -807,7 +860,8 @@ namespace RTC
 				Utils::Byte::Set2Bytes(buffer, 2, static_cast<uint16_t>(this->size - 20 - 8));
 			}
 
-			// Calculate the HMAC-SHA1 of the packet according to MESSAGE-INTEGRITY rules.
+			// Calculate the HMAC-SHA1 of the packet according to MESSAGE-INTEGRITY
+			// rules.
 			const uint8_t* computedMessageIntegrity =
 			  Utils::Crypto::GetHmacSha1(this->password, buffer, pos);
 

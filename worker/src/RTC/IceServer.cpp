@@ -3,6 +3,7 @@
 
 #include "RTC/IceServer.hpp"
 #include "Logger.hpp"
+#include "DepLibUV.hpp"
 
 namespace RTC
 {
@@ -11,6 +12,9 @@ namespace RTC
 	static constexpr size_t StunSerializeBufferSize{ 65536 };
 	thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
 	static constexpr size_t MaxTuples{ 8 };
+	static const std::string SoftwareAttribute{ "mediasoup" };
+	static constexpr uint64_t ConsentCheckIntervalMs{ 5000u };
+	static constexpr uint64_t ConsentCheckResponseTimeoutMs{ 30000u };
 
 	/* Class methods. */
 	IceServer::IceState IceStateFromFbs(FBS::WebRtcTransport::IceState state)
@@ -99,6 +103,13 @@ namespace RTC
 		}
 
 		this->tuples.clear();
+
+		// Clear queue of ongoing sent ICE consent requests.
+		this->sentConsents.clear();
+
+		// Delete the ICE consent check timer.
+		delete this->consentCheckTimer;
+		this->consentCheckTimer = nullptr;
 	}
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
@@ -161,10 +172,10 @@ namespace RTC
 		{
 			case RTC::StunPacket::Class::REQUEST:
 			{
-				// USERNAME, MESSAGE-INTEGRITY and PRIORITY are required.
-				if (!packet->HasMessageIntegrity() || (packet->GetPriority() == 0u) || packet->GetUsername().empty())
+				// PRIORITY is required.
+				if (packet->GetPriority() == 0u)
 				{
-					MS_WARN_TAG(ice, "mising required attributes in STUN Binding Request => 400");
+					MS_WARN_TAG(ice, "mising required PRIORITY attribute in STUN Binding Request => 400");
 
 					// Reply 400.
 					RTC::StunPacket* response = packet->CreateErrorResponse(400);
@@ -178,7 +189,8 @@ namespace RTC
 				}
 
 				// Check authentication.
-				switch (packet->CheckAuthentication(this->usernameFragment, this->password))
+				switch (packet->CheckAuthentication(
+				  this->usernameFragment, this->remoteUsernameFragment, this->password))
 				{
 					case RTC::StunPacket::Authentication::OK:
 					{
@@ -204,7 +216,7 @@ namespace RTC
 						if (
 							!this->oldUsernameFragment.empty() &&
 							!this->oldPassword.empty() &&
-							packet->CheckAuthentication(this->oldUsernameFragment, this->oldPassword) == RTC::StunPacket::Authentication::OK
+							packet->CheckAuthentication(this->oldUsernameFragment, this->remoteUsernameFragment, this->oldPassword) == RTC::StunPacket::Authentication::OK
 						)
 						// clang-format on
 						{
@@ -226,7 +238,7 @@ namespace RTC
 						return;
 					}
 
-					case RTC::StunPacket::Authentication::BAD_REQUEST:
+					case RTC::StunPacket::Authentication::BAD_MESSAGE:
 					{
 						MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
 
@@ -300,25 +312,132 @@ namespace RTC
 
 			case RTC::StunPacket::Class::INDICATION:
 			{
-				MS_DEBUG_TAG(ice, "STUN Binding Indication processed");
+				MS_DEBUG_TAG(ice, "STUN Binding Indication received, ignored");
 
 				break;
 			}
 
 			case RTC::StunPacket::Class::SUCCESS_RESPONSE:
 			{
-				MS_DEBUG_TAG(ice, "STUN Binding Success Response processed");
+				// Check authentication.
+				switch (packet->CheckAuthentication(
+				  this->remoteUsernameFragment, this->usernameFragment, this->remotePassword))
+				{
+					case RTC::StunPacket::Authentication::OK:
+					{
+						break;
+					}
+
+					case RTC::StunPacket::Authentication::UNAUTHORIZED:
+					{
+						MS_WARN_TAG(ice, "received STUN Success Response with wrong authentication, discarded");
+
+						return;
+					}
+
+					case RTC::StunPacket::Authentication::BAD_MESSAGE:
+					{
+						MS_WARN_TAG(ice, "cannot check authentication in received STUN Binding Success Response, discarded");
+
+						return;
+					}
+				}
+
+				// Trick: We only read the fist 4 bytes of the transactionId of the
+				// response since we know that we generated 4 bytes followed by 8 zeroed
+				// bytes in the transactionId of the sent consent request.
+				auto transactionId = Utils::Byte::Get4Bytes(packet->GetTransactionId(), 0);
+
+				// Let's iterate all entries in the queue and remove the consent request
+				// associated to this response and all those that were sent before.
+
+				// Find the associated entry first.
+				auto it = this->sentConsents.begin();
+
+				for (; it != this->sentConsents.end(); ++it)
+				{
+					auto& sentConsent = *it;
+
+					if (Utils::Byte::Get4Bytes(sentConsent.transactionId, 0) == transactionId)
+					{
+						break;
+					}
+				}
+
+				if (it != this->sentConsents.end())
+				{
+					// Delete the matching entry and all previous ones.
+					this->sentConsents.erase(this->sentConsents.begin(), it + 1);
+				}
+				else
+				{
+					MS_WARN_TAG(ice, "received STUN Success Response doesn't match any sent consent request");
+				}
 
 				break;
 			}
 
 			case RTC::StunPacket::Class::ERROR_RESPONSE:
 			{
-				MS_DEBUG_TAG(ice, "STUN Binding Error Response processed");
+				// TODO: We may only want to check auth if 403 with MESSAGE_INTEGRITY.
+
+				// Check authentication.
+				switch (packet->CheckAuthentication(
+				  this->remoteUsernameFragment, this->usernameFragment, this->remotePassword))
+				{
+					case RTC::StunPacket::Authentication::OK:
+					{
+						break;
+					}
+
+					case RTC::StunPacket::Authentication::UNAUTHORIZED:
+					{
+						MS_WARN_TAG(ice, "received STUN Error Response with wrong authentication, discarded");
+
+						return;
+					}
+
+					case RTC::StunPacket::Authentication::BAD_MESSAGE:
+					{
+						MS_WARN_TAG(ice, "cannot check authentication in received STUN Binding Error Response");
+
+						return;
+					}
+
+					// TODO: Check if this a 403 response to our consent request and do stuff.
+				}
 
 				break;
 			}
 		}
+	}
+
+	void IceServer::RestartIce(const std::string& usernameFragment, const std::string& password)
+	{
+		MS_TRACE();
+
+		if (!this->oldUsernameFragment.empty())
+		{
+			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
+		}
+
+		this->oldUsernameFragment = this->usernameFragment;
+		this->usernameFragment    = usernameFragment;
+
+		this->oldPassword = this->password;
+		this->password    = password;
+
+		this->remoteNomination = 0u;
+
+		// Notify the listener.
+		this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
+
+		// NOTE: Do not call listener->OnIceServerLocalUsernameFragmentRemoved()
+		// yet with old usernameFragment. Wait until we receive a STUN packet
+		// with the new one.
+
+		// Restart ICE consent checks to avoid authentication issues.
+		MayRestartConsentChecks();
 	}
 
 	bool IceServer::IsValidTuple(const RTC::TransportTuple* tuple) const
@@ -372,6 +491,8 @@ namespace RTC
 			if (this->tuples.begin() != this->tuples.end())
 			{
 				SetSelectedTuple(std::addressof(*this->tuples.begin()));
+
+				MayStartOrRestartConsentChecks();
 			}
 			// Or just emit 'disconnected'.
 			else
@@ -384,6 +505,8 @@ namespace RTC
 
 				// Notify the listener.
 				this->listener->OnIceServerDisconnected(this);
+
+				MayStopConsentChecks();
 			}
 		}
 	}
@@ -409,7 +532,11 @@ namespace RTC
 		}
 
 		// Mark it as selected tuple.
-		SetSelectedTuple(storedTuple);
+		auto isNewSelectedTuple = SetSelectedTuple(storedTuple);
+
+		if (isNewSelectedTuple) {
+			MayStartOrRestartConsentChecks();
+		}
 	}
 
 	void IceServer::HandleTuple(
@@ -445,6 +572,8 @@ namespace RTC
 
 					// Notify the listener.
 					this->listener->OnIceServerConnected(this);
+
+					MayStartConsentChecks();
 				}
 				else
 				{
@@ -475,6 +604,8 @@ namespace RTC
 
 						// Notify the listener.
 						this->listener->OnIceServerCompleted(this);
+
+						MayStartConsentChecks();
 					}
 				}
 
@@ -507,6 +638,8 @@ namespace RTC
 
 					// Notify the listener.
 					this->listener->OnIceServerConnected(this);
+
+					MayStartConsentChecks();
 				}
 				else
 				{
@@ -537,6 +670,8 @@ namespace RTC
 
 						// Notify the listener.
 						this->listener->OnIceServerCompleted(this);
+
+						MayStartConsentChecks();
 					}
 				}
 
@@ -572,7 +707,7 @@ namespace RTC
 					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
 					{
 						// Mark it as selected tuple.
-						SetSelectedTuple(storedTuple);
+						auto isNewSelectedTuple = SetSelectedTuple(storedTuple);
 
 						// Update state.
 						this->state = IceState::COMPLETED;
@@ -585,6 +720,10 @@ namespace RTC
 
 						// Notify the listener.
 						this->listener->OnIceServerCompleted(this);
+
+						if (isNewSelectedTuple) {
+							MayStartOrRestartConsentChecks();
+						}
 					}
 				}
 
@@ -612,12 +751,16 @@ namespace RTC
 					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
 					{
 						// Mark it as selected tuple.
-						SetSelectedTuple(storedTuple);
+						auto isNewSelectedTuple = SetSelectedTuple(storedTuple);
 
 						// Update nomination.
 						if (hasNomination && nomination > this->remoteNomination)
 						{
 							this->remoteNomination = nomination;
+						}
+
+						if (isNewSelectedTuple) {
+							MayStartOrRestartConsentChecks();
 						}
 					}
 				}
@@ -627,7 +770,7 @@ namespace RTC
 		}
 	}
 
-	inline RTC::TransportTuple* IceServer::AddTuple(RTC::TransportTuple* tuple)
+	RTC::TransportTuple* IceServer::AddTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -695,7 +838,7 @@ namespace RTC
 		return storedTuple;
 	}
 
-	inline RTC::TransportTuple* IceServer::HasTuple(const RTC::TransportTuple* tuple) const
+	RTC::TransportTuple* IceServer::HasTuple(const RTC::TransportTuple* tuple) const
 	{
 		MS_TRACE();
 
@@ -719,19 +862,185 @@ namespace RTC
 		return nullptr;
 	}
 
-	inline void IceServer::SetSelectedTuple(RTC::TransportTuple* storedTuple)
+	bool IceServer::SetSelectedTuple(RTC::TransportTuple* storedTuple)
 	{
 		MS_TRACE();
 
 		// If already the selected tuple do nothing.
 		if (storedTuple == this->selectedTuple)
 		{
-			return;
+			return false;
 		}
 
 		this->selectedTuple = storedTuple;
 
 		// Notify the listener.
 		this->listener->OnIceServerSelectedTuple(this, this->selectedTuple);
+
+		return true;
+	}
+
+	void IceServer::MayStartConsentChecks()
+	{
+		MS_TRACE();
+
+		if (!AreConsentChecksEnabled())
+		{
+			return;
+		}
+		else if (AreConsentChecksRunning())
+		{
+			return;
+		}
+
+		// Create the ICE consent checks timer if it doesn't exist.
+		if (!this->consentCheckTimer)	{
+			this->consentCheckTimer = new TimerHandle(this);
+		}
+
+		this->consentCheckTimer->Start(ConsentCheckIntervalMs);
+	}
+
+	void IceServer::MayStopConsentChecks()
+	{
+		MS_TRACE();
+
+		if (this->consentCheckTimer)	{
+			this->consentCheckTimer->Stop();
+		}
+
+		// Clear queue of ongoing sent ICE consent requests.
+		this->sentConsents.clear();
+	}
+
+	void IceServer::MayRestartConsentChecks()
+	{
+		MS_TRACE();
+
+		if (!AreConsentChecksRunning())
+		{
+			return;
+		}
+
+		// Clear queue of ongoing sent ICE consent requests.
+		this->sentConsents.clear();
+
+		MayStartConsentChecks();
+	}
+
+	void IceServer::MayStartOrRestartConsentChecks()
+	{
+		MS_TRACE();
+
+		if (!AreConsentChecksRunning())
+		{
+			MayStartConsentChecks();
+		}
+		else
+		{
+			MayRestartConsentChecks();
+		}
+	}
+
+	void IceServer::SendConsentRequest()
+	{
+		MS_TRACE();
+
+		// MS_ASSERT(this->state == IceState::CONNECTED || this->state == IceState::COMPLETED, "cannot
+		// send consent request in state other than 'connected' or 'completed'");
+		MS_ASSERT(this->selectedTuple, "cannot send consent request without a selected tuple");
+
+		// Here we do a trick. We generate a transactionId of 4 bytes and fill the
+		// latest 8 bytes of the transactionId with zeroes.
+		uint32_t transactionId = Utils::Crypto::GetRandomUInt(0u, UINT32_MAX);
+
+		auto& sentContext = this->sentConsents.emplace_back(transactionId, DepLibUV::GetTimeMs());
+
+		auto* request = new StunPacket(
+		  StunPacket::Class::REQUEST,
+		  StunPacket::Method::BINDING,
+		  sentContext.transactionId,
+		  nullptr,
+		  0);
+
+		const std::string username = this->remoteUsernameFragment + ":" + this->usernameFragment;
+
+		request->SetUsername(username.c_str(), username.length());
+		request->SetPriority(1u);
+		request->SetIceControlled(1u);
+		request->SetSoftware(SoftwareAttribute.c_str(), SoftwareAttribute.length());
+		request->Authenticate(this->remotePassword);
+		request->Serialize(StunSerializeBuffer);
+
+		this->listener->OnIceServerSendStunPacket(this, request, this->selectedTuple);
+
+		delete request;
+	}
+
+	inline void IceServer::OnTimer(TimerHandle* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->consentCheckTimer)
+		{
+			// State must be 'connected' or 'completed'.
+			MS_ASSERT(this->state == IceState::COMPLETED || this->state == IceState::CONNECTED, "ICE consent check timer fired but state is neither 'completed' nor 'connected'");
+			// There should be a selected tuple.
+			MS_ASSERT(this->selectedTuple, "ICE consent check timer fired but there is not selected tuple");
+
+			auto nowMs = DepLibUV::GetTimeMs();
+
+			// Check if there is at least an ongoing expired ICE consent request
+			// and if so move to disconnected state.
+			auto it = this->sentConsents.begin();
+
+			for (; it != this->sentConsents.end(); ++it)
+			{
+				auto& sentConsent = *it;
+
+				if (nowMs - sentConsent.sentAtMs >= ConsentCheckResponseTimeoutMs)
+				{
+					break;
+				}
+			}
+
+			if (it == this->sentConsents.end())
+			{
+					// Send a new ICE consent request.
+					SendConsentRequest();
+
+					/*
+				   * The interval between ICE consent requests is varied randomly over the
+				   * range [0.8, 1.2] times the calculated interval to prevent
+				   * synchronization of consent checks.
+				   */
+					const uint64_t interval = ConsentCheckIntervalMs + static_cast<float>(Utils::Crypto::GetRandomUInt(8, 12)) / 10;
+
+					this->consentCheckTimer->Start(interval);
+			}
+			else
+			{
+				MS_WARN_TAG(ice, "ICE consent expired, moving to 'disconnected' state");
+
+				auto* disconnectedSelectedTuple = this->selectedTuple;
+
+				// Update state.
+				this->state = IceState::DISCONNECTED;
+
+				// Clear all tuples.
+				this->selectedTuple = nullptr;
+				this->tuples.clear();
+
+				// Reset remote nomination.
+				this->remoteNomination = 0u;
+
+				// Clear queue of ongoing sent ICE consent requests.
+				this->sentConsents.clear();
+
+				// Notify the listener.
+				this->listener->OnIceServerTupleRemoved(this, disconnectedSelectedTuple);
+				this->listener->OnIceServerDisconnected(this);
+			}
+		}
 	}
 } // namespace RTC

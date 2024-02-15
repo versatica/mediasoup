@@ -50,7 +50,7 @@ namespace RTC
 		{
 			OK           = 0,
 			UNAUTHORIZED = 1,
-			BAD_REQUEST  = 2
+			BAD_MESSAGE  = 2
 		};
 
 	public:
@@ -95,6 +95,10 @@ namespace RTC
 		{
 			return this->size;
 		}
+		const uint8_t* GetTransactionId() const
+		{
+			return this->transactionId;
+		}
 		void SetUsername(const char* username, size_t len)
 		{
 			this->username.assign(username, len);
@@ -126,6 +130,10 @@ namespace RTC
 		void SetErrorCode(uint16_t errorCode)
 		{
 			this->errorCode = errorCode;
+		}
+		void SetSoftware(const char* software, size_t len)
+		{
+			this->software.assign(software, len);
 		}
 		void SetMessageIntegrity(const uint8_t* messageIntegrity)
 		{
@@ -171,6 +179,10 @@ namespace RTC
 		{
 			return this->errorCode;
 		}
+		std::string GetSoftware() const
+		{
+			return this->software;
+		}
 		bool HasMessageIntegrity() const
 		{
 			return (this->messageIntegrity != nullptr);
@@ -180,7 +192,9 @@ namespace RTC
 			return this->hasFingerprint;
 		}
 		Authentication CheckAuthentication(
-		  const std::string& localUsername, const std::string& localPassword);
+		  const std::string& usernameFragment1,
+		  const std::string& usernameFragment2,
+		  const std::string& password);
 		StunPacket* CreateSuccessResponse();
 		StunPacket* CreateErrorResponse(uint16_t errorCode);
 		void Authenticate(const std::string& password);
@@ -194,7 +208,8 @@ namespace RTC
 		uint8_t* data{ nullptr };                // Pointer to binary data.
 		size_t size{ 0u };                       // The full message size (including header).
 		// STUN attributes.
-		std::string username;          // Less than 513 bytes.
+		std::string username; // Less than 513 bytes.
+		std::string password;
 		uint32_t priority{ 0u };       // 4 bytes unsigned integer.
 		uint64_t iceControlling{ 0u }; // 8 bytes unsigned integer.
 		uint64_t iceControlled{ 0u };  // 8 bytes unsigned integer.
@@ -205,7 +220,7 @@ namespace RTC
 		bool hasFingerprint{ false };                       // 4 bytes.
 		const struct sockaddr* xorMappedAddress{ nullptr }; // 8 or 20 bytes.
 		uint16_t errorCode{ 0u };                           // 4 bytes (no reason phrase).
-		std::string password;
+		std::string software;                               // Less than 763 bytes.
 	};
 } // namespace RTC
 
