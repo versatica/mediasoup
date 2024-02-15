@@ -2,8 +2,8 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/IceServer.hpp"
-#include "Logger.hpp"
 #include "DepLibUV.hpp"
+#include "Logger.hpp"
 
 namespace RTC
 {
@@ -337,7 +337,9 @@ namespace RTC
 
 					case RTC::StunPacket::Authentication::BAD_MESSAGE:
 					{
-						MS_WARN_TAG(ice, "cannot check authentication in received STUN Binding Success Response, discarded");
+						MS_WARN_TAG(
+						  ice,
+						  "cannot check authentication in received STUN Binding Success Response, discarded");
 
 						return;
 					}
@@ -404,7 +406,7 @@ namespace RTC
 						return;
 					}
 
-					// TODO: Check if this a 403 response to our consent request and do stuff.
+						// TODO: Check if this a 403 response to our consent request and do stuff.
 				}
 
 				break;
@@ -534,7 +536,8 @@ namespace RTC
 		// Mark it as selected tuple.
 		auto isNewSelectedTuple = SetSelectedTuple(storedTuple);
 
-		if (isNewSelectedTuple) {
+		if (isNewSelectedTuple)
+		{
 			MayStartOrRestartConsentChecks();
 		}
 	}
@@ -721,7 +724,8 @@ namespace RTC
 						// Notify the listener.
 						this->listener->OnIceServerCompleted(this);
 
-						if (isNewSelectedTuple) {
+						if (isNewSelectedTuple)
+						{
 							MayStartOrRestartConsentChecks();
 						}
 					}
@@ -759,7 +763,8 @@ namespace RTC
 							this->remoteNomination = nomination;
 						}
 
-						if (isNewSelectedTuple) {
+						if (isNewSelectedTuple)
+						{
 							MayStartOrRestartConsentChecks();
 						}
 					}
@@ -894,7 +899,8 @@ namespace RTC
 		}
 
 		// Create the ICE consent checks timer if it doesn't exist.
-		if (!this->consentCheckTimer)	{
+		if (!this->consentCheckTimer)
+		{
 			this->consentCheckTimer = new TimerHandle(this);
 		}
 
@@ -905,7 +911,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->consentCheckTimer)	{
+		if (this->consentCheckTimer)
+		{
 			this->consentCheckTimer->Stop();
 		}
 
@@ -957,11 +964,7 @@ namespace RTC
 		auto& sentContext = this->sentConsents.emplace_back(transactionId, DepLibUV::GetTimeMs());
 
 		auto* request = new StunPacket(
-		  StunPacket::Class::REQUEST,
-		  StunPacket::Method::BINDING,
-		  sentContext.transactionId,
-		  nullptr,
-		  0);
+		  StunPacket::Class::REQUEST, StunPacket::Method::BINDING, sentContext.transactionId, nullptr, 0);
 
 		const std::string username = this->remoteUsernameFragment + ":" + this->usernameFragment;
 
@@ -984,7 +987,9 @@ namespace RTC
 		if (timer == this->consentCheckTimer)
 		{
 			// State must be 'connected' or 'completed'.
-			MS_ASSERT(this->state == IceState::COMPLETED || this->state == IceState::CONNECTED, "ICE consent check timer fired but state is neither 'completed' nor 'connected'");
+			MS_ASSERT(
+			  this->state == IceState::COMPLETED || this->state == IceState::CONNECTED,
+			  "ICE consent check timer fired but state is neither 'completed' nor 'connected'");
 			// There should be a selected tuple.
 			MS_ASSERT(this->selectedTuple, "ICE consent check timer fired but there is not selected tuple");
 
@@ -1006,17 +1011,18 @@ namespace RTC
 
 			if (it == this->sentConsents.end())
 			{
-					// Send a new ICE consent request.
-					SendConsentRequest();
+				// Send a new ICE consent request.
+				SendConsentRequest();
 
-					/*
-				   * The interval between ICE consent requests is varied randomly over the
-				   * range [0.8, 1.2] times the calculated interval to prevent
-				   * synchronization of consent checks.
-				   */
-					const uint64_t interval = ConsentCheckIntervalMs + static_cast<float>(Utils::Crypto::GetRandomUInt(8, 12)) / 10;
+				/*
+				 * The interval between ICE consent requests is varied randomly over the
+				 * range [0.8, 1.2] times the calculated interval to prevent
+				 * synchronization of consent checks.
+				 */
+				const uint64_t interval =
+				  ConsentCheckIntervalMs + static_cast<float>(Utils::Crypto::GetRandomUInt(8, 12)) / 10;
 
-					this->consentCheckTimer->Start(interval);
+				this->consentCheckTimer->Start(interval);
 			}
 			else
 			{
