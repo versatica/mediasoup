@@ -73,6 +73,10 @@ namespace RTC
 		~IceServer() override;
 
 	public:
+		void SetConsentTimeout(uint8_t consentTimeoutSec)
+		{
+			this->consentTimeoutSec = consentTimeoutSec;
+		}
 		void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
 		const std::string& GetUsernameFragment() const
 		{
@@ -133,8 +137,9 @@ namespace RTC
 		bool SetSelectedTuple(RTC::TransportTuple* storedTuple);
 		bool AreConsentChecksEnabled() const
 		{
-			// TODO: We also need an API setting probably.
-			return (!this->remoteUsernameFragment.empty() && !this->remotePassword.empty());
+			return (
+			  this->consentTimeoutSec != 0u && !this->remoteUsernameFragment.empty() &&
+			  !this->remotePassword.empty());
 		}
 		bool AreConsentChecksRunning() const
 		{
@@ -164,6 +169,7 @@ namespace RTC
 		uint32_t remoteNomination{ 0u };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
+		uint8_t consentTimeoutSec{ 30u };
 		TimerHandle* consentCheckTimer{ nullptr };
 		std::deque<SentConsent> sentConsents;
 	};

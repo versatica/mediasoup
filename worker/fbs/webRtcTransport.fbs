@@ -23,6 +23,7 @@ table WebRtcTransportOptions {
     enable_tcp: bool = true;
     prefer_udp: bool = false;
     prefer_tcp: bool = false;
+    ice_consent_timeout: uint8 = 30;
 }
 
 enum FingerprintAlgorithm: uint8 {

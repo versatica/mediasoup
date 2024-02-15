@@ -14,7 +14,7 @@ namespace RTC
 	static constexpr size_t MaxTuples{ 8 };
 	static const std::string SoftwareAttribute{ "mediasoup" };
 	static constexpr uint64_t ConsentCheckIntervalMs{ 5000u };
-	static constexpr uint64_t ConsentCheckResponseTimeoutMs{ 30000u };
+	static constexpr uint64_t MaxOngoingSentConsents{ 20u };
 
 	/* Class methods. */
 	IceServer::IceState IceStateFromFbs(FBS::WebRtcTransport::IceState state)
@@ -963,6 +963,14 @@ namespace RTC
 
 		auto& sentContext = this->sentConsents.emplace_back(transactionId, DepLibUV::GetTimeMs());
 
+		// Limit max number of entries in the queue.
+		if (this->sentConsents.size() > MaxOngoingSentConsents)
+		{
+			MS_WARN_TAG(ice, "too many entries in the sent consents queue, removing the oldest one");
+
+			this->sentConsents.pop_front();
+		}
+
 		auto* request = new StunPacket(
 		  StunPacket::Class::REQUEST, StunPacket::Method::BINDING, sentContext.transactionId, nullptr, 0);
 
@@ -1003,7 +1011,7 @@ namespace RTC
 			{
 				auto& sentConsent = *it;
 
-				if (nowMs - sentConsent.sentAtMs >= ConsentCheckResponseTimeoutMs)
+				if (nowMs - sentConsent.sentAtMs >= this->consentTimeoutSec * 1000)
 				{
 					break;
 				}

@@ -97,6 +97,13 @@ export type WebRtcTransportOptionsBase<WebRtcTransportAppData> = {
 	preferTcp?: boolean;
 
 	/**
+	 * ICE consent timeout (in seconds). If 0 it is disabled. Default 30.
+	 * For it to be enabled, |iceUfrag| and |icePwd| must be present in
+	 * DtlsParams given to connect() method.
+	 */
+	iceConsentTimeout?: number;
+
+	/**
 	 * Initial available outgoing bitrate (in bps). Default 600000.
 	 */
 	initialAvailableOutgoingBitrate?: number;

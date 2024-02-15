@@ -164,6 +164,8 @@ namespace RTC
 			this->iceServer = new RTC::IceServer(
 			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
 
+			this->iceServer->SetConsentTimeout(options->iceConsentTimeout());
+
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
 
@@ -230,6 +232,8 @@ namespace RTC
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
 			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+
+			this->iceServer->SetConsentTimeout(options->iceConsentTimeout());
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
