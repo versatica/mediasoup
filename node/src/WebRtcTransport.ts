@@ -157,8 +157,6 @@ export type IceCandidate = {
 export type DtlsParameters = {
 	role?: DtlsRole;
 	fingerprints: DtlsFingerprint[];
-	iceUfrag?: string;
-	icePwd?: string;
 };
 
 /**
@@ -479,14 +477,17 @@ export class WebRtcTransport<
 	 * @override
 	 */
 	async connect({
+		iceParameters,
 		dtlsParameters,
 	}: {
+		iceParameters?: IceParameters;
 		dtlsParameters: DtlsParameters;
 	}): Promise<void> {
 		logger.debug('connect()');
 
 		const requestOffset = createConnectRequest({
 			builder: this.channel.bufferBuilder,
+			iceParameters,
 			dtlsParameters,
 		});
 
@@ -837,19 +838,31 @@ export function parseWebRtcTransportDumpResponse(
 
 function createConnectRequest({
 	builder,
+	iceParameters,
 	dtlsParameters,
 }: {
 	builder: flatbuffers.Builder;
+	iceParameters?: IceParameters;
 	dtlsParameters: DtlsParameters;
 }): number {
+	// Serialize ICeParameters if given. This can throw.
+	const iceParametersOffset = iceParameters
+		? serializeIceParameters(builder, iceParameters)
+		: undefined;
+
 	// Serialize DtlsParameters. This can throw.
 	const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
 
+	const ConnectRequest = FbsWebRtcTransport.ConnectRequest;
+
 	// Create request.
-	return FbsWebRtcTransport.ConnectRequest.createConnectRequest(
-		builder,
-		dtlsParametersOffset
-	);
+	ConnectRequest.startConnectRequest(builder);
+	if (iceParametersOffset) {
+		ConnectRequest.addIceParameters(builder, iceParametersOffset);
+	}
+	ConnectRequest.addDtlsParameters(builder, dtlsParametersOffset);
+
+	return ConnectRequest.endConnectRequest(builder);
 }
 
 function parseGetStatsResponse(
@@ -918,6 +931,24 @@ function parseDtlsParameters(
 	};
 }
 
+function serializeIceParameters(
+	builder: flatbuffers.Builder,
+	iceParameters: IceParameters
+): number {
+	const usernameFragmentOffset = builder.createString(
+		iceParameters.usernameFragment ?? ''
+	);
+	const passwordOffset = builder.createString(iceParameters.password ?? '');
+	const iceLiteOffset = Boolean(iceParameters.iceLite);
+
+	return FbsWebRtcTransport.IceParameters.createIceParameters(
+		builder,
+		usernameFragmentOffset,
+		passwordOffset,
+		iceLiteOffset
+	);
+}
+
 function serializeDtlsParameters(
 	builder: flatbuffers.Builder,
 	dtlsParameters: DtlsParameters
@@ -942,9 +973,6 @@ function serializeDtlsParameters(
 			fingerprints
 		);
 
-	const iceUfragOffset = builder.createString(dtlsParameters.iceUfrag ?? '');
-	const icePwdOffset = builder.createString(dtlsParameters.icePwd ?? '');
-
 	const role =
 		dtlsParameters.role !== undefined
 			? dtlsRoleToFbs(dtlsParameters.role)
@@ -953,8 +981,6 @@ function serializeDtlsParameters(
 	return FbsWebRtcTransport.DtlsParameters.createDtlsParameters(
 		builder,
 		fingerprintsOffset,
-		role,
-		iceUfragOffset,
-		icePwdOffset
+		role
 	);
 }

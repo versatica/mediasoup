@@ -56,8 +56,6 @@ enum DtlsState: uint8 {
 table DtlsParameters {
     fingerprints: [Fingerprint] (required);
     role: DtlsRole = AUTO;
-    ice_ufrag: string;
-    ice_pwd: string;
 }
 
 table IceParameters {
@@ -97,6 +95,7 @@ table IceCandidate {
 }
 
 table ConnectRequest {
+    ice_parameters: IceParameters;
     dtls_parameters: DtlsParameters (required);
 }
 

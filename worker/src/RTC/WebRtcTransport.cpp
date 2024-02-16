@@ -440,6 +440,7 @@ namespace RTC
 				}
 
 				const auto* body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
+				const auto* iceParameters  = body->iceParameters();
 				const auto* dtlsParameters = body->dtlsParameters();
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
@@ -463,8 +464,8 @@ namespace RTC
 
 				dtlsRemoteRole = RTC::DtlsTransport::RoleFromFbs(dtlsParameters->role());
 
-				const std::string iceUsernameFragment = dtlsParameters->iceUfrag()->str();
-				const std::string icePassword         = dtlsParameters->icePwd()->str();
+				const std::string iceUsernameFragment = iceParameters->usernameFragment()->str();
+				const std::string icePassword         = iceParameters->password()->str();
 
 				if (!iceUsernameFragment.empty() && !icePassword.empty())
 				{
