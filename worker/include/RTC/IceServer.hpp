@@ -139,7 +139,7 @@ namespace RTC
 		bool IsConsentCheckEnabled() const
 		{
 			return (
-			  this->consentTimeoutSec != 0u && !this->remoteUsernameFragment.empty() &&
+			  this->consentTimeoutMs != 0u && !this->remoteUsernameFragment.empty() &&
 			  !this->remotePassword.empty());
 		}
 		bool IsConsentCheckRunning() const
@@ -163,7 +163,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		std::string usernameFragment;
 		std::string password;
-		uint8_t consentTimeoutSec{ 30u };
+		uint16_t consentTimeoutMs{ 30000u };
 		// Others.
 		std::string oldUsernameFragment;
 		std::string oldPassword;

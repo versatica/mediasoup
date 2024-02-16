@@ -14,6 +14,8 @@ namespace RTC
 	static constexpr size_t MaxTuples{ 8 };
 	static const std::string SoftwareAttribute{ "mediasoup" };
 	static constexpr uint64_t ConsentCheckIntervalMs{ 5000u };
+	static constexpr uint8_t ConsentCheckMinTimeoutSec{ 10u };
+	static constexpr uint8_t ConsentCheckMaxTimeoutSec{ 60u };
 	static constexpr uint64_t MaxOngoingSentConsents{ 20u };
 
 	/* Class methods. */
@@ -76,10 +78,30 @@ namespace RTC
 	  const std::string& usernameFragment,
 	  const std::string& password,
 	  uint8_t consentTimeoutSec)
-	  : listener(listener), usernameFragment(usernameFragment), password(password),
-	    consentTimeoutSec(consentTimeoutSec)
+	  : listener(listener), usernameFragment(usernameFragment), password(password)
 	{
 		MS_TRACE();
+
+		if (consentTimeoutSec < ConsentCheckMinTimeoutSec)
+		{
+			MS_WARN_TAG(
+			  ice,
+			  "consentTimeoutSec cannot be lower than %" PRIu8 " seconds, fixing it",
+			  ConsentCheckMinTimeoutSec);
+
+			consentTimeoutSec = ConsentCheckMinTimeoutSec;
+		}
+		else if (consentTimeoutSec > ConsentCheckMaxTimeoutSec)
+		{
+			MS_WARN_TAG(
+			  ice,
+			  "consentTimeoutSec cannot be higher than %" PRIu8 " seconds, fixing it",
+			  ConsentCheckMaxTimeoutSec);
+
+			consentTimeoutSec = ConsentCheckMaxTimeoutSec;
+		}
+
+		this->consentTimeoutMs = consentTimeoutSec * 1000;
 
 		// Notify the listener.
 		this->listener->OnIceServerLocalUsernameFragmentAdded(this, usernameFragment);
@@ -1001,17 +1023,11 @@ namespace RTC
 		// associated to this response and all those that were sent before.
 
 		// Find the associated entry first.
-		auto it = this->sentConsents.begin();
-
-		for (; it != this->sentConsents.end(); ++it)
-		{
-			auto& sentConsent = *it;
-
-			if (Utils::Byte::Get4Bytes(sentConsent.transactionId, 0) == transactionId)
-			{
-				break;
-			}
-		}
+		auto it = std::find_if(
+		  this->sentConsents.begin(),
+		  this->sentConsents.end(),
+		  [transactionId](auto& sentConsent)
+		  { return Utils::Byte::Get4Bytes(sentConsent.transactionId, 0) == transactionId; });
 
 		if (it != this->sentConsents.end())
 		{
@@ -1088,21 +1104,17 @@ namespace RTC
 			// There should be a selected tuple.
 			MS_ASSERT(this->selectedTuple, "ICE consent check timer fired but there is not selected tuple");
 
-			auto nowMs = DepLibUV::GetTimeMs();
-
 			// Check if there is at least an ongoing expired ICE consent request
 			// and if so move to disconnected state.
-			auto it = this->sentConsents.begin();
 
-			for (; it != this->sentConsents.end(); ++it)
-			{
-				auto& sentConsent = *it;
+			auto nowMs            = DepLibUV::GetTimeMs();
+			auto consentTimeoutMs = this->consentTimeoutMs;
 
-				if (nowMs - sentConsent.sentAtMs >= this->consentTimeoutSec * 1000)
-				{
-					break;
-				}
-			}
+			auto it = std::find_if(
+			  this->sentConsents.begin(),
+			  this->sentConsents.end(),
+			  [nowMs, consentTimeoutMs](auto& sentConsent)
+			  { return nowMs - sentConsent.sentAtMs >= consentTimeoutMs; });
 
 			if (it == this->sentConsents.end())
 			{
