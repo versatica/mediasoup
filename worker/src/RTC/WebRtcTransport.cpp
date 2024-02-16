@@ -160,11 +160,11 @@ namespace RTC
 				iceLocalPreferenceDecrement += 100;
 			}
 
+			auto iceConsentTimeout = options->iceConsentTimeout();
+
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
-
-			this->iceServer->SetConsentTimeout(options->iceConsentTimeout());
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
@@ -229,11 +229,11 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("empty iceCandidates");
 			}
 
+			auto iceConsentTimeout = options->iceConsentTimeout();
+
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
-
-			this->iceServer->SetConsentTimeout(options->iceConsentTimeout());
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
