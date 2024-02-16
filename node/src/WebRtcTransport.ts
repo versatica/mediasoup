@@ -845,10 +845,12 @@ function createConnectRequest({
 	iceParameters?: IceParameters;
 	dtlsParameters: DtlsParameters;
 }): number {
-	// Serialize ICeParameters if given. This can throw.
-	const iceParametersOffset = iceParameters
-		? serializeIceParameters(builder, iceParameters)
-		: undefined;
+	let iceParametersOffset: number | undefined;
+
+	// Serialize IceParameters if given. This can throw.
+	if (iceParameters) {
+		iceParametersOffset = serializeIceParameters(builder, iceParameters);
+	}
 
 	// Serialize DtlsParameters. This can throw.
 	const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
@@ -857,9 +859,11 @@ function createConnectRequest({
 
 	// Create request.
 	ConnectRequest.startConnectRequest(builder);
+
 	if (iceParametersOffset) {
 		ConnectRequest.addIceParameters(builder, iceParametersOffset);
 	}
+
 	ConnectRequest.addDtlsParameters(builder, dtlsParametersOffset);
 
 	return ConnectRequest.endConnectRequest(builder);
