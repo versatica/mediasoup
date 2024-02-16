@@ -298,7 +298,10 @@ impl Handler<ClientMessage> for EchoConnection {
                 // synchronous
                 actix::spawn(async move {
                     match transport
-                        .connect(WebRtcTransportRemoteParameters { dtls_parameters })
+                        .connect(WebRtcTransportRemoteParameters {
+                            ice_parameters: None,
+                            dtls_parameters,
+                        })
                         .await
                     {
                         Ok(_) => {
@@ -346,7 +349,10 @@ impl Handler<ClientMessage> for EchoConnection {
                 // The same as producer transport, but for consumer transport
                 actix::spawn(async move {
                     match transport
-                        .connect(WebRtcTransportRemoteParameters { dtls_parameters })
+                        .connect(WebRtcTransportRemoteParameters {
+                            ice_parameters: None,
+                            dtls_parameters,
+                        })
                         .await
                     {
                         Ok(_) => {

@@ -1,5 +1,9 @@
 # Changelog
 
+### Next
+
+- Add server side ICE consent checks to detect silent WebRTC disconnections ([PR #1332](https://github.com/versatica/mediasoup/pull/1332)).
+
 ### 3.13.19
 
 - Node: Fix `router.createWebRtcTransport()` with `listenIps` ([PR #1330](https://github.com/versatica/mediasoup/pull/1330)).

@@ -344,7 +344,10 @@ impl Handler<ClientMessage> for SvcSimulcastConnection {
                 // synchronous
                 actix::spawn(async move {
                     match transport
-                        .connect(WebRtcTransportRemoteParameters { dtls_parameters })
+                        .connect(WebRtcTransportRemoteParameters {
+                            ice_parameters: None,
+                            dtls_parameters,
+                        })
                         .await
                     {
                         Ok(_) => {
@@ -392,7 +395,10 @@ impl Handler<ClientMessage> for SvcSimulcastConnection {
                 // The same as producer transport, but for consumer transport
                 actix::spawn(async move {
                     match transport
-                        .connect(WebRtcTransportRemoteParameters { dtls_parameters })
+                        .connect(WebRtcTransportRemoteParameters {
+                            ice_parameters: None,
+                            dtls_parameters,
+                        })
                         .await
                     {
                         Ok(_) => {

@@ -82,7 +82,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (consentTimeoutSec < ConsentCheckMinTimeoutSec)
+		if (consentTimeoutSec == 0u)
+		{
+			// 0 means disabled so it's a valid value.
+		}
+		else if (consentTimeoutSec < ConsentCheckMinTimeoutSec)
 		{
 			MS_WARN_TAG(
 			  ice,

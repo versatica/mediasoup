@@ -153,6 +153,14 @@ pub struct IceParameters {
 }
 
 impl IceParameters {
+    pub(crate) fn to_fbs(&self) -> web_rtc_transport::IceParameters {
+        web_rtc_transport::IceParameters {
+            username_fragment: self.username_fragment.to_string(),
+            password: self.password.to_string(),
+            ice_lite: self.ice_lite.unwrap_or(false),
+        }
+    }
+
     pub(crate) fn from_fbs(parameters: web_rtc_transport::IceParameters) -> Self {
         Self {
             username_fragment: parameters.username_fragment.to_string(),

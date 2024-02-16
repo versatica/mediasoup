@@ -299,12 +299,57 @@ test('webRtcTransport.connect() succeeds', async () => {
 	};
 
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
+		webRtcTransport.connect({
+			dtlsParameters: dtlsRemoteParameters,
+		})
 	).resolves.toBeUndefined();
 
 	// Must fail if connected.
 	await expect(
-		webRtcTransport.connect({ dtlsParameters: dtlsRemoteParameters })
+		webRtcTransport.connect({
+			dtlsParameters: dtlsRemoteParameters,
+		})
+	).rejects.toThrow(Error);
+
+	expect(webRtcTransport.dtlsParameters.role).toBe('server');
+}, 2000);
+
+test('webRtcTransport.connect() with iceParameters succeeds', async () => {
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+		],
+	});
+
+	const iceRemoteParameters: mediasoup.types.IceParameters = {
+		usernameFragment: 'foo',
+		password: 'xxxx',
+	};
+
+	const dtlsRemoteParameters: mediasoup.types.DtlsParameters = {
+		fingerprints: [
+			{
+				algorithm: 'sha-256',
+				value:
+					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
+			},
+		],
+		role: 'client',
+	};
+
+	await expect(
+		webRtcTransport.connect({
+			iceParameters: iceRemoteParameters,
+			dtlsParameters: dtlsRemoteParameters,
+		})
+	).resolves.toBeUndefined();
+
+	// Must fail if connected.
+	await expect(
+		webRtcTransport.connect({
+			iceParameters: iceRemoteParameters,
+			dtlsParameters: dtlsRemoteParameters,
+		})
 	).rejects.toThrow(Error);
 
 	expect(webRtcTransport.dtlsParameters.role).toBe('server');

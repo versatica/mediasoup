@@ -1,8 +1,8 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
 use mediasoup::data_structures::{
-    AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateType, IceRole,
-    IceState, ListenInfo, Protocol, SctpState,
+    AppData, DtlsFingerprint, DtlsParameters, DtlsRole, DtlsState, IceCandidateType, IceParameters,
+    IceRole, IceState, ListenInfo, Protocol, SctpState,
 };
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
@@ -418,6 +418,7 @@ fn connect_succeeds() {
 
         transport
             .connect(WebRtcTransportRemoteParameters {
+                ice_parameters: None,
                 dtls_parameters: dtls_parameters.clone(),
             })
             .await
@@ -426,7 +427,70 @@ fn connect_succeeds() {
         // Must fail if connected.
         assert!(matches!(
             transport
-                .connect(WebRtcTransportRemoteParameters { dtls_parameters })
+                .connect(WebRtcTransportRemoteParameters {
+                    ice_parameters: None,
+                    dtls_parameters
+                })
+                .await,
+            Err(RequestError::Response { .. }),
+        ));
+
+        assert_eq!(transport.dtls_parameters().role, DtlsRole::Server);
+    });
+}
+
+#[test]
+fn connect_with_ice_parameters_succeeds() {
+    future::block_on(async move {
+        let (_worker, router) = init().await;
+
+        let transport = router
+            .create_webrtc_transport(WebRtcTransportOptions::new(
+                WebRtcTransportListenInfos::new(ListenInfo {
+                    protocol: Protocol::Udp,
+                    ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                    announced_address: Some("9.9.9.1".to_string()),
+                    port: None,
+                    flags: None,
+                    send_buffer_size: None,
+                    recv_buffer_size: None,
+                }),
+            ))
+            .await
+            .expect("Failed to create WebRTC transport");
+
+        let ice_parameters = IceParameters {
+            username_fragment: "foo".to_string(),
+            password: "xxxx".to_string(),
+            ice_lite: None,
+        };
+
+        let dtls_parameters = DtlsParameters {
+            role: DtlsRole::Client,
+            fingerprints: vec![DtlsFingerprint::Sha256 {
+                value: [
+                    0x82, 0x5A, 0x68, 0x3D, 0x36, 0xC3, 0x0A, 0xDE, 0xAF, 0xE7, 0x32, 0x43, 0xD2,
+                    0x88, 0x83, 0x57, 0xAC, 0x2D, 0x65, 0xE5, 0x80, 0xC4, 0xB6, 0xFB, 0xAF, 0x1A,
+                    0xA0, 0x21, 0x9F, 0x6D, 0x0C, 0xAD,
+                ],
+            }],
+        };
+
+        transport
+            .connect(WebRtcTransportRemoteParameters {
+                ice_parameters: Some(ice_parameters.clone()),
+                dtls_parameters: dtls_parameters.clone(),
+            })
+            .await
+            .expect("Failed to establish WebRTC transport connection");
+
+        // Must fail if connected.
+        assert!(matches!(
+            transport
+                .connect(WebRtcTransportRemoteParameters {
+                    ice_parameters: Some(ice_parameters),
+                    dtls_parameters
+                })
                 .await,
             Err(RequestError::Response { .. }),
         ));

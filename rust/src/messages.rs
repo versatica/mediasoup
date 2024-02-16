@@ -669,6 +669,7 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     enable_tcp: bool,
     prefer_udp: bool,
     prefer_tcp: bool,
+    ice_consent_timeout: u8,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
     max_sctp_message_size: u32,
@@ -701,6 +702,7 @@ impl RouterCreateWebrtcTransportData {
             enable_tcp: webrtc_transport_options.enable_tcp,
             prefer_udp: webrtc_transport_options.prefer_udp,
             prefer_tcp: webrtc_transport_options.prefer_tcp,
+            ice_consent_timeout: webrtc_transport_options.ice_consent_timeout,
             enable_sctp: webrtc_transport_options.enable_sctp,
             num_sctp_streams: webrtc_transport_options.num_sctp_streams,
             max_sctp_message_size: webrtc_transport_options.max_sctp_message_size,
@@ -726,6 +728,7 @@ impl RouterCreateWebrtcTransportData {
             enable_tcp: self.enable_tcp,
             prefer_udp: self.prefer_udp,
             prefer_tcp: self.prefer_tcp,
+            ice_consent_timeout: self.ice_consent_timeout,
         }
     }
 }
@@ -1405,6 +1408,7 @@ pub(crate) struct WebRtcTransportConnectResponse {
 
 #[derive(Debug)]
 pub(crate) struct WebRtcTransportConnectRequest {
+    pub(crate) ice_parameters: Option<IceParameters>,
     pub(crate) dtls_parameters: DtlsParameters,
 }
 
@@ -1415,8 +1419,11 @@ impl Request for WebRtcTransportConnectRequest {
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
-        let data =
-            web_rtc_transport::ConnectRequest::create(&mut builder, self.dtls_parameters.to_fbs());
+        let data = web_rtc_transport::ConnectRequest::create(
+            &mut builder,
+            self.ice_parameters.map(|parameters| parameters.to_fbs()),
+            self.dtls_parameters.to_fbs(),
+        );
         let request_body =
             request::Body::create_web_rtc_transport_connect_request(&mut builder, data);
         let request = request::Request::create(
