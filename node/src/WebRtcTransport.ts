@@ -98,8 +98,7 @@ export type WebRtcTransportOptionsBase<WebRtcTransportAppData> = {
 
 	/**
 	 * ICE consent timeout (in seconds). If 0 it is disabled. Default 30.
-	 * For it to be enabled, |iceUfrag| and |icePwd| must be present in
-	 * DtlsParams given to connect() method.
+	 * For it to be enabled, iceParameters must be given in connect() method.
 	 */
 	iceConsentTimeout?: number;
 
