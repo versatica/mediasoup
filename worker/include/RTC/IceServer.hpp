@@ -92,7 +92,7 @@ namespace RTC
 			this->remoteUsernameFragment = usernameFragment;
 			this->remotePassword         = password;
 
-			if (IsConsentCheckEnabled())
+			if (IsConsentCheckSupported())
 			{
 				// Restart ICE consent check to avoid authentication issues.
 				MayRestartConsentCheck();
@@ -136,7 +136,7 @@ namespace RTC
 		 * NOTE: The given tuple MUST be already stored within the list.
 		 */
 		bool SetSelectedTuple(RTC::TransportTuple* storedTuple);
-		bool IsConsentCheckEnabled() const
+		bool IsConsentCheckSupported() const
 		{
 			return (
 			  this->consentTimeoutMs != 0u && !this->remoteUsernameFragment.empty() &&

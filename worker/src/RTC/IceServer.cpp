@@ -888,7 +888,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!IsConsentCheckEnabled())
+		if (!IsConsentCheckSupported())
 		{
 			return;
 		}
@@ -999,10 +999,10 @@ namespace RTC
 
 		MS_DEBUG_DEV("processing STUN Binding %s Response", responseType.c_str());
 
-		if (!IsConsentCheckEnabled())
+		if (!IsConsentCheckSupported())
 		{
 			MS_WARN_DEV(
-			  "ignoring STUN Binding %s Response because ICE consent check is not enabled",
+			  "ignoring STUN Binding %s Response because ICE consent check is not supported",
 			  responseType.c_str());
 
 			return;
@@ -1098,7 +1098,7 @@ namespace RTC
 
 		if (timer == this->consentCheckTimer)
 		{
-			MS_ASSERT(IsConsentCheckEnabled(), "ICE consent check not enabled");
+			MS_ASSERT(IsConsentCheckSupported(), "ICE consent check not supported");
 
 			// State must be 'connected' or 'completed'.
 			MS_ASSERT(
