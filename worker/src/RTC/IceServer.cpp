@@ -134,7 +134,13 @@ namespace RTC
 			this->listener->OnIceServerTupleRemoved(this, storedTuple);
 		}
 
+		// Clear all tuples.
+		// NOTE: Do it after notifying the listener since the listener may need to
+		// use/read the tuple being removed so we cannot free it yet.
 		this->tuples.clear();
+
+		// Unset selected tuple.
+		this->selectedTuple = nullptr;
 
 		// Clear queue of ongoing sent ICE consent request.
 		this->sentConsents.clear();
@@ -1095,18 +1101,32 @@ namespace RTC
 		// Update state.
 		this->state = IceState::DISCONNECTED;
 
-		// Unset the selected tuple.
-		this->selectedTuple = nullptr;
-
 		// Reset remote nomination.
 		this->remoteNomination = 0u;
-
-		// Stop ICE consent check.
-		MayStopConsentCheck();
 
 		// Notify the listener.
 		this->listener->OnIceServerTupleRemoved(this, disconnectedSelectedTuple);
 		this->listener->OnIceServerDisconnected(this);
+
+		// Clear all tuples.
+		for (const auto& it : this->tuples)
+		{
+			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
+
+			// Notify the listener.
+			this->listener->OnIceServerTupleRemoved(this, storedTuple);
+		}
+
+		// Clear all tuples.
+		// NOTE: Do it after notifying the listener since the listener may need to
+		// use/read the tuple being removed so we cannot free it yet.
+		this->tuples.clear();
+
+		// Unset selected tuple.
+		this->selectedTuple = nullptr;
+
+		// Stop ICE consent check.
+		MayStopConsentCheck();
 	}
 
 	inline void IceServer::OnTimer(TimerHandle* timer)
