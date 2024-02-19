@@ -125,6 +125,7 @@ namespace RTC
 			this->listener->OnIceServerLocalUsernameFragmentRemoved(this, this->oldUsernameFragment);
 		}
 
+		// Clear all tuples.
 		for (const auto& it : this->tuples)
 		{
 			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
@@ -1094,9 +1095,8 @@ namespace RTC
 		// Update state.
 		this->state = IceState::DISCONNECTED;
 
-		// Clear all tuples.
+		// Unset the selected tuple.
 		this->selectedTuple = nullptr;
-		this->tuples.clear();
 
 		// Reset remote nomination.
 		this->remoteNomination = 0u;
