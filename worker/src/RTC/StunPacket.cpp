@@ -394,14 +394,11 @@ namespace RTC
 		}
 		MS_DUMP("  size: %zu bytes", this->size);
 
-		char transactionId[25];
+		auto transactionId1 = Utils::Byte::Get4Bytes(this->transactionId, 0);
+		auto transactionId2 = Utils::Byte::Get8Bytes(this->transactionId, 4);
 
-		for (int i{ 0 }; i < 12; ++i)
-		{
-			// NOTE: n must be 3 because snprintf adds a \0 after printed chars.
-			std::snprintf(transactionId + (i * 2), 3, "%.2x", this->transactionId[i]);
-		}
-		MS_DUMP("  transactionId: %s", transactionId);
+		MS_DUMP("  transactionId (first 4 bytes): %" PRIu32, transactionId1);
+		MS_DUMP("  transactionId (last 8 bytes): %" PRIu64, transactionId2);
 		if (this->errorCode != 0u)
 		{
 			MS_DUMP("  errorCode: %" PRIu16, this->errorCode);
@@ -542,6 +539,13 @@ namespace RTC
 				}
 
 				break;
+			}
+
+			default:
+			{
+				MS_WARN_TAG(ice, "unknown STUN class %" PRIu16 ", cannot authenticate", this->klass);
+
+				return Authentication::BAD_MESSAGE;
 			}
 		}
 
