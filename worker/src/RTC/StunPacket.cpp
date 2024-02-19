@@ -371,16 +371,16 @@ namespace RTC
 		switch (this->klass)
 		{
 			case Class::REQUEST:
-				klass = "Request";
+				klass = "request";
 				break;
 			case Class::INDICATION:
-				klass = "Indication";
+				klass = "indication";
 				break;
 			case Class::SUCCESS_RESPONSE:
-				klass = "SuccessResponse";
+				klass = "success response";
 				break;
 			case Class::ERROR_RESPONSE:
-				klass = "ErrorResponse";
+				klass = "error response";
 				break;
 		}
 		if (this->method == Method::BINDING)
@@ -474,7 +474,7 @@ namespace RTC
 				// usernameFragment1 must be given.
 				if (usernameFragment1.empty())
 				{
-					MS_WARN_TAG(ice, "usernameFragment1 not given, cannot authenticate Request or Indication");
+					MS_WARN_TAG(ice, "usernameFragment1 not given, cannot authenticate request or indication");
 
 					return Authentication::BAD_MESSAGE;
 				}
@@ -482,7 +482,7 @@ namespace RTC
 				// USERNAME attribute must be present.
 				if (this->username.empty())
 				{
-					MS_WARN_TAG(ice, "missing USERNAME attribute, cannot authenticate Request or Indication");
+					MS_WARN_TAG(ice, "missing USERNAME attribute, cannot authenticate request or indication");
 
 					return Authentication::BAD_MESSAGE;
 				}
@@ -491,7 +491,7 @@ namespace RTC
 				if (!this->messageIntegrity)
 				{
 					MS_WARN_TAG(
-					  ice, "missing MESSAGE-INTEGRITY attribute, cannot authenticate Request or Indication");
+					  ice, "missing MESSAGE-INTEGRITY attribute, cannot authenticate request or indication");
 
 					return Authentication::BAD_MESSAGE;
 				}
@@ -536,7 +536,7 @@ namespace RTC
 				// MESSAGE-INTEGRITY attribute must be present.
 				if (!this->messageIntegrity)
 				{
-					MS_WARN_TAG(ice, "missing MESSAGE-INTEGRITY attribute, cannot authenticate Response");
+					MS_WARN_TAG(ice, "missing MESSAGE-INTEGRITY attribute, cannot authenticate response");
 
 					return Authentication::BAD_MESSAGE;
 				}
@@ -587,7 +587,7 @@ namespace RTC
 
 		MS_ASSERT(
 		  this->klass == Class::REQUEST,
-		  "attempt to create a success response for a non Request STUN packet");
+		  "attempt to create a success response for a non request STUN packet");
 
 		return new StunPacket(Class::SUCCESS_RESPONSE, this->method, this->transactionId, nullptr, 0);
 	}
@@ -598,7 +598,7 @@ namespace RTC
 
 		MS_ASSERT(
 		  this->klass == Class::REQUEST,
-		  "attempt to create an error response for a non Request STUN packet");
+		  "attempt to create an error response for a non request STUN packet");
 
 		auto* response =
 		  new StunPacket(Class::ERROR_RESPONSE, this->method, this->transactionId, nullptr, 0);
@@ -610,10 +610,10 @@ namespace RTC
 
 	void StunPacket::Authenticate(const std::string& password)
 	{
-		// Just for Request, Indication and SuccessResponse messages.
+		// Just for request, indication and success response messages.
 		if (this->klass == Class::ERROR_RESPONSE)
 		{
-			MS_ERROR("cannot set password for ErrorResponse messages");
+			MS_ERROR("cannot set password for error responses");
 
 			return;
 		}

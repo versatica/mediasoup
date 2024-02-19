@@ -135,7 +135,7 @@ namespace RTC
 
 		this->tuples.clear();
 
-		// Clear queue of ongoing sent ICE consent Requests.
+		// Clear queue of ongoing sent ICE consent request.
 		this->sentConsents.clear();
 
 		// Delete the ICE consent check timer.
@@ -281,14 +281,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("processing STUN Request");
+		MS_DEBUG_DEV("processing STUN request");
 
 		// Must be a Binding method.
 		if (request->GetMethod() != RTC::StunPacket::Method::BINDING)
 		{
 			MS_WARN_TAG(
 			  ice,
-			  "STUN Request with unknown method %#.3x => 400",
+			  "STUN request with unknown method %#.3x => 400",
 			  static_cast<unsigned int>(request->GetMethod()));
 
 			// Reply 400.
@@ -305,7 +305,7 @@ namespace RTC
 		// Must have FINGERPRINT attribute.
 		if (!request->HasFingerprint())
 		{
-			MS_WARN_TAG(ice, "STUN Binding Request without FINGERPRINT attribute => 400");
+			MS_WARN_TAG(ice, "STUN Binding request without FINGERPRINT attribute => 400");
 
 			// Reply 400.
 			RTC::StunPacket* response = request->CreateErrorResponse(400);
@@ -321,7 +321,7 @@ namespace RTC
 		// PRIORITY attribute is required.
 		if (request->GetPriority() == 0u)
 		{
-			MS_WARN_TAG(ice, "STUN Binding Request without PRIORITY attribute => 400");
+			MS_WARN_TAG(ice, "STUN Binding request without PRIORITY attribute => 400");
 
 			// Reply 400.
 			RTC::StunPacket* response = request->CreateErrorResponse(400);
@@ -373,7 +373,7 @@ namespace RTC
 					break;
 				}
 
-				MS_WARN_TAG(ice, "wrong authentication in STUN Binding Request => 401");
+				MS_WARN_TAG(ice, "wrong authentication in STUN Binding request => 401");
 
 				// Reply 401.
 				RTC::StunPacket* response = request->CreateErrorResponse(401);
@@ -388,7 +388,7 @@ namespace RTC
 
 			case RTC::StunPacket::Authentication::BAD_MESSAGE:
 			{
-				MS_WARN_TAG(ice, "cannot check authentication in STUN Binding Request => 400");
+				MS_WARN_TAG(ice, "cannot check authentication in STUN Binding request => 400");
 
 				// Reply 400.
 				RTC::StunPacket* response = request->CreateErrorResponse(400);
@@ -405,7 +405,7 @@ namespace RTC
 		// The remote peer must be ICE controlling.
 		if (request->GetIceControlled())
 		{
-			MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding Request => 487");
+			MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding request => 487");
 
 			// Reply 487 (Role Conflict).
 			RTC::StunPacket* response = request->CreateErrorResponse(487);
@@ -419,7 +419,7 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		  "valid STUN Binding Request [priority:%" PRIu32 ", useCandidate:%s]",
+		  "valid STUN Binding request [priority:%" PRIu32 ", useCandidate:%s]",
 		  static_cast<uint32_t>(request->GetPriority()),
 		  request->HasUseCandidate() ? "true" : "false");
 
@@ -460,20 +460,20 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DEBUG_DEV("processing STUN Indication");
+		MS_DEBUG_DEV("processing STUN indication");
 
 		// Must be a Binding method.
 		if (indication->GetMethod() != RTC::StunPacket::Method::BINDING)
 		{
 			MS_WARN_TAG(
 			  ice,
-			  "STUN Indication with unknown method %#.3x, discarded",
+			  "STUN indication with unknown method %#.3x, discarded",
 			  static_cast<unsigned int>(indication->GetMethod()));
 
 			return;
 		}
 
-		// Nothig else to do. We just discard STUN Binding Indications.
+		// Nothig else to do. We just discard STUN Binding indications.
 	}
 
 	void IceServer::ProcessStunResponse(RTC::StunPacket* response)
@@ -481,29 +481,29 @@ namespace RTC
 		MS_TRACE();
 
 		const std::string responseType = response->GetClass() == RTC::StunPacket::Class::SUCCESS_RESPONSE
-		                                   ? "Success"
-		                                   : std::to_string(response->GetErrorCode()) + " Error";
+		                                   ? "success"
+		                                   : std::to_string(response->GetErrorCode()) + " error";
 
-		MS_DEBUG_DEV("processing STUN %s Response", responseType.c_str());
+		MS_DEBUG_DEV("processing STUN %s response", responseType.c_str());
 
 		// Must be a Binding method.
 		if (response->GetMethod() != RTC::StunPacket::Method::BINDING)
 		{
 			MS_WARN_TAG(
 			  ice,
-			  "STUN %s Response with unknown method %#.3x, discarded",
+			  "STUN %s response with unknown method %#.3x, discarded",
 			  responseType.c_str(),
 			  static_cast<unsigned int>(response->GetMethod()));
 
 			return;
 		}
 
-		// Must use FINGERPRINT (optional for ICE STUN indications).
+		// Must have FINGERPRINT attribute.
 		if (!response->HasFingerprint())
 		{
 			MS_WARN_TAG(
 			  ice,
-			  "STUN Binding %s Response without FINGERPRINT attribute, discarded",
+			  "STUN Binding %s response without FINGERPRINT attribute, discarded",
 			  responseType.c_str());
 
 			return;
@@ -521,7 +521,7 @@ namespace RTC
 			case RTC::StunPacket::Authentication::UNAUTHORIZED:
 			{
 				MS_WARN_TAG(
-				  ice, "STUN %s Response with wrong authentication, discarded", responseType.c_str());
+				  ice, "STUN %s response with wrong authentication, discarded", responseType.c_str());
 
 				return;
 			}
@@ -530,7 +530,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "cannot check authentication in STUN Binding %s Response, discarded",
+				  "cannot check authentication in STUN Binding %s response, discarded",
 				  responseType.c_str());
 
 				return;
@@ -540,7 +540,7 @@ namespace RTC
 		if (!IsConsentCheckSupported())
 		{
 			MS_WARN_DEV(
-			  "ignoring STUN Binding %s Response because ICE consent check is not supported",
+			  "ignoring STUN Binding %s response because ICE consent check is not supported",
 			  responseType.c_str());
 
 			return;
@@ -550,7 +550,7 @@ namespace RTC
 		else if (!IsConsentCheckRunning())
 		{
 			MS_DEBUG_DEV(
-			  "ignoring STUN Binding %s Response because ICE consent check is not running",
+			  "ignoring STUN Binding %s response because ICE consent check is not running",
 			  responseType.c_str());
 
 			return;
@@ -558,10 +558,10 @@ namespace RTC
 
 		// Trick: We only read the fist 4 bytes of the transactionId of the
 		// response since we know that we generated 4 bytes followed by 8 zeroed
-		// bytes in the transactionId of the sent consent Request.
+		// bytes in the transactionId of the sent consent request.
 		auto transactionId = Utils::Byte::Get4Bytes(response->GetTransactionId(), 0);
 
-		// Let's iterate all entries in the queue and remove the consent Request
+		// Let's iterate all entries in the queue and remove the consent request
 		// associated to this response and all those that were sent before.
 
 		// Find the associated entry first.
@@ -574,8 +574,8 @@ namespace RTC
 		if (it != this->sentConsents.end())
 		{
 			// If a success response or any non 403 error, let's behave the same way
-			// by deleting the matching sent consent Request and all previous ones.
-			// This way, if a strict ICE endpoint replies 400 to our consent Requests
+			// by deleting the matching sent consent request and all previous ones.
+			// This way, if a strict ICE endpoint replies 400 to our consent requests
 			// (because indeed mediasoup as ICE Lite server should not send requests)
 			// we know that the endpoint is alive, which is what ICE consent mechanism
 			// is about anyway.
@@ -589,7 +589,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "ICE consent revoked by the endpoint by means of a 403 response to our ICE consent Request, moving to 'disconnected' state");
+				  "ICE consent revoked by the endpoint by means of a 403 response to our ICE consent request, moving to 'disconnected' state");
 
 				ConsentTerminated();
 			}
@@ -598,7 +598,7 @@ namespace RTC
 		{
 			MS_WARN_TAG(
 			  ice,
-			  "STUN %s Response doesn't match any sent consent Request, discarded",
+			  "STUN %s response doesn't match any sent consent request, discarded",
 			  responseType.c_str());
 		}
 	}
@@ -1006,7 +1006,7 @@ namespace RTC
 			this->consentCheckTimer->Stop();
 		}
 
-		// Clear queue of ongoing sent ICE consent Requests.
+		// Clear queue of ongoing sent ICE consent requests.
 		this->sentConsents.clear();
 	}
 
@@ -1019,7 +1019,7 @@ namespace RTC
 			return;
 		}
 
-		// Clear queue of ongoing sent ICE consent Requests.
+		// Clear queue of ongoing sent ICE consent requests.
 		this->sentConsents.clear();
 
 		MayStartConsentCheck();
@@ -1045,9 +1045,9 @@ namespace RTC
 
 		MS_ASSERT(
 		  this->state == IceState::CONNECTED || this->state == IceState::COMPLETED,
-		  "cannot send ICE consent Request in state other than 'connected' or 'completed'");
+		  "cannot send ICE consent request in state other than 'connected' or 'completed'");
 
-		MS_ASSERT(this->selectedTuple, "cannot send ICE consent Request without a selected tuple");
+		MS_ASSERT(this->selectedTuple, "cannot send ICE consent request without a selected tuple");
 
 		// Here we do a trick. We generate a transactionId of 4 bytes and fill the
 		// latest 8 bytes of the transactionId with zeroes.
@@ -1075,7 +1075,7 @@ namespace RTC
 		request->Authenticate(this->remotePassword);
 		request->Serialize(StunSerializeBuffer);
 
-		MS_DEBUG_DEV("sending ICE consent Request");
+		MS_DEBUG_DEV("sending ICE consent request");
 
 		this->listener->OnIceServerSendStunPacket(this, request, this->selectedTuple);
 
@@ -1125,7 +1125,7 @@ namespace RTC
 			// There should be a selected tuple.
 			MS_ASSERT(this->selectedTuple, "ICE consent check timer fired but there is not selected tuple");
 
-			// Check if there is at least an ongoing expired ICE Consent Request
+			// Check if there is at least an ongoing expired ICE consent request
 			// and if so move to disconnected state.
 
 			auto nowMs            = DepLibUV::GetTimeMs();
@@ -1139,11 +1139,11 @@ namespace RTC
 
 			if (it == this->sentConsents.end())
 			{
-				// Send a new ICE Consent Request.
+				// Send a new ICE consent request.
 				SendConsentRequest();
 
 				/*
-				 * The interval between ICE Consent Requests is varied randomly over the
+				 * The interval between ICE consent requests is varied randomly over the
 				 * range [0.8, 1.2] times the calculated interval to prevent
 				 * synchronization of consent checks.
 				 */
