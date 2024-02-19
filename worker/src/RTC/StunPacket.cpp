@@ -471,9 +471,28 @@ namespace RTC
 			case Class::REQUEST:
 			case Class::INDICATION:
 			{
-				// Both USERNAME and MESSAGE-INTEGRITY must be present.
-				if (!this->messageIntegrity || this->username.empty())
+				// usernameFragment1 must be given.
+				if (usernameFragment1.empty())
 				{
+					MS_WARN_TAG(ice, "usernameFragment1 not given, cannot authenticate Request or Indication");
+
+					return Authentication::BAD_MESSAGE;
+				}
+
+				// USERNAME attribute must be present.
+				if (this->username.empty())
+				{
+					MS_WARN_TAG(ice, "missing USERNAME attribute, cannot authenticate Request or Indication");
+
+					return Authentication::BAD_MESSAGE;
+				}
+
+				// MESSAGE-INTEGRITY attribute must be present.
+				if (!this->messageIntegrity)
+				{
+					MS_WARN_TAG(
+					  ice, "missing MESSAGE-INTEGRITY attribute, cannot authenticate Request or Indication");
+
 					return Authentication::BAD_MESSAGE;
 				}
 
@@ -514,9 +533,11 @@ namespace RTC
 			case Class::SUCCESS_RESPONSE:
 			case Class::ERROR_RESPONSE:
 			{
-				// MESSAGE-INTEGRITY must be present.
+				// MESSAGE-INTEGRITY attribute must be present.
 				if (!this->messageIntegrity)
 				{
+					MS_WARN_TAG(ice, "missing MESSAGE-INTEGRITY attribute, cannot authenticate Response");
+
 					return Authentication::BAD_MESSAGE;
 				}
 
