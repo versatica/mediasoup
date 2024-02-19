@@ -1408,7 +1408,6 @@ pub(crate) struct WebRtcTransportConnectResponse {
 
 #[derive(Debug)]
 pub(crate) struct WebRtcTransportConnectRequest {
-    pub(crate) ice_parameters: Option<IceParameters>,
     pub(crate) dtls_parameters: DtlsParameters,
 }
 
@@ -1419,11 +1418,8 @@ impl Request for WebRtcTransportConnectRequest {
 
     fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
         let mut builder = Builder::new();
-        let data = web_rtc_transport::ConnectRequest::create(
-            &mut builder,
-            self.ice_parameters.map(|parameters| parameters.to_fbs()),
-            self.dtls_parameters.to_fbs(),
-        );
+        let data =
+            web_rtc_transport::ConnectRequest::create(&mut builder, self.dtls_parameters.to_fbs());
         let request_body =
             request::Body::create_web_rtc_transport_connect_request(&mut builder, data);
         let request = request::Request::create(

@@ -95,7 +95,6 @@ table IceCandidate {
 }
 
 table ConnectRequest {
-    ice_parameters: IceParameters;
     dtls_parameters: DtlsParameters (required);
 }
 

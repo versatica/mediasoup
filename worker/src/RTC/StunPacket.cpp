@@ -470,9 +470,7 @@ namespace RTC
 	}
 
 	StunPacket::Authentication StunPacket::CheckAuthentication(
-	  const std::string& usernameFragment1,
-	  const std::string& usernameFragment2,
-	  const std::string& password)
+	  const std::string& usernameFragment1, const std::string& password)
 	{
 		MS_TRACE();
 
@@ -506,35 +504,16 @@ namespace RTC
 					return Authentication::BAD_MESSAGE;
 				}
 
-				// If we have both username fragments, do the proper check.
-				if (!usernameFragment2.empty())
-				{
-					const size_t usernameFragment1Len = usernameFragment1.length();
-					const size_t usernameFragment2Len = usernameFragment2.length();
+				// Check that the USERNAME attribute begins with the first username
+				// fragment plus ":".
+				const size_t usernameFragment1Len = usernameFragment1.length();
 
-					if (
-					  this->username.length() != usernameFragment1Len + 1 + usernameFragment2Len ||
-					  this->username.at(usernameFragment1Len) != ':' ||
-					  this->username.compare(0, usernameFragment1Len, usernameFragment1) != 0 ||
-					  this->username.compare(
-					    usernameFragment1Len + 1, usernameFragment2Len, usernameFragment2) != 0)
-					{
-						return Authentication::UNAUTHORIZED;
-					}
-				}
-				// Otherwise check that USERNAME attribute begins with the first
-				// username fragment plus ":".
-				else
+				if (
+				  this->username.length() <= usernameFragment1Len ||
+				  this->username.at(usernameFragment1Len) != ':' ||
+				  this->username.compare(0, usernameFragment1Len, usernameFragment1) != 0)
 				{
-					const size_t usernameFragment1Len = usernameFragment1.length();
-
-					if (
-					  this->username.length() <= usernameFragment1Len ||
-					  this->username.at(usernameFragment1Len) != ':' ||
-					  this->username.compare(0, usernameFragment1Len, usernameFragment1) != 0)
-					{
-						return Authentication::UNAUTHORIZED;
-					}
+					return Authentication::UNAUTHORIZED;
 				}
 
 				break;

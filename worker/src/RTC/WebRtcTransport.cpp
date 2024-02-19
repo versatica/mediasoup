@@ -441,21 +441,6 @@ namespace RTC
 
 				const auto* body = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
 
-				auto iceParametersPresent =
-				  flatbuffers::IsFieldPresent(body, FBS::WebRtcTransport::ConnectRequest::VT_ICEPARAMETERS);
-
-				if (iceParametersPresent)
-				{
-					const auto* iceParameters             = body->iceParameters();
-					const std::string iceUsernameFragment = iceParameters->usernameFragment()->str();
-					const std::string icePassword         = iceParameters->password()->str();
-
-					if (!iceUsernameFragment.empty() && !icePassword.empty())
-					{
-						this->iceServer->SetRemoteUsernameFragmentAndPassword(iceUsernameFragment, icePassword);
-					}
-				}
-
 				const auto* dtlsParameters = body->dtlsParameters();
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;

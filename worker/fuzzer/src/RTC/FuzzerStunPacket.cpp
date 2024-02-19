@@ -41,7 +41,7 @@ void Fuzzer::RTC::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetErrorCode();
 	packet->HasMessageIntegrity();
 	packet->HasFingerprint();
-	packet->CheckAuthentication("foo", "bar", "xxx");
+	packet->CheckAuthentication("foo", "xxx");
 
 	if (packet->GetClass() == ::RTC::StunPacket::Class::REQUEST)
 	{

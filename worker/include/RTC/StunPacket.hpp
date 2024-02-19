@@ -193,8 +193,8 @@ namespace RTC
 			return this->hasFingerprint;
 		}
 		Authentication CheckAuthentication(
+		  // The first username fragment in the USERNAME attribute.
 		  const std::string& usernameFragment1,
-		  const std::string& usernameFragment2,
 		  const std::string& password);
 		StunPacket* CreateSuccessResponse();
 		StunPacket* CreateErrorResponse(uint16_t errorCode);

@@ -98,7 +98,6 @@ export type WebRtcTransportOptionsBase<WebRtcTransportAppData> = {
 
 	/**
 	 * ICE consent timeout (in seconds). If 0 it is disabled. Default 30.
-	 * For it to be enabled, iceParameters must be given in connect() method.
 	 */
 	iceConsentTimeout?: number;
 
@@ -476,17 +475,14 @@ export class WebRtcTransport<
 	 * @override
 	 */
 	async connect({
-		iceParameters,
 		dtlsParameters,
 	}: {
-		iceParameters?: IceParameters;
 		dtlsParameters: DtlsParameters;
 	}): Promise<void> {
 		logger.debug('connect()');
 
 		const requestOffset = createConnectRequest({
 			builder: this.channel.bufferBuilder,
-			iceParameters,
 			dtlsParameters,
 		});
 
@@ -837,35 +833,18 @@ export function parseWebRtcTransportDumpResponse(
 
 function createConnectRequest({
 	builder,
-	iceParameters,
 	dtlsParameters,
 }: {
 	builder: flatbuffers.Builder;
-	iceParameters?: IceParameters;
 	dtlsParameters: DtlsParameters;
 }): number {
-	let iceParametersOffset: number | undefined;
-
-	// Serialize IceParameters if given. This can throw.
-	if (iceParameters) {
-		iceParametersOffset = serializeIceParameters(builder, iceParameters);
-	}
-
 	// Serialize DtlsParameters. This can throw.
 	const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
 
-	const ConnectRequest = FbsWebRtcTransport.ConnectRequest;
-
-	// Create request.
-	ConnectRequest.startConnectRequest(builder);
-
-	if (iceParametersOffset) {
-		ConnectRequest.addIceParameters(builder, iceParametersOffset);
-	}
-
-	ConnectRequest.addDtlsParameters(builder, dtlsParametersOffset);
-
-	return ConnectRequest.endConnectRequest(builder);
+	return FbsWebRtcTransport.ConnectRequest.createConnectRequest(
+		builder,
+		dtlsParametersOffset
+	);
 }
 
 function parseGetStatsResponse(
@@ -932,24 +911,6 @@ function parseDtlsParameters(
 		fingerprints: fingerprints,
 		role: binary.role() === null ? undefined : dtlsRoleFromFbs(binary.role()!),
 	};
-}
-
-function serializeIceParameters(
-	builder: flatbuffers.Builder,
-	iceParameters: IceParameters
-): number {
-	const usernameFragmentOffset = builder.createString(
-		iceParameters.usernameFragment ?? ''
-	);
-	const passwordOffset = builder.createString(iceParameters.password ?? '');
-	const iceLiteOffset = Boolean(iceParameters.iceLite);
-
-	return FbsWebRtcTransport.IceParameters.createIceParameters(
-		builder,
-		usernameFragmentOffset,
-		passwordOffset,
-		iceLiteOffset
-	);
 }
 
 function serializeDtlsParameters(

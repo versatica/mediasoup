@@ -130,7 +130,6 @@ pub struct WebRtcTransportOptions {
     /// Default false.
     pub prefer_tcp: bool,
     /// ICE consent timeout (in seconds). If 0 it is disabled.
-    /// For it to be enabled, iceParameters must be given in connect() method.
     /// Default 30.
     pub ice_consent_timeout: u8,
     /// Create a SCTP association.
@@ -390,8 +389,6 @@ impl WebRtcTransportStat {
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebRtcTransportRemoteParameters {
-    /// Remote ICE parameters.
-    pub ice_parameters: Option<IceParameters>,
     /// Remote DTLS parameters.
     pub dtls_parameters: DtlsParameters,
 }
@@ -928,7 +925,7 @@ impl WebRtcTransport {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_structures::{IceParameters, DtlsParameters, DtlsRole, DtlsFingerprint};
+    /// use mediasoup::data_structures::{DtlsParameters, DtlsRole, DtlsFingerprint};
     /// use mediasoup::webrtc_transport::WebRtcTransportRemoteParameters;
     ///
     /// # async fn f(
@@ -937,11 +934,6 @@ impl WebRtcTransport {
     /// // Calling connect() on a PlainTransport created with comedia and rtcp_mux set.
     /// webrtc_transport
     ///     .connect(WebRtcTransportRemoteParameters {
-    ///         ice_parameters: Some(IceParameters {
-    ///             username_fragment: "foo".to_string(),
-    ///             password: "xxxx".to_string(),
-    ///             ice_lite: None,
-    ///         }),
     ///         dtls_parameters: DtlsParameters {
     ///             role: DtlsRole::Server,
     ///             fingerprints: vec![
@@ -971,7 +963,6 @@ impl WebRtcTransport {
             .request(
                 self.id(),
                 WebRtcTransportConnectRequest {
-                    ice_parameters: remote_parameters.ice_parameters,
                     dtls_parameters: remote_parameters.dtls_parameters,
                 },
             )

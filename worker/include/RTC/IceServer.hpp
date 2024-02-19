@@ -7,7 +7,6 @@
 #include "RTC/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "handles/TimerHandle.hpp"
-#include <deque>
 #include <list>
 #include <string>
 
@@ -86,22 +85,6 @@ namespace RTC
 		{
 			return this->password;
 		}
-		void SetRemoteUsernameFragmentAndPassword(
-		  const std::string& usernameFragment, const std::string& password)
-		{
-			this->remoteUsernameFragment = usernameFragment;
-			this->remotePassword         = password;
-
-			if (IsConsentCheckSupported())
-			{
-				// Restart ICE consent check to avoid authentication issues.
-				MayRestartConsentCheck();
-			}
-			else
-			{
-				MayStopConsentCheck();
-			}
-		}
 		IceState GetState() const
 		{
 			return this->state;
@@ -134,27 +117,21 @@ namespace RTC
 		 */
 		RTC::TransportTuple* HasTuple(const RTC::TransportTuple* tuple) const;
 		/**
-		 * Set the given tuple as the selected tuple. Returns true if given tuple
-		 * was not already the selected tuple, false otherwise.
+		 * Set the given tuple as the selected tuple.
 		 * NOTE: The given tuple MUST be already stored within the list.
 		 */
-		bool SetSelectedTuple(RTC::TransportTuple* storedTuple);
+		void SetSelectedTuple(RTC::TransportTuple* storedTuple);
 		bool IsConsentCheckSupported() const
 		{
-			return (
-			  this->consentTimeoutMs != 0u && !this->remoteUsernameFragment.empty() &&
-			  !this->remotePassword.empty());
+			return this->consentTimeoutMs != 0u;
 		}
 		bool IsConsentCheckRunning() const
 		{
 			return (this->consentCheckTimer && this->consentCheckTimer->IsActive());
 		}
-		void MayStartConsentCheck();
-		void MayStopConsentCheck();
-		void MayRestartConsentCheck();
-		void MayStartOrRestartConsentCheck();
-		void SendConsentRequest();
-		void ConsentTerminated();
+		void StartConsentCheck();
+		void RestartConsentCheck();
+		void StopConsentCheck();
 
 		/* Pure virtual methods inherited from TimerHandle::Listener. */
 	public:
@@ -169,14 +146,12 @@ namespace RTC
 		// Others.
 		std::string oldUsernameFragment;
 		std::string oldPassword;
-		std::string remoteUsernameFragment;
-		std::string remotePassword;
 		IceState state{ IceState::NEW };
 		uint32_t remoteNomination{ 0u };
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		TimerHandle* consentCheckTimer{ nullptr };
-		std::deque<SentConsent> sentConsents;
+		uint64_t lastConsentRequestReceivedAtMs{ 0u };
 	};
 } // namespace RTC
 

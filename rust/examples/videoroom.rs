@@ -659,10 +659,7 @@ mod participant {
                     // synchronous
                     actix::spawn(async move {
                         match transport
-                            .connect(WebRtcTransportRemoteParameters {
-                                ice_parameters: None,
-                                dtls_parameters,
-                            })
+                            .connect(WebRtcTransportRemoteParameters { dtls_parameters })
                             .await
                         {
                             Ok(_) => {
@@ -721,10 +718,7 @@ mod participant {
                     // The same as producer transport, but for consumer transport
                     actix::spawn(async move {
                         match transport
-                            .connect(WebRtcTransportRemoteParameters {
-                                ice_parameters: None,
-                                dtls_parameters,
-                            })
+                            .connect(WebRtcTransportRemoteParameters { dtls_parameters })
                             .await
                         {
                             Ok(_) => {
