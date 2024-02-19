@@ -46,7 +46,7 @@ void Fuzzer::RTC::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	if (packet->GetClass() == ::RTC::StunPacket::Class::REQUEST)
 	{
 		auto* successResponse = packet->CreateSuccessResponse();
-		auto* errorResponse = packet->CreateErrorResponse(444);
+		auto* errorResponse   = packet->CreateErrorResponse(444);
 
 		delete successResponse;
 		delete errorResponse;
