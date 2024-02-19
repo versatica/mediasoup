@@ -456,6 +456,19 @@ namespace RTC
 		MS_DUMP("</StunPacket>");
 	}
 
+	void StunPacket::SetPassword(const std::string& password)
+	{
+		// Just for request, indication and success response messages.
+		if (this->klass == Class::ERROR_RESPONSE)
+		{
+			MS_ERROR("cannot set password for error responses");
+
+			return;
+		}
+
+		this->password = password;
+	}
+
 	StunPacket::Authentication StunPacket::CheckAuthentication(
 	  const std::string& usernameFragment1,
 	  const std::string& usernameFragment2,
@@ -610,19 +623,6 @@ namespace RTC
 		response->SetErrorCode(errorCode);
 
 		return response;
-	}
-
-	void StunPacket::Authenticate(const std::string& password)
-	{
-		// Just for request, indication and success response messages.
-		if (this->klass == Class::ERROR_RESPONSE)
-		{
-			MS_ERROR("cannot set password for error responses");
-
-			return;
-		}
-
-		this->password = password;
 	}
 
 	void StunPacket::Serialize(uint8_t* buffer)

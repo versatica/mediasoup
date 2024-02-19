@@ -147,6 +147,7 @@ namespace RTC
 		{
 			return this->username;
 		}
+		void SetPassword(const std::string& password);
 		uint32_t GetPriority() const
 		{
 			return this->priority;
@@ -197,7 +198,6 @@ namespace RTC
 		  const std::string& password);
 		StunPacket* CreateSuccessResponse();
 		StunPacket* CreateErrorResponse(uint16_t errorCode);
-		void Authenticate(const std::string& password);
 		void Serialize(uint8_t* buffer);
 
 	private:

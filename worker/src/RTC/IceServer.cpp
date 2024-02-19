@@ -432,11 +432,11 @@ namespace RTC
 		// Authenticate the response.
 		if (this->oldPassword.empty())
 		{
-			response->Authenticate(this->password);
+			response->SetPassword(this->password);
 		}
 		else
 		{
-			response->Authenticate(this->oldPassword);
+			response->SetPassword(this->oldPassword);
 		}
 
 		// Send back.
@@ -1069,10 +1069,10 @@ namespace RTC
 		const std::string username = this->remoteUsernameFragment + ":" + this->usernameFragment;
 
 		request->SetUsername(username.c_str(), username.length());
+		request->SetPassword(this->remotePassword);
 		request->SetPriority(1u);
 		request->SetIceControlled(1u);
 		request->SetSoftware(SoftwareAttribute.c_str(), SoftwareAttribute.length());
-		request->Authenticate(this->remotePassword);
 		request->Serialize(StunSerializeBuffer);
 
 		MS_DEBUG_DEV("sending ICE consent request");
