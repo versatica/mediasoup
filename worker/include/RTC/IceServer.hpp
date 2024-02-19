@@ -120,6 +120,9 @@ namespace RTC
 		void MayForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 	private:
+		void ProcessStunRequest(RTC::StunPacket* request, RTC::TransportTuple* tuple);
+		void ProcessStunIndication(RTC::StunPacket* indication);
+		void ProcessStunResponse(RTC::StunPacket* response);
 		void HandleTuple(
 		  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 		/**
@@ -151,7 +154,6 @@ namespace RTC
 		void MayRestartConsentCheck();
 		void MayStartOrRestartConsentCheck();
 		void SendConsentRequest();
-		void ProcessStunResponse(RTC::StunPacket* response);
 		void ConsentTerminated();
 
 		/* Pure virtual methods inherited from TimerHandle::Listener. */
