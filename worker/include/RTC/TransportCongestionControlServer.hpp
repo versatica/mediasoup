@@ -58,7 +58,8 @@ namespace RTC
 		void FillAndSendTransportCcFeedback();
 
 	private:
-		void SendTransportCcFeedback();
+		// Returns true if a feedback packet was sent.
+		bool SendTransportCcFeedback();
 		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
 		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);

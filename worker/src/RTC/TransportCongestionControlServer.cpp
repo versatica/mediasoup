@@ -220,7 +220,19 @@ namespace RTC
 					{
 						MS_DEBUG_DEV("transport-cc feedback packet is full, sending feedback now");
 
-						SendTransportCcFeedback();
+						if (!SendTransportCcFeedback())
+						{
+							// If no feedback packet was sent then the feedback packet was
+							// not reset and hence it remains full so we cannot add more
+							// packets on it, so we have to reset it.
+							this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
+							  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+
+							// Set current packet count.
+							// NOTE: Do not increment it since no feedback packet was sent.
+							this->transportCcFeedbackPacket->SetFeedbackPacketCount(
+							  this->transportCcFeedbackPacketCount);
+						}
 					}
 
 					break;
@@ -285,7 +297,7 @@ namespace RTC
 		}
 	}
 
-	void TransportCongestionControlServer::SendTransportCcFeedback()
+	bool TransportCongestionControlServer::SendTransportCcFeedback()
 	{
 		MS_TRACE();
 
@@ -293,7 +305,9 @@ namespace RTC
 
 		if (!this->transportCcFeedbackPacket->IsSerializable())
 		{
-			return;
+			MS_WARN_DEV("couldn't send feedback packet (not serializable)");
+
+			return false;
 		}
 
 		auto latestWideSeqNumber = this->transportCcFeedbackPacket->GetLatestSequenceNumber();
@@ -326,6 +340,8 @@ namespace RTC
 		// Increment packet count.
 		this->transportCcFeedbackPacket->SetFeedbackPacketCount(++this->transportCcFeedbackPacketCount);
 		this->transportCcFeedbackWideSeqNumStart = latestWideSeqNumber + 1;
+
+		return true;
 	}
 
 	void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs)
