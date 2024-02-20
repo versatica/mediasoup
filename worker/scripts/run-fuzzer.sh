@@ -26,9 +26,9 @@ kill ${MEDIASOUP_WORKER_FUZZER_PID}
 status=$?;
 
 if [ "${status}" -eq 0 ]; then
-	echo ">>> [INFO] mediasoup-worker-fuzzer still running so no fuzzer issue so far"
+	echo ">>> [INFO] mediasoup-worker-fuzzer was still running so there is no fuzzer issue so far"
 	exit 0
 else
-	echo ">>> [ERROR] mediasoup-worker-fuzzer not running so it existed already" >&2
+	echo ">>> [ERROR] mediasoup-worker-fuzzer was not running so it existed already due to some fuzzer issue" >&2
 	exit ${status}
 fi
