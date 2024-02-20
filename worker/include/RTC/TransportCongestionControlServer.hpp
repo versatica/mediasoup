@@ -63,6 +63,7 @@ namespace RTC
 		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
 		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
+		void ResetTransportCcFeedback(uint8_t feedbackPacketCount);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
 	public:
