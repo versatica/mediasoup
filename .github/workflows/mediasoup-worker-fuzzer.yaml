@@ -37,4 +37,6 @@ jobs:
       - name: invoke -r worker fuzzer
         run: invoke -r worker fuzzer
 
-      # We don't run mediasoup-worker-fuzzer (maybe in the future).
+      # Run mediasoup-worker-fuzzer for 2 minutes.
+      - name: ./scripts/run-fuzzer.sh 120
+        run: ./scripts/run-fuzzer.sh 120
