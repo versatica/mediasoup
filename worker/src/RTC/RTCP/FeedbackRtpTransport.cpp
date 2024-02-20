@@ -294,7 +294,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(baseSet, "base not set");
+			MS_ASSERT(this->baseSet, "base not set");
 			MS_ASSERT(!IsFull(), "packet is full");
 
 			// If the wide sequence number of the new packet is lower than the latest seen,
