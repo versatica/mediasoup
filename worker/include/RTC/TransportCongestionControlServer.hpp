@@ -95,6 +95,7 @@ namespace RTC
 		// Whether any packet with transport wide sequence number was received.
 		bool transportWideSeqNumberReceived{ false };
 		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
+		// Map of arrival timestamp (ms) indexed by wide seq number.
 		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};
 } // namespace RTC

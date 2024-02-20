@@ -96,6 +96,9 @@ namespace RTC
 				// Create a new feedback packet.
 				this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0u, 0u));
 
+				// Set current packet count.
+				this->transportCcFeedbackPacket->SetFeedbackPacketCount(this->transportCcFeedbackPacketCount);
+
 				break;
 			}
 
@@ -131,9 +134,10 @@ namespace RTC
 					break;
 				}
 
-				// We may receive packets with sequence number lower than the one in previous
-				// tcc feedback, these packets may have been reported as lost previously,
-				// therefore we need to reset the start sequence num for the next tcc feedback.
+				// We may receive packets with sequence number lower than the one in
+				// previous tcc feedback, these packets may have been reported as lost
+				// previously, therefore we need to reset the start sequence num for the
+				// next tcc feedback.
 				if (
 				  !this->transportWideSeqNumberReceived ||
 				  RTC::SeqManager<uint16_t>::IsSeqLowerThan(
@@ -192,13 +196,17 @@ namespace RTC
 			return;
 		}
 
+		auto baseTimestamp = it->second;
+
 		// Set base sequence num and reference time.
-		this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, it->second);
+		this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, baseTimestamp);
 
 		for (; it != this->mapPacketArrivalTimes.end(); ++it)
 		{
-			auto result =
-			  this->transportCcFeedbackPacket->AddPacket(it->first, it->second, this->maxRtcpPacketLen);
+			auto sequenceNumber = it->first;
+			auto timestamp      = it->second;
+			auto result         = this->transportCcFeedbackPacket->AddPacket(
+        sequenceNumber, timestamp, this->maxRtcpPacketLen);
 
 			switch (result)
 			{
@@ -223,6 +231,14 @@ namespace RTC
 					// Create a new feedback packet.
 					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
 					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
+
+					// Set current packet count.
+					// NOTE: Do not increment it since the previous ongoing feedback
+					// packet was not sent.
+					this->transportCcFeedbackPacket->SetFeedbackPacketCount(
+					  this->transportCcFeedbackPacketCount);
+
+					break;
 				}
 
 				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::FATAL:
@@ -231,7 +247,7 @@ namespace RTC
 					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(
 					  this->transportCcFeedbackSenderSsrc, this->transportCcFeedbackMediaSsrc));
 
-					// Use current packet count.
+					// Set current packet count.
 					// NOTE: Do not increment it since the previous ongoing feedback
 					// packet was not sent.
 					this->transportCcFeedbackPacket->SetFeedbackPacketCount(
@@ -242,6 +258,8 @@ namespace RTC
 			}
 		}
 
+		// It may happen that the packet is empty (no deltas) but in that case
+		// SendTransportCcFeedback() won't send it so we are safe.
 		SendTransportCcFeedback();
 	}
 
@@ -264,7 +282,7 @@ namespace RTC
 		}
 	}
 
-	inline void TransportCongestionControlServer::SendTransportCcFeedback()
+	void TransportCongestionControlServer::SendTransportCcFeedback()
 	{
 		MS_TRACE();
 
@@ -307,8 +325,7 @@ namespace RTC
 		this->transportCcFeedbackWideSeqNumStart = latestWideSeqNumber + 1;
 	}
 
-	inline void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(
-	  uint16_t seqNum, uint64_t nowMs)
+	void TransportCongestionControlServer::MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -330,7 +347,7 @@ namespace RTC
 		}
 	}
 
-	inline void TransportCongestionControlServer::MaySendLimitationRembFeedback(uint64_t nowMs)
+	void TransportCongestionControlServer::MaySendLimitationRembFeedback(uint64_t nowMs)
 	{
 		MS_TRACE();
 
@@ -402,7 +419,7 @@ namespace RTC
 		this->packetLoss = totalPacketLoss / samples;
 	}
 
-	inline void TransportCongestionControlServer::OnRembServerAvailableBitrate(
+	void TransportCongestionControlServer::OnRembServerAvailableBitrate(
 	  const webrtc::RemoteBitrateEstimator* /*rembServer*/,
 	  const std::vector<uint32_t>& ssrcs,
 	  uint32_t availableBitrate)
@@ -440,7 +457,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlServerSendRtcpPacket(this, &packet);
 	}
 
-	inline void TransportCongestionControlServer::OnTimer(TimerHandle* timer)
+	void TransportCongestionControlServer::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
 
