@@ -19,7 +19,7 @@ fi
 # will return status code 0, otherwise 1 (which means that the
 # mediasoup-worker-fuzzer binary already exited due to some fuzzer or other
 # error).
-make fuzzer-run-all &
+invoke fuzzer-run-all &
 MEDIASOUP_WORKER_FUZZER_PID=$!
 sleep ${DURATION_SEC}
 kill ${MEDIASOUP_WORKER_FUZZER_PID}
