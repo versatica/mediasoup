@@ -24,19 +24,6 @@ namespace RTC
 		};
 
 	public:
-		struct SentConsent
-		{
-			uint8_t transactionId[12];
-			uint64_t sentAtMs;
-
-			SentConsent(uint64_t transactionId, uint64_t sentAtMs) : sentAtMs(sentAtMs)
-			{
-				Utils::Byte::Set4Bytes(this->transactionId, 0, transactionId);
-				Utils::Byte::Set8Bytes(this->transactionId, 4, 0);
-			}
-		};
-
-	public:
 		static IceState RoleFromFbs(FBS::WebRtcTransport::IceState state);
 		static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
