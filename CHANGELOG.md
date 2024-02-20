@@ -1,5 +1,9 @@
 # Changelog
 
+### Next
+
+- Fix regression (crash) in transport-cc feedback generation ([PR #1339](https://github.com/versatica/mediasoup/pull/1339)).
+
 ### 3.13.19
 
 - Node: Fix `router.createWebRtcTransport()` with `listenIps` ([PR #1330](https://github.com/versatica/mediasoup/pull/1330)).
