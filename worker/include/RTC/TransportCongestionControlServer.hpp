@@ -58,10 +58,12 @@ namespace RTC
 		void FillAndSendTransportCcFeedback();
 
 	private:
-		void SendTransportCcFeedback();
+		// Returns true if a feedback packet was sent.
+		bool SendTransportCcFeedback();
 		void MayDropOldPacketArrivalTimes(uint16_t seqNum, uint64_t nowMs);
 		void MaySendLimitationRembFeedback(uint64_t nowMs);
 		void UpdatePacketLoss(double packetLoss);
+		void ResetTransportCcFeedback(uint8_t feedbackPacketCount);
 
 		/* Pure virtual methods inherited from webrtc::RemoteBitrateEstimator::Listener. */
 	public:
@@ -95,6 +97,7 @@ namespace RTC
 		// Whether any packet with transport wide sequence number was received.
 		bool transportWideSeqNumberReceived{ false };
 		uint16_t transportCcFeedbackWideSeqNumStart{ 0u };
+		// Map of arrival timestamp (ms) indexed by wide seq number.
 		std::map<uint16_t, uint64_t, RTC::SeqManager<uint16_t>::SeqLowerThan> mapPacketArrivalTimes;
 	};
 } // namespace RTC
