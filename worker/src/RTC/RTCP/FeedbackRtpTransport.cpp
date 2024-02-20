@@ -299,8 +299,8 @@ namespace RTC
 			MS_ASSERT(this->baseSet, "base not set");
 			MS_ASSERT(!IsFull(), "packet is full");
 
-			// If the wide sequence number of the new packet is lower than the latest seen,
-			// ignore it.
+			// If the wide sequence number of the new packet is lower than the latest
+			// seen, ignore it.
 			// NOTE: Not very spec compliant but libwebrtc does it.
 			// Also ignore if the sequence number matches the latest seen.
 			if (!RTC::SeqManager<uint16_t>::IsSeqHigherThan(sequenceNumber, this->latestSequenceNumber))
@@ -342,7 +342,8 @@ namespace RTC
 			// Delta in 16 bits signed.
 			auto delta = static_cast<int16_t>(delta64);
 
-			// Check whether another chunks and corresponding delta infos could be added.
+			// Check whether another chunks and corresponding delta infos could be
+			// added.
 			{
 				// Fixed packet size.
 				size_t size = FeedbackRtpPacket::GetSize();
