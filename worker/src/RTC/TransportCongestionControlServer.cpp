@@ -35,9 +35,6 @@ namespace RTC
 				// Create a feedback packet.
 				this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(0u, 0u));
 
-				// Set initial packet count.
-				this->transportCcFeedbackPacket->SetFeedbackPacketCount(this->transportCcFeedbackPacketCount);
-
 				// Create the feedback send periodic timer.
 				this->transportCcFeedbackSendPeriodicTimer = new TimerHandle(this);
 
@@ -196,17 +193,23 @@ namespace RTC
 			return;
 		}
 
-		auto baseTimestamp = it->second;
-
-		// Set base sequence num and reference time.
-		this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, baseTimestamp);
-
 		for (; it != this->mapPacketArrivalTimes.end(); ++it)
 		{
 			auto sequenceNumber = it->first;
 			auto timestamp      = it->second;
-			auto result         = this->transportCcFeedbackPacket->AddPacket(
-        sequenceNumber, timestamp, this->maxRtcpPacketLen);
+
+			// If the base is not set in this packet let's set it.
+			// NOTE: This maybe needed many times during this loop since the current
+			// feedback packet maybe a fresh new one if the previous one was full (so
+			// already sent) or failed to be built.
+			if (!this->transportCcFeedbackPacket->IsBaseSet())
+			{
+				// Set base sequence num and reference time.
+				this->transportCcFeedbackPacket->SetBase(this->transportCcFeedbackWideSeqNumStart, timestamp);
+			}
+
+			auto result = this->transportCcFeedbackPacket->AddPacket(
+			  sequenceNumber, timestamp, this->maxRtcpPacketLen);
 
 			switch (result)
 			{
@@ -226,7 +229,7 @@ namespace RTC
 				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
 				{
 					// This should not happen.
-					MS_WARN_DEV("transport-cc feedback packet is exceeded");
+					MS_WARN_TAG(rtcp, "transport-cc feedback packet is exceeded");
 
 					// Create a new feedback packet.
 					this->transportCcFeedbackPacket.reset(new RTC::RTCP::FeedbackRtpTransportPacket(

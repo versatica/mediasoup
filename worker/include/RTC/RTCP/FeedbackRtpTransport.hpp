@@ -212,6 +212,10 @@ namespace RTC
 			~FeedbackRtpTransportPacket() override;
 
 		public:
+			bool IsBaseSet() const
+			{
+				return this->baseSet;
+			}
 			void SetBase(uint16_t sequenceNumber, uint64_t timestamp);
 			AddPacketResult AddPacket(uint16_t sequenceNumber, uint64_t timestamp, size_t maxRtcpPacketLen);
 			// Just for locally generated packets.

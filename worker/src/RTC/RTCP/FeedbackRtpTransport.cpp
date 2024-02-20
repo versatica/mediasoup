@@ -282,6 +282,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_ASSERT(!this->baseSet, "base already set");
+
 			this->baseSet              = true;
 			this->baseSequenceNumber   = sequenceNumber;
 			this->referenceTime        = static_cast<int32_t>((timestamp & 0x1FFFFFC0) / 64);
