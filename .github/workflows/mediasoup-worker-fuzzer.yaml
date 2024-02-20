@@ -38,5 +38,5 @@ jobs:
         run: invoke -r worker fuzzer
 
       # Run mediasoup-worker-fuzzer for 2 minutes.
-      - name: ./scripts/run-fuzzer.sh 120
-        run: ./scripts/run-fuzzer.sh 120
+      - name: run-fuzzer.sh 120
+        run: cd worker && ./scripts/run-fuzzer.sh 120
