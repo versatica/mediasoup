@@ -454,6 +454,7 @@ export class Router<
 		numSctpStreams = { OS: 1024, MIS: 1024 },
 		maxSctpMessageSize = 262144,
 		sctpSendBufferSize = 262144,
+		iceConsentTimeout = 30,
 		appData,
 	}: WebRtcTransportOptions<WebRtcTransportAppData>): Promise<
 		WebRtcTransport<WebRtcTransportAppData>
@@ -596,7 +597,8 @@ export class Router<
 				enableUdp,
 				enableTcp,
 				preferUdp,
-				preferTcp
+				preferTcp,
+				iceConsentTimeout
 			);
 
 		const requestOffset = new FbsRouter.CreateWebRtcTransportRequestT(

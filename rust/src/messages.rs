@@ -669,6 +669,7 @@ pub(crate) struct RouterCreateWebrtcTransportData {
     enable_tcp: bool,
     prefer_udp: bool,
     prefer_tcp: bool,
+    ice_consent_timeout: u8,
     enable_sctp: bool,
     num_sctp_streams: NumSctpStreams,
     max_sctp_message_size: u32,
@@ -701,6 +702,7 @@ impl RouterCreateWebrtcTransportData {
             enable_tcp: webrtc_transport_options.enable_tcp,
             prefer_udp: webrtc_transport_options.prefer_udp,
             prefer_tcp: webrtc_transport_options.prefer_tcp,
+            ice_consent_timeout: webrtc_transport_options.ice_consent_timeout,
             enable_sctp: webrtc_transport_options.enable_sctp,
             num_sctp_streams: webrtc_transport_options.num_sctp_streams,
             max_sctp_message_size: webrtc_transport_options.max_sctp_message_size,
@@ -726,6 +728,7 @@ impl RouterCreateWebrtcTransportData {
             enable_tcp: self.enable_tcp,
             prefer_udp: self.prefer_udp,
             prefer_tcp: self.prefer_tcp,
+            ice_consent_timeout: self.ice_consent_timeout,
         }
     }
 }
