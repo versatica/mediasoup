@@ -1,6 +1,6 @@
 # Changelog
 
-### Next
+### 3.13.20
 
 - Add server side ICE consent checks to detect silent WebRTC disconnections ([PR #1332](https://github.com/versatica/mediasoup/pull/1332)).
 - Fix regression (crash) in transport-cc feedback generation ([PR #1339](https://github.com/versatica/mediasoup/pull/1339)).
