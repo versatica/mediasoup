@@ -708,7 +708,10 @@ namespace RTC
 
 		SSL_set_bio(this->ssl, this->sslBioFromNetwork, this->sslBioToNetwork);
 
-		// Set the MTU so that we don't send packets that are too large with no fragmentation.
+		// Set the MTU so that we don't send packets that are too large with no
+		// fragmentation.
+		// TODO: This is not honored, see issue:
+		//   https://github.com/versatica/mediasoup/issues/1100
 		SSL_set_mtu(this->ssl, DtlsMtu);
 		DTLS_set_link_mtu(this->ssl, DtlsMtu);
 
@@ -964,7 +967,8 @@ namespace RTC
 		// Application data received. Notify to the listener.
 		if (read > 0)
 		{
-			// It is allowed to receive DTLS data even before validating remote fingerprint.
+			// It is allowed to receive DTLS data even before validating remote
+			// fingerprint.
 			if (!this->handshakeDone)
 			{
 				MS_WARN_TAG(dtls, "ignoring application data received while DTLS handshake not done");
@@ -982,7 +986,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// We cannot send data to the peer if its remote fingerprint is not validated.
+		// We cannot send data to the peer if its remote fingerprint is not
+		// validated.
 		if (this->state != DtlsState::CONNECTED)
 		{
 			MS_WARN_TAG(dtls, "cannot send application data while DTLS is not fully connected");
@@ -1240,7 +1245,8 @@ namespace RTC
 
 			return true;
 		}
-		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
+		// NOTE: Don't start the timer again if the timeout is greater than 30
+		// seconds.
 		else
 		{
 			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
@@ -1391,8 +1397,8 @@ namespace RTC
 		BIO* bio = BIO_new(BIO_s_mem());
 
 		// Ensure the underlying BUF_MEM structure is also freed.
-		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]" since
-		// BIO_set_close() always returns 1.
+		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]"
+		// since BIO_set_close() always returns 1.
 		(void)BIO_set_close(bio, BIO_CLOSE);
 
 		ret = PEM_write_bio_X509(bio, certificate);
@@ -1651,8 +1657,9 @@ namespace RTC
 			this->handshakeDoneNow = true;
 		}
 
-		// NOTE: checking SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN here upon
-		// receipt of a close alert does not work (the flag is set after this callback).
+		// NOTE: checking SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN here
+		// upon receipt of a close alert does not work (the flag is set after this
+		// callback).
 	}
 
 	void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
