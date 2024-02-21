@@ -11,9 +11,6 @@ ENV CXX="g++"
 
 ENV MEDIASOUP_LOCAL_DEV="true"
 ENV KEEP_BUILD_ARTIFACTS="1"
-# Disable liburing due to this bug:
-# https://github.com/versatica/mediasoup/issues/1334
-ENV MESON_ARGS="-Dms_disable_liburing=true"
 
 WORKDIR /mediasoup
 
