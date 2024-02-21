@@ -129,6 +129,9 @@ pub struct WebRtcTransportOptions {
     /// Prefer TCP.
     /// Default false.
     pub prefer_tcp: bool,
+    /// ICE consent timeout (in seconds). If 0 it is disabled.
+    /// Default 30.
+    pub ice_consent_timeout: u8,
     /// Create a SCTP association.
     /// Default false.
     pub enable_sctp: bool,
@@ -155,6 +158,7 @@ impl WebRtcTransportOptions {
             enable_tcp: false,
             prefer_udp: false,
             prefer_tcp: false,
+            ice_consent_timeout: 30,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 262_144,
@@ -172,6 +176,7 @@ impl WebRtcTransportOptions {
             enable_tcp: true,
             prefer_udp: false,
             prefer_tcp: false,
+            ice_consent_timeout: 30,
             enable_sctp: false,
             num_sctp_streams: NumSctpStreams::default(),
             max_sctp_message_size: 262_144,

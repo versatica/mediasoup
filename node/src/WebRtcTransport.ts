@@ -97,6 +97,11 @@ export type WebRtcTransportOptionsBase<WebRtcTransportAppData> = {
 	preferTcp?: boolean;
 
 	/**
+	 * ICE consent timeout (in seconds). If 0 it is disabled. Default 30.
+	 */
+	iceConsentTimeout?: number;
+
+	/**
 	 * Initial available outgoing bitrate (in bps). Default 600000.
 	 */
 	initialAvailableOutgoingBitrate?: number;
@@ -836,7 +841,6 @@ function createConnectRequest({
 	// Serialize DtlsParameters. This can throw.
 	const dtlsParametersOffset = serializeDtlsParameters(builder, dtlsParameters);
 
-	// Create request.
 	return FbsWebRtcTransport.ConnectRequest.createConnectRequest(
 		builder,
 		dtlsParametersOffset

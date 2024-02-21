@@ -160,9 +160,11 @@ namespace RTC
 				iceLocalPreferenceDecrement += 100;
 			}
 
+			auto iceConsentTimeout = options->iceConsentTimeout();
+
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
@@ -227,9 +229,11 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("empty iceCandidates");
 			}
 
+			auto iceConsentTimeout = options->iceConsentTimeout();
+
 			// Create a ICE server.
 			this->iceServer = new RTC::IceServer(
-			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32));
+			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
 
 			// Create a DTLS transport.
 			this->dtlsTransport = new RTC::DtlsTransport(this);
@@ -435,7 +439,8 @@ namespace RTC
 					MS_THROW_ERROR("connect() already called");
 				}
 
-				const auto* body           = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
+				const auto* body = request->data->body_as<FBS::WebRtcTransport::ConnectRequest>();
+
 				const auto* dtlsParameters = body->dtlsParameters();
 
 				RTC::DtlsTransport::Fingerprint dtlsRemoteFingerprint;
