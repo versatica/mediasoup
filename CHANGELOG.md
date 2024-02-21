@@ -1,6 +1,10 @@
 # Changelog
 
-### Next
+### 3.13.22
+
+- Fix wrong publication of mediasoup NPM 3.13.21.
+
+### 3.13.21
 
 - Revert ([PR #1156](https://github.com/versatica/mediasoup/pull/1156)) "Make DTLS fragment stay within MTU size range" because it causes a memory leak ([PR #1342](https://github.com/versatica/mediasoup/pull/1342)).
 
