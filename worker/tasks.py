@@ -23,7 +23,7 @@ import os;
 import inspect;
 import shutil;
 # We import this from a custom location and pylint doesn't know.
-from invoke import task; # pylint: disable=import-error
+from invoke import task, call; # pylint: disable=import-error
 
 MEDIASOUP_BUILDTYPE = os.getenv('MEDIASOUP_BUILDTYPE') or 'Release';
 WORKER_DIR = os.path.dirname(os.path.abspath(
@@ -135,14 +135,14 @@ def meson_ninja(ctx):
 
 
 @task(pre=[meson_ninja])
-def setup(ctx):
+def setup(ctx, meson_args=MESON_ARGS):
     """
     Run meson setup
     """
     if MEDIASOUP_BUILDTYPE == 'Release':
         with ctx.cd(f'"{WORKER_DIR}"'):
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {MESON_ARGS} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{BUILD_DIR}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
@@ -150,7 +150,7 @@ def setup(ctx):
     elif MEDIASOUP_BUILDTYPE == 'Debug':
         with ctx.cd(f'"{WORKER_DIR}"'):
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {MESON_ARGS} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{BUILD_DIR}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
@@ -158,7 +158,7 @@ def setup(ctx):
     else:
         with ctx.cd(f'"{WORKER_DIR}"'):
             ctx.run(
-                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {MESON_ARGS} "{BUILD_DIR}"',
+                f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{BUILD_DIR}"',
                 echo=True,
                 pty=PTY_SUPPORTED,
                 shell=SHELL
@@ -464,18 +464,18 @@ def tidy(ctx):
         );
 
 
-@task(pre=[setup, flatc])
+@task(pre=[call(setup, meson_args=MESON_ARGS + ' -Db_sanitize=address'), flatc])
 def fuzzer(ctx):
     """
     Build the mediasoup-worker-fuzzer binary (which uses libFuzzer)
     """
 
     # NOTE: We need to pass '-Db_sanitize=address' to enable fuzzer in all Meson
-    # subprojects.
+    # subprojects, so we pass it to the setup() task.
 
     with ctx.cd(f'"{WORKER_DIR}"'):
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} -Db_sanitize=address mediasoup-worker-fuzzer',
+            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-fuzzer',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
