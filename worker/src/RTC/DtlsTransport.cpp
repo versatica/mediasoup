@@ -875,6 +875,7 @@ namespace RTC
 
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
+				SendPendingOutgoingDtlsData();
 				SetTimeout();
 
 				break;
