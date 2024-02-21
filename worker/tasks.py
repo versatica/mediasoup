@@ -469,9 +469,13 @@ def fuzzer(ctx):
     """
     Build the mediasoup-worker-fuzzer binary (which uses libFuzzer)
     """
+
+    # NOTE: We need to pass '-Db_sanitize=address' to enable fuzzer in all Meson
+    # subprojects.
+
     with ctx.cd(f'"{WORKER_DIR}"'):
         ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-fuzzer',
+            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} -Db_sanitize=address mediasoup-worker-fuzzer',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
