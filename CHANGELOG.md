@@ -2,7 +2,7 @@
 
 ### Next
 
-- `Revert ([PR #1156](https://github.com/versatica/mediasoup/pull/1156)) "Make DTLS fragment stay within MTU size range" because it causes a memory leak ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Revert ([PR #1156](https://github.com/versatica/mediasoup/pull/1156)) "Make DTLS fragment stay within MTU size range" because it causes a memory leak ([PR #1342](https://github.com/versatica/mediasoup/pull/1342)).
 
 ### 3.13.20
 
