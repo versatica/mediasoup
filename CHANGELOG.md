@@ -1,5 +1,9 @@
 # Changelog
 
+### Next
+
+- Revert ([PR #1156](https://github.com/versatica/mediasoup/pull/1156)) "Make DTLS fragment stay within MTU size range" because it causes a memory leak ([PR #1342](https://github.com/versatica/mediasoup/pull/1342)).
+
 ### 3.13.20
 
 - Add server side ICE consent checks to detect silent WebRTC disconnections ([PR #1332](https://github.com/versatica/mediasoup/pull/1332)).

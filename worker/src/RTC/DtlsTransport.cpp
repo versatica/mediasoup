@@ -61,30 +61,6 @@ inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 	}
 }
 
-inline static long onSslBioOut(
-  BIO* bio,
-  int operationType,
-  const char* argp,
-  size_t len,
-  int /*argi*/,
-  long /*argl*/,
-  int ret,
-  size_t* /*processed*/)
-{
-	const long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
-
-	if (operationType == BIO_CB_WRITE && argp && len > 0)
-	{
-		MS_DEBUG_DEV("%zu bytes of DTLS data ready to be sent", len);
-
-		auto* dtlsTransport = reinterpret_cast<RTC::DtlsTransport*>(BIO_get_callback_arg(bio));
-
-		dtlsTransport->SendDtlsData(reinterpret_cast<const uint8_t*>(argp), len);
-	}
-
-	return resultOfcallback;
-}
-
 namespace RTC
 {
 	/* Static. */
@@ -730,11 +706,12 @@ namespace RTC
 			goto error;
 		}
 
-		BIO_set_callback_ex(this->sslBioToNetwork, onSslBioOut);
-		BIO_set_callback_arg(this->sslBioToNetwork, reinterpret_cast<char*>(this));
 		SSL_set_bio(this->ssl, this->sslBioFromNetwork, this->sslBioToNetwork);
 
-		// Set the MTU so that we don't send packets that are too large with no fragmentation.
+		// Set the MTU so that we don't send packets that are too large with no
+		// fragmentation.
+		// TODO: This is not honored, see issue:
+		//   https://github.com/versatica/mediasoup/issues/1100
 		SSL_set_mtu(this->ssl, DtlsMtu);
 		DTLS_set_link_mtu(this->ssl, DtlsMtu);
 
@@ -778,6 +755,7 @@ namespace RTC
 		{
 			// Send close alert to the peer.
 			SSL_shutdown(this->ssl);
+			SendPendingOutgoingDtlsData();
 		}
 
 		if (this->ssl)
@@ -900,6 +878,7 @@ namespace RTC
 
 				SSL_set_connect_state(this->ssl);
 				SSL_do_handshake(this->ssl);
+				SendPendingOutgoingDtlsData();
 				SetTimeout();
 
 				break;
@@ -970,6 +949,9 @@ namespace RTC
 		// Must call SSL_read() to process received DTLS data.
 		read = SSL_read(this->ssl, static_cast<void*>(DtlsTransport::sslReadBuffer), SslReadBufferSize);
 
+		// Send data if it's ready.
+		SendPendingOutgoingDtlsData();
+
 		// Check SSL status and return if it is bad/closed.
 		if (!CheckStatus(read))
 		{
@@ -985,7 +967,8 @@ namespace RTC
 		// Application data received. Notify to the listener.
 		if (read > 0)
 		{
-			// It is allowed to receive DTLS data even before validating remote fingerprint.
+			// It is allowed to receive DTLS data even before validating remote
+			// fingerprint.
 			if (!this->handshakeDone)
 			{
 				MS_WARN_TAG(dtls, "ignoring application data received while DTLS handshake not done");
@@ -1003,7 +986,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// We cannot send data to the peer if its remote fingerprint is not validated.
+		// We cannot send data to the peer if its remote fingerprint is not
+		// validated.
 		if (this->state != DtlsState::CONNECTED)
 		{
 			MS_WARN_TAG(dtls, "cannot send application data while DTLS is not fully connected");
@@ -1036,14 +1020,9 @@ namespace RTC
 			MS_WARN_TAG(
 			  dtls, "OpenSSL SSL_write() wrote less (%d bytes) than given data (%zu bytes)", written, len);
 		}
-	}
 
-	void DtlsTransport::SendDtlsData(const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		// Notify the listener.
-		this->listener->OnDtlsTransportSendData(this, data, len);
+		// Send data.
+		SendPendingOutgoingDtlsData();
 	}
 
 	void DtlsTransport::Reset()
@@ -1062,8 +1041,9 @@ namespace RTC
 		// Stop the DTLS timer.
 		this->timer->Stop();
 
-		// NOTE: We need to reset the SSL instance so we need to "shutdown" it, but we
-		// don't want to send a Close Alert to the peer. However this is gonna happen.
+		// NOTE: We need to reset the SSL instance so we need to "shutdown" it, but
+		// we don't want to send a Close Alert to the peer, so just don't call
+		// SendPendingOutgoingDTLSData().
 		SSL_shutdown(this->ssl);
 
 		this->localRole.reset();
@@ -1083,7 +1063,7 @@ namespace RTC
 		}
 	}
 
-	inline bool DtlsTransport::CheckStatus(int returnCode)
+	bool DtlsTransport::CheckStatus(int returnCode)
 	{
 		MS_TRACE();
 
@@ -1200,7 +1180,37 @@ namespace RTC
 		}
 	}
 
-	inline bool DtlsTransport::SetTimeout()
+	void DtlsTransport::SendPendingOutgoingDtlsData()
+	{
+		MS_TRACE();
+
+		if (BIO_eof(this->sslBioToNetwork))
+		{
+			return;
+		}
+
+		int64_t read;
+		char* data{ nullptr };
+
+		read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
+
+		if (read <= 0)
+		{
+			return;
+		}
+
+		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
+
+		// Notify the listener.
+		this->listener->OnDtlsTransportSendData(
+		  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
+
+		// Clear the BIO buffer.
+		// NOTE: the (void) avoids the -Wunused-value warning.
+		(void)BIO_reset(this->sslBioToNetwork);
+	}
+
+	bool DtlsTransport::SetTimeout()
 	{
 		MS_TRACE();
 
@@ -1235,7 +1245,8 @@ namespace RTC
 
 			return true;
 		}
-		// NOTE: Don't start the timer again if the timeout is greater than 30 seconds.
+		// NOTE: Don't start the timer again if the timeout is greater than 30
+		// seconds.
 		else
 		{
 			MS_WARN_TAG(dtls, "DTLS timeout too high (%" PRIu64 "ms), resetting DLTS", timeoutMs);
@@ -1250,7 +1261,7 @@ namespace RTC
 		}
 	}
 
-	inline bool DtlsTransport::ProcessHandshake()
+	bool DtlsTransport::ProcessHandshake()
 	{
 		MS_TRACE();
 
@@ -1292,7 +1303,7 @@ namespace RTC
 		return false;
 	}
 
-	inline bool DtlsTransport::CheckRemoteFingerprint()
+	bool DtlsTransport::CheckRemoteFingerprint()
 	{
 		MS_TRACE();
 
@@ -1386,8 +1397,8 @@ namespace RTC
 		BIO* bio = BIO_new(BIO_s_mem());
 
 		// Ensure the underlying BUF_MEM structure is also freed.
-		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]" since
-		// BIO_set_close() always returns 1.
+		// NOTE: Avoid stupid "warning: value computed is not used [-Wunused-value]"
+		// since BIO_set_close() always returns 1.
 		(void)BIO_set_close(bio, BIO_CLOSE);
 
 		ret = PEM_write_bio_X509(bio, certificate);
@@ -1424,7 +1435,7 @@ namespace RTC
 		return true;
 	}
 
-	inline void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite)
+	void DtlsTransport::ExtractSrtpKeys(RTC::SrtpSession::CryptoSuite srtpCryptoSuite)
 	{
 		MS_TRACE();
 
@@ -1529,7 +1540,7 @@ namespace RTC
 		delete[] srtpRemoteMasterKey;
 	}
 
-	inline std::optional<RTC::SrtpSession::CryptoSuite> DtlsTransport::GetNegotiatedSrtpCryptoSuite()
+	std::optional<RTC::SrtpSession::CryptoSuite> DtlsTransport::GetNegotiatedSrtpCryptoSuite()
 	{
 		MS_TRACE();
 
@@ -1563,7 +1574,7 @@ namespace RTC
 		return negotiatedSrtpCryptoSuite;
 	}
 
-	inline void DtlsTransport::OnSslInfo(int where, int ret)
+	void DtlsTransport::OnSslInfo(int where, int ret)
 	{
 		MS_TRACE();
 
@@ -1646,11 +1657,12 @@ namespace RTC
 			this->handshakeDoneNow = true;
 		}
 
-		// NOTE: checking SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN here upon
-		// receipt of a close alert does not work (the flag is set after this callback).
+		// NOTE: checking SSL_get_shutdown(this->ssl) & SSL_RECEIVED_SHUTDOWN here
+		// upon receipt of a close alert does not work (the flag is set after this
+		// callback).
 	}
 
-	inline void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
+	void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();
 
@@ -1670,6 +1682,9 @@ namespace RTC
 
 		if (ret == 1)
 		{
+			// If required, send DTLS data.
+			SendPendingOutgoingDtlsData();
+
 			// Set the DTLS timer again.
 			SetTimeout();
 		}
