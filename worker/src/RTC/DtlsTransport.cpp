@@ -832,9 +832,9 @@ namespace RTC
 		}
 
 		MS_DUMP("<DtlsTransport>");
-		MS_DUMP("  state           : %s", state.c_str());
-		MS_DUMP("  role            : %s", role.c_str());
-		MS_DUMP("  handshake done: : %s", this->handshakeDone ? "yes" : "no");
+		MS_DUMP("  state: %s", state.c_str());
+		MS_DUMP("  role: %s", role.c_str());
+		MS_DUMP("  handshake done: %s", this->handshakeDone ? "yes" : "no");
 		MS_DUMP("</DtlsTransport>");
 	}
 
@@ -1207,12 +1207,13 @@ namespace RTC
 		}
 		else
 		{
-			// Here we have a DTLS message with total size higher than our DtlsMtu
-			// value. Such a big DTLS message is, in fact, various DTLS message
-			// fragments. Each DTLS message fragment must be sent in a single
-			// UDP datagram or TCP framed message (althought N DTLS message fragments
-			// can be sent together because they are framed). So the question is: how
-			// to split this big data we have here into valid DTLS message fragments?
+			// Here we have data containing one or more DTLS messages with total size
+			// higher than our DtlsMtu value. These DTLS messages are, in fact, DTLS
+			// message fragments (various fragments conform a DTLS message). Each DTLS
+			// message fragment must be sent in a single UDP datagram or TCP framed
+			// message (although various DTLS message fragments can be sent together
+			// because they are framed). So the question is: How to split this big
+			// data we have here into valid DTLS message fragments?
 			//
 			// Here the trick:
 			// - We called SSL_CTX_set_options() with SSL_OP_NO_QUERY_MTU (among other
@@ -1221,13 +1222,45 @@ namespace RTC
 			// - We called DTLS_set_link_mtu(this->ssl, DtlsMtu).
 			//
 			// So we know that OpenSSL will split DTLS messages bigger than DtlsMtu
-			// into DtlsMtu long chunks (of course the last chunk maybe smaller).
-			// So assuming that (and it behaves that way), we can do the reverse
-			// operation here and split this big data into chunks of DtlsMtu (except
-			// the last one, of couse), so it's guaranteed that each chunk contains
-			// a valid DTLS message fragment. So we notify the parent by passing each
+			// into DtlsMtu bytes long chunks (of course the last chunk maybe smaller).
+			// So assuming that (and it behaves that way), we can follow the reverse
+			// logic here and split this big data into chunks of DtlsMtu (except the
+			// last one, of couse), so it's guaranteed that each chunk will contain a
+			// valid DTLS message fragment. So we notify the parent by passing each
 			// chunk to it, so it will encapsulate it into a single UDP datagram or
 			// framed TCP message.
+			//
+			// There is an scenario in which this logic would fail:
+			//
+			// - DtlsMtu is 1350 bytes.
+			// - OpenSSL generates 2 sequential DTLS messages to be sent to client.
+			// - First message is 2500 bytes long. So OpenSSL splits it into 2 DTLS
+			//   message fragments:
+			//   1. First DTLS message fragment is 1350 (DtlsMtu) bytes long.
+			//   2. Second DTLS message fragment is 1150.
+			// - Second message is 500 bytes long (so no fragments needed).
+			// - So in SendPendingOutgoingDtlsData() we have 3000 bytes to send in
+			//   total and there are 3 DTLS messages:
+			//   1. The first fragment of the first message: 1350 bytes.
+			//   2. The second fragment of the first message: 1150 bytes.
+			//   3. The second DTLS message: 500 bytes.
+			// - Following the above logic, SendPendingOutgoingDtlsData() will split
+			//   those 3000 bytes as follows:
+			//   1. First 1350 bytes: Here we are exactly taking the first fragment of
+			//      the first message, so all good.
+			//   2. Next 1350 bytes: Here we are reading the 1150 bytes of the second
+			//      fragment of the first message plus the first 200 bytes of the
+			//      second message. This is NOT good.
+			//   3. Next 300 bytes: The remaining 300 bytes of the second message.
+			//      This is not good.
+			// - Client will reject the second and third UDP packets since they do not
+			//   contain one or more valid DTLS full messages or DTLS message
+			//   fragments.
+			//
+			// However, by experimenting I see that OpenSSL doesn't generate messages
+			// like those and, anyway, we may only need to send DTLS messages bigger
+			// than DtlsMtu during the handshake and only if our certificate is big,
+			// and in this scenario the problematic above sequence doesn't happen.
 			//
 			// PR with more information about this:
 			//   https://github.com/versatica/mediasoup/pull/1343.
