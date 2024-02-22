@@ -51,10 +51,10 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<FeedbackPsVbcmItem>");
-			MS_DUMP("  ssrc            : %" PRIu32, this->GetSsrc());
-			MS_DUMP("  sequence number : %" PRIu8, this->GetSequenceNumber());
-			MS_DUMP("  payload type    : %" PRIu8, this->GetPayloadType());
-			MS_DUMP("  length          : %" PRIu16, this->GetLength());
+			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP("  sequence number: %" PRIu8, this->GetSequenceNumber());
+			MS_DUMP("  payload type: %" PRIu8, this->GetPayloadType());
+			MS_DUMP("  length: %" PRIu16, this->GetLength());
 			MS_DUMP("</FeedbackPsVbcmItem>");
 		}
 	} // namespace RTCP

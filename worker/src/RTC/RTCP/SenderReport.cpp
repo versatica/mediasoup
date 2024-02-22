@@ -36,12 +36,12 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SenderReport>");
-			MS_DUMP("  ssrc         : %" PRIu32, GetSsrc());
-			MS_DUMP("  ntp sec      : %" PRIu32, GetNtpSec());
-			MS_DUMP("  ntp frac     : %" PRIu32, GetNtpFrac());
-			MS_DUMP("  rtp ts       : %" PRIu32, GetRtpTs());
-			MS_DUMP("  packet count : %" PRIu32, GetPacketCount());
-			MS_DUMP("  octet count  : %" PRIu32, GetOctetCount());
+			MS_DUMP("  ssrc: %" PRIu32, GetSsrc());
+			MS_DUMP("  ntp sec: %" PRIu32, GetNtpSec());
+			MS_DUMP("  ntp frac: %" PRIu32, GetNtpFrac());
+			MS_DUMP("  rtp ts: %" PRIu32, GetRtpTs());
+			MS_DUMP("  packet count: %" PRIu32, GetPacketCount());
+			MS_DUMP("  octet count: %" PRIu32, GetOctetCount());
 			MS_DUMP("</SenderReport>");
 		}
 

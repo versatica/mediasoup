@@ -147,10 +147,10 @@ namespace RTC
 
 			MS_DUMP("<FeedbackPsRembPacket>");
 			FeedbackPsPacket::Dump();
-			MS_DUMP("  bitrate (bps) : %" PRIu64, this->bitrate);
+			MS_DUMP("  bitrate (bps): %" PRIu64, this->bitrate);
 			for (auto ssrc : this->ssrcs)
 			{
-				MS_DUMP("  ssrc          : %" PRIu32, ssrc);
+				MS_DUMP("  ssrc: %" PRIu32, ssrc);
 			}
 			MS_DUMP("</FeedbackPsRembPacket>");
 		}

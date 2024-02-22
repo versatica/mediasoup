@@ -92,9 +92,9 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SdesItem>");
-			MS_DUMP("  type   : %s", SdesItem::Type2String(this->GetType()).c_str());
-			MS_DUMP("  length : %" PRIu8, this->header->length);
-			MS_DUMP("  value  : %.*s", this->header->length, this->header->value);
+			MS_DUMP("  type: %s", SdesItem::Type2String(this->GetType()).c_str());
+			MS_DUMP("  length: %" PRIu8, this->header->length);
+			MS_DUMP("  value: %.*s", this->header->length, this->header->value);
 			MS_DUMP("</SdesItem>");
 		}
 
@@ -240,7 +240,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<SdesChunk>");
-			MS_DUMP("  ssrc : %" PRIu32, this->ssrc);
+			MS_DUMP("  ssrc: %" PRIu32, this->ssrc);
 			for (auto* item : this->items)
 			{
 				item->Dump();

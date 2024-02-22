@@ -96,12 +96,10 @@ void TcpServerHandle::Close()
 void TcpServerHandle::Dump() const
 {
 	MS_DUMP("<TcpServerHandle>");
-	MS_DUMP(
-	  "  [TCP, local:%s :%" PRIu16 ", status:%s, connections:%zu]",
-	  this->localIp.c_str(),
-	  static_cast<uint16_t>(this->localPort),
-	  (!this->closed) ? "open" : "closed",
-	  this->connections.size());
+	MS_DUMP("  localIp: %s", this->localIp.c_str());
+	MS_DUMP("  localPort: %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP("  num connections: %zu", this->connections.size());
+	MS_DUMP("  closed: %s", this->closed ? "yes" : "no");
 	MS_DUMP("</TcpServerHandle>");
 }
 

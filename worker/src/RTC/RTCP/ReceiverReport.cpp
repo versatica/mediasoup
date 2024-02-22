@@ -37,13 +37,13 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<ReceiverReport>");
-			MS_DUMP("  ssrc          : %" PRIu32, GetSsrc());
-			MS_DUMP("  fraction lost : %" PRIu8, GetFractionLost());
-			MS_DUMP("  total lost    : %" PRIu32, GetTotalLost());
-			MS_DUMP("  last seq      : %" PRIu32, GetLastSeq());
-			MS_DUMP("  jitter        : %" PRIu32, GetJitter());
-			MS_DUMP("  lsr           : %" PRIu32, GetLastSenderReport());
-			MS_DUMP("  dlsr          : %" PRIu32, GetDelaySinceLastSenderReport());
+			MS_DUMP("  ssrc: %" PRIu32, GetSsrc());
+			MS_DUMP("  fraction lost: %" PRIu8, GetFractionLost());
+			MS_DUMP("  total lost: %" PRIu32, GetTotalLost());
+			MS_DUMP("  last seq: %" PRIu32, GetLastSeq());
+			MS_DUMP("  jitter: %" PRIu32, GetJitter());
+			MS_DUMP("  lsr: %" PRIu32, GetLastSenderReport());
+			MS_DUMP("  dlsr: %" PRIu32, GetDelaySinceLastSenderReport());
 			MS_DUMP("</ReceiverReport>");
 		}
 

@@ -179,11 +179,11 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<FeedbackRtpTransportPacket>");
-			MS_DUMP("  base sequence         : %" PRIu16, this->baseSequenceNumber);
-			MS_DUMP("  packet status count   : %" PRIu16, this->packetStatusCount);
-			MS_DUMP("  reference time        : %" PRIi32, this->referenceTime);
-			MS_DUMP("  feedback packet count : %" PRIu8, this->feedbackPacketCount);
-			MS_DUMP("  size                  : %zu", GetSize());
+			MS_DUMP("  base sequence: %" PRIu16, this->baseSequenceNumber);
+			MS_DUMP("  packet status count: %" PRIu16, this->packetStatusCount);
+			MS_DUMP("  reference time: %" PRIi32, this->referenceTime);
+			MS_DUMP("  feedback packet count: %" PRIu8, this->feedbackPacketCount);
+			MS_DUMP("  size: %zu", GetSize());
 
 			for (auto* chunk : this->chunks)
 			{
@@ -728,8 +728,8 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("  <RunLengthChunk>");
-			MS_DUMP("    status : %s", FeedbackRtpTransportPacket::status2String[this->status].c_str());
-			MS_DUMP("    count  : %" PRIu16, this->count);
+			MS_DUMP("    status: %s", FeedbackRtpTransportPacket::status2String[this->status].c_str());
+			MS_DUMP("    count: %" PRIu16, this->count);
 			MS_DUMP("  </RunLengthChunk>");
 		}
 

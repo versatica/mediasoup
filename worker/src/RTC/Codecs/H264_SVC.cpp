@@ -251,7 +251,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<PayloadDescriptor>");
+			MS_DUMP("<H264_SVC::PayloadDescriptor>");
 			MS_DUMP(
 			  "  s:%" PRIu8 "|e:%" PRIu8 "|i:%" PRIu8 "|d:%" PRIu8 "|b:%" PRIu8,
 			  this->s,
@@ -259,12 +259,12 @@ namespace RTC
 			  this->i,
 			  this->d,
 			  this->b);
-			MS_DUMP("  hasSlIndex           : %s", this->hasSlIndex ? "true" : "false");
-			MS_DUMP("  hasTlIndex           : %s", this->hasTlIndex ? "true" : "false");
-			MS_DUMP("  tl0picidx            : %" PRIu8, this->tl0picidx);
-			MS_DUMP("  noIntLayerPredFlag   : %" PRIu8, this->noIntLayerPredFlag);
-			MS_DUMP("  isKeyFrame           : %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("</PayloadDescriptor>");
+			MS_DUMP("  hasSlIndex: %s", this->hasSlIndex ? "true" : "false");
+			MS_DUMP("  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
+			MS_DUMP("  tl0picidx: %" PRIu8, this->tl0picidx);
+			MS_DUMP("  noIntLayerPredFlag: %" PRIu8, this->noIntLayerPredFlag);
+			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP("</H264_SVC::PayloadDescriptor>");
 		}
 
 		H264_SVC::PayloadDescriptorHandler::PayloadDescriptorHandler(

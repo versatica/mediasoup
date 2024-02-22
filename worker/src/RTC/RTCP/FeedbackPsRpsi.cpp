@@ -77,9 +77,9 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<FeedbackPsRpsiItem>");
-			MS_DUMP("  padding bits : %" PRIu8, this->header->paddingBits);
-			MS_DUMP("  payload type : %" PRIu8, this->GetPayloadType());
-			MS_DUMP("  length       : %zu", this->GetLength());
+			MS_DUMP("  padding bits %" PRIu8, this->header->paddingBits);
+			MS_DUMP("  payload type: %" PRIu8, this->GetPayloadType());
+			MS_DUMP("  length: %zu", this->GetLength());
 			MS_DUMP("</FeedbackPsRpsiItem>");
 		}
 	} // namespace RTCP

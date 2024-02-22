@@ -68,9 +68,9 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<FeedbackRtpTmmbItem>");
-			MS_DUMP("  ssrc     : %" PRIu32, this->GetSsrc());
-			MS_DUMP("  bitrate  : %" PRIu64, this->GetBitrate());
-			MS_DUMP("  overhead : %" PRIu16, this->GetOverhead());
+			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP("  bitrate: %" PRIu64, this->GetBitrate());
+			MS_DUMP("  overhead: %" PRIu16, this->GetOverhead());
 			MS_DUMP("</FeedbackRtpTmmbItem>");
 		}
 

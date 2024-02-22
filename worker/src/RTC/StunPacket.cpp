@@ -421,7 +421,7 @@ namespace RTC
 		}
 		if (this->hasUseCandidate)
 		{
-			MS_DUMP("  useCandidate");
+			MS_DUMP("  useCandidate: yes");
 		}
 		if (!this->software.empty())
 		{
@@ -450,7 +450,7 @@ namespace RTC
 		}
 		if (this->hasFingerprint)
 		{
-			MS_DUMP("  has fingerprint");
+			MS_DUMP("  fingerprint: yes");
 		}
 
 		MS_DUMP("</StunPacket>");
