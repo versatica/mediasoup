@@ -1207,9 +1207,32 @@ namespace RTC
 		}
 		else
 		{
-			// Here we do a dangerous thing that works.
-			// Explained in https://github.com/versatica/mediasoup/pull/1343.
-			MS_WARN_TAG(
+			// Here we have a DTLS message with total size higher than our DtlsMtu
+			// value. Such a big DTLS message is, in fact, various DTLS message
+			// fragments. Each DTLS message fragment must be sent in a single
+			// UDP datagram or TCP framed message (althought N DTLS message fragments
+			// can be sent together because they are framed). So the question is: how
+			// to split this big data we have here into valid DTLS message fragments?
+			//
+			// Here the trick:
+			// - We called SSL_CTX_set_options() with SSL_OP_NO_QUERY_MTU (among other
+			//   flags).
+			// - We called SSL_set_mtu(this->ssl, DtlsMtu).
+			// - We called DTLS_set_link_mtu(this->ssl, DtlsMtu).
+			//
+			// So we know that OpenSSL will split DTLS messages bigger than DtlsMtu
+			// into DtlsMtu long chunks (of course the last chunk maybe smaller).
+			// So assuming that (and it behaves that way), we can do the reverse
+			// operation here and split this big data into chunks of DtlsMtu (except
+			// the last one, of couse), so it's guaranteed that each chunk contains
+			// a valid DTLS message fragment. So we notify the parent by passing each
+			// chunk to it, so it will encapsulate it into a single UDP datagram or
+			// framed TCP message.
+			//
+			// PR with more information about this:
+			//   https://github.com/versatica/mediasoup/pull/1343.
+
+			MS_DEBUG_TAG(
 			  dtls,
 			  "data to be sent is longer than DTLS MTU, fragmenting it [len:%" PRIi64 ", DtlsMtu:%i]",
 			  read,
