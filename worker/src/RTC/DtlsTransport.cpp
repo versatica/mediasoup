@@ -1207,7 +1207,8 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_DEV(
+			MS_WARN_TAG(
+			  dtls,
 			  "data to be sent is longer than DTLS MTU, fragmenting it [len:%" PRIi64 ", DtlsMtu:%i]",
 			  read,
 			  DtlsMtu);
