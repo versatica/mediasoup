@@ -1189,10 +1189,8 @@ namespace RTC
 			return;
 		}
 
-		int64_t read;
 		char* data{ nullptr };
-
-		read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
+		const int64_t read = BIO_get_mem_data(this->sslBioToNetwork, &data); // NOLINT
 
 		if (read <= 0)
 		{
@@ -1201,9 +1199,36 @@ namespace RTC
 
 		MS_DEBUG_DEV("%" PRIu64 " bytes of DTLS data ready to sent to the peer", read);
 
-		// Notify the listener.
-		this->listener->OnDtlsTransportSendData(
-		  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
+		if (read <= DtlsMtu)
+		{
+			// Notify the listener.
+			this->listener->OnDtlsTransportSendData(
+			  this, reinterpret_cast<uint8_t*>(data), static_cast<size_t>(read));
+		}
+		else
+		{
+			MS_WARN_DEV(
+			  "data to be sent is longer than DTLS MTU, fragmenting it [len:%" PRIi64 ", DtlsMtu:%i]",
+			  read,
+			  DtlsMtu);
+
+			size_t offset{ 0u };
+
+			while (offset < read)
+			{
+				auto* fragmentData = reinterpret_cast<uint8_t*>(data + offset);
+				auto fragmentLen   = static_cast<size_t>(read) - offset >= DtlsMtu
+				                       ? DtlsMtu
+				                       : static_cast<size_t>(read) - offset;
+
+				MS_DEBUG_DEV("sending fragment [offset:%zu, len:%zu]", offset, fragmentLen);
+
+				// Notify the listener.
+				this->listener->OnDtlsTransportSendData(this, fragmentData, fragmentLen);
+
+				offset += fragmentLen;
+			}
+		}
 
 		// Clear the BIO buffer.
 		// NOTE: the (void) avoids the -Wunused-value warning.
