@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::DtlsTransport"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/DtlsTransport.hpp"
 #include "Logger.hpp"
@@ -1207,6 +1207,8 @@ namespace RTC
 		}
 		else
 		{
+			// Here we do a dangerous thing that works.
+			// Explained in https://github.com/versatica/mediasoup/pull/1343.
 			MS_WARN_TAG(
 			  dtls,
 			  "data to be sent is longer than DTLS MTU, fragmenting it [len:%" PRIi64 ", DtlsMtu:%i]",
