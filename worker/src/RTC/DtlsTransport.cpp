@@ -12,23 +12,25 @@
 #include <cstdio>  // std::snprintf(), std::fopen()
 #include <cstring> // std::memcpy(), std::strcmp()
 
-#define LOG_OPENSSL_ERROR(desc)                                                                    \
-	do                                                                                               \
-	{                                                                                                \
-		if (ERR_peek_error() == 0)                                                                     \
-		{                                                                                              \
-			MS_ERROR("OpenSSL error [desc:'%s']", desc);                                                 \
-		}                                                                                              \
-		else                                                                                           \
-		{                                                                                              \
-			int64_t err;                                                                                 \
-			while ((err = ERR_get_error()) != 0)                                                         \
-			{                                                                                            \
-				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr));   \
-			}                                                                                            \
-			ERR_clear_error();                                                                           \
-		}                                                                                              \
+// clang-format off
+#define LOG_OPENSSL_ERROR(desc) \
+	do \
+	{ \
+		if (ERR_peek_error() == 0) \
+		{ \
+			MS_ERROR("OpenSSL error [desc:'%s']", desc); \
+		} \
+		else \
+		{ \
+			int64_t err; \
+			while ((err = ERR_get_error()) != 0) \
+			{ \
+				MS_ERROR("OpenSSL error [desc:'%s', error:'%s']", desc, ERR_error_string(err, nullptr)); \
+			} \
+			ERR_clear_error(); \
+		} \
 	} while (false)
+// clang-format on
 
 /* Static methods for OpenSSL callbacks. */
 
