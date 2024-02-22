@@ -834,9 +834,9 @@ namespace RTC
 		}
 
 		MS_DUMP("<DtlsTransport>");
-		MS_DUMP("  state           : %s", state.c_str());
-		MS_DUMP("  role            : %s", role.c_str());
-		MS_DUMP("  handshake done: : %s", this->handshakeDone ? "yes" : "no");
+		MS_DUMP("  state: %s", state.c_str());
+		MS_DUMP("  role: %s", role.c_str());
+		MS_DUMP("  handshake done: %s", this->handshakeDone ? "yes" : "no");
 		MS_DUMP("</DtlsTransport>");
 	}
 
