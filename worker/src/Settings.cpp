@@ -273,23 +273,20 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(info, "<configuration>");
 
 	MS_DEBUG_TAG(
-	  info,
-	  "  logLevel             : %s",
-	  Settings::LogLevel2String[Settings::configuration.logLevel].c_str());
-	MS_DEBUG_TAG(info, "  logTags              : %s", logTagsStream.str().c_str());
-	MS_DEBUG_TAG(info, "  rtcMinPort           : %" PRIu16, Settings::configuration.rtcMinPort);
-	MS_DEBUG_TAG(info, "  rtcMaxPort           : %" PRIu16, Settings::configuration.rtcMaxPort);
+	  info, "  logLevel: %s", Settings::LogLevel2String[Settings::configuration.logLevel].c_str());
+	MS_DEBUG_TAG(info, "  logTags: %s", logTagsStream.str().c_str());
+	MS_DEBUG_TAG(info, "  rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
+	MS_DEBUG_TAG(info, "  rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
 		MS_DEBUG_TAG(
-		  info, "  dtlsCertificateFile  : %s", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG_TAG(
-		  info, "  dtlsPrivateKeyFile   : %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		  info, "  dtlsCertificateFile: %s", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile: %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 	if (!Settings::configuration.libwebrtcFieldTrials.empty())
 	{
 		MS_DEBUG_TAG(
-		  info, "  libwebrtcFieldTrials : %s", Settings::configuration.libwebrtcFieldTrials.c_str());
+		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
 	}
 
 	MS_DEBUG_TAG(info, "</configuration>");
