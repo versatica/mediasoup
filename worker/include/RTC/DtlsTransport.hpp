@@ -152,6 +152,8 @@ namespace RTC
 			return this->localRole;
 		}
 		void SendApplicationData(const uint8_t* data, size_t len);
+		// This method must be public since it's called within an OpenSSL callback.
+		void SendDtlsData(const uint8_t* data, size_t len);
 
 	private:
 		bool IsRunning() const
@@ -173,7 +175,6 @@ namespace RTC
 		}
 		void Reset();
 		bool CheckStatus(int returnCode);
-		void SendPendingOutgoingDtlsData();
 		bool SetTimeout();
 		bool ProcessHandshake();
 		bool CheckRemoteFingerprint();
