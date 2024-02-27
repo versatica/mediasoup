@@ -61,7 +61,7 @@ inline static long onSslBioOut(
 
 	// This callback is called twice for write operations:
 	// - First one with operationType = BIO_CB_WRITE.
-	// - Second one with perationType = BIO_CB_RETURN | BIO_CB_WRITE.
+	// - Second one with operationType = BIO_CB_RETURN | BIO_CB_WRITE.
 	// We only care about the former.
 	if (operationType == BIO_CB_WRITE && argp && len > 0)
 	{
@@ -75,13 +75,13 @@ inline static long onSslBioOut(
 
 inline static unsigned int onSslDtlsTimer(SSL* /*ssl*/, unsigned int timerUs)
 {
-	if (timerUs == 0)
+	if (timerUs == 0u)
 	{
-		return 100000;
+		return 100000u;
 	}
-	else if (timerUs >= 4000000)
+	else if (timerUs >= 4000000u)
 	{
-		return 4000000;
+		return 4000000u;
 	}
 	else
 	{
@@ -97,15 +97,15 @@ namespace RTC
 	static constexpr int DtlsMtu{ 1350 };
 	static constexpr int SslReadBufferSize{ 65536 };
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
-	static constexpr size_t SrtpMasterKeyLength{ 16 };
-	static constexpr size_t SrtpMasterSaltLength{ 14 };
+	static constexpr size_t SrtpMasterKeyLength{ 16u };
+	static constexpr size_t SrtpMasterSaltLength{ 14u };
 	static constexpr size_t SrtpMasterLength{ SrtpMasterKeyLength + SrtpMasterSaltLength };
 	// AES-GCM: http://tools.ietf.org/html/rfc7714
-	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
-	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
+	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32u };
+	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12u };
 	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength };
-	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
-	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
+	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16u };
+	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12u };
 	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength };
 	// clang-format on
 
