@@ -1,6 +1,6 @@
 # Changelog
 
-### Next
+### 3.13.23
 
 - Fix DTLS packets do not honor configured DTLS MTU (attempt 3) ([PR #1345](https://github.com/versatica/mediasoup/pull/1345)).
 
