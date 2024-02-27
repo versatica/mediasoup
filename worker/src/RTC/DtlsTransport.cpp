@@ -47,6 +47,14 @@ inline static void onSslInfo(const SSL* ssl, int where, int ret)
 	static_cast<RTC::DtlsTransport*>(SSL_get_ex_data(ssl, 0))->OnSslInfo(where, ret);
 }
 
+/**
+ * This callback is called by OpenSSL when it wants to send DTLS data to the
+ * endpoint. Such a data could be a full DTLS message, various DTLS messages,
+ * a DTLS message fragment, various DTLS message fragments or a combination of
+ * these. It's guaranteed (by observation) that |len| argument corresponds to
+ * the entire content of our BIO mem buffer |this->sslBioToNetwork| and it
+ * never exceeds our |DtlsMtu| limit.
+ */
 inline static long onSslBioOut(
   BIO* bio,
   int operationType,
@@ -1049,6 +1057,13 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * This method is called within our |onSslBioOut| callback above. As told
+	 * there, it's guaranteed that OpenSSL invokes that callback with all the
+	 * bytes currently writes in our BIO mem buffer |this->sslBioToNetwork| so
+	 * we can safely reset/clear that buffer once we have sent the data to the
+	 * endpoint.
+	 */
 	void DtlsTransport::SendDtlsData(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
@@ -1059,10 +1074,6 @@ namespace RTC
 		this->listener->OnDtlsTransportSendData(this, data, len);
 
 		// Clear the BIO buffer.
-		// NOTE: Here we now that OpenSSL called the onSslBioOut() callback with
-		// all the byte length that it previously wrote into the BIO mem buffer
-		// (this->sslBioToNetwork), so it's safe to clear the entire buffer after
-		// sending its entire DTLS data to the endpoint.
 		auto ret = BIO_reset(this->sslBioToNetwork);
 
 		if (ret != 1)
