@@ -63,7 +63,7 @@ inline static long onSslBioOut(
 	// - First one with operationType = BIO_CB_WRITE.
 	// - Second one with operationType = BIO_CB_RETURN | BIO_CB_WRITE.
 	// We only care about the former.
-	if (operationType == BIO_CB_WRITE && argp && len > 0)
+	if ((operationType == BIO_CB_WRITE) && argp && len > 0)
 	{
 		auto* dtlsTransport = reinterpret_cast<RTC::DtlsTransport*>(BIO_get_callback_arg(bio));
 
@@ -1060,11 +1060,15 @@ namespace RTC
 
 		// Clear the BIO buffer.
 		// NOTE: Here we now that OpenSSL called the onSslBioOut() callback with
-		// with all the byte length that it previously wrote into the BIO mem
-		// buffer (this->sslBioToNetwork), so it's safe to clear the entire buffer
-		// after sending its entire DTLS data to the endpoint.
-		// NOTE: the (void) avoids the -Wunused-value warning.
-		(void)BIO_reset(this->sslBioToNetwork);
+		// all the byte length that it previously wrote into the BIO mem buffer
+		// (this->sslBioToNetwork), so it's safe to clear the entire buffer after
+		// sending its entire DTLS data to the endpoint.
+		auto ret = BIO_reset(this->sslBioToNetwork);
+
+		if (ret != 1)
+		{
+			MS_ERROR("BIO_reset() failed [ret:%d]", ret);
+		}
 	}
 
 	void DtlsTransport::Reset()
@@ -1110,10 +1114,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int err;
 		const bool wasHandshakeDone = this->handshakeDone;
 
-		err = SSL_get_error(this->ssl, returnCode);
+		int err = SSL_get_error(this->ssl, returnCode);
 
 		switch (err)
 		{
