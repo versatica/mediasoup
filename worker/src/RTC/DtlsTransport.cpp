@@ -1060,7 +1060,7 @@ namespace RTC
 	/**
 	 * This method is called within our |onSslBioOut| callback above. As told
 	 * there, it's guaranteed that OpenSSL invokes that callback with all the
-	 * bytes currently writes in our BIO mem buffer |this->sslBioToNetwork| so
+	 * bytes currently written in our BIO mem buffer |this->sslBioToNetwork| so
 	 * we can safely reset/clear that buffer once we have sent the data to the
 	 * endpoint.
 	 */
