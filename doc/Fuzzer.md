@@ -39,10 +39,11 @@ For memory leak detection enable the following environment variable:
 
 The mediasoup-worker fuzzer reads some custom environment variables to decide which kind of fuzzing perform:
 
-- `MS_FUZZ_STUN=1`: Do STUN fuzzing.
-- `MS_FUZZ_RTP=1`: Do RTP fuzzing.
-- `MS_FUZZ_RTCP=1`: Do RTCP fuzzing.
-- `MS_FUZZ_UTILS=1`: Do C++ utils fuzzing.
+- `MS_FUZZ_STUN=1`: Enable STUN fuzzer.
+- `MS_FUZZ_DTLS=1`: Enable DTLS fuzzer.
+- `MS_FUZZ_RTP=1`: Enable RTP fuzzer.
+- `MS_FUZZ_RTCP=1`: Enable RTCP fuzzer.
+- `MS_FUZZ_UTILS=1`: Enable C++ utils fuzzer.
 - If none of them is given, then **all** fuzzers are enabled.
 
 The log level can also be set by setting the `MS_FUZZ_LOG_LEVEL` environment variable to "debug", "warn" or "error" (it is "none" if unset).
@@ -53,6 +54,12 @@ The log level can also be set by setting the `MS_FUZZ_LOG_LEVEL` environment var
 
 ```bash
 MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus
+```
+
+- Detect memory leaks and just fuzz DTLS:
+
+```bash
+MS_FUZZ_DTLS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus
 ```
 
 - Detect memory leaks and just fuzz RTP:

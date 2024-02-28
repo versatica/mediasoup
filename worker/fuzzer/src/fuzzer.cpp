@@ -9,6 +9,8 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "RTC/DtlsTransport.hpp"
+#include "RTC/FuzzerDtlsTransport.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
 #include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
 #include "RTC/FuzzerRtpStreamSend.hpp"
@@ -22,6 +24,7 @@
 #include <stdint.h>
 
 bool fuzzStun  = false;
+bool fuzzDtls  = false;
 bool fuzzRtp   = false;
 bool fuzzRtcp  = false;
 bool fuzzUtils = false;
@@ -39,6 +42,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzStun)
 	{
 		Fuzzer::RTC::StunPacket::Fuzz(data, len);
+	}
+
+	if (fuzzDtls)
+	{
+		Fuzzer::RTC::DtlsTransport::Fuzz(data, len);
 	}
 
 	if (fuzzRtp)
@@ -85,35 +93,43 @@ int Init()
 	}
 
 	// Select what to fuzz.
+
 	if (std::getenv("MS_FUZZ_STUN") && std::string(std::getenv("MS_FUZZ_STUN")) == "1")
 	{
-		std::cout << "[fuzzer] STUN fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] STUN fuzzer enabled" << std::endl;
 
 		fuzzStun = true;
 	}
+	if (std::getenv("MS_FUZZ_DTLS") && std::string(std::getenv("MS_FUZZ_DTLS")) == "1")
+	{
+		std::cout << "[fuzzer] DTLS fuzzer enabled" << std::endl;
+
+		fuzzDtls = true;
+	}
 	if (std::getenv("MS_FUZZ_RTP") && std::string(std::getenv("MS_FUZZ_RTP")) == "1")
 	{
-		std::cout << "[fuzzer] RTP fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] RTP fuzzer enabled" << std::endl;
 
 		fuzzRtp = true;
 	}
 	if (std::getenv("MS_FUZZ_RTCP") && std::string(std::getenv("MS_FUZZ_RTCP")) == "1")
 	{
-		std::cout << "[fuzzer] RTCP fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] RTCP fuzzer enabled" << std::endl;
 
 		fuzzRtcp = true;
 	}
 	if (std::getenv("MS_FUZZ_UTILS") && std::string(std::getenv("MS_FUZZ_UTILS")) == "1")
 	{
-		std::cout << "[fuzzer] Utils fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] Utils fuzzer enabled" << std::endl;
 
 		fuzzUtils = true;
 	}
-	if (!fuzzUtils && !fuzzStun && !fuzzRtcp && !fuzzRtp)
+	if (!fuzzStun && !fuzzDtls && !fuzzRtcp && !fuzzRtp && !fuzzUtils)
 	{
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
 		fuzzStun  = true;
+		fuzzDtls  = true;
 		fuzzRtp   = true;
 		fuzzRtcp  = true;
 		fuzzUtils = true;
@@ -128,6 +144,7 @@ int Init()
 	DepUsrSCTP::ClassInit();
 	DepLibWebRTC::ClassInit();
 	Utils::Crypto::ClassInit();
+	::RTC::DtlsTransport::ClassInit();
 
 	return 0;
 }
