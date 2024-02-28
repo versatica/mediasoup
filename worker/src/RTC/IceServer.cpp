@@ -174,7 +174,8 @@ namespace RTC
 
 			default:
 			{
-				MS_WARN_TAG(ice, "unknown STUN class %" PRIu16 ", discarded", packet->GetClass());
+				MS_WARN_TAG(
+				  ice, "unknown STUN class %" PRIu16 ", discarded", static_cast<uint16_t>(packet->GetClass()));
 			}
 		}
 	}

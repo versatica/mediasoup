@@ -535,7 +535,10 @@ namespace RTC
 
 			default:
 			{
-				MS_WARN_TAG(ice, "unknown STUN class %" PRIu16 ", cannot authenticate", this->klass);
+				MS_WARN_TAG(
+				  ice,
+				  "unknown STUN class %" PRIu16 ", cannot authenticate",
+				  static_cast<uint16_t>(this->klass));
 
 				return Authentication::BAD_MESSAGE;
 			}
