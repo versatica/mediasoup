@@ -96,31 +96,31 @@ int Init()
 
 	if (std::getenv("MS_FUZZ_STUN") && std::string(std::getenv("MS_FUZZ_STUN")) == "1")
 	{
-		std::cout << "[fuzzer] STUN fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] STUN fuzzer enabled" << std::endl;
 
 		fuzzStun = true;
 	}
 	if (std::getenv("MS_FUZZ_DTLS") && std::string(std::getenv("MS_FUZZ_DTLS")) == "1")
 	{
-		std::cout << "[fuzzer] DTLS fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] DTLS fuzzer enabled" << std::endl;
 
 		fuzzDtls = true;
 	}
 	if (std::getenv("MS_FUZZ_RTP") && std::string(std::getenv("MS_FUZZ_RTP")) == "1")
 	{
-		std::cout << "[fuzzer] RTP fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] RTP fuzzer enabled" << std::endl;
 
 		fuzzRtp = true;
 	}
 	if (std::getenv("MS_FUZZ_RTCP") && std::string(std::getenv("MS_FUZZ_RTCP")) == "1")
 	{
-		std::cout << "[fuzzer] RTCP fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] RTCP fuzzer enabled" << std::endl;
 
 		fuzzRtcp = true;
 	}
 	if (std::getenv("MS_FUZZ_UTILS") && std::string(std::getenv("MS_FUZZ_UTILS")) == "1")
 	{
-		std::cout << "[fuzzer] Utils fuzzers enabled" << std::endl;
+		std::cout << "[fuzzer] Utils fuzzer enabled" << std::endl;
 
 		fuzzUtils = true;
 	}
