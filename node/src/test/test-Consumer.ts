@@ -739,21 +739,25 @@ test('consumer.dump() succeeds', async () => {
 	expect(dump2.consumableRtpEncodings![0]).toEqual(
 		expect.objectContaining({
 			ssrc: ctx.videoProducer!.consumableRtpParameters.encodings?.[0].ssrc,
+			scalabilityMode: 'L1T5',
 		})
 	);
 	expect(dump2.consumableRtpEncodings![1]).toEqual(
 		expect.objectContaining({
 			ssrc: ctx.videoProducer!.consumableRtpParameters.encodings?.[1].ssrc,
+			scalabilityMode: 'L1T5',
 		})
 	);
 	expect(dump2.consumableRtpEncodings![2]).toEqual(
 		expect.objectContaining({
 			ssrc: ctx.videoProducer!.consumableRtpParameters.encodings?.[2].ssrc,
+			scalabilityMode: 'L1T5',
 		})
 	);
 	expect(dump2.consumableRtpEncodings![3]).toEqual(
 		expect.objectContaining({
 			ssrc: ctx.videoProducer!.consumableRtpParameters.encodings?.[3].ssrc,
+			scalabilityMode: 'L1T5',
 		})
 	);
 	expect(dump2.supportedCodecPayloadTypes).toEqual([103]);
