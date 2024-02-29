@@ -123,10 +123,10 @@ const ctx: TestContext = {
 				},
 			],
 			encodings: [
-				{ ssrc: 22222222, rtx: { ssrc: 22222223 } },
-				{ ssrc: 22222224, rtx: { ssrc: 22222225 } },
-				{ ssrc: 22222226, rtx: { ssrc: 22222227 } },
-				{ ssrc: 22222228, rtx: { ssrc: 22222229 } },
+				{ ssrc: 22222222, scalabilityMode: 'L1T5', rtx: { ssrc: 22222223 } },
+				{ ssrc: 22222224, scalabilityMode: 'L1T5', rtx: { ssrc: 22222225 } },
+				{ ssrc: 22222226, scalabilityMode: 'L1T5', rtx: { ssrc: 22222227 } },
+				{ ssrc: 22222228, scalabilityMode: 'L1T5', rtx: { ssrc: 22222229 } },
 			],
 			rtcp: {
 				cname: 'FOOBAR',
@@ -389,7 +389,9 @@ test('transport.consume() succeeds', async () => {
 	});
 	expect(videoConsumer.preferredLayers).toEqual({
 		spatialLayer: 3,
-		temporalLayer: 0,
+		// |temporalLayer| was not given in |preferredLayers| in transport.consume()
+		// so it should be set to the highest one.
+		temporalLayer: 4,
 	});
 	expect(videoConsumer.currentLayers).toBeUndefined();
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
@@ -729,7 +731,7 @@ test('consumer.dump() succeeds', async () => {
 			rtx: {
 				ssrc: videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc,
 			},
-			scalabilityMode: 'L4T1',
+			scalabilityMode: 'L4T5',
 		},
 	]);
 	expect(Array.isArray(dump2.consumableRtpEncodings)).toBe(true);
@@ -870,7 +872,31 @@ test('consumer.setPreferredLayers() succeed', async () => {
 
 	expect(videoConsumer.preferredLayers).toEqual({
 		spatialLayer: 2,
+		temporalLayer: 3,
+	});
+
+	await videoConsumer.setPreferredLayers({ spatialLayer: 3 });
+
+	expect(videoConsumer.preferredLayers).toEqual({
+		spatialLayer: 3,
+		temporalLayer: 4,
+	});
+
+	await videoConsumer.setPreferredLayers({ spatialLayer: 3, temporalLayer: 0 });
+
+	expect(videoConsumer.preferredLayers).toEqual({
+		spatialLayer: 3,
 		temporalLayer: 0,
+	});
+
+	await videoConsumer.setPreferredLayers({
+		spatialLayer: 66,
+		temporalLayer: 66,
+	});
+
+	expect(videoConsumer.preferredLayers).toEqual({
+		spatialLayer: 3,
+		temporalLayer: 4,
 	});
 }, 2000);
 

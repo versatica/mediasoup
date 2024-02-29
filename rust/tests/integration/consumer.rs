@@ -159,21 +159,25 @@ fn video_producer_options() -> ProducerOptions {
             encodings: vec![
                 RtpEncodingParameters {
                     ssrc: Some(22222222),
+                    scalability_mode: "L1T5".parse().unwrap(),
                     rtx: Some(RtpEncodingParametersRtx { ssrc: 22222223 }),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
                     ssrc: Some(22222224),
+                    scalability_mode: "L1T5".parse().unwrap(),
                     rtx: Some(RtpEncodingParametersRtx { ssrc: 22222225 }),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
                     ssrc: Some(22222226),
+                    scalability_mode: "L1T5".parse().unwrap(),
                     rtx: Some(RtpEncodingParametersRtx { ssrc: 22222227 }),
                     ..RtpEncodingParameters::default()
                 },
                 RtpEncodingParameters {
                     ssrc: Some(22222228),
+                    scalability_mode: "L1T5".parse().unwrap(),
                     rtx: Some(RtpEncodingParametersRtx { ssrc: 22222229 }),
                     ..RtpEncodingParameters::default()
                 },
@@ -555,7 +559,10 @@ fn consume_succeeds() {
                 video_consumer.preferred_layers(),
                 Some(ConsumerLayers {
                     spatial_layer: 3,
-                    temporal_layer: Some(0)
+                    // |temporal_layer| was not given in |preferred_layers| in
+                    // transport.consume() so it should be set to the highest
+                    // one.
+                    temporal_layer: Some(4)
                 })
             );
             assert_eq!(video_consumer.current_layers(), None);
@@ -1091,7 +1098,7 @@ fn dump_succeeds() {
                         .unwrap()
                         .rtx,
                     dtx: None,
-                    scalability_mode: "L4T1".parse().unwrap(),
+                    scalability_mode: "L4T5".parse().unwrap(),
                     rid: None,
                     max_bitrate: None,
                 }],
@@ -1324,7 +1331,55 @@ fn set_preferred_layers_succeeds() {
                 video_consumer.preferred_layers(),
                 Some(ConsumerLayers {
                     spatial_layer: 2,
+                    temporal_layer: Some(3),
+                })
+            );
+
+            video_consumer
+                .set_preferred_layers(ConsumerLayers {
+                    spatial_layer: 3,
+                    temporal_layer: None,
+                })
+                .await
+                .expect("Failed to set preferred layers consumer");
+
+            assert_eq!(
+                video_consumer.preferred_layers(),
+                Some(ConsumerLayers {
+                    spatial_layer: 3,
+                    temporal_layer: Some(4),
+                })
+            );
+
+            video_consumer
+                .set_preferred_layers(ConsumerLayers {
+                    spatial_layer: 3,
                     temporal_layer: Some(0),
+                })
+                .await
+                .expect("Failed to set preferred layers consumer");
+
+            assert_eq!(
+                video_consumer.preferred_layers(),
+                Some(ConsumerLayers {
+                    spatial_layer: 3,
+                    temporal_layer: Some(0),
+                })
+            );
+
+            video_consumer
+                .set_preferred_layers(ConsumerLayers {
+                    spatial_layer: 66,
+                    temporal_layer: Some(66),
+                })
+                .await
+                .expect("Failed to set preferred layers consumer");
+
+            assert_eq!(
+                video_consumer.preferred_layers(),
+                Some(ConsumerLayers {
+                    spatial_layer: 3,
+                    temporal_layer: Some(4),
                 })
             );
         }
