@@ -1117,7 +1117,7 @@ fn dump_succeeds() {
                         rtx: None,
                         max_bitrate: None,
                         dtx: None,
-                        scalability_mode: ScalabilityMode::None,
+                        scalability_mode: "L1T5".parse().unwrap(),
                     })
                     .collect::<Vec<_>>()
             );
