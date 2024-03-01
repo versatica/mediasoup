@@ -343,7 +343,7 @@ test('transport.consume() succeeds', async () => {
 		producerId: ctx.videoProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 		paused: true,
-		preferredLayers: { spatialLayer: 12 },
+		preferredLayers: { spatialLayer: 12, temporalLayer: 0 },
 		appData: { baz: 'LOL' },
 	});
 
@@ -389,9 +389,7 @@ test('transport.consume() succeeds', async () => {
 	});
 	expect(videoConsumer.preferredLayers).toEqual({
 		spatialLayer: 3,
-		// |temporalLayer| was not given in |preferredLayers| in transport.consume()
-		// so it should be set to the highest one.
-		temporalLayer: 4,
+		temporalLayer: 0,
 	});
 	expect(videoConsumer.currentLayers).toBeUndefined();
 	expect(videoConsumer.appData).toEqual({ baz: 'LOL' });
