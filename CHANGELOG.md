@@ -1,5 +1,9 @@
 # Changelog
 
+### Next
+
+- Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
+
 ### 3.13.23
 
 - Fix DTLS packets do not honor configured DTLS MTU (attempt 3) ([PR #1345](https://github.com/versatica/mediasoup/pull/1345)).
