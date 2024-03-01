@@ -1,13 +1,15 @@
 import * as FbsRtpStream from './fbs/rtp-stream';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 
+type BitrateByLayer = { [key: string]: number };
+
 export type RtpStreamRecvStats = BaseRtpStreamStats & {
 	type: string;
 	jitter: number;
 	packetCount: number;
 	byteCount: number;
 	bitrate: number;
-	bitrateByLayer?: any;
+	bitrateByLayer: BitrateByLayer;
 };
 
 export type RtpStreamSendStats = BaseRtpStreamStats & {
@@ -118,7 +120,7 @@ function parseBaseStreamStats(
 	};
 }
 
-function parseBitrateByLayer(binary: FbsRtpStream.RecvStats): any {
+function parseBitrateByLayer(binary: FbsRtpStream.RecvStats): BitrateByLayer {
 	if (binary.bitrateByLayerLength() === 0) {
 		return {};
 	}
@@ -131,4 +133,6 @@ function parseBitrateByLayer(binary: FbsRtpStream.RecvStats): any {
 
 		bitRateByLayer[layer] = Number(bitrate);
 	}
+
+	return bitRateByLayer;
 }
