@@ -503,7 +503,7 @@ fn consume_succeeds() {
                     options.paused = true;
                     options.preferred_layers = Some(ConsumerLayers {
                         spatial_layer: 12,
-                        temporal_layer: None,
+                        temporal_layer: Some(0),
                     });
                     options.app_data = AppData::new(ConsumerAppData { baz: "LOL" });
                     options
@@ -559,10 +559,7 @@ fn consume_succeeds() {
                 video_consumer.preferred_layers(),
                 Some(ConsumerLayers {
                     spatial_layer: 3,
-                    // |temporal_layer| was not given in |preferred_layers| in
-                    // transport.consume() so it should be set to the highest
-                    // one.
-                    temporal_layer: Some(4)
+                    temporal_layer: Some(0)
                 })
             );
             assert_eq!(video_consumer.current_layers(), None);
