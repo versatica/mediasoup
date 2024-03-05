@@ -1,5 +1,5 @@
 #define MS_CLASS "DepUsrSCTP"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "DepUsrSCTP.hpp"
 #ifdef MS_LIBURING_SUPPORTED
@@ -8,7 +8,8 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include <usrsctp.h>
-#include <cstdio> // std::vsnprintf()
+#include <cstdio>  // std::vsnprintf()
+#include <cstring> // std::memcpy()
 #include <mutex>
 
 /* Static. */
@@ -17,10 +18,40 @@ static constexpr size_t CheckerInterval{ 10u }; // In ms.
 static std::mutex GlobalSyncMutex;
 static size_t GlobalInstances{ 0u };
 
+/* Static methods for UV callbacks. */
+
+inline static void onAsync(uv_async_t* handle)
+{
+	MS_TRACE();
+	MS_DUMP("---------- onAsync!!");
+
+	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+
+	// Get the sending data from the map.
+	auto* store = DepUsrSCTP::GetSendSctpDataStore(handle);
+
+	if (!store)
+	{
+		MS_WARN_DEV("store not found");
+
+		return;
+	}
+
+	auto* sctpAssociation = store->sctpAssociation;
+	auto* data            = store->data;
+	auto len              = store->len;
+
+	MS_DUMP("---------- onAsync, sending SCTP data!!");
+
+	sctpAssociation->OnUsrSctpSendSctpData(data, len);
+}
+
 /* Static methods for usrsctp global callbacks. */
 
 inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
+	MS_TRACE();
+
 	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(addr));
 
 	if (!sctpAssociation)
@@ -30,7 +61,7 @@ inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*t
 		return -1;
 	}
 
-	sctpAssociation->OnUsrSctpSendSctpData(data, len);
+	DepUsrSCTP::SendSctpData(sctpAssociation, static_cast<uint8_t*>(data), len);
 
 	// NOTE: Must not free data, usrsctp lib does it.
 
@@ -60,6 +91,7 @@ thread_local DepUsrSCTP::Checker* DepUsrSCTP::checker{ nullptr };
 uint64_t DepUsrSCTP::numSctpAssociations{ 0u };
 uintptr_t DepUsrSCTP::nextSctpAssociationId{ 0u };
 absl::flat_hash_map<uintptr_t, RTC::SctpAssociation*> DepUsrSCTP::mapIdSctpAssociation;
+absl::flat_hash_map<const uv_async_t*, DepUsrSCTP::SendSctpDataStore> DepUsrSCTP::mapAsyncHandlerSendSctpData;
 
 /* Static methods. */
 
@@ -91,6 +123,7 @@ void DepUsrSCTP::ClassDestroy()
 	MS_TRACE();
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+
 	--GlobalInstances;
 
 	if (GlobalInstances == 0)
@@ -101,6 +134,7 @@ void DepUsrSCTP::ClassDestroy()
 		nextSctpAssociationId = 0u;
 
 		DepUsrSCTP::mapIdSctpAssociation.clear();
+		DepUsrSCTP::mapAsyncHandlerSendSctpData.clear();
 	}
 }
 
@@ -158,13 +192,20 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 
 	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
 
-	auto it = DepUsrSCTP::mapIdSctpAssociation.find(sctpAssociation->id);
+	auto it  = DepUsrSCTP::mapIdSctpAssociation.find(sctpAssociation->id);
+	auto it2 = DepUsrSCTP::mapAsyncHandlerSendSctpData.find(sctpAssociation->GetAsyncHandle());
 
 	MS_ASSERT(
 	  it == DepUsrSCTP::mapIdSctpAssociation.end(),
-	  "the id of the SctpAssociation is already in the map");
+	  "the id of the SctpAssociation is already in the mapIdSctpAssociation map");
+	MS_ASSERT(
+	  it2 == DepUsrSCTP::mapAsyncHandlerSendSctpData.end(),
+	  "the id of the SctpAssociation is already in the mapAsyncHandlerSendSctpData map");
 
 	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
+	DepUsrSCTP::mapAsyncHandlerSendSctpData[sctpAssociation->GetAsyncHandle()];
+
+	sctpAssociation->InitializeSyncHandle(onAsync);
 
 	if (++DepUsrSCTP::numSctpAssociations == 1u)
 	{
@@ -180,9 +221,11 @@ void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation
 
 	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
 
-	auto found = DepUsrSCTP::mapIdSctpAssociation.erase(sctpAssociation->id);
+	auto found1 = DepUsrSCTP::mapIdSctpAssociation.erase(sctpAssociation->id);
+	auto found2 = DepUsrSCTP::mapAsyncHandlerSendSctpData.erase(sctpAssociation->GetAsyncHandle());
 
-	MS_ASSERT(found > 0, "SctpAssociation not found");
+	MS_ASSERT(found1 > 0, "SctpAssociation not found in mapIdSctpAssociation map");
+	MS_ASSERT(found2 > 0, "SctpAssociation not found in mapAsyncHandlerSendSctpData map");
 	MS_ASSERT(DepUsrSCTP::numSctpAssociations > 0u, "numSctpAssociations was not higher than 0");
 
 	if (--DepUsrSCTP::numSctpAssociations == 0u)
@@ -205,6 +248,56 @@ RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 	}
 
 	return it->second;
+}
+
+void DepUsrSCTP::SendSctpData(RTC::SctpAssociation* sctpAssociation, uint8_t* data, size_t len)
+{
+	MS_TRACE();
+
+	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+
+	// Store the sending data into the map.
+
+	auto it = DepUsrSCTP::mapAsyncHandlerSendSctpData.find(sctpAssociation->GetAsyncHandle());
+
+	MS_ASSERT(
+	  it != DepUsrSCTP::mapAsyncHandlerSendSctpData.end(),
+	  "SctpAssociation not found in mapAsyncHandlerSendSctpData map");
+
+	SendSctpDataStore& store = it->second;
+
+	// NOTE: In Rust, DepUsrSCTP::SendSctpData() is called from onSendSctpData()
+	// callback from a different thread and usrsctp immediately frees |data| when
+	// the callback execution finishes. So we have to mem copy it.
+	store.sctpAssociation = sctpAssociation;
+	store.data            = new uint8_t[len];
+	store.len             = len;
+
+	std::memcpy(store.data, data, len);
+
+	// Invoke UV async send.
+	int err = uv_async_send(sctpAssociation->GetAsyncHandle());
+
+	if (err != 0)
+	{
+		MS_WARN_TAG(sctp, "uv_async_send() failed: %s", uv_strerror(err));
+	}
+}
+
+DepUsrSCTP::SendSctpDataStore* DepUsrSCTP::GetSendSctpDataStore(uv_async_t* handle)
+{
+	MS_TRACE();
+
+	auto it = DepUsrSCTP::mapAsyncHandlerSendSctpData.find(handle);
+
+	if (it == DepUsrSCTP::mapAsyncHandlerSendSctpData.end())
+	{
+		return nullptr;
+	}
+
+	SendSctpDataStore& store = it->second;
+
+	return std::addressof(store);
 }
 
 /* DepUsrSCTP::Checker instance methods. */
