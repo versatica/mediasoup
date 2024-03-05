@@ -44,6 +44,9 @@ inline static void onAsync(uv_async_t* handle)
 	MS_DUMP_STD("---------- onAsync, sending SCTP data!!");
 
 	sctpAssociation->OnUsrSctpSendSctpData(data, len);
+
+	// Must delete the mem copied data once sent.
+	delete[] store->data;
 }
 
 /* Static methods for usrsctp global callbacks. */
