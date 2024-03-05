@@ -298,7 +298,9 @@ namespace RTC
 		// Register the SctpAssociation from the global map.
 		DepUsrSCTP::DeregisterSctpAssociation(this);
 
-		delete this->uvAsyncHandle;
+		MS_DUMP_STD("---- HERE we should delete the handler but if so the app crashes");
+		// TODO: We should delete teh async handle, but then a crash happens.
+		// delete this->uvAsyncHandle;
 		delete[] this->messageBuffer;
 	}
 
