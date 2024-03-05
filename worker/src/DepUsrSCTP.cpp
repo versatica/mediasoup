@@ -23,7 +23,7 @@ static size_t GlobalInstances{ 0u };
 inline static void onAsync(uv_async_t* handle)
 {
 	MS_TRACE();
-	MS_DUMP("---------- onAsync!!");
+	MS_DUMP_STD("---------- onAsync!!");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
@@ -41,7 +41,7 @@ inline static void onAsync(uv_async_t* handle)
 	auto* data            = store->data;
 	auto len              = store->len;
 
-	MS_DUMP("---------- onAsync, sending SCTP data!!");
+	MS_DUMP_STD("---------- onAsync, sending SCTP data!!");
 
 	sctpAssociation->OnUsrSctpSendSctpData(data, len);
 }
@@ -99,6 +99,7 @@ void DepUsrSCTP::ClassInit()
 {
 	MS_TRACE();
 
+	MS_DUMP_STD("---------- DepUsrSCTP::ClassInit()");
 	MS_DEBUG_TAG(info, "usrsctp");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
@@ -121,6 +122,8 @@ void DepUsrSCTP::ClassInit()
 void DepUsrSCTP::ClassDestroy()
 {
 	MS_TRACE();
+
+	MS_DUMP_STD("---------- DepUsrSCTP::ClassDestroy()");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
@@ -188,6 +191,8 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
 
+	MS_DUMP_STD("------ DepUsrSCTP::RegisterSctpAssociation()");
+
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
 	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
@@ -203,7 +208,7 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 	  "the id of the SctpAssociation is already in the mapAsyncHandlerSendSctpData map");
 
 	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
-	DepUsrSCTP::mapAsyncHandlerSendSctpData[sctpAssociation->GetAsyncHandle()];
+	DepUsrSCTP::mapAsyncHandlerSendSctpData[sctpAssociation->GetAsyncHandle()] = { sctpAssociation };
 
 	sctpAssociation->InitializeSyncHandle(onAsync);
 
@@ -216,6 +221,8 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
+
+	MS_DUMP_STD("------ DepUsrSCTP::DeregisterSctpAssociation() !!!!!!!!");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
@@ -269,7 +276,8 @@ void DepUsrSCTP::SendSctpData(RTC::SctpAssociation* sctpAssociation, uint8_t* da
 	// NOTE: In Rust, DepUsrSCTP::SendSctpData() is called from onSendSctpData()
 	// callback from a different thread and usrsctp immediately frees |data| when
 	// the callback execution finishes. So we have to mem copy it.
-	store.sctpAssociation = sctpAssociation;
+	// TODO: This must be freed, but I'd prefer if we used a static thread_local
+	// buffer, but I don't know max size of this (if any).
 	store.data            = new uint8_t[len];
 	store.len             = len;
 

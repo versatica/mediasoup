@@ -287,6 +287,7 @@ namespace RTC
 	SctpAssociation::~SctpAssociation()
 	{
 		MS_TRACE();
+		MS_DUMP_STD("----------------- SctpAssociation destructor!!!");
 
 		usrsctp_set_ulpinfo(this->socket, nullptr);
 		usrsctp_close(this->socket);
