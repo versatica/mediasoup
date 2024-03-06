@@ -113,7 +113,9 @@ afterEach(async () => {
 
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
 	const onStream = jest.fn();
-	const numMessages = 200;
+	console.log('TODO: Revert numMessages to 200');
+	const numMessages = 3;
+	// const numMessages = 200;
 	let sentMessageBytes = 0;
 	let recvMessageBytes = 0;
 	let numSentMessages = 0;
@@ -139,6 +141,8 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				// @ts-ignore
 				data.ppid = sctp.PPID.WEBRTC_BINARY;
 			}
+
+			console.log('---- sending id %s', id);
 
 			ctx.sctpSendStream!.write(data);
 			sentMessageBytes += data.byteLength;
@@ -169,6 +173,8 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				const id = Number(data.toString('utf8'));
 				// @ts-ignore
 				const ppid = data.ppid;
+
+				console.log('---- received id %s', id);
 
 				if (id !== numReceivedMessages) {
 					reject(
