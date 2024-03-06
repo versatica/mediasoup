@@ -13,8 +13,8 @@ private:
 	/* Struct for storing a pending SCTP message to be sent. */
 	struct SendSctpDataItem
 	{
-		// NOTE: We keep this struct simple, without explicit allocation
-		// or deallocation in constructor/destructor, and instead rely on
+		// NOTE: We keep this struct simple, without explicit allocation or
+		// deallocation of members in constructor/destructor, and instead rely on
 		// the destructor of the main container SendSctpDataStore.
 
 		SendSctpDataItem() noexcept;
