@@ -305,8 +305,8 @@ void DepUsrSCTP::SendSctpData(RTC::SctpAssociation* sctpAssociation, uint8_t* da
 	// the callback execution finishes. So we have to mem copy it.
 	auto& item = store.items.emplace_back();
 
-	item.data  = new uint8_t[len];
-	item.len   = len;
+	item.data = new uint8_t[len];
+	item.len  = len;
 	std::memcpy(item.data, data, len);
 
 	// Invoke UV async send.
