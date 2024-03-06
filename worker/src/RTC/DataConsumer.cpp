@@ -525,11 +525,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP(
-		  "------ [ppid:%" PRIu32 ", msg:'%s']",
-		  ppid,
-		  std::string(reinterpret_cast<const char*>(msg), len).c_str());
-
 		if (!IsActive())
 		{
 			return;

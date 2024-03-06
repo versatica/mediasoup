@@ -2880,12 +2880,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_DUMP(
-		  "------ [streamId:%" PRIu16 ", ppid:%" PRIu32 ", msg:'%s']",
-		  streamId,
-		  ppid,
-		  std::string(reinterpret_cast<const char*>(msg), len).c_str());
-
 		RTC::DataProducer* dataProducer = this->sctpListener.GetDataProducer(streamId);
 
 		if (!dataProducer)

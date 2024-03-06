@@ -7,7 +7,6 @@
 #include "DepLibUring.hpp"
 #endif
 #include "DepLibUV.hpp"
-#include "DepUsrSCTP.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
@@ -39,9 +38,6 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 		this->signalHandle->AddSignal(SIGTERM, "TERM");
 	}
 #endif
-
-	// Create the Checker instance in DepUsrSCTP.
-	DepUsrSCTP::CreateChecker();
 
 #ifdef MS_LIBURING_SUPPORTED
 	// Start polling CQEs, which will create a uv_pool_t handle.
@@ -101,9 +97,6 @@ void Worker::Close()
 
 	// Delete the RTC::Shared singleton.
 	delete this->shared;
-
-	// Close the Checker instance in DepUsrSCTP.
-	DepUsrSCTP::CloseChecker();
 
 #ifdef MS_LIBURING_SUPPORTED
 	// Stop polling CQEs, which will close the uv_pool_t handle.
