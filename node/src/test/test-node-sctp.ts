@@ -3,6 +3,11 @@ import * as dgram from 'node:dgram';
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
 
+// Trick to avoid that Jest overrides console.
+console.log('TOOD: REMOVE console hack');
+import { log } from 'node:console';
+console.log = log;
+
 type TestContext = {
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
@@ -114,7 +119,7 @@ afterEach(async () => {
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
 	const onStream = jest.fn();
 	console.log('TODO: Revert numMessages to 200');
-	const numMessages = 3;
+	const numMessages = 2;
 	// const numMessages = 200;
 	let sentMessageBytes = 0;
 	let recvMessageBytes = 0;
@@ -142,7 +147,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				data.ppid = sctp.PPID.WEBRTC_BINARY;
 			}
 
-			console.log('---- sending id %s', id);
+			console.log('---- test | sending id %s', id);
 
 			ctx.sctpSendStream!.write(data);
 			sentMessageBytes += data.byteLength;
@@ -174,7 +179,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				// @ts-ignore
 				const ppid = data.ppid;
 
-				console.log('---- received id %s', id);
+				console.log('---- test | received id %s', id);
 
 				if (id !== numReceivedMessages) {
 					reject(
@@ -196,8 +201,6 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 							`ppid in message with id ${id} should be ${sctp.PPID.WEBRTC_BINARY} but it is ${ppid}`
 						)
 					);
-
-					return;
 				}
 			});
 		});

@@ -5,15 +5,63 @@
 #include "RTC/SctpAssociation.hpp"
 #include "handles/TimerHandle.hpp"
 #include <absl/container/flat_hash_map.h>
+#include <vector>
 
 class DepUsrSCTP
 {
+private:
+	/* Struct for storing a pending SCTP message to be sent. */
+	struct SendSctpDataItem
+	{
+		// NOTE: We keep this struct simple, without explicit allocation
+		// or deallocation in constructor/destructor, and instead rely on
+		// the destructor of the main container SendSctpDataStore.
+
+		SendSctpDataItem() noexcept;
+
+		// SendSctpDataItem(uint8_t* data, size_t len) : data(new uint8_t[len]), len(len)
+		// {
+		// 	std::memcpy(this->data, data, len);
+		// }
+		// SendSctpDataItem(uint8_t* data, size_t len);
+
+		// Disable copy constructor because of the dynamically allocated data.
+		// SendSctpDataItem(const SendSctpDataItem&) = delete;
+
+		// ~SendSctpDataItem()
+		// {
+		// 	delete[] this->data;
+		// }
+		~SendSctpDataItem();
+
+		uint8_t* data{ nullptr };
+		size_t len{ 0u };
+
+		int fooId{ 0 };
+	};
+
 public:
+	/* Struct for storing pending datas to be sent. */
 	struct SendSctpDataStore
 	{
+		explicit SendSctpDataStore(RTC::SctpAssociation* sctpAssociation);
+
+		// Disable copy constructor.
+		// SendSctpDataStore(const SendSctpDataStore&) = delete;
+
+		// ~SendSctpDataStore()
+		// {
+		// 	this->items.clear();
+		// }
+		~SendSctpDataStore();
+
+		void ClearItems();
+
 		RTC::SctpAssociation* sctpAssociation;
-		uint8_t* data;
-		size_t len;
+
+		int fooId{ 0 };
+
+		std::vector<SendSctpDataItem> items;
 	};
 
 private:
@@ -53,6 +101,7 @@ private:
 	static uint64_t numSctpAssociations;
 	static uintptr_t nextSctpAssociationId;
 	static absl::flat_hash_map<uintptr_t, RTC::SctpAssociation*> mapIdSctpAssociation;
+	// Map of SendSctpDataStores indexed by uv_async_t*.
 	static absl::flat_hash_map<const uv_async_t*, SendSctpDataStore> mapAsyncHandlerSendSctpData;
 };
 

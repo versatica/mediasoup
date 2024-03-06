@@ -423,6 +423,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		MS_DUMP(
+		  "------ [ppid:%" PRIu32 ", msg:'%s']",
+		  ppid,
+		  std::string(reinterpret_cast<const char*>(msg), len).c_str());
+
 		// This must be controlled by the DataConsumer.
 		MS_ASSERT(
 		  len <= this->maxSctpMessageSize,
@@ -753,7 +758,8 @@ namespace RTC
 
 			this->listener->OnSctpAssociationMessageReceived(this, streamId, data, len, ppid);
 		}
-		// If end of message and there is buffered data, append data and notify buffer.
+		// If end of message and there is buffered data, append data and notify
+		// buffer.
 		else if (eor && this->messageBufferLen != 0)
 		{
 			std::memcpy(this->messageBuffer + this->messageBufferLen, data, len);

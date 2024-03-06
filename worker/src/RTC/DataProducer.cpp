@@ -262,6 +262,8 @@ namespace RTC
 			return;
 		}
 
+		MS_DUMP("------ [msg:'%s']", std::string(reinterpret_cast<const char*>(msg), len).c_str());
+
 		this->listener->OnDataProducerMessageReceived(
 		  this, msg, len, ppid, subchannels, requiredSubchannel);
 	}

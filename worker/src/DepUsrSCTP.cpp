@@ -1,4 +1,5 @@
 #define MS_CLASS "DepUsrSCTP"
+// TODO: Comment
 #define MS_LOG_DEV_LEVEL 3
 
 #include "DepUsrSCTP.hpp"
@@ -18,6 +19,10 @@ static constexpr size_t CheckerInterval{ 10u }; // In ms.
 static std::mutex GlobalSyncMutex;
 static size_t GlobalInstances{ 0u };
 
+// TODO: REMOVE
+static int FOO_STORE_ID{ 0u };
+static int FOO_ITEM_ID{ 0u };
+
 /* Static methods for UV callbacks. */
 
 inline static void onAsync(uv_async_t* handle)
@@ -25,6 +30,8 @@ inline static void onAsync(uv_async_t* handle)
 	MS_TRACE();
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
+
+	MS_DUMP("**** onAsync() called");
 
 	// Get the sending data from the map.
 	auto* store = DepUsrSCTP::GetSendSctpDataStore(handle);
@@ -37,13 +44,20 @@ inline static void onAsync(uv_async_t* handle)
 	}
 
 	auto* sctpAssociation = store->sctpAssociation;
-	auto* data            = store->data;
-	auto len              = store->len;
+	auto& items           = store->items;
 
-	sctpAssociation->OnUsrSctpSendSctpData(data, len);
+	MS_DUMP("------------- sending pening messages [items.size:%zu]", items.size());
 
-	// Must delete the mem copied data once sent.
-	delete[] store->data;
+	for (auto& item : items)
+	{
+		auto* data = item.data;
+		auto len   = item.len;
+
+		sctpAssociation->OnUsrSctpSendSctpData(data, len);
+	}
+
+	// Must clear send data items once they have been sent.
+	store->ClearItems();
 }
 
 /* Static methods for usrsctp global callbacks. */
@@ -51,6 +65,8 @@ inline static void onAsync(uv_async_t* handle)
 inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
 	MS_TRACE();
+
+	MS_DUMP("**** onSendSctpData() called");
 
 	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(addr));
 
@@ -120,6 +136,7 @@ void DepUsrSCTP::ClassInit()
 
 void DepUsrSCTP::ClassDestroy()
 {
+	MS_DUMP("-------- ClassDestroy()");
 	MS_TRACE();
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
@@ -134,6 +151,7 @@ void DepUsrSCTP::ClassDestroy()
 		nextSctpAssociationId = 0u;
 
 		DepUsrSCTP::mapIdSctpAssociation.clear();
+		MS_DUMP("-------- ClassDestroy() calling mapAsyncHandlerSendSctpData.clear()");
 		DepUsrSCTP::mapAsyncHandlerSendSctpData.clear();
 	}
 }
@@ -202,8 +220,10 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 	  it2 == DepUsrSCTP::mapAsyncHandlerSendSctpData.end(),
 	  "the id of the SctpAssociation is already in the mapAsyncHandlerSendSctpData map");
 
-	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id]                      = sctpAssociation;
-	DepUsrSCTP::mapAsyncHandlerSendSctpData[sctpAssociation->GetAsyncHandle()] = { sctpAssociation };
+	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
+	// DepUsrSCTP::mapAsyncHandlerSendSctpData[sctpAssociation->GetAsyncHandle()] = { sctpAssociation,
+	// ++FOO_STORE_ID };
+	DepUsrSCTP::mapAsyncHandlerSendSctpData.emplace(sctpAssociation->GetAsyncHandle(), sctpAssociation);
 
 	sctpAssociation->InitializeSyncHandle(onAsync);
 
@@ -264,17 +284,23 @@ void DepUsrSCTP::SendSctpData(RTC::SctpAssociation* sctpAssociation, uint8_t* da
 	  it != DepUsrSCTP::mapAsyncHandlerSendSctpData.end(),
 	  "SctpAssociation not found in mapAsyncHandlerSendSctpData map");
 
-	SendSctpDataStore& store = it->second;
+	auto& store = it->second;
 
+	MS_DUMP("-------- store.items.emplace_back()... [items.size:%zu]", store.items.size());
 	// NOTE: In Rust, DepUsrSCTP::SendSctpData() is called from onSendSctpData()
 	// callback from a different thread and usrsctp immediately frees |data| when
 	// the callback execution finishes. So we have to mem copy it.
-	// TODO: This must be freed, but I'd prefer if we used a static thread_local
-	// buffer, but I don't know max size of this (if any).
-	store.data = new uint8_t[len];
-	store.len  = len;
+	auto& item = store.items.emplace_back();
 
-	std::memcpy(store.data, data, len);
+	item.fooId = ++FOO_ITEM_ID;
+	item.data  = new uint8_t[len];
+	item.len   = len;
+	std::memcpy(item.data, data, len);
+
+	MS_DUMP(
+	  "-------- store.items.emplace_back() DONE [item.fooId:%d, items.size:%zu]",
+	  item.fooId,
+	  store.items.size());
 
 	// Invoke UV async send.
 	int err = uv_async_send(sctpAssociation->GetAsyncHandle());
@@ -361,4 +387,50 @@ void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
 #endif
 
 	this->lastCalledAtMs = nowMs;
+}
+
+// DepUsrSCTP::SendSctpDataItem::SendSctpDataItem(uint8_t* data, size_t len)
+//   : data(new uint8_t[len]), len(len)
+// {
+// 	this->fooId = ++FOO_ITEM_ID;
+// 	MS_DUMP("---------- item constructor [fooId:%d, data:%p]", this->fooId, this->data);
+// 	std::memcpy(this->data, data, len);
+// }
+
+DepUsrSCTP::SendSctpDataItem::SendSctpDataItem() noexcept
+{
+	MS_DUMP("---------- item constructor");
+}
+
+DepUsrSCTP::SendSctpDataItem::~SendSctpDataItem()
+{
+	MS_DUMP("---------- item destructor [fooId:%d, data:%p]", this->fooId, this->data);
+	// delete[] this->data;
+}
+
+DepUsrSCTP::SendSctpDataStore::SendSctpDataStore(RTC::SctpAssociation* sctpAssociation)
+  : sctpAssociation(sctpAssociation)
+{
+	this->fooId = ++FOO_STORE_ID;
+
+	MS_DUMP("---------- store constructor [fooId:%d]", this->fooId);
+}
+
+DepUsrSCTP::SendSctpDataStore::~SendSctpDataStore()
+{
+	MS_DUMP("---------- store destructor [fooId:%d, items.size():%zu]", this->fooId, this->items.size());
+
+	ClearItems();
+}
+
+void DepUsrSCTP::SendSctpDataStore::ClearItems()
+{
+	MS_DUMP(
+	  "---------- store ClearItems() [fooId:%d, items.size():%zu]", this->fooId, this->items.size());
+
+	for (auto& item : this->items)
+	{
+		delete[] item.data;
+	}
+	this->items.clear();
 }
