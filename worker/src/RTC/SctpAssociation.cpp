@@ -30,6 +30,13 @@ const uint16_t EventTypes[] =
 };
 /* clang-format on */
 
+/* Static methods for UV callbacks. */
+
+inline static void onCloseAsync(uv_handle_t* handle)
+{
+	delete reinterpret_cast<uv_async_t*>(handle);
+}
+
 /* Static methods for usrsctp callbacks. */
 
 inline static int onRecvSctpData(
@@ -287,7 +294,6 @@ namespace RTC
 	SctpAssociation::~SctpAssociation()
 	{
 		MS_TRACE();
-		MS_DUMP_STD("----------------- SctpAssociation destructor!!!");
 
 		usrsctp_set_ulpinfo(this->socket, nullptr);
 		usrsctp_close(this->socket);
@@ -298,9 +304,9 @@ namespace RTC
 		// Register the SctpAssociation from the global map.
 		DepUsrSCTP::DeregisterSctpAssociation(this);
 
-		MS_DUMP_STD("---- HERE we should delete the handler but if so the app crashes");
-		// TODO: We should delete teh async handle, but then a crash happens.
-		// delete this->uvAsyncHandle;
+		uv_close(
+		  reinterpret_cast<uv_handle_t*>(this->uvAsyncHandle), static_cast<uv_close_cb>(onCloseAsync));
+
 		delete[] this->messageBuffer;
 	}
 

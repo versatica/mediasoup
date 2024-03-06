@@ -23,7 +23,6 @@ static size_t GlobalInstances{ 0u };
 inline static void onAsync(uv_async_t* handle)
 {
 	MS_TRACE();
-	MS_DUMP_STD("---------- onAsync!!");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
@@ -41,8 +40,6 @@ inline static void onAsync(uv_async_t* handle)
 	auto* data            = store->data;
 	auto len              = store->len;
 
-	MS_DUMP_STD("---------- onAsync, sending SCTP data!!");
-
 	sctpAssociation->OnUsrSctpSendSctpData(data, len);
 
 	// Must delete the mem copied data once sent.
@@ -54,8 +51,6 @@ inline static void onAsync(uv_async_t* handle)
 inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
 	MS_TRACE();
-
-	MS_DUMP_STD("---------- onSendSctpData!!");
 
 	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(addr));
 
@@ -104,7 +99,6 @@ void DepUsrSCTP::ClassInit()
 {
 	MS_TRACE();
 
-	MS_DUMP_STD("---------- DepUsrSCTP::ClassInit()");
 	MS_DEBUG_TAG(info, "usrsctp");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
@@ -127,8 +121,6 @@ void DepUsrSCTP::ClassInit()
 void DepUsrSCTP::ClassDestroy()
 {
 	MS_TRACE();
-
-	MS_DUMP_STD("---------- DepUsrSCTP::ClassDestroy()");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
@@ -196,8 +188,6 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
 
-	MS_DUMP_STD("------ DepUsrSCTP::RegisterSctpAssociation()");
-
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
 	MS_ASSERT(DepUsrSCTP::checker != nullptr, "Checker not created");
@@ -212,7 +202,7 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 	  it2 == DepUsrSCTP::mapAsyncHandlerSendSctpData.end(),
 	  "the id of the SctpAssociation is already in the mapAsyncHandlerSendSctpData map");
 
-	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id] = sctpAssociation;
+	DepUsrSCTP::mapIdSctpAssociation[sctpAssociation->id]                      = sctpAssociation;
 	DepUsrSCTP::mapAsyncHandlerSendSctpData[sctpAssociation->GetAsyncHandle()] = { sctpAssociation };
 
 	sctpAssociation->InitializeSyncHandle(onAsync);
@@ -226,8 +216,6 @@ void DepUsrSCTP::RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 void DepUsrSCTP::DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation)
 {
 	MS_TRACE();
-
-	MS_DUMP_STD("------ DepUsrSCTP::DeregisterSctpAssociation() !!!!!!!!");
 
 	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
@@ -283,8 +271,8 @@ void DepUsrSCTP::SendSctpData(RTC::SctpAssociation* sctpAssociation, uint8_t* da
 	// the callback execution finishes. So we have to mem copy it.
 	// TODO: This must be freed, but I'd prefer if we used a static thread_local
 	// buffer, but I don't know max size of this (if any).
-	store.data            = new uint8_t[len];
-	store.len             = len;
+	store.data = new uint8_t[len];
+	store.len  = len;
 
 	std::memcpy(store.data, data, len);
 
