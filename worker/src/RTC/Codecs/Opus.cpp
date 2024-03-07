@@ -18,7 +18,6 @@ namespace RTC
 
 			// Detect DTX based by checking the same than libwebrtc does in
 			// audio_coder_opus_common.h in IsDtxPacket().
-			// bool IsDtxPacket() const override { return payload_.size() <= 2; }
 			if (len <= 2)
 			{
 				payloadDescriptor->isDtx = true;
