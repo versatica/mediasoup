@@ -438,6 +438,7 @@ executable(
     'fuzzer/src/RTC/FuzzerSeqManager.cpp',
     'fuzzer/src/RTC/FuzzerStunPacket.cpp',
     'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
+    'fuzzer/src/RTC/Codecs/FuzzerCodecs.cpp',
     'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
     'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
     'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',

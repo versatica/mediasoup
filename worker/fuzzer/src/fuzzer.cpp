@@ -9,6 +9,7 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "RTC/Codecs/FuzzerCodecs.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/FuzzerDtlsTransport.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
@@ -23,11 +24,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-bool fuzzStun  = false;
-bool fuzzDtls  = false;
-bool fuzzRtp   = false;
-bool fuzzRtcp  = false;
-bool fuzzUtils = false;
+bool fuzzStun   = false;
+bool fuzzDtls   = false;
+bool fuzzRtp    = false;
+bool fuzzRtcp   = false;
+bool fuzzCodecs = false;
+bool fuzzUtils  = false;
 
 int Init();
 
@@ -60,6 +62,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzRtcp)
 	{
 		Fuzzer::RTC::RTCP::Packet::Fuzz(data, len);
+	}
+
+	if (fuzzCodecs)
+	{
+		Fuzzer::RTC::Codecs::Fuzz(data, len);
 	}
 
 	if (fuzzUtils)
@@ -118,6 +125,12 @@ int Init()
 
 		fuzzRtcp = true;
 	}
+	if (std::getenv("MS_FUZZ_CODECS") && std::string(std::getenv("MS_FUZZ_CODECS")) == "1")
+	{
+		std::cout << "[fuzzer] codecs fuzzer enabled" << std::endl;
+
+		fuzzCodecs = true;
+	}
 	if (std::getenv("MS_FUZZ_UTILS") && std::string(std::getenv("MS_FUZZ_UTILS")) == "1")
 	{
 		std::cout << "[fuzzer] Utils fuzzer enabled" << std::endl;
@@ -128,11 +141,12 @@ int Init()
 	{
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
-		fuzzStun  = true;
-		fuzzDtls  = true;
-		fuzzRtp   = true;
-		fuzzRtcp  = true;
-		fuzzUtils = true;
+		fuzzStun   = true;
+		fuzzDtls   = true;
+		fuzzRtp    = true;
+		fuzzRtcp   = true;
+		fuzzCodecs = true;
+		fuzzUtils  = true;
 	}
 
 	Settings::configuration.logLevel = logLevel;
