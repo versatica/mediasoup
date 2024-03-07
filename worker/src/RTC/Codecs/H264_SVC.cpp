@@ -184,6 +184,11 @@ namespace RTC
 				case 14:
 				case 20:
 				{
+					if (len <= 1)
+					{
+						return nullptr;
+					}
+
 					size_t offset{ 1 };
 					uint8_t byte = data[offset];
 
