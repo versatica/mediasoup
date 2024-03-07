@@ -166,7 +166,10 @@ namespace RTC
 				// Single NAL unit packet.
 				// IDR (instantaneous decoding picture).
 				case 5:
+				{
 					payloadDescriptor->isKeyFrame = true;
+				}
+
 				case 1:
 				{
 					payloadDescriptor->slIndex = 0;
@@ -177,6 +180,7 @@ namespace RTC
 
 					break;
 				}
+
 				case 14:
 				case 20:
 				{
@@ -210,6 +214,7 @@ namespace RTC
 
 					break;
 				}
+
 				case 7:
 				{
 					payloadDescriptor->isKeyFrame = isStartBit ? true : false;
