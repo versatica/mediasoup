@@ -16,8 +16,10 @@ namespace RTC
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
-			// libopus generates a single byte payload (TOC, no frames) to generate DTX.
-			if (len == 1)
+			// Detect DTX based by checking the same than libwebrtc does in
+			// audio_coder_opus_common.h in IsDtxPacket().
+			// bool IsDtxPacket() const override { return payload_.size() <= 2; }
+			if (len <= 2)
 			{
 				payloadDescriptor->isDtx = true;
 			}
