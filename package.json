@@ -100,7 +100,7 @@
 	},
 	"dependencies": {
 		"debug": "^4.3.4",
-		"flatbuffers": "^23.5.26",
+		"flatbuffers": "^24.3.6",
 		"h264-profile-level-id": "^2.0.0",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^9.4.0",
