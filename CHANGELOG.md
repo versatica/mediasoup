@@ -4,6 +4,7 @@
 
 - Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
 - Update worker dependency libuv to 1.48.0.
+- OPUS: Fix DTX detection #1357 ([PR #1357](https://github.com/versatica/mediasoup/pull/1357)).
 
 ### 3.13.23
 
