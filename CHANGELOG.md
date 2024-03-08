@@ -1,6 +1,6 @@
 # Changelog
 
-### Next
+### 3.13.24
 
 - Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
 - Update worker dependency libuv to 1.48.0.
