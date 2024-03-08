@@ -4,6 +4,7 @@
 
 - Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
 - Update worker dependency libuv to 1.48.0.
+- Update worker FlatBuffers to 24.3.6-1 (fix cannot set temporal layer 0) ([PR #1348](https://github.com/versatica/mediasoup/pull/1348)).
 
 ### 3.13.23
 
@@ -123,7 +124,7 @@
 
 ### 3.13.0
 
-- Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
+- Switch from JSON based messages to FlatBuffers ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
 - Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 - Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
 - Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
