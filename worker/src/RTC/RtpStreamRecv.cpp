@@ -309,6 +309,10 @@ namespace RTC
 		// Increase media transmission counter.
 		this->mediaTransmissionCounter.Update(packet);
 
+		// Ignore padding-only packets and don't mark the stream as active with them.
+		if (packet->GetPayloadLength() == 0)
+			return false;
+
 		// Not inactive anymore.
 		if (this->inactive)
 		{
@@ -418,6 +422,9 @@ namespace RTC
 
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
+
+			if (packet->GetPayloadLength() == 0)
+				return false;
 
 			// Not inactive anymore.
 			if (this->inactive)

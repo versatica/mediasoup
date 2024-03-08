@@ -724,6 +724,14 @@ namespace RTC
 			return;
 		}
 
+		// Packets with only padding are not forwarded.
+		if (packet->GetPayloadLength() == 0)
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+			return;
+		}
+
 		if (this->targetTemporalLayer == -1)
 		{
 #ifdef MS_RTC_LOGGER_RTP
