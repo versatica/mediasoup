@@ -189,6 +189,7 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		packet2->Serialize(bufferPacket2);
 
 		REQUIRE(std::memcmp(bufferPacket1, bufferPacket2, packet1->GetSize()) == 0);
+		delete packet2;
 	}
 
 	SECTION("create DLRR")
@@ -262,5 +263,6 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		packet2->Serialize(bufferPacket2);
 
 		REQUIRE(std::memcmp(bufferPacket1, bufferPacket2, packet1->GetSize()) == 0);
+		delete packet2;
 	}
 }

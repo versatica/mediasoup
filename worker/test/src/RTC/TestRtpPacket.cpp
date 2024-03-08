@@ -396,7 +396,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	SECTION("create RtpPacket and apply payload shift to it")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		uint8_t buffer[1500] =
 		{
 			0xb0, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
@@ -509,7 +509,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	SECTION("set One-Byte header extensions")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		uint8_t buffer[1500] =
 		{
 			0xa0, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
@@ -675,7 +675,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	SECTION("set Two-Bytes header extensions")
 	{
 		// clang-format off
-		uint8_t buffer[] =
+		uint8_t buffer[1500] =
 		{
 			0xa0, 0x01, 0x00, 0x08,
 			0x00, 0x00, 0x00, 0x04,
