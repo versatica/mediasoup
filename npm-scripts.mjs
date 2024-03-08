@@ -5,13 +5,15 @@ import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import tar from 'tar';
+import * as ini from 'ini';
 
-const PKG = JSON.parse(fs.readFileSync('./package.json').toString());
+const PKG = JSON.parse(
+	fs.readFileSync('./package.json', { encoding: 'utf-8' })
+);
 const IS_WINDOWS = os.platform() === 'win32';
 const MAYOR_VERSION = PKG.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
-const FLATBUFFERS_VERSION = '23.3.3';
 const WORKER_RELEASE_DIR = 'worker/out/Release';
 const WORKER_RELEASE_BIN = IS_WINDOWS
 	? 'mediasoup-worker.exe'
@@ -362,6 +364,18 @@ function flatcNode() {
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const extension = IS_WINDOWS ? '.exe' : '';
+	const flatbuffersWrapFilePath = path.join(
+		'worker',
+		'subprojects',
+		'flatbuffers.wrap'
+	);
+	const flatbuffersWrap = ini.parse(
+		fs.readFileSync(flatbuffersWrapFilePath, {
+			encoding: 'utf-8',
+		})
+	);
+	const flatbuffersDir = flatbuffersWrap['wrap-file']['directory'];
+
 	const flatc = path.resolve(
 		path.join(
 			'worker',
@@ -369,10 +383,11 @@ function flatcNode() {
 			buildType,
 			'build',
 			'subprojects',
-			`flatbuffers-${FLATBUFFERS_VERSION}`,
+			flatbuffersDir,
 			`flatc${extension}`
 		)
 	);
+
 	const out = path.resolve(path.join('node', 'src'));
 
 	for (const dirent of fs.readdirSync(path.join('worker', 'fbs'), {
@@ -601,7 +616,7 @@ async function getVersionChanges() {
 	// NOTE: Load dep on demand since it's a devDependency.
 	const marked = await import('marked');
 
-	const changelog = fs.readFileSync('./CHANGELOG.md').toString();
+	const changelog = fs.readFileSync('./CHANGELOG.md', { encoding: 'utf-8' });
 	const entries = marked.lexer(changelog);
 
 	for (let idx = 0; idx < entries.length; ++idx) {

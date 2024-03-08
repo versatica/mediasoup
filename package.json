@@ -99,9 +99,11 @@
 		]
 	},
 	"dependencies": {
+		"@types/ini": "^4.1.0",
 		"debug": "^4.3.4",
 		"flatbuffers": "^24.3.6",
 		"h264-profile-level-id": "^2.0.0",
+		"ini": "^4.1.2",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^9.4.0",
 		"tar": "^6.2.0"
