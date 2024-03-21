@@ -16,6 +16,7 @@
 #include "RTC/Codecs/FuzzerVP9.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/FuzzerDtlsTransport.hpp"
+#include "RTC/FuzzerRateCalculator.hpp"
 #include "RTC/FuzzerRtpPacket.hpp"
 #include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
 #include "RTC/FuzzerRtpStreamSend.hpp"
@@ -35,7 +36,9 @@ bool fuzzRtcp   = false;
 bool fuzzCodecs = false;
 bool fuzzUtils  = false;
 
-int Init();
+// This Init() function must be declared static, otherwise linking will fail if
+// another source file defines same non static Init() function.
+static int Init();
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 {
@@ -61,6 +64,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
 		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
 		Fuzzer::RTC::SeqManager::Fuzz(data, len);
+		Fuzzer::RTC::RateCalculator::Fuzz(data, len);
 	}
 
 	if (fuzzRtcp)
