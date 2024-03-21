@@ -14,6 +14,9 @@
 #include "FBS/response.h"
 #include "FBS/worker.h"
 
+// TODO: REMOVE
+#include <fstream>
+
 /* Instance methods. */
 
 Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
@@ -47,6 +50,9 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	// Tell the Node process that we are running.
 	this->shared->channelNotifier->Emit(
 	  std::to_string(Logger::Pid), FBS::Notification::Event::WORKER_RUNNING);
+
+	auto* timer = new TimerHandle(this);
+	// timer->Start(1000, 1000);
 
 	MS_DEBUG_DEV("starting libuv loop");
 	DepLibUV::RunLoop();
@@ -546,4 +552,13 @@ inline RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
 	}
 
 	return webRtcServer;
+}
+
+void Worker::OnTimer(TimerHandle* /*timer*/)
+{
+	MS_DUMP_STD("---- Worker::OnTimer()");
+	std::ofstream outfile;
+	outfile.open("/tmp/ms_log.txt", std::ios_base::app);
+	outfile << "---- Worker::OnTimer()\n";
+	outfile.flush();
 }
