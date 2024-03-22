@@ -4,10 +4,21 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpPacket.hpp" // RTC::MtuSize
 
-::RTC::RateCalculator rateCalculator;
+static ::RTC::RateCalculator rateCalculator;
+static uint64_t nowMs;
+
+// This Init() function must be declared static, otherwise linking will fail if
+// another source file defines same non static Init() function.
+static int Init();
 
 void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
 {
+	// Trick to initialize our stuff just once.
+	static int unused = Init();
+
+	// Avoid [-Wunused-variable].
+	unused++;
+
 	// We need at least 2 bytes of |data|.
 	if (len < 2)
 	{
@@ -16,7 +27,8 @@ void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
 
 	auto size =
 	  static_cast<size_t>(Utils::Crypto::GetRandomUInt(0u, static_cast<uint32_t>(::RTC::MtuSize)));
-	uint64_t nowMs = DepLibUV::GetTimeMs();
+
+	nowMs += Utils::Crypto::GetRandomUInt(0u, 2000u);
 
 	rateCalculator.Update(size, nowMs);
 
@@ -25,4 +37,11 @@ void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
 	{
 		rateCalculator.GetRate(nowMs);
 	}
+}
+
+int Init()
+{
+	nowMs = DepLibUV::GetTimeMs();
+
+	return 0;
 }
