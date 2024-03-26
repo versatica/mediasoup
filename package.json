@@ -101,20 +101,20 @@
 	"dependencies": {
 		"@types/ini": "^4.1.0",
 		"debug": "^4.3.4",
-		"flatbuffers": "^24.3.7",
+		"flatbuffers": "^24.3.25",
 		"h264-profile-level-id": "^2.0.0",
 		"ini": "^4.1.2",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^9.4.0",
-		"tar": "^6.2.0"
+		"tar": "^6.2.1"
 	},
 	"devDependencies": {
 		"@octokit/rest": "^20.0.2",
 		"@types/debug": "^4.1.12",
 		"@types/jest": "^29.5.12",
-		"@types/node": "^20.11.25",
-		"@typescript-eslint/eslint-plugin": "^7.1.1",
-		"@typescript-eslint/parser": "^7.1.1",
+		"@types/node": "^20.11.30",
+		"@typescript-eslint/eslint-plugin": "^7.4.0",
+		"@typescript-eslint/parser": "^7.4.0",
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-jest": "^27.9.0",
@@ -126,6 +126,6 @@
 		"prettier": "^3.2.5",
 		"sctp": "^1.0.0",
 		"ts-jest": "^29.1.2",
-		"typescript": "^5.4.2"
+		"typescript": "^5.4.3"
 	}
 }
