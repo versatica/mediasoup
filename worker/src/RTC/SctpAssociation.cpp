@@ -460,7 +460,6 @@ namespace RTC
 			if (sctpSendBufferFull)
 			{
 				MS_DEBUG_DEV(
-				  sctp,
 				  "error sending SCTP message [sid:%" PRIu16 ", ppid:%" PRIu32 ", message size:%zu]: %s",
 				  parameters.streamId,
 				  ppid,
