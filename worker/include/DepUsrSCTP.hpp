@@ -18,6 +18,7 @@ private:
 	public:
 		void Start();
 		void Stop();
+		void HandleUsrSctpTimers();
 
 		/* Pure virtual methods inherited from TimerHandle::Listener. */
 	public:
@@ -37,6 +38,7 @@ public:
 	static void RegisterSctpAssociation(RTC::SctpAssociation* sctpAssociation);
 	static void DeregisterSctpAssociation(RTC::SctpAssociation* sctpAssociation);
 	static RTC::SctpAssociation* RetrieveSctpAssociation(uintptr_t id);
+	static void HandleUsrSctpTimers();
 
 private:
 	thread_local static Checker* checker;

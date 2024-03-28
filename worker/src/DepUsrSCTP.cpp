@@ -13,20 +13,26 @@
 
 /* Static. */
 
-static constexpr size_t CheckerInterval{ 10u }; // In ms.
 static std::mutex GlobalSyncMutex;
 static size_t GlobalInstances{ 0u };
 
 /* Static methods for usrsctp global callbacks. */
 
-inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
+static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*tos*/, uint8_t /*setDf*/)
 {
+	MS_TRACE();
+
 	auto* sctpAssociation = DepUsrSCTP::RetrieveSctpAssociation(reinterpret_cast<uintptr_t>(addr));
 
 	if (!sctpAssociation)
 	{
 		MS_WARN_TAG(sctp, "no SctpAssociation found");
 
+		DepUsrSCTP::HandleUsrSctpTimers();
+
+		// TODO: Why are we returning -1 here? What does it tell usrsctp?
+		// If the SctpAssociation doesn't exist anymore we don't want that usrscp
+		// insists.
 		return -1;
 	}
 
@@ -34,12 +40,15 @@ inline static int onSendSctpData(void* addr, void* data, size_t len, uint8_t /*t
 
 	// NOTE: Must not free data, usrsctp lib does it.
 
+	DepUsrSCTP::HandleUsrSctpTimers();
+
 	return 0;
 }
 
 // Static method for printing usrsctp debug.
-inline static void sctpDebug(const char* format, ...)
+static void sctpDebug(const char* format, ...)
 {
+	MS_TRACE();
 	char buffer[10000];
 	va_list ap;
 
@@ -207,6 +216,13 @@ RTC::SctpAssociation* DepUsrSCTP::RetrieveSctpAssociation(uintptr_t id)
 	return it->second;
 }
 
+void DepUsrSCTP::HandleUsrSctpTimers()
+{
+	MS_TRACE();
+
+	DepUsrSCTP::checker->HandleUsrSctpTimers();
+}
+
 /* DepUsrSCTP::Checker instance methods. */
 
 DepUsrSCTP::Checker::Checker() : timer(new TimerHandle(this))
@@ -229,7 +245,7 @@ void DepUsrSCTP::Checker::Start()
 
 	this->lastCalledAtMs = 0u;
 
-	this->timer->Start(CheckerInterval, CheckerInterval);
+	HandleUsrSctpTimers();
 }
 
 void DepUsrSCTP::Checker::Stop()
@@ -243,9 +259,22 @@ void DepUsrSCTP::Checker::Stop()
 	this->timer->Stop();
 }
 
+void DepUsrSCTP::Checker::HandleUsrSctpTimers()
+{
+	MS_TRACE();
+
+	auto timeout = static_cast<uint64_t>(usrsctp_get_timeout());
+
+	MS_DUMP("------ starting timer with usrsctp timeout: %" PRIu64 " ms", timeout);
+
+	this->timer->Start(timeout);
+}
+
 void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
 {
 	MS_TRACE();
+
+	MS_DUMP("------ onTimer!");
 
 	auto nowMs          = DepLibUV::GetTimeMs();
 	const int elapsedMs = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
@@ -267,4 +296,6 @@ void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
 #endif
 
 	this->lastCalledAtMs = nowMs;
+
+	HandleUsrSctpTimers();
 }
