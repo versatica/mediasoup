@@ -19,7 +19,14 @@ export * from './SrtpParameters';
 export * from './errors';
 export type { ScalabilityMode } from './scalabilityModes';
 
-export type AppData =
-{
+export type AppData = {
 	[key: string]: unknown;
 };
+
+type Only<T, U> = {
+	[P in keyof T]: T[P];
+} & {
+	[P in keyof U]?: never;
+};
+
+export type Either<T, U> = Only<T, U> | Only<U, T>;

@@ -2,10 +2,12 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamSend.hpp"
+#ifdef MS_LIBURING_SUPPORTED
+#include "DepLibUring.hpp"
+#endif
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/SeqManager.hpp"
 
 namespace RTC
 {
@@ -51,11 +53,6 @@ namespace RTC
 
 					break;
 				}
-
-				default:
-				{
-					MS_ABORT("codec mimeType not set");
-				}
 			}
 
 			this->retransmissionBuffer = new RTC::RtpRetransmissionBuffer(
@@ -72,18 +69,22 @@ namespace RTC
 		this->retransmissionBuffer = nullptr;
 	}
 
-	void RtpStreamSend::FillJsonStats(json& jsonObject)
+	flatbuffers::Offset<FBS::RtpStream::Stats> RtpStreamSend::FillBufferStats(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
 		MS_TRACE();
 
 		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
-		RTC::RtpStream::FillJsonStats(jsonObject);
+		auto baseStats = RTC::RtpStream::FillBufferStats(builder);
+		auto stats     = FBS::RtpStream::CreateSendStats(
+      builder,
+      baseStats,
+      this->transmissionCounter.GetPacketCount(),
+      this->transmissionCounter.GetBytes(),
+      this->transmissionCounter.GetBitrate(nowMs));
 
-		jsonObject["type"]        = "outbound-rtp";
-		jsonObject["packetCount"] = this->transmissionCounter.GetPacketCount();
-		jsonObject["byteCount"]   = this->transmissionCounter.GetBytes();
-		jsonObject["bitrate"]     = this->transmissionCounter.GetBitrate(nowMs);
+		return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::SendStats, stats.Union());
 	}
 
 	void RtpStreamSend::SetRtx(uint8_t payloadType, uint32_t ssrc)
@@ -126,6 +127,11 @@ namespace RTC
 
 		this->nackCount++;
 
+#ifdef MS_LIBURING_SUPPORTED
+		// Activate liburing usage.
+		DepLibUring::SetActive();
+#endif
+
 		for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 		{
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
@@ -165,6 +171,11 @@ namespace RTC
 				}
 			}
 		}
+
+#ifdef MS_LIBURING_SUPPORTED
+		// Submit all prepared submission entries.
+		DepLibUring::Submit();
+#endif
 	}
 
 	void RtpStreamSend::ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType)
@@ -275,7 +286,7 @@ namespace RTC
 		return report;
 	}
 
-	RTC::RTCP::DelaySinceLastRr::SsrcInfo* RtpStreamSend::GetRtcpXrDelaySinceLastRr(uint64_t nowMs)
+	RTC::RTCP::DelaySinceLastRr::SsrcInfo* RtpStreamSend::GetRtcpXrDelaySinceLastRrSsrcInfo(uint64_t nowMs)
 	{
 		MS_TRACE();
 

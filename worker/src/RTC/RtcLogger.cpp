@@ -49,7 +49,6 @@ namespace RTC
 
 		void RtpPacket::Log() const
 		{
-#ifdef MS_RTC_LOGGER_RTP
 			MS_TRACE();
 
 			std::cout << "{";
@@ -57,23 +56,23 @@ namespace RTC
 
 			if (!this->recvTransportId.empty())
 			{
-				std::cout << ", \"recvTransportId\": \"" << this->recvTransportId << "\"";
+				std::cout << R"(, "recvTransportId": ")" << this->recvTransportId << "\"";
 			}
 			if (!this->sendTransportId.empty())
 			{
-				std::cout << ", \"sendTransportId\": \"" << this->sendTransportId << "\"";
+				std::cout << R"(, "sendTransportId": ")" << this->sendTransportId << "\"";
 			}
 			if (!this->routerId.empty())
 			{
-				std::cout << ", \"routerId\": \"" << this->routerId << "\"";
+				std::cout << R"(, "routerId": ")" << this->routerId << "\"";
 			}
 			if (!this->producerId.empty())
 			{
-				std::cout << ", \"producerId\": \"" << this->producerId << "\"";
+				std::cout << R"(, "producerId": ")" << this->producerId << "\"";
 			}
 			if (!this->consumerId.empty())
 			{
-				std::cout << ", \"consumerId\": \"" << this->consumerId << "\"";
+				std::cout << R"(, "consumerId": ")" << this->consumerId << "\"";
 			}
 
 			std::cout << ", \"recvRtpTimestamp\": " << this->recvRtpTimestamp;
@@ -83,7 +82,6 @@ namespace RTC
 			std::cout << ", \"dropped\": " << (this->dropped ? "true" : "false");
 			std::cout << ", \"dropReason\": '" << dropReason2String[this->dropReason] << "'";
 			std::cout << "}" << std::endl;
-#endif
 		}
 
 		void RtpPacket::Clear()

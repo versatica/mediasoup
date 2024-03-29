@@ -1,0 +1,21 @@
+# NOTE: This file and .prettierignore must contain same paths.
+
+/.cache
+/art
+/coverage
+/node/lib
+/node/src/fbs
+/rust
+/target
+/worker/deps
+/worker/fbs
+/worker/fuzzer
+/worker/include
+/worker/prebuild
+/worker/pip_invoke
+/worker/src
+/worker/subprojects
+/worker/test
+/worker/out
+/NO_GIT
+

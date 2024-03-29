@@ -71,11 +71,15 @@ namespace RTC
 
 				// Possitive value.
 				if (((value >> 23) & 1) == 0)
+				{
 					return value;
+				}
 
 				// Negative value.
 				if (value != 0x0800000)
+				{
 					value &= ~(1 << 23);
+				}
 
 				return -value;
 			}
@@ -170,7 +174,9 @@ namespace RTC
 				auto it = std::find(this->reports.begin(), this->reports.end(), report);
 
 				if (it != this->reports.end())
+				{
 					this->reports.erase(it);
+				}
 			}
 			Iterator Begin()
 			{

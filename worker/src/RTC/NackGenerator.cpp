@@ -21,12 +21,10 @@ namespace RTC
 	/* Instance methods. */
 
 	NackGenerator::NackGenerator(Listener* listener, unsigned int sendNackDelayMs)
-	  : listener(listener), sendNackDelayMs(sendNackDelayMs), rtt(DefaultRtt)
+	  : listener(listener), sendNackDelayMs(sendNackDelayMs), timer(new TimerHandle(this)),
+	    rtt(DefaultRtt)
 	{
 		MS_TRACE();
-
-		// Set the timer.
-		this->timer = new Timer(this);
 	}
 
 	NackGenerator::~NackGenerator()
@@ -42,7 +40,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint16_t seq          = packet->GetSequenceNumber();
+		const uint16_t seq    = packet->GetSequenceNumber();
 		const bool isKeyFrame = packet->IsKeyFrame();
 
 		if (!this->started)
@@ -83,14 +81,7 @@ namespace RTC
 
 				this->nackList.erase(it);
 
-				if (retries != 0)
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
+				return retries != 0;
 			}
 
 			// Out of order packet or already handled NACKed packet.
@@ -145,7 +136,7 @@ namespace RTC
 		this->lastSeq = seq;
 
 		// Check if there are any nacks that are waiting for this seq number.
-		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
+		const std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
 
 		if (!nackBatch.empty())
 		{
@@ -256,7 +247,7 @@ namespace RTC
 		while (it != this->nackList.end())
 		{
 			NackInfo& nackInfo = it->second;
-			uint16_t seq       = nackInfo.seq;
+			const uint16_t seq = nackInfo.seq;
 
 			if (this->sendNackDelayMs > 0 && nowMs - nackInfo.createdAtMs < this->sendNackDelayMs)
 			{
@@ -372,11 +363,11 @@ namespace RTC
 		}
 	}
 
-	inline void NackGenerator::OnTimer(Timer* /*timer*/)
+	inline void NackGenerator::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();
 
-		std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
+		const std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::TIME);
 
 		if (!nackBatch.empty())
 		{

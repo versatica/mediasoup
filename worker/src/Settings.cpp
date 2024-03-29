@@ -5,10 +5,10 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <flatbuffers/flatbuffers.h>
 #include <cctype>   // isprint()
 #include <iterator> // std::ostream_iterator
 #include <mutex>
-#include <nlohmann/json.hpp>
 #include <sstream> // std::ostringstream
 #include <stdexcept>
 extern "C"
@@ -18,20 +18,20 @@ extern "C"
 
 /* Static. */
 
-static std::mutex globalSyncMutex;
+static std::mutex GlobalSyncMutex;
 
 /* Class variables. */
 
 thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
-absl::flat_hash_map<std::string, LogLevel> Settings::string2LogLevel =
+absl::flat_hash_map<std::string, LogLevel> Settings::String2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  }
 };
-absl::flat_hash_map<LogLevel, std::string> Settings::logLevel2String =
+absl::flat_hash_map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
@@ -69,14 +69,16 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	/* Parse command line options. */
 
 	// getopt_long_only() is not thread-safe
-	std::lock_guard<std::mutex> lock(globalSyncMutex);
+	const std::lock_guard<std::mutex> lock(GlobalSyncMutex);
 
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
 		if (!optarg)
+		{
 			MS_THROW_TYPE_ERROR("unknown configuration parameter: %s", optarg);
+		}
 
 		switch (c)
 		{
@@ -160,9 +162,13 @@ void Settings::SetConfiguration(int argc, char* argv[])
 			case '?':
 			{
 				if (isprint(optopt) != 0)
+				{
 					MS_THROW_TYPE_ERROR("invalid option '-%c'", (char)optopt);
+				}
 				else
+				{
 					MS_THROW_TYPE_ERROR("unknown long option given as argument");
+				}
 			}
 
 			// Valid option, but it requires and argument that is not given.
@@ -183,11 +189,15 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	// Set logTags.
 	if (!logTags.empty())
+	{
 		Settings::SetLogTags(logTags);
+	}
 
 	// Validate RTC ports.
 	if (Settings::configuration.rtcMaxPort < Settings::configuration.rtcMinPort)
+	{
 		MS_THROW_TYPE_ERROR("rtcMaxPort cannot be less than rtcMinPort");
+	}
 
 	// Set DTLS certificate files (if provided),
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();
@@ -201,31 +211,57 @@ void Settings::PrintConfiguration()
 	std::ostringstream logTagsStream;
 
 	if (Settings::configuration.logTags.info)
+	{
 		logTags.emplace_back("info");
+	}
 	if (Settings::configuration.logTags.ice)
+	{
 		logTags.emplace_back("ice");
+	}
 	if (Settings::configuration.logTags.dtls)
+	{
 		logTags.emplace_back("dtls");
+	}
 	if (Settings::configuration.logTags.rtp)
+	{
 		logTags.emplace_back("rtp");
+	}
 	if (Settings::configuration.logTags.srtp)
+	{
 		logTags.emplace_back("srtp");
+	}
 	if (Settings::configuration.logTags.rtcp)
+	{
 		logTags.emplace_back("rtcp");
+	}
 	if (Settings::configuration.logTags.rtx)
+	{
 		logTags.emplace_back("rtx");
+	}
 	if (Settings::configuration.logTags.bwe)
+	{
 		logTags.emplace_back("bwe");
+	}
 	if (Settings::configuration.logTags.score)
+	{
 		logTags.emplace_back("score");
+	}
 	if (Settings::configuration.logTags.simulcast)
+	{
 		logTags.emplace_back("simulcast");
+	}
 	if (Settings::configuration.logTags.svc)
+	{
 		logTags.emplace_back("svc");
+	}
 	if (Settings::configuration.logTags.sctp)
+	{
 		logTags.emplace_back("sctp");
+	}
 	if (Settings::configuration.logTags.message)
+	{
 		logTags.emplace_back("message");
+	}
 
 	if (!logTags.empty())
 	{
@@ -237,23 +273,20 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(info, "<configuration>");
 
 	MS_DEBUG_TAG(
-	  info,
-	  "  logLevel             : %s",
-	  Settings::logLevel2String[Settings::configuration.logLevel].c_str());
-	MS_DEBUG_TAG(info, "  logTags              : %s", logTagsStream.str().c_str());
-	MS_DEBUG_TAG(info, "  rtcMinPort           : %" PRIu16, Settings::configuration.rtcMinPort);
-	MS_DEBUG_TAG(info, "  rtcMaxPort           : %" PRIu16, Settings::configuration.rtcMaxPort);
+	  info, "  logLevel: %s", Settings::LogLevel2String[Settings::configuration.logLevel].c_str());
+	MS_DEBUG_TAG(info, "  logTags: %s", logTagsStream.str().c_str());
+	MS_DEBUG_TAG(info, "  rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
+	MS_DEBUG_TAG(info, "  rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
 	if (!Settings::configuration.dtlsCertificateFile.empty())
 	{
 		MS_DEBUG_TAG(
-		  info, "  dtlsCertificateFile  : %s", Settings::configuration.dtlsCertificateFile.c_str());
-		MS_DEBUG_TAG(
-		  info, "  dtlsPrivateKeyFile   : %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
+		  info, "  dtlsCertificateFile: %s", Settings::configuration.dtlsCertificateFile.c_str());
+		MS_DEBUG_TAG(info, "  dtlsPrivateKeyFile: %s", Settings::configuration.dtlsPrivateKeyFile.c_str());
 	}
 	if (!Settings::configuration.libwebrtcFieldTrials.empty())
 	{
 		MS_DEBUG_TAG(
-		  info, "  libwebrtcFieldTrials : %s", Settings::configuration.libwebrtcFieldTrials.c_str());
+		  info, "  libwebrtcFieldTrials: %s", Settings::configuration.libwebrtcFieldTrials.c_str());
 	}
 
 	MS_DEBUG_TAG(info, "</configuration>");
@@ -263,31 +296,28 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
-	switch (request->methodId)
+	switch (request->method)
 	{
-		case Channel::ChannelRequest::MethodId::WORKER_UPDATE_SETTINGS:
+		case Channel::ChannelRequest::Method::WORKER_UPDATE_SETTINGS:
 		{
-			auto jsonLogLevelIt = request->data.find("logLevel");
-			auto jsonLogTagsIt  = request->data.find("logTags");
+			const auto* body = request->data->body_as<FBS::Worker::UpdateSettingsRequest>();
 
-			// Update logLevel if requested.
-			if (jsonLogLevelIt != request->data.end() && jsonLogLevelIt->is_string())
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGLEVEL))
 			{
-				std::string logLevel = *jsonLogLevelIt;
+				auto logLevel = body->logLevel()->str();
 
 				// This may throw.
 				Settings::SetLogLevel(logLevel);
 			}
 
 			// Update logTags if requested.
-			if (jsonLogTagsIt != request->data.end() && jsonLogTagsIt->is_array())
+			if (flatbuffers::IsFieldPresent(body, FBS::Worker::UpdateSettingsRequest::VT_LOGTAGS))
 			{
 				std::vector<std::string> logTags;
 
-				for (const auto& logTag : *jsonLogTagsIt)
+				for (const auto& logTag : *body->logTags())
 				{
-					if (logTag.is_string())
-						logTags.push_back(logTag);
+					logTags.push_back(logTag->str());
 				}
 
 				Settings::SetLogTags(logTags);
@@ -303,7 +333,7 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 
 		default:
 		{
-			MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
+			MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 		}
 	}
 }
@@ -315,10 +345,12 @@ void Settings::SetLogLevel(std::string& level)
 	// Lowcase given level.
 	Utils::String::ToLowerCase(level);
 
-	if (Settings::string2LogLevel.find(level) == Settings::string2LogLevel.end())
+	if (Settings::String2LogLevel.find(level) == Settings::String2LogLevel.end())
+	{
 		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
+	}
 
-	Settings::configuration.logLevel = Settings::string2LogLevel[level];
+	Settings::configuration.logLevel = Settings::String2LogLevel[level];
 }
 
 void Settings::SetLogTags(const std::vector<std::string>& tags)
@@ -331,31 +363,57 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 	for (const auto& tag : tags)
 	{
 		if (tag == "info")
+		{
 			newLogTags.info = true;
+		}
 		else if (tag == "ice")
+		{
 			newLogTags.ice = true;
+		}
 		else if (tag == "dtls")
+		{
 			newLogTags.dtls = true;
+		}
 		else if (tag == "rtp")
+		{
 			newLogTags.rtp = true;
+		}
 		else if (tag == "srtp")
+		{
 			newLogTags.srtp = true;
+		}
 		else if (tag == "rtcp")
+		{
 			newLogTags.rtcp = true;
+		}
 		else if (tag == "rtx")
+		{
 			newLogTags.rtx = true;
+		}
 		else if (tag == "bwe")
+		{
 			newLogTags.bwe = true;
+		}
 		else if (tag == "score")
+		{
 			newLogTags.score = true;
+		}
 		else if (tag == "simulcast")
+		{
 			newLogTags.simulcast = true;
+		}
 		else if (tag == "svc")
+		{
 			newLogTags.svc = true;
+		}
 		else if (tag == "sctp")
+		{
 			newLogTags.sctp = true;
+		}
 		else if (tag == "message")
+		{
 			newLogTags.message = true;
+		}
 	}
 
 	Settings::configuration.logTags = newLogTags;

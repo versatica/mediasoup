@@ -1,6 +1,8 @@
-export type SctpCapabilities =
-{
-  numStreams: NumSctpStreams;
+import * as flatbuffers from 'flatbuffers';
+import * as FbsSctpParameters from './fbs/sctp-parameters';
+
+export type SctpCapabilities = {
+	numStreams: NumSctpStreams;
 };
 
 /**
@@ -25,8 +27,7 @@ export type SctpCapabilities =
  * mediasoup-client provides specific per browser/version OS and MIS values via
  * the device.sctpCapabilities getter.
  */
-export type NumSctpStreams =
-{
+export type NumSctpStreams = {
 	/**
 	 * Initially requested number of outgoing SCTP streams.
 	 */
@@ -38,8 +39,7 @@ export type NumSctpStreams =
 	MIS: number;
 };
 
-export type SctpParameters =
-{
+export type SctpParameters = {
 	/**
 	 * Must always equal 5000.
 	 */
@@ -68,8 +68,7 @@ export type SctpParameters =
  * If ordered if false, only one of maxPacketLifeTime or maxRetransmits
  * can be true.
  */
-export type SctpStreamParameters =
-{
+export type SctpStreamParameters = {
 	/**
 	 * SCTP stream id.
 	 */
@@ -93,3 +92,61 @@ export type SctpStreamParameters =
 	 */
 	maxRetransmits?: number;
 };
+
+export type SctpParametersDump = {
+	port: number;
+	OS: number;
+	MIS: number;
+	maxMessageSize: number;
+	sendBufferSize: number;
+	sctpBufferedAmount: number;
+	isDataChannel: boolean;
+};
+
+export function parseSctpParametersDump(
+	binary: FbsSctpParameters.SctpParameters
+): SctpParametersDump {
+	return {
+		port: binary.port(),
+		OS: binary.os(),
+		MIS: binary.mis(),
+		maxMessageSize: binary.maxMessageSize(),
+		sendBufferSize: binary.sendBufferSize(),
+		sctpBufferedAmount: binary.sctpBufferedAmount(),
+		isDataChannel: binary.isDataChannel(),
+	};
+}
+
+export function serializeSctpStreamParameters(
+	builder: flatbuffers.Builder,
+	parameters: SctpStreamParameters
+): number {
+	return FbsSctpParameters.SctpStreamParameters.createSctpStreamParameters(
+		builder,
+		parameters.streamId,
+		parameters.ordered!,
+		typeof parameters.maxPacketLifeTime === 'number'
+			? parameters.maxPacketLifeTime
+			: null,
+		typeof parameters.maxRetransmits === 'number'
+			? parameters.maxRetransmits
+			: null
+	);
+}
+
+export function parseSctpStreamParameters(
+	parameters: FbsSctpParameters.SctpStreamParameters
+): SctpStreamParameters {
+	return {
+		streamId: parameters.streamId(),
+		ordered: parameters.ordered()!,
+		maxPacketLifeTime:
+			parameters.maxPacketLifeTime() !== null
+				? parameters.maxPacketLifeTime()!
+				: undefined,
+		maxRetransmits:
+			parameters.maxRetransmits() !== null
+				? parameters.maxRetransmits()!
+				: undefined,
+	};
+}

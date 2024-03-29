@@ -224,8 +224,11 @@ void TrendlineEstimator::Detect(double trend, double ts_delta, int64_t now_ms) {
         MS_DEBUG_DEV("hypothesis_: BandwidthUsage::kBwOverusing");
 
 #if MS_LOG_DEV_LEVEL == 3
-        for (auto& kv : delay_hist_) {
-          MS_DEBUG_DEV("arrival_time_ms - first_arrival_time_ms_:%f, smoothed_delay_:%f", kv.first, kv.second);
+        for (auto& packetTiming : delay_hist_) {
+          MS_DEBUG_DEV(
+            "packetTiming [arrival_time_ms:%f, smoothed_delay_ms:%f, raw_delay_ms:%f",
+            packetTiming.arrival_time_ms, packetTiming.smoothed_delay_ms, packetTiming.raw_delay_ms
+          );
         }
 #endif
       }

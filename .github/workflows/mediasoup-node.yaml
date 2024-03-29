@@ -1,6 +1,6 @@
 name: mediasoup-node
 
-on: [push, pull_request]
+on: [pull_request, workflow_dispatch]
 
 concurrency:
   # Cancel a currently running workflow from the same PR, branch or tag when a
@@ -14,25 +14,30 @@ jobs:
       matrix:
         ci:
           - os: ubuntu-20.04
+            node: 16
+          - os: ubuntu-20.04
             node: 18
           - os: ubuntu-22.04
             node: 20
           - os: macos-12
             node: 18
+          - os: macos-14
+            node: 20
           - os: windows-2022
-            node: 18
+            node: 20
 
     runs-on: ${{ matrix.ci.os }}
 
     env:
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_LOCAL_DEV: 'true'
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.ci.node }}
 
@@ -45,6 +50,12 @@ jobs:
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 
-      - run: npm ci
-      - run: npm run lint:node
-      - run: npm run test:node
+      # NOTE: Add --force since some dev dependencies require Node >= 18.
+      - name: npm ci
+        run: npm ci --force --foreground-scripts
+
+      - name: npm run lint:node
+        run: npm run lint:node
+
+      - name: npm run test:node
+        run: npm run test:node

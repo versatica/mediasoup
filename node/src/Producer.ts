@@ -1,13 +1,21 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import { Channel } from './Channel';
-import { PayloadChannel } from './PayloadChannel';
 import { TransportInternal } from './Transport';
-import { MediaKind, RtpParameters } from './RtpParameters';
+import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
+import { Event, Notification } from './fbs/notification';
+import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
 import { AppData } from './types';
+import * as utils from './utils';
+import { TraceDirection as FbsTraceDirection } from './fbs/common';
+import * as FbsNotification from './fbs/notification';
+import * as FbsRequest from './fbs/request';
+import * as FbsTransport from './fbs/transport';
+import * as FbsProducer from './fbs/producer';
+import * as FbsProducerTraceInfo from './fbs/producer/trace-info';
+import * as FbsRtpParameters from './fbs/rtp-parameters';
 
-export type ProducerOptions<ProducerAppData extends AppData = AppData> =
-{
+export type ProducerOptions<ProducerAppData extends AppData = AppData> = {
 	/**
 	 * Producer id (just for Router.pipeToRouter() method).
 	 */
@@ -43,13 +51,18 @@ export type ProducerOptions<ProducerAppData extends AppData = AppData> =
 /**
  * Valid types for 'trace' event.
  */
-export type ProducerTraceEventType = 'rtp' | 'keyframe' | 'nack' | 'pli' | 'fir';
+export type ProducerTraceEventType =
+	| 'rtp'
+	| 'keyframe'
+	| 'nack'
+	| 'pli'
+	| 'fir'
+	| 'sr';
 
 /**
  * 'trace' event data.
  */
-export type ProducerTraceEventData =
-{
+export type ProducerTraceEventData = {
 	/**
 	 * Trace type.
 	 */
@@ -71,8 +84,12 @@ export type ProducerTraceEventData =
 	info: any;
 };
 
-export type ProducerScore =
-{
+export type ProducerScore = {
+	/**
+	 * Index of the RTP stream in the rtpParameters.encodings array.
+	 */
+	encodingIdx: number;
+
 	/**
 	 * SSRC of the RTP stream.
 	 */
@@ -89,8 +106,7 @@ export type ProducerScore =
 	score: number;
 };
 
-export type ProducerVideoOrientation =
-{
+export type ProducerVideoOrientation = {
 	/**
 	 * Whether the source is a video camera.
 	 */
@@ -107,53 +123,24 @@ export type ProducerVideoOrientation =
 	rotation: number;
 };
 
-export type ProducerStat =
-{
-	// Common to all RtpStreams.
-	type: string;
-	timestamp: number;
-	ssrc: number;
-	rtxSsrc?: number;
-	rid?: string;
-	kind: string;
-	mimeType: string;
-	packetsLost: number;
-	fractionLost: number;
-	packetsDiscarded: number;
-	packetsRetransmitted: number;
-	packetsRepaired: number;
-	nackCount: number;
-	nackPacketCount: number;
-	pliCount: number;
-	firCount: number;
-	score: number;
-	packetCount: number;
-	byteCount: number;
-	bitrate: number;
-	roundTripTime?: number;
-	rtxPacketsDiscarded?: number;
-	// RtpStreamRecv specific.
-	jitter: number;
-	bitrateByLayer?: any;
-};
+export type ProducerStat = RtpStreamRecvStats;
 
 /**
  * Producer type.
  */
 export type ProducerType = 'simple' | 'simulcast' | 'svc';
 
-export type ProducerEvents =
-{
+export type ProducerEvents = {
 	transportclose: [];
 	score: [ProducerScore[]];
 	videoorientationchange: [ProducerVideoOrientation];
 	trace: [ProducerTraceEventData];
+	listenererror: [string, Error];
 	// Private events.
 	'@close': [];
 };
 
-export type ProducerObserverEvents =
-{
+export type ProducerObserverEvents = {
 	close: [];
 	pause: [];
 	resume: [];
@@ -162,13 +149,22 @@ export type ProducerObserverEvents =
 	trace: [ProducerTraceEventData];
 };
 
-type ProducerInternal = TransportInternal &
-{
+type ProducerDump = {
+	id: string;
+	kind: string;
+	type: ProducerType;
+	rtpParameters: RtpParameters;
+	rtpMapping: any;
+	rtpStreams: any;
+	traceEventTypes: string[];
+	paused: boolean;
+};
+
+type ProducerInternal = TransportInternal & {
 	producerId: string;
 };
 
-type ProducerData =
-{
+type ProducerData = {
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
 	type: ProducerType;
@@ -177,9 +173,9 @@ type ProducerData =
 
 const logger = new Logger('Producer');
 
-export class Producer<ProducerAppData extends AppData = AppData>
-	extends EnhancedEventEmitter<ProducerEvents>
-{
+export class Producer<
+	ProducerAppData extends AppData = AppData,
+> extends EnhancedEventEmitter<ProducerEvents> {
 	// Internal data.
 	readonly #internal: ProducerInternal;
 
@@ -189,17 +185,14 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	// Channel instance.
 	readonly #channel: Channel;
 
-	// PayloadChannel instance.
-	readonly #payloadChannel: PayloadChannel;
-
 	// Closed flag.
 	#closed = false;
 
-	// Custom app data.
-	#appData: ProducerAppData;
-
 	// Paused flag.
 	#paused = false;
+
+	// Custom app data.
+	#appData: ProducerAppData;
 
 	// Current score.
 	#score: ProducerScore[] = [];
@@ -210,25 +203,19 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	/**
 	 * @private
 	 */
-	constructor(
-		{
-			internal,
-			data,
-			channel,
-			payloadChannel,
-			appData,
-			paused
-		}:
-		{
-			internal: ProducerInternal;
-			data: ProducerData;
-			channel: Channel;
-			payloadChannel: PayloadChannel;
-			appData?: ProducerAppData;
-			paused: boolean;
-		}
-	)
-	{
+	constructor({
+		internal,
+		data,
+		channel,
+		appData,
+		paused,
+	}: {
+		internal: ProducerInternal;
+		data: ProducerData;
+		channel: Channel;
+		appData?: ProducerAppData;
+		paused: boolean;
+	}) {
 		super();
 
 		logger.debug('constructor()');
@@ -236,9 +223,8 @@ export class Producer<ProducerAppData extends AppData = AppData>
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#payloadChannel = payloadChannel;
-		this.#appData = appData || {} as ProducerAppData;
 		this.#paused = paused;
+		this.#appData = appData || ({} as ProducerAppData);
 
 		this.handleWorkerNotifications();
 	}
@@ -246,40 +232,35 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	/**
 	 * Producer id.
 	 */
-	get id(): string
-	{
+	get id(): string {
 		return this.#internal.producerId;
 	}
 
 	/**
 	 * Whether the Producer is closed.
 	 */
-	get closed(): boolean
-	{
+	get closed(): boolean {
 		return this.#closed;
 	}
 
 	/**
 	 * Media kind.
 	 */
-	get kind(): MediaKind
-	{
+	get kind(): MediaKind {
 		return this.#data.kind;
 	}
 
 	/**
 	 * RTP parameters.
 	 */
-	get rtpParameters(): RtpParameters
-	{
+	get rtpParameters(): RtpParameters {
 		return this.#data.rtpParameters;
 	}
 
 	/**
 	 * Producer type.
 	 */
-	get type(): ProducerType
-	{
+	get type(): ProducerType {
 		return this.#data.type;
 	}
 
@@ -288,48 +269,42 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	 *
 	 * @private
 	 */
-	get consumableRtpParameters(): RtpParameters
-	{
+	get consumableRtpParameters(): RtpParameters {
 		return this.#data.consumableRtpParameters;
 	}
 
 	/**
 	 * Whether the Producer is paused.
 	 */
-	get paused(): boolean
-	{
+	get paused(): boolean {
 		return this.#paused;
 	}
 
 	/**
 	 * Producer score list.
 	 */
-	get score(): ProducerScore[]
-	{
+	get score(): ProducerScore[] {
 		return this.#score;
 	}
 
 	/**
 	 * App custom data.
 	 */
-	get appData(): ProducerAppData
-	{
+	get appData(): ProducerAppData {
 		return this.#appData;
 	}
 
 	/**
 	 * App custom data setter.
 	 */
-	set appData(appData: ProducerAppData)
-	{
+	set appData(appData: ProducerAppData) {
 		this.#appData = appData;
 	}
 
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ProducerObserverEvents>
-	{
+	get observer(): EnhancedEventEmitter<ProducerObserverEvents> {
 		return this.#observer;
 	}
 
@@ -337,18 +312,15 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	 * @private
 	 * Just for testing purposes.
 	 */
-	get channelForTesting(): Channel
-	{
+	get channelForTesting(): Channel {
 		return this.#channel;
 	}
 
 	/**
 	 * Close the Producer.
 	 */
-	close(): void
-	{
-		if (this.#closed)
-		{
+	close(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -358,11 +330,19 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
-		const reqData = { producerId: this.#internal.producerId };
+		/* Build Request. */
+		const requestOffset = new FbsTransport.CloseProducerRequestT(
+			this.#internal.producerId
+		).pack(this.#channel.bufferBuilder);
 
-		this.#channel.request('transport.closeProducer', this.#internal.transportId, reqData)
+		this.#channel
+			.request(
+				FbsRequest.Method.TRANSPORT_CLOSE_PRODUCER,
+				FbsRequest.Body.Transport_CloseProducerRequest,
+				requestOffset,
+				this.#internal.transportId
+			)
 			.catch(() => {});
 
 		this.emit('@close');
@@ -376,10 +356,8 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	 *
 	 * @private
 	 */
-	transportClosed(): void
-	{
-		if (this.#closed)
-		{
+	transportClosed(): void {
+		if (this.#closed) {
 			return;
 		}
 
@@ -389,7 +367,6 @@ export class Producer<ProducerAppData extends AppData = AppData>
 
 		// Remove notification subscriptions.
 		this.#channel.removeAllListeners(this.#internal.producerId);
-		this.#payloadChannel.removeAllListeners(this.#internal.producerId);
 
 		this.safeEmit('transportclose');
 
@@ -400,39 +377,64 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	/**
 	 * Dump Producer.
 	 */
-	async dump(): Promise<any>
-	{
+	async dump(): Promise<ProducerDump> {
 		logger.debug('dump()');
 
-		return this.#channel.request('producer.dump', this.#internal.producerId);
+		const response = await this.#channel.request(
+			FbsRequest.Method.PRODUCER_DUMP,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
+
+		/* Decode Response. */
+		const dumpResponse = new FbsProducer.DumpResponse();
+
+		response.body(dumpResponse);
+
+		return parseProducerDump(dumpResponse);
 	}
 
 	/**
 	 * Get Producer stats.
 	 */
-	async getStats(): Promise<ProducerStat[]>
-	{
+	async getStats(): Promise<ProducerStat[]> {
 		logger.debug('getStats()');
 
-		return this.#channel.request('producer.getStats', this.#internal.producerId);
+		const response = await this.#channel.request(
+			FbsRequest.Method.PRODUCER_GET_STATS,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
+
+		/* Decode Response. */
+		const data = new FbsProducer.GetStatsResponse();
+
+		response.body(data);
+
+		return parseProducerStats(data);
 	}
 
 	/**
 	 * Pause the Producer.
 	 */
-	async pause(): Promise<void>
-	{
+	async pause(): Promise<void> {
 		logger.debug('pause()');
 
-		const wasPaused = this.#paused;
+		await this.#channel.request(
+			FbsRequest.Method.PRODUCER_PAUSE,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
 
-		await this.#channel.request('producer.pause', this.#internal.producerId);
+		const wasPaused = this.#paused;
 
 		this.#paused = true;
 
 		// Emit observer event.
-		if (!wasPaused)
-		{
+		if (!wasPaused) {
 			this.#observer.safeEmit('pause');
 		}
 	}
@@ -440,19 +442,22 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	/**
 	 * Resume the Producer.
 	 */
-	async resume(): Promise<void>
-	{
+	async resume(): Promise<void> {
 		logger.debug('resume()');
 
-		const wasPaused = this.#paused;
+		await this.#channel.request(
+			FbsRequest.Method.PRODUCER_RESUME,
+			undefined,
+			undefined,
+			this.#internal.producerId
+		);
 
-		await this.#channel.request('producer.resume', this.#internal.producerId);
+		const wasPaused = this.#paused;
 
 		this.#paused = false;
 
 		// Emit observer event.
-		if (wasPaused)
-		{
+		if (wasPaused) {
 			this.#observer.safeEmit('resume');
 		}
 	}
@@ -460,79 +465,293 @@ export class Producer<ProducerAppData extends AppData = AppData>
 	/**
 	 * Enable 'trace' event.
 	 */
-	async enableTraceEvent(types: ProducerTraceEventType[] = []): Promise<void>
-	{
+	async enableTraceEvent(types: ProducerTraceEventType[] = []): Promise<void> {
 		logger.debug('enableTraceEvent()');
 
-		const reqData = { types };
+		if (!Array.isArray(types)) {
+			throw new TypeError('types must be an array');
+		}
+		if (types.find(type => typeof type !== 'string')) {
+			throw new TypeError('every type must be a string');
+		}
+
+		// Convert event types.
+		const fbsEventTypes: FbsProducer.TraceEventType[] = [];
+
+		for (const eventType of types) {
+			try {
+				fbsEventTypes.push(producerTraceEventTypeToFbs(eventType));
+			} catch (error) {
+				logger.warn('enableTraceEvent() | [error:${error}]');
+			}
+		}
+
+		/* Build Request. */
+		const requestOffset = new FbsProducer.EnableTraceEventRequestT(
+			fbsEventTypes
+		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(
-			'producer.enableTraceEvent', this.#internal.producerId, reqData);
+			FbsRequest.Method.PRODUCER_ENABLE_TRACE_EVENT,
+			FbsRequest.Body.Producer_EnableTraceEventRequest,
+			requestOffset,
+			this.#internal.producerId
+		);
 	}
 
 	/**
 	 * Send RTP packet (just valid for Producers created on a DirectTransport).
 	 */
-	send(rtpPacket: Buffer)
-	{
-		if (!Buffer.isBuffer(rtpPacket))
-		{
+	send(rtpPacket: Buffer) {
+		if (!Buffer.isBuffer(rtpPacket)) {
 			throw new TypeError('rtpPacket must be a Buffer');
 		}
 
-		this.#payloadChannel.notify(
-			'producer.send', this.#internal.producerId, undefined, rtpPacket);
+		const builder = this.#channel.bufferBuilder;
+		const dataOffset = FbsProducer.SendNotification.createDataVector(
+			builder,
+			rtpPacket
+		);
+		const notificationOffset =
+			FbsProducer.SendNotification.createSendNotification(builder, dataOffset);
+
+		this.#channel.notify(
+			FbsNotification.Event.PRODUCER_SEND,
+			FbsNotification.Body.Producer_SendNotification,
+			notificationOffset,
+			this.#internal.producerId
+		);
 	}
 
-	private handleWorkerNotifications(): void
-	{
-		this.#channel.on(this.#internal.producerId, (event: string, data?: any) =>
-		{
-			switch (event)
-			{
-				case 'score':
-				{
-					const score = data as ProducerScore[];
+	private handleWorkerNotifications(): void {
+		this.#channel.on(
+			this.#internal.producerId,
+			(event: Event, data?: Notification) => {
+				switch (event) {
+					case Event.PRODUCER_SCORE: {
+						const notification = new FbsProducer.ScoreNotification();
 
-					this.#score = score;
+						data!.body(notification);
 
-					this.safeEmit('score', score);
+						const score: ProducerScore[] = utils.parseVector(
+							notification,
+							'scores',
+							parseProducerScore
+						);
 
-					// Emit observer event.
-					this.#observer.safeEmit('score', score);
+						this.#score = score;
 
-					break;
-				}
+						this.safeEmit('score', score);
 
-				case 'videoorientationchange':
-				{
-					const videoOrientation = data as ProducerVideoOrientation;
+						// Emit observer event.
+						this.#observer.safeEmit('score', score);
 
-					this.safeEmit('videoorientationchange', videoOrientation);
+						break;
+					}
 
-					// Emit observer event.
-					this.#observer.safeEmit('videoorientationchange', videoOrientation);
+					case Event.PRODUCER_VIDEO_ORIENTATION_CHANGE: {
+						const notification =
+							new FbsProducer.VideoOrientationChangeNotification();
 
-					break;
-				}
+						data!.body(notification);
 
-				case 'trace':
-				{
-					const trace = data as ProducerTraceEventData;
+						const videoOrientation: ProducerVideoOrientation =
+							notification.unpack();
 
-					this.safeEmit('trace', trace);
+						this.safeEmit('videoorientationchange', videoOrientation);
 
-					// Emit observer event.
-					this.#observer.safeEmit('trace', trace);
+						// Emit observer event.
+						this.#observer.safeEmit('videoorientationchange', videoOrientation);
 
-					break;
-				}
+						break;
+					}
 
-				default:
-				{
-					logger.error('ignoring unknown event "%s"', event);
+					case Event.PRODUCER_TRACE: {
+						const notification = new FbsProducer.TraceNotification();
+
+						data!.body(notification);
+
+						const trace: ProducerTraceEventData =
+							parseTraceEventData(notification);
+
+						this.safeEmit('trace', trace);
+
+						// Emit observer event.
+						this.#observer.safeEmit('trace', trace);
+
+						break;
+					}
+
+					default: {
+						logger.error('ignoring unknown event "%s"', event);
+					}
 				}
 			}
-		});
+		);
 	}
+}
+
+export function producerTypeFromFbs(type: FbsRtpParameters.Type): ProducerType {
+	switch (type) {
+		case FbsRtpParameters.Type.SIMPLE: {
+			return 'simple';
+		}
+
+		case FbsRtpParameters.Type.SIMULCAST: {
+			return 'simulcast';
+		}
+
+		case FbsRtpParameters.Type.SVC: {
+			return 'svc';
+		}
+
+		default: {
+			throw new TypeError(`invalid FbsRtpParameters.Type: ${type}`);
+		}
+	}
+}
+
+export function producerTypeToFbs(type: ProducerType): FbsRtpParameters.Type {
+	switch (type) {
+		case 'simple': {
+			return FbsRtpParameters.Type.SIMPLE;
+		}
+
+		case 'simulcast': {
+			return FbsRtpParameters.Type.SIMULCAST;
+		}
+
+		case 'svc': {
+			return FbsRtpParameters.Type.SVC;
+		}
+	}
+}
+
+function producerTraceEventTypeToFbs(
+	eventType: ProducerTraceEventType
+): FbsProducer.TraceEventType {
+	switch (eventType) {
+		case 'keyframe': {
+			return FbsProducer.TraceEventType.KEYFRAME;
+		}
+
+		case 'fir': {
+			return FbsProducer.TraceEventType.FIR;
+		}
+
+		case 'nack': {
+			return FbsProducer.TraceEventType.NACK;
+		}
+
+		case 'pli': {
+			return FbsProducer.TraceEventType.PLI;
+		}
+
+		case 'rtp': {
+			return FbsProducer.TraceEventType.RTP;
+		}
+
+		case 'sr': {
+			return FbsProducer.TraceEventType.SR;
+		}
+
+		default: {
+			throw new TypeError(`invalid ProducerTraceEventType: ${eventType}`);
+		}
+	}
+}
+
+function producerTraceEventTypeFromFbs(
+	eventType: FbsProducer.TraceEventType
+): ProducerTraceEventType {
+	switch (eventType) {
+		case FbsProducer.TraceEventType.KEYFRAME: {
+			return 'keyframe';
+		}
+
+		case FbsProducer.TraceEventType.FIR: {
+			return 'fir';
+		}
+
+		case FbsProducer.TraceEventType.NACK: {
+			return 'nack';
+		}
+
+		case FbsProducer.TraceEventType.PLI: {
+			return 'pli';
+		}
+
+		case FbsProducer.TraceEventType.RTP: {
+			return 'rtp';
+		}
+
+		case FbsProducer.TraceEventType.SR: {
+			return 'sr';
+		}
+	}
+}
+
+export function parseProducerDump(
+	data: FbsProducer.DumpResponse
+): ProducerDump {
+	return {
+		id: data.id()!,
+		kind: data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
+		type: producerTypeFromFbs(data.type()),
+		rtpParameters: parseRtpParameters(data.rtpParameters()!),
+		// NOTE: optional values are represented with null instead of undefined.
+		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpMapping: data.rtpMapping() ? data.rtpMapping()!.unpack() : undefined,
+		// NOTE: optional values are represented with null instead of undefined.
+		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpStreams:
+			data.rtpStreamsLength() > 0
+				? utils.parseVector(data, 'rtpStreams', (rtpStream: any) =>
+						rtpStream.unpack()
+					)
+				: undefined,
+		traceEventTypes: utils.parseVector<ProducerTraceEventType>(
+			data,
+			'traceEventTypes',
+			producerTraceEventTypeFromFbs
+		),
+		paused: data.paused(),
+	};
+}
+
+function parseProducerStats(
+	binary: FbsProducer.GetStatsResponse
+): ProducerStat[] {
+	return utils.parseVector(binary, 'stats', parseRtpStreamRecvStats);
+}
+
+function parseProducerScore(binary: FbsProducer.Score): ProducerScore {
+	return {
+		encodingIdx: binary.encodingIdx(),
+		ssrc: binary.ssrc(),
+		rid: binary.rid() ?? undefined,
+		score: binary.score(),
+	};
+}
+
+function parseTraceEventData(
+	trace: FbsProducer.TraceNotification
+): ProducerTraceEventData {
+	let info: any;
+
+	if (trace.infoType() !== FbsProducer.TraceInfo.NONE) {
+		const accessor = trace.info.bind(trace);
+
+		info = FbsProducerTraceInfo.unionToTraceInfo(trace.infoType(), accessor);
+
+		trace.info(info);
+	}
+
+	return {
+		type: producerTraceEventTypeFromFbs(trace.type()),
+		timestamp: Number(trace.timestamp()),
+		direction:
+			trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
+		info: info ? info.unpack() : undefined,
+	};
 }
