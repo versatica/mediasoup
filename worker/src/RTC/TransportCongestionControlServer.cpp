@@ -397,7 +397,7 @@ namespace RTC
 
 	void TransportCongestionControlServer::UpdatePacketLoss(double packetLoss)
 	{
-		// Add the score into the histogram.
+		// Add the lost into the histogram.
 		if (this->packetLossHistory.size() == PacketLossHistogramLength)
 		{
 			this->packetLossHistory.pop_front();
