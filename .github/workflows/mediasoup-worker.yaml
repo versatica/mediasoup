@@ -65,8 +65,14 @@ jobs:
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
       # We need to install pip invoke manually.
+      - name: pip3 install invoke
+        run: pip3 install invoke
+        if: runner.os != 'macOS'
+
+      # We need to install pip invoke manually.
       - name: pip3 install --break-system-packages invoke
         run: pip3 install --break-system-packages invoke
+        if: runner.os == 'macOS'
 
       # We need to install npm deps of worker/scripts/package.json.
       - name: npm ci --prefix worker/scripts
