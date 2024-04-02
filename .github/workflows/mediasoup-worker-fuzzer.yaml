@@ -16,6 +16,10 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
+          - os: ubuntu-22.04
+            cc: clang
+            cxx: clang++
+            arch: arm64
 
     runs-on: ${{ matrix.build.os }}
 
