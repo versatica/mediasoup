@@ -21,7 +21,6 @@ jobs:
             cxx: clang++
             arch: arm64
 
-
     runs-on: ${{ matrix.build.os }}
 
     env:

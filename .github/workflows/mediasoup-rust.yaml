@@ -26,7 +26,6 @@ jobs:
           - os: macos-14
           - os: windows-2022
 
-
     runs-on: ${{ matrix.ci.os }}
 
     env:
