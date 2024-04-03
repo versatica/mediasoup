@@ -22,7 +22,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -35,7 +35,7 @@ const ctx: TestContext = {
 			clockRate: 90000,
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -64,7 +64,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 'bar1' },
 	}),
-	videoProducerOptions: utils.deepFreeze({
+	videoProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'video',
 		rtpParameters: {
 			mid: 'VIDEO',
@@ -102,7 +102,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 'bar2' },
 	}),
-	dataProducerOptions: utils.deepFreeze({
+	dataProducerOptions: utils.deepFreeze<mediasoup.types.DataProducerOptions>({
 		sctpStreamParameters: {
 			streamId: 666,
 			ordered: false,
@@ -111,59 +111,61 @@ const ctx: TestContext = {
 		label: 'foo',
 		protocol: 'bar',
 	}),
-	consumerDeviceCapabilities: utils.deepFreeze({
-		codecs: [
-			{
-				kind: 'audio',
-				mimeType: 'audio/opus',
-				preferredPayloadType: 100,
-				clockRate: 48000,
-				channels: 2,
-			},
-			{
-				kind: 'video',
-				mimeType: 'video/VP8',
-				preferredPayloadType: 101,
-				clockRate: 90000,
-				rtcpFeedback: [
-					{ type: 'nack' },
-					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'transport-cc' },
-				],
-			},
-			{
-				kind: 'video',
-				mimeType: 'video/rtx',
-				preferredPayloadType: 102,
-				clockRate: 90000,
-				parameters: {
-					apt: 101,
+	consumerDeviceCapabilities: utils.deepFreeze<mediasoup.types.RtpCapabilities>(
+		{
+			codecs: [
+				{
+					kind: 'audio',
+					mimeType: 'audio/opus',
+					preferredPayloadType: 100,
+					clockRate: 48000,
+					channels: 2,
 				},
-				rtcpFeedback: [],
-			},
-		],
-		headerExtensions: [
-			{
-				kind: 'video',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				preferredId: 4,
-				preferredEncrypt: false,
-				direction: 'sendrecv',
-			},
-			{
-				kind: 'video',
-				uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
-				preferredId: 5,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				preferredId: 10,
-				preferredEncrypt: false,
-			},
-		],
-	}),
+				{
+					kind: 'video',
+					mimeType: 'video/VP8',
+					preferredPayloadType: 101,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'transport-cc' },
+					],
+				},
+				{
+					kind: 'video',
+					mimeType: 'video/rtx',
+					preferredPayloadType: 102,
+					clockRate: 90000,
+					parameters: {
+						apt: 101,
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					kind: 'video',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					preferredId: 4,
+					preferredEncrypt: false,
+					direction: 'sendrecv',
+				},
+				{
+					kind: 'video',
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					preferredId: 5,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+					preferredId: 10,
+					preferredEncrypt: false,
+				},
+			],
+		}
+	),
 };
 
 beforeEach(async () => {

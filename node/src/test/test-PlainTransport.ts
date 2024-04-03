@@ -12,7 +12,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',

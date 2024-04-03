@@ -12,7 +12,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/multiopus',
@@ -27,7 +27,7 @@ const ctx: TestContext = {
 			},
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -57,42 +57,44 @@ const ctx: TestContext = {
 			],
 		},
 	}),
-	consumerDeviceCapabilities: utils.deepFreeze({
-		codecs: [
-			{
-				mimeType: 'audio/multiopus',
-				kind: 'audio',
-				preferredPayloadType: 100,
-				clockRate: 48000,
-				channels: 6,
-				parameters: {
-					channel_mapping: '0,4,1,2,3,5',
-					num_streams: 4,
-					coupled_streams: 2,
+	consumerDeviceCapabilities: utils.deepFreeze<mediasoup.types.RtpCapabilities>(
+		{
+			codecs: [
+				{
+					mimeType: 'audio/multiopus',
+					kind: 'audio',
+					preferredPayloadType: 100,
+					clockRate: 48000,
+					channels: 6,
+					parameters: {
+						channel_mapping: '0,4,1,2,3,5',
+						num_streams: 4,
+						coupled_streams: 2,
+					},
 				},
-			},
-		],
-		headerExtensions: [
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId: 1,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-				preferredId: 4,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				preferredId: 10,
-				preferredEncrypt: false,
-			},
-		],
-	}),
+			],
+			headerExtensions: [
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					preferredId: 1,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+					preferredId: 4,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+					preferredId: 10,
+					preferredEncrypt: false,
+				},
+			],
+		}
+	),
 };
 
 beforeEach(async () => {

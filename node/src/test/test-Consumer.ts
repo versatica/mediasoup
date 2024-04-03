@@ -24,7 +24,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -51,7 +51,7 @@ const ctx: TestContext = {
 			},
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -86,7 +86,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
-	videoProducerOptions: utils.deepFreeze({
+	videoProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'video',
 		rtpParameters: {
 			mid: 'VIDEO',
@@ -134,95 +134,97 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
-	consumerDeviceCapabilities: utils.deepFreeze({
-		codecs: [
-			{
-				mimeType: 'audio/opus',
-				kind: 'audio',
-				preferredPayloadType: 100,
-				clockRate: 48000,
-				channels: 2,
-				rtcpFeedback: [{ type: 'nack', parameter: '' }],
-			},
-			{
-				mimeType: 'video/H264',
-				kind: 'video',
-				preferredPayloadType: 101,
-				clockRate: 90000,
-				parameters: {
-					'level-asymmetry-allowed': 1,
-					'packetization-mode': 1,
-					'profile-level-id': '4d0032',
+	consumerDeviceCapabilities: utils.deepFreeze<mediasoup.types.RtpCapabilities>(
+		{
+			codecs: [
+				{
+					mimeType: 'audio/opus',
+					kind: 'audio',
+					preferredPayloadType: 100,
+					clockRate: 48000,
+					channels: 2,
+					rtcpFeedback: [{ type: 'nack', parameter: '' }],
 				},
-				rtcpFeedback: [
-					{ type: 'nack', parameter: '' },
-					{ type: 'nack', parameter: 'pli' },
-					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'goog-remb', parameter: '' },
-				],
-			},
-			{
-				mimeType: 'video/rtx',
-				kind: 'video',
-				preferredPayloadType: 102,
-				clockRate: 90000,
-				parameters: {
-					apt: 101,
+				{
+					mimeType: 'video/H264',
+					kind: 'video',
+					preferredPayloadType: 101,
+					clockRate: 90000,
+					parameters: {
+						'level-asymmetry-allowed': 1,
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'goog-remb', parameter: '' },
+					],
 				},
-				rtcpFeedback: [],
-			},
-		],
-		headerExtensions: [
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId: 1,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId: 1,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
-				preferredId: 2,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-				preferredId: 4,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-				preferredId: 4,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				preferredId: 10,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:3gpp:video-orientation',
-				preferredId: 11,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:toffset',
-				preferredId: 12,
-				preferredEncrypt: false,
-			},
-		],
-	}),
+				{
+					mimeType: 'video/rtx',
+					kind: 'video',
+					preferredPayloadType: 102,
+					clockRate: 90000,
+					parameters: {
+						apt: 101,
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					preferredId: 1,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					preferredId: 1,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+					preferredId: 2,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+					preferredId: 4,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+					preferredId: 4,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+					preferredId: 10,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:3gpp:video-orientation',
+					preferredId: 11,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:ietf:params:rtp-hdrext:toffset',
+					preferredId: 12,
+					preferredEncrypt: false,
+				},
+			],
+		}
+	),
 };
 
 beforeEach(async () => {
