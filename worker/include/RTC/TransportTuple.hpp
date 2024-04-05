@@ -130,7 +130,7 @@ namespace RTC
 		{
 			if (this->protocol == Protocol::UDP)
 			{
-				return (const struct sockaddr*)this->udpRemoteAddr;
+				return static_cast<const struct sockaddr*>(this->udpRemoteAddr);
 			}
 			else
 			{
