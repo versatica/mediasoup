@@ -216,6 +216,18 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	  uvRusage.ru_nivcsw);
 }
 
+RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) const
+{
+	auto it = this->mapWebRtcServers.find(webRtcServerId);
+
+	if (it == this->mapWebRtcServers.end())
+	{
+		MS_THROW_ERROR("WebRtcServer not found");
+	}
+
+	return it->second;
+}
+
 RTC::Router* Worker::GetRouter(const std::string& routerId) const
 {
 	MS_TRACE();
@@ -246,19 +258,7 @@ void Worker::CheckNoRouter(const std::string& routerId) const
 	}
 }
 
-RTC::WebRtcServer* Worker::GetWebRtcServer(const std::string& webRtcServerId) const
-{
-	auto it = this->mapWebRtcServers.find(webRtcServerId);
-
-	if (it == this->mapWebRtcServers.end())
-	{
-		MS_THROW_ERROR("WebRtcServer not found");
-	}
-
-	return it->second;
-}
-
-inline void Worker::HandleRequest(Channel::ChannelRequest* request)
+void Worker::HandleRequest(Channel::ChannelRequest* request)
 {
 	MS_TRACE();
 
@@ -449,7 +449,7 @@ inline void Worker::HandleRequest(Channel::ChannelRequest* request)
 	}
 }
 
-inline void Worker::HandleNotification(Channel::ChannelNotification* notification)
+void Worker::HandleNotification(Channel::ChannelNotification* notification)
 {
 	MS_TRACE();
 
@@ -478,7 +478,7 @@ inline void Worker::HandleNotification(Channel::ChannelNotification* notificatio
 	}
 }
 
-inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
+void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 {
 	MS_TRACE_STD();
 
@@ -492,7 +492,7 @@ inline void Worker::OnChannelClosed(Channel::ChannelSocket* /*socket*/)
 	Close();
 }
 
-inline void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
+void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 {
 	MS_TRACE();
 
@@ -538,8 +538,7 @@ inline void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 	}
 }
 
-inline RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(
-  RTC::Router* /*router*/, std::string& webRtcServerId)
+RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(RTC::Router* /*router*/, std::string& webRtcServerId)
 {
 	MS_TRACE();
 
