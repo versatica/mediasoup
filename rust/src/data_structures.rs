@@ -66,6 +66,12 @@ pub struct ListenInfo {
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
+    /// Min listening port. If given (and also |max_port|) then |port| will be ignored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_port: Option<u16>,
+    /// Max listening port. If given (and also |min_port|) then |port| will be ignored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_port: Option<u16>,
     /// Socket flags.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<SocketFlags>,
@@ -90,6 +96,8 @@ impl ListenInfo {
                 .as_ref()
                 .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
+            min_port: self.min_port.unwrap_or(0),
+            max_port: self.max_port.unwrap_or(0),
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
             recv_buffer_size: self.recv_buffer_size.unwrap_or(0),

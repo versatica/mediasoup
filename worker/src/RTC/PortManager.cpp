@@ -575,6 +575,345 @@ namespace RTC
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
 
+	uv_handle_t* PortManager::Bind(
+	  Transport transport,
+	  std::string& ip,
+	  uint16_t minPort,
+	  uint16_t maxPort,
+	  RTC::Transport::SocketFlags& flags)
+	{
+		MS_TRACE();
+
+		if (maxPort < minPort)
+		{
+			MS_THROW_TYPE_ERROR("maxPort cannot be less than minPort");
+		}
+
+		// First normalize the IP. This may throw if invalid IP.
+		Utils::IP::NormalizeIp(ip);
+
+		int err;
+		const int family = Utils::IP::GetFamily(ip);
+		struct sockaddr_storage bindAddr
+		{
+		};
+		size_t portIdx;
+		std::vector<bool>& ports = PortManager::GetPorts(transport, ip);
+		size_t attempt{ 0u };
+		const size_t numAttempts = ports.size();
+		uv_handle_t* uvHandle{ nullptr };
+		uint16_t port;
+		std::string transportStr;
+		const uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
+
+		switch (transport)
+		{
+			case Transport::UDP:
+			{
+				transportStr.assign("udp");
+
+				break;
+			}
+
+			case Transport::TCP:
+			{
+				transportStr.assign("tcp");
+
+				break;
+			}
+		}
+
+		switch (family)
+		{
+			case AF_INET:
+			{
+				err = uv_ip4_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in*>(&bindAddr));
+
+				if (err != 0)
+				{
+					MS_THROW_ERROR("uv_ip4_addr() failed: %s", uv_strerror(err));
+				}
+
+				break;
+			}
+
+			case AF_INET6:
+			{
+				err = uv_ip6_addr(ip.c_str(), 0, reinterpret_cast<struct sockaddr_in6*>(&bindAddr));
+
+				if (err != 0)
+				{
+					MS_THROW_ERROR("uv_ip6_addr() failed: %s", uv_strerror(err));
+				}
+
+				break;
+			}
+
+			// This cannot happen.
+			default:
+			{
+				MS_THROW_ERROR("unknown IP family");
+			}
+		}
+
+		// Choose a random port index to start from.
+		portIdx = static_cast<size_t>(Utils::Crypto::GetRandomUInt(
+		  static_cast<uint32_t>(0), static_cast<uint32_t>(ports.size() - 1)));
+
+		// Iterate all ports until getting one available. Fail if none found and also
+		// if bind() fails N times in theoretically available ports.
+		while (true)
+		{
+			// Increase attempt number.
+			++attempt;
+
+			// If we have tried all the ports in the range throw.
+			if (attempt > numAttempts)
+			{
+				MS_THROW_ERROR(
+				  "no more available ports [transport:%s, ip:'%s', numAttempt:%zu]",
+				  transportStr.c_str(),
+				  ip.c_str(),
+				  numAttempts);
+			}
+
+			// Increase current port index.
+			portIdx = (portIdx + 1) % ports.size();
+
+			// So the corresponding port is the vector position plus the RTC minimum port.
+			port = static_cast<uint16_t>(portIdx + minPort);
+
+			MS_DEBUG_DEV(
+			  "testing port [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
+			  transportStr.c_str(),
+			  ip.c_str(),
+			  port,
+			  attempt,
+			  numAttempts);
+
+			// Check whether this port is not available.
+			if (ports[portIdx])
+			{
+				MS_DEBUG_DEV(
+				  "port in use, trying again [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
+				  transportStr.c_str(),
+				  ip.c_str(),
+				  port,
+				  attempt,
+				  numAttempts);
+
+				continue;
+			}
+
+			// Here we already have a theoretically available port. Now let's check
+			// whether no other process is binding into it.
+
+			// Set the chosen port into the sockaddr struct.
+			switch (family)
+			{
+				case AF_INET:
+				{
+					(reinterpret_cast<struct sockaddr_in*>(&bindAddr))->sin_port = htons(port);
+
+					break;
+				}
+
+				case AF_INET6:
+				{
+					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
+
+					break;
+				}
+			}
+
+			// Try to bind on it.
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
+					err      = uv_udp_init_ex(
+            DepLibUV::GetLoop(), reinterpret_cast<uv_udp_t*>(uvHandle), UV_UDP_RECVMMSG);
+
+					break;
+				}
+
+				case Transport::TCP:
+				{
+					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
+					err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
+
+					break;
+				}
+			}
+
+			if (err != 0)
+			{
+				switch (transport)
+				{
+					case Transport::UDP:
+					{
+						delete reinterpret_cast<uv_udp_t*>(uvHandle);
+
+						MS_THROW_ERROR("uv_udp_init_ex() failed: %s", uv_strerror(err));
+
+						break;
+					}
+
+					case Transport::TCP:
+					{
+						delete reinterpret_cast<uv_tcp_t*>(uvHandle);
+
+						MS_THROW_ERROR("uv_tcp_init() failed: %s", uv_strerror(err));
+
+						break;
+					}
+				}
+			}
+
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					err = uv_udp_bind(
+					  reinterpret_cast<uv_udp_t*>(uvHandle),
+					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+					  bitFlags);
+
+					if (err != 0)
+					{
+						MS_WARN_DEV(
+						  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  transportStr.c_str(),
+						  ip.c_str(),
+						  port,
+						  attempt,
+						  numAttempts,
+						  uv_strerror(err));
+					}
+
+					break;
+				}
+
+				case Transport::TCP:
+				{
+					err = uv_tcp_bind(
+					  reinterpret_cast<uv_tcp_t*>(uvHandle),
+					  reinterpret_cast<const struct sockaddr*>(&bindAddr),
+					  bitFlags);
+
+					if (err != 0)
+					{
+						MS_WARN_DEV(
+						  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  transportStr.c_str(),
+						  ip.c_str(),
+						  port,
+						  attempt,
+						  numAttempts,
+						  uv_strerror(err));
+					}
+
+					// uv_tcp_bind() may succeed even if later uv_listen() fails, so
+					// double check it.
+					if (err == 0)
+					{
+						err = uv_listen(
+						  reinterpret_cast<uv_stream_t*>(uvHandle),
+						  256,
+						  static_cast<uv_connection_cb>(onFakeConnection));
+
+						MS_WARN_DEV(
+						  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  transportStr.c_str(),
+						  ip.c_str(),
+						  port,
+						  attempt,
+						  numAttempts,
+						  uv_strerror(err));
+					}
+
+					break;
+				}
+			}
+
+			// If it succeeded, exit the loop here.
+			if (err == 0)
+			{
+				break;
+			}
+
+			// If it failed, close the handle and check the reason.
+			switch (transport)
+			{
+				case Transport::UDP:
+				{
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
+
+					break;
+				};
+
+				case Transport::TCP:
+				{
+					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+
+					break;
+				}
+			}
+
+			switch (err)
+			{
+				// If bind() fails due to "too many open files" just throw.
+				case UV_EMFILE:
+				{
+					MS_THROW_ERROR(
+					  "port bind failed due to too many open files [transport:%s, ip:'%s', port:%" PRIu16
+					  ", attempt:%zu/%zu]",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  attempt,
+					  numAttempts);
+
+					break;
+				}
+
+				// If cannot bind in the given IP, throw.
+				case UV_EADDRNOTAVAIL:
+				{
+					MS_THROW_ERROR(
+					  "port bind failed due to address not available [transport:%s, ip:'%s', port:%" PRIu16
+					  ", attempt:%zu/%zu]",
+					  transportStr.c_str(),
+					  ip.c_str(),
+					  port,
+					  attempt,
+					  numAttempts);
+
+					break;
+				}
+
+				default:
+				{
+					// Otherwise continue in the loop to try again with next port.
+				}
+			}
+		}
+
+		// If here, we got an available port. Mark it as unavailable.
+		ports[portIdx] = true;
+
+		MS_DEBUG_DEV(
+		  "bind succeeded [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
+		  transportStr.c_str(),
+		  ip.c_str(),
+		  port,
+		  attempt,
+		  numAttempts);
+
+		return static_cast<uv_handle_t*>(uvHandle);
+	}
+
 	void PortManager::Unbind(Transport transport, std::string& ip, uint16_t port)
 	{
 		MS_TRACE();

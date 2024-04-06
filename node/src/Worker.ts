@@ -701,6 +701,8 @@ export class Worker<
 					listenInfo.ip,
 					listenInfo.announcedAddress ?? listenInfo.announcedIp,
 					listenInfo.port,
+					listenInfo.minPort,
+					listenInfo.maxPort,
 					socketFlagsToFbs(listenInfo.flags),
 					listenInfo.sendBufferSize,
 					listenInfo.recvBufferSize

@@ -26,6 +26,19 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	UdpSocket::UdpSocket(
+	  Listener* listener,
+	  std::string& ip,
+	  uint16_t minPort,
+	  uint16_t maxPort,
+	  RTC::Transport::SocketFlags& flags)
+	  : // This may throw.
+	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, minPort, maxPort, flags)),
+	    listener(listener), fixedPort(true)
+	{
+		MS_TRACE();
+	}
+
 	UdpSocket::~UdpSocket()
 	{
 		MS_TRACE();

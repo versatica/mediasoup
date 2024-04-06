@@ -91,6 +91,18 @@ export type TransportListenInfo = {
 	port?: number;
 
 	/**
+	 * Min listening port. If given (and also |maxPort|) then |port| will be
+	 * ignored.
+	 */
+	minPort?: number;
+
+	/**
+	 * Max listening port. If given (and also |minPort|) then |port| will be
+	 * ignored.
+	 */
+	maxPort?: number;
+
+	/**
 	 * Socket flags.
 	 */
 	flags?: TransportSocketFlags;

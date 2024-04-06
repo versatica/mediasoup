@@ -23,6 +23,8 @@ table ListenInfo {
     ip: string (required);
     announced_address: string;
     port: uint16 = 0;
+    minPort: uint16 = 0;
+    maxPort: uint16 = 0;
     flags: SocketFlags (required);
     send_buffer_size: uint32 = 0;
     recv_buffer_size: uint32 = 0;

@@ -560,6 +560,8 @@ export class Router<
 						listenInfo.ip,
 						listenInfo.announcedAddress ?? listenInfo.announcedIp,
 						listenInfo.port,
+						listenInfo.minPort,
+						listenInfo.maxPort,
 						socketFlagsToFbs(listenInfo.flags),
 						listenInfo.sendBufferSize,
 						listenInfo.recvBufferSize
@@ -748,6 +750,8 @@ export class Router<
 				listenInfo!.ip,
 				listenInfo!.announcedAddress ?? listenInfo!.announcedIp,
 				listenInfo!.port,
+				listenInfo!.minPort,
+				listenInfo!.maxPort,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize
@@ -760,6 +764,8 @@ export class Router<
 						rtcpListenInfo.ip,
 						rtcpListenInfo.announcedAddress ?? rtcpListenInfo.announcedIp,
 						rtcpListenInfo.port,
+						rtcpListenInfo.minPort,
+						rtcpListenInfo.maxPort,
 						socketFlagsToFbs(rtcpListenInfo.flags),
 						rtcpListenInfo.sendBufferSize,
 						rtcpListenInfo.recvBufferSize
@@ -900,6 +906,8 @@ export class Router<
 				listenInfo!.ip,
 				listenInfo!.announcedAddress ?? listenInfo!.announcedIp,
 				listenInfo!.port,
+				listenInfo!.minPort,
+				listenInfo!.maxPort,
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize

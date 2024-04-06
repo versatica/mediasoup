@@ -94,7 +94,12 @@ namespace RTC
 					// This may throw.
 					RTC::UdpSocket* udpSocket;
 
-					if (listenInfo->port() != 0)
+					if (listenInfo->minPort() != 0 && listenInfo->maxPort() != 0)
+					{
+						udpSocket =
+						  new RTC::UdpSocket(this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags);
+					}
+					else if (listenInfo->port() != 0)
 					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
@@ -126,7 +131,12 @@ namespace RTC
 					// This may throw.
 					RTC::TcpServer* tcpServer;
 
-					if (listenInfo->port() != 0)
+					if (listenInfo->minPort() != 0 && listenInfo->maxPort() != 0)
+					{
+						tcpServer = new RTC::TcpServer(
+						  this, this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags);
+					}
+					else if (listenInfo->port() != 0)
 					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}

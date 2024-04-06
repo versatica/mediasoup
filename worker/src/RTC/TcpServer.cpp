@@ -35,6 +35,20 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	TcpServer::TcpServer(
+	  Listener* listener,
+	  RTC::TcpConnection::Listener* connListener,
+	  std::string& ip,
+	  uint16_t minPort,
+	  uint16_t maxPort,
+	  RTC::Transport::SocketFlags& flags)
+	  : // This may throw.
+	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, minPort, maxPort, flags)),
+	    listener(listener), connListener(connListener), fixedPort(true)
+	{
+		MS_TRACE();
+	}
+
 	TcpServer::~TcpServer()
 	{
 		MS_TRACE();

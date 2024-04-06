@@ -35,6 +35,13 @@ namespace RTC
 		  std::string& ip,
 		  uint16_t port,
 		  RTC::Transport::SocketFlags& flags);
+		TcpServer(
+		  Listener* listener,
+		  RTC::TcpConnection::Listener* connListener,
+		  std::string& ip,
+		  uint16_t minPort,
+		  uint16_t maxPort,
+		  RTC::Transport::SocketFlags& flags);
 		~TcpServer() override;
 
 		/* Pure virtual methods inherited from ::TcpServerHandle. */
