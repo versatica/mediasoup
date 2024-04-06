@@ -193,7 +193,7 @@ namespace RTC
 					const auto* remoteSockAddrIn = reinterpret_cast<const struct sockaddr_in*>(remoteSockAddr);
 
 					const uint64_t address = ntohl(remoteSockAddrIn->sin_addr.s_addr);
-					const uint64_t port    = (ntohs(remoteSockAddrIn->sin_port));
+					const uint64_t port    = ntohs(remoteSockAddrIn->sin_port);
 
 					this->hash = port << 48;
 					this->hash |= address << 16;
