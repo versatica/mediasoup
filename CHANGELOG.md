@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- `ListenInfo`: Add `minPort` and `maxPort` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+- `TransportListenInfo`: Add `minPort` and `maxPort` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
 
 ### 3.13.24
 
@@ -54,8 +54,8 @@
 ### 3.13.14
 
 - Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
-- `ListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
-- `ListenInfo`: Ignore given socket flags if not suitable for given IP family or transport ([PR #1294](https://github.com/versatica/mediasoup/pull/1294)).
+- `TransportListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
+- `TransportListenInfo`: Ignore given socket flags if not suitable for given IP family or transport ([PR #1294](https://github.com/versatica/mediasoup/pull/1294)).
 - Meson: Remove `-Db_pie=true -Db_staticpic=true` args ([PR #1293](https://github.com/versatica/mediasoup/pull/1293)).
 - Add RTCP Sender Report trace event ([PR #1267](https://github.com/versatica/mediasoup/pull/1267) by @GithubUser8080).
 
@@ -129,7 +129,7 @@
 ### 3.13.0
 
 - Switch from JSON based messages to FlatBuffers ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
-- Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
+- Add `TransportListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 - Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
 - Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
 - DataChannel subchannels feature ([PR #1152](https://github.com/versatica/mediasoup/pull/1152)).

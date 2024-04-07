@@ -50,13 +50,13 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 
 	/**
 	 * Minimun RTC port for ICE, DTLS, RTP, etc. Default 10000.
-	 * @deprecated Use |minPort| in ListenInfo object instead.
+	 * @deprecated Use |minPort| in TransportListenInfo object instead.
 	 */
 	rtcMinPort?: number;
 
 	/**
 	 * Maximum RTC port for ICE, DTLS, RTP, etc. Default 59999.
-	 * @deprecated Use |maxPort| in ListenInfo object instead.
+	 * @deprecated Use |maxPort| in TransportListenInfo object instead.
 	 */
 	rtcMaxPort?: number;
 
