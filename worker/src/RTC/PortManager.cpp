@@ -586,7 +586,6 @@ namespace RTC
 		  attempt,
 		  numAttempts);
 
-
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
 
