@@ -10,18 +10,11 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	UdpSocket::UdpSocket(Listener* listener, std::string& ip, RTC::Transport::SocketFlags& flags)
-	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, flags)), listener(listener)
-	{
-		MS_TRACE();
-	}
-
 	UdpSocket::UdpSocket(
 	  Listener* listener, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, port, flags)), listener(listener),
-	    fixedPort(true)
+	    ::UdpSocketHandle::UdpSocketHandle(RTC::PortManager::BindUdp(ip, port, flags)),
+	    listener(listener), fixedPort(true)
 	{
 		MS_TRACE();
 	}
@@ -31,12 +24,16 @@ namespace RTC
 	  std::string& ip,
 	  uint16_t minPort,
 	  uint16_t maxPort,
-	  RTC::Transport::SocketFlags& flags)
+	  RTC::Transport::SocketFlags& flags,
+	  uint64_t& portRangeHash)
 	  : // This may throw.
-	    ::UdpSocketHandle::UdpSocketHandle(PortManager::BindUdp(ip, minPort, maxPort, flags)),
-	    listener(listener), fixedPort(true)
+	    ::UdpSocketHandle::UdpSocketHandle(
+	      RTC::PortManager::BindUdp(ip, minPort, maxPort, flags, portRangeHash)),
+	    listener(listener), fixedPort(false)
 	{
 		MS_TRACE();
+
+		this->portRangeHash = portRangeHash;
 	}
 
 	UdpSocket::~UdpSocket()
@@ -45,7 +42,7 @@ namespace RTC
 
 		if (!this->fixedPort)
 		{
-			PortManager::UnbindUdp(this->localIp, this->localPort);
+			RTC::PortManager::Unbind(this->portRangeHash, this->localPort);
 		}
 	}
 

@@ -139,6 +139,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 		routerIds.push_back(builder.CreateString(routerId));
 	}
 
+	// Add channelMessageHandlers.
 	auto channelMessageHandlers = this->shared->channelMessageRegistrator->FillBuffer(builder);
 
 	return FBS::Worker::CreateDumpResponseDirect(

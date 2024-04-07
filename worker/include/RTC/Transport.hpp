@@ -130,6 +130,8 @@ namespace RTC
 			std::string ip;
 			std::string announcedAddress;
 			uint16_t port{ 0u };
+			uint16_t minPort{ 0u };
+			uint16_t maxPort{ 0u };
 			SocketFlags flags;
 			uint32_t sendBufferSize{ 0u };
 			uint32_t recvBufferSize{ 0u };

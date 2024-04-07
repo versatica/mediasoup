@@ -14,18 +14,6 @@ namespace RTC
 	  Listener* listener,
 	  RTC::TcpConnection::Listener* connListener,
 	  std::string& ip,
-	  RTC::Transport::SocketFlags& flags)
-	  : // This may throw.
-	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, flags)), listener(listener),
-	    connListener(connListener)
-	{
-		MS_TRACE();
-	}
-
-	TcpServer::TcpServer(
-	  Listener* listener,
-	  RTC::TcpConnection::Listener* connListener,
-	  std::string& ip,
 	  uint16_t port,
 	  RTC::Transport::SocketFlags& flags)
 	  : // This may throw.
@@ -41,12 +29,16 @@ namespace RTC
 	  std::string& ip,
 	  uint16_t minPort,
 	  uint16_t maxPort,
-	  RTC::Transport::SocketFlags& flags)
+	  RTC::Transport::SocketFlags& flags,
+	  uint64_t& portRangeHash)
 	  : // This may throw.
-	    ::TcpServerHandle::TcpServerHandle(RTC::PortManager::BindTcp(ip, minPort, maxPort, flags)),
-	    listener(listener), connListener(connListener), fixedPort(true)
+	    ::TcpServerHandle::TcpServerHandle(
+	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeHash)),
+	    listener(listener), connListener(connListener), fixedPort(false)
 	{
 		MS_TRACE();
+
+		this->portRangeHash = portRangeHash;
 	}
 
 	TcpServer::~TcpServer()
@@ -55,7 +47,7 @@ namespace RTC
 
 		if (!this->fixedPort)
 		{
-			RTC::PortManager::UnbindTcp(this->localIp, this->localPort);
+			RTC::PortManager::Unbind(this->portRangeHash, this->localPort);
 		}
 	}
 

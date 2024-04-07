@@ -18,7 +18,7 @@ public:
 
 public:
 	void Close();
-	virtual void Dump() const;
+	void Dump() const;
 	const struct sockaddr* GetLocalAddress() const
 	{
 		return reinterpret_cast<const struct sockaddr*>(&this->localAddr);

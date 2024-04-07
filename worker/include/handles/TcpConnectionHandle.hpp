@@ -54,7 +54,7 @@ public:
 	{
 		return this->closed;
 	}
-	virtual void Dump() const;
+	void Dump() const;
 	void Setup(
 	  Listener* listener,
 	  struct sockaddr_storage* localAddr,

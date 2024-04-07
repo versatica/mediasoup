@@ -4,6 +4,7 @@
 #include "RTC/WebRtcServer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Settings.hpp"
 #include "Utils.hpp"
 #include <cmath> // std::pow()
 
@@ -96,16 +97,29 @@ namespace RTC
 
 					if (listenInfo->minPort() != 0 && listenInfo->maxPort() != 0)
 					{
-						udpSocket =
-						  new RTC::UdpSocket(this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags);
+						uint64_t portRangeHash{ 0u };
+
+						udpSocket = new RTC::UdpSocket(
+						  this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags, portRangeHash);
 					}
 					else if (listenInfo->port() != 0)
 					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
+					// NOTE: This is temporal to allow deprecated usage of worker port range.
+					// In the future this should throw since |port| or |minPort| and |maxPort|
+					// will be required.
 					else
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, flags);
+						uint64_t portRangeHash{ 0u };
+
+						udpSocket = new RTC::UdpSocket(
+						  this,
+						  ip,
+						  Settings::configuration.rtcMinPort,
+						  Settings::configuration.rtcMaxPort,
+						  flags,
+						  portRangeHash);
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedAddress);
@@ -133,16 +147,30 @@ namespace RTC
 
 					if (listenInfo->minPort() != 0 && listenInfo->maxPort() != 0)
 					{
+						uint64_t portRangeHash{ 0u };
+
 						tcpServer = new RTC::TcpServer(
-						  this, this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags);
+						  this, this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags, portRangeHash);
 					}
 					else if (listenInfo->port() != 0)
 					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}
+					// NOTE: This is temporal to allow deprecated usage of worker port range.
+					// In the future this should throw since |port| or |minPort| and |maxPort|
+					// will be required.
 					else
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, flags);
+						uint64_t portRangeHash{ 0u };
+
+						tcpServer = new RTC::TcpServer(
+						  this,
+						  this,
+						  ip,
+						  Settings::configuration.rtcMinPort,
+						  Settings::configuration.rtcMaxPort,
+						  flags,
+						  portRangeHash);
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedAddress);
