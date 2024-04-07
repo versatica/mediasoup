@@ -38,7 +38,7 @@ namespace RTC
 	/* Class methods. */
 
 	uv_handle_t* PortManager::Bind(
-	  Transport transport, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
+	  Protocol protocol, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags)
 	{
 		MS_TRACE();
 
@@ -51,21 +51,21 @@ namespace RTC
 		{
 		};
 		uv_handle_t* uvHandle{ nullptr };
-		std::string transportStr;
-		const uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
+		std::string protocolStr;
+		const uint8_t bitFlags = ConvertSocketFlags(flags, protocol, family);
 
-		switch (transport)
+		switch (protocol)
 		{
-			case Transport::UDP:
+			case Protocol::UDP:
 			{
-				transportStr.assign("udp");
+				protocolStr.assign("udp");
 
 				break;
 			}
 
-			case Transport::TCP:
+			case Protocol::TCP:
 			{
-				transportStr.assign("tcp");
+				protocolStr.assign("tcp");
 
 				break;
 			}
@@ -123,9 +123,9 @@ namespace RTC
 		}
 
 		// Try to bind on it.
-		switch (transport)
+		switch (protocol)
 		{
-			case Transport::UDP:
+			case Protocol::UDP:
 			{
 				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 				err      = uv_udp_init_ex(
@@ -134,7 +134,7 @@ namespace RTC
 				break;
 			}
 
-			case Transport::TCP:
+			case Protocol::TCP:
 			{
 				uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
 				err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
@@ -145,9 +145,9 @@ namespace RTC
 
 		if (err != 0)
 		{
-			switch (transport)
+			switch (protocol)
 			{
-				case Transport::UDP:
+				case Protocol::UDP:
 				{
 					delete reinterpret_cast<uv_udp_t*>(uvHandle);
 
@@ -156,7 +156,7 @@ namespace RTC
 					break;
 				}
 
-				case Transport::TCP:
+				case Protocol::TCP:
 				{
 					delete reinterpret_cast<uv_tcp_t*>(uvHandle);
 
@@ -167,9 +167,9 @@ namespace RTC
 			}
 		}
 
-		switch (transport)
+		switch (protocol)
 		{
-			case Transport::UDP:
+			case Protocol::UDP:
 			{
 				err = uv_udp_bind(
 				  reinterpret_cast<uv_udp_t*>(uvHandle),
@@ -182,8 +182,8 @@ namespace RTC
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
 
 					MS_THROW_ERROR(
-					  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
-					  transportStr.c_str(),
+					  "uv_udp_bind() failed [protocol:%s, ip:'%s', port:%" PRIu16 "]: %s",
+					  protocolStr.c_str(),
 					  ip.c_str(),
 					  port,
 					  uv_strerror(err));
@@ -192,7 +192,7 @@ namespace RTC
 				break;
 			}
 
-			case Transport::TCP:
+			case Protocol::TCP:
 			{
 				err = uv_tcp_bind(
 				  reinterpret_cast<uv_tcp_t*>(uvHandle),
@@ -205,8 +205,8 @@ namespace RTC
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
-					  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
-					  transportStr.c_str(),
+					  "uv_tcp_bind() failed [protocol:%s, ip:'%s', port:%" PRIu16 "]: %s",
+					  protocolStr.c_str(),
 					  ip.c_str(),
 					  port,
 					  uv_strerror(err));
@@ -225,8 +225,8 @@ namespace RTC
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
 					MS_THROW_ERROR(
-					  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 "]: %s",
-					  transportStr.c_str(),
+					  "uv_listen() failed [protocol:%s, ip:'%s', port:%" PRIu16 "]: %s",
+					  protocolStr.c_str(),
 					  ip.c_str(),
 					  port,
 					  uv_strerror(err));
@@ -237,16 +237,13 @@ namespace RTC
 		}
 
 		MS_DEBUG_DEV(
-		  "bind succeeded [transport:%s, ip:'%s', port:%" PRIu16 "]",
-		  transportStr.c_str(),
-		  ip.c_str(),
-		  port);
+		  "bind succeeded [protocol:%s, ip:'%s', port:%" PRIu16 "]", protocolStr.c_str(), ip.c_str(), port);
 
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
 
 	uv_handle_t* PortManager::Bind(
-	  Transport transport,
+	  Protocol protocol,
 	  std::string& ip,
 	  uint16_t minPort,
 	  uint16_t maxPort,
@@ -268,20 +265,20 @@ namespace RTC
 		struct sockaddr_storage bindAddr
 		{
 		};
-		std::string transportStr;
+		std::string protocolStr;
 
-		switch (transport)
+		switch (protocol)
 		{
-			case Transport::UDP:
+			case Protocol::UDP:
 			{
-				transportStr.assign("udp");
+				protocolStr.assign("udp");
 
 				break;
 			}
 
-			case Transport::TCP:
+			case Protocol::TCP:
 			{
-				transportStr.assign("tcp");
+				protocolStr.assign("tcp");
 
 				break;
 			}
@@ -320,7 +317,7 @@ namespace RTC
 			}
 		}
 
-		hash = GeneratePortRangeHash(transport, std::addressof(bindAddr), minPort, maxPort);
+		hash = GeneratePortRangeHash(protocol, std::addressof(bindAddr), minPort, maxPort);
 
 		auto& portRange          = PortManager::GetOrCreatePortRange(hash, minPort, maxPort);
 		const size_t numPorts    = portRange.ports.size();
@@ -329,7 +326,7 @@ namespace RTC
 		size_t portIdx;
 		uint16_t port;
 		uv_handle_t* uvHandle{ nullptr };
-		const uint8_t bitFlags = ConvertSocketFlags(flags, transport, family);
+		const uint8_t bitFlags = ConvertSocketFlags(flags, protocol, family);
 
 		// Choose a random port index to start from.
 		portIdx = static_cast<size_t>(
@@ -346,8 +343,8 @@ namespace RTC
 			if (attempt > numAttempts)
 			{
 				MS_THROW_ERROR(
-				  "no more available ports [transport:%s, ip:'%s', numAttempt:%zu]",
-				  transportStr.c_str(),
+				  "no more available ports [protocol:%s, ip:'%s', numAttempt:%zu]",
+				  protocolStr.c_str(),
 				  ip.c_str(),
 				  numAttempts);
 			}
@@ -359,8 +356,8 @@ namespace RTC
 			port = static_cast<uint16_t>(portIdx + minPort);
 
 			MS_DEBUG_DEV(
-			  "testing port [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
-			  transportStr.c_str(),
+			  "testing port [protocol:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
+			  protocolStr.c_str(),
 			  ip.c_str(),
 			  port,
 			  attempt,
@@ -370,8 +367,8 @@ namespace RTC
 			if (portRange.ports[portIdx])
 			{
 				MS_DEBUG_DEV(
-				  "port in use, trying again [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
-				  transportStr.c_str(),
+				  "port in use, trying again [protocol:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
+				  protocolStr.c_str(),
 				  ip.c_str(),
 				  port,
 				  attempt,
@@ -402,9 +399,9 @@ namespace RTC
 			}
 
 			// Try to bind on it.
-			switch (transport)
+			switch (protocol)
 			{
-				case Transport::UDP:
+				case Protocol::UDP:
 				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_udp_t());
 					err      = uv_udp_init_ex(
@@ -413,7 +410,7 @@ namespace RTC
 					break;
 				}
 
-				case Transport::TCP:
+				case Protocol::TCP:
 				{
 					uvHandle = reinterpret_cast<uv_handle_t*>(new uv_tcp_t());
 					err      = uv_tcp_init(DepLibUV::GetLoop(), reinterpret_cast<uv_tcp_t*>(uvHandle));
@@ -424,9 +421,9 @@ namespace RTC
 
 			if (err != 0)
 			{
-				switch (transport)
+				switch (protocol)
 				{
-					case Transport::UDP:
+					case Protocol::UDP:
 					{
 						delete reinterpret_cast<uv_udp_t*>(uvHandle);
 
@@ -435,7 +432,7 @@ namespace RTC
 						break;
 					}
 
-					case Transport::TCP:
+					case Protocol::TCP:
 					{
 						delete reinterpret_cast<uv_tcp_t*>(uvHandle);
 
@@ -446,9 +443,9 @@ namespace RTC
 				}
 			}
 
-			switch (transport)
+			switch (protocol)
 			{
-				case Transport::UDP:
+				case Protocol::UDP:
 				{
 					err = uv_udp_bind(
 					  reinterpret_cast<uv_udp_t*>(uvHandle),
@@ -458,8 +455,8 @@ namespace RTC
 					if (err != 0)
 					{
 						MS_WARN_DEV(
-						  "uv_udp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
-						  transportStr.c_str(),
+						  "uv_udp_bind() failed [protocol:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  protocolStr.c_str(),
 						  ip.c_str(),
 						  port,
 						  attempt,
@@ -470,7 +467,7 @@ namespace RTC
 					break;
 				}
 
-				case Transport::TCP:
+				case Protocol::TCP:
 				{
 					err = uv_tcp_bind(
 					  reinterpret_cast<uv_tcp_t*>(uvHandle),
@@ -480,8 +477,8 @@ namespace RTC
 					if (err != 0)
 					{
 						MS_WARN_DEV(
-						  "uv_tcp_bind() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
-						  transportStr.c_str(),
+						  "uv_tcp_bind() failed [protocol:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  protocolStr.c_str(),
 						  ip.c_str(),
 						  port,
 						  attempt,
@@ -499,8 +496,8 @@ namespace RTC
 						  static_cast<uv_connection_cb>(onFakeConnection));
 
 						MS_WARN_DEV(
-						  "uv_listen() failed [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
-						  transportStr.c_str(),
+						  "uv_listen() failed [protocol:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]: %s",
+						  protocolStr.c_str(),
 						  ip.c_str(),
 						  port,
 						  attempt,
@@ -519,16 +516,16 @@ namespace RTC
 			}
 
 			// If it failed, close the handle and check the reason.
-			switch (transport)
+			switch (protocol)
 			{
-				case Transport::UDP:
+				case Protocol::UDP:
 				{
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseUdp));
 
 					break;
 				};
 
-				case Transport::TCP:
+				case Protocol::TCP:
 				{
 					uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 
@@ -542,9 +539,9 @@ namespace RTC
 				case UV_EMFILE:
 				{
 					MS_THROW_ERROR(
-					  "port bind failed due to too many open files [transport:%s, ip:'%s', port:%" PRIu16
+					  "port bind failed due to too many open files [protocol:%s, ip:'%s', port:%" PRIu16
 					  ", attempt:%zu/%zu]",
-					  transportStr.c_str(),
+					  protocolStr.c_str(),
 					  ip.c_str(),
 					  port,
 					  attempt,
@@ -557,9 +554,9 @@ namespace RTC
 				case UV_EADDRNOTAVAIL:
 				{
 					MS_THROW_ERROR(
-					  "port bind failed due to address not available [transport:%s, ip:'%s', port:%" PRIu16
+					  "port bind failed due to address not available [protocol:%s, ip:'%s', port:%" PRIu16
 					  ", attempt:%zu/%zu]",
-					  transportStr.c_str(),
+					  protocolStr.c_str(),
 					  ip.c_str(),
 					  port,
 					  attempt,
@@ -582,12 +579,13 @@ namespace RTC
 		portRange.numUsedPorts++;
 
 		MS_DEBUG_DEV(
-		  "bind succeeded [transport:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
-		  transportStr.c_str(),
+		  "bind succeeded [protocol:%s, ip:'%s', port:%" PRIu16 ", attempt:%zu/%zu]",
+		  protocolStr.c_str(),
 		  ip.c_str(),
 		  port,
 		  attempt,
 		  numAttempts);
+
 
 		return static_cast<uv_handle_t*>(uvHandle);
 	}
@@ -599,7 +597,12 @@ namespace RTC
 		auto it = PortManager::mapPortRanges.find(hash);
 
 		// This should not happen.
-		MS_ASSERT(it != PortManager::mapPortRanges.end(), "hash %" PRIu64 " doesn't exist", hash);
+		if (it == PortManager::mapPortRanges.end())
+		{
+			MS_ERROR("hash %" PRIu64 " doesn't exist in the map", hash);
+
+			return;
+		}
 
 		auto& portRange    = it->second;
 		const auto portIdx = static_cast<size_t>(port - portRange.minPort);
@@ -646,26 +649,26 @@ namespace RTC
 	 *
 	 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |           MIN PORT            |             IP                |
+	 * |           MIN PORT            |           MAX PORT            |
 	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |              IP               |       MAX PORT >> 2       |F|P|
+	 * |              IP               |           IP >> 2         |F|P|
 	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	 *
 	 * Hash for IPv6.
 	 *
 	 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |           MIN PORT            | IP[0] ^  IP[1] ^ IP[2] ^ IP[3]|
+	 * |           MIN PORT            |           MAX PORT            |
 	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	 * |IP[0] ^  IP[1] ^ IP[2] ^ IP[3] |       MAX PORT >> 2       |F|P|
+	 * |IP[0] ^  IP[1] ^ IP[2] ^ IP[3] |           same >> 2       |F|P|
 	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	 */
 	uint64_t PortManager::GeneratePortRangeHash(
-	  Transport transport, sockaddr_storage* bindAddr, uint16_t minPort, uint16_t maxPort)
+	  Protocol protocol, sockaddr_storage* bindAddr, uint16_t minPort, uint16_t maxPort)
 	{
 		MS_TRACE();
 
-		uint64_t hash;
+		uint64_t hash{ 0u };
 
 		switch (bindAddr->ss_family)
 		{
@@ -673,11 +676,12 @@ namespace RTC
 			{
 				auto* bindAddrIn = reinterpret_cast<struct sockaddr_in*>(bindAddr);
 
-				const uint64_t address = ntohl(bindAddrIn->sin_addr.s_addr);
+				// We want it in network order.
+				const uint64_t address = bindAddrIn->sin_addr.s_addr;
 
 				hash = static_cast<uint64_t>(minPort) << 48;
-				hash |= address << 16;
-				hash |= (static_cast<uint64_t>(maxPort) >> 2) << 2;
+				hash = static_cast<uint64_t>(maxPort) << 32;
+				hash |= (address >> 2) << 2;
 				hash |= 0x0000; // AF_INET.
 
 				break;
@@ -691,18 +695,19 @@ namespace RTC
 				const auto address = a[0] ^ a[1] ^ a[2] ^ a[3];
 
 				hash = static_cast<uint64_t>(minPort) << 48;
+				hash = static_cast<uint64_t>(maxPort) << 32;
 				hash |= static_cast<uint64_t>(address) << 16;
-				hash |= (static_cast<uint64_t>(maxPort) >> 2) << 2;
+				hash |= (static_cast<uint64_t>(address) >> 2) << 2;
 				hash |= 0x0002; // AF_INET6.
 
 				break;
 			}
 		}
 
-		// Override least significant bit with transport information:
+		// Override least significant bit with protocol information:
 		// - If UDP, start with 0.
 		// - If TCP, start with 1.
-		if (transport == Transport::UDP)
+		if (protocol == Protocol::UDP)
 		{
 			hash |= 0x0000;
 		}
@@ -742,8 +747,7 @@ namespace RTC
 		return portRange;
 	}
 
-	uint8_t PortManager::ConvertSocketFlags(
-	  RTC::Transport::SocketFlags& flags, Transport transport, int family)
+	uint8_t PortManager::ConvertSocketFlags(RTC::Transport::SocketFlags& flags, Protocol protocol, int family)
 	{
 		MS_TRACE();
 
@@ -752,16 +756,16 @@ namespace RTC
 		// Ignore ipv6Only in IPv4, otherwise libuv will throw.
 		if (flags.ipv6Only && family == AF_INET6)
 		{
-			switch (transport)
+			switch (protocol)
 			{
-				case Transport::UDP:
+				case Protocol::UDP:
 				{
 					bitFlags |= UV_UDP_IPV6ONLY;
 
 					break;
 				}
 
-				case Transport::TCP:
+				case Protocol::TCP:
 				{
 					bitFlags |= UV_TCP_IPV6ONLY;
 
@@ -771,7 +775,7 @@ namespace RTC
 		}
 
 		// Ignore udpReusePort in TCP, otherwise libuv will throw.
-		if (flags.udpReusePort && transport == Transport::UDP)
+		if (flags.udpReusePort && protocol == Protocol::UDP)
 		{
 			bitFlags |= UV_UDP_REUSEADDR;
 		}
