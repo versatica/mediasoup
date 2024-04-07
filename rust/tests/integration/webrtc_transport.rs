@@ -315,7 +315,7 @@ fn create_with_min_port_and_max_port_succeeds() {
             .expect("Failed to create WebRTC transport");
 
         let port1 = transport1.ice_candidates().get(0).unwrap().port;
-        assert_eq!(port1 >= min_port && port1 <= max_port);
+        assert!(port1 >= min_port && port1 <= max_port);
 
         let transport2 = router
             .create_webrtc_transport({
@@ -335,7 +335,7 @@ fn create_with_min_port_and_max_port_succeeds() {
             .expect("Failed to create WebRTC transport");
 
         let port2 = transport2.ice_candidates().get(0).unwrap().port;
-        assert_eq!(port2 >= min_port && port2 <= max_port);
+        assert!(port2 >= min_port && port2 <= max_port);
 
         assert!(matches!(
             router
