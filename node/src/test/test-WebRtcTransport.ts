@@ -211,8 +211,6 @@ test('router.createWebRtcTransport() with fixed port succeeds', async () => {
 	});
 
 	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
-
-	webRtcTransport.close();
 }, 2000);
 
 test('router.createWebRtcTransport() with portRange succeeds', async () => {
