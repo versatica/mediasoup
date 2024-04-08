@@ -8,7 +8,8 @@ import {
 	TransportListenInfo,
 	TransportListenIp,
 	TransportProtocol,
-	TransportSocketFlags,
+	portRangeToFbs,
+	socketFlagsToFbs,
 } from './Transport';
 import {
 	WebRtcTransport,
@@ -560,8 +561,7 @@ export class Router<
 						listenInfo.ip,
 						listenInfo.announcedAddress ?? listenInfo.announcedIp,
 						listenInfo.port,
-						listenInfo.minPort,
-						listenInfo.maxPort,
+						portRangeToFbs(listenInfo.portRange),
 						socketFlagsToFbs(listenInfo.flags),
 						listenInfo.sendBufferSize,
 						listenInfo.recvBufferSize
@@ -750,8 +750,7 @@ export class Router<
 				listenInfo!.ip,
 				listenInfo!.announcedAddress ?? listenInfo!.announcedIp,
 				listenInfo!.port,
-				listenInfo!.minPort,
-				listenInfo!.maxPort,
+				portRangeToFbs(listenInfo!.portRange),
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize
@@ -764,8 +763,7 @@ export class Router<
 						rtcpListenInfo.ip,
 						rtcpListenInfo.announcedAddress ?? rtcpListenInfo.announcedIp,
 						rtcpListenInfo.port,
-						rtcpListenInfo.minPort,
-						rtcpListenInfo.maxPort,
+						portRangeToFbs(rtcpListenInfo.portRange),
 						socketFlagsToFbs(rtcpListenInfo.flags),
 						rtcpListenInfo.sendBufferSize,
 						rtcpListenInfo.recvBufferSize
@@ -906,8 +904,7 @@ export class Router<
 				listenInfo!.ip,
 				listenInfo!.announcedAddress ?? listenInfo!.announcedIp,
 				listenInfo!.port,
-				listenInfo!.minPort,
-				listenInfo!.maxPort,
+				portRangeToFbs(listenInfo!.portRange),
 				socketFlagsToFbs(listenInfo!.flags),
 				listenInfo!.sendBufferSize,
 				listenInfo!.recvBufferSize
@@ -1576,13 +1573,4 @@ export function parseRouterDumpResponse(
 			'mapDataConsumerIdDataProducerId'
 		),
 	};
-}
-
-export function socketFlagsToFbs(
-	flags: TransportSocketFlags = {}
-): FbsTransport.SocketFlagsT {
-	return new FbsTransport.SocketFlagsT(
-		Boolean(flags.ipv6Only),
-		Boolean(flags.udpReusePort)
-	);
 }

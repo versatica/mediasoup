@@ -91,16 +91,9 @@ export type TransportListenInfo = {
 	port?: number;
 
 	/**
-	 * Min listening port. If given (and also |maxPort|) then |port| will be
-	 * ignored.
+	 * Listening port range. If given then |port| will be ignored.
 	 */
-	minPort?: number;
-
-	/**
-	 * Max listening port. If given (and also |minPort|) then |port| will be
-	 * ignored.
-	 */
-	maxPort?: number;
+	portRange?: TransportPortRange;
 
 	/**
 	 * Socket flags.
@@ -139,6 +132,20 @@ export type TransportListenIp = {
  * Transport protocol.
  */
 export type TransportProtocol = 'udp' | 'tcp';
+
+/**
+ * Port range..
+ */
+export type TransportPortRange = {
+	/**
+	 * Lowest port in the range.
+	 */
+	min: number;
+	/**
+	 * Highest port in the range.
+	 */
+	max: number;
+};
 
 /**
  * UDP/TCP socket flags.
@@ -1286,36 +1293,19 @@ export class Transport<
 	}
 }
 
-function transportTraceEventTypeToFbs(
-	eventType: TransportTraceEventType
-): FbsTransport.TraceEventType {
-	switch (eventType) {
-		case 'probation': {
-			return FbsTransport.TraceEventType.PROBATION;
-		}
-
-		case 'bwe': {
-			return FbsTransport.TraceEventType.BWE;
-		}
-
-		default: {
-			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
-		}
-	}
+export function portRangeToFbs(
+	portRange: TransportPortRange = { min: 0, max: 0 }
+): FbsTransport.PortRangeT {
+	return new FbsTransport.PortRangeT(portRange.min, portRange.max);
 }
 
-function transportTraceEventTypeFromFbs(
-	eventType: FbsTransport.TraceEventType
-): TransportTraceEventType {
-	switch (eventType) {
-		case FbsTransport.TraceEventType.PROBATION: {
-			return 'probation';
-		}
-
-		case FbsTransport.TraceEventType.BWE: {
-			return 'bwe';
-		}
-	}
+export function socketFlagsToFbs(
+	flags: TransportSocketFlags = {}
+): FbsTransport.SocketFlagsT {
+	return new FbsTransport.SocketFlagsT(
+		Boolean(flags.ipv6Only),
+		Boolean(flags.udpReusePort)
+	);
 }
 
 export function parseSctpState(fbsSctpState: FbsSctpState): SctpState {
@@ -1537,6 +1527,38 @@ function parseRecvRtpHeaderExtensions(
 				? binary.transportWideCc01()!
 				: undefined,
 	};
+}
+
+function transportTraceEventTypeToFbs(
+	eventType: TransportTraceEventType
+): FbsTransport.TraceEventType {
+	switch (eventType) {
+		case 'probation': {
+			return FbsTransport.TraceEventType.PROBATION;
+		}
+
+		case 'bwe': {
+			return FbsTransport.TraceEventType.BWE;
+		}
+
+		default: {
+			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
+		}
+	}
+}
+
+function transportTraceEventTypeFromFbs(
+	eventType: FbsTransport.TraceEventType
+): TransportTraceEventType {
+	switch (eventType) {
+		case FbsTransport.TraceEventType.PROBATION: {
+			return 'probation';
+		}
+
+		case FbsTransport.TraceEventType.BWE: {
+			return 'bwe';
+		}
+	}
 }
 
 function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {

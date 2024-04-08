@@ -76,20 +76,25 @@ namespace RTC
 				{
 					RTC::UdpSocket* udpSocket;
 
-					if (listenInfo->minPort() != 0 && listenInfo->maxPort() != 0)
+					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
 					{
 						uint64_t portRangeHash{ 0u };
 
 						udpSocket = new RTC::UdpSocket(
-						  this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags, portRangeHash);
+						  this,
+						  ip,
+						  listenInfo->portRange()->min(),
+						  listenInfo->portRange()->max(),
+						  flags,
+						  portRangeHash);
 					}
 					else if (listenInfo->port() != 0)
 					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
 					// NOTE: This is temporal to allow deprecated usage of worker port range.
-					// In the future this should throw since |port| or |minPort| and |maxPort|
-					// will be required.
+					// In the future this should throw since |port| or |portRange| will be
+					// required.
 					else
 					{
 						uint64_t portRangeHash{ 0u };
@@ -136,20 +141,26 @@ namespace RTC
 				{
 					RTC::TcpServer* tcpServer;
 
-					if (listenInfo->minPort() != 0 && listenInfo->maxPort() != 0)
+					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
 					{
 						uint64_t portRangeHash{ 0u };
 
 						tcpServer = new RTC::TcpServer(
-						  this, this, ip, listenInfo->minPort(), listenInfo->maxPort(), flags, portRangeHash);
+						  this,
+						  this,
+						  ip,
+						  listenInfo->portRange()->min(),
+						  listenInfo->portRange()->max(),
+						  flags,
+						  portRangeHash);
 					}
 					else if (listenInfo->port() != 0)
 					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}
 					// NOTE: This is temporal to allow deprecated usage of worker port range.
-					// In the future this should throw since |port| or |minPort| and |maxPort|
-					// will be required.
+					// In the future this should throw since |port| or |portRange| will be
+					// required.
 					else
 					{
 						uint64_t portRangeHash{ 0u };

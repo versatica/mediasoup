@@ -100,8 +100,7 @@ fn create_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: Some("9.9.9.1".to_string()),
                         port: None,
-                        min_port: None,
-                        max_port: None,
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -140,8 +139,7 @@ fn create_succeeds() {
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_address: Some("9.9.9.1".to_string()),
                                 port: None,
-                                min_port: None,
-                                max_port: None,
+                                port_range: None,
                                 flags: None,
                                 send_buffer_size: None,
                                 recv_buffer_size: None,
@@ -151,8 +149,7 @@ fn create_succeeds() {
                                 ip: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
                                 announced_address: Some("foo1.bar.org".to_string()),
                                 port: None,
-                                min_port: None,
-                                max_port: None,
+                                port_range: None,
                                 flags: None,
                                 send_buffer_size: None,
                                 recv_buffer_size: None,
@@ -162,8 +159,7 @@ fn create_succeeds() {
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_address: None,
                                 port: None,
-                                min_port: None,
-                                max_port: None,
+                                port_range: None,
                                 flags: None,
                                 send_buffer_size: None,
                                 recv_buffer_size: None,
@@ -275,8 +271,7 @@ fn create_with_fixed_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: Some(port),
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -290,12 +285,10 @@ fn create_with_fixed_port_succeeds() {
 }
 
 #[test]
-fn create_with_min_port_and_max_port_succeeds() {
+fn create_with_port_range_succeeds() {
     future::block_on(async move {
         let (_worker, router) = init().await;
-
-        let min_port = 11111;
-        let max_port = 11112;
+        let port_range = 11111..=11112;
 
         let transport1 = router
             .create_webrtc_transport({
@@ -304,8 +297,7 @@ fn create_with_min_port_and_max_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: Some(min_port),
-                    max_port: Some(max_port),
+                    port_range: Some(port_range.clone()),
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -315,7 +307,7 @@ fn create_with_min_port_and_max_port_succeeds() {
             .expect("Failed to create WebRTC transport");
 
         let port1 = transport1.ice_candidates().get(0).unwrap().port;
-        assert!(port1 >= min_port && port1 <= max_port);
+        assert!(port1 >= *port_range.start() && port1 <= *port_range.end());
 
         let transport2 = router
             .create_webrtc_transport({
@@ -324,8 +316,7 @@ fn create_with_min_port_and_max_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: Some(min_port),
-                    max_port: Some(max_port),
+                    port_range: Some(port_range.clone()),
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -335,7 +326,7 @@ fn create_with_min_port_and_max_port_succeeds() {
             .expect("Failed to create WebRTC transport");
 
         let port2 = transport2.ice_candidates().get(0).unwrap().port;
-        assert!(port2 >= min_port && port2 <= max_port);
+        assert!(port2 >= *port_range.start() && port2 <= *port_range.end());
 
         assert!(matches!(
             router
@@ -345,8 +336,7 @@ fn create_with_min_port_and_max_port_succeeds() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: Some("9.9.9.1".to_string()),
                         port: None,
-                        min_port: Some(min_port),
-                        max_port: Some(max_port),
+                        port_range: Some(port_range.clone()),
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -370,8 +360,7 @@ fn weak() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -403,8 +392,7 @@ fn create_non_bindable_ip() {
                         ip: "8.8.8.8".parse().unwrap(),
                         announced_address: None,
                         port: None,
-                        min_port: None,
-                        max_port: None,
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -428,8 +416,7 @@ fn get_stats_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -482,8 +469,7 @@ fn connect_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -534,8 +520,7 @@ fn set_max_incoming_bitrate_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -569,8 +554,7 @@ fn set_max_outgoing_bitrate_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -604,8 +588,7 @@ fn set_min_outgoing_bitrate_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -639,8 +622,7 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -679,8 +661,7 @@ fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -719,8 +700,7 @@ fn restart_ice_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -757,8 +737,7 @@ fn enable_trace_event_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -835,8 +814,7 @@ fn close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
                     port: None,
-                    min_port: None,
-                    max_port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,

@@ -13,7 +13,7 @@ use std::any::Any;
 use std::borrow::Cow;
 use std::fmt;
 use std::net::IpAddr;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, RangeInclusive};
 use std::sync::Arc;
 
 /// Container for arbitrary data attached to mediasoup entities.
@@ -52,7 +52,7 @@ impl AppData {
 /// # Notes on usage
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide
 /// `announced_address`.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListenInfo {
     /// Network protocol.
@@ -66,12 +66,9 @@ pub struct ListenInfo {
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
-    /// Min listening port. If given (and also |max_port|) then |port| will be ignored.
+    /// Listening port range. If given then |port| will be ignored.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub min_port: Option<u16>,
-    /// Max listening port. If given (and also |min_port|) then |port| will be ignored.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_port: Option<u16>,
+    pub port_range: Option<RangeInclusive<u16>>,
     /// Socket flags.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<SocketFlags>,
@@ -96,8 +93,21 @@ impl ListenInfo {
                 .as_ref()
                 .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
-            min_port: self.min_port.unwrap_or(0),
-            max_port: self.max_port.unwrap_or(0),
+            // port_range: self
+            //     .port_range
+            //     .unwrap_or(*Box::<RangeInclusive<u16>>::new(0, 0)),
+            port_range: Box::new(transport::PortRange {
+                min: if self.port_range.is_some() {
+                    *self.port_range.as_ref().unwrap().start()
+                } else {
+                    0
+                },
+                max: if self.port_range.is_some() {
+                    *self.port_range.as_ref().unwrap().end()
+                } else {
+                    0
+                },
+            }),
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
             recv_buffer_size: self.recv_buffer_size.unwrap_or(0),
