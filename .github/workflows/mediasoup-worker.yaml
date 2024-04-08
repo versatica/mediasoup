@@ -104,10 +104,10 @@ jobs:
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
 
-      - name: invoke -r worker test
-        run: invoke -r worker test
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
+      # - name: invoke -r worker test
+      #   run: invoke -r worker test
+      #   # TODO: Maybe fix this one day.
+      #   if: runner.os != 'Windows'
 
       - name: MEDIASOUP_BUILDTYPE=Debug invoke -r worker test
         run: MEDIASOUP_BUILDTYPE=Debug invoke -r worker test
