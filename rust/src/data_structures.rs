@@ -93,9 +93,6 @@ impl ListenInfo {
                 .as_ref()
                 .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
-            // port_range: self
-            //     .port_range
-            //     .unwrap_or(*Box::<RangeInclusive<u16>>::new(0, 0)),
             port_range: Box::new(transport::PortRange {
                 min: if self.port_range.is_some() {
                     *self.port_range.as_ref().unwrap().start()
