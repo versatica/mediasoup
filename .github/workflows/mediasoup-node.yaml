@@ -14,14 +14,9 @@ jobs:
       matrix:
         ci:
           - os: ubuntu-20.04
-            node: 16
-          - os: ubuntu-20.04
             node: 18
           - os: ubuntu-22.04
             node: 20
-          - os: ubuntu-20.04
-            node: 16
-            arch: arm64
           - os: ubuntu-20.04
             node: 18
             arch: arm64
