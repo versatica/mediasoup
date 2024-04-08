@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Require Node.js >= 18 ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+
 ### 3.13.24
 
 - Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
