@@ -1,5 +1,6 @@
 import * as os from 'node:os';
 import { Duplex } from 'node:stream';
+import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
@@ -156,8 +157,7 @@ export class Channel extends EnhancedEventEmitter {
 						}
 
 						default: {
-							// eslint-disable-next-line no-console
-							console.warn(
+							warn(
 								`worker[pid:${pid}] unexpected data: ${payload.toString(
 									'utf8',
 									1
@@ -482,8 +482,7 @@ export class Channel extends EnhancedEventEmitter {
 
 			// 'X' (a dump log).
 			case 'X': {
-				// eslint-disable-next-line no-console
-				console.log(logData.slice(1));
+				info(logData.slice(1));
 
 				break;
 			}

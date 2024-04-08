@@ -6,8 +6,9 @@ import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './EnhancedEventEmitter';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
-import { Router, RouterOptions, socketFlagsToFbs } from './Router';
+import { Router, RouterOptions } from './Router';
 import { WebRtcServer, WebRtcServerOptions } from './WebRtcServer';
+import { portRangeToFbs, socketFlagsToFbs } from './Transport';
 import { RtpCodecCapability } from './RtpParameters';
 import { AppData } from './types';
 import * as utils from './utils';
@@ -50,11 +51,13 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 
 	/**
 	 * Minimun RTC port for ICE, DTLS, RTP, etc. Default 10000.
+	 * @deprecated Use |portRange| in TransportListenInfo object instead.
 	 */
 	rtcMinPort?: number;
 
 	/**
 	 * Maximum RTC port for ICE, DTLS, RTP, etc. Default 59999.
+	 * @deprecated Use |portRange| in TransportListenInfo object instead.
 	 */
 	rtcMaxPort?: number;
 
@@ -701,6 +704,7 @@ export class Worker<
 					listenInfo.ip,
 					listenInfo.announcedAddress ?? listenInfo.announcedIp,
 					listenInfo.port,
+					portRangeToFbs(listenInfo.portRange),
 					socketFlagsToFbs(listenInfo.flags),
 					listenInfo.sendBufferSize,
 					listenInfo.recvBufferSize

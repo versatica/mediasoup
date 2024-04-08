@@ -23,8 +23,7 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 	};
 
 /**
- * @deprecated
- * Use TransportListenInfo instead.
+ * @deprecated Use TransportListenInfo instead.
  */
 export type WebRtcServerListenInfo = TransportListenInfo;
 
