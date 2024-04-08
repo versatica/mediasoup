@@ -91,7 +91,76 @@ test('worker.createWebRtcServer() succeeds', async () => {
 	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
-test('worker.createWebRtcServer() without specifying port succeeds', async () => {
+test('worker.createWebRtcServer() with portRange succeeds', async () => {
+	const onObserverNewWebRtcServer = jest.fn();
+
+	ctx.worker!.observer.once('newwebrtcserver', onObserverNewWebRtcServer);
+
+	const port1 = await pickPort({
+		type: 'udp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+	const port2 = await pickPort({
+		type: 'udp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+
+	const webRtcServer = await ctx.worker!.createWebRtcServer({
+		listenInfos: [
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				portRange: { min: port1, max: port1 },
+			},
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedAddress: '1.2.3.4',
+				portRange: { min: port2, max: port2 },
+			},
+		],
+		appData: { foo: 123 },
+	});
+
+	expect(onObserverNewWebRtcServer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewWebRtcServer).toHaveBeenCalledWith(webRtcServer);
+	expect(typeof webRtcServer.id).toBe('string');
+	expect(webRtcServer.closed).toBe(false);
+	expect(webRtcServer.appData).toEqual({ foo: 123 });
+
+	await expect(ctx.worker!.dump()).resolves.toMatchObject({
+		pid: ctx.worker!.pid,
+		webRtcServerIds: [webRtcServer.id],
+		routerIds: [],
+		channelMessageHandlers: {
+			channelRequestHandlers: [webRtcServer.id],
+			channelNotificationHandlers: [],
+		},
+	});
+
+	await expect(webRtcServer.dump()).resolves.toMatchObject({
+		id: webRtcServer.id,
+		udpSockets: [{ ip: '127.0.0.1', port: port1 }],
+		tcpServers: [{ ip: '127.0.0.1', port: port2 }],
+		webRtcTransportIds: [],
+		localIceUsernameFragments: [],
+		tupleHashes: [],
+	});
+
+	// Private API.
+	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
+
+	ctx.worker!.close();
+
+	expect(webRtcServer.closed).toBe(true);
+
+	// Private API.
+	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
+}, 2000);
+
+test('worker.createWebRtcServer() without specifying port/portRange succeeds', async () => {
 	const onObserverNewWebRtcServer = jest.fn();
 
 	ctx.worker!.observer.once('newwebrtcserver', onObserverNewWebRtcServer);

@@ -454,6 +454,16 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);
 
 	await expect(
+		ctx.router1!.createPipeTransport({
+			listenInfo: {
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				portRange: { min: 4000, max: 3000 },
+			},
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
 		ctx.router1!.createPipeTransport({ listenIp: '123' })
 	).rejects.toThrow(TypeError);
 
@@ -479,7 +489,11 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 
 test('router.createPipeTransport() with enableRtx succeeds', async () => {
 	const pipeTransport = await ctx.router1!.createPipeTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			portRange: { min: 2000, max: 3000 },
+		},
 		enableRtx: true,
 	});
 
@@ -583,7 +597,11 @@ test('pipeTransport.connect() with valid SRTP parameters succeeds', async () => 
 
 test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset', async () => {
 	const pipeTransport = await ctx.router1!.createPipeTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			portRange: { min: 2000, max: 3000 },
+		},
 		enableRtx: true,
 	});
 

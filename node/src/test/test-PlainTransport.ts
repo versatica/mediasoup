@@ -60,7 +60,11 @@ afterEach(async () => {
 
 test('router.createPlainTransport() succeeds', async () => {
 	const plainTransport = await ctx.router!.createPlainTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			portRange: { min: 2000, max: 3000 },
+		},
 	});
 
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
@@ -77,6 +81,7 @@ test('router.createPlainTransport() succeeds', async () => {
 			protocol: 'udp',
 			ip: '127.0.0.1',
 			announcedAddress: '9.9.9.1',
+			portRange: { min: 2000, max: 3000 },
 		},
 		enableSctp: true,
 		appData: { foo: 'bar' },
@@ -170,6 +175,16 @@ test('router.createPlainTransport() succeeds', async () => {
 test('router.createPlainTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-ignore
 	await expect(ctx.router!.createPlainTransport({})).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createPlainTransport({
+			listenInfo: {
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				portRange: { min: 4000, max: 3000 },
+			},
+		})
+	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router!.createPlainTransport({ listenIp: '123' })
