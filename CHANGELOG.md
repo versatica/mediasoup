@@ -1,6 +1,6 @@
 # Changelog
 
-### NEXT
+### 3.14.0
 
 - `TransportListenInfo`: Add `portRange` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
 - Require Node.js >= 18 ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
