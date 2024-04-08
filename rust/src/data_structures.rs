@@ -93,18 +93,13 @@ impl ListenInfo {
                 .as_ref()
                 .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
-            port_range: Box::new(transport::PortRange {
-                min: if self.port_range.is_some() {
-                    *self.port_range.as_ref().unwrap().start()
-                } else {
-                    0
-                },
-                max: if self.port_range.is_some() {
-                    *self.port_range.as_ref().unwrap().end()
-                } else {
-                    0
-                },
-            }),
+            port_range: match &self.port_range {
+                Some(port_range) => Box::new(transport::PortRange {
+                    min: *port_range.start(),
+                    max: *port_range.end(),
+                }),
+                None => Box::new(transport::PortRange { min: 0, max: 0 }),
+            },
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
             recv_buffer_size: self.recv_buffer_size.unwrap_or(0),
