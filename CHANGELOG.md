@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- `TransportListenInfo`: Add `minPort` and `maxPort` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+- `TransportListenInfo`: Add `portRange` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
 
 ### 3.13.24
 
