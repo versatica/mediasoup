@@ -108,3 +108,8 @@ jobs:
         run: invoke -r worker test
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
+
+      - name: MEDIASOUP_BUILDTYPE=Debug invoke -r worker test
+        run: MEDIASOUP_BUILDTYPE=Debug invoke -r worker test
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
