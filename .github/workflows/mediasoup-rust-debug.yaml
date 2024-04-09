@@ -24,7 +24,6 @@ jobs:
             arch: arm64
           - os: macos-12
           - os: macos-14
-          - os: windows-2022
 
     runs-on: ${{ matrix.ci.os }}
 
