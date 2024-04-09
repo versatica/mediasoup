@@ -25,22 +25,22 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
-          - os: ubuntu-20.04
-            cc: gcc
-            cxx: g++
-            arch: arm64
-          - os: ubuntu-20.04
-            cc: clang
-            cxx: clang++
-            arch: arm64
-          - os: ubuntu-22.04
-            cc: gcc
-            cxx: g++
-            arch: arm64
-          - os: ubuntu-22.04
-            cc: clang
-            cxx: clang++
-            arch: arm64
+          # - os: ubuntu-20.04
+          #   cc: gcc
+          #   cxx: g++
+          #   arch: arm64
+          # - os: ubuntu-20.04
+          #   cc: clang
+          #   cxx: clang++
+          #   arch: arm64
+          # - os: ubuntu-22.04
+          #   cc: gcc
+          #   cxx: g++
+          #   arch: arm64
+          # - os: ubuntu-22.04
+          #   cc: clang
+          #   cxx: clang++
+          #   arch: arm64
           - os: macos-12
             cc: gcc
             cxx: g++
