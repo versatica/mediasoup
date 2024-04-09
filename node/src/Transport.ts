@@ -285,6 +285,10 @@ export type BaseTransportStats = {
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
+	maxOutgoingBitrate?: number;
+	minOutgoingBitrate?: number;
+	rtpPacketLossReceived?: number;
+	rtpPacketLossSent?: number;
 };
 
 type TransportData =
@@ -1475,11 +1479,34 @@ export function parseBaseTransportStats(
 		rtxSendBitrate: Number(binary.rtxSendBitrate()),
 		probationBytesSent: Number(binary.probationBytesSent()),
 		probationSendBitrate: Number(binary.probationSendBitrate()),
-		availableOutgoingBitrate: Number(binary.availableOutgoingBitrate()),
-		availableIncomingBitrate: Number(binary.availableIncomingBitrate()),
-		maxIncomingBitrate: binary.maxIncomingBitrate()
-			? Number(binary.maxIncomingBitrate())
-			: undefined,
+		availableOutgoingBitrate:
+			typeof binary.availableOutgoingBitrate() === 'number'
+				? Number(binary.availableOutgoingBitrate())
+				: undefined,
+		availableIncomingBitrate:
+			typeof binary.availableIncomingBitrate() === 'number'
+				? Number(binary.availableIncomingBitrate())
+				: undefined,
+		maxIncomingBitrate:
+			typeof binary.maxIncomingBitrate() === 'number'
+				? Number(binary.maxIncomingBitrate())
+				: undefined,
+		maxOutgoingBitrate:
+			typeof binary.maxOutgoingBitrate() === 'number'
+				? Number(binary.maxOutgoingBitrate())
+				: undefined,
+		minOutgoingBitrate:
+			typeof binary.minOutgoingBitrate() === 'number'
+				? Number(binary.minOutgoingBitrate())
+				: undefined,
+		rtpPacketLossReceived:
+			typeof binary.rtpPacketLossReceived() === 'number'
+				? Number(binary.rtpPacketLossReceived())
+				: undefined,
+		rtpPacketLossSent:
+			typeof binary.rtpPacketLossSent() === 'number'
+				? Number(binary.rtpPacketLossSent())
+				: undefined,
 	};
 }
 

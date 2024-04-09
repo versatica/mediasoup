@@ -502,10 +502,10 @@ namespace RTC
 		  // minOutgoingBitrate.
 		  this->minOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->minOutgoingBitrate)
 		                           : flatbuffers::nullopt,
-		  // packetLossReceived.
+		  // rtpPacketLossReceived.
 		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
 		                  : flatbuffers::nullopt,
-		  // packetLossSent.
+		  // rtpPacketLossSent.
 		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
 		                  : flatbuffers::nullopt);
 	}

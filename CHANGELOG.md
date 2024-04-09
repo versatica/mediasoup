@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Node: Bring transport `rtpPacketLossReceived` and `rtpPacketLossSent` stats back ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.14.0
 
 - `TransportListenInfo`: Add `portRange` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
