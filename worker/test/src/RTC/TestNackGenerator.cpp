@@ -148,20 +148,9 @@ SCENARIO("ISSUE 1366: https://github.com/versatica/mediasoup/issues/1366")
 		REQUIRE(RTC::SeqManager<uint16_t>::IsSeqLowerThan(10000, 60000) == false);
 	}
 
-	SECTION("std::set")
-	{
-		std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
-
-		recoveredList.insert(10000);
-		recoveredList.insert(40000);
-		recoveredList.insert(60000);
-
-		REQUIRE(recoveredList.size() == 3);
-	}
-
-	// SECTION("absl::btree_set")
+	// SECTION("std::set")
 	// {
-	// 	absl::btree_set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
+	// 	std::set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
 
 	// 	recoveredList.insert(10000);
 	// 	recoveredList.insert(40000);
@@ -169,6 +158,17 @@ SCENARIO("ISSUE 1366: https://github.com/versatica/mediasoup/issues/1366")
 
 	// 	REQUIRE(recoveredList.size() == 3);
 	// }
+
+	SECTION("absl::btree_set")
+	{
+		absl::btree_set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
+
+		recoveredList.insert(10000);
+		recoveredList.insert(40000);
+		recoveredList.insert(60000);
+
+		REQUIRE(recoveredList.size() == 3);
+	}
 }
 
 SCENARIO("NACK generator", "[rtp][rtcp]")
