@@ -232,6 +232,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->closing = true;
+
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		for (auto& item : this->udpSocketOrTcpServers)
@@ -497,7 +499,14 @@ namespace RTC
 		  this->webRtcTransports.find(webRtcTransport) != this->webRtcTransports.end(),
 		  "WebRtcTransport not handled");
 
-		this->webRtcTransports.erase(webRtcTransport);
+		// NOTE: If WebRtcServer is closing then do not remove the transport from
+		// the set since it would modify the set while the WebRtcServer destructor
+		// is iterating it.
+		// See: https://github.com/versatica/mediasoup/pull/1369#issuecomment-2044672247
+		if (!this->closing)
+		{
+			this->webRtcTransports.erase(webRtcTransport);
+		}
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportLocalIceUsernameFragmentAdded(

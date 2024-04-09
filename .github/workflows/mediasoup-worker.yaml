@@ -53,6 +53,9 @@ jobs:
         # A single Node.js version should be fine for C++.
         node:
           - 20
+        build-type:
+          - Release
+          - Debug
 
     runs-on: ${{ matrix.build.os }}
 
@@ -61,6 +64,7 @@ jobs:
       CXX: ${{ matrix.build.cxx }}
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
+      MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
 
     steps:
       - name: Checkout
