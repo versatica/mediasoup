@@ -18,6 +18,8 @@ jobs:
         ci:
           - os: ubuntu-20.04
           - os: ubuntu-22.04
+          # NOTE: Disabled until CI arm64 runners are publicly available:
+          #   https://github.com/versatica/mediasoup/issues/1372
           # - os: ubuntu-20.04
           #   arch: arm64
           # - os: ubuntu-22.04

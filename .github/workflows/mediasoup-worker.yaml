@@ -25,6 +25,8 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
+          # NOTE: Disabled until CI arm64 runners are publicly available:
+          #   https://github.com/versatica/mediasoup/issues/1372
           # - os: ubuntu-20.04
           #   cc: gcc
           #   cxx: g++

@@ -22,6 +22,8 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
+          # NOTE: Disabled until CI arm64 runners are publicly available:
+          #   https://github.com/versatica/mediasoup/issues/1372
           # Worker prebuild for Linux on arm64.
           # - os: ubuntu-20.04
           #   cc: gcc
