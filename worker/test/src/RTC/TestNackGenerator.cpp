@@ -141,7 +141,7 @@ void validate(std::vector<TestNackGeneratorInput>& inputs)
 
 SCENARIO("ISSUE 1366: https://github.com/versatica/mediasoup/issues/1366")
 {
-	SECTION("absl::btree_set")
+	SECTION("foo")
 	{
 		REQUIRE(RTC::SeqManager<uint16_t>::IsSeqLowerThan(10000, 40000) == true);
 		REQUIRE(RTC::SeqManager<uint16_t>::IsSeqLowerThan(40000, 60000) == true);
@@ -159,16 +159,16 @@ SCENARIO("ISSUE 1366: https://github.com/versatica/mediasoup/issues/1366")
 		REQUIRE(recoveredList.size() == 3);
 	}
 
-	// SECTION("absl::btree_set")
-	// {
-	// 	absl::btree_set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
+	SECTION("absl::btree_set")
+	{
+		absl::btree_set<uint16_t, RTC::SeqManager<uint16_t>::SeqLowerThan> recoveredList;
 
-	// 	recoveredList.insert(10000);
-	// 	recoveredList.insert(40000);
-	// 	recoveredList.insert(60000);
+		recoveredList.insert(10000);
+		recoveredList.insert(40000);
+		recoveredList.insert(60000);
 
-	// 	REQUIRE(recoveredList.size() == 3);
-	// }
+		REQUIRE(recoveredList.size() == 3);
+	}
 }
 
 SCENARIO("NACK generator", "[rtp][rtcp]")
