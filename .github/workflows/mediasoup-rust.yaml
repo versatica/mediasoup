@@ -49,6 +49,8 @@ jobs:
       - name: cargo clippy
         run: cargo clippy --all-targets -- -D warnings
 
+      # NOTE: In Windows this will build and test libmediasoupworker in release
+      # mode twice since build.rs doesn't allow debug mode for Windows.
       - name: cargo test
         run: |
           cargo test --verbose
