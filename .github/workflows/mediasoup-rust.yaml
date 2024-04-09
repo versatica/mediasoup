@@ -51,7 +51,9 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
       - name: cargo test
-        run: cargo test --verbose
+        run: |
+          cargo test --verbose
+          cargo test --release --verbose
 
       - name: cargo doc
         run: cargo doc --locked --all --no-deps --lib
