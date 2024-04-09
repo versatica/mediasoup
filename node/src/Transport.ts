@@ -285,6 +285,10 @@ export type BaseTransportStats = {
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
+	maxOutgoingBitrate?: number;
+	minOutgoingBitrate?: number;
+	rtpPacketLossReceived: number;
+	rtpPacketLossSent: number;
 };
 
 type TransportData =
@@ -1480,6 +1484,14 @@ export function parseBaseTransportStats(
 		maxIncomingBitrate: binary.maxIncomingBitrate()
 			? Number(binary.maxIncomingBitrate())
 			: undefined,
+		maxOutgoingBitrate: binary.maxOutgoingBitrate()
+			? Number(binary.maxOutgoingBitrate())
+			: undefined,
+		minOutgoingBitrate: binary.minOutgoingBitrate()
+			? Number(binary.minOutgoingBitrate())
+			: undefined,
+		rtpPacketLossReceived: Number(binary.rtpPacketLossReceived()),
+		rtpPacketLossSent: Number(binary.rtpPacketLossSent()),
 	};
 }
 
