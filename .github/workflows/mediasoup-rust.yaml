@@ -30,7 +30,6 @@ jobs:
 
     env:
       KEEP_BUILD_ARTIFACTS: '1'
-      MEDIASOUP_BUILDTYPE: 'Release'
 
     steps:
       - name: Checkout
