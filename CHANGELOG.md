@@ -1,8 +1,8 @@
 # Changelog
 
-### NEXT
+### 3.14.1
 
-- Node: Bring transport `rtpPacketLossReceived` and `rtpPacketLossSent` stats back ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Node: Bring transport `rtpPacketLossReceived` and `rtpPacketLossSent` stats back ([PR #1371](https://github.com/versatica/mediasoup/pull/1371)).
 
 ### 3.14.0
 
