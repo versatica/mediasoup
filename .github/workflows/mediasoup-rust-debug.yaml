@@ -1,4 +1,4 @@
-name: mediasoup-rust
+name: mediasoup-rust-debug
 
 on: [pull_request, workflow_dispatch]
 

@@ -1,4 +1,4 @@
-name: mediasoup-worker
+name: mediasoup-worker-debug
 
 on: [pull_request, workflow_dispatch]
 
