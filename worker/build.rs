@@ -2,15 +2,12 @@ use std::process::Command;
 use std::{env, fs};
 
 fn main() {
-    // Honor MEDIASOUP_BUILDTYPE environment variable if given.
-    // On Windows Rust always links against release version of MSVC runtime,
-    // thus requires Release build
-    let build_type = if env::var("MEDIASOUP_BUILDTYPE").is_ok() && cfg!(not(windows)) {
-        env::var("MEDIASOUP_BUILDTYPE").unwrap().to_string()
-    } else if cfg!(all(debug_assertions, not(windows))) {
-        "Debug".to_string()
+    // On Windows Rust always links against release version of MSVC runtime, thus requires
+    // Release build here
+    let build_type = if cfg!(all(debug_assertions, not(windows))) {
+        "Debug"
     } else {
-        "Release".to_string()
+        "Release"
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
