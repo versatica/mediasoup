@@ -1,4 +1,4 @@
-name: mediasoup-rust
+name: mediasoup-node
 
 on: [pull_request, workflow_dispatch]
 
@@ -8,53 +8,58 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   ci:
     strategy:
       matrix:
         ci:
           - os: ubuntu-20.04
+            node: 18
           - os: ubuntu-22.04
+            node: 20
           - os: ubuntu-20.04
+            node: 18
             arch: arm64
           - os: ubuntu-22.04
+            node: 20
             arch: arm64
           - os: macos-12
+            node: 18
           - os: macos-14
+            node: 20
           - os: windows-2022
+            node: 20
 
     runs-on: ${{ matrix.ci.os }}
 
     env:
-      KEEP_BUILD_ARTIFACTS: '1'
-      MEDIASOUP_BUILDTYPE: 'Release'
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_LOCAL_DEV: 'true'
+      MEDIASOUP_BUILDTYPE: 'Debug'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.ci.node }}
+
       - name: Configure cache
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ matrix.ci.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+            ~/.npm
+          key: ${{ matrix.ci.os }}-node-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ matrix.ci.os }}-node-
 
-      - name: cargo fmt
-        run: cargo fmt --all -- --check
+      - name: npm ci
+        run: npm ci --foreground-scripts
 
-      - name: cargo clippy
-        run: cargo clippy --all-targets -- -D warnings
+      - name: npm run lint:node
+        run: npm run lint:node
 
-      - name: cargo test
-        run: cargo test --verbose
-
-      - name: cargo doc
-        run: cargo doc --locked --all --no-deps --lib
-        env:
-          DOCS_RS: '1'
-          RUSTDOCFLAGS: '-D rustdoc::broken-intra-doc-links -D rustdoc::private_intra_doc_links'
+      - name: npm run test:node
+        run: npm run test:node
