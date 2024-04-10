@@ -22,16 +22,6 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-          # Worker prebuild for Linux on arm64.
-          - os: ubuntu-20.04
-            cc: gcc
-            cxx: g++
-            arch: arm64
-          # Worker prebuild for Linux on arm64.
-          - os: ubuntu-22.04
-            cc: gcc
-            cxx: g++
-            arch: arm64
           - os: macos-12
             cc: clang
             cxx: clang++

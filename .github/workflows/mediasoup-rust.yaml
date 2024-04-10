@@ -18,10 +18,6 @@ jobs:
         ci:
           - os: ubuntu-20.04
           - os: ubuntu-22.04
-          - os: ubuntu-20.04
-            arch: arm64
-          - os: ubuntu-22.04
-            arch: arm64
           - os: macos-12
           - os: macos-14
           - os: windows-2022
