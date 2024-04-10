@@ -17,14 +17,6 @@ jobs:
             node: 18
           - os: ubuntu-22.04
             node: 20
-          # NOTE: Disabled until CI arm64 runners are publicly available:
-          #   https://github.com/versatica/mediasoup/issues/1372
-          # - os: ubuntu-20.04
-          #   node: 18
-          #   arch: arm64
-          # - os: ubuntu-22.04
-          #   node: 20
-          #   arch: arm64
           - os: macos-12
             node: 18
           - os: macos-14
