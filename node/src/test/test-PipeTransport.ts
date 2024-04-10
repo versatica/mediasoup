@@ -1,5 +1,7 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, ConsumerEvents, DataConsumerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -201,15 +203,11 @@ afterEach(async () => {
 	ctx.worker2?.close();
 
 	if (ctx.worker1?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker1?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker1, 'subprocessclose');
 	}
 
 	if (ctx.worker2?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker2?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker2, 'subprocessclose');
 	}
 });
 
@@ -827,8 +825,9 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 
 	// NOTE: Let's use a Promise since otherwise there may be race conditions
 	// between events and await lines below.
-	const promise1 = new Promise<void>(resolve =>
-		videoConsumer.once('producerresume', resolve)
+	const promise1 = enhancedOnce<ConsumerEvents>(
+		videoConsumer,
+		'producerresume'
 	);
 
 	await ctx.videoProducer!.resume();
@@ -837,9 +836,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 	expect(videoConsumer.producerPaused).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
 
-	const promise2 = new Promise<void>(resolve =>
-		videoConsumer.once('producerpause', resolve)
-	);
+	const promise2 = enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
 
 	await ctx.videoProducer!.pause();
 	await promise2;
@@ -864,9 +861,7 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 	expect(ctx.videoProducer!.closed).toBe(true);
 
 	if (!videoConsumer.closed) {
-		await new Promise<void>(resolve =>
-			videoConsumer.once('producerclose', resolve)
-		);
+		await enhancedOnce<ConsumerEvents>(videoConsumer, 'producerclose');
 	}
 
 	expect(videoConsumer.closed).toBe(true);
@@ -969,9 +964,7 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
 	expect(ctx.dataProducer!.closed).toBe(true);
 
 	if (!dataConsumer.closed) {
-		await new Promise<void>(resolve =>
-			dataConsumer.once('dataproducerclose', resolve)
-		);
+		await enhancedOnce<DataConsumerEvents>(dataConsumer, 'dataproducerclose');
 	}
 
 	expect(dataConsumer.closed).toBe(true);

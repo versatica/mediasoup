@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { spawn, ChildProcess } from 'node:child_process';
 import { version } from './';
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { Router, RouterOptions } from './Router';

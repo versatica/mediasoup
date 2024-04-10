@@ -2,6 +2,8 @@ import * as dgram from 'node:dgram';
 // @ts-ignore
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents } from '../types';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -66,7 +68,7 @@ beforeEach(async () => {
 
 	// Wait for the SCTP association to be open.
 	await Promise.race([
-		new Promise<void>(resolve => ctx.sctpSocket.on('connect', resolve)),
+		enhancedOnce(ctx.sctpSocket, 'connect'),
 		new Promise<void>((resolve, reject) =>
 			setTimeout(() => reject(new Error('SCTP connection timeout')), 3000)
 		),
@@ -100,9 +102,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 
 	// NOTE: For some reason we have to wait a bit for the SCTP stuff to release

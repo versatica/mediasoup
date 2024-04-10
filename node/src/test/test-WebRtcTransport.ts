@@ -1,6 +1,8 @@
 import { pickPort } from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, WebRtcTransportEvents } from '../types';
 import * as utils from '../utils';
 import { serializeProtocol, TransportTuple } from '../Transport';
 import {
@@ -57,9 +59,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -844,11 +844,13 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
 
 	webRtcTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		webRtcTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<WebRtcTransportEvents>(
+		webRtcTransport,
+		'routerclose'
+	);
 
-		ctx.router!.close();
-	});
+	ctx.router!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(webRtcTransport.closed).toBe(true);
@@ -869,11 +871,13 @@ test('WebRtcTransport emits "routerclose" if Worker is closed', async () => {
 
 	webRtcTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		webRtcTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<WebRtcTransportEvents>(
+		webRtcTransport,
+		'routerclose'
+	);
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(webRtcTransport.closed).toBe(true);

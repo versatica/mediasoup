@@ -3,7 +3,7 @@ import { Duplex } from 'node:stream';
 import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request';
 import { Response } from './fbs/response';

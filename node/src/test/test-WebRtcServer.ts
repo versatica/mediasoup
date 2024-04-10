@@ -1,5 +1,7 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, WebRtcServerEvents } from '../types';
 import { InvalidStateError } from '../errors';
 
 type TestContext = {
@@ -16,9 +18,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -359,10 +359,10 @@ test('WebRtcServer emits "workerclose" if Worker is closed', async () => {
 
 	webRtcServer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		webRtcServer.on('workerclose', resolve);
-		ctx.worker!.close();
-	});
+	const promise = enhancedOnce<WebRtcServerEvents>(webRtcServer, 'workerclose');
+
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(webRtcServer.closed).toBe(true);
