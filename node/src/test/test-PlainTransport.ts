@@ -1,6 +1,8 @@
 import * as os from 'node:os';
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, PlainTransportEvents } from '../types';
 import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
@@ -52,9 +54,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -539,11 +539,13 @@ test('PlainTransport emits "routerclose" if Router is closed', async () => {
 
 	plainTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		plainTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<PlainTransportEvents>(
+		plainTransport,
+		'routerclose'
+	);
 
-		ctx.router!.close();
-	});
+	ctx.router!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);
@@ -558,11 +560,13 @@ test('PlainTransport emits "routerclose" if Worker is closed', async () => {
 
 	plainTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		plainTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<PlainTransportEvents>(
+		plainTransport,
+		'routerclose'
+	);
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);

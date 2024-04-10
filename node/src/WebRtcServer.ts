@@ -1,5 +1,5 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import { Channel } from './Channel';
 import { TransportListenInfo } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';

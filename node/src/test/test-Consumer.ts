@@ -1,6 +1,7 @@
-import { once } from 'node:events';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, ConsumerEvents } from '../types';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 import {
@@ -248,9 +249,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -1025,7 +1024,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 	});
 
 	await Promise.all([
-		once(audioConsumer, 'producerpause'),
+		enhancedOnce<ConsumerEvents>(audioConsumer, 'producerpause'),
 
 		// Let's await for pause() to resolve to avoid aborted channel requests
 		// due to worker closure.
@@ -1036,7 +1035,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 	expect(audioConsumer.producerPaused).toBe(true);
 
 	await Promise.all([
-		once(audioConsumer, 'producerresume'),
+		enhancedOnce<ConsumerEvents>(audioConsumer, 'producerresume'),
 
 		// Let's await for resume() to resolve to avoid aborted channel requests
 		// due to worker closure.
@@ -1162,10 +1161,10 @@ test('Consumer emits "producerclose" if Producer is closed', async () => {
 
 	audioConsumer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		audioConsumer.on('producerclose', resolve);
-		ctx.audioProducer!.close();
-	});
+	const promise = enhancedOnce<ConsumerEvents>(audioConsumer, 'producerclose');
+
+	ctx.audioProducer!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
@@ -1181,10 +1180,10 @@ test('Consumer emits "transportclose" if Transport is closed', async () => {
 
 	videoConsumer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		videoConsumer.on('transportclose', resolve);
-		ctx.webRtcTransport2!.close();
-	});
+	const promise = enhancedOnce<ConsumerEvents>(videoConsumer, 'transportclose');
+
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoConsumer.closed).toBe(true);

@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, DataProducerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -48,9 +50,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -353,11 +353,13 @@ test('DataProducer emits "transportclose" if Transport is closed', async () => {
 
 	dataProducer2.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		dataProducer2.on('transportclose', resolve);
+	const promise = enhancedOnce<DataProducerEvents>(
+		dataProducer2,
+		'transportclose'
+	);
 
-		ctx.webRtcTransport2!.close();
-	});
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataProducer2.closed).toBe(true);
