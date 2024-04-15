@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Update worker subprojects ([PR #1376](https://github.com/versatica/mediasoup/pull/1376)).
+
 ### 3.14.1
 
 - Node: Bring transport `rtpPacketLossReceived` and `rtpPacketLossSent` stats back ([PR #1371](https://github.com/versatica/mediasoup/pull/1371)).
