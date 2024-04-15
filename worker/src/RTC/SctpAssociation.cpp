@@ -390,6 +390,10 @@ namespace RTC
 #endif
 
 		usrsctp_conninput(reinterpret_cast<void*>(this->id), data, len, 0);
+
+		// TODO: IMHO it makes sense that we handle/refresh usrsctp timers when
+		// SCTP data is received.
+		DepUsrSCTP::HandleUsrSctpTimers();
 	}
 
 	void SctpAssociation::SendSctpMessage(
