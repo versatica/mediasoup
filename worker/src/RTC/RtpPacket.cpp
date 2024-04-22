@@ -373,9 +373,6 @@ namespace RTC
 		                        : flatbuffers::nullopt);
 	}
 
-	/**
-	 * NOTE: This method automatically removes payload padding if present.
-	 */
 	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)
 	{
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
@@ -467,7 +464,7 @@ namespace RTC
 		if (this->headerExtension && shift != 0)
 		{
 			// Shift the payload.
-			std::memmove(this->payload + shift, this->payload, this->payloadLength);
+			std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
 			this->payload += shift;
 
 			// Update packet total size.
@@ -485,7 +482,7 @@ namespace RTC
 			this->headerExtension = reinterpret_cast<HeaderExtension*>(this->payload);
 
 			// Shift the payload.
-			std::memmove(this->payload + shift, this->payload, this->payloadLength);
+			std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
 			this->payload += shift;
 
 			// Update packet total size.
@@ -553,13 +550,11 @@ namespace RTC
 
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
 
-		// Remove padding if present.
+		// If there is padding we have to ensure that last byte of it contains
+		// the number of bytes of padding.
 		if (this->payloadPadding != 0u)
 		{
-			SetPayloadPaddingFlag(false);
-
-			this->size -= size_t{ this->payloadPadding };
-			this->payloadPadding = 0u;
+			this->payload[this->payloadLength + this->payloadPadding - 1] = this->payloadPadding;
 		}
 	}
 
@@ -672,7 +667,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->size -= this->payloadLength;
-		this->payloadLength = length;
+		this->payloadLength  = length;
 		this->size += this->payloadLength;
 
 		// Remove padding if present.
