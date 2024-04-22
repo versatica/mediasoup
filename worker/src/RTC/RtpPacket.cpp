@@ -96,6 +96,7 @@ namespace RTC
 			}
 
 			payloadPadding = data[len - 1];
+
 			if (payloadPadding == 0)
 			{
 				MS_WARN_TAG(rtp, "padding byte cannot be 0, packet discarded");
@@ -112,6 +113,7 @@ namespace RTC
 
 				return nullptr;
 			}
+
 			payloadLength -= size_t{ payloadPadding };
 		}
 
@@ -371,6 +373,9 @@ namespace RTC
 		                        : flatbuffers::nullopt);
 	}
 
+	/**
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	void RtpPacket::SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions)
 	{
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
@@ -462,7 +467,7 @@ namespace RTC
 		if (this->headerExtension && shift != 0)
 		{
 			// Shift the payload.
-			std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
+			std::memmove(this->payload + shift, this->payload, this->payloadLength);
 			this->payload += shift;
 
 			// Update packet total size.
@@ -480,7 +485,7 @@ namespace RTC
 			this->headerExtension = reinterpret_cast<HeaderExtension*>(this->payload);
 
 			// Shift the payload.
-			std::memmove(this->payload + shift, this->payload, this->payloadLength + this->payloadPadding);
+			std::memmove(this->payload + shift, this->payload, this->payloadLength);
 			this->payload += shift;
 
 			// Update packet total size.
@@ -547,6 +552,15 @@ namespace RTC
 		}
 
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
+
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
+		}
 	}
 
 	void RtpPacket::UpdateMid(const std::string& mid)
@@ -651,22 +665,24 @@ namespace RTC
 	}
 
 	/**
-	 * NOTE: This method automatically adjusts padding for padding+payload to be
-	 * padded to 4 bytes.
+	 * NOTE: This method automatically removes payload padding if present.
 	 */
 	void RtpPacket::SetPayloadLength(size_t length)
 	{
 		MS_TRACE();
 
-		auto payloadPadding = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(length)) - length;
-
 		this->size -= this->payloadLength;
-		this->size -= size_t{ this->payloadPadding };
-		this->payloadLength  = length;
-		this->payloadPadding = payloadPadding;
-		this->size += this->payloadLength + this->payloadPadding;
+		this->payloadLength = length;
+		this->size += this->payloadLength;
 
-		SetPayloadPaddingFlag(this->payloadPadding > 0);
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
+		}
 	}
 
 	RtpPacket* RtpPacket::Clone() const
@@ -752,8 +768,12 @@ namespace RTC
 		return packet;
 	}
 
-	// NOTE: The caller must ensure that the buffer/memmory of the packet has
-	// space enough for adding 2 extra bytes.
+	/**
+	 * NOTE: The caller must ensure that the buffer/memmory of the packet has
+	 * space enough for adding 2 extra bytes.
+	 *
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	void RtpPacket::RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq)
 	{
 		MS_TRACE();
@@ -787,6 +807,9 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	bool RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
 	{
 		MS_TRACE();
@@ -855,8 +878,7 @@ namespace RTC
 	/**
 	 * Shifts the payload given offset (to right or to left).
 	 *
-	 * NOTE: This method doesn't automatically adjust padding for padding+payload
-	 * to be padded to 4 bytes.
+	 * NOTE: This method automatically removes payload padding if present.
 	 */
 	void RtpPacket::ShiftPayload(size_t payloadOffset, size_t shift, bool expand)
 	{
@@ -879,7 +901,7 @@ namespace RTC
 
 		if (expand)
 		{
-			shiftedLen = this->payloadLength + size_t{ this->payloadPadding } - payloadOffset;
+			shiftedLen = this->payloadLength - payloadOffset;
 
 			std::memmove(payloadOffsetPtr + shift, payloadOffsetPtr, shiftedLen);
 
@@ -888,12 +910,21 @@ namespace RTC
 		}
 		else
 		{
-			shiftedLen = this->payloadLength + size_t{ this->payloadPadding } - payloadOffset - shift;
+			shiftedLen = this->payloadLength - payloadOffset - shift;
 
 			std::memmove(payloadOffsetPtr, payloadOffsetPtr + shift, shiftedLen);
 
 			this->payloadLength -= shift;
 			this->size -= shift;
+		}
+
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
 		}
 	}
 
