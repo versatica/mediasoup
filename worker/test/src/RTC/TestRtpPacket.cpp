@@ -476,17 +476,17 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[6] == 0x06);
 		REQUIRE(payload[7] == 0x07);
 
-		// NOTE: This will require padding to 4 bytes.
+		// NOTE: This will require padding to 2 bytes.
 		packet->SetPayloadLength(14);
 
-		REQUIRE(packet->GetPayloadLength() == 16);
-		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetPayloadLength() == 14);
+		REQUIRE(packet->GetPayloadPadding() == 2);
 		REQUIRE(packet->GetSize() == 44);
 
 		packet->ShiftPayload(4, 4, true);
 
-		REQUIRE(packet->GetPayloadLength() == 20);
-		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetPayloadLength() == 18);
+		REQUIRE(packet->GetPayloadPadding() == 2);
 		REQUIRE(packet->GetSize() == 48);
 		REQUIRE(payload[0] == 0x00);
 		REQUIRE(payload[1] == 0x01);

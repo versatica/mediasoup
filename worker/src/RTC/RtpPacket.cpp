@@ -650,20 +650,23 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * NOTE: This method automatically adjusts padding for padding+payload to be
+	 * padded to 4 bytes.
+	 */
 	void RtpPacket::SetPayloadLength(size_t length)
 	{
 		MS_TRACE();
 
-		// Pad desired length to 4 bytes.
-		length = static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(length)));
+		auto payloadPadding = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(length)) - length;
 
 		this->size -= this->payloadLength;
 		this->size -= size_t{ this->payloadPadding };
 		this->payloadLength  = length;
-		this->payloadPadding = 0u;
-		this->size += length;
+		this->payloadPadding = payloadPadding;
+		this->size += this->payloadLength + this->payloadPadding;
 
-		SetPayloadPaddingFlag(false);
+		SetPayloadPaddingFlag(this->payloadPadding > 0);
 	}
 
 	RtpPacket* RtpPacket::Clone() const
@@ -849,6 +852,12 @@ namespace RTC
 		this->payloadDescriptorHandler->Restore(this->payload);
 	}
 
+	/**
+	 * Shifts the payload given offset (to right or to left).
+	 *
+	 * NOTE: This method doesn't automatically adjust padding for padding+payload
+	 * to be padded to 4 bytes.
+	 */
 	void RtpPacket::ShiftPayload(size_t payloadOffset, size_t shift, bool expand)
 	{
 		MS_TRACE();
