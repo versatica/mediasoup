@@ -549,14 +549,6 @@ namespace RTC
 		}
 
 		MS_ASSERT(ptr == this->payload, "wrong ptr calculation");
-
-		// TODO: Yes or not?
-		// If there is padding we have to ensure that last byte of it contains
-		// the number of bytes of padding.
-		// if (this->payloadPadding != 0u)
-		// {
-		// 	this->payload[this->payloadLength + this->payloadPadding - 1] = this->payloadPadding;
-		// }
 	}
 
 	void RtpPacket::UpdateMid(const std::string& mid)
@@ -668,7 +660,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->size -= this->payloadLength;
-		this->payloadLength  = length;
+		this->payloadLength = length;
 		this->size += this->payloadLength;
 
 		// Remove padding if present.

@@ -1,6 +1,3 @@
-#define MS_CLASS "TestRtpPacket"
-#include "Logger.hpp"
-
 #include "common.hpp"
 #include "helpers.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -698,6 +695,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -710,10 +711,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		{
 			FAIL("not a RTP packet");
 		}
-
-		MS_DUMP_STD("---- 1 [packet->GetPayloadLength():%zu, packet->GetPayloadPadding():%d]", packet->GetPayloadLength(), packet->GetPayloadPadding());
-		MS_DUMP_DATA_STD(packet->GetPayload(), packet->GetPayloadLength() + packet->GetPayloadPadding());
-		MS_DUMP_STD("····");
 
 		REQUIRE(packet->GetSize() == 28);
 		REQUIRE(packet->HasHeaderExtension() == false);
@@ -730,10 +727,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		extensions.clear();
 
 		packet->SetExtensions(2, extensions);
-
-		MS_DUMP_STD("---- 2 [packet->GetPayloadLength():%zu, packet->GetPayloadPadding():%d]", packet->GetPayloadLength(), packet->GetPayloadPadding());
-		MS_DUMP_DATA_STD(packet->GetPayload(), packet->GetPayloadLength() + packet->GetPayloadPadding());
-		MS_DUMP_STD("····");
 
 		REQUIRE(packet->GetSize() == 32);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -774,10 +767,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		packet->SetExtensions(2, extensions);
 
-		MS_DUMP_STD("---- 3 [packet->GetPayloadLength():%zu, packet->GetPayloadPadding():%d]", packet->GetPayloadLength(), packet->GetPayloadPadding());
-		MS_DUMP_DATA_STD(packet->GetPayload(), packet->GetPayloadLength() + packet->GetPayloadPadding());
-		MS_DUMP_STD("····");
-
 		REQUIRE(packet->GetSize() == 52); // 51 + 1 byte for padding in header extension.
 		REQUIRE(packet->HasHeaderExtension() == true);
 		REQUIRE(packet->GetHeaderExtensionId() == 0b0001000000000000);
@@ -786,11 +775,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == true);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
-
-		MS_DUMP_STD("---- 4 [packet->GetPayloadLength():%zu, packet->GetPayloadPadding():%d]", packet->GetPayloadLength(), packet->GetPayloadPadding());
-		MS_DUMP_DATA_STD(packet->GetPayload(), packet->GetPayloadLength() + packet->GetPayloadPadding());
-		MS_DUMP_STD("····");
-
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
