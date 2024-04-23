@@ -1020,9 +1020,9 @@ impl Consumer {
             .inner
             .channel
             .request(self.id(), ConsumerGetStatsRequest {})
-            .await;
+            .await?;
 
-        if let Ok(response::Body::ConsumerGetStatsResponse(data)) = response {
+        if let response::Body::ConsumerGetStatsResponse(data) = response {
             match data.stats.len() {
                 0 => panic!("Empty stats response from worker"),
                 1 => {

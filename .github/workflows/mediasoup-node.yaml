@@ -14,8 +14,6 @@ jobs:
       matrix:
         ci:
           - os: ubuntu-20.04
-            node: 16
-          - os: ubuntu-20.04
             node: 18
           - os: ubuntu-22.04
             node: 20
@@ -25,12 +23,16 @@ jobs:
             node: 20
           - os: windows-2022
             node: 20
+        build-type:
+          - Release
+          - Debug
 
     runs-on: ${{ matrix.ci.os }}
 
     env:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
+      MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
 
     steps:
       - name: Checkout
@@ -50,9 +52,8 @@ jobs:
           restore-keys: |
             ${{ matrix.ci.os }}-node-
 
-      # NOTE: Add --force since some dev dependencies require Node >= 18.
       - name: npm ci
-        run: npm ci --force --foreground-scripts
+        run: npm ci --foreground-scripts
 
       - name: npm run lint:node
         run: npm run lint:node

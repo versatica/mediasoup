@@ -899,9 +899,9 @@ impl Producer {
             .inner()
             .channel
             .request(self.id(), ProducerGetStatsRequest {})
-            .await;
+            .await?;
 
-        if let Ok(response::Body::ProducerGetStatsResponse(data)) = response {
+        if let response::Body::ProducerGetStatsResponse(data) = response {
             Ok(data.stats.iter().map(ProducerStat::from_fbs).collect())
         } else {
             panic!("Wrong message from worker");

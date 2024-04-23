@@ -43,6 +43,7 @@ The mediasoup-worker fuzzer reads some custom environment variables to decide wh
 - `MS_FUZZ_DTLS=1`: Enable DTLS fuzzer.
 - `MS_FUZZ_RTP=1`: Enable RTP fuzzer.
 - `MS_FUZZ_RTCP=1`: Enable RTCP fuzzer.
+- `MS_FUZZ_CODECS=1`: Enable audio/video codecs fuzzer.
 - `MS_FUZZ_UTILS=1`: Enable C++ utils fuzzer.
 - If none of them is given, then **all** fuzzers are enabled.
 
@@ -72,6 +73,12 @@ MS_FUZZ_RTP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-wor
 
 ```bash
 MS_FUZZ_RTCP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+```
+
+- Detect memory leaks and just fuzz audio/video codecs:
+
+```bash
+MS_FUZZ_CODECS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus
 ```
 
 - Detect memory leaks and just fuzz mediasoup-worker C++ utils:

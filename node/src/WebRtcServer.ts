@@ -1,5 +1,5 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import { Channel } from './Channel';
 import { TransportListenInfo } from './Transport';
 import { WebRtcTransport } from './WebRtcTransport';
@@ -23,8 +23,7 @@ export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
 	};
 
 /**
- * @deprecated
- * Use TransportListenInfo instead.
+ * @deprecated Use TransportListenInfo instead.
  */
 export type WebRtcServerListenInfo = TransportListenInfo;
 

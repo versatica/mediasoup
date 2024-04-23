@@ -1,10 +1,24 @@
 # Changelog
 
-### Next
+### NEXT
+
+- Update worker subprojects ([PR #1376](https://github.com/versatica/mediasoup/pull/1376)).
+- OPUS: Fix DTX detection #1357 ([PR #1357](https://github.com/versatica/mediasoup/pull/1357)).
+
+### 3.14.1
+
+- Node: Bring transport `rtpPacketLossReceived` and `rtpPacketLossSent` stats back ([PR #1371](https://github.com/versatica/mediasoup/pull/1371)).
+
+### 3.14.0
+
+- `TransportListenInfo`: Add `portRange` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+- Require Node.js >= 18 ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+
+### 3.13.24
 
 - Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
 - Update worker dependency libuv to 1.48.0.
-- OPUS: Fix DTX detection #1357 ([PR #1357](https://github.com/versatica/mediasoup/pull/1357)).
+- Update worker FlatBuffers to 24.3.6-1 (fix cannot set temporal layer 0) ([PR #1348](https://github.com/versatica/mediasoup/pull/1348)).
 
 ### 3.13.23
 
@@ -50,8 +64,9 @@
 ### 3.13.14
 
 - Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
-- `ListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
-- `ListenInfo`: Ignore given socket flags if not suitable for given IP family or transport ([PR #1294](https://github.com/versatica/mediasoup/pull/1294)).
+- `TransportListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
+  - Note that `flags.ipv6Only` is `false` by default.
+- `TransportListenInfo`: Ignore given socket flags if not suitable for given IP family or transport ([PR #1294](https://github.com/versatica/mediasoup/pull/1294)).
 - Meson: Remove `-Db_pie=true -Db_staticpic=true` args ([PR #1293](https://github.com/versatica/mediasoup/pull/1293)).
 - Add RTCP Sender Report trace event ([PR #1267](https://github.com/versatica/mediasoup/pull/1267) by @GithubUser8080).
 
@@ -124,8 +139,8 @@
 
 ### 3.13.0
 
-- Switch from JSON based messages to `flatbuffers` ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
-- Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
+- Switch from JSON based messages to FlatBuffers ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
+- Add `TransportListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 - Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
 - Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
 - DataChannel subchannels feature ([PR #1152](https://github.com/versatica/mediasoup/pull/1152)).

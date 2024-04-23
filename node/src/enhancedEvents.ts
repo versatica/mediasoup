@@ -1,7 +1,7 @@
-import { EventEmitter } from 'node:events';
+import { EventEmitter, once } from 'node:events';
 import { Logger } from './Logger';
 
-const logger = new Logger('EnhancedEventEmitter');
+const enhancedEventEmitterLogger = new Logger('EnhancedEventEmitter');
 
 type Events = Record<string, any[]>;
 
@@ -24,7 +24,7 @@ export class EnhancedEventEmitter<
 		try {
 			return super.emit(eventName, ...args);
 		} catch (error) {
-			logger.error(
+			enhancedEventEmitterLogger.error(
 				'safeEmit() | event listener threw an error [eventName:%s]:%o',
 				eventName,
 				error
@@ -120,4 +120,21 @@ export class EnhancedEventEmitter<
 	rawListeners<K extends keyof E & string>(eventName: K): Function[] {
 		return super.rawListeners(eventName);
 	}
+}
+
+/**
+ * TypeScript version of events.once():
+ *   https://nodejs.org/api/events.html#eventsonceemitter-name-options
+ *
+ * Usage example:
+ * ```ts
+ * await enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
+ * ````
+ */
+export async function enhancedOnce<E extends Events = Events>(
+	emmiter: EnhancedEventEmitter<E>,
+	eventName: keyof E & string,
+	options?: any
+): Promise<any[]> {
+	return once(emmiter, eventName, options);
 }
