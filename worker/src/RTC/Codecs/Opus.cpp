@@ -140,7 +140,6 @@ namespace RTC
 
 			if (this->payloadDescriptor->isDtx && context->GetIgnoreDtx())
 			{
-				MS_DUMP("----- ignoring DTX");
 				return false;
 			}
 			else
