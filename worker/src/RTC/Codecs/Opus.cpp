@@ -82,13 +82,6 @@ namespace RTC
 				default:;
 			}
 
-			// Detect DTX based by checking the same than libwebrtc does in
-			// audio_coder_opus_common.h in IsDtxPacket().
-			if (len <= 2)
-			{
-				payloadDescriptor->isDtx = true;
-			}
-
 			return payloadDescriptor.release();
 		}
 
