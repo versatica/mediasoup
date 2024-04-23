@@ -3,6 +3,7 @@
 ### NEXT
 
 - Update worker subprojects ([PR #1376](https://github.com/versatica/mediasoup/pull/1376)).
+- OPUS: Fix DTX detection #1357 ([PR #1357](https://github.com/versatica/mediasoup/pull/1357)).
 
 ### 3.14.1
 
