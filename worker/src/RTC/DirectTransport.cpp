@@ -222,7 +222,7 @@ namespace RTC
 	  const uint8_t* msg,
 	  size_t len,
 	  uint32_t ppid,
-	  onQueuedCallback* /*cb*/)
+	  onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -237,6 +237,12 @@ namespace RTC
 		  FBS::Notification::Event::DATACONSUMER_MESSAGE,
 		  FBS::Notification::Body::DataConsumer_MessageNotification,
 		  notification);
+
+		else if (cb)
+		{
+			(*cb)(true, false);
+			delete cb;
+		}
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);
