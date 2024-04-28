@@ -152,11 +152,11 @@ export type TransportPortRange = {
  */
 export type TransportSocketFlags = {
 	/**
-	 * Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
+	 * Disable dual-stack support so only IPv6 is used (only if |ip| is IPv6).
 	 */
 	ipv6Only?: boolean;
 	/**
-	 * Make different transports bind to the same ip and port (only for UDP).
+	 * Make different transports bind to the same IP and port (only for UDP).
 	 * Useful for multicast scenarios with plain transport. Use with caution.
 	 */
 	udpReusePort?: boolean;
