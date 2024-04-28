@@ -146,6 +146,12 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "cannot send RTP packet not associated to a Consumer");
 
+			if (cb)
+			{
+				(*cb)(false);
+				delete cb;
+			}
+
 			return;
 		}
 
