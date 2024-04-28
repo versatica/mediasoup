@@ -4,7 +4,7 @@
 
 - Update worker subprojects ([PR #1376](https://github.com/versatica/mediasoup/pull/1376)).
 - OPUS: Fix DTX detection ([PR #1357](https://github.com/versatica/mediasoup/pull/1357)).
-- Worker: Fix sending callback leaks ([PR #1383](https://github.com/versatica/mediasoup/pull/1383)).
+- Worker: Fix sending callback leaks ([PR #1383](https://github.com/versatica/mediasoup/pull/1383), credits to @Lynnworld).
 
 ### 3.14.1
 
