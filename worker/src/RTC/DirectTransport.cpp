@@ -218,11 +218,7 @@ namespace RTC
 	}
 
 	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer,
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
-	  onQueuedCallback* cb)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -238,7 +234,7 @@ namespace RTC
 		  FBS::Notification::Body::DataConsumer_MessageNotification,
 		  notification);
 
-		else if (cb)
+		if (cb)
 		{
 			(*cb)(true, false);
 			delete cb;
