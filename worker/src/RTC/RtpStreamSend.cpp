@@ -637,7 +637,7 @@ namespace RTC
 		  score);
 #endif
 
-		// Call the parent method for update score
+		// Call the parent method for update score.
 		RTC::RtpStream::UpdateScore(score);
 	}
 
