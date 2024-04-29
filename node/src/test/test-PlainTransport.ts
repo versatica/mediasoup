@@ -1,6 +1,8 @@
 import * as os from 'node:os';
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, PlainTransportEvents } from '../types';
 import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
@@ -12,7 +14,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -52,15 +54,17 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
 test('router.createPlainTransport() succeeds', async () => {
 	const plainTransport = await ctx.router!.createPlainTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			portRange: { min: 2000, max: 3000 },
+		},
 	});
 
 	await expect(ctx.router!.dump()).resolves.toMatchObject({
@@ -77,6 +81,7 @@ test('router.createPlainTransport() succeeds', async () => {
 			protocol: 'udp',
 			ip: '127.0.0.1',
 			announcedAddress: '9.9.9.1',
+			portRange: { min: 2000, max: 3000 },
 		},
 		enableSctp: true,
 		appData: { foo: 'bar' },
@@ -170,6 +175,16 @@ test('router.createPlainTransport() succeeds', async () => {
 test('router.createPlainTransport() with wrong arguments rejects with TypeError', async () => {
 	// @ts-ignore
 	await expect(ctx.router!.createPlainTransport({})).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router!.createPlainTransport({
+			listenInfo: {
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				portRange: { min: 4000, max: 3000 },
+			},
+		})
+	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router!.createPlainTransport({ listenIp: '123' })
@@ -524,11 +539,13 @@ test('PlainTransport emits "routerclose" if Router is closed', async () => {
 
 	plainTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		plainTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<PlainTransportEvents>(
+		plainTransport,
+		'routerclose'
+	);
 
-		ctx.router!.close();
-	});
+	ctx.router!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);
@@ -543,11 +560,13 @@ test('PlainTransport emits "routerclose" if Worker is closed', async () => {
 
 	plainTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		plainTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<PlainTransportEvents>(
+		plainTransport,
+		'routerclose'
+	);
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(plainTransport.closed).toBe(true);

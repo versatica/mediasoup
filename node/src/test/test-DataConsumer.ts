@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, DataConsumerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -12,7 +14,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	dataProducerOptions: utils.deepFreeze({
+	dataProducerOptions: utils.deepFreeze<mediasoup.types.DataProducerOptions>({
 		sctpStreamParameters: {
 			streamId: 12345,
 			ordered: false,
@@ -44,9 +46,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -374,11 +374,13 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 
 	dataConsumer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		dataConsumer.on('dataproducerclose', resolve);
+	const promise = enhancedOnce<DataConsumerEvents>(
+		dataConsumer,
+		'dataproducerclose'
+	);
 
-		ctx.dataProducer!.close();
-	});
+	ctx.dataProducer!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);
@@ -392,11 +394,13 @@ test('DataConsumer emits "transportclose" if Transport is closed', async () => {
 
 	dataConsumer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		dataConsumer.on('transportclose', resolve);
+	const promise = enhancedOnce<DataConsumerEvents>(
+		dataConsumer,
+		'transportclose'
+	);
 
-		ctx.webRtcTransport2!.close();
-	});
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataConsumer.closed).toBe(true);

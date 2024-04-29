@@ -15,14 +15,14 @@ jobs:
   ci:
     strategy:
       matrix:
-        os:
-          - ubuntu-20.04
-          - ubuntu-22.04
-          - macos-12
-          - macos-14
-          - windows-2022
+        ci:
+          - os: ubuntu-20.04
+          - os: ubuntu-22.04
+          - os: macos-12
+          - os: macos-14
+          - os: windows-2022
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.ci.os }}
 
     env:
       KEEP_BUILD_ARTIFACTS: '1'
@@ -37,7 +37,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ matrix.ci.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt
         run: cargo fmt --all -- --check
@@ -45,8 +45,12 @@ jobs:
       - name: cargo clippy
         run: cargo clippy --all-targets -- -D warnings
 
+      # NOTE: In Windows this will build and test libmediasoupworker in release
+      # mode twice since build.rs doesn't allow debug mode for Windows.
       - name: cargo test
-        run: cargo test --verbose
+        run: |
+          cargo test --verbose
+          cargo test --release --verbose
 
       - name: cargo doc
         run: cargo doc --locked --all --no-deps --lib
