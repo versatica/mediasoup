@@ -146,6 +146,12 @@ namespace RTC
 		{
 			MS_WARN_TAG(rtp, "cannot send RTP packet not associated to a Consumer");
 
+			if (cb)
+			{
+				(*cb)(false);
+				delete cb;
+			}
+
 			return;
 		}
 
@@ -212,11 +218,7 @@ namespace RTC
 	}
 
 	void DirectTransport::SendMessage(
-	  RTC::DataConsumer* dataConsumer,
-	  const uint8_t* msg,
-	  size_t len,
-	  uint32_t ppid,
-	  onQueuedCallback* /*cb*/)
+	  RTC::DataConsumer* dataConsumer, const uint8_t* msg, size_t len, uint32_t ppid, onQueuedCallback* cb)
 	{
 		MS_TRACE();
 
@@ -231,6 +233,12 @@ namespace RTC
 		  FBS::Notification::Event::DATACONSUMER_MESSAGE,
 		  FBS::Notification::Body::DataConsumer_MessageNotification,
 		  notification);
+
+		if (cb)
+		{
+			(*cb)(true, false);
+			delete cb;
+		}
 
 		// Increase send transmission.
 		RTC::Transport::DataSent(len);

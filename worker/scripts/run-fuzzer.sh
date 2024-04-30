@@ -10,7 +10,7 @@ if [ "${current_dir_name}" != "worker" ] ; then
 fi
 
 if [ "$#" -eq 0 ] ; then
-	echo "run-fuzzer.sh [ERROR] duration (in seconds) must be fiven as argument" >&2
+	echo "run-fuzzer.sh [ERROR] duration (in seconds) must be given as argument" >&2
 	exit 1
 fi
 

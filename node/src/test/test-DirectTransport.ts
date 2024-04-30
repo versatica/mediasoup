@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, DirectTransportEvents } from '../types';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -16,9 +18,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -397,11 +397,13 @@ test('DirectTransport emits "routerclose" if Router is closed', async () => {
 
 	directTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		directTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<DirectTransportEvents>(
+		directTransport,
+		'routerclose'
+	);
 
-		ctx.router!.close();
-	});
+	ctx.router!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);
@@ -413,11 +415,13 @@ test('DirectTransport emits "routerclose" if Worker is closed', async () => {
 
 	directTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		directTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<DirectTransportEvents>(
+		directTransport,
+		'routerclose'
+	);
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);

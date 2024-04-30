@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, RouterEvents } from '../types';
 import { InvalidStateError } from '../errors';
 import * as utils from '../utils';
 
@@ -8,7 +10,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -46,9 +48,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -148,11 +148,10 @@ test('Router emits "workerclose" if Worker is closed', async () => {
 
 	router.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		router.on('workerclose', resolve);
+	const promise = enhancedOnce<RouterEvents>(router, 'workerclose');
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(router.closed).toBe(true);

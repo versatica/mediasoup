@@ -1,5 +1,5 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import { Channel } from './Channel';
 import { TransportInternal } from './Transport';
 import { ProducerStat } from './Producer';

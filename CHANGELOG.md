@@ -1,5 +1,20 @@
 # Changelog
 
+### 3.14.2
+
+- Update worker subprojects ([PR #1376](https://github.com/versatica/mediasoup/pull/1376)).
+- OPUS: Fix DTX detection ([PR #1357](https://github.com/versatica/mediasoup/pull/1357)).
+- Worker: Fix sending callback leaks ([PR #1383](https://github.com/versatica/mediasoup/pull/1383), credits to @Lynnworld).
+
+### 3.14.1
+
+- Node: Bring transport `rtpPacketLossReceived` and `rtpPacketLossSent` stats back ([PR #1371](https://github.com/versatica/mediasoup/pull/1371)).
+
+### 3.14.0
+
+- `TransportListenInfo`: Add `portRange` (deprecate worker port range) ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+- Require Node.js >= 18 ([PR #1365](https://github.com/versatica/mediasoup/pull/1365)).
+
 ### 3.13.24
 
 - Node: Fix missing `bitrateByLayer` field in stats of `RtpRecvStream` in Node ([PR #1349](https://github.com/versatica/mediasoup/pull/1349)).
@@ -50,20 +65,21 @@
 ### 3.13.14
 
 - Avoid modification of user input data ([PR #1285](https://github.com/versatica/mediasoup/pull/1285)).
-- `ListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
-- `ListenInfo`: Ignore given socket flags if not suitable for given IP family or transport ([PR #1294](https://github.com/versatica/mediasoup/pull/1294)).
+- `TransportListenInfo`: Add transport socket flags ([PR #1291](https://github.com/versatica/mediasoup/pull/1291)).
+  - Note that `flags.ipv6Only` is `false` by default.
+- `TransportListenInfo`: Ignore given socket flags if not suitable for given IP family or transport ([PR #1294](https://github.com/versatica/mediasoup/pull/1294)).
 - Meson: Remove `-Db_pie=true -Db_staticpic=true` args ([PR #1293](https://github.com/versatica/mediasoup/pull/1293)).
 - Add RTCP Sender Report trace event ([PR #1267](https://github.com/versatica/mediasoup/pull/1267) by @GithubUser8080).
 
 ### 3.13.13
 
-- worker: Do not use references for async callbacks ([PR #1274](https://github.com/versatica/mediasoup/pull/1274)).
+- Worker: Do not use references for async callbacks ([PR #1274](https://github.com/versatica/mediasoup/pull/1274)).
 - liburing: Enable zero copy ([PR #1273](https://github.com/versatica/mediasoup/pull/1273)).
 - Fix build on musl based systems (such as Alpine Linux) ([PR #1279](https://github.com/versatica/mediasoup/pull/1279)).
 
 ### 3.13.12
 
-- worker: Disable `RtcLogger` usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).
+- Worker: Disable `RtcLogger` usage if not enabled ([PR #1264](https://github.com/versatica/mediasoup/pull/1264)).
 - npm installation: Don't require Python if valid worker prebuilt binary is fetched ([PR #1265](https://github.com/versatica/mediasoup/pull/1265)).
 - Update h264-profile-level-id NPM dependency to 1.1.0.
 
@@ -125,11 +141,11 @@
 ### 3.13.0
 
 - Switch from JSON based messages to FlatBuffers ([PR #1064](https://github.com/versatica/mediasoup/pull/1064)).
-- Add `ListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
+- Add `TransportListenInfo` in all transports and send/recv buffer size options ([PR #1084](https://github.com/versatica/mediasoup/pull/1084)).
 - Add optional `rtcpListenInfo` in `PlainTransportOptions` ([PR #1099](https://github.com/versatica/mediasoup/pull/1099)).
 - Add pause/resume API in `DataProducer` and `DataConsumer` ([PR #1104](https://github.com/versatica/mediasoup/pull/1104)).
 - DataChannel subchannels feature ([PR #1152](https://github.com/versatica/mediasoup/pull/1152)).
-- `Worker`: Make DTLS fragment stay within MTU size range ([PR #1156](https://github.com/versatica/mediasoup/pull/1156), based on [PR #1143](https://github.com/versatica/mediasoup/pull/1143) by @vpnts-se).
+- Worker: Make DTLS fragment stay within MTU size range ([PR #1156](https://github.com/versatica/mediasoup/pull/1156), based on [PR #1143](https://github.com/versatica/mediasoup/pull/1143) by @vpnts-se).
 
 ### 3.12.16
 
@@ -174,7 +190,7 @@
 
 ### 3.12.6
 
-- `Worker`: Add `Transport::Destroying()` protected method ([PR #1114](https://github.com/versatica/mediasoup/pull/1114)).
+- Worker: Add `Transport::Destroying()` protected method ([PR #1114](https://github.com/versatica/mediasoup/pull/1114)).
 - `RtpStreamRecv`: Fix jitter calculation ([PR #1117](https://github.com/versatica/mediasoup/pull/1117), thanks to @penguinol).
 - Revert "Node: make types.ts only export types rather than the entire class/code" ([PR #1109](https://github.com/versatica/mediasoup/pull/1109)) because it requires `typescript` >= 5 in the apps that import mediasoup and we don't want to be that strict yet.
 
@@ -204,11 +220,11 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.11.26
 
-- `Worker`: Fix NACK timer and avoid negative RTT ([PR #1082](https://github.com/versatica/mediasoup/pull/1082), thanks to @o-u-p for his work in ([PR #1076](https://github.com/versatica/mediasoup/pull/1076)).
+- Worker: Fix NACK timer and avoid negative RTT ([PR #1082](https://github.com/versatica/mediasoup/pull/1082), thanks to @o-u-p for his work in ([PR #1076](https://github.com/versatica/mediasoup/pull/1076)).
 
 ### 3.11.25
 
-- `Worker`: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
+- Worker: Require C++17, Meson >= 1.1.0 and update subprojects ([PR #1081](https://github.com/versatica/mediasoup/pull/1081)).
 
 ### 3.11.24
 
@@ -308,7 +324,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 - Node: Migrate tests to TypeScript ([PR #958](https://github.com/versatica/mediasoup/pull/958)).
 - Node: Remove compiled JavaScript from repository and compile TypeScript code on NPM `prepare` script on demand when installed via git ([PR #954](https://github.com/versatica/mediasoup/pull/954)).
-- `Worker`: Add `RTC::Shared` singleton for RTC entities ([PR #953](https://github.com/versatica/mediasoup/pull/953)).
+- Worker: Add `RTC::Shared` singleton for RTC entities ([PR #953](https://github.com/versatica/mediasoup/pull/953)).
 - Update OpenSSL to 3.0.7.
 
 ### 3.11.3
@@ -484,7 +500,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.9.4
 
-- `Worker`: Fix bad printing of error messages from Worker ([PR #750](https://github.com/versatica/mediasoup/pull/750) by @j1elo).
+- Worker: Fix bad printing of error messages from Worker ([PR #750](https://github.com/versatica/mediasoup/pull/750) by @j1elo).
 
 ### 3.9.3
 
@@ -502,7 +518,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 ### 3.9.1
 
 - NixOS friendly build process ([PR #683](https://github.com/versatica/mediasoup/pull/683)).
-- `Worker`: Emit "died" event before observer "close" ([PR #684](https://github.com/versatica/mediasoup/pull/684)).
+- Worker: Emit "died" event before observer "close" ([PR #684](https://github.com/versatica/mediasoup/pull/684)).
 - Transport: Hide debug message for RTX RTCP-RR packets ([PR #688](https://github.com/versatica/mediasoup/pull/688)).
 - Update `libuv` to 1.42.0.
 - Improve Windows support ([PR #692](https://github.com/versatica/mediasoup/pull/692)).

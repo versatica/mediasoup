@@ -1,6 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
 import { Channel } from './Channel';
 import { RouterInternal } from './Router';
@@ -91,6 +91,11 @@ export type TransportListenInfo = {
 	port?: number;
 
 	/**
+	 * Listening port range. If given then |port| will be ignored.
+	 */
+	portRange?: TransportPortRange;
+
+	/**
 	 * Socket flags.
 	 */
 	flags?: TransportSocketFlags;
@@ -129,15 +134,29 @@ export type TransportListenIp = {
 export type TransportProtocol = 'udp' | 'tcp';
 
 /**
+ * Port range..
+ */
+export type TransportPortRange = {
+	/**
+	 * Lowest port in the range.
+	 */
+	min: number;
+	/**
+	 * Highest port in the range.
+	 */
+	max: number;
+};
+
+/**
  * UDP/TCP socket flags.
  */
 export type TransportSocketFlags = {
 	/**
-	 * Disable dual-stack support so only IPv6 is used (only if ip is IPv6).
+	 * Disable dual-stack support so only IPv6 is used (only if |ip| is IPv6).
 	 */
 	ipv6Only?: boolean;
 	/**
-	 * Make different transports bind to the same ip and port (only for UDP).
+	 * Make different transports bind to the same IP and port (only for UDP).
 	 * Useful for multicast scenarios with plain transport. Use with caution.
 	 */
 	udpReusePort?: boolean;
@@ -266,6 +285,10 @@ export type BaseTransportStats = {
 	availableOutgoingBitrate?: number;
 	availableIncomingBitrate?: number;
 	maxIncomingBitrate?: number;
+	maxOutgoingBitrate?: number;
+	minOutgoingBitrate?: number;
+	rtpPacketLossReceived?: number;
+	rtpPacketLossSent?: number;
 };
 
 type TransportData =
@@ -1274,36 +1297,19 @@ export class Transport<
 	}
 }
 
-function transportTraceEventTypeToFbs(
-	eventType: TransportTraceEventType
-): FbsTransport.TraceEventType {
-	switch (eventType) {
-		case 'probation': {
-			return FbsTransport.TraceEventType.PROBATION;
-		}
-
-		case 'bwe': {
-			return FbsTransport.TraceEventType.BWE;
-		}
-
-		default: {
-			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
-		}
-	}
+export function portRangeToFbs(
+	portRange: TransportPortRange = { min: 0, max: 0 }
+): FbsTransport.PortRangeT {
+	return new FbsTransport.PortRangeT(portRange.min, portRange.max);
 }
 
-function transportTraceEventTypeFromFbs(
-	eventType: FbsTransport.TraceEventType
-): TransportTraceEventType {
-	switch (eventType) {
-		case FbsTransport.TraceEventType.PROBATION: {
-			return 'probation';
-		}
-
-		case FbsTransport.TraceEventType.BWE: {
-			return 'bwe';
-		}
-	}
+export function socketFlagsToFbs(
+	flags: TransportSocketFlags = {}
+): FbsTransport.SocketFlagsT {
+	return new FbsTransport.SocketFlagsT(
+		Boolean(flags.ipv6Only),
+		Boolean(flags.udpReusePort)
+	);
 }
 
 export function parseSctpState(fbsSctpState: FbsSctpState): SctpState {
@@ -1473,11 +1479,34 @@ export function parseBaseTransportStats(
 		rtxSendBitrate: Number(binary.rtxSendBitrate()),
 		probationBytesSent: Number(binary.probationBytesSent()),
 		probationSendBitrate: Number(binary.probationSendBitrate()),
-		availableOutgoingBitrate: Number(binary.availableOutgoingBitrate()),
-		availableIncomingBitrate: Number(binary.availableIncomingBitrate()),
-		maxIncomingBitrate: binary.maxIncomingBitrate()
-			? Number(binary.maxIncomingBitrate())
-			: undefined,
+		availableOutgoingBitrate:
+			typeof binary.availableOutgoingBitrate() === 'number'
+				? Number(binary.availableOutgoingBitrate())
+				: undefined,
+		availableIncomingBitrate:
+			typeof binary.availableIncomingBitrate() === 'number'
+				? Number(binary.availableIncomingBitrate())
+				: undefined,
+		maxIncomingBitrate:
+			typeof binary.maxIncomingBitrate() === 'number'
+				? Number(binary.maxIncomingBitrate())
+				: undefined,
+		maxOutgoingBitrate:
+			typeof binary.maxOutgoingBitrate() === 'number'
+				? Number(binary.maxOutgoingBitrate())
+				: undefined,
+		minOutgoingBitrate:
+			typeof binary.minOutgoingBitrate() === 'number'
+				? Number(binary.minOutgoingBitrate())
+				: undefined,
+		rtpPacketLossReceived:
+			typeof binary.rtpPacketLossReceived() === 'number'
+				? Number(binary.rtpPacketLossReceived())
+				: undefined,
+		rtpPacketLossSent:
+			typeof binary.rtpPacketLossSent() === 'number'
+				? Number(binary.rtpPacketLossSent())
+				: undefined,
 	};
 }
 
@@ -1525,6 +1554,38 @@ function parseRecvRtpHeaderExtensions(
 				? binary.transportWideCc01()!
 				: undefined,
 	};
+}
+
+function transportTraceEventTypeToFbs(
+	eventType: TransportTraceEventType
+): FbsTransport.TraceEventType {
+	switch (eventType) {
+		case 'probation': {
+			return FbsTransport.TraceEventType.PROBATION;
+		}
+
+		case 'bwe': {
+			return FbsTransport.TraceEventType.BWE;
+		}
+
+		default: {
+			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
+		}
+	}
+}
+
+function transportTraceEventTypeFromFbs(
+	eventType: FbsTransport.TraceEventType
+): TransportTraceEventType {
+	switch (eventType) {
+		case FbsTransport.TraceEventType.PROBATION: {
+			return 'probation';
+		}
+
+		case FbsTransport.TraceEventType.BWE: {
+			return 'bwe';
+		}
+	}
 }
 
 function parseBweTraceInfo(binary: FbsTransport.BweTraceInfo): {

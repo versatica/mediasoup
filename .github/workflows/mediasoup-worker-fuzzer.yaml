@@ -16,6 +16,9 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
+        build-type:
+          - Release
+          - Debug
 
     runs-on: ${{ matrix.build.os }}
 
@@ -24,6 +27,7 @@ jobs:
       CXX: ${{ matrix.build.cxx }}
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
+      MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
 
     steps:
       - name: Checkout
@@ -32,6 +36,12 @@ jobs:
       # We need to install pip invoke manually.
       - name: pip3 install invoke
         run: pip3 install invoke
+        if: runner.os != 'macOS'
+
+      # In macOS we need to specify this option.
+      - name: pip3 install --break-system-packages invoke
+        run: pip3 install --break-system-packages invoke
+        if: runner.os == 'macOS'
 
       # Build the mediasoup-worker-fuzzer binary (which uses libFuzzer).
       - name: invoke -r worker fuzzer

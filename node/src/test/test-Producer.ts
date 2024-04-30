@@ -1,5 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import { WorkerEvents, ProducerEvents } from '../types';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 import {
@@ -20,7 +22,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -48,7 +50,7 @@ const ctx: TestContext = {
 			rtcpFeedback: [], // Will be ignored.
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -83,7 +85,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
-	videoProducerOptions: utils.deepFreeze({
+	videoProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'video',
 		rtpParameters: {
 			mid: 'VIDEO',
@@ -148,9 +150,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -823,10 +823,10 @@ test('Producer emits "transportclose" if Transport is closed', async () => {
 
 	videoProducer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		videoProducer.on('transportclose', resolve);
-		ctx.webRtcTransport2!.close();
-	});
+	const promise = enhancedOnce<ProducerEvents>(videoProducer, 'transportclose');
+
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoProducer.closed).toBe(true);

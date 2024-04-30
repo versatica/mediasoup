@@ -501,6 +501,7 @@ mod participant {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,

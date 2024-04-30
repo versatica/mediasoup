@@ -41,6 +41,7 @@ jobs:
       CXX: ${{ matrix.build.cxx }}
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
+      MEDIASOUP_BUILDTYPE: 'Release'
 
     steps:
       - name: Checkout

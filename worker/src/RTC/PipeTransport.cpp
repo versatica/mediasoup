@@ -53,6 +53,8 @@ namespace RTC
 		}
 
 		this->listenInfo.port               = options->listenInfo()->port();
+		this->listenInfo.portRange.min      = options->listenInfo()->portRange()->min();
+		this->listenInfo.portRange.max      = options->listenInfo()->portRange()->max();
 		this->listenInfo.sendBufferSize     = options->listenInfo()->sendBufferSize();
 		this->listenInfo.recvBufferSize     = options->listenInfo()->recvBufferSize();
 		this->listenInfo.flags.ipv6Only     = options->listenInfo()->flags()->ipv6Only();
@@ -68,15 +70,37 @@ namespace RTC
 
 		try
 		{
-			// This may throw.
-			if (this->listenInfo.port != 0)
+			if (this->listenInfo.portRange.min != 0 && this->listenInfo.portRange.max != 0)
+			{
+				uint64_t portRangeHash{ 0u };
+
+				this->udpSocket = new RTC::UdpSocket(
+				  this,
+				  this->listenInfo.ip,
+				  this->listenInfo.portRange.min,
+				  this->listenInfo.portRange.max,
+				  this->listenInfo.flags,
+				  portRangeHash);
+			}
+			else if (this->listenInfo.port != 0)
 			{
 				this->udpSocket = new RTC::UdpSocket(
 				  this, this->listenInfo.ip, this->listenInfo.port, this->listenInfo.flags);
 			}
+			// NOTE: This is temporal to allow deprecated usage of worker port range.
+			// In the future this should throw since |port| or |portRange| will be
+			// required.
 			else
 			{
-				this->udpSocket = new RTC::UdpSocket(this, this->listenInfo.ip, this->listenInfo.flags);
+				uint64_t portRangeHash{ 0u };
+
+				this->udpSocket = new RTC::UdpSocket(
+				  this,
+				  this->listenInfo.ip,
+				  Settings::configuration.rtcMinPort,
+				  Settings::configuration.rtcMaxPort,
+				  this->listenInfo.flags,
+				  portRangeHash);
 			}
 
 			if (this->listenInfo.sendBufferSize != 0)

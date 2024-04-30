@@ -96,6 +96,7 @@ namespace RTC
 			}
 
 			payloadPadding = data[len - 1];
+
 			if (payloadPadding == 0)
 			{
 				MS_WARN_TAG(rtp, "padding byte cannot be 0, packet discarded");
@@ -112,6 +113,7 @@ namespace RTC
 
 				return nullptr;
 			}
+
 			payloadLength -= size_t{ payloadPadding };
 		}
 
@@ -650,20 +652,25 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	void RtpPacket::SetPayloadLength(size_t length)
 	{
 		MS_TRACE();
 
-		// Pad desired length to 4 bytes.
-		length = static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(length)));
-
 		this->size -= this->payloadLength;
-		this->size -= size_t{ this->payloadPadding };
-		this->payloadLength  = length;
-		this->payloadPadding = 0u;
-		this->size += length;
+		this->payloadLength = length;
+		this->size += this->payloadLength;
 
-		SetPayloadPaddingFlag(false);
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
+		}
 	}
 
 	RtpPacket* RtpPacket::Clone() const
@@ -749,8 +756,12 @@ namespace RTC
 		return packet;
 	}
 
-	// NOTE: The caller must ensure that the buffer/memmory of the packet has
-	// space enough for adding 2 extra bytes.
+	/**
+	 * NOTE: The caller must ensure that the buffer/memmory of the packet has
+	 * space enough for adding 2 extra bytes.
+	 *
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	void RtpPacket::RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq)
 	{
 		MS_TRACE();
@@ -784,6 +795,9 @@ namespace RTC
 		}
 	}
 
+	/**
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	bool RtpPacket::RtxDecode(uint8_t payloadType, uint32_t ssrc)
 	{
 		MS_TRACE();
@@ -849,6 +863,11 @@ namespace RTC
 		this->payloadDescriptorHandler->Restore(this->payload);
 	}
 
+	/**
+	 * Shifts the payload given offset (to right or to left).
+	 *
+	 * NOTE: This method automatically removes payload padding if present.
+	 */
 	void RtpPacket::ShiftPayload(size_t payloadOffset, size_t shift, bool expand)
 	{
 		MS_TRACE();
@@ -870,7 +889,7 @@ namespace RTC
 
 		if (expand)
 		{
-			shiftedLen = this->payloadLength + size_t{ this->payloadPadding } - payloadOffset;
+			shiftedLen = this->payloadLength - payloadOffset;
 
 			std::memmove(payloadOffsetPtr + shift, payloadOffsetPtr, shiftedLen);
 
@@ -879,12 +898,21 @@ namespace RTC
 		}
 		else
 		{
-			shiftedLen = this->payloadLength + size_t{ this->payloadPadding } - payloadOffset - shift;
+			shiftedLen = this->payloadLength - payloadOffset - shift;
 
 			std::memmove(payloadOffsetPtr, payloadOffsetPtr + shift, shiftedLen);
 
 			this->payloadLength -= shift;
 			this->size -= shift;
+		}
+
+		// Remove padding if present.
+		if (this->payloadPadding != 0u)
+		{
+			SetPayloadPaddingFlag(false);
+
+			this->size -= size_t{ this->payloadPadding };
+			this->payloadPadding = 0u;
 		}
 	}
 
