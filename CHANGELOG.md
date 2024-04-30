@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Worker: Fix possible value overflow in `FeedbackRtpTransport.cpp` ([PR #1386](https://github.com/versatica/mediasoup/pull/1386), credits to @Lynnworld).
+
 ### 3.14.2
 
 - Update worker subprojects ([PR #1376](https://github.com/versatica/mediasoup/pull/1376)).
