@@ -637,7 +637,8 @@ namespace RTC
 		  score);
 #endif
 
-		RtpStream::UpdateScore(score);
+		// Call the parent method for update score.
+		RTC::RtpStream::UpdateScore(score);
 	}
 
 	void RtpStreamSend::UserOnSequenceNumberReset()
