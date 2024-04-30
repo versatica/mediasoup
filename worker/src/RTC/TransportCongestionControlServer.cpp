@@ -338,8 +338,8 @@ namespace RTC
 		// the condition is met.
 		if (nowMs >= PacketArrivalTimestampWindow)
 		{
-			auto expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
-			auto it              = this->mapPacketArrivalTimes.begin();
+			uint64_t expiryTimestamp = nowMs - PacketArrivalTimestampWindow;
+			auto it                  = this->mapPacketArrivalTimes.begin();
 
 			while (it != this->mapPacketArrivalTimes.end() &&
 			       it->first != this->transportCcFeedbackWideSeqNumStart &&

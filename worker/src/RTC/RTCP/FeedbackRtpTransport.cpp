@@ -310,7 +310,9 @@ namespace RTC
 
 			// Check if there are too many missing packets.
 			{
-				auto missingPackets = sequenceNumber - (this->latestSequenceNumber + 1);
+				// NOTE: We CANNOT use auto here, we must use uint16_t. Otherwise this is a bug.
+				// https://github.com/versatica/mediasoup/issues/1385#issuecomment-2084982087
+				const uint16_t missingPackets = sequenceNumber - (this->latestSequenceNumber + 1);
 
 				if (missingPackets > FeedbackRtpTransportPacket::maxMissingPackets)
 				{
