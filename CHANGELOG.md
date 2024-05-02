@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.14.4
+
+- Worker: Fix crash. RtcpFeedback parameter is optional ([PR #1387](https://github.com/versatica/mediasoup/pull/1387), credits to @Lynnworld).
+
 ### 3.14.3
 
 - Worker: Fix possible value overflow in `FeedbackRtpTransport.cpp` ([PR #1386](https://github.com/versatica/mediasoup/pull/1386), credits to @Lynnworld).
