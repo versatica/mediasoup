@@ -101,10 +101,6 @@ afterEach(async () => {
 	ctx.sctpSocket?.end();
 	ctx.worker?.close();
 
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
-
 	// NOTE: For some reason we have to wait a bit for the SCTP stuff to release
 	// internal things, otherwise Jest reports open handles. We don't care much
 	// honestly.

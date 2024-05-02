@@ -54,6 +54,7 @@
 		"typescript:build": "node npm-scripts.mjs typescript:build",
 		"typescript:watch": "node npm-scripts.mjs typescript:watch",
 		"worker:build": "node npm-scripts.mjs worker:build",
+		"worker:build-lib": "node npm-scripts.mjs worker:build-lib",
 		"worker:prebuild": "node npm-scripts.mjs worker:prebuild",
 		"lint": "npm run lint:node && npm run lint:worker",
 		"lint:node": "node npm-scripts.mjs lint:node",
@@ -106,7 +107,8 @@
 		"ini": "^4.1.2",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^9.4.0",
-		"tar": "^7.0.1"
+		"tar": "^7.0.1",
+		"worker-channel": "file:./node/workerChannel"
 	},
 	"devDependencies": {
 		"@octokit/rest": "^20.1.0",

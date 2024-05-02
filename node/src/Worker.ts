@@ -1,7 +1,6 @@
 import * as process from 'node:process';
 import * as path from 'node:path';
-import { spawn, ChildProcess } from 'node:child_process';
-import { version } from './';
+import { WorkerChannel } from '../workerChannel';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
@@ -203,7 +202,6 @@ export type WorkerDump = {
 
 export type WorkerEvents = {
 	died: [Error];
-	subprocessclose: [];
 	listenererror: [string, Error];
 	// Private events.
 	'@success': [];
@@ -247,11 +245,13 @@ const workerLogger = new Logger('Worker');
 export class Worker<
 	WorkerAppData extends AppData = AppData,
 > extends EnhancedEventEmitter<WorkerEvents> {
-	// mediasoup-worker child process.
-	#child: ChildProcess;
+	/**
+	 * WorkerChannel instance.
+	 */
+	#workerChannel: WorkerChannel;
 
 	// Worker process PID.
-	readonly #pid: number;
+	readonly #pid: number = process.pid;
 
 	// Channel instance.
 	readonly #channel: Channel;
@@ -261,9 +261,6 @@ export class Worker<
 
 	// Died dlag.
 	#died = false;
-
-	// Worker subprocess closed flag.
-	#subprocessClosed = false;
 
 	// Custom app data.
 	#appData: WorkerAppData;
@@ -345,157 +342,37 @@ export class Worker<
 			spawnArgs.join(' ')
 		);
 
-		this.#child = spawn(
-			// command
-			spawnBin,
-			// args
-			spawnArgs,
-			// options
-			{
-				env: {
-					MEDIASOUP_VERSION: version,
-					// Let the worker process inherit all environment variables, useful
-					// if a custom and not in the path GCC is used so the user can set
-					// LD_LIBRARY_PATH environment variable for runtime.
-					...process.env,
-				},
+		this.#workerChannel = new WorkerChannel(spawnArgs);
 
-				detached: false,
+		this.#workerChannel.on('error', (code: number) => {
+			if (code === 42) {
+				logger.error('worker failed due to wrong settings [pid:%s]', this.#pid);
 
-				// fd 0 (stdin)   : Just ignore it.
-				// fd 1 (stdout)  : Pipe it for 3rd libraries that log their own stuff.
-				// fd 2 (stderr)  : Same as stdout.
-				// fd 3 (channel) : Producer Channel fd.
-				// fd 4 (channel) : Consumer Channel fd.
-				stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe'],
-				windowsHide: true,
+				this.emit('@failure', new TypeError('wrong settings'));
+			} else {
+				logger.error(
+					'worker failed unexpectedly [pid:%s, code:%s]',
+					this.#pid,
+					code
+				);
+
+				this.emit('@failure', new Error(`[pid:${this.#pid}, code:${code}]`));
 			}
-		);
-
-		this.#pid = this.#child.pid!;
+		});
 
 		this.#channel = new Channel({
-			producerSocket: this.#child.stdio[3],
-			consumerSocket: this.#child.stdio[4],
-			pid: this.#pid,
+			workerChannel: this.#workerChannel,
+			pid: process.pid,
 		});
 
 		this.#appData = appData || ({} as WorkerAppData);
 
-		let spawnDone = false;
-
 		// Listen for 'running' notification.
-		this.#channel.once(String(this.#pid), (event: Event) => {
-			if (!spawnDone && event === Event.WORKER_RUNNING) {
-				spawnDone = true;
-
+		this.#channel.once(String(process.pid), (event: Event) => {
+			if (event === Event.WORKER_RUNNING) {
 				logger.debug('worker process running [pid:%s]', this.#pid);
 
 				this.emit('@success');
-			}
-		});
-
-		this.#child.on('exit', (code, signal) => {
-			// If killed by ourselves, do nothing.
-			if (this.#child.killed) {
-				return;
-			}
-
-			if (!spawnDone) {
-				spawnDone = true;
-
-				if (code === 42) {
-					logger.error(
-						'worker process failed due to wrong settings [pid:%s]',
-						this.#pid
-					);
-
-					this.close();
-					this.emit('@failure', new TypeError('wrong settings'));
-				} else {
-					logger.error(
-						'worker process failed unexpectedly [pid:%s, code:%s, signal:%s]',
-						this.#pid,
-						code,
-						signal
-					);
-
-					this.close();
-					this.emit(
-						'@failure',
-						new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`)
-					);
-				}
-			} else {
-				logger.error(
-					'worker process died unexpectedly [pid:%s, code:%s, signal:%s]',
-					this.#pid,
-					code,
-					signal
-				);
-
-				this.workerDied(
-					new Error(`[pid:${this.#pid}, code:${code}, signal:${signal}]`)
-				);
-			}
-		});
-
-		this.#child.on('error', error => {
-			// If killed by ourselves, do nothing.
-			if (this.#child.killed) {
-				return;
-			}
-
-			if (!spawnDone) {
-				spawnDone = true;
-
-				logger.error(
-					'worker process failed [pid:%s]: %s',
-					this.#pid,
-					error.message
-				);
-
-				this.close();
-				this.emit('@failure', error);
-			} else {
-				logger.error(
-					'worker process error [pid:%s]: %s',
-					this.#pid,
-					error.message
-				);
-
-				this.workerDied(error);
-			}
-		});
-
-		this.#child.on('close', (code, signal) => {
-			logger.debug(
-				'worker subprocess closed [pid:%s, code:%s, signal:%s]',
-				this.#pid,
-				code,
-				signal
-			);
-
-			this.#subprocessClosed = true;
-
-			this.safeEmit('subprocessclose');
-		});
-
-		// Be ready for 3rd party worker libraries logging to stdout.
-		this.#child.stdout!.on('data', buffer => {
-			for (const line of buffer.toString('utf8').split('\n')) {
-				if (line) {
-					workerLogger.debug(`(stdout) ${line}`);
-				}
-			}
-		});
-
-		// In case of a worker bug, mediasoup will log to stderr.
-		this.#child.stderr!.on('data', buffer => {
-			for (const line of buffer.toString('utf8').split('\n')) {
-				if (line) {
-					workerLogger.error(`(stderr) ${line}`);
-				}
 			}
 		});
 	}
@@ -519,13 +396,6 @@ export class Worker<
 	 */
 	get died(): boolean {
 		return this.#died;
-	}
-
-	/**
-	 * Whether the Worker subprocess is closed.
-	 */
-	get subprocessClosed(): boolean {
-		return this.#subprocessClosed;
 	}
 
 	/**
@@ -577,8 +447,7 @@ export class Worker<
 
 		this.#closed = true;
 
-		// Kill the worker process.
-		this.#child.kill('SIGTERM');
+		this.#channel.request(FbsRequest.Method.WORKER_CLOSE).catch(() => {});
 
 		// Close the Channel instance.
 		this.#channel.close();

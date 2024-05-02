@@ -60,6 +60,7 @@ async function run() {
 		case 'prepare': {
 			flatcNode();
 			buildTypescript({ force: false });
+			buildWorkerLib();
 
 			break;
 		}
@@ -124,6 +125,12 @@ async function run() {
 
 		case 'worker:build': {
 			buildWorker();
+
+			break;
+		}
+
+		case 'worker:build-lib': {
+			buildWorkerLib();
 
 			break;
 		}
@@ -313,6 +320,20 @@ function buildWorker() {
 	installInvoke();
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
+}
+
+function buildWorkerLib() {
+	logInfo('buildWorkerLib()');
+
+	installInvoke();
+
+	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
+
+	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
+
+	executeCmd(
+		`cd node/workerChannel && GYP_DEFINES="mediasoup_build_type=${buildType}" npm i`
+	);
 }
 
 function cleanWorkerArtifacts() {

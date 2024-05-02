@@ -15,6 +15,8 @@ async function run() {
 		'../test/include/helpers.hpp',
 		'../fuzzer/src/**/*.cpp',
 		'../fuzzer/include/**/*.hpp',
+		'../../node/workerChannel/src/**/*.cpp',
+		'../../node/workerChannel/src/**/*.hpp',
 	]);
 
 	switch (task) {

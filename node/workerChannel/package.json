@@ -1,0 +1,20 @@
+{
+	"name": "mediasoup worker native module",
+	"version": "0.0.0",
+	"description": "Node.js Addon do communicate with mediasoup worker",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"private": true,
+	"gypfile": true,
+	"scripts": {
+		"build": "rm -rf lib/ && tsc --project ./",
+		"test": "node lib/test.js"
+	},
+	"dependencies": {
+		"bindings": "*",
+		"node-addon-api": "*"
+	},
+	"devDependencies": {
+		"typescript": "^5.4.5"
+	}
+}

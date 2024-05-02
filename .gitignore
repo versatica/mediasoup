@@ -10,6 +10,12 @@
 # flatc generated files.
 /node/src/fbs
 
+## Node WorkerChannel addon.
+/node/workerChannel/node_modules
+/node/workerChannel/build
+/node/workerChannel/lib
+/node/workerChannel/.cache
+
 ## Rust.
 /rust/examples-frontend/*/node_modules
 /rust/examples-frontend/*/package-lock.json
