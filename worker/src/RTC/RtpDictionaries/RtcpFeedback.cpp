@@ -13,7 +13,10 @@ namespace RTC
 		MS_TRACE();
 
 		this->type      = data->type()->str();
-		this->parameter = data->parameter()->str();
+		if (flatbuffers::IsFieldPresent(data, FBS::RtpParameters::RtcpFeedback::VT_PARAMETER))
+		{
+			this->parameter = data->parameter()->str();
+		}
 	}
 
 	flatbuffers::Offset<FBS::RtpParameters::RtcpFeedback> RtcpFeedback::FillBuffer(
