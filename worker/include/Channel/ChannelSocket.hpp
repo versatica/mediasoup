@@ -91,13 +91,13 @@ namespace Channel
 		~ChannelSocket() override;
 
 	public:
+		void Close();
 		void SetListener(Listener* listener);
 		void Send(const uint8_t* data, uint32_t dataLen);
 		void SendLog(const char* data, uint32_t dataLen);
 		bool CallbackRead();
 
 	private:
-		void InternalClose();
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);
 
 		/* Pure virtual methods inherited from ConsumerSocket::Listener. */

@@ -79,7 +79,7 @@ extern "C" int mediasoup_worker_run(
 	{
 		MS_ERROR_STD("settings error: %s", error.what());
 
-		channel.reset();
+		channel->Close();
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
@@ -90,7 +90,7 @@ extern "C" int mediasoup_worker_run(
 	{
 		MS_ERROR_STD("unexpected settings error: %s", error.what());
 
-		channel.reset();
+		channel->Close();
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 

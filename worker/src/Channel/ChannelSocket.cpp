@@ -79,7 +79,37 @@ namespace Channel
 
 		if (!this->closed)
 		{
-			InternalClose();
+			Close();
+		}
+	}
+
+	void ChannelSocket::Close()
+	{
+		MS_TRACE_STD();
+
+		if (this->closed)
+		{
+			return;
+		}
+
+		this->closed = true;
+
+		if (this->uvReadHandle)
+		{
+			uv_close(
+			  reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onCloseAsync));
+		}
+
+		if (this->consumerSocket)
+		{
+			delete this->consumerSocket;
+			this->consumerSocket = nullptr;
+		}
+
+		if (this->producerSocket)
+		{
+			delete this->producerSocket;
+			this->producerSocket = nullptr;
 		}
 	}
 
@@ -214,36 +244,6 @@ namespace Channel
 
 		// Return `true` if something was processed.
 		return free != nullptr;
-	}
-
-	void ChannelSocket::InternalClose()
-	{
-		MS_TRACE_STD();
-
-		if (this->closed)
-		{
-			return;
-		}
-
-		this->closed = true;
-
-		if (this->uvReadHandle)
-		{
-			uv_close(
-			  reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onCloseAsync));
-		}
-
-		if (this->consumerSocket)
-		{
-			delete this->consumerSocket;
-			this->consumerSocket = nullptr;
-		}
-
-		if (this->producerSocket)
-		{
-			delete this->producerSocket;
-			this->producerSocket = nullptr;
-		}
 	}
 
 	void ChannelSocket::SendImpl(const uint8_t* payload, uint32_t payloadLen)
