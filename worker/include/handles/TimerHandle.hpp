@@ -23,7 +23,6 @@ public:
 	~TimerHandle();
 
 public:
-	void Close();
 	void Start(uint64_t timeout, uint64_t repeat = 0);
 	void Stop();
 	void Reset();
@@ -40,6 +39,9 @@ public:
 	{
 		return uv_is_active(reinterpret_cast<uv_handle_t*>(this->uvHandle)) != 0;
 	}
+
+private:
+	void InternalClose();
 
 	/* Callbacks fired by UV events. */
 public:

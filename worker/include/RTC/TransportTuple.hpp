@@ -51,29 +51,7 @@ namespace RTC
 		}
 
 	public:
-		void Close()
-		{
-			if (this->protocol == Protocol::UDP)
-			{
-				this->udpSocket->Close();
-			}
-			else
-			{
-				this->tcpConnection->Close();
-			}
-		}
-
-		bool IsClosed()
-		{
-			if (this->protocol == Protocol::UDP)
-			{
-				return this->udpSocket->IsClosed();
-			}
-			else
-			{
-				return this->tcpConnection->IsClosed();
-			}
-		}
+		void CloseTcpConnection();
 
 		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 

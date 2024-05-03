@@ -131,6 +131,7 @@ namespace RTC
 		std::string password;
 		uint16_t consentTimeoutMs{ 30000u };
 		// Others.
+		bool destroying{ false };
 		std::string oldUsernameFragment;
 		std::string oldPassword;
 		IceState state{ IceState::NEW };

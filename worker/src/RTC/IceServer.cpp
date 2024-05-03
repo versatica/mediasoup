@@ -112,6 +112,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->destroying = true;
+
 		// Here we must notify the listener about the removal of current
 		// usernameFragments (and also the old one if any) and all tuples.
 
@@ -222,6 +224,13 @@ namespace RTC
 	void IceServer::RemoveTuple(RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
+
+		// While IceServer is being destroyed, it may call listener methods that may
+		// end calling RemoveTuple(). We must ignore it to avoid double-free issues.
+		if (this->destroying)
+		{
+			return;
+		}
 
 		RTC::TransportTuple* removedTuple{ nullptr };
 
