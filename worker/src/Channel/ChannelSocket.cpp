@@ -81,6 +81,9 @@ namespace Channel
 		{
 			Close();
 		}
+
+		delete this->consumerSocket;
+		delete this->producerSocket;
 	}
 
 	void ChannelSocket::Close()
@@ -102,14 +105,12 @@ namespace Channel
 
 		if (this->consumerSocket)
 		{
-			delete this->consumerSocket;
-			this->consumerSocket = nullptr;
+			this->consumerSocket->Close();
 		}
 
 		if (this->producerSocket)
 		{
-			delete this->producerSocket;
-			this->producerSocket = nullptr;
+			this->producerSocket->Close();
 		}
 	}
 

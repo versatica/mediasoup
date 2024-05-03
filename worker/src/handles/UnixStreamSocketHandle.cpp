@@ -128,10 +128,60 @@ UnixStreamSocketHandle::~UnixStreamSocketHandle()
 
 	if (!this->closed)
 	{
-		InternalClose();
+		Close();
 	}
 
 	delete[] this->buffer;
+}
+
+// NOTE: In UnixStreamSocketHandle we need a poublic Close() method and cannot
+// just rely on the destructor plus a private InternalClose() method.
+void UnixStreamSocketHandle::Close()
+{
+	MS_TRACE_STD();
+
+	if (this->closed)
+	{
+		return;
+	}
+
+	int err;
+
+	this->closed = true;
+
+	// Tell the UV handle that the UnixStreamSocketHandle has been closed.
+	this->uvHandle->data = nullptr;
+
+	if (this->role == UnixStreamSocketHandle::Role::CONSUMER)
+	{
+		// Don't read more.
+		err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
+
+		if (err != 0)
+		{
+			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		}
+	}
+
+	// If there is no error and the peer didn't close its pipe side then close gracefully.
+	if (this->role == UnixStreamSocketHandle::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
+	{
+		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
+		auto* req = new uv_shutdown_t;
+		req->data = static_cast<void*>(this);
+		err       = uv_shutdown(
+      req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
+
+		if (err != 0)
+		{
+			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
+		}
+	}
+	// Otherwise directly close the socket.
+	else
+	{
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClosePipe));
+	}
 }
 
 void UnixStreamSocketHandle::Write(const uint8_t* data, size_t len)
@@ -270,54 +320,6 @@ void UnixStreamSocketHandle::SetRecvBufferSize(uint32_t size)
 	}
 }
 
-void UnixStreamSocketHandle::InternalClose()
-{
-	MS_TRACE_STD();
-
-	if (this->closed)
-	{
-		return;
-	}
-
-	int err;
-
-	this->closed = true;
-
-	// Tell the UV handle that the UnixStreamSocketHandle has been closed.
-	this->uvHandle->data = nullptr;
-
-	if (this->role == UnixStreamSocketHandle::Role::CONSUMER)
-	{
-		// Don't read more.
-		err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
-
-		if (err != 0)
-		{
-			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
-		}
-	}
-
-	// If there is no error and the peer didn't close its pipe side then close gracefully.
-	if (this->role == UnixStreamSocketHandle::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
-	{
-		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
-		auto* req = new uv_shutdown_t;
-		req->data = static_cast<void*>(this);
-		err       = uv_shutdown(
-      req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
-
-		if (err != 0)
-		{
-			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
-		}
-	}
-	// Otherwise directly close the socket.
-	else
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClosePipe));
-	}
-}
-
 inline void UnixStreamSocketHandle::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_t* buf)
 {
 	MS_TRACE_STD();
@@ -368,7 +370,7 @@ inline void UnixStreamSocketHandle::OnUvRead(ssize_t nread, const uv_buf_t* /*bu
 		this->isClosedByPeer = true;
 
 		// Close local side of the pipe.
-		InternalClose();
+		Close();
 
 		// Notify the subclass.
 		UserOnUnixStreamSocketClosed();
@@ -381,7 +383,7 @@ inline void UnixStreamSocketHandle::OnUvRead(ssize_t nread, const uv_buf_t* /*bu
 		this->hasError = true;
 
 		// Close the socket.
-		InternalClose();
+		Close();
 
 		// Notify the subclass.
 		UserOnUnixStreamSocketClosed();
@@ -399,7 +401,7 @@ inline void UnixStreamSocketHandle::OnUvWriteError(int error)
 
 	MS_ERROR_STD("write error, closing the pipe: %s", uv_strerror(error));
 
-	InternalClose();
+	Close();
 
 	// Notify the subclass.
 	UserOnUnixStreamSocketClosed();

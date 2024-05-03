@@ -40,6 +40,7 @@ public:
 	virtual ~UnixStreamSocketHandle();
 
 public:
+	void Close();
 	bool IsClosed() const
 	{
 		return this->closed;
@@ -49,9 +50,6 @@ public:
 	void SetSendBufferSize(uint32_t size);
 	uint32_t GetRecvBufferSize() const;
 	void SetRecvBufferSize(uint32_t size);
-
-private:
-	void InternalClose();
 
 	/* Callbacks fired by UV events. */
 public:
