@@ -236,6 +236,15 @@ namespace RTC
 
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
+		// NOTE: We need to close WebRtcTransports first since they may need to
+		// send DTLS Close Alert so UDP sockets and TCP connections must remain
+		// open.
+		for (auto* webRtcTransport : this->webRtcTransports)
+		{
+			webRtcTransport->ListenServerClosed();
+		}
+		this->webRtcTransports.clear();
+
 		for (auto& item : this->udpSocketOrTcpServers)
 		{
 			delete item.udpSocket;
@@ -245,12 +254,6 @@ namespace RTC
 			item.tcpServer = nullptr;
 		}
 		this->udpSocketOrTcpServers.clear();
-
-		for (auto* webRtcTransport : this->webRtcTransports)
-		{
-			webRtcTransport->ListenServerClosed();
-		}
-		this->webRtcTransports.clear();
 	}
 
 	flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> WebRtcServer::FillBuffer(

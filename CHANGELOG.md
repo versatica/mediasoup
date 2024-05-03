@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Fix memory leak when using `WebRtcServer` with TCP enabled ([PR #1389](https://github.com/versatica/mediasoup/pull/1389)).
+- Worker: Fix crash when closing `WebRtcServer` with active `WebRtcTransports` ([PR #1390](https://github.com/versatica/mediasoup/pull/1390)).
 
 ### 3.14.4
 
