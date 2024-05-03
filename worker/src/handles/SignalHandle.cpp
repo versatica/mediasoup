@@ -31,24 +31,7 @@ SignalHandle::~SignalHandle()
 
 	if (!this->closed)
 	{
-		Close();
-	}
-}
-
-void SignalHandle::Close()
-{
-	MS_TRACE();
-
-	if (this->closed)
-	{
-		return;
-	}
-
-	this->closed = true;
-
-	for (auto* uvHandle : this->uvHandles)
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseSignal));
+		InternalClose();
 	}
 }
 
@@ -86,7 +69,24 @@ void SignalHandle::AddSignal(int signum, const std::string& name)
 	this->uvHandles.push_back(uvHandle);
 }
 
-inline void SignalHandle::OnUvSignal(int signum)
+void SignalHandle::InternalClose()
+{
+	MS_TRACE();
+
+	if (this->closed)
+	{
+		return;
+	}
+
+	this->closed = true;
+
+	for (auto* uvHandle : this->uvHandles)
+	{
+		uv_close(reinterpret_cast<uv_handle_t*>(uvHandle), static_cast<uv_close_cb>(onCloseSignal));
+	}
+}
+
+void SignalHandle::OnUvSignal(int signum)
 {
 	MS_TRACE();
 

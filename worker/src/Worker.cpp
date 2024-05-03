@@ -111,7 +111,7 @@ void Worker::Close()
 #endif
 
 	// Close the Channel.
-	this->channel->Close();
+	delete this->channel;
 }
 
 flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(

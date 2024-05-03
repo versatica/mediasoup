@@ -11,6 +11,8 @@ namespace RTC
 
 	TransportTuple::Protocol TransportTuple::ProtocolFromFbs(FBS::Transport::Protocol protocol)
 	{
+		MS_TRACE();
+
 		switch (protocol)
 		{
 			case FBS::Transport::Protocol::UDP:
@@ -23,6 +25,8 @@ namespace RTC
 
 	FBS::Transport::Protocol TransportTuple::ProtocolToFbs(TransportTuple::Protocol protocol)
 	{
+		MS_TRACE();
+
 		switch (protocol)
 		{
 			case TransportTuple::Protocol::UDP:
@@ -34,6 +38,18 @@ namespace RTC
 	}
 
 	/* Instance methods. */
+
+	void TransportTuple::CloseTcpConnection()
+	{
+		MS_TRACE();
+
+		if (this->protocol == Protocol::UDP)
+		{
+			MS_ABORT("cannot delete a UDP socket");
+		}
+
+		this->tcpConnection->TriggerClose();
+	}
 
 	flatbuffers::Offset<FBS::Transport::Tuple> TransportTuple::FillBuffer(
 	  flatbuffers::FlatBufferBuilder& builder) const

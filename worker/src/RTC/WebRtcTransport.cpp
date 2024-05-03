@@ -1180,9 +1180,9 @@ namespace RTC
 		}
 
 		// If this is a TCP tuple, close its underlaying TCP connection.
-		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP && !tuple->IsClosed())
+		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP)
 		{
-			tuple->Close();
+			tuple->CloseTcpConnection();
 		}
 	}
 
