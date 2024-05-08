@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: Fix possible double free when ICE consent check fails ([PR #1390](https://github.com/versatica/mediasoup/pull/1390)).
+- Worker: Fix possible double free when ICE consent check fails ([PR #1393](https://github.com/versatica/mediasoup/pull/1393)).
 
 ### 3.14.5
 
