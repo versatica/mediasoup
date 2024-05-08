@@ -123,7 +123,7 @@ namespace RTC
 		}
 
 		// Clear all tuples.
-		this->clearingAllTuples = true;
+		this->isRemovingTuples = true;
 
 		for (const auto& it : this->tuples)
 		{
@@ -133,12 +133,12 @@ namespace RTC
 			this->listener->OnIceServerTupleRemoved(this, storedTuple);
 		}
 
+		this->isRemovingTuples = false;
+
 		// Clear all tuples.
 		// NOTE: Do it after notifying the listener since the listener may need to
 		// use/read the tuple being removed so we cannot free it yet.
 		this->tuples.clear();
-
-		this->clearingAllTuples = false;
 
 		// Unset selected tuple.
 		this->selectedTuple = nullptr;
@@ -227,9 +227,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// While IceServer is being destroyed, it may call listener methods that may
-		// end calling RemoveTuple(). We must ignore it to avoid double-free issues.
-		if (this->clearingAllTuples)
+		// If IceServer is removing a tuple or all tuples (for instance in the
+		// destructor), the OnIceServerTupleRemoved() callback may end triggering
+		// new calls to RemoveTuple(). We must ignore it to avoid double-free issues.
+		if (this->isRemovingTuples)
 		{
 			return;
 		}
@@ -258,7 +259,9 @@ namespace RTC
 		}
 
 		// Notify the listener.
+		this->isRemovingTuples = true;
 		this->listener->OnIceServerTupleRemoved(this, removedTuple);
+		this->isRemovingTuples = false;
 
 		// Remove it from the list of tuples.
 		// NOTE: Do it after notifying the listener since the listener may need to
@@ -812,7 +815,9 @@ namespace RTC
 			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
 
 			// Notify the listener.
+			this->isRemovingTuples = true;
 			this->listener->OnIceServerTupleRemoved(this, removedTuple);
+			this->isRemovingTuples = false;
 
 			// Remove it from the list of tuples.
 			// NOTE: Do it after notifying the listener since the listener may need to
@@ -929,7 +934,7 @@ namespace RTC
 			this->remoteNomination = 0u;
 
 			// Clear all tuples.
-			this->clearingAllTuples = true;
+			this->isRemovingTuples = true;
 
 			for (const auto& it : this->tuples)
 			{
@@ -939,12 +944,12 @@ namespace RTC
 				this->listener->OnIceServerTupleRemoved(this, storedTuple);
 			}
 
+			this->isRemovingTuples = false;
+
 			// Clear all tuples.
 			// NOTE: Do it after notifying the listener since the listener may need to
 			// use/read the tuple being removed so we cannot free it yet.
 			this->tuples.clear();
-
-			this->clearingAllTuples = false;
 
 			// Unset selected tuple.
 			this->selectedTuple = nullptr;
