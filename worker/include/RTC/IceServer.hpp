@@ -131,7 +131,6 @@ namespace RTC
 		std::string password;
 		uint16_t consentTimeoutMs{ 30000u };
 		// Others.
-		bool destroying{ false };
 		std::string oldUsernameFragment;
 		std::string oldPassword;
 		IceState state{ IceState::NEW };
@@ -140,6 +139,7 @@ namespace RTC
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		TimerHandle* consentCheckTimer{ nullptr };
 		uint64_t lastConsentRequestReceivedAtMs{ 0u };
+		bool clearingAllTuples{ false };
 	};
 } // namespace RTC
 

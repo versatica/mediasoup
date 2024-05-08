@@ -112,8 +112,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->destroying = true;
-
 		// Here we must notify the listener about the removal of current
 		// usernameFragments (and also the old one if any) and all tuples.
 
@@ -125,6 +123,8 @@ namespace RTC
 		}
 
 		// Clear all tuples.
+		this->clearingAllTuples = true;
+
 		for (const auto& it : this->tuples)
 		{
 			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
@@ -137,6 +137,8 @@ namespace RTC
 		// NOTE: Do it after notifying the listener since the listener may need to
 		// use/read the tuple being removed so we cannot free it yet.
 		this->tuples.clear();
+
+		this->clearingAllTuples = false;
 
 		// Unset selected tuple.
 		this->selectedTuple = nullptr;
@@ -227,7 +229,7 @@ namespace RTC
 
 		// While IceServer is being destroyed, it may call listener methods that may
 		// end calling RemoveTuple(). We must ignore it to avoid double-free issues.
-		if (this->destroying)
+		if (this->clearingAllTuples)
 		{
 			return;
 		}
@@ -927,6 +929,8 @@ namespace RTC
 			this->remoteNomination = 0u;
 
 			// Clear all tuples.
+			this->clearingAllTuples = true;
+
 			for (const auto& it : this->tuples)
 			{
 				auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
@@ -939,6 +943,8 @@ namespace RTC
 			// NOTE: Do it after notifying the listener since the listener may need to
 			// use/read the tuple being removed so we cannot free it yet.
 			this->tuples.clear();
+
+			this->clearingAllTuples = false;
 
 			// Unset selected tuple.
 			this->selectedTuple = nullptr;
