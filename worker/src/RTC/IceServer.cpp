@@ -112,8 +112,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->destroying = true;
-
 		// Here we must notify the listener about the removal of current
 		// usernameFragments (and also the old one if any) and all tuples.
 
@@ -125,6 +123,8 @@ namespace RTC
 		}
 
 		// Clear all tuples.
+		this->isRemovingTuples = true;
+
 		for (const auto& it : this->tuples)
 		{
 			auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
@@ -132,6 +132,8 @@ namespace RTC
 			// Notify the listener.
 			this->listener->OnIceServerTupleRemoved(this, storedTuple);
 		}
+
+		this->isRemovingTuples = false;
 
 		// Clear all tuples.
 		// NOTE: Do it after notifying the listener since the listener may need to
@@ -225,9 +227,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// While IceServer is being destroyed, it may call listener methods that may
-		// end calling RemoveTuple(). We must ignore it to avoid double-free issues.
-		if (this->destroying)
+		// If IceServer is removing a tuple or all tuples (for instance in the
+		// destructor), the OnIceServerTupleRemoved() callback may end triggering
+		// new calls to RemoveTuple(). We must ignore it to avoid double-free issues.
+		if (this->isRemovingTuples)
 		{
 			return;
 		}
@@ -256,7 +259,9 @@ namespace RTC
 		}
 
 		// Notify the listener.
+		this->isRemovingTuples = true;
 		this->listener->OnIceServerTupleRemoved(this, removedTuple);
+		this->isRemovingTuples = false;
 
 		// Remove it from the list of tuples.
 		// NOTE: Do it after notifying the listener since the listener may need to
@@ -810,7 +815,9 @@ namespace RTC
 			MS_ASSERT(removedTuple, "couldn't find any tuple to be removed");
 
 			// Notify the listener.
+			this->isRemovingTuples = true;
 			this->listener->OnIceServerTupleRemoved(this, removedTuple);
+			this->isRemovingTuples = false;
 
 			// Remove it from the list of tuples.
 			// NOTE: Do it after notifying the listener since the listener may need to
@@ -927,6 +934,8 @@ namespace RTC
 			this->remoteNomination = 0u;
 
 			// Clear all tuples.
+			this->isRemovingTuples = true;
+
 			for (const auto& it : this->tuples)
 			{
 				auto* storedTuple = const_cast<RTC::TransportTuple*>(std::addressof(it));
@@ -934,6 +943,8 @@ namespace RTC
 				// Notify the listener.
 				this->listener->OnIceServerTupleRemoved(this, storedTuple);
 			}
+
+			this->isRemovingTuples = false;
 
 			// Clear all tuples.
 			// NOTE: Do it after notifying the listener since the listener may need to

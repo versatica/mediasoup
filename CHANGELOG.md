@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Worker: Fix possible double free when ICE consent check fails ([PR #1393](https://github.com/versatica/mediasoup/pull/1393)).
+
 ### 3.14.5
 
 - Worker: Fix memory leak when using `WebRtcServer` with TCP enabled ([PR #1389](https://github.com/versatica/mediasoup/pull/1389)).
