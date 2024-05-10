@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, DirectTransportEvents } from '../types';
+import { DirectTransportEvents } from '../types';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;

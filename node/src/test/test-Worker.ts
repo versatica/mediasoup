@@ -1,9 +1,6 @@
-import * as os from 'node:os';
 import * as process from 'node:process';
 import * as path from 'node:path';
 import * as mediasoup from '../';
-import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents } from '../types';
 import { InvalidStateError } from '../errors';
 
 test('Worker.workerBin matches mediasoup-worker absolute path', () => {
@@ -178,6 +175,7 @@ test('worker.close() succeeds', async () => {
 	expect(worker.died).toBe(false);
 }, 2000);
 
+/*
 test.skip('Worker emits "died" if worker process died unexpectedly', async () => {
 	let onDied: ReturnType<typeof jest.fn>;
 	let onObserverClose: ReturnType<typeof jest.fn>;
@@ -271,3 +269,4 @@ test.skip('Worker emits "died" if worker process died unexpectedly', async () =>
 	expect(worker3.closed).toBe(true);
 	expect(worker3.died).toBe(true);
 }, 5000);
+*/

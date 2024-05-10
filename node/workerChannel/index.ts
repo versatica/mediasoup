@@ -1,7 +1,8 @@
-import { createRequire } from 'node:module';
 import { EventEmitter } from 'events';
 
 const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WorkerChannel: NativeWorkerChannel } = require(
 	`../build/${buildType}/worker-channel.node`
 );

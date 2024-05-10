@@ -175,4 +175,20 @@ eslintConfig.overrides.push({
 	},
 });
 
+eslintConfig.overrides.push({
+	files: ['node/workerChannel/*.ts'],
+	parser: '@typescript-eslint/parser',
+	parserOptions: {
+		...eslintConfig.parserOptions,
+		project: 'node/workerChannel/tsconfig.json',
+	},
+	plugins: [...eslintConfig.plugins, '@typescript-eslint'],
+	extends: [
+		'plugin:@typescript-eslint/eslint-recommended',
+		'plugin:@typescript-eslint/recommended',
+		...eslintConfig.extends,
+	],
+	rules: { ...eslintConfig.rules, ...tsRules },
+});
+
 module.exports = eslintConfig;

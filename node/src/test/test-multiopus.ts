@@ -1,6 +1,4 @@
 import * as mediasoup from '../';
-import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents } from '../types';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 

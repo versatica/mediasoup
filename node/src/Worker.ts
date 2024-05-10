@@ -241,7 +241,6 @@ export const workerBin = process.env.MEDIASOUP_WORKER_BIN
 			);
 
 const logger = new Logger('Worker');
-const workerLogger = new Logger('Worker');
 
 export class Worker<
 	WorkerAppData extends AppData = AppData,

@@ -1,7 +1,7 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, WebRtcServerEvents } from '../types';
+import { WebRtcServerEvents } from '../types';
 import { InvalidStateError } from '../errors';
 
 type TestContext = {

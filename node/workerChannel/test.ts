@@ -5,6 +5,7 @@ const args = [''];
 const workerChannel = new WorkerChannel(version, args);
 
 workerChannel.on('data', value => {
+	// eslint-disable-next-line no-console
 	console.log('### DATA event ... value: ', value);
 });
 
