@@ -170,10 +170,7 @@ def clean(ctx): # pylint: disable=unused-argument
     """
     Clean the installation directory
     """
-    try:
-        shutil.rmtree(MEDIASOUP_INSTALL_DIR);
-    except:
-        pass;
+    shutil.rmtree(MEDIASOUP_INSTALL_DIR, ignore_errors=True);
 
 
 @task
@@ -181,10 +178,7 @@ def clean_build(ctx): # pylint: disable=unused-argument
     """
     Clean the build directory
     """
-    try:
-        shutil.rmtree(BUILD_DIR);
-    except:
-        pass;
+    shutil.rmtree(BUILD_DIR, ignore_errors=True);
 
 
 @task
@@ -192,15 +186,8 @@ def clean_pip(ctx): # pylint: disable=unused-argument
     """
     Clean the local pip setup
     """
-    try:
-        shutil.rmtree(PIP_MESON_NINJA_DIR);
-    except:
-        pass;
-
-    try:
-        shutil.rmtree(PIP_PYLINT_DIR);
-    except:
-        pass;
+    shutil.rmtree(PIP_MESON_NINJA_DIR, ignore_errors=True);
+    shutil.rmtree(PIP_PYLINT_DIR, ignore_errors=True);
 
 
 @task(pre=[meson_ninja])
@@ -215,7 +202,6 @@ def clean_subprojects(ctx):
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-
 
 @task
 def clean_all(ctx):
@@ -233,10 +219,8 @@ def clean_all(ctx):
         except:
             pass;
 
-        try:
-            shutil.rmtree(MEDIASOUP_OUT_DIR);
-        except:
-            pass;
+        shutil.rmtree(MEDIASOUP_OUT_DIR, ignore_errors=True);
+        shutil.rmtree('include/FBS', ignore_errors=True);
 
 
 @task(pre=[meson_ninja])
