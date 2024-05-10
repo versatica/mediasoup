@@ -19,7 +19,7 @@
       'conditions': [
         ['OS=="linux"', {
           "libraries": [
-            "<!(pwd)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.so"
+            "<!(pwd)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
           ],
         }],
         ['OS=="win"', {
