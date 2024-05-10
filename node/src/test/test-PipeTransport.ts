@@ -1003,7 +1003,7 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	expect(dump2.transportIds.length).toBe(1);
 }, 2000);
 
-test('router.pipeToRouter() called in two Routers passing one to each other as argument generates a single a single PipeTransport pair', async () => {
+test('router.pipeToRouter() called in two Routers passing one to each other as argument generates a single PipeTransport pair', async () => {
 	const routerA = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
 	});

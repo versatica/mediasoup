@@ -1,5 +1,18 @@
 # Changelog
 
+### 3.14.6
+
+- Worker: Fix potential double free when ICE consent check fails ([PR #1393](https://github.com/versatica/mediasoup/pull/1393)).
+
+### 3.14.5
+
+- Worker: Fix memory leak when using `WebRtcServer` with TCP enabled ([PR #1389](https://github.com/versatica/mediasoup/pull/1389)).
+- Worker: Fix crash when closing `WebRtcServer` with active `WebRtcTransports` ([PR #1390](https://github.com/versatica/mediasoup/pull/1390)).
+
+### 3.14.4
+
+- Worker: Fix crash. `RtcpFeedback` parameter is optional ([PR #1387](https://github.com/versatica/mediasoup/pull/1387), credits to @Lynnworld).
+
 ### 3.14.3
 
 - Worker: Fix possible value overflow in `FeedbackRtpTransport.cpp` ([PR #1386](https://github.com/versatica/mediasoup/pull/1386), credits to @Lynnworld).

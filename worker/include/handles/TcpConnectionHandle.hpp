@@ -49,7 +49,7 @@ public:
 	virtual ~TcpConnectionHandle();
 
 public:
-	void Close();
+	void TriggerClose();
 	bool IsClosed() const
 	{
 		return this->closed;
@@ -110,6 +110,7 @@ public:
 	}
 
 private:
+	void InternalClose();
 	bool SetPeerAddress();
 
 	/* Callbacks fired by UV events. */

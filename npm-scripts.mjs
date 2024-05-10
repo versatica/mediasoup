@@ -25,6 +25,28 @@ const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
+// Paths for ESLint to check. Converted to string for convenience.
+const ESLINT_PATHS = ['node/src', 'npm-scripts.mjs', 'worker/scripts'].join(
+	' '
+);
+// Paths for ESLint to ignore. Converted to string argument for convenience.
+const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
+	.map(entry => `--ignore-pattern ${entry}`)
+	.join(' ');
+// Paths for Prettier to check/write. Converted to string for convenience.
+// NOTE: Prettier ignores paths in .gitignore so we don't need to care about
+// node/src/fbs.
+const PRETTIER_PATHS = [
+	'CHANGELOG.md',
+	'CONTRIBUTING.md',
+	'README.md',
+	'doc',
+	'node/src',
+	'npm-scripts.mjs',
+	'package.json',
+	'worker/scripts',
+].join(' ');
+
 const task = process.argv[2];
 const args = process.argv.slice(3).join(' ');
 
@@ -346,13 +368,15 @@ function cleanWorkerArtifacts() {
 function lintNode() {
 	logInfo('lintNode()');
 
-	executeCmd('prettier . --check');
-
 	// Ensure there are no rules that are unnecessary or conflict with Prettier
 	// rules.
 	executeCmd('eslint-config-prettier .eslintrc.js');
 
-	executeCmd('eslint -c .eslintrc.js --max-warnings 0 .');
+	executeCmd(
+		`eslint -c .eslintrc.js --ext=ts,js,mjs --max-warnings 0 ${ESLINT_IGNORE_PATTERN_ARGS} ${ESLINT_PATHS}`
+	);
+
+	executeCmd(`prettier --check ${PRETTIER_PATHS}`);
 }
 
 function lintWorker() {
@@ -366,7 +390,7 @@ function lintWorker() {
 function formatNode() {
 	logInfo('formatNode()');
 
-	executeCmd('prettier . --write');
+	executeCmd(`prettier --write ${PRETTIER_PATHS}`);
 }
 
 function flatcNode() {

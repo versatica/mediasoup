@@ -17,7 +17,6 @@ public:
 	~TcpServerHandle() override;
 
 public:
-	void Close();
 	void Dump() const;
 	const struct sockaddr* GetLocalAddress() const
 	{
@@ -48,6 +47,7 @@ protected:
 	void AcceptTcpConnection(TcpConnectionHandle* connection);
 
 private:
+	void InternalClose();
 	bool SetLocalAddress();
 
 	/* Pure virtual methods that must be implemented by the subclass. */

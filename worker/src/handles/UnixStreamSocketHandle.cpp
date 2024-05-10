@@ -126,14 +126,16 @@ UnixStreamSocketHandle::~UnixStreamSocketHandle()
 {
 	MS_TRACE_STD();
 
-	delete[] this->buffer;
-
 	if (!this->closed)
 	{
 		Close();
 	}
+
+	delete[] this->buffer;
 }
 
+// NOTE: In UnixStreamSocketHandle we need a poublic Close() method and cannot
+// just rely on the destructor plus a private InternalClose() method.
 void UnixStreamSocketHandle::Close()
 {
 	MS_TRACE_STD();
