@@ -5,6 +5,7 @@
 /coverage
 /node/lib
 /node/src/fbs
+/node/workerChannel/lib
 /rust
 /target
 /worker/deps
