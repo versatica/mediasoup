@@ -26,11 +26,14 @@ const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check. Converted to string for convenience.
-const ESLINT_PATHS = ['node/src', 'npm-scripts.mjs', 'worker/scripts'].join(
-	' '
-);
+const ESLINT_PATHS = [
+	'node/src',
+	'node/workerChannel',
+	'npm-scripts.mjs',
+	'worker/scripts',
+].join(' ');
 // Paths for ESLint to ignore. Converted to string argument for convenience.
-const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
+const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs', '/node/workerChannel/lib']
 	.map(entry => `--ignore-pattern ${entry}`)
 	.join(' ');
 // Paths for Prettier to check/write. Converted to string for convenience.
@@ -42,6 +45,7 @@ const PRETTIER_PATHS = [
 	'README.md',
 	'doc',
 	'node/src',
+	'node/workerChannel',
 	'npm-scripts.mjs',
 	'package.json',
 	'worker/scripts',
