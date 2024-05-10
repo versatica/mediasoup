@@ -326,7 +326,7 @@ function buildWorkerLib() {
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 
 	executeCmd(
-		`cd node/workerChannel && GYP_DEFINES="mediasoup_build_type=${buildType}" npm i`
+		`cd node/workerChannel && GYP_DEFINES="mediasoup_build_type=${buildType}" npm ci`
 	);
 }
 
