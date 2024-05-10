@@ -129,12 +129,6 @@ async function run() {
 			break;
 		}
 
-		case 'worker:build-lib': {
-			buildWorkerLib();
-
-			break;
-		}
-
 		case 'worker:prebuild': {
 			await prebuildWorker();
 

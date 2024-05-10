@@ -54,7 +54,6 @@
 		"typescript:build": "node npm-scripts.mjs typescript:build",
 		"typescript:watch": "node npm-scripts.mjs typescript:watch",
 		"worker:build": "node npm-scripts.mjs worker:build",
-		"worker:build-lib": "node npm-scripts.mjs worker:build-lib",
 		"worker:prebuild": "node npm-scripts.mjs worker:prebuild",
 		"lint": "npm run lint:node && npm run lint:worker",
 		"lint:node": "node npm-scripts.mjs lint:node",
