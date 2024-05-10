@@ -1,5 +1,6 @@
 import * as process from 'node:process';
 import * as path from 'node:path';
+import { version } from './';
 import { WorkerChannel } from '../workerChannel';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
@@ -342,7 +343,7 @@ export class Worker<
 			spawnArgs.join(' ')
 		);
 
-		this.#workerChannel = new WorkerChannel(spawnArgs);
+		this.#workerChannel = new WorkerChannel(version, spawnArgs);
 
 		this.#workerChannel.on('error', (code: number) => {
 			if (code === 42) {

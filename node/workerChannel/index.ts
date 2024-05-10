@@ -10,12 +10,13 @@ export class WorkerChannel extends EventEmitter {
 	private emitter: EventEmitter;
 	private workerChannel: typeof NativeWorkerChannel;
 
-	constructor(args: string[]) {
+	constructor(version: string, args: string[]) {
 		super();
 
 		this.emitter = new EventEmitter();
 		this.workerChannel = new NativeWorkerChannel(
 			this.emitter.emit.bind(this.emitter),
+			version,
 			args
 		);
 

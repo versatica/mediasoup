@@ -4,8 +4,6 @@
 #include <cstring>
 #include <iostream>
 
-const char* version = "v3";
-
 void deleteMessage(uint8_t* message, uint32_t messageLen, size_t ctx)
 {
 	delete[] message;
@@ -31,7 +29,7 @@ void channelWriteFn(const uint8_t* message, uint32_t messageLen, ChannelWriteCtx
 	return workerChannel->OnChannelWrite(message, messageLen);
 }
 
-void libmediasoup(WorkerChannel* workerChannel, std::vector<std::string> args)
+void libmediasoup(WorkerChannel* workerChannel, std::string version, std::vector<std::string> args)
 {
 	std::vector<char*> argv;
 
@@ -41,7 +39,15 @@ void libmediasoup(WorkerChannel* workerChannel, std::vector<std::string> args)
 	}
 
 	auto result = mediasoup_worker_run(
-	  argv.size(), argv.data(), version, 0, 0, channelReadFn, workerChannel, channelWriteFn, workerChannel);
+	  argv.size(),
+	  argv.data(),
+	  version.data(),
+	  0,
+	  0,
+	  channelReadFn,
+	  workerChannel,
+	  channelWriteFn,
+	  workerChannel);
 
 	if (result != 0)
 	{
@@ -80,9 +86,10 @@ Napi::Object WorkerChannel::Init(Napi::Env env, Napi::Object exports)
 
 WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<WorkerChannel>(info)
 {
-	auto env    = info.Env();
-	auto cb     = info[0].As<Napi::Function>();
-	auto params = info[1].As<Napi::Array>();
+	auto env     = info.Env();
+	auto cb      = info[0].As<Napi::Function>();
+	auto version = info[1].As<Napi::String>();
+	auto params  = info[2].As<Napi::Array>();
 
 	this->emit = Napi::ThreadSafeFunction::New(env, cb, "WorkerChannel", 0, 1);
 
@@ -101,7 +108,7 @@ WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<
 		args.push_back(value.Utf8Value());
 	}
 
-	this->thread = std::thread(libmediasoup, this, args);
+	this->thread = std::thread(libmediasoup, this, version.Utf8Value(), args);
 }
 
 WorkerChannel::~WorkerChannel()

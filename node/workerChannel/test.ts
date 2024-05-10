@@ -1,7 +1,8 @@
 import { WorkerChannel } from './';
 
+const version = 'v3';
 const args = [''];
-const workerChannel = new WorkerChannel(args);
+const workerChannel = new WorkerChannel(version, args);
 
 workerChannel.on('data', value => {
 	console.log('### DATA event ... value: ', value);
