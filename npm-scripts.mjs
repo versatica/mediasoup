@@ -87,8 +87,8 @@ async function run() {
 		// TypeScript to JavaScript.
 		case 'prepare': {
 			flatcNode();
-			buildTypescript({ force: false });
 			buildWorkerLib();
+			buildTypescript({ force: false });
 
 			break;
 		}
@@ -115,7 +115,9 @@ async function run() {
 					'skipping mediasoup-worker prebuilt download, building it locally'
 				);
 
+				// TODO: remove buildWorker.
 				buildWorker();
+				buildWorkerLib();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -127,7 +129,9 @@ async function run() {
 					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`
 				);
 
+				// TODO: remove buildWorker.
 				buildWorker();
+				buildWorkerLib();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
