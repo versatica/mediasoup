@@ -176,7 +176,7 @@ eslintConfig.overrides.push({
 });
 
 eslintConfig.overrides.push({
-	files: ['node/workerChannel/*.ts'],
+	files: ['node/workerChannel/src/*.ts'],
 	parser: '@typescript-eslint/parser',
 	parserOptions: {
 		...eslintConfig.parserOptions,
