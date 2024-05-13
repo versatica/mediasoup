@@ -66,7 +66,7 @@ function buildTypescript() {
 function buildBinding() {
 	logInfo('buildBinding()');
 
-	executeCmd('npm ci --ignore-scripts}');
+	executeCmd('npm ci --ignore-scripts');
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 
