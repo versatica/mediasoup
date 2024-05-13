@@ -7,8 +7,10 @@
 	"private": true,
 	"gypfile": true,
 	"scripts": {
-		"build": "rm -rf lib/ && tsc --project ./",
-		"test": "node lib/test.js"
+		"binding:build": "node npm-scripts.mjs binding:build",
+		"typescript:build": "node npm-scripts.mjs typescript:build",
+		"typescript:watch": "node npm-scripts.mjs typescript:watch",
+		"test": "node npm-scripts.mjs test"
 	},
 	"dependencies": {
 		"bindings": "*",

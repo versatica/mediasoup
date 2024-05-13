@@ -349,11 +349,8 @@ function buildWorkerLib() {
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
 
-	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
-
-	executeCmd(
-		`cd node/workerChannel && npm ci --ignore-scripts && GYP_DEFINES="mediasoup_build_type=${buildType}" node-gyp rebuild --${buildType.toLowerCase()}`
-	);
+	executeCmd('cd node/workerChannel && npm run binding:build');
+	executeCmd('cd node/workerChannel && npm run typescript:build');
 }
 
 function cleanWorkerArtifacts() {
