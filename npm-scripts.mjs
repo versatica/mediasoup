@@ -42,6 +42,7 @@ const PRETTIER_PATHS = [
 	'README.md',
 	'doc',
 	'node/src',
+	'node/tsconfig.json',
 	'npm-scripts.mjs',
 	'package.json',
 	'worker/scripts',
