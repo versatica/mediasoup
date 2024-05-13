@@ -116,6 +116,21 @@ void UdpSocketHandle::Dump() const
 	MS_DUMP("</UdpSocketHandle>");
 }
 
+int UdpSocketHandle::Connect(const struct sockaddr* addr)
+{
+	MS_TRACE();
+	if (this->connected)
+	{
+		MS_WARN_DEV("the socket already connected");
+		return -1;
+	}
+	else
+	{
+		this->connected = true;
+		return uv_udp_connect(this->uvHandle, addr);
+	}
+}
+
 void UdpSocketHandle::Send(
   const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb)
 {

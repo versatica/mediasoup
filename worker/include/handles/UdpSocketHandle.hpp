@@ -73,6 +73,11 @@ public:
 	{
 		return this->sentBytes;
 	}
+	bool IsConnected() const
+	{
+		return this->connected;
+	}
+	int Connect(const struct sockaddr* addr);
 	uint32_t GetSendBufferSize() const;
 	void SetSendBufferSize(uint32_t size);
 	uint32_t GetRecvBufferSize() const;
@@ -109,6 +114,7 @@ private:
 	uv_os_fd_t fd{ 0u };
 #endif
 	bool closed{ false };
+	bool connected{ false };
 	size_t recvBytes{ 0u };
 	size_t sentBytes{ 0u };
 };

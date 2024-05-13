@@ -79,7 +79,14 @@ namespace RTC
 		{
 			if (this->protocol == Protocol::UDP)
 			{
-				this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+				if (this->udpSocket->IsConnected())
+				{
+					this->udpSocket->Send(data, len, nullptr, cb);
+				}
+				else
+				{
+					this->udpSocket->Send(data, len, this->udpRemoteAddr, cb);
+				}
 			}
 			else
 			{
