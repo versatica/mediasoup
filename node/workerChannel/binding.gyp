@@ -15,17 +15,12 @@
         "<!@(node -p \"require('node-addon-api').include\")",
         "<!(pwd)/../../worker/include",
       ],
+      "libraries": [
+        "<!(pwd)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
+      ],
       'dependencies': ["<!(node -p \"require('node-addon-api').gyp\")"],
       'conditions': [
-        ['OS=="linux"', {
-          "libraries": [
-            "<!(pwd)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
-          ],
-        }],
         ['OS=="win"', {
-          "libraries": [
-            "<!(pwd)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.dll"
-          ],
           "msvs_settings": {
             "VCCLCompilerTool": {
               "ExceptionHandling": 1
@@ -33,9 +28,6 @@
           }
         }],
         ['OS=="mac"', {
-          "libraries": [
-            "<!(pwd)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
-          ],
           "xcode_settings": {
             "CLANG_CXX_LIBRARY": "libc++",
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
