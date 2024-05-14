@@ -132,15 +132,15 @@ ChannelReadFreeFn WorkerChannel::OnChannelRead(
 		this->handle = handle;
 	}
 
+	std::lock_guard<std::mutex> guard(this->mutex);
+
 	if (this->messages.size() == 0)
 	{
 		return nullptr;
 	}
 
-	this->mutex.lock();
 	auto* msg = this->messages.front();
 	this->messages.pop_front();
-	this->mutex.unlock();
 
 	*message = msg;
 
@@ -187,10 +187,10 @@ void WorkerChannel::Send(const Napi::CallbackInfo& info)
 
 	std::memcpy(data, message.Data(), message.ByteLength());
 
-	// Store the message.
-	this->mutex.lock();
-	this->messages.push_back(data);
-	this->mutex.unlock();
+	{
+		std::lock_guard<std::mutex> guard(this->mutex);
+		this->messages.push_back(data);
+	}
 
 	// Notify mediasoup about the new message.
 	uv_async_send(const_cast<uv_async_t*>(this->handle));

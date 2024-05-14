@@ -24,7 +24,7 @@ private:
 	std::thread thread;
 	Napi::ThreadSafeFunction emit;
 
-	const uv_async_t* handle;
+	const uv_async_t* handle{ nullptr };
 	std::mutex mutex;
 	std::deque<uint8_t*> messages;
 
