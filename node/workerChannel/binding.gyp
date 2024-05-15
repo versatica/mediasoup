@@ -18,7 +18,6 @@
       "libraries": [
         "<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
       ],
-      'dependencies': ["<!(node -p \"require('node-addon-api').gyp\")"],
       'conditions': [
         ['OS=="win"', {
           "msvs_settings": {
