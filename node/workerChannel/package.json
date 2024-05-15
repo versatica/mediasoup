@@ -13,7 +13,6 @@
 		"test": "node npm-scripts.mjs test"
 	},
 	"dependencies": {
-		"bindings": "*",
 		"node-addon-api": "*"
 	},
 	"devDependencies": {
