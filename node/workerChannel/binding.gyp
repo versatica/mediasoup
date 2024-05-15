@@ -29,7 +29,7 @@
               # 1 - MultiThreadedDebug (/MTd)
               # 2 - MultiThreadedDLL (/MD)
               # 3 - MultiThreadedDebugDLL (/MDd)
-              'RuntimeLibrary': 1,
+              'RuntimeLibrary': 0,
             },
             'VCLinkerTool': {
               'AdditionalOptions': [ '/NODEFAULTLIB:library' ],
