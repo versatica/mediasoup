@@ -23,7 +23,13 @@
         ['OS=="win"', {
           "msvs_settings": {
             "VCCLCompilerTool": {
-              "ExceptionHandling": 1
+              "ExceptionHandling": 1,
+              # RuntimeLibrary:
+              # 0 - MultiThreaded (/MT)
+              # 1 - MultiThreadedDebug (/MTd)
+              # 2 - MultiThreadedDLL (/MD)
+              # 3 - MultiThreadedDebugDLL (/MDd)
+              'RuntimeLibrary': 1,
             }
           }
         }],
