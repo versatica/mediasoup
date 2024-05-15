@@ -1,9 +1,9 @@
-#include "DepLibUV.hpp"
 #include "common.hpp"   // mediasoup header file.
 #include "lib.hpp"      // mediasoup header file.
+#include <napi.h>
+#include <uv.h>
 #include <deque>
 #include <mutex>
-#include <napi.h>
 #include <thread>
 
 class WorkerChannel : public Napi::ObjectWrap<WorkerChannel>
