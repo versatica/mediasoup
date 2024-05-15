@@ -72,7 +72,7 @@ function buildBinding() {
 
 	process.env.GYP_DEFINES = `mediasoup_build_type=${buildType}`;
 
-	executeCmd(`node-gyp rebuild --${buildType.toLowerCase()}`);
+	executeCmd(`node-gyp rebuild --${buildType.toLowerCase()} --verbose`);
 }
 
 function testNode() {
