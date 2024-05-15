@@ -1,7 +1,9 @@
 #include "common.hpp"   // mediasoup header file.
 #include "lib.hpp"      // mediasoup header file.
 #include <napi.h>
+#ifndef _WIN32
 #include <uv.h>
+#endif
 #include <deque>
 #include <mutex>
 #include <thread>
