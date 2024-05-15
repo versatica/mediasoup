@@ -21,7 +21,7 @@
       'conditions': [
         ['OS=="win"', {
           "libraries": [
-            "Ws2_32.lib",
+            "Ws2_32.lib", "Dbghelp.lib", "Crypt32.lib", "Userenv.lib",
           ],
           "msvs_settings": {
             "VCCLCompilerTool": {
