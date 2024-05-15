@@ -20,6 +20,9 @@
       ],
       'conditions': [
         ['OS=="win"', {
+          "libraries": [
+            "Ws2_32.lib",
+          ],
           "msvs_settings": {
             "VCCLCompilerTool": {
               "ExceptionHandling": 1,
