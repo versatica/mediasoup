@@ -115,8 +115,6 @@ async function run() {
 					'skipping mediasoup-worker prebuilt download, building it locally'
 				);
 
-				// TODO: remove buildWorker.
-				buildWorker();
 				buildWorkerLib();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
@@ -129,8 +127,6 @@ async function run() {
 					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`
 				);
 
-				// TODO: remove buildWorker.
-				buildWorker();
 				buildWorkerLib();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
