@@ -43,7 +43,6 @@ test('createWorker() succeeds', async () => {
 	expect(worker1.constructor.name).toBe('Worker');
 	expect(typeof worker1.pid).toBe('number');
 	expect(worker1.closed).toBe(false);
-	expect(worker1.died).toBe(false);
 
 	worker1.close();
 
@@ -63,7 +62,6 @@ test('createWorker() succeeds', async () => {
 	expect(worker2.constructor.name).toBe('Worker');
 	expect(typeof worker2.pid).toBe('number');
 	expect(worker2.closed).toBe(false);
-	expect(worker2.died).toBe(false);
 	expect(worker2.appData).toEqual({ foo: 456 });
 
 	worker2.close();
@@ -172,101 +170,4 @@ test('worker.close() succeeds', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
-	expect(worker.died).toBe(false);
 }, 2000);
-
-/*
-test.skip('Worker emits "died" if worker process died unexpectedly', async () => {
-	let onDied: ReturnType<typeof jest.fn>;
-	let onObserverClose: ReturnType<typeof jest.fn>;
-
-	const worker1 = await mediasoup.createWorker({ logLevel: 'warn' });
-
-	onDied = jest.fn();
-	onObserverClose = jest.fn();
-
-	worker1.observer.once('close', onObserverClose);
-
-	await new Promise<void>((resolve, reject) => {
-		worker1.on('died', () => {
-			onDied();
-
-			if (onObserverClose.mock.calls.length > 0) {
-				reject(
-					new Error('observer "close" event emitted before worker "died" event')
-				);
-			} else if (worker1.closed) {
-				resolve();
-			} else {
-				reject(new Error('worker.closed is false'));
-			}
-		});
-
-		process.kill(worker1.pid, 'SIGINT');
-	});
-
-	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(worker1.closed).toBe(true);
-	expect(worker1.died).toBe(true);
-
-	const worker2 = await mediasoup.createWorker({ logLevel: 'warn' });
-
-	onDied = jest.fn();
-	onObserverClose = jest.fn();
-
-	worker2.observer.once('close', onObserverClose);
-
-	await new Promise<void>((resolve, reject) => {
-		worker2.on('died', () => {
-			onDied();
-
-			if (onObserverClose.mock.calls.length > 0) {
-				reject(
-					new Error('observer "close" event emitted before worker "died" event')
-				);
-			} else if (worker2.closed) {
-				resolve();
-			} else {
-				reject(new Error('worker.closed is false'));
-			}
-		});
-
-		process.kill(worker2.pid, 'SIGTERM');
-	});
-
-	expect(onDied).toHaveBeenCalledTimes(1);
-	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(worker2.closed).toBe(true);
-	expect(worker2.died).toBe(true);
-
-	const worker3 = await mediasoup.createWorker({ logLevel: 'warn' });
-
-	onDied = jest.fn();
-	onObserverClose = jest.fn();
-
-	worker3.observer.once('close', onObserverClose);
-
-	await new Promise<void>((resolve, reject) => {
-		worker3.on('died', () => {
-			onDied();
-
-			if (onObserverClose.mock.calls.length > 0) {
-				reject(
-					new Error('observer "close" event emitted before worker "died" event')
-				);
-			} else if (worker3.closed) {
-				resolve();
-			} else {
-				reject(new Error('worker.closed is false'));
-			}
-		});
-
-		process.kill(worker3.pid, 'SIGKILL');
-	});
-
-	expect(onDied).toHaveBeenCalledTimes(1);
-	expect(onObserverClose).toHaveBeenCalledTimes(1);
-	expect(worker3.closed).toBe(true);
-	expect(worker3.died).toBe(true);
-}, 5000);
-*/

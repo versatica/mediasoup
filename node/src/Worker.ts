@@ -202,7 +202,6 @@ export type WorkerDump = {
 };
 
 export type WorkerEvents = {
-	died: [Error];
 	listenererror: [string, Error];
 	// Private events.
 	'@success': [];
@@ -258,9 +257,6 @@ export class Worker<
 
 	// Closed flag.
 	#closed = false;
-
-	// Died dlag.
-	#died = false;
 
 	// Custom app data.
 	#appData: WorkerAppData;
@@ -389,13 +385,6 @@ export class Worker<
 	 */
 	get closed(): boolean {
 		return this.#closed;
-	}
-
-	/**
-	 * Whether the Worker died.
-	 */
-	get died(): boolean {
-		return this.#died;
 	}
 
 	/**
@@ -662,37 +651,6 @@ export class Worker<
 		this.#observer.safeEmit('newrouter', router);
 
 		return router;
-	}
-
-	private workerDied(error: Error): void {
-		if (this.#closed) {
-			return;
-		}
-
-		logger.debug(`died() [error:${error}]`);
-
-		this.#closed = true;
-		this.#died = true;
-
-		// Close the Channel instance.
-		this.#channel.close();
-
-		// Close every Router.
-		for (const router of this.#routers) {
-			router.workerClosed();
-		}
-		this.#routers.clear();
-
-		// Close every WebRtcServer.
-		for (const webRtcServer of this.#webRtcServers) {
-			webRtcServer.workerClosed();
-		}
-		this.#webRtcServers.clear();
-
-		this.safeEmit('died', error);
-
-		// Emit observer event.
-		this.#observer.safeEmit('close');
 	}
 }
 
