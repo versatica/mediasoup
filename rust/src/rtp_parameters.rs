@@ -943,21 +943,19 @@ impl RtpParameters {
                             })
                             .collect(),
                     ),
-                    rtcp_feedback: match &codec {
-                        RtpCodecParameters::Audio { .. } => None,
-                        RtpCodecParameters::Video { rtcp_feedback, .. } => Some(
-                            rtcp_feedback
-                                .iter()
-                                .map(|rtcp_feedback| {
-                                    let (r#type, parameter) = rtcp_feedback.as_type_parameter();
-                                    rtp_parameters::RtcpFeedback {
-                                        type_: r#type.to_string(),
-                                        parameter: Some(parameter.to_string()),
-                                    }
-                                })
-                                .collect(),
-                        ),
-                    },
+                    rtcp_feedback: Some(
+                        codec
+                            .rtcp_feedback()
+                            .iter()
+                            .map(|rtcp_feedback| {
+                                let (r#type, parameter) = rtcp_feedback.as_type_parameter();
+                                rtp_parameters::RtcpFeedback {
+                                    type_: r#type.to_string(),
+                                    parameter: Some(parameter.to_string()),
+                                }
+                            })
+                            .collect(),
+                    ),
                 })
                 .collect(),
             header_extensions: self
@@ -1116,6 +1114,11 @@ impl RtpCodecParameters {
     pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
         let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
         parameters
+    }
+
+    pub(crate) fn rtcp_feedback(&self) -> &[RtcpFeedback] {
+        let (Self::Audio { rtcp_feedback, .. } | Self::Video { rtcp_feedback, .. }) = self;
+        rtcp_feedback
     }
 
     pub(crate) fn rtcp_feedback_mut(&mut self) -> &mut Vec<RtcpFeedback> {
