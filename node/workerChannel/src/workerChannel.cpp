@@ -85,13 +85,18 @@ Napi::Object WorkerChannel::Init(Napi::Env env, Napi::Object exports)
 
 WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<WorkerChannel>(info)
 {
-	auto env     = info.Env();
+	auto env = info.Env();
 
-	if (info.Length() < 2) {
+	if (info.Length() < 2)
+	{
 		throw Napi::TypeError::New(env, "Expected at least two arguments");
-	} else if (!info[0].IsFunction()) {
+	}
+	else if (!info[0].IsFunction())
+	{
 		throw Napi::TypeError::New(env, "Expected first arg to be function");
-	} else if (!info[1].IsString()) {
+	}
+	else if (!info[1].IsString())
+	{
 		throw Napi::TypeError::New(env, "Expected second arg to be string");
 	}
 
@@ -102,12 +107,14 @@ WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<
 
 	std::vector<std::string> args = { "" };
 
-	if (info.Length() == 3) {
-		if (!info[2].IsArray()) {
+	if (info.Length() == 3)
+	{
+		if (!info[2].IsArray())
+		{
 			throw Napi::TypeError::New(env, "Expected third arg to be array");
 		}
 
-		auto params  = info[2].As<Napi::Array>();
+		auto params = info[2].As<Napi::Array>();
 
 		for (uint32_t i = 0; i < params.Length(); i++)
 		{
@@ -124,7 +131,6 @@ WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<
 		}
 	}
 
-
 	this->thread = std::thread(libmediasoup, this, version.Utf8Value(), args);
 }
 
@@ -132,7 +138,7 @@ WorkerChannel::~WorkerChannel()
 {
 	std::lock_guard<std::mutex> guard(this->mutex);
 
-	for (const auto* message: this->messages)
+	for (const auto* message : this->messages)
 	{
 		delete[] message;
 	}
@@ -201,12 +207,13 @@ void WorkerChannel::OnError(const uint8_t code)
 
 void WorkerChannel::Send(const Napi::CallbackInfo& info)
 {
-
-	if (info.Length() != 1) {
+	if (info.Length() != 1)
+	{
 		throw Napi::TypeError::New(info.Env(), "Expected one argument");
 	}
 
-	if (!info[0].IsTypedArray()) {
+	if (!info[0].IsTypedArray())
+	{
 		throw Napi::TypeError::New(info.Env(), "Expected arg to be a Uint8Array");
 	}
 
@@ -221,7 +228,8 @@ void WorkerChannel::Send(const Napi::CallbackInfo& info)
 		this->messages.push_back(data);
 	}
 
-	if (!this->handle) {
+	if (!this->handle)
+	{
 		return;
 	}
 
