@@ -1,7 +1,7 @@
 {
-	"name": "mediasoup worker native module",
+	"name": "mediasoup worker channel",
 	"version": "0.0.0",
-	"description": "Node.js Addon do communicate with mediasoup worker",
+	"description": "Node.js Addon to communicate with mediasoup worker",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"private": true,
