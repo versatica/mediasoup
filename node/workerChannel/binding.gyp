@@ -1,6 +1,7 @@
 {
   "variables": {
-    "mediasoup_build_type%": "Release"
+    "mediasoup_build_type%": "Release",
+    "mediasoup_worker_lib%": ""
   },
   "targets": [
     {
@@ -15,10 +16,17 @@
         "<!@(node -p \"require('node-addon-api').include\")",
         "<(module_root_dir)/../../worker/include",
       ],
-      "libraries": [
-        "<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
-      ],
       'conditions': [
+        ['mediasoup_worker_lib==""', {
+          "libraries": [
+            "<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
+          ],
+        }, {
+          "libraries": [
+            "<(mediasoup_worker_lib)"
+            ],
+          }
+        ],
         ['OS=="win"', {
           "libraries": [
             "Ws2_32.lib", "Dbghelp.lib", "Crypt32.lib", "Userenv.lib",

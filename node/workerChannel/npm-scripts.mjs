@@ -72,6 +72,10 @@ function buildBinding() {
 
 	process.env.GYP_DEFINES = `mediasoup_build_type=${buildType}`;
 
+	if (process.env.MEDIASOUP_WORKER_LIB) {
+		process.env.GYP_DEFINES += ` mediasoup_worker_lib=${process.env.MEDIASOUP_WORKER_LIB}`;
+	}
+
 	executeCmd(`node-gyp rebuild --${buildType.toLowerCase()} --verbose`);
 }
 
