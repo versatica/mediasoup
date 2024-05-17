@@ -87,27 +87,44 @@ Napi::Object WorkerChannel::Init(Napi::Env env, Napi::Object exports)
 WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<WorkerChannel>(info)
 {
 	auto env     = info.Env();
+
+	if (info.Length() < 2) {
+		throw Napi::TypeError::New(env, "Expected at least two arguments");
+	} else if (!info[0].IsFunction()) {
+		throw Napi::TypeError::New(env, "Expected first arg to be function");
+	} else if (!info[1].IsString()) {
+		throw Napi::TypeError::New(env, "Expected second arg to be string");
+	}
+
 	auto cb      = info[0].As<Napi::Function>();
 	auto version = info[1].As<Napi::String>();
-	auto params  = info[2].As<Napi::Array>();
 
 	this->emit = Napi::ThreadSafeFunction::New(env, cb, "WorkerChannel", 0, 1);
 
 	std::vector<std::string> args = { "" };
 
-	for (uint32_t i = 0; i < params.Length(); i++)
-	{
-		Napi::Value v = params[i];
-
-		if (!v.IsString())
-		{
-			continue;
+	if (info.Length() == 3) {
+		if (!info[2].IsArray()) {
+			throw Napi::TypeError::New(env, "Expected third arg to be array");
 		}
 
-		auto value = v.As<Napi::String>();
+		auto params  = info[2].As<Napi::Array>();
 
-		args.push_back(value.Utf8Value());
+		for (uint32_t i = 0; i < params.Length(); i++)
+		{
+			Napi::Value v = params[i];
+
+			if (!v.IsString())
+			{
+				throw Napi::TypeError::New(env, "Expected array item to be string");
+			}
+
+			auto value = v.As<Napi::String>();
+
+			args.push_back(value.Utf8Value());
+		}
 	}
+
 
 	this->thread = std::thread(libmediasoup, this, version.Utf8Value(), args);
 }
@@ -185,6 +202,15 @@ void WorkerChannel::OnError(const uint8_t code)
 
 void WorkerChannel::Send(const Napi::CallbackInfo& info)
 {
+
+	if (info.Length() != 1) {
+		throw Napi::TypeError::New(info.Env(), "Expected one argument");
+	}
+
+	if (!info[0].IsTypedArray()) {
+		throw Napi::TypeError::New(info.Env(), "Expected arg to be a Uint8Array");
+	}
+
 	// Copy the message into its own memory.
 	auto message = info[0].As<Napi::Uint8Array>();
 	auto data    = new uint8_t[message.ByteLength()];
@@ -194,6 +220,10 @@ void WorkerChannel::Send(const Napi::CallbackInfo& info)
 	{
 		std::lock_guard<std::mutex> guard(this->mutex);
 		this->messages.push_back(data);
+	}
+
+	if (!this->handle) {
+		return;
 	}
 
 	// Notify mediasoup about the new message.
