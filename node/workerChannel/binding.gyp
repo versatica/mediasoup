@@ -35,7 +35,7 @@
               'AdditionalOptions': [ '/MT' ],
             },
             'VCLinkerTool': {
-              'AdditionalOptions': [ '/NODEFAULTLIB:library' ],
+              'AdditionalOptions': ['/FORCE:MULTIPLE'],
             },
           }
         }],
