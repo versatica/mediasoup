@@ -1,8 +1,7 @@
 #include "../include/workerChannel.hpp"
 #include "napi.h"
-
 #include <cstring>
-#include <iostream>
+#include <vector>
 
 void deleteMessage(uint8_t* message, uint32_t messageLen, size_t ctx)
 {
