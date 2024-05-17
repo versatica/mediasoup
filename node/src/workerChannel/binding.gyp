@@ -14,12 +14,12 @@
       'cflags_cc!': [ '-fno-exceptions' ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<(module_root_dir)/../../worker/include",
+        "<(module_root_dir)/../../../worker/include",
       ],
       'conditions': [
         ['mediasoup_worker_lib==""', {
           'libraries': [
-            '<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
+            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
           ],
         }, {
           "libraries": [
@@ -34,13 +34,6 @@
           'msvs_settings': {
             'VCCLCompilerTool': {
               'ExceptionHandling': 1,
-              # RuntimeLibrary:
-              # 0 - MultiThreaded (/MT)
-              # 1 - MultiThreadedDebug (/MTd)
-              # 2 - MultiThreadedDLL (/MD)
-              # 3 - MultiThreadedDebugDLL (/MDd)
-              'RuntimeLibrary': 0,
-              'AdditionalOptions': [ '/MT' ],
             },
             'VCLinkerTool': {
               'AdditionalOptions': ['/FORCE:MULTIPLE'],

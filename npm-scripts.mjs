@@ -22,7 +22,7 @@ const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
 const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
-const WORKER_CHANNEL_ADDON_PATH = 'node/workerChannel';
+const WORKER_CHANNEL_ADDON_PATH = 'node/src/workerChannel';
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
@@ -51,7 +51,6 @@ const PRETTIER_PATHS = [
 	'node/src',
 	'node/tsconfig.json',
 	`${WORKER_CHANNEL_ADDON_PATH}/src`,
-	`${WORKER_CHANNEL_ADDON_PATH}/tsconfig.json`,
 	'npm-scripts.mjs',
 	'package.json',
 	'worker/scripts',
@@ -356,7 +355,7 @@ function buildWorkerLib() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
 
 	executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run binding:build`);
-	executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run typescript:build`);
+	// executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run typescript:build`);
 }
 
 function cleanWorkerArtifacts() {

@@ -1,5 +1,5 @@
 import * as process from 'node:process';
-import * as fs from 'node:fs';
+// import * as fs from 'node:fs';
 import { execSync } from 'node:child_process';
 
 const task = process.argv[2];
@@ -18,21 +18,7 @@ async function run() {
 			break;
 		}
 
-		case 'typescript:build': {
-			buildTypescript();
-
-			break;
-		}
-
-		case 'typescript:watch': {
-			deleteNodeLib();
-			executeCmd(`tsc --project ./ --watch ${args}`);
-
-			break;
-		}
-
 		case 'test': {
-			buildTypescript();
 			testNode();
 
 			break;
@@ -46,22 +32,22 @@ async function run() {
 	}
 }
 
-function deleteNodeLib() {
-	if (!fs.existsSync('node/lib')) {
-		return;
-	}
+// function deleteNodeLib() {
+// 	if (!fs.existsSync('node/lib')) {
+// 		return;
+// 	}
 
-	logInfo('deleteNodeLib()');
+// 	logInfo('deleteNodeLib()');
 
-	fs.rmSync('node/lib', { recursive: true, force: true });
-}
+// 	fs.rmSync('node/lib', { recursive: true, force: true });
+// }
 
-function buildTypescript() {
-	logInfo('buildTypescript()');
+// function buildTypescript() {
+// 	logInfo('buildTypescript()');
 
-	deleteNodeLib();
-	executeCmd('tsc --project ./');
-}
+// 	deleteNodeLib();
+// 	executeCmd('tsc --project ./');
+// }
 
 function buildBinding() {
 	logInfo('buildBinding()');
