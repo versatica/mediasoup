@@ -22,18 +22,22 @@ const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
 const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
+const WORKER_CHANNEL_ADDON_PATH = 'node/workerChannel';
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check. Converted to string for convenience.
 const ESLINT_PATHS = [
 	'node/src',
-	'node/workerChannel',
+	WORKER_CHANNEL_ADDON_PATH,
 	'npm-scripts.mjs',
 	'worker/scripts',
 ].join(' ');
 // Paths for ESLint to ignore. Converted to string argument for convenience.
-const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs', '/node/workerChannel/lib']
+const ESLINT_IGNORE_PATTERN_ARGS = [
+	'node/src/fbs',
+	`${WORKER_CHANNEL_ADDON_PATH}/lib`,
+]
 	.map(entry => `--ignore-pattern ${entry}`)
 	.join(' ');
 // Paths for Prettier to check/write. Converted to string for convenience.
@@ -46,8 +50,8 @@ const PRETTIER_PATHS = [
 	'doc',
 	'node/src',
 	'node/tsconfig.json',
-	'node/workerChannel/src',
-	'node/workerChannel/tsconfig.json',
+	`${WORKER_CHANNEL_ADDON_PATH}/src`,
+	`${WORKER_CHANNEL_ADDON_PATH}/tsconfig.json`,
 	'npm-scripts.mjs',
 	'package.json',
 	'worker/scripts',
@@ -351,8 +355,8 @@ function buildWorkerLib() {
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
 
-	executeCmd('cd node/workerChannel && npm run binding:build');
-	executeCmd('cd node/workerChannel && npm run typescript:build');
+	executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run binding:build`);
+	executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run typescript:build`);
 }
 
 function cleanWorkerArtifacts() {
