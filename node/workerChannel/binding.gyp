@@ -1,14 +1,14 @@
 {
-  "variables": {
-    "mediasoup_build_type%": "Release",
-    "mediasoup_worker_lib%": ""
+  'variables': {
+    'mediasoup_build_type%': 'Release',
+    'mediasoup_worker_lib%': ''
   },
   "targets": [
     {
-      "target_name": "worker-channel",
-      "sources": [
-        "src/binding.cpp",
-        "src/workerChannel.cpp"
+      'target_name': 'worker-channel',
+      'sources': [
+        'src/binding.cpp',
+        'src/workerChannel.cpp'
       ],
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
@@ -18,22 +18,22 @@
       ],
       'conditions': [
         ['mediasoup_worker_lib==""', {
-          "libraries": [
-            "<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a"
+          'libraries': [
+            '<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
           ],
         }, {
           "libraries": [
-            "<(mediasoup_worker_lib)"
+            '<(mediasoup_worker_lib)'
             ],
           }
         ],
         ['OS=="win"', {
-          "libraries": [
-            "Ws2_32.lib", "Dbghelp.lib", "Crypt32.lib", "Userenv.lib",
+          'libraries': [
+            'Ws2_32.lib', 'Dbghelp.lib', 'Crypt32.lib', 'Userenv.lib',
           ],
-          "msvs_settings": {
-            "VCCLCompilerTool": {
-              "ExceptionHandling": 1,
+          'msvs_settings': {
+            'VCCLCompilerTool': {
+              'ExceptionHandling': 1,
               # RuntimeLibrary:
               # 0 - MultiThreaded (/MT)
               # 1 - MultiThreadedDebug (/MTd)
@@ -48,8 +48,8 @@
           }
         }],
         ['OS=="mac"', {
-          "xcode_settings": {
-            "CLANG_CXX_LIBRARY": "libc++",
+          'xcode_settings': {
+            "CLANG_CXX_LIBRARY": 'libc++',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             # TODO: This should be the same as the one used for libmediasoup
             # Is it really needed?
