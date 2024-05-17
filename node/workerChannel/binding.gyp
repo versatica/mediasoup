@@ -28,13 +28,8 @@
           }
         ],
         ['OS=="win"', {
-          'conditions': [
-            ['mediasoup_build_type=="Debug"', {
-              'libraries': ['Dbghelp.lib'],
-            }],
-          ],
           'libraries': [
-            'Ws2_32.lib', 'Crypt32.lib', 'Userenv.lib',
+            'Ws2_32.lib', 'Dbghelp.lib', 'Crypt32.lib', 'Userenv.lib',
           ],
           'msvs_settings': {
             'VCCLCompilerTool': {
