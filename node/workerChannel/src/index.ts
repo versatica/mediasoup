@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { EnhancedEventEmitter } from '../../src/enhancedEvents';
 
 const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 
@@ -7,7 +8,12 @@ const { WorkerChannel: NativeWorkerChannel } = require(
 	`../build/${buildType}/worker-channel.node`
 );
 
-export class WorkerChannel extends EventEmitter {
+export type WorkerChannelEvents = {
+	data: [Uint8Array];
+	error: [number];
+};
+
+export class WorkerChannel extends EnhancedEventEmitter<WorkerChannelEvents> {
 	private emitter: EventEmitter;
 	private workerChannel: typeof NativeWorkerChannel;
 
@@ -22,11 +28,11 @@ export class WorkerChannel extends EventEmitter {
 		);
 
 		this.emitter.on('data', data => {
-			this.emit('data', data);
+			this.safeEmit('data', data);
 		});
 
 		this.emitter.on('error', code => {
-			this.emit('error', code);
+			this.safeEmit('error', code);
 		});
 	}
 
