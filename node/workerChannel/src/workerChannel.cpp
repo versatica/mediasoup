@@ -98,6 +98,7 @@ WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<
 	for (uint32_t i = 0; i < params.Length(); i++)
 	{
 		Napi::Value v = params[i];
+
 		if (!v.IsString())
 		{
 			continue;
@@ -113,15 +114,18 @@ WorkerChannel::WorkerChannel(const Napi::CallbackInfo& info) : Napi::ObjectWrap<
 
 WorkerChannel::~WorkerChannel()
 {
-	std::cout << "~WorkerChannel()" << std::endl;
+	std::lock_guard<std::mutex> guard(this->mutex);
+
+	for (const auto* message: this->messages)
+	{
+		delete[] message;
+	}
 }
 
 void WorkerChannel::Finalize(Napi::Env env)
 {
-	std::cout << "Finalize()" << std::endl;
-
 	this->emit.Release();
-	// this->thread.join();
+	this->thread.join();
 }
 
 ChannelReadFreeFn WorkerChannel::OnChannelRead(
