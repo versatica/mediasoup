@@ -3,7 +3,7 @@
 ### NEXT
 
 - `SimulcastConsumer`: Fix increase layer when current layer has not receive SR ([PR #1098](https://github.com/versatica/mediasoup/pull/1098) by @penguinol).
-- Ignore RTP packets with empty payload ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX), credits to @ggarber).
+- Ignore RTP packets with empty payload ([PR #1403](https://github.com/versatica/mediasoup/pull/1403), credits to @ggarber).
 
 ### 3.14.6
 
