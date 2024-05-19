@@ -3,13 +3,11 @@
 
 #include "MediaSoupErrors.hpp"
 #include "lib.hpp"
-#include <cstdlib> // std::_Exit(), std::genenv()
+#include <cstdlib> // std::_Exit()
 #include <string>
 
 static constexpr int ConsumerChannelFd{ 3 };
 static constexpr int ProducerChannelFd{ 4 };
-static constexpr int PayloadConsumerChannelFd{ 5 };
-static constexpr int PayloadProducerChannelFd{ 6 };
 
 int main(int argc, char* argv[])
 {
@@ -25,21 +23,7 @@ int main(int argc, char* argv[])
 	const std::string version = std::getenv("MEDIASOUP_VERSION");
 
 	auto statusCode = mediasoup_worker_run(
-	  argc,
-	  argv,
-	  version.c_str(),
-	  ConsumerChannelFd,
-	  ProducerChannelFd,
-	  PayloadConsumerChannelFd,
-	  PayloadProducerChannelFd,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr,
-	  nullptr);
+	  argc, argv, version.c_str(), ConsumerChannelFd, ProducerChannelFd, nullptr, nullptr, nullptr, nullptr);
 
 	std::_Exit(statusCode);
 }

@@ -3,7 +3,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <vector>
 
 using namespace RTC;
@@ -86,7 +86,9 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 								for (size_t i{ 1 }; i < MaxRequestedPackets; ++i)
 								{
 									if ((bitmask & 1) != 0)
+									{
 										this->nackedSeqNumbers.push_back(firstSeq + i);
+									}
 
 									bitmask >>= 1;
 								}
@@ -129,7 +131,9 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 	if (!packet)
+	{
 		FAIL("not a RTP packet");
+	}
 
 	RtpStream::Params params;
 

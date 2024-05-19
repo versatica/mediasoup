@@ -18,6 +18,8 @@ namespace RTC
 
 			if (len < 2)
 			{
+				MS_WARN_DEV("ignoring payload with length < 2");
+
 				return nullptr;
 			}
 
@@ -161,7 +163,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("<PayloadDescriptor>");
+			MS_DUMP("<H264::PayloadDescriptor>");
 			MS_DUMP(
 			  "  s:%" PRIu8 "|e:%" PRIu8 "|i:%" PRIu8 "|d:%" PRIu8 "|b:%" PRIu8,
 			  this->s,
@@ -170,13 +172,19 @@ namespace RTC
 			  this->d,
 			  this->b);
 			if (this->hasTid)
-				MS_DUMP("  tid        : %" PRIu8, this->tid);
+			{
+				MS_DUMP("  tid: %" PRIu8, this->tid);
+			}
 			if (this->hasLid)
-				MS_DUMP("  lid        : %" PRIu8, this->lid);
+			{
+				MS_DUMP("  lid: %" PRIu8, this->lid);
+			}
 			if (this->hasTl0picidx)
-				MS_DUMP("  tl0picidx  : %" PRIu8, this->tl0picidx);
-			MS_DUMP("  isKeyFrame : %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("</PayloadDescriptor>");
+			{
+				MS_DUMP("  tl0picidx: %" PRIu8, this->tl0picidx);
+			}
+			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP("</H264::PayloadDescriptor>");
 		}
 
 		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)

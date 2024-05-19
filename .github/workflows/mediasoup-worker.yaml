@@ -1,6 +1,6 @@
 name: mediasoup-worker
 
-on: [push, pull_request]
+on: [pull_request, workflow_dispatch]
 
 concurrency:
   # Cancel a currently running workflow from the same PR, branch or tag when a
@@ -11,7 +11,6 @@ concurrency:
 jobs:
   ci:
     strategy:
-      fail-fast: false
       matrix:
         build:
           - os: ubuntu-20.04
@@ -29,7 +28,7 @@ jobs:
           - os: macos-12
             cc: gcc
             cxx: g++
-          - os: macos-12
+          - os: macos-14
             cc: clang
             cxx: clang++
           - os: windows-2022
@@ -37,32 +36,28 @@ jobs:
             cxx: cl
         # A single Node.js version should be fine for C++.
         node:
-          - 18
+          - 20
+        build-type:
+          - Release
+          - Debug
 
     runs-on: ${{ matrix.build.os }}
 
     env:
       CC: ${{ matrix.build.cc }}
       CXX: ${{ matrix.build.cxx }}
-      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: "true"
+      MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
+      MEDIASOUP_LOCAL_DEV: 'true'
+      MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-
-      # We need to install some NPM production deps for npm-scripts.mjs to work.
-      - run: npm ci --ignore-scripts --omit=dev
-      - run: npm run install-clang-tools
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
-      - run: npm run lint:worker
-        # TODO: Maybe fix this one day.
-        if: runner.os != 'Windows'
 
       - name: Configure cache
         uses: actions/cache@v3
@@ -73,7 +68,31 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-${{matrix.build.cc}}-
 
-      - run: npm run worker:build
-      - run: npm run test:worker
+      # We need to install pip invoke manually.
+      - name: pip3 install invoke
+        run: pip3 install invoke
+        if: runner.os != 'macOS'
+
+      # In macOS we need to specify this option.
+      - name: pip3 install --break-system-packages invoke
+        run: pip3 install --break-system-packages invoke
+        if: runner.os == 'macOS'
+
+      # We need to install npm deps of worker/scripts/package.json.
+      - name: npm ci --prefix worker/scripts
+        run: npm ci --prefix worker/scripts --foreground-scripts
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+
+      - name: invoke -r worker lint
+        run: invoke -r worker lint
+        # TODO: Maybe fix this one day.
+        if: runner.os != 'Windows'
+
+      - name: invoke -r worker mediasoup-worker
+        run: invoke -r worker mediasoup-worker
+
+      - name: invoke -r worker test
+        run: invoke -r worker test
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'

@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "helpers.hpp"
 #include "RTC/RtpPacket.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <string>
 #include <vector>
@@ -20,12 +20,16 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		std::string rid;
 
 		if (!helpers::readBinaryFile("data/packet1.raw", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -55,12 +59,16 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		size_t len;
 
 		if (!helpers::readBinaryFile("data/packet2.raw", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == false);
@@ -86,12 +94,16 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint32_t absSendTime;
 
 		if (!helpers::readBinaryFile("data/packet3.raw", buffer, &len))
+		{
 			FAIL("cannot open file");
+		}
 
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -181,7 +193,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == false);
@@ -213,7 +227,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -258,7 +274,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -325,7 +343,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -399,7 +419,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, len);
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->GetPayloadType() == 1);
@@ -413,6 +435,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 8);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetSize() == 40);
 
 		auto* payload = packet->GetPayload();
@@ -426,11 +449,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[6] == 0x06);
 		REQUIRE(payload[7] == 0x07);
 
+		// NOTE: This will remove padding.
 		packet->ShiftPayload(0, 2, true);
 
 		REQUIRE(packet->GetPayloadLength() == 10);
-		REQUIRE(packet->GetPayloadPadding() == 4);
-		REQUIRE(packet->GetSize() == 42);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 38);
 		REQUIRE(payload[2] == 0x00);
 		REQUIRE(payload[3] == 0x01);
 		REQUIRE(payload[4] == 0x02);
@@ -443,8 +467,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		packet->ShiftPayload(0, 2, false);
 
 		REQUIRE(packet->GetPayloadLength() == 8);
-		REQUIRE(packet->GetPayloadPadding() == 4);
-		REQUIRE(packet->GetSize() == 40);
+		REQUIRE(packet->GetPayloadPadding() == 0);
+		REQUIRE(packet->GetSize() == 36);
 		REQUIRE(payload[0] == 0x00);
 		REQUIRE(payload[1] == 0x01);
 		REQUIRE(payload[2] == 0x02);
@@ -454,18 +478,18 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(payload[6] == 0x06);
 		REQUIRE(payload[7] == 0x07);
 
-		// NOTE: This will require padding to 4 bytes.
+		// NOTE: This will remove padding.
 		packet->SetPayloadLength(14);
 
-		REQUIRE(packet->GetPayloadLength() == 16);
+		REQUIRE(packet->GetPayloadLength() == 14);
 		REQUIRE(packet->GetPayloadPadding() == 0);
-		REQUIRE(packet->GetSize() == 44);
+		REQUIRE(packet->GetSize() == 42);
 
 		packet->ShiftPayload(4, 4, true);
 
-		REQUIRE(packet->GetPayloadLength() == 20);
+		REQUIRE(packet->GetPayloadLength() == 18);
 		REQUIRE(packet->GetPayloadPadding() == 0);
-		REQUIRE(packet->GetSize() == 48);
+		REQUIRE(packet->GetSize() == 46);
 		REQUIRE(payload[0] == 0x00);
 		REQUIRE(payload[1] == 0x01);
 		REQUIRE(payload[2] == 0x02);
@@ -511,7 +535,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->GetSize() == 28);
 		REQUIRE(packet->HasHeaderExtension() == false);
@@ -521,6 +547,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 
@@ -536,6 +563,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 
@@ -588,6 +616,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
@@ -623,6 +652,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(1, extenLen) == nullptr);
@@ -665,6 +695,10 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00
 		};
 		// clang-format on
 
@@ -674,7 +708,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t* extenValue;
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->GetSize() == 28);
 		REQUIRE(packet->HasHeaderExtension() == false);
@@ -684,6 +720,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 
@@ -699,6 +736,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == true);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 
@@ -737,6 +775,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == true);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(0, extenLen) == nullptr);
@@ -780,6 +819,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->HasTwoBytesExtensions() == true);
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
+		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 		REQUIRE(packet->GetExtension(1, extenLen) == nullptr);
@@ -810,7 +850,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
 
 		if (!packet)
+		{
 			FAIL("not a RTP packet");
+		}
 
 		REQUIRE(packet->HasMarker() == false);
 		REQUIRE(packet->HasHeaderExtension() == true);

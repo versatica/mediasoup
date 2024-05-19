@@ -9,4 +9,4 @@ https://mediasoup.discourse.group
 
 Before asking any questions, please check the mediasoup official documentation:
 
-https://mediasoup.org/documentation/
+https://mediasoup.org/documentation

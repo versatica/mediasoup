@@ -3,7 +3,6 @@
 
 #include "RTC/RTCP/FeedbackPsSli.hpp"
 #include "Logger.hpp"
-#include <cstring>
 
 namespace RTC
 {
@@ -40,9 +39,9 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<FeedbackPsSliItem>");
-			MS_DUMP("  first      : %" PRIu16, this->first);
-			MS_DUMP("  number     : %" PRIu16, this->number);
-			MS_DUMP("  picture id : %" PRIu8, this->pictureId);
+			MS_DUMP("  first: %" PRIu16, this->first);
+			MS_DUMP("  number: %" PRIu16, this->number);
+			MS_DUMP("  picture id: %" PRIu8, this->pictureId);
 			MS_DUMP("</FeedbackPsSliItem>");
 		}
 	} // namespace RTCP

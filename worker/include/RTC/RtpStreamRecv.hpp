@@ -5,14 +5,14 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpStream.hpp"
-#include "handles/Timer.hpp"
+#include "handles/TimerHandle.hpp"
 #include <vector>
 
 namespace RTC
 {
 	class RtpStreamRecv : public RTC::RtpStream,
 	                      public RTC::NackGenerator::Listener,
-	                      public Timer::Listener
+	                      public TimerHandle::Listener
 	{
 	public:
 		class Listener : public RTC::RtpStream::Listener
@@ -47,9 +47,10 @@ namespace RTC
 		  RTC::RtpStream::Params& params,
 		  unsigned int sendNackDelayMs,
 		  bool useRtpInactivityCheck);
-		~RtpStreamRecv();
+		~RtpStreamRecv() override;
 
-		void FillJsonStats(json& jsonObject) override;
+		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
+		  flatbuffers::FlatBufferBuilder& builder) override;
 		bool ReceivePacket(RTC::RtpPacket* packet);
 		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
@@ -76,6 +77,10 @@ namespace RTC
 		{
 			return this->transmissionCounter.GetLayerBitrate(nowMs, spatialLayer, temporalLayer);
 		}
+		bool HasRtpInactivityCheckEnabled() const
+		{
+			return this->useRtpInactivityCheck;
+		}
 
 	private:
 		void CalculateJitter(uint32_t rtpTimestamp);
@@ -85,9 +90,9 @@ namespace RTC
 	public:
 		void UserOnSequenceNumberReset() override;
 
-		/* Pure virtual methods inherited from Timer. */
+		/* Pure virtual methods inherited from TimerHandle. */
 	protected:
-		void OnTimer(Timer* timer) override;
+		void OnTimer(TimerHandle* timer) override;
 
 		/* Pure virtual methods inherited from RTC::NackGenerator. */
 	protected:
@@ -114,11 +119,13 @@ namespace RTC
 		uint64_t lastSrReceived{ 0u };
 		// Relative transit time for prev packet.
 		int32_t transit{ 0u };
-		uint32_t jitter{ 0u };
+		// Jitter in RTP timestamp units. As per spec it's kept as floating value
+		// although it's exposed as integer in the stats.
+		float jitter{ 0 };
 		uint8_t firSeqNumber{ 0u };
 		uint32_t reportedPacketLost{ 0u };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
-		Timer* inactivityCheckPeriodicTimer{ nullptr };
+		TimerHandle* inactivityCheckPeriodicTimer{ nullptr };
 		bool inactive{ false };
 		// Valid media + valid RTX.
 		TransmissionCounter transmissionCounter;

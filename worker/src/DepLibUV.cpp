@@ -3,7 +3,6 @@
 
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <cstdlib> // std::abort()
 
 /* Static variables. */
 
@@ -11,9 +10,9 @@ thread_local uv_loop_t* DepLibUV::loop{ nullptr };
 
 /* Static methods for UV callbacks. */
 
-inline static void onClose(uv_handle_t* handle)
+inline static void onCloseLoop(uv_handle_t* handle)
 {
-	delete handle;
+	delete reinterpret_cast<uv_loop_t*>(handle);
 }
 
 inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
@@ -27,7 +26,9 @@ inline static void onWalk(uv_handle_t* handle, void* /*arg*/)
 	  uv_has_ref(handle));
 
 	if (!uv_is_closing(handle))
-		uv_close(handle, onClose);
+	{
+		uv_close(handle, onCloseLoop);
+	}
 }
 
 /* Static methods. */
@@ -41,7 +42,9 @@ void DepLibUV::ClassInit()
 	const int err = uv_loop_init(DepLibUV::loop);
 
 	if (err != 0)
+	{
 		MS_ABORT("libuv loop initialization failed");
+	}
 }
 
 void DepLibUV::ClassDestroy()
@@ -63,13 +66,17 @@ void DepLibUV::ClassDestroy()
 		err = uv_loop_close(DepLibUV::loop);
 
 		if (err != UV_EBUSY)
+		{
 			break;
+		}
 
 		uv_run(DepLibUV::loop, UV_RUN_NOWAIT);
 	}
 
 	if (err != 0)
+	{
 		MS_ERROR_STD("failed to close libuv loop: %s", uv_err_name(err));
+	}
 
 	delete DepLibUV::loop;
 }
