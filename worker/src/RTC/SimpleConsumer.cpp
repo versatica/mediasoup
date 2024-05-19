@@ -314,6 +314,18 @@ namespace RTC
 			return;
 		}
 
+		// Packets with only padding are not forwarded.
+		if (packet->GetPayloadLength() == 0)
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
+#endif
+
+			return;
+		}
+
 		auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those

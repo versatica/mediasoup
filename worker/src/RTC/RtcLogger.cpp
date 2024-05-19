@@ -18,6 +18,7 @@ namespace RTC
 			{ RtpPacket::DropReason::INVALID_TARGET_LAYER,                    "InvalidTargetLayer"                 },
 			{ RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE,                "UnsupportedPayloadType"             },
 			{ RtpPacket::DropReason::NOT_A_KEYFRAME,                          "NotAKeyframe"                       },
+			{ RtpPacket::DropReason::EMPTY_PAYLOAD,                           "EmptyPayload"                       },
 			{ RtpPacket::DropReason::SPATIAL_LAYER_MISMATCH,                  "SpatialLayerMismatch"               },
 			{ RtpPacket::DropReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,         "TooHighTimestampExtraNeeded"        },
 			{ RtpPacket::DropReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH, "PacketPreviousToSpatialLayerSwitch" },
