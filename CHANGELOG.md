@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- `SimulcastConsumer`: Fix increase layer when current layer has not receive SR ([PR #1098](https://github.com/versatica/mediasoup/pull/1098) by @penguinol).
+
 ### 3.14.6
 
 - Worker: Fix potential double free when ICE consent check fails ([PR #1393](https://github.com/versatica/mediasoup/pull/1393)).
