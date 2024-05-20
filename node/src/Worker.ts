@@ -1,7 +1,7 @@
 import * as process from 'node:process';
 import * as path from 'node:path';
+import { WorkerChannel } from 'worker-channel';
 import { version } from './';
-import { WorkerChannel } from '../workerChannel';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';

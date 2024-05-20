@@ -1,6 +1,6 @@
 {
-	"name": "mediasoup worker channel",
-	"version": "0.0.0",
+	"name": "worker-channel",
+	"version": "1.0.0",
 	"description": "Node.js Addon to communicate with mediasoup worker",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -13,6 +13,7 @@
 		"test": "node npm-scripts.mjs test"
 	},
 	"dependencies": {
+		"debug": "^4.3.4",
 		"node-addon-api": "*"
 	},
 	"devDependencies": {
