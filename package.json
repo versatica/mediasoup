@@ -104,10 +104,10 @@
 		"flatbuffers": "^24.3.25",
 		"h264-profile-level-id": "^2.0.0",
 		"ini": "^4.1.2",
+		"node-addon-api": "^8.0.0",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^9.4.0",
-		"tar": "^7.1.0",
-		"worker-channel": "file:node/workerChannel"
+		"tar": "^7.1.0"
 	},
 	"devDependencies": {
 		"@octokit/rest": "^20.1.1",

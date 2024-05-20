@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { EnhancedEventEmitter } from './enhancedEvents';
+import { EnhancedEventEmitter } from '../../src/enhancedEvents';
 
 const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 

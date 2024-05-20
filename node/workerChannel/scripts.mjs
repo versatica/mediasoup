@@ -18,21 +18,7 @@ async function run() {
 			break;
 		}
 
-		case 'typescript:build': {
-			buildTypescript();
-
-			break;
-		}
-
-		case 'typescript:watch': {
-			deleteNodeLib();
-			executeCmd(`tsc --project ./ --watch ${args}`);
-
-			break;
-		}
-
 		case 'test': {
-			buildTypescript();
 			testNode();
 
 			break;
@@ -46,27 +32,8 @@ async function run() {
 	}
 }
 
-function deleteNodeLib() {
-	if (!fs.existsSync('node/lib')) {
-		return;
-	}
-
-	logInfo('deleteNodeLib()');
-
-	fs.rmSync('node/lib', { recursive: true, force: true });
-}
-
-function buildTypescript() {
-	logInfo('buildTypescript()');
-
-	deleteNodeLib();
-	executeCmd('tsc --project ./');
-}
-
 function buildBinding() {
 	logInfo('buildBinding()');
-
-	executeCmd('npm ci --ignore-scripts');
 
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 

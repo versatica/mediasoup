@@ -355,8 +355,9 @@ function buildWorkerLib() {
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
 
-	executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run binding:build`);
-	executeCmd(`cd ${WORKER_CHANNEL_ADDON_PATH} && npm run typescript:build`);
+	executeCmd(
+		`cd ${WORKER_CHANNEL_ADDON_PATH} && node scripts.mjs binding:build`
+	);
 }
 
 function cleanWorkerArtifacts() {

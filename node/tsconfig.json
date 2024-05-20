@@ -10,7 +10,7 @@
 		"declaration": true,
 		"declarationMap": true
 	},
-	"include": ["src"],
+	"include": ["src", "workerChannel/src"],
 	"watchOptions": {
 		"watchFile": "useFsEvents",
 		"watchDirectory": "useFsEvents",
