@@ -34,10 +34,7 @@ const ESLINT_PATHS = [
 	'worker/scripts',
 ].join(' ');
 // Paths for ESLint to ignore. Converted to string argument for convenience.
-const ESLINT_IGNORE_PATTERN_ARGS = [
-	'node/src/fbs',
-	`${WORKER_CHANNEL_ADDON_PATH}/lib`,
-]
+const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
 	.map(entry => `--ignore-pattern ${entry}`)
 	.join(' ');
 // Paths for Prettier to check/write. Converted to string for convenience.
@@ -51,7 +48,6 @@ const PRETTIER_PATHS = [
 	'node/src',
 	'node/tsconfig.json',
 	`${WORKER_CHANNEL_ADDON_PATH}/src`,
-	`${WORKER_CHANNEL_ADDON_PATH}/tsconfig.json`,
 	'npm-scripts.mjs',
 	'package.json',
 	'worker/scripts',
