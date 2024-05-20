@@ -82,7 +82,7 @@ function buildBinding() {
 function testNode() {
 	logInfo('testNode()');
 
-	executeCmd('node lib/test.js');
+	executeCmd('node --test-only lib/test.js');
 }
 
 function executeCmd(command, exitOnError = true) {

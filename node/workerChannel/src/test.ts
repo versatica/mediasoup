@@ -1,5 +1,5 @@
 import assert = require('node:assert');
-import { beforeEach, describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 
 const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 
@@ -7,6 +7,14 @@ const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 const { WorkerChannel: NativeWorkerChannel } = require(
 	`../build/${buildType}/worker-channel.node`
 );
+
+const closeRequest = new Uint8Array([
+  12, 0,  0, 0, 8,  0, 10, 0, 9, 0,  4,
+   0, 8,  0, 0, 0, 16,  0, 0, 0, 0,  1,
+  10, 0, 12, 0, 8,  0,  0, 0, 4, 0, 10,
+   0, 0,  0, 8, 0,  0,  0, 1, 0, 0,  0,
+   0, 0,  0, 0, 0,  0,  0, 0
+]);
 
 describe('NativeWorkerChannel constructor', () => {
 	it('fails if no argument is passed', () => {
@@ -79,7 +87,7 @@ describe('NativeWorkerChannel constructor', () => {
 	});
 });
 
-describe('NativeWorkerChannel send', () => {
+describe.only('NativeWorkerChannel send', () => {
 	const version = 'X';
 	const func = () => {};
 
@@ -87,6 +95,10 @@ describe('NativeWorkerChannel send', () => {
 
 	beforeEach(() => {
 		workerChannel = new NativeWorkerChannel(func, version);
+	});
+
+	afterEach(() => {
+		workerChannel.send(closeRequest);
 	});
 
 	[true, 1, 'one', () => {}].forEach(data => {
