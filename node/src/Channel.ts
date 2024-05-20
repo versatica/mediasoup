@@ -321,8 +321,6 @@ export class Channel extends EnhancedEventEmitter {
 		// do not point to the builder buffer overriding others info.
 		const buffer = this.#bufferBuilder.asUint8Array();
 
-		console.warn('buffer: ', buffer);
-
 		// Clear the buffer builder so it's reused for the next request.
 		this.#bufferBuilder.clear();
 
