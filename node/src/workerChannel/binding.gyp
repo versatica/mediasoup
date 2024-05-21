@@ -14,12 +14,12 @@
       'cflags_cc!': [ '-fno-exceptions' ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<(module_root_dir)/../../worker/include",
+        "<(module_root_dir)/../../../worker/include",
       ],
       'conditions': [
         ['mediasoup_worker_lib==""', {
           'libraries': [
-            '<(module_root_dir)/../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
+            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
           ],
         }, {
           "libraries": [

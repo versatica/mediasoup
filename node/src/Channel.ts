@@ -1,7 +1,7 @@
 import * as os from 'node:os';
 import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
-import { WorkerChannel } from '../workerChannel/src';
+import { WorkerChannel } from './workerChannel/src';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import { InvalidStateError } from './errors';

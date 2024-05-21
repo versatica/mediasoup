@@ -22,7 +22,7 @@ const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
 const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
-const WORKER_CHANNEL_ADDON_PATH = 'node/workerChannel';
+const WORKER_CHANNEL_ADDON_PATH = 'node/src/workerChannel';
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
@@ -334,6 +334,8 @@ function buildTypescript({ force = false } = { force: false }) {
 
 	deleteNodeLib();
 	executeCmd('tsc --project node');
+
+	copyAddon();
 }
 
 function buildWorker() {
@@ -354,6 +356,19 @@ function buildWorkerLib() {
 	executeCmd(
 		`cd ${WORKER_CHANNEL_ADDON_PATH} && node scripts.mjs binding:build`
 	);
+
+	copyAddon();
+}
+
+function copyAddon() {
+	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
+	const outDir = `node/lib/workerChannel/build/${buildType}`;
+
+	ensureDir(outDir);
+
+	fs.cpSync(`${WORKER_CHANNEL_ADDON_PATH}/build/${buildType}`, outDir, {
+		recursive: true,
+	});
 }
 
 function cleanWorkerArtifacts() {
