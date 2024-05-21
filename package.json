@@ -21,6 +21,7 @@
 	"types": "node/lib/index.d.ts",
 	"files": [
 		"node/lib",
+		"node/src/workerChannel",
 		"worker/deps/libwebrtc",
 		"worker/fbs",
 		"worker/fuzzer/include",

@@ -87,7 +87,6 @@ async function run() {
 		// TypeScript to JavaScript.
 		case 'prepare': {
 			flatcNode();
-			buildWorkerLib();
 			buildTypescript({ force: false });
 
 			break;
