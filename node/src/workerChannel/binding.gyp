@@ -51,7 +51,6 @@
               # 2 - MultiThreadedDLL (/MD)
               # 3 - MultiThreadedDebugDLL (/MDd)
               'RuntimeLibrary': '<(runtime_library)',
-              # 'AdditionalOptions': [ '/MT' ],
             },
             'VCLinkerTool': {
               'AdditionalOptions': ['/FORCE:MULTIPLE'],
