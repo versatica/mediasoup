@@ -15,9 +15,7 @@ const MAYOR_VERSION = PKG.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
-const WORKER_RELEASE_BIN = IS_WINDOWS
-	? 'mediasoup-worker.exe'
-	: 'mediasoup-worker';
+const WORKER_RELEASE_BIN = 'libmediasoup-worker.a';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
@@ -27,12 +25,9 @@ const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check. Converted to string for convenience.
-const ESLINT_PATHS = [
-	'node/src',
-	WORKER_CHANNEL_ADDON_PATH,
-	'npm-scripts.mjs',
-	'worker/scripts',
-].join(' ');
+const ESLINT_PATHS = ['node/src', 'npm-scripts.mjs', 'worker/scripts'].join(
+	' '
+);
 // Paths for ESLint to ignore. Converted to string argument for convenience.
 const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
 	.map(entry => `--ignore-pattern ${entry}`)
@@ -47,7 +42,6 @@ const PRETTIER_PATHS = [
 	'doc',
 	'node/src',
 	'node/tsconfig.json',
-	`${WORKER_CHANNEL_ADDON_PATH}/src`,
 	'npm-scripts.mjs',
 	'package.json',
 	'worker/scripts',
@@ -499,7 +493,7 @@ function checkRelease() {
 	installNodeDeps();
 	flatcNode();
 	buildTypescript({ force: true });
-	buildWorker();
+	buildWorkerLib();
 	lintNode();
 	lintWorker();
 	testNode();
