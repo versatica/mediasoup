@@ -250,6 +250,18 @@ namespace RTC
 		auto& syncRequired  = this->mapRtpStreamSyncRequired.at(rtpStream);
 		auto& rtpSeqManager = this->mapRtpStreamRtpSeqManager.at(rtpStream);
 
+		// Packets with only padding are not forwarded.
+		if (packet->GetPayloadLength() == 0)
+		{
+			rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
+#endif
+
+			return;
+		}
+
 		// If we need to sync, support key frames and this is not a key frame, ignore
 		// the packet.
 		if (syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
