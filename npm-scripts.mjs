@@ -467,7 +467,7 @@ function flatcWorker() {
 function testNode() {
 	logInfo('testNode()');
 
-	executeCmd(`jest --silent false --detectOpenHandles --forceExit ${args}`);
+	executeCmd(`jest --silent false --detectOpenHandles ${args}`);
 }
 
 function testWorker() {

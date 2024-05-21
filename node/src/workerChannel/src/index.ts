@@ -36,6 +36,13 @@ export class WorkerChannel extends EnhancedEventEmitter<WorkerChannelEvents> {
 		});
 	}
 
+	close() {
+		// By setting the instance to `undefined`, the garbage collector will clean up
+		// the native instance, calling its `Finalize()` method accordingly.
+		// Without it, the tests will never finish due to remaining open handles.
+		this.workerChannel = undefined;
+	}
+
 	send(data: Uint8Array): void {
 		this.workerChannel.send(data);
 	}

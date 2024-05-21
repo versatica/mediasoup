@@ -354,6 +354,8 @@ export class Worker<
 
 				this.emit('@failure', new Error(`[pid:${this.#pid}, code:${code}]`));
 			}
+
+			this.close();
 		});
 
 		this.#channel = new Channel({
@@ -440,6 +442,9 @@ export class Worker<
 
 		// Close the Channel instance.
 		this.#channel.close();
+
+		// Close the WorkerChannel instance.
+		this.#workerChannel.close();
 
 		// Close every Router.
 		for (const router of this.#routers) {
