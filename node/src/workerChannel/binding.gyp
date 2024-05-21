@@ -22,7 +22,7 @@
             '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
           ],
         }, {
-          "libraries": [
+          'libraries': [
             '<(mediasoup_worker_lib)'
             ],
           }
@@ -30,6 +30,17 @@
         ['OS=="win"', {
           'libraries': [
             'Ws2_32.lib', 'Dbghelp.lib', 'Crypt32.lib', 'Userenv.lib',
+          ],
+          'conditions': [
+            ['mediasoup_build_type=="Release"', {
+              'variables': {
+                'runtime_library': '0',
+              },
+            }, {
+              'variables': {
+                'runtime_library': '1',
+              },
+            }],
           ],
           'msvs_settings': {
             'VCCLCompilerTool': {
@@ -39,8 +50,8 @@
               # 1 - MultiThreadedDebug (/MTd)
               # 2 - MultiThreadedDLL (/MD)
               # 3 - MultiThreadedDebugDLL (/MDd)
-              'RuntimeLibrary': 0,
-              'AdditionalOptions': [ '/MT' ],
+              'RuntimeLibrary': '<(runtime_library)',
+              # 'AdditionalOptions': [ '/MT' ],
             },
             'VCLinkerTool': {
               'AdditionalOptions': ['/FORCE:MULTIPLE'],
