@@ -11,9 +11,7 @@
 /node/src/fbs
 
 ## Node WorkerChannel addon.
-/node/workerChannel/node_modules
 /node/workerChannel/build
-/node/workerChannel/lib
 /node/workerChannel/.cache
 
 ## Rust.
