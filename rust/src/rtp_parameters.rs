@@ -585,6 +585,10 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
     AbsCaptureTime,
+    /// <http://www.webrtc.org/experiments/rtp-hdrext/playout-delay>
+    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay")]
+    PlayoutDelay,
+
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
     Unsupported,
@@ -620,6 +624,9 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime
             }
+            RtpHeaderExtensionUri::PlayoutDelay => {
+                rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay
+            }
             RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
         }
     }
@@ -653,6 +660,9 @@ impl RtpHeaderExtensionUri {
             rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime => {
                 RtpHeaderExtensionUri::AbsCaptureTime
             }
+            rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay => {
+                RtpHeaderExtensionUri::PlayoutDelay
+            }
         }
     }
 }
@@ -679,6 +689,7 @@ impl FromStr for RtpHeaderExtensionUri {
             "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time" => {
                 Ok(Self::AbsCaptureTime)
             }
+            "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay" => Ok(Self::PlayoutDelay),
             _ => Err(RtpHeaderExtensionUriParseError::Unsupported),
         }
     }
@@ -709,6 +720,9 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time"
+            }
+            RtpHeaderExtensionUri::PlayoutDelay => {
+                "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }

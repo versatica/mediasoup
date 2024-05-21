@@ -67,6 +67,11 @@ namespace RTC
 			{
 				return RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME;
 			}
+
+			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
+			{
+				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
+			}
 		}
 	}
 
@@ -128,6 +133,11 @@ namespace RTC
 			case RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime;
+			}
+
+			case RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
+			{
+				return FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay;
 			}
 		}
 	}

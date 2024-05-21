@@ -499,6 +499,11 @@ fn pipe_to_router_succeeds_with_video() {
                     id: 13,
                     encrypt: false,
                 },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
+                    encrypt: false,
+                },
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
@@ -554,6 +559,11 @@ fn pipe_to_router_succeeds_with_video() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
                     id: 13,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
                     encrypt: false,
                 },
             ],
@@ -751,6 +761,11 @@ fn create_with_enable_rtx_succeeds() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
                     id: 13,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
                     encrypt: false,
                 },
             ],

@@ -95,6 +95,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.playoutDelay == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			{
+				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.mid == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::MID)
 			{
 				this->rtpHeaderExtensionIds.mid = exten.id;
