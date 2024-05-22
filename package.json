@@ -44,7 +44,8 @@
 		"npm-scripts.mjs"
 	],
 	"engines": {
-		"node": ">=18"
+		"node": ">=18",
+		"npm": ">=10.3.0"
 	},
 	"keywords": [
 		"webrtc",
