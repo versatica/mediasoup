@@ -1,11 +1,9 @@
 name: mediasoup-worker-prebuild
 
 # Only trigger on GitHub releases.
-# on:
-  # release:
-    # types: [published]
-
-on: [pull_request, workflow_dispatch]
+on:
+  release:
+    types: [published]
 
 jobs:
   ci:
@@ -69,5 +67,4 @@ jobs:
       - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: addon-test-5
           files: worker/prebuild/libmediasoup-worker-*.tgz
