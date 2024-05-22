@@ -12,7 +12,6 @@
 
 ## Node WorkerChannel addon.
 /node/src/workerChannel/build
-/node/src/workerChannel/.cache
 
 ## Rust.
 /rust/examples-frontend/*/node_modules
