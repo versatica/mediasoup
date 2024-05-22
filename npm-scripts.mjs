@@ -329,8 +329,6 @@ function buildTypescript({ force = false } = { force: false }) {
 
 	deleteNodeLib();
 	executeCmd('tsc --project node');
-
-	copyAddon();
 }
 
 function buildWorkerLib() {
@@ -349,21 +347,6 @@ function buildAddon() {
 	executeCmd(
 		`cd ${WORKER_CHANNEL_ADDON_PATH} && node scripts.mjs binding:build`
 	);
-
-	copyAddon();
-}
-
-function copyAddon() {
-	logInfo('copyAddon()');
-
-	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
-	const outDir = `node/lib/workerChannel/build/${buildType}`;
-
-	ensureDir(outDir);
-
-	fs.cpSync(`${WORKER_CHANNEL_ADDON_PATH}/build/${buildType}`, outDir, {
-		recursive: true,
-	});
 }
 
 function cleanWorkerArtifacts() {
