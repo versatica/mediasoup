@@ -1,7 +1,7 @@
 import * as os from 'node:os';
-import { Duplex } from 'node:stream';
 import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
+import { WorkerChannel } from './workerChannel/src';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import { InvalidStateError } from './errors';
@@ -35,11 +35,8 @@ export class Channel extends EnhancedEventEmitter {
 	// Closed flag.
 	#closed = false;
 
-	// Unix Socket instance for sending messages to the worker process.
-	readonly #producerSocket: Duplex;
-
-	// Unix Socket instance for receiving messages to the worker process.
-	readonly #consumerSocket: Duplex;
+	// WorkerChannel for sending and receiving messages to/from worker.
+	readonly #workerChannel: WorkerChannel;
 
 	// Next id for messages sent to the worker process.
 	#nextId = 0;
@@ -57,23 +54,20 @@ export class Channel extends EnhancedEventEmitter {
 	 * @private
 	 */
 	constructor({
-		producerSocket,
-		consumerSocket,
+		workerChannel,
 		pid,
 	}: {
-		producerSocket: any;
-		consumerSocket: any;
+		workerChannel: WorkerChannel;
 		pid: number;
 	}) {
 		super();
 
 		logger.debug('constructor()');
 
-		this.#producerSocket = producerSocket as Duplex;
-		this.#consumerSocket = consumerSocket as Duplex;
+		this.#workerChannel = workerChannel;
 
 		// Read Channel responses/notifications from the worker.
-		this.#consumerSocket.on('data', (buffer: Buffer) => {
+		this.#workerChannel.on('data', (buffer: Buffer) => {
 			if (!this.#recvBuffer.length) {
 				this.#recvBuffer = buffer;
 			} else {
@@ -176,22 +170,6 @@ export class Channel extends EnhancedEventEmitter {
 				this.#recvBuffer = this.#recvBuffer.slice(msgStart);
 			}
 		});
-
-		this.#consumerSocket.on('end', () =>
-			logger.debug('Consumer Channel ended by the worker process')
-		);
-
-		this.#consumerSocket.on('error', error =>
-			logger.error(`Consumer Channel error: ${error}`)
-		);
-
-		this.#producerSocket.on('end', () =>
-			logger.debug('Producer Channel ended by the worker process')
-		);
-
-		this.#producerSocket.on('error', error =>
-			logger.error(`Producer Channel error: ${error}`)
-		);
 	}
 
 	/**
@@ -217,24 +195,6 @@ export class Channel extends EnhancedEventEmitter {
 		for (const sent of this.#sents.values()) {
 			sent.close();
 		}
-
-		// Remove event listeners but leave a fake 'error' hander to avoid
-		// propagation.
-		this.#consumerSocket.removeAllListeners('end');
-		this.#consumerSocket.removeAllListeners('error');
-		this.#consumerSocket.on('error', () => {});
-
-		this.#producerSocket.removeAllListeners('end');
-		this.#producerSocket.removeAllListeners('error');
-		this.#producerSocket.on('error', () => {});
-
-		// Destroy the sockets.
-		try {
-			this.#producerSocket.destroy();
-		} catch (error) {}
-		try {
-			this.#consumerSocket.destroy();
-		} catch (error) {}
 	}
 
 	/**
@@ -282,14 +242,14 @@ export class Channel extends EnhancedEventEmitter {
 			notificationOffset
 		);
 
-		// Finalizes the buffer and adds a 4 byte prefix with the size of the buffer.
-		this.#bufferBuilder.finishSizePrefixed(messageOffset);
+		// Finalizes the buffer.
+		this.#bufferBuilder.finish(messageOffset);
 
-		// Create a new buffer with this data so multiple contiguous flatbuffers
-		// do not point to the builder buffer overriding others info.
-		const buffer = new Uint8Array(this.#bufferBuilder.asUint8Array());
+		// Take a reference of the inner buffer.
+		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// Clear the buffer builder so it's reused for the next request.
+		// NOTE: This merely resets the buffer offset, it does not clear the content.
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
@@ -298,7 +258,7 @@ export class Channel extends EnhancedEventEmitter {
 
 		try {
 			// This may throw if closed or remote side ended.
-			this.#producerSocket.write(buffer, 'binary');
+			this.#workerChannel.send(buffer);
 		} catch (error) {
 			logger.warn(`notify() | sending notification failed: ${error}`);
 
@@ -354,14 +314,14 @@ export class Channel extends EnhancedEventEmitter {
 			requestOffset
 		);
 
-		// Finalizes the buffer and adds a 4 byte prefix with the size of the buffer.
-		this.#bufferBuilder.finishSizePrefixed(messageOffset);
+		// Finalizes the buffer.
+		this.#bufferBuilder.finish(messageOffset);
 
-		// Create a new buffer with this data so multiple contiguous flatbuffers
-		// do not point to the builder buffer overriding others info.
-		const buffer = new Uint8Array(this.#bufferBuilder.asUint8Array());
+		// Take a reference of the inner buffer.
+		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// Clear the buffer builder so it's reused for the next request.
+		// NOTE: This merely resets the buffer offset, it does not clear the content.
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
@@ -369,7 +329,7 @@ export class Channel extends EnhancedEventEmitter {
 		}
 
 		// This may throw if closed or remote side ended.
-		this.#producerSocket.write(buffer, 'binary');
+		this.#workerChannel.send(buffer);
 
 		return new Promise((pResolve, pReject) => {
 			const sent: Sent = {

@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, RouterEvents } from '../types';
+import { RouterEvents } from '../types';
 import { InvalidStateError } from '../errors';
 import * as utils from '../utils';
 
@@ -46,10 +46,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('worker.createRouter() succeeds', async () => {

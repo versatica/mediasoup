@@ -1,6 +1,4 @@
 import * as mediasoup from '../';
-import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents } from '../types';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 
@@ -109,10 +107,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('produce() and consume() succeed', async () => {

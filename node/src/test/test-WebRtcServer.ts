@@ -1,7 +1,7 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, WebRtcServerEvents } from '../types';
+import { WebRtcServerEvents } from '../types';
 import { InvalidStateError } from '../errors';
 
 type TestContext = {
@@ -16,10 +16,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('worker.createWebRtcServer() succeeds', async () => {

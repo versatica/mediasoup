@@ -1,7 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, ProducerEvents } from '../types';
+import { ProducerEvents } from '../types';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 import {
@@ -148,10 +148,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('webRtcTransport1.produce() succeeds', async () => {

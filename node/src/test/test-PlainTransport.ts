@@ -2,7 +2,7 @@ import * as os from 'node:os';
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, PlainTransportEvents } from '../types';
+import { PlainTransportEvents } from '../types';
 import * as utils from '../utils';
 
 const IS_WINDOWS = os.platform() === 'win32';
@@ -52,10 +52,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('router.createPlainTransport() succeeds', async () => {

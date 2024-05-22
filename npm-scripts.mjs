@@ -15,13 +15,12 @@ const MAYOR_VERSION = PKG.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
-const WORKER_RELEASE_BIN = IS_WINDOWS
-	? 'mediasoup-worker.exe'
-	: 'mediasoup-worker';
+const WORKER_RELEASE_BIN = 'libmediasoup-worker.a';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
 const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
 const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
+const WORKER_CHANNEL_ADDON_PATH = 'node/src/workerChannel';
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
@@ -109,7 +108,8 @@ async function run() {
 					'skipping mediasoup-worker prebuilt download, building it locally'
 				);
 
-				buildWorker();
+				buildWorkerLib();
+				buildAddon();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -121,7 +121,8 @@ async function run() {
 					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`
 				);
 
-				buildWorker();
+				buildWorkerLib();
+				buildAddon();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -146,7 +147,7 @@ async function run() {
 		}
 
 		case 'worker:build': {
-			buildWorker();
+			buildWorkerLib();
 
 			break;
 		}
@@ -281,7 +282,7 @@ function getPython() {
 }
 
 function getWorkerPrebuildTarName() {
-	let name = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
+	let name = `libmediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
 
 	// In Linux we want to know about kernel version since kernel >= 6 supports
 	// io-uring.
@@ -330,12 +331,22 @@ function buildTypescript({ force = false } = { force: false }) {
 	executeCmd('tsc --project node');
 }
 
-function buildWorker() {
-	logInfo('buildWorker()');
+function buildWorkerLib() {
+	logInfo('buildWorkerLib()');
 
 	installInvoke();
 
-	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
+}
+
+function buildAddon() {
+	logInfo('buildAddon()');
+
+	installInvoke();
+
+	executeCmd(
+		`cd ${WORKER_CHANNEL_ADDON_PATH} && node scripts.mjs binding:build`
+	);
 }
 
 function cleanWorkerArtifacts() {
@@ -467,7 +478,8 @@ function checkRelease() {
 	installNodeDeps();
 	flatcNode();
 	buildTypescript({ force: true });
-	buildWorker();
+	buildWorkerLib();
+	buildAddon();
 	lintNode();
 	lintWorker();
 	testNode();
@@ -568,46 +580,6 @@ async function downloadPrebuiltWorker() {
 					logWarn(
 						`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`
 					);
-				}
-
-				// Let's confirm that the fetched mediasoup-worker prebuit binary does
-				// run in current host. This is to prevent weird issues related to
-				// different versions of libc in the system and so on.
-				// So run mediasoup-worker without the required MEDIASOUP_VERSION env and
-				// expect exit code 41 (see main.cpp).
-
-				logInfo(
-					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
-				);
-
-				try {
-					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
-
-					// This will always fail on purpose, but if status code is 41 then
-					// it's good.
-					execSync(`"${resolvedBinPath}"`, {
-						stdio: ['ignore', 'ignore', 'ignore'],
-						// Ensure no env is passed to avoid accidents.
-						env: {},
-					});
-				} catch (error) {
-					if (error.status === 41) {
-						logInfo(
-							'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
-						);
-
-						resolve(true);
-					} else {
-						logError(
-							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
-						);
-
-						try {
-							fs.unlinkSync(WORKER_RELEASE_BIN_PATH);
-						} catch (error2) {}
-
-						resolve(false);
-					}
 				}
 			})
 			.on('error', error => {

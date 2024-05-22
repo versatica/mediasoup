@@ -2,7 +2,7 @@ import { pickPort } from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, WebRtcTransportEvents } from '../types';
+import { WebRtcTransportEvents } from '../types';
 import * as utils from '../utils';
 import { serializeProtocol, TransportTuple } from '../Transport';
 import {
@@ -57,10 +57,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('router.createWebRtcTransport() succeeds', async () => {

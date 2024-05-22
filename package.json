@@ -21,6 +21,10 @@
 	"types": "node/lib/index.d.ts",
 	"files": [
 		"node/lib",
+		"node/src/workerChannel/binding.gyp",
+		"node/src/workerChannel/include",
+		"node/src/workerChannel/scripts.mjs",
+		"node/src/workerChannel/src",
 		"worker/deps/libwebrtc",
 		"worker/fbs",
 		"worker/fuzzer/include",
@@ -40,7 +44,8 @@
 		"npm-scripts.mjs"
 	],
 	"engines": {
-		"node": ">=18"
+		"node": ">=18",
+		"npm": ">=10.3.0"
 	},
 	"keywords": [
 		"webrtc",
@@ -104,6 +109,7 @@
 		"flatbuffers": "^24.3.25",
 		"h264-profile-level-id": "^2.0.0",
 		"ini": "^4.1.2",
+		"node-addon-api": "^8.0.0",
 		"node-fetch": "^3.3.2",
 		"supports-color": "^9.4.0",
 		"tar": "^7.1.0"

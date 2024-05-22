@@ -67,4 +67,4 @@ jobs:
       - name: Upload mediasoup-worker prebuilt binary
         uses: softprops/action-gh-release@v1
         with:
-          files: worker/prebuild/mediasoup-worker-*.tgz
+          files: worker/prebuild/libmediasoup-worker-*.tgz

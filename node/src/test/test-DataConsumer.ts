@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, DataConsumerEvents } from '../types';
+import { DataConsumerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -44,10 +44,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('transport.consumeData() succeeds', async () => {

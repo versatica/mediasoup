@@ -3,7 +3,6 @@ import * as dgram from 'node:dgram';
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents } from '../types';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -100,10 +99,6 @@ afterEach(async () => {
 	ctx.udpSocket?.close();
 	ctx.sctpSocket?.end();
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 
 	// NOTE: For some reason we have to wait a bit for the SCTP stuff to release
 	// internal things, otherwise Jest reports open handles. We don't care much
