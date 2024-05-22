@@ -333,14 +333,6 @@ function buildTypescript({ force = false } = { force: false }) {
 	copyAddon();
 }
 
-function buildWorker() {
-	logInfo('buildWorker()');
-
-	installInvoke();
-
-	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
-}
-
 function buildWorkerLib() {
 	logInfo('buildWorkerLib()');
 
