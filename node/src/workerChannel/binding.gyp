@@ -19,7 +19,7 @@
       'conditions': [
         ['mediasoup_worker_lib==""', {
           'libraries': [
-            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/build/libmediasoup-worker.a'
+            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/libmediasoup-worker.a'
           ],
         }, {
           'libraries': [
@@ -61,8 +61,7 @@
           'xcode_settings': {
             "CLANG_CXX_LIBRARY": 'libc++',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            # TODO: This should be the same as the one used for libmediasoup
-            # Is it really needed?
+            # TODO: This should be the same as the one used for libmediasoup?
             'MACOSX_DEPLOYMENT_TARGET': '14'
           }
         }]
