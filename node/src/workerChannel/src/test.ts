@@ -1,3 +1,10 @@
+/**
+ * NOTE: These tests are to be run locally only, if needed.
+ * When running them within a testing environment (jest|node) the native addon
+ * handle will remain open and the test process won't terminate, making any
+ * CI process fail.
+ */
+
 import assert = require('node:assert');
 import { beforeEach, describe, it } from 'node:test';
 
