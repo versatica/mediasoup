@@ -109,6 +109,7 @@ async function run() {
 				);
 
 				buildWorkerLib();
+				buildAddon();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -121,6 +122,7 @@ async function run() {
 				);
 
 				buildWorkerLib();
+				buildAddon();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -145,7 +147,7 @@ async function run() {
 		}
 
 		case 'worker:build': {
-			buildWorker();
+			buildWorkerLib();
 
 			break;
 		}
@@ -345,6 +347,12 @@ function buildWorkerLib() {
 	installInvoke();
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
+}
+
+function buildAddon() {
+	logInfo('buildAddon()');
+
+	installInvoke();
 
 	executeCmd(
 		`cd ${WORKER_CHANNEL_ADDON_PATH} && node scripts.mjs binding:build`
@@ -354,6 +362,8 @@ function buildWorkerLib() {
 }
 
 function copyAddon() {
+	logInfo('copyAddon()');
+
 	const buildType = process.env.MEDIASOUP_BUILDTYPE || 'Release';
 	const outDir = `node/lib/workerChannel/build/${buildType}`;
 
@@ -494,6 +504,7 @@ function checkRelease() {
 	flatcNode();
 	buildTypescript({ force: true });
 	buildWorkerLib();
+	buildAddon();
 	lintNode();
 	lintWorker();
 	testNode();
