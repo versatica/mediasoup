@@ -245,11 +245,11 @@ export class Channel extends EnhancedEventEmitter {
 		// Finalizes the buffer.
 		this.#bufferBuilder.finish(messageOffset);
 
-		// Create a new buffer with this data so multiple contiguous flatbuffers
-		// do not point to the builder buffer overriding others info.
+		// Take a reference of the inner buffer.
 		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// Clear the buffer builder so it's reused for the next request.
+		// NOTE: This merely resets the buffer offset, it does not clear the content.
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
@@ -317,11 +317,11 @@ export class Channel extends EnhancedEventEmitter {
 		// Finalizes the buffer.
 		this.#bufferBuilder.finish(messageOffset);
 
-		// Create a new buffer with this data so multiple contiguous flatbuffers
-		// do not point to the builder buffer overriding others info.
+		// Take a reference of the inner buffer.
 		const buffer = this.#bufferBuilder.asUint8Array();
 
 		// Clear the buffer builder so it's reused for the next request.
+		// NOTE: This merely resets the buffer offset, it does not clear the content.
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
