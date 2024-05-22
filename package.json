@@ -21,7 +21,10 @@
 	"types": "node/lib/index.d.ts",
 	"files": [
 		"node/lib",
-		"node/src/workerChannel",
+		"node/src/workerChannel/binding.gyp",
+		"node/src/workerChannel/include",
+		"node/src/workerChannel/scripts.mjs",
+		"node/src/workerChannel/src",
 		"worker/deps/libwebrtc",
 		"worker/fbs",
 		"worker/fuzzer/include",
