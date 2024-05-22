@@ -282,7 +282,7 @@ function getPython() {
 }
 
 function getWorkerPrebuildTarName() {
-	let name = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
+	let name = `libmediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
 
 	// In Linux we want to know about kernel version since kernel >= 6 supports
 	// io-uring.
