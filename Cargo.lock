@@ -1354,7 +1354,7 @@ checksum = "b6e8aaa3f231bb4bd57b84b2d5dc3ae7f350265df8aa96492e0bc394a1571909"
 
 [[package]]
 name = "mediasoup"
-version = "0.16.0"
+version = "0.17.0"
 dependencies = [
  "actix",
  "actix-web",
@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "mediasoup-sys"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "planus",
  "planus-codegen",
