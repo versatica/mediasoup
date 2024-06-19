@@ -476,7 +476,7 @@ namespace RTC
 				continue;
 			}
 
-			// Ignore spatial layers for Producer stream score 0.
+			// Ignore spatial layers (streams) with score 0.
 			if (producerRtpStream->GetScore() == 0)
 			{
 				continue;
