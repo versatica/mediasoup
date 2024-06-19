@@ -56,11 +56,6 @@ inline static void onCloseTcp(uv_handle_t* handle)
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
-inline static void onCloseShutdown(uv_handle_t* handle)
-{
-	delete reinterpret_cast<uv_shutdown_t*>(handle);
-}
-
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	auto* handle = req->handle;
@@ -68,7 +63,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 	delete req;
 
 	// Now do close the handle.
-	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseShutdown));
+	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
 /* Instance methods. */
