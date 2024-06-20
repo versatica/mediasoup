@@ -1,7 +1,12 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WorkerEvents, ConsumerEvents, DataConsumerEvents } from '../types';
+import {
+	WorkerEvents,
+	ConsumerEvents,
+	ProducerObserverEvents,
+	DataConsumerEvents,
+} from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -809,7 +814,13 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 
 test('producer.pause() and producer.resume() are transmitted to pipe Consumer', async () => {
 	await ctx.videoProducer!.pause();
-	await ctx.router1!.pipeToRouter({
+
+	// We need to obtain the pipeProducer to await for its 'puase' and 'resume'
+	// events, otherwise we may get errors like this:
+	// InvalidStateError: Channel closed, pending request aborted [method:PRODUCER_PAUSE, id:8]
+	// See related fixed issue:
+	// https://github.com/versatica/mediasoup/issues/1374
+	const { pipeProducer: pipeVideoProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
@@ -829,20 +840,30 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 		videoConsumer,
 		'producerresume'
 	);
+	const promise2 = enhancedOnce<ProducerObserverEvents>(
+		pipeVideoProducer!.observer,
+		'resume'
+	);
 
 	await ctx.videoProducer!.resume();
-	await promise1;
+	await Promise.all([promise1, promise2]);
 
 	expect(videoConsumer.producerPaused).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
+	expect(pipeVideoProducer!.paused).toBe(false);
 
-	const promise2 = enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
+	const promise3 = enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
+	const promise4 = enhancedOnce<ProducerObserverEvents>(
+		pipeVideoProducer!.observer,
+		'pause'
+	);
 
 	await ctx.videoProducer!.pause();
-	await promise2;
+	await Promise.all([promise3, promise4]);
 
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.paused).toBe(false);
+	expect(pipeVideoProducer!.paused).toBe(true);
 }, 2000);
 
 test('producer.close() is transmitted to pipe Consumer', async () => {
