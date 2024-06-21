@@ -569,35 +569,35 @@ impl DtlsFingerprint {
         match fingerprint.algorithm {
             web_rtc_transport::FingerprintAlgorithm::Sha1 => {
                 let value_result = hex_as_bytes::<20>(fingerprint.value.as_str());
-                
+
                 DtlsFingerprint::Sha1 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha224 => {
                 let value_result = hex_as_bytes::<28>(fingerprint.value.as_str());
-                
+
                 DtlsFingerprint::Sha224 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha256 => {
                 let value_result = hex_as_bytes::<32>(fingerprint.value.as_str());
-                
+
                 DtlsFingerprint::Sha256 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha384 => {
                 let value_result = hex_as_bytes::<48>(fingerprint.value.as_str());
-                
+
                 DtlsFingerprint::Sha384 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha512 => {
                 let value_result = hex_as_bytes::<64>(fingerprint.value.as_str());
-                
+
                 DtlsFingerprint::Sha512 {
                     value: value_result,
                 }
