@@ -688,7 +688,8 @@ pub(crate) fn can_consume(
     }
 
     // Ensure there is at least one media codec.
-    Ok(matching_codecs.first()
+    Ok(matching_codecs
+        .first()
         .map(|codec| !codec.is_rtx())
         .unwrap_or_default())
 }
@@ -839,7 +840,8 @@ pub(crate) fn get_consumer_rtp_parameters(
         // If any of the consumable_rtp_parameters.encodings has scalability_mode, process it
         // (assume all encodings have the same value).
         let mut scalability_mode = consumable_rtp_parameters
-            .encodings.first()
+            .encodings
+            .first()
             .map(|encoding| encoding.scalability_mode.clone())
             .unwrap_or_default();
 
