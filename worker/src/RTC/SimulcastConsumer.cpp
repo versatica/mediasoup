@@ -476,6 +476,12 @@ namespace RTC
 				continue;
 			}
 
+			// Ignore spatial layers (streams) with score 0.
+			if (producerRtpStream->GetScore() == 0)
+			{
+				continue;
+			}
+
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
 			// clang-format off
