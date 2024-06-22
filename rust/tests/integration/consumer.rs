@@ -291,6 +291,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
 }
 
 // Keeps executor threads running until dropped
+#[allow(dead_code)]
 struct ExecutorGuard(Vec<async_oneshot::Sender<()>>);
 
 fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
@@ -977,7 +978,7 @@ fn dump_succeeds() {
                     ssrc: audio_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .ssrc,
                     rid: None,
@@ -1086,13 +1087,13 @@ fn dump_succeeds() {
                     ssrc: video_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .ssrc,
                     rtx: video_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .rtx,
                     dtx: None,
@@ -1165,7 +1166,7 @@ fn get_stats_succeeds() {
                 audio_consumer
                     .rtp_parameters()
                     .encodings
-                    .get(0)
+                    .first()
                     .unwrap()
                     .ssrc
                     .unwrap()
@@ -1214,7 +1215,7 @@ fn get_stats_succeeds() {
                 video_consumer
                     .rtp_parameters()
                     .encodings
-                    .get(0)
+                    .first()
                     .unwrap()
                     .ssrc
                     .unwrap()

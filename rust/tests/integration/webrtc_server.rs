@@ -233,10 +233,10 @@ fn unavailable_infos_fails() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
+        // #[derive(Debug, PartialEq)]
+        // struct CustomAppData {
+        //     foo: u32,
+        // }
 
         // Using an unavailable listen IP.
         {

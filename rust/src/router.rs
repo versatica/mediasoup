@@ -1303,8 +1303,12 @@ impl Router {
                     // We've created `DataConsumer` with SCTP above, so this should never panic
                     pipe_data_consumer.sctp_stream_parameters().unwrap(),
                 );
-                producer_options.label = pipe_data_consumer.label().clone();
-                producer_options.protocol = pipe_data_consumer.protocol().clone();
+                producer_options
+                    .label
+                    .clone_from(pipe_data_consumer.label());
+                producer_options
+                    .protocol
+                    .clone_from(pipe_data_consumer.protocol());
                 producer_options.app_data = data_producer.app_data().clone();
 
                 producer_options

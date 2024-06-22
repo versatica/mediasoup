@@ -8,6 +8,7 @@ unsafe extern "C" fn free_vec(message: *mut u8, message_len: u32, message_capaci
     Vec::from_raw_parts(message, message_len as usize, message_capacity);
 }
 
+#[allow(dead_code)]
 pub(super) struct ChannelReadCallback(
     Box<dyn (FnMut(UvAsyncT) -> Option<Vec<u8>>) + Send + 'static>,
 );
