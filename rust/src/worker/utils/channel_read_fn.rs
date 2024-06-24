@@ -8,10 +8,17 @@ unsafe extern "C" fn free_vec(message: *mut u8, message_len: u32, message_capaci
     Vec::from_raw_parts(message, message_len as usize, message_capacity);
 }
 
-#[allow(dead_code)]
-pub(super) struct ChannelReadCallback(
-    Box<dyn (FnMut(UvAsyncT) -> Option<Vec<u8>>) + Send + 'static>,
-);
+pub(super) struct ChannelReadCallback {
+    _callback: Box<dyn (FnMut(UvAsyncT) -> Option<Vec<u8>>) + Send + 'static>,
+}
+
+impl ChannelReadCallback {
+    pub(super) fn new(
+        _callback: Box<dyn (FnMut(UvAsyncT) -> Option<Vec<u8>>) + Send + 'static>,
+    ) -> Self {
+        Self { _callback }
+    }
+}
 
 pub(crate) struct PreparedChannelRead {
     channel_read_fn: ChannelReadFn,
@@ -72,6 +79,6 @@ where
     PreparedChannelRead {
         channel_read_fn: wrapper::<F>,
         channel_read_ctx: ChannelReadCtx(read_callback.as_ref() as *const F as *const c_void),
-        write_callback: ChannelReadCallback(read_callback),
+        write_callback: ChannelReadCallback::new(read_callback),
     }
 }

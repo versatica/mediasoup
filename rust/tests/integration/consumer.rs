@@ -291,8 +291,15 @@ fn consumer_device_capabilities() -> RtpCapabilities {
 }
 
 // Keeps executor threads running until dropped
-#[allow(dead_code)]
-struct ExecutorGuard(Vec<async_oneshot::Sender<()>>);
+struct ExecutorGuard {
+    _senders: Vec<async_oneshot::Sender<()>>,
+}
+
+impl ExecutorGuard {
+    fn new(_senders: Vec<async_oneshot::Sender<()>>) -> Self {
+        Self { _senders }
+    }
+}
 
 fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
     let executor = Arc::new(Executor::new());
@@ -319,7 +326,7 @@ fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
         })
         .collect();
 
-    (ExecutorGuard(senders), executor)
+    (ExecutorGuard::new(senders), executor)
 }
 
 async fn init() -> (
