@@ -304,6 +304,7 @@ namespace RTC
 		{
 			uint16_t minDelay;
 			uint16_t maxDelay;
+
 			if (ReadPlayoutDelay(minDelay, maxDelay))
 			{
 				MS_DUMP(

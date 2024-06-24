@@ -48,6 +48,11 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION;
 			}
 
+			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
+			{
+				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
+			}
+
 			case FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset:
 			{
 				return RtpHeaderExtensionUri::Type::TOFFSET;
@@ -66,11 +71,6 @@ namespace RTC
 			case FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime:
 			{
 				return RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME;
-			}
-
-			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
-			{
-				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
 			}
 		}
 	}
@@ -125,6 +125,11 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::VideoOrientation;
 			}
 
+			case RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
+			{
+				return FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay;
+			}
+
 			case RtpHeaderExtensionUri::Type::TOFFSET:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset;
@@ -133,11 +138,6 @@ namespace RTC
 			case RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime;
-			}
-
-			case RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay;
 			}
 		}
 	}

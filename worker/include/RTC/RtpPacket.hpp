@@ -498,10 +498,12 @@ namespace RTC
 		{
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtension(this->playoutDelayExtensionId, extenLen);
+
 			if (extenLen != 3)
 			{
 				return false;
 			}
+
 			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
 			minDelay   = v >> 12u;
 			maxDelay   = v & 0xFFFu;

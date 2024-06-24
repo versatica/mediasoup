@@ -1403,8 +1403,6 @@ namespace RTC
 			packet->SetMidExtensionId(static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID));
 			packet->SetAbsSendTimeExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
-			packet->SetPlayoutDelayExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY));
 			packet->SetTransportWideCc01ExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
 			// NOTE: Remove this once framemarking draft becomes RFC.
@@ -1416,6 +1414,8 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
 			packet->SetVideoOrientationExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION));
+			packet->SetPlayoutDelayExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY));
 		}
 
 		return true;
