@@ -328,6 +328,20 @@ const supportedRtpCapabilities: RtpCapabilities = {
 			preferredEncrypt: false,
 			direction: 'sendrecv',
 		},
+		{
+			kind: 'audio',
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			preferredId: 14,
+			preferredEncrypt: false,
+			direction: 'sendrecv',
+		},
+		{
+			kind: 'video',
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			preferredId: 14,
+			preferredEncrypt: false,
+			direction: 'sendrecv',
+		},
 	],
 };
 

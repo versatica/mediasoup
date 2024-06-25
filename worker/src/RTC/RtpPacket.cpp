@@ -300,6 +300,20 @@ namespace RTC
 				  rotation);
 			}
 		}
+		if (this->playoutDelayExtensionId != 0u)
+		{
+			uint16_t minDelay;
+			uint16_t maxDelay;
+
+			if (ReadPlayoutDelay(minDelay, maxDelay))
+			{
+				MS_DUMP(
+				  "  playoutDelay: extId:%" PRIu8 ", minDelay:%" PRIu16 ", maxDelay:%" PRIu16,
+				  this->videoOrientationExtensionId,
+				  minDelay,
+				  maxDelay);
+			}
+		}
 		MS_DUMP("  csrc count: %" PRIu8, this->header->csrcCount);
 		MS_DUMP("  marker: %s", HasMarker() ? "true" : "false");
 		MS_DUMP("  payload type: %" PRIu8, GetPayloadType());
@@ -387,6 +401,7 @@ namespace RTC
 		this->frameMarkingExtensionId      = 0u;
 		this->ssrcAudioLevelExtensionId    = 0u;
 		this->videoOrientationExtensionId  = 0u;
+		this->playoutDelayExtensionId      = 0u;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
 		std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), nullptr);
@@ -748,6 +763,7 @@ namespace RTC
 		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
+		packet->playoutDelayExtensionId      = this->playoutDelayExtensionId;
 		// Assign the payload descriptor handler.
 		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
 		// Store allocated buffer.

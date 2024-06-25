@@ -73,6 +73,7 @@ enum RtpHeaderExtensionUri: uint8 {
     TransportWideCcDraft01,
     AbsSendTime,
     AbsCaptureTime,
+    PlayoutDelay,
 }
 
 table RtpHeaderExtensionParameters {
