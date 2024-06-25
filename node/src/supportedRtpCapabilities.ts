@@ -329,14 +329,14 @@ const supportedRtpCapabilities: RtpCapabilities = {
 			direction: 'sendrecv',
 		},
 		{
-			kind: 'video',
+			kind: 'audio',
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			preferredId: 14,
 			preferredEncrypt: false,
 			direction: 'sendrecv',
 		},
 		{
-			kind: 'audio',
+			kind: 'video',
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
 			preferredId: 14,
 			preferredEncrypt: false,
