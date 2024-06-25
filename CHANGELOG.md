@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.14.8
+
+- Add support for 'playout-delay' RTP extension ([PR #1412](https://github.com/versatica/mediasoup/pull/1412) by @DavidNegro).
+
 ### 3.14.7
 
 - `SimulcastConsumer`: Fix increase layer when current layer has not receive SR ([PR #1098](https://github.com/versatica/mediasoup/pull/1098) by @penguinol).
