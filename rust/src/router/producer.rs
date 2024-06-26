@@ -759,7 +759,7 @@ impl Producer {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Score(scores) => {
-                            *score.lock() = scores.clone();
+                            score.lock().clone_from(&scores);
                             handlers.score.call(|callback| {
                                 callback(&scores);
                             });

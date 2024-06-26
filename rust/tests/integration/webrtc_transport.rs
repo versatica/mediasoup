@@ -280,7 +280,7 @@ fn create_with_fixed_port_succeeds() {
             .await
             .expect("Failed to create WebRTC transport");
 
-        assert_eq!(transport.ice_candidates().get(0).unwrap().port, port);
+        assert_eq!(transport.ice_candidates().first().unwrap().port, port);
     });
 }
 
@@ -306,7 +306,7 @@ fn create_with_port_range_succeeds() {
             .await
             .expect("Failed to create WebRTC transport");
 
-        let port1 = transport1.ice_candidates().get(0).unwrap().port;
+        let port1 = transport1.ice_candidates().first().unwrap().port;
         assert!(port1 >= *port_range.start() && port1 <= *port_range.end());
 
         let transport2 = router
@@ -325,7 +325,7 @@ fn create_with_port_range_succeeds() {
             .await
             .expect("Failed to create WebRTC transport");
 
-        let port2 = transport2.ice_candidates().get(0).unwrap().port;
+        let port2 = transport2.ice_candidates().first().unwrap().port;
         assert!(port2 >= *port_range.start() && port2 <= *port_range.end());
 
         assert!(matches!(

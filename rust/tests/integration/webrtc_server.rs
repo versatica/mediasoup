@@ -10,6 +10,11 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+#[derive(Debug, PartialEq)]
+struct CustomAppData {
+    foo: u32,
+}
+
 async fn init() -> (Worker, Worker) {
     {
         let mut builder = env_logger::builder();
@@ -51,11 +56,6 @@ fn create_webrtc_server_succeeds() {
                 }
             })
             .detach();
-
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
 
         let webrtc_server = worker1
             .create_webrtc_server({
@@ -150,11 +150,6 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         let webrtc_server = worker1
             .create_webrtc_server({
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
@@ -232,11 +227,6 @@ fn unavailable_infos_fails() {
                 }
             })
             .detach();
-
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
 
         // Using an unavailable listen IP.
         {

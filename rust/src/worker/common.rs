@@ -35,9 +35,7 @@ impl<F: Sized + Send + Sync + 'static> EventHandlers<F> {
         let index;
         {
             let mut event_handlers = self.handlers.lock();
-            let list = event_handlers
-                .entry(target_id.clone())
-                .or_insert_with(EventHandlersList::default);
+            let list = event_handlers.entry(target_id.clone()).or_default();
             index = list.index;
             list.index += 1;
             list.callbacks.insert(index, callback);

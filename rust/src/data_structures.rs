@@ -528,12 +528,15 @@ pub enum DtlsFingerprint {
     },
 }
 
-fn hex_as_bytes(input: &str, output: &mut [u8]) {
+fn hex_as_bytes<const N: usize>(input: &str) -> [u8; N] {
+    let mut output = [0_u8; N];
     for (i, o) in input.split(':').zip(&mut output.iter_mut()) {
         *o = u8::from_str_radix(i, 16).unwrap_or_else(|error| {
             panic!("Failed to parse value {i} as series of hex bytes: {error}")
         });
     }
+
+    output
 }
 
 impl DtlsFingerprint {
@@ -565,45 +568,35 @@ impl DtlsFingerprint {
     pub(crate) fn from_fbs(fingerprint: &web_rtc_transport::Fingerprint) -> DtlsFingerprint {
         match fingerprint.algorithm {
             web_rtc_transport::FingerprintAlgorithm::Sha1 => {
-                let mut value_result = [0_u8; 20];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<20>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha1 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha224 => {
-                let mut value_result = [0_u8; 28];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<28>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha224 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha256 => {
-                let mut value_result = [0_u8; 32];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<32>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha256 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha384 => {
-                let mut value_result = [0_u8; 48];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<48>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha384 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha512 => {
-                let mut value_result = [0_u8; 64];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<64>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha512 {
                     value: value_result,

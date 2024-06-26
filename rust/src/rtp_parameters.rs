@@ -919,7 +919,6 @@ impl RtpParameters {
         })
     }
 
-    #[allow(dead_code)]
     pub(crate) fn into_fbs(self) -> rtp_parameters::RtpParameters {
         rtp_parameters::RtpParameters {
             mid: self.mid,

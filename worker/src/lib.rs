@@ -1,6 +1,11 @@
 use std::os::raw::{c_char, c_int, c_void};
 
-include!(concat!(env!("OUT_DIR"), "/fbs.rs"));
+pub use planus_codegen::*;
+
+mod planus_codegen {
+    #![allow(clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/fbs.rs"));
+}
 
 #[repr(transparent)]
 #[derive(Copy, Clone)]
