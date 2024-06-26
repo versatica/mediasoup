@@ -9,6 +9,7 @@ unsafe extern "C" fn free_vec(message: *mut u8, message_len: u32, message_capaci
 }
 
 pub(super) struct ChannelReadCallback {
+    // Silence clippy warnings
     _callback: Box<dyn (FnMut(UvAsyncT) -> Option<Vec<u8>>) + Send + 'static>,
 }
 

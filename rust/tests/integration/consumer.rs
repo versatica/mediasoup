@@ -292,6 +292,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
 
 // Keeps executor threads running until dropped
 struct ExecutorGuard {
+    // Silence clippy warnings
     _senders: Vec<async_oneshot::Sender<()>>,
 }
 

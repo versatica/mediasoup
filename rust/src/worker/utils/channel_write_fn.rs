@@ -5,8 +5,8 @@ use std::slice;
 /// TypeAlias to silience clippy::type_complexity warnings
 type CallbackType = Box<dyn FnMut(&[u8]) + Send + 'static>;
 
-#[allow(clippy::type_complexity)]
 pub(super) struct ChannelReadCallback {
+    // Silence clippy warnings
     _callback: CallbackType,
 }
 
