@@ -33,14 +33,12 @@ fn main() {
     )
     .expect("Failed to translate flatbuffers files");
 
-    let planus_content = planus_codegen::generate_rust(&flatbuffers_declarations)
-        .expect("Failed to generate Rust code from flatbuffers");
-
-    let planus_content =
-        planus_content.replace("mod root {", "mod root {\n    #![allow(clippy::all)]");
-    fs::write(format!("{out_dir}/fbs.rs"), planus_content)
-        .expect("Failed to write generated Rust flatbuffers into fbs.rs");
-
+    fs::write(
+        format!("{out_dir}/fbs.rs"),
+        planus_codegen::generate_rust(&flatbuffers_declarations)
+            .expect("Failed to generate Rust code from flatbuffers"),
+    )
+    .expect("Failed to write generated Rust flatbuffers into fbs.rs");
     if env::var("DOCS_RS").is_ok() {
         // Skip everything when building docs on docs.rs
         return;
