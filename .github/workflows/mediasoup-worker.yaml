@@ -96,3 +96,8 @@ jobs:
         run: invoke -r worker test
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
+
+      - name: invoke -r worker test-asan
+        run: invoke -r worker test-asan
+        # Address Sanitizer only works on Linux.
+        if: runner.os == 'Linux'
