@@ -413,7 +413,7 @@ def test_asan(ctx):
 
     with ctx.cd(f'"{WORKER_DIR}"'):
         ctx.run(
-            f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan" --invisibles --use-colour=yes {mediasoup_test_tags}',
+            f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
