@@ -17,6 +17,15 @@ jobs:
             node: 18
           - os: ubuntu-22.04
             node: 20
+          - os: ubuntu-24.04
+            node: 20
+            meson_args: '-Db_sanitize=address'
+          - os: ubuntu-24.04
+            node: 20
+            meson_args: '-Db_sanitize=undefined'
+          - os: ubuntu-24.04
+            node: 20
+            meson_args: '-Db_sanitize=thread'
           - os: macos-12
             node: 18
           - os: macos-14
@@ -33,6 +42,7 @@ jobs:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
       MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
+      MESON_ARGS: ${{ matrix.ci.meson_args }}
 
     steps:
       - name: Checkout
@@ -54,6 +64,9 @@ jobs:
 
       - name: npm ci
         run: npm ci --foreground-scripts
+        env:
+          # Disable leak detection because it's detected by the tool flatc uses to build.
+          ASAN_OPTIONS: 'detect_leaks=0'
 
       - name: npm run lint:node
         run: npm run lint:node
