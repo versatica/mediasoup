@@ -57,7 +57,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	};
 
 	// clang-format off
-	uint8_t rtpBuffer1[] =
+	uint8_t rtpBuffer[] =
 	{
 		0b10000000, 0b01111011, 0b01010010, 0b00001110,
 		0b01011011, 0b01101011, 0b11001010, 0b10110101,
@@ -65,15 +65,17 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	};
 	// clang-format on
 
+	uint8_t rtpBuffer1[1500];
 	uint8_t rtpBuffer2[1500];
 	uint8_t rtpBuffer3[1500];
 	uint8_t rtpBuffer4[1500];
 	uint8_t rtpBuffer5[1500];
 
-	std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
-	std::memcpy(rtpBuffer3, rtpBuffer1, sizeof(rtpBuffer1));
-	std::memcpy(rtpBuffer4, rtpBuffer1, sizeof(rtpBuffer1));
-	std::memcpy(rtpBuffer5, rtpBuffer1, sizeof(rtpBuffer1));
+	std::memcpy(rtpBuffer1, rtpBuffer, sizeof(rtpBuffer));
+	std::memcpy(rtpBuffer2, rtpBuffer, sizeof(rtpBuffer));
+	std::memcpy(rtpBuffer3, rtpBuffer, sizeof(rtpBuffer));
+	std::memcpy(rtpBuffer4, rtpBuffer, sizeof(rtpBuffer));
+	std::memcpy(rtpBuffer5, rtpBuffer, sizeof(rtpBuffer));
 
 	SECTION("receive NACK and get retransmitted packets")
 	{
