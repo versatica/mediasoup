@@ -188,9 +188,17 @@ Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/
 
 Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release` (or at `worker/out/Debug` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test` folder.
 
-### `invoke test-asan`
+### `invoke test-asan-address`
 
-Run test with Address Sanitizer.
+Run test with Address Sanitizer with `-fsanitize=address`.
+
+### `invoke test-asan-undefined`
+
+Run test with Address Sanitizer with `-fsanitize=undefined`.
+
+### `invoke test-asan-thread`
+
+Run test with Address Sanitizer with `-fsanitize=thread`.
 
 ### `invoke tidy`
 

@@ -96,3 +96,24 @@ jobs:
         run: invoke -r worker test
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
+
+      # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
+      # is fixed.
+      # - name: invoke -r worker test-asan-address
+      #   run: invoke -r worker test-asan-address
+      #   # Address Sanitizer only works on Linux.
+      #   if: runner.os == 'Linux'
+
+      # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
+      # is fixed.
+      # - name: invoke -r worker test-asan-undefined
+      #   run: invoke -r worker test-asan-undefined
+      #   # Address Sanitizer only works on Linux.
+      #   if: runner.os == 'Linux'
+
+      # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
+      # is fixed.
+      # - name: invoke -r worker test-asan-thread
+      #   run: invoke -r worker test-asan-thread
+      #   # Address Sanitizer only works on Linux.
+      #   if: runner.os == 'Linux'

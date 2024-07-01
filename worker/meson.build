@@ -393,11 +393,11 @@ test(
   workdir: meson.project_source_root(),
 )
 
-mediasoup_worker_test_asan = executable(
-  'mediasoup-worker-test-asan',
+mediasoup_worker_test_asan_address = executable(
+  'mediasoup-worker-test-asan-address',
   build_by_default: false,
   install: true,
-  install_tag: 'mediasoup-worker-test-asan',
+  install_tag: 'mediasoup-worker-test-asan-address',
   dependencies: dependencies + [
     catch2_proj.get_variable('catch2_dep'),
   ],
@@ -417,8 +417,66 @@ mediasoup_worker_test_asan = executable(
 )
 
 test(
-  'mediasoup-worker-test-asan',
-  mediasoup_worker_test_asan,
+  'mediasoup-worker-test-asan-address',
+  mediasoup_worker_test_asan_address,
+  workdir: meson.project_source_root(),
+)
+
+mediasoup_worker_test_asan_undefined = executable(
+  'mediasoup-worker-test-asan-undefined',
+  build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-test-asan-undefined',
+  dependencies: dependencies + [
+    catch2_proj.get_variable('catch2_dep'),
+  ],
+  sources: common_sources + test_sources,
+  include_directories: include_directories(
+    'include',
+    'test/include',
+  ),
+  cpp_args: cpp_args + [
+    '-DMS_LOG_STD',
+    '-DMS_TEST',
+    '-fsanitize=undefined',
+  ],
+  link_args: [
+    '-fsanitize=undefined',
+  ],
+)
+
+test(
+  'mediasoup-worker-test-asan-undefined',
+  mediasoup_worker_test_asan_undefined,
+  workdir: meson.project_source_root(),
+)
+
+mediasoup_worker_test_asan_thread = executable(
+  'mediasoup-worker-test-asan-thread',
+  build_by_default: false,
+  install: true,
+  install_tag: 'mediasoup-worker-test-asan-thread',
+  dependencies: dependencies + [
+    catch2_proj.get_variable('catch2_dep'),
+  ],
+  sources: common_sources + test_sources,
+  include_directories: include_directories(
+    'include',
+    'test/include',
+  ),
+  cpp_args: cpp_args + [
+    '-DMS_LOG_STD',
+    '-DMS_TEST',
+    '-fsanitize=thread',
+  ],
+  link_args: [
+    '-fsanitize=thread',
+  ],
+)
+
+test(
+  'mediasoup-worker-test-asan-thread',
+  mediasoup_worker_test_asan_thread,
   workdir: meson.project_source_root(),
 )
 
