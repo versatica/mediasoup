@@ -192,13 +192,13 @@ Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release` (or a
 
 Run test with Address Sanitizer with `-fsanitize=address`.
 
-### `invoke test-asan-thread`
-
-Run test with Address Sanitizer with `-fsanitize=thread`.
-
 ### `invoke test-asan-undefined`
 
 Run test with Address Sanitizer with `-fsanitize=undefined`.
+
+### `invoke test-asan-thread`
+
+Run test with Address Sanitizer with `-fsanitize=thread`.
 
 ### `invoke tidy`
 

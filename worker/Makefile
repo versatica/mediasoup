@@ -33,8 +33,8 @@ endif
 	format \
 	test \
 	test-asan-address \
-	test-asan-thread \
 	test-asan-undefined \
+	test-asan-thread \
 	tidy \
 	fuzzer \
 	fuzzer-run-all \
@@ -101,11 +101,11 @@ test: invoke
 test-asan-address: invoke
 	"$(PYTHON)" -m invoke test-asan-address
 
-test-asan-thread: invoke
-	"$(PYTHON)" -m invoke test-asan-thread
-
 test-asan-undefined: invoke
 	"$(PYTHON)" -m invoke test-asan-undefined
+
+test-asan-thread: invoke
+	"$(PYTHON)" -m invoke test-asan-thread
 
 tidy: invoke
 	"$(PYTHON)" -m invoke tidy

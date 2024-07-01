@@ -421,37 +421,6 @@ def test_asan_address(ctx):
 
 
 @task(pre=[setup, flatc])
-def test_asan_thread(ctx):
-    """
-    Run worker test with thread Sanitizer with -fsanitize=thread
-    """
-    with ctx.cd(f'"{WORKER_DIR}"'):
-        ctx.run(
-            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-thread',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-    with ctx.cd(f'"{WORKER_DIR}"'):
-        ctx.run(
-            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-thread',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-
-    mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
-
-    with ctx.cd(f'"{WORKER_DIR}"'):
-        ctx.run(
-            f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-
-
-@task(pre=[setup, flatc])
 def test_asan_undefined(ctx):
     """
     Run worker test with undefined Sanitizer with -fsanitize=undefined
@@ -476,6 +445,37 @@ def test_asan_undefined(ctx):
     with ctx.cd(f'"{WORKER_DIR}"'):
         ctx.run(
             f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-undefined" --invisibles {mediasoup_test_tags}',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+
+@task(pre=[setup, flatc])
+def test_asan_thread(ctx):
+    """
+    Run worker test with thread Sanitizer with -fsanitize=thread
+    """
+    with ctx.cd(f'"{WORKER_DIR}"'):
+        ctx.run(
+            f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-thread',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+    with ctx.cd(f'"{WORKER_DIR}"'):
+        ctx.run(
+            f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-thread',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+    mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
+
+    with ctx.cd(f'"{WORKER_DIR}"'):
+        ctx.run(
+            f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL

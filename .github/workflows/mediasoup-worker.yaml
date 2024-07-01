@@ -102,12 +102,12 @@ jobs:
         # Address Sanitizer only works on Linux.
         if: runner.os == 'Linux'
 
-      - name: invoke -r worker test-asan-thread
-        run: invoke -r worker test-asan-thread
+      - name: invoke -r worker test-asan-undefined
+        run: invoke -r worker test-asan-undefined
         # Address Sanitizer only works on Linux.
         if: runner.os == 'Linux'
 
-      - name: invoke -r worker test-asan-undefined
-        run: invoke -r worker test-asan-undefined
+      - name: invoke -r worker test-asan-thread
+        run: invoke -r worker test-asan-thread
         # Address Sanitizer only works on Linux.
         if: runner.os == 'Linux'
