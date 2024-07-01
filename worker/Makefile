@@ -32,7 +32,9 @@ endif
 	lint \
 	format \
 	test \
-	test-asan \
+	test-asan-address \
+	test-asan-thread \
+	test-asan-undefined \
 	tidy \
 	fuzzer \
 	fuzzer-run-all \
@@ -96,8 +98,14 @@ format: invoke
 test: invoke
 	"$(PYTHON)" -m invoke test
 
-test-asan: invoke
-	"$(PYTHON)" -m invoke test-asan
+test-asan-address: invoke
+	"$(PYTHON)" -m invoke test-asan-address
+
+test-asan-thread: invoke
+	"$(PYTHON)" -m invoke test-asan-thread
+
+test-asan-undefined: invoke
+	"$(PYTHON)" -m invoke test-asan-undefined
 
 tidy: invoke
 	"$(PYTHON)" -m invoke tidy
