@@ -496,7 +496,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto* stream = new RtpStreamSend(&testRtpStreamListener, params, mid);
+		std::unique_ptr<RtpStreamSend> sharedStream1(
+		  new RtpStreamSend(&testRtpStreamListener, params, mid));
 
 		size_t iterations = 10000000;
 
@@ -508,36 +509,33 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 			auto* packet = RtpPacket::Parse(rtpBuffer1, 1500);
 			packet->SetSsrc(1111);
 
-			std::shared_ptr<RtpPacket> sharedPacket(packet);
+			std::unique_ptr<RtpPacket> sharedPacket(packet);
 
-			stream->ReceivePacket(packet, sharedPacket);
+			sharedStream1->ReceivePacket(packet, sharedPacket);
 		}
 
 		std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
-		std::cout << "nullptr && initialized shared_ptr: \t" << dur.count() << " seconds" << std::endl;
-
-		delete stream;
+		std::cout << "nullptr && initialized unique_ptr: \t" << dur.count() << " seconds" << std::endl;
 
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
-		stream               = new RtpStreamSend(&testRtpStreamListener, params, mid);
+		std::unique_ptr<RtpStreamSend> sharedStream2(
+		  new RtpStreamSend(&testRtpStreamListener, params, mid));
 
 		start = std::chrono::system_clock::now();
 
 		for (size_t i = 0; i < iterations; i++)
 		{
-			std::shared_ptr<RtpPacket> sharedPacket;
+			std::unique_ptr<RtpPacket> sharedPacket;
 
 			// Create packet.
 			auto* packet = RtpPacket::Parse(rtpBuffer1, 1500);
 			packet->SetSsrc(1111);
 
-			stream->ReceivePacket(packet, sharedPacket);
+			sharedStream2->ReceivePacket(packet, sharedPacket);
 		}
 
 		dur = std::chrono::system_clock::now() - start;
-		std::cout << "raw && empty shared_ptr duration: \t" << dur.count() << " seconds" << std::endl;
-
-		delete stream;
+		std::cout << "raw && empty unique_ptr duration: \t" << dur.count() << " seconds" << std::endl;
 	}
 #endif
 }
