@@ -111,7 +111,9 @@ jobs:
       #   # Address Sanitizer only works on Linux.
       #   if: runner.os == 'Linux'
 
-      - name: invoke -r worker test-asan-thread
-        run: invoke -r worker test-asan-thread
-        # Address Sanitizer only works on Linux.
-        if: runner.os == 'Linux'
+      # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
+      # is fixed.
+      # - name: invoke -r worker test-asan-thread
+      #   run: invoke -r worker test-asan-thread
+      #   # Address Sanitizer only works on Linux.
+      #   if: runner.os == 'Linux'
