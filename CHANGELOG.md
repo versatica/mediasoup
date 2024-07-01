@@ -1,5 +1,9 @@
 # Changelog
 
+### NEXT
+
+- Worker: Test, fix buffer overflow ([PR #1419](https://github.com/versatica/mediasoup/pull/1419)).
+
 ### 3.14.8
 
 - Add support for 'playout-delay' RTP extension ([PR #1412](https://github.com/versatica/mediasoup/pull/1412) by @DavidNegro).
