@@ -131,7 +131,9 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 	SECTION("create RRT")
 	{
 		// Create local report and check content.
-		std::unique_ptr<ReceiverReferenceTime> report1(new ReceiverReferenceTime());
+		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
+		// managed by the packet.
+		auto* report1 = new ReceiverReferenceTime();
 
 		report1->SetNtpSec(11111111);
 		report1->SetNtpFrac(22222222);
@@ -146,8 +148,9 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		report1->Serialize(bufferReport1);
 
 		// Create a new report out of the external buffer.
-		std::unique_ptr<ReceiverReferenceTime> report2(
-		  ReceiverReferenceTime::Parse(bufferReport1, report1->GetSize()));
+		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
+		// managed by the packet.
+		auto report2 = ReceiverReferenceTime::Parse(bufferReport1, report1->GetSize());
 
 		REQUIRE(report1->GetType() == report2->GetType());
 		REQUIRE(report1->GetNtpSec() == report2->GetNtpSec());
@@ -157,8 +160,8 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		std::unique_ptr<ExtendedReportPacket> packet1(new ExtendedReportPacket());
 
 		packet1->SetSsrc(2222);
-		packet1->AddReport(report1.get());
-		packet1->AddReport(report2.get());
+		packet1->AddReport(report1);
+		packet1->AddReport(report2);
 
 		REQUIRE(packet1->GetType() == Type::XR);
 		REQUIRE(packet1->GetCount() == 0);
@@ -194,8 +197,12 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 	SECTION("create DLRR")
 	{
 		// Create local report and check content.
-		std::unique_ptr<DelaySinceLastRr> report1(new DelaySinceLastRr());
-		std::unique_ptr<DelaySinceLastRr::SsrcInfo> ssrcInfo1(new DelaySinceLastRr::SsrcInfo());
+		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
+		// managed by the packet.
+		auto* report1   = new DelaySinceLastRr();
+		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
+		// managed by the report.
+		auto* ssrcInfo1 = new DelaySinceLastRr::SsrcInfo();
 
 		ssrcInfo1->SetSsrc(1234);
 		ssrcInfo1->SetLastReceiverReport(11111111);
@@ -206,7 +213,7 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		REQUIRE(ssrcInfo1->GetDelaySinceLastReceiverReport() == 22222222);
 		REQUIRE(ssrcInfo1->GetSize() == sizeof(DelaySinceLastRr::SsrcInfo::Body));
 
-		report1->AddSsrcInfo(ssrcInfo1.get());
+		report1->AddSsrcInfo(ssrcInfo1);
 
 		// Serialize the report into an external buffer.
 		uint8_t bufferReport1[256]{ 0 };
@@ -214,8 +221,9 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		report1->Serialize(bufferReport1);
 
 		// Create a new report out of the external buffer.
-		std::unique_ptr<DelaySinceLastRr> report2(
-		  DelaySinceLastRr::Parse(bufferReport1, report1->GetSize()));
+		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
+		// managed by the packet.
+		auto report2 = DelaySinceLastRr::Parse(bufferReport1, report1->GetSize());
 
 		REQUIRE(report1->GetType() == report2->GetType());
 
@@ -232,8 +240,8 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		std::unique_ptr<ExtendedReportPacket> packet1(new ExtendedReportPacket());
 
 		packet1->SetSsrc(2222);
-		packet1->AddReport(report1.get());
-		packet1->AddReport(report2.get());
+		packet1->AddReport(report1);
+		packet1->AddReport(report2);
 
 		REQUIRE(packet1->GetType() == Type::XR);
 		REQUIRE(packet1->GetCount() == 0);
