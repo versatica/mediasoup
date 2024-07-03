@@ -3,8 +3,8 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <memory>
 #include <cstring> // std::memcmp(), std::memcpy()
+#include <memory>
 
 using namespace RTC::RTCP;
 
@@ -199,7 +199,7 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		// Create local report and check content.
 		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
 		// managed by the packet.
-		auto* report1   = new DelaySinceLastRr();
+		auto* report1 = new DelaySinceLastRr();
 		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
 		// managed by the report.
 		auto* ssrcInfo1 = new DelaySinceLastRr::SsrcInfo();
