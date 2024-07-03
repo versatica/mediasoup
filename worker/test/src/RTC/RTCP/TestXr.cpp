@@ -3,6 +3,7 @@
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <memory>
 #include <cstring> // std::memcmp(), std::memcpy()
 
 using namespace RTC::RTCP;
