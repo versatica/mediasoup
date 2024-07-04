@@ -196,43 +196,35 @@ namespace Channel
 
 			if (message->data_type() == FBS::Message::Body::Request)
 			{
-				ChannelRequest* request;
-
 				try
 				{
-					request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+					this->request.Receive(message->data_as<FBS::Request::Request>());
 
 					// Notify the listener.
-					this->listener->HandleRequest(request);
+					this->listener->HandleRequest(&request);
 				}
 				catch (const MediaSoupTypeError& error)
 				{
-					request->TypeError(error.what());
+					this->request.TypeError(error.what());
 				}
 				catch (const MediaSoupError& error)
 				{
-					request->Error(error.what());
+					this->request.Error(error.what());
 				}
-
-				delete request;
 			}
 			else if (message->data_type() == FBS::Message::Body::Notification)
 			{
-				ChannelNotification* notification;
-
 				try
 				{
-					notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+					this->notification.Receive(message->data_as<FBS::Notification::Notification>());
 
 					// Notify the listener.
-					this->listener->HandleNotification(notification);
+					this->listener->HandleNotification(&notification);
 				}
 				catch (const MediaSoupError& error)
 				{
 					MS_ERROR("notification failed: %s", error.what());
 				}
-
-				delete notification;
 			}
 			else
 			{
@@ -277,43 +269,35 @@ namespace Channel
 
 		if (message->data_type() == FBS::Message::Body::Request)
 		{
-			ChannelRequest* request;
-
 			try
 			{
-				request = new ChannelRequest(this, message->data_as<FBS::Request::Request>());
+				this->request.Receive(message->data_as<FBS::Request::Request>());
 
 				// Notify the listener.
-				this->listener->HandleRequest(request);
+				this->listener->HandleRequest(&request);
 			}
 			catch (const MediaSoupTypeError& error)
 			{
-				request->TypeError(error.what());
+				this->request.TypeError(error.what());
 			}
 			catch (const MediaSoupError& error)
 			{
-				request->Error(error.what());
+				this->request.Error(error.what());
 			}
-
-			delete request;
 		}
 		else if (message->data_type() == FBS::Message::Body::Notification)
 		{
-			ChannelNotification* notification;
-
 			try
 			{
-				notification = new ChannelNotification(message->data_as<FBS::Notification::Notification>());
+				this->notification.Receive(message->data_as<FBS::Notification::Notification>());
 
 				// Notify the listener.
-				this->listener->HandleNotification(notification);
+				this->listener->HandleNotification(&notification);
 			}
 			catch (const MediaSoupError& error)
 			{
 				MS_ERROR("notification failed: %s", error.what());
 			}
-
-			delete notification;
 		}
 		else
 		{

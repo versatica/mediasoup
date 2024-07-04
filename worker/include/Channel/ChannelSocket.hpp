@@ -118,6 +118,8 @@ namespace Channel
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
 		flatbuffers::FlatBufferBuilder bufferBuilder{};
+		Channel::ChannelRequest request{ this };
+		Channel::ChannelNotification notification{};
 	};
 } // namespace Channel
 

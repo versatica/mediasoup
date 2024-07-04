@@ -7,10 +7,6 @@
 
 namespace Channel
 {
-	/* Static variables. */
-
-	thread_local flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
-
 	/* Class variables. */
 
 	// clang-format off
@@ -93,14 +89,14 @@ namespace Channel
 	/**
 	 * msg contains the request flatbuffer.
 	 */
-	ChannelRequest::ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request)
-	  : channel(channel)
+	void ChannelRequest::Receive(const FBS::Request::Request* request)
 	{
 		MS_TRACE();
 
-		this->data   = request;
-		this->id     = request->id();
-		this->method = request->method();
+		this->data    = request;
+		this->id      = request->id();
+		this->method  = request->method();
+		this->replied = false;
 
 		auto methodCStrIt = ChannelRequest::method2String.find(this->method);
 

@@ -20,7 +20,7 @@ namespace Channel
 
 	/* Instance methods. */
 
-	ChannelNotification::ChannelNotification(const FBS::Notification::Notification* notification)
+	void ChannelNotification::Receive(const FBS::Notification::Notification* notification)
 	{
 		MS_TRACE();
 
