@@ -22,6 +22,7 @@ namespace Channel
 
 	public:
 		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
+		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
 
 	public:
 		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
@@ -29,7 +30,7 @@ namespace Channel
 
 		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
 		{
-			return this->bufferBuilder;
+			return ChannelRequest::bufferBuilder;
 		}
 		void Accept();
 		template<class Body>
@@ -39,7 +40,7 @@ namespace Channel
 
 			this->replied = true;
 
-			auto& builder = this->bufferBuilder;
+			auto& builder = ChannelRequest::bufferBuilder;
 			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
 
 			auto message =
@@ -47,7 +48,7 @@ namespace Channel
 
 			builder.FinishSizePrefixed(message);
 			this->Send(builder.GetBufferPointer(), builder.GetSize());
-			builder.Reset();
+			builder.Clear();
 		}
 		void Error(const char* reason = nullptr);
 		void TypeError(const char* reason = nullptr);
@@ -61,7 +62,6 @@ namespace Channel
 		Channel::ChannelSocket* channel{ nullptr };
 		const FBS::Request::Request* data{ nullptr };
 		// Others.
-		flatbuffers::FlatBufferBuilder bufferBuilder{};
 		uint32_t id{ 0u };
 		Method method;
 		const char* methodCStr;
