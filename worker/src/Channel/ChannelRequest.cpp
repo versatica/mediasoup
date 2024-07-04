@@ -9,7 +9,7 @@ namespace Channel
 {
 	/* Static variables. */
 
-	thread_local	flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
+	thread_local flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
 
 	/* Class variables. */
 
@@ -87,7 +87,7 @@ namespace Channel
 		{ FBS::Request::Method::RTPOBSERVER_REMOVE_PRODUCER,                    "rtpObserver.removeProducer"                 },
 	};
 	// clang-format on
-	
+
 	/* Instance methods. */
 
 	/**
