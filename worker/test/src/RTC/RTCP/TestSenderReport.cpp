@@ -2,6 +2,7 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
+#include <memory>
 
 using namespace RTC::RTCP;
 
@@ -50,7 +51,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 {
 	SECTION("parse SR packet")
 	{
-		SenderReportPacket* packet = SenderReportPacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<SenderReportPacket> packet{ SenderReportPacket::Parse(buffer, sizeof(buffer)) };
 
 		auto* report = *(packet->Begin());
 
@@ -67,17 +68,15 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 
 	SECTION("parse SR")
 	{
-		SenderReport* report = SenderReport::Parse(srBuffer, SenderReport::HeaderSize);
+		std::unique_ptr<SenderReport> report{ SenderReport::Parse(srBuffer, SenderReport::HeaderSize) };
 
 		REQUIRE(report);
 
-		verify(report);
+		verify(report.get());
 
 		SECTION("serialize SenderReport instance")
 		{
@@ -90,8 +89,6 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 				REQUIRE(std::memcmp(srBuffer, serialized, SenderReport::HeaderSize) == 0);
 			}
 		}
-
-		delete report;
 	}
 
 	SECTION("create SR packet multiple reports")
@@ -122,7 +119,8 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		SenderReport* reports[count]{ nullptr };
 
-		auto* packet2 = static_cast<SenderReportPacket*>(Packet::Parse(buffer, sizeof(buffer)));
+		std::unique_ptr<SenderReportPacket> packet2{ static_cast<SenderReportPacket*>(
+			Packet::Parse(buffer, sizeof(buffer))) };
 
 		REQUIRE(packet2 != nullptr);
 
@@ -154,7 +152,6 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 			REQUIRE(report->GetOctetCount() == i);
 		}
 
-		delete packet2;
 		delete packet3;
 		delete packet4;
 	}

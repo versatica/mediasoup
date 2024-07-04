@@ -47,11 +47,11 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 {
 	SECTION("parse BYE packet")
 	{
-		ByePacket* packet = ByePacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<ByePacket> packet{ ByePacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
-		verify(packet);
+		verify(packet.get());
 
 		SECTION("serialize packet instance")
 		{
@@ -64,8 +64,6 @@ SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 
 	SECTION("create ByePacket")
