@@ -26,7 +26,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 			FAIL("cannot open file");
 		}
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
 
 		if (!packet)
 		{
@@ -59,8 +59,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto* payloadDescriptor =
-		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
+		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+		};
 
 		REQUIRE(payloadDescriptor);
 
@@ -73,10 +74,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->tlIndex == 0);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
-
-		delete payloadDescriptor;
-
-		delete packet;
 	}
 
 	SECTION("parse I0-8.bin")
@@ -90,7 +87,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 			FAIL("cannot open file");
 		}
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
 
 		if (!packet)
 		{
@@ -123,8 +120,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto* payloadDescriptor =
-		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
+		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+		};
 
 		REQUIRE(payloadDescriptor);
 
@@ -137,10 +135,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->tlIndex == 0);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
-
-		delete payloadDescriptor;
-
-		delete packet;
 	}
 
 	SECTION("parse I0-5.bin")
@@ -154,7 +148,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 			FAIL("cannot open file");
 		}
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
 
 		if (!packet)
 		{
@@ -187,8 +181,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto* payloadDescriptor =
-		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
+		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+		};
 
 		REQUIRE(payloadDescriptor);
 
@@ -200,10 +195,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
-
-		delete payloadDescriptor;
-
-		delete packet;
 	}
 
 	SECTION("parse I1-15.bin")
@@ -217,7 +208,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 			FAIL("cannot open file");
 		}
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
 
 		if (!packet)
 		{
@@ -250,8 +241,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto* payloadDescriptor =
-		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
+		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+		};
 
 		REQUIRE(payloadDescriptor);
 
@@ -264,10 +256,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->tlIndex == 0);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
-
-		delete payloadDescriptor;
-
-		delete packet;
 	}
 
 	SECTION("parse I0-14.bin")
@@ -281,7 +269,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 			FAIL("cannot open file");
 		}
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
 
 		if (!packet)
 		{
@@ -314,8 +302,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto* payloadDescriptor =
-		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
+		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+		};
 
 		REQUIRE(payloadDescriptor);
 
@@ -328,10 +317,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->tlIndex == 0);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
-
-		delete payloadDescriptor;
-
-		delete packet;
 	}
 
 	SECTION("parse 2SL-I14.bin")
@@ -345,7 +330,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 			FAIL("cannot open file");
 		}
 
-		RtpPacket* packet = RtpPacket::Parse(buffer, len);
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
 
 		if (!packet)
 		{
@@ -378,8 +363,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		// Read frame-marking.
 		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-		const auto* payloadDescriptor =
-		  Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen);
+		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+		};
 
 		REQUIRE(payloadDescriptor);
 
@@ -393,10 +379,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(payloadDescriptor->hasSlIndex);
 		REQUIRE(payloadDescriptor->slIndex == 0);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
-
-		delete payloadDescriptor;
-
-		delete packet;
 	}
 
 	SECTION("create and test RTP files")
@@ -453,7 +435,7 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 					FAIL("Failed to write RTP packet!\n");
 				}
 
-				RtpPacket* packet = RtpPacket::Parse(buffer2, len);
+				std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer2, len) };
 
 				if (!packet)
 				{
@@ -469,8 +451,9 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 				// Read frame-marking.
 				packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
-				const auto* payloadDescriptor = Codecs::H264_SVC::Parse(
-				  payload, packet->GetPayloadLength(), frameMarking, frameMarkingLen);
+				std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
+					Codecs::H264_SVC::Parse(payload, packet->GetPayloadLength(), frameMarking, frameMarkingLen)
+				};
 
 				REQUIRE(payloadDescriptor);
 
@@ -478,9 +461,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 
 				pos += bytes;
 				rows++;
-
-				delete payloadDescriptor;
-				delete packet;
 			}
 
 			nf.close();
