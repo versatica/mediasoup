@@ -162,7 +162,7 @@ namespace Channel
 
 		this->bufferBuilder.FinishSizePrefixed(message);
 		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
-		this->bufferBuilder.Reset();
+		this->bufferBuilder.Clear();
 	}
 
 	bool ChannelSocket::CallbackRead()
