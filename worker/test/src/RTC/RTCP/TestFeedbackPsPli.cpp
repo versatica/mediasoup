@@ -2,7 +2,6 @@
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
-#include <memory>
 
 using namespace RTC::RTCP;
 

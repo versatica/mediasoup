@@ -4,7 +4,6 @@
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp(), std::memcpy()
-#include <memory>
 
 using namespace RTC::RTCP;
 

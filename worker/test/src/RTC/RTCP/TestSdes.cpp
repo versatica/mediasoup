@@ -3,7 +3,6 @@
 #include "RTC/RTCP/Sdes.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
-#include <memory>
 #include <string>
 
 using namespace RTC::RTCP;
