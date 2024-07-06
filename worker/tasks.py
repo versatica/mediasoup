@@ -61,7 +61,6 @@ MESON_ARGS = os.getenv('MESON_ARGS') if os.getenv('MESON_ARGS') else '--vsenv' i
 # Let's use a specific version of ninja to avoid buggy version 1.11.1:
 # https://mediasoup.discourse.group/t/partly-solved-could-not-detect-ninja-v1-8-2-or-newer/
 # https://github.com/ninja-build/ninja/issues/2211
-# https://github.com/ninja-build/ninja/issues/2212
 NINJA_VERSION = os.getenv('NINJA_VERSION') or '1.10.2.4';
 PYLINT_VERSION = os.getenv('PYLINT_VERSION') or '3.0.2';
 NPM = os.getenv('NPM') or 'npm';
