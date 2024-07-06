@@ -11,6 +11,8 @@ concurrency:
 jobs:
   ci:
     strategy:
+      # TMP for debugging
+      fail-fast: false
       matrix:
         build:
           - os: ubuntu-20.04
