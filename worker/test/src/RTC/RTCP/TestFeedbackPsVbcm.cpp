@@ -55,11 +55,11 @@ SCENARIO("RTCP Feedback PS VBCM parsing", "[parser][rtcp][feedback-ps][vbcm]")
 
 	SECTION("parse FeedbackPsVbcmPacket")
 	{
-		FeedbackPsVbcmPacket* packet = FeedbackPsVbcmPacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<FeedbackPsVbcmPacket> packet{ FeedbackPsVbcmPacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
-		verify(packet);
+		verify(packet.get());
 
 		SECTION("serialize packet instance")
 		{
@@ -72,7 +72,5 @@ SCENARIO("RTCP Feedback PS VBCM parsing", "[parser][rtcp][feedback-ps][vbcm]")
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 }

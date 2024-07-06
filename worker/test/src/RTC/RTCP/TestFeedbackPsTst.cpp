@@ -45,11 +45,11 @@ SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
 
 	SECTION("parse FeedbackPsTstPacket")
 	{
-		FeedbackPsTstnPacket* packet = FeedbackPsTstnPacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<FeedbackPsTstnPacket> packet{ FeedbackPsTstnPacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
-		verify(packet);
+		verify(packet.get());
 
 		SECTION("serialize packet instance")
 		{
@@ -62,8 +62,6 @@ SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 
 	SECTION("create FeedbackPsTstPacket")

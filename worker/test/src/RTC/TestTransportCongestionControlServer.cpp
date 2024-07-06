@@ -93,7 +93,7 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 	tccServer.SetMaxIncomingBitrate(150000);
 	tccServer.TransportConnected();
 
-	RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+	std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
 
 	packet->SetTransportWideCc01ExtensionId(5);
 	packet->SetSequenceNumber(1);
@@ -116,7 +116,7 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 		}
 
 		packet->UpdateTransportWideCc01(input.wideSeqNumber);
-		tccServer.IncomingPacket(input.nowMs, packet);
+		tccServer.IncomingPacket(input.nowMs, packet.get());
 	}
 
 	tccServer.FillAndSendTransportCcFeedback();

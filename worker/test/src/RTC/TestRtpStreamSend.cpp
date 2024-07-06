@@ -10,14 +10,15 @@
 
 using namespace RTC;
 
-static RtpPacket* CreateRtpPacket(uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
+static std::unique_ptr<RtpPacket> CreateRtpPacket(
+  uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
 {
 	auto* packet = RtpPacket::Parse(buffer, len);
 
 	packet->SetSequenceNumber(seq);
 	packet->SetTimestamp(timestamp);
 
-	return packet;
+	return std::unique_ptr<RtpPacket>(packet);
 }
 
 static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> streams, RtpPacket* packet)
@@ -78,20 +79,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK and get retransmitted packets")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		std::unique_ptr<RtpPacket> packet3(
-		  CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		std::unique_ptr<RtpPacket> packet4(
-		  CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
+		auto packet4(CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		std::unique_ptr<RtpPacket> packet5(
-		  CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		auto packet5(CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -104,7 +100,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RtpStreamSend> stream(new RtpStreamSend(&testRtpStreamListener, params, mid));
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		SendRtpPacket({ { stream.get(), params.ssrc } }, packet1.get());
@@ -146,20 +142,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK and get zero retransmitted packets if useNack is not set")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		std::unique_ptr<RtpPacket> packet3(
-		  CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		std::unique_ptr<RtpPacket> packet4(
-		  CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
+		auto packet4(CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		std::unique_ptr<RtpPacket> packet5(
-		  CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		auto packet5(CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -172,7 +163,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RtpStreamSend> stream(new RtpStreamSend(&testRtpStreamListener, params, mid));
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		SendRtpPacket({ { stream.get(), params.ssrc } }, packet1.get());
@@ -202,20 +193,15 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK and get zero retransmitted packets for audio")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
-		std::unique_ptr<RtpPacket> packet3(
-		  CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
-		std::unique_ptr<RtpPacket> packet4(
-		  CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
+		auto packet4(CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
-		std::unique_ptr<RtpPacket> packet5(
-		  CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		auto packet5(CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -228,7 +214,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
 
 		std::string mid;
-		std::unique_ptr<RtpStreamSend> stream(new RtpStreamSend(&testRtpStreamListener, params, mid));
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params, mid);
 
 		// Receive all the packets (some of them not in order and/or duplicated).
 		SendRtpPacket({ { stream.get(), params.ssrc } }, packet1.get());
@@ -258,11 +244,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	SECTION("receive NACK in different RtpStreamSend instances and get retransmitted packets")
 	{
 		// packet1 [pt:123, seq:21006, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
 
 		// Create two RtpStreamSend instances.
 		TestRtpStreamListener testRtpStreamListener1;
@@ -334,10 +318,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		uint32_t diffTs    = RtpStreamSend::MaxRetransmissionDelayForVideoMs * clockRate / 1000;
 		uint32_t secondTs  = firstTs + diffTs;
 
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, firstTs));
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, secondTs - 1));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, firstTs));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, secondTs - 1));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -350,7 +332,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RtpStreamSend> stream(new RtpStreamSend(&testRtpStreamListener, params1, mid));
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params1, mid);
 
 		// Receive all the packets.
 		SendRtpPacket({ { stream.get(), params1.ssrc } }, packet1.get());
@@ -389,12 +371,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		// Send a third packet so it will clean old packets from the buffer.
 		uint32_t thirdTs = firstTs + (2 * diffTs);
 
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, firstTs));
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, secondTs));
-		std::unique_ptr<RtpPacket> packet3(
-		  CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, thirdTs));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, firstTs));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, secondTs));
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, thirdTs));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -407,7 +386,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RtpStreamSend> stream(new RtpStreamSend(&testRtpStreamListener, params1, mid));
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params1, mid);
 
 		// Receive all the packets.
 		SendRtpPacket({ { stream.get(), params1.ssrc } }, packet1.get());
@@ -439,18 +418,14 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 	{
 		// This scenario reproduce the "too bad sequence number" and "bad sequence
 		// number" scenarios in RtpStream::UpdateSeq().
-		std::unique_ptr<RtpPacket> packet1(
-		  CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
-		std::unique_ptr<RtpPacket> packet2(
-		  CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 50002, 1000002));
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 50002, 1000002));
 		// Third packet has bad sequence number (its seq is more than MaxDropout=3000
 		// older than current max seq) and will be dropped.
-		std::unique_ptr<RtpPacket> packet3(
-		  CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 40003, 1000003));
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 40003, 1000003));
 		// Forth packet has seq=badSeq+1 so will be accepted and will trigger a
 		// stream reset.
-		std::unique_ptr<RtpPacket> packet4(
-		  CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 40004, 1000004));
+		auto packet4(CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 40004, 1000004));
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -463,7 +438,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		std::unique_ptr<RtpStreamSend> stream(new RtpStreamSend(&testRtpStreamListener, params1, mid));
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params1, mid);
 
 		SendRtpPacket({ { stream.get(), params1.ssrc } }, packet1.get());
 		SendRtpPacket({ { stream.get(), params1.ssrc } }, packet2.get());
@@ -496,7 +471,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
 
 		std::string mid;
-		auto* stream = new RtpStreamSend(&testRtpStreamListener, params, mid);
+		std::unique_ptr<RtpStreamSend> stream1(new RtpStreamSend(&testRtpStreamListener, params, mid));
 
 		size_t iterations = 10000000;
 
@@ -510,16 +485,14 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 			std::shared_ptr<RtpPacket> sharedPacket(packet);
 
-			stream->ReceivePacket(packet, sharedPacket);
+			stream1->ReceivePacket(packet, sharedPacket);
 		}
 
 		std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
 		std::cout << "nullptr && initialized shared_ptr: \t" << dur.count() << " seconds" << std::endl;
 
-		delete stream;
-
 		params.mimeType.type = RTC::RtpCodecMimeType::Type::AUDIO;
-		stream               = new RtpStreamSend(&testRtpStreamListener, params, mid);
+		std::unique_ptr<RtpStreamSend> stream2(new RtpStreamSend(&testRtpStreamListener, params, mid));
 
 		start = std::chrono::system_clock::now();
 
@@ -531,13 +504,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 			auto* packet = RtpPacket::Parse(rtpBuffer1, 1500);
 			packet->SetSsrc(1111);
 
-			stream->ReceivePacket(packet, sharedPacket);
+			stream2->ReceivePacket(packet, sharedPacket);
 		}
 
 		dur = std::chrono::system_clock::now() - start;
 		std::cout << "raw && empty shared_ptr duration: \t" << dur.count() << " seconds" << std::endl;
-
-		delete stream;
 	}
 #endif
 }

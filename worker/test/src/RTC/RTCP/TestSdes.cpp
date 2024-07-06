@@ -97,8 +97,8 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 {
 	SECTION("parse packet 1")
 	{
-		SdesPacket* packet = SdesPacket::Parse(buffer1, sizeof(buffer1));
-		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer1);
+		std::unique_ptr<SdesPacket> packet{ SdesPacket::Parse(buffer1, sizeof(buffer1)) };
+		auto* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer1);
 
 		REQUIRE(packet);
 		REQUIRE(ntohs(header->length) == 6);
@@ -164,14 +164,12 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 			REQUIRE(std::memcmp(chunk1Buffer, serialized1, 24) == 0);
 		}
-
-		delete packet;
 	}
 
 	SECTION("parse packet 2")
 	{
-		SdesPacket* packet = SdesPacket::Parse(buffer2, sizeof(buffer2));
-		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer2);
+		std::unique_ptr<SdesPacket> packet{ SdesPacket::Parse(buffer2, sizeof(buffer2)) };
+		auto* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer2);
 
 		REQUIRE(packet);
 		REQUIRE(ntohs(header->length) == 13);
@@ -292,14 +290,12 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 			REQUIRE(std::memcmp(chunk2Buffer, serialized2, 24) == 0);
 		}
-
-		delete packet;
 	}
 
 	SECTION("parse packet 3")
 	{
-		SdesPacket* packet = SdesPacket::Parse(buffer3, sizeof(buffer3));
-		auto* header       = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer3);
+		std::unique_ptr<SdesPacket> packet{ SdesPacket::Parse(buffer3, sizeof(buffer3)) };
+		auto* header = reinterpret_cast<RTC::RTCP::Packet::CommonHeader*>(buffer3);
 
 		REQUIRE(packet);
 		REQUIRE(ntohs(header->length) == 3);
@@ -364,8 +360,6 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 			REQUIRE(std::memcmp(chunk1Buffer, serialized1, 12) == 0);
 		}
-
-		delete packet;
 	}
 
 	SECTION("parsing a packet with missing null octects fails")
@@ -390,15 +384,13 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		SdesPacket packet;
 		// Create a chunk and an item to obtain their size.
-		SdesChunk* chunk = new SdesChunk(1234 /*ssrc*/);
+		auto chunk = std::make_unique<SdesChunk>(1234 /*ssrc*/);
 		auto* item1 =
 		  new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
 
 		chunk->AddItem(item1);
 
 		auto chunkSize = chunk->GetSize();
-
-		delete chunk;
 
 		for (auto i{ 1 }; i <= count; ++i)
 		{
@@ -422,7 +414,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		// exceed 31.
 		packet.Serialize(buffer1);
 
-		auto* packet2 = static_cast<SdesPacket*>(Packet::Parse(buffer1, sizeof(buffer1)));
+		std::unique_ptr<SdesPacket> packet2{static_cast<SdesPacket*>(Packet::Parse(buffer1, sizeof(buffer1)))};
 
 		REQUIRE(packet2 != nullptr);
 		REQUIRE(packet2->GetCount() == count);
@@ -443,11 +435,10 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 			REQUIRE(std::string(item->GetValue()) == item1Value);
 		}
 
-		SdesPacket* packet3 = static_cast<SdesPacket*>(packet2->GetNext());
+		std::unique_ptr<SdesPacket> packet3{static_cast<SdesPacket*>(packet2->GetNext())};
 
 		REQUIRE(packet3 == nullptr);
 
-		delete packet3;
 	}
 
 	SECTION("create SDES packet with more than 31 chunks")
@@ -456,15 +447,13 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		SdesPacket packet;
 		// Create a chunk and an item to obtain their size.
-		SdesChunk* chunk = new SdesChunk(1234 /*ssrc*/);
+		auto chunk = std::make_unique<SdesChunk>(1234 /*ssrc*/);
 		auto* item1 =
 		  new RTC::RTCP::SdesItem(SdesItem::Type::CNAME, item1Value.size(), item1Value.c_str());
 
 		chunk->AddItem(item1);
 
 		auto chunkSize = chunk->GetSize();
-
-		delete chunk;
 
 		for (auto i{ 1 }; i <= count; ++i)
 		{
@@ -487,7 +476,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 		// Serialization must contain 2 SDES packets since report count exceeds 31.
 		packet.Serialize(buffer1);
 
-		auto* packet2 = static_cast<SdesPacket*>(Packet::Parse(buffer1, sizeof(buffer1)));
+		std::unique_ptr<SdesPacket> packet2 {static_cast<SdesPacket*>(Packet::Parse(buffer1, sizeof(buffer1)))};
 
 		REQUIRE(packet2 != nullptr);
 		REQUIRE(packet2->GetCount() == 31);
@@ -529,7 +518,6 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 			REQUIRE(std::string(item->GetValue()) == item1Value);
 		}
 
-		delete packet2;
 		delete packet3;
 	}
 
