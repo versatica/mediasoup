@@ -34,7 +34,7 @@ namespace Channel
 
 			builder.FinishSizePrefixed(message);
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
-			builder.Reset();
+			builder.Clear();
 		}
 
 		void Emit(const std::string& targetId, FBS::Notification::Event event)
@@ -48,7 +48,7 @@ namespace Channel
 
 			builder.FinishSizePrefixed(message);
 			this->channel->Send(builder.GetBufferPointer(), builder.GetSize());
-			builder.Reset();
+			builder.Clear();
 		}
 
 	private:
