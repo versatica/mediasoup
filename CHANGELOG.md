@@ -3,7 +3,7 @@
 ### NEXT
 
 - Worker: Test, fix buffer overflow ([PR #1419](https://github.com/versatica/mediasoup/pull/1419)).
-- Bump up Meson from 1.3.0 to 1.4.1.
+- Bump up Meson from 1.3.0 to 1.5.0 ([PR #1424](https://github.com/versatica/mediasoup/pull/1424)).
 
 ### 3.14.8
 
