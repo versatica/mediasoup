@@ -13,6 +13,9 @@ cpp_args = [
   host_machine.endian() == 'little' ? '-DMS_LITTLE_ENDIAN' : '-DMS_BIG_ENDIAN',
 ]
 
+add_global_arguments('-fsanitize=address', language: 'cpp')
+add_global_link_arguments('-fsanitize=address', language: 'cpp')
+
 if host_machine.system() == 'windows'
   cpp_args += [
     '-DNOMINMAX', # Don't define min and max macros (windows.h)
