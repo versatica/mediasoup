@@ -18,13 +18,13 @@ jobs:
           - os: ubuntu-20.04
             cc: gcc
             cxx: g++
-            # Workaround for this issue:
+            # Workaround for this issue in Ubunt 20.04:
             # https://github.com/versatica/mediasoup/actions/runs/9992113733/job/27616379442?pr=1427
-            install-libgcc-9-dev: true
+            workaround-ubuntu-20-04: true
           - os: ubuntu-20.04
             cc: clang
             cxx: clang++
-            install-libgcc-9-dev: true
+            workaround-ubuntu-20-04: true
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
@@ -89,12 +89,13 @@ jobs:
         name: npm ci --prefix worker/scripts
         run: npm ci --prefix worker/scripts --foreground-scripts
 
-      # Workaround for this issue:
+      # Workaround for this issue in Ubuntu 20.04:
       # https://github.com/versatica/mediasoup/actions/runs/9992113733/job/27616379442?pr=1427
-      - if: ${{ matrix.build.install-libgcc-9-dev }}
+      - if: ${{ matrix.build.workaround-ubuntu-20-04 }}
         name: workaround for Ubuntu 20.04
         run: sudo apt install -y libgcc-10-dev && sudo ln -s /usr/lib/gcc/x86_64-linux-gnu/10/libtsan_preinit.o /usr/lib/libtsan_preinit.o
 
+      # NOTE: Maybe make it work on Windows someday.
       - if: runner.os != 'Windows'
         name: invoke -r worker lint
         run: invoke -r worker lint
@@ -102,37 +103,25 @@ jobs:
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
 
-      - name: invoke -r worker test
+      # NOTE: Maybe make it work on Windows someday.
+      - if: runner.os != 'Windows'
+        name: invoke -r worker test
         run: invoke -r worker test
 
-      # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: runner.os == 'Linux'
-        name: invoke -r worker clean-all
-        run: invoke -r worker clean-all
-
       # Address Sanitizer only works on Linux.
+      # Let's clean everything before rebuilding worker tests with ASAN.
       - if: runner.os == 'Linux'
         name: invoke -r worker test-asan-address
-        run: invoke -r worker test-asan-address
-
-      # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: runner.os == 'Linux'
-        name: invoke -r worker clean-all
-        run: invoke -r worker clean-all
-
-      # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
-      # is fixed.
-      - name: invoke -r worker test-asan-undefined
-        run: invoke -r worker test-asan-undefined
-        # Address Sanitizer only works on Linux.
-        if: runner.os == 'Linux'
-
-      # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: runner.os == 'Linux'
-        name: invoke -r worker clean-all
-        run: invoke -r worker clean-all
+        run: invoke -r worker clean-all && invoke -r worker test-asan-address
 
       # Address Sanitizer only works on Linux.
+      # Let's clean everything before rebuilding worker tests with ASAN.
+      - if: runner.os == 'Linux'
+        name: invoke -r worker test-asan-undefined
+        run: invoke -r worker clean-all && invoke -r worker test-asan-undefined
+
+      # Address Sanitizer only works on Linux.
+      # Let's clean everything before rebuilding worker tests with ASAN.
       - if: runner.os == 'Linux'
         name: invoke -r worker test-asan-thread
-        run: invoke -r worker test-asan-thread
+        run: invoke -r worker clean-all && invoke -r worker test-asan-thread
