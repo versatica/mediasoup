@@ -91,7 +91,7 @@ jobs:
       # TODO: Explain this.
       - if: ${{ matrix.build.install-libgcc-9-dev }}
         name: sudo apt install -y libgcc-9-dev
-        run: sudo apt install -y libgcc-9-dev
+        run: sudo apt install libgcc-10-dev && sudo ln -s /usr/lib/gcc/x86_64-linux-gnu/10/libtsan_preinit.o /usr/lib/libtsan_preinit.o
 
       - name: invoke -r worker lint
         run: invoke -r worker lint
