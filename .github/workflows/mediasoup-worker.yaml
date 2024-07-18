@@ -111,10 +111,10 @@ jobs:
         if: runner.os == 'Linux'
 
       # Let's clean everything before rebuilding worker tests with ASAN.
-      - name: invoke -r worker clean-all
-        run: invoke -r worker clean-all
-        # Address Sanitizer only works on Linux.
-        if: runner.os == 'Linux'
+      # - name: invoke -r worker clean-all
+      #   run: invoke -r worker clean-all
+      #   # Address Sanitizer only works on Linux.
+      #   if: runner.os == 'Linux'
 
       # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
       # is fixed.
@@ -124,10 +124,10 @@ jobs:
       #   if: runner.os == 'Linux'
 
       # Let's clean everything before rebuilding worker tests with ASAN.
-      - name: invoke -r worker clean-all
-        run: invoke -r worker clean-all
-        # Address Sanitizer only works on Linux.
-        if: runner.os == 'Linux'
+      # - name: invoke -r worker clean-all
+      #   run: invoke -r worker clean-all
+      #   # Address Sanitizer only works on Linux.
+      #   if: runner.os == 'Linux'
 
       # TODO: Uncomment once https://github.com/versatica/mediasoup/issues/1417
       # is fixed.
