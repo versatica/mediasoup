@@ -90,8 +90,8 @@ jobs:
 
       # TODO: Explain this.
       - if: ${{ matrix.build.install-libgcc-9-dev }}
-        name: apt install -y libgcc-9-dev
-        run: apt install -y libgcc-9-dev
+        name: sudo apt install -y libgcc-9-dev
+        run: sudo apt install -y libgcc-9-dev
 
       - name: invoke -r worker lint
         run: invoke -r worker lint
