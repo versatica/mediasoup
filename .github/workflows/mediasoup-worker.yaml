@@ -18,9 +18,11 @@ jobs:
           - os: ubuntu-20.04
             cc: gcc
             cxx: g++
+            install-libgcc-9-dev: true
           - os: ubuntu-20.04
             cc: clang
             cxx: clang++
+            install-libgcc-9-dev: true
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
@@ -85,6 +87,10 @@ jobs:
         run: npm ci --prefix worker/scripts --foreground-scripts
         # TODO: Maybe fix this one day.
         if: runner.os != 'Windows'
+
+      # TODO: Explain this.
+      - if: ${{ matrix.build.install-libgcc-9-dev }}
+        name: apt install -y libgcc-9-dev
 
       - name: invoke -r worker lint
         run: invoke -r worker lint
