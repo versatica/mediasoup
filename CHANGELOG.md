@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Test, fix buffer overflow ([PR #1419](https://github.com/versatica/mediasoup/pull/1419)).
+- Bump up Meson from 1.3.0 to 1.5.0 ([PR #1424](https://github.com/versatica/mediasoup/pull/1424)).
 
 ### 3.14.8
 
@@ -434,7 +435,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.10.2
 
-- Fix release contents by including meson_options.txt ([PR #863](https://github.com/versatica/mediasoup/pull/863)).
+- Fix release contents by including `meson_options.txt` ([PR #863](https://github.com/versatica/mediasoup/pull/863)).
 
 ### 3.10.1
 
