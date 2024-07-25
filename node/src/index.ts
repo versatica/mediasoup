@@ -22,11 +22,13 @@ export const version: string = require('../../package.json').version;
  */
 export { parse as parseScalabilityMode } from './scalabilityModes';
 
+export type Observer = EnhancedEventEmitter<ObserverEvents>;
+
 export type ObserverEvents = {
 	newworker: [Worker];
 };
 
-const observer = new EnhancedEventEmitter<ObserverEvents>();
+const observer: Observer = new EnhancedEventEmitter<ObserverEvents>();
 
 /**
  * Observer.

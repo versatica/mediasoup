@@ -1,5 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import {
 	parseSctpState,
 	BaseTransportDump,
@@ -130,6 +131,9 @@ export type PlainTransportEvents = TransportEvents & {
 	sctpstatechange: [SctpState];
 };
 
+export type PlainTransportObserver =
+	EnhancedEventEmitter<PlainTransportObserverEvents>;
+
 export type PlainTransportObserverEvents = TransportObserverEvents & {
 	tuple: [TransportTuple];
 	rtcptuple: [TransportTuple];
@@ -166,7 +170,7 @@ export class PlainTransport<
 > extends Transport<
 	PlainTransportAppData,
 	PlainTransportEvents,
-	PlainTransportObserverEvents
+	PlainTransportObserver
 > {
 	// PlainTransport data.
 	readonly #data: PlainTransportData;
@@ -177,7 +181,10 @@ export class PlainTransport<
 	constructor(
 		options: PlainTransportConstructorOptions<PlainTransportAppData>
 	) {
-		super(options);
+		const observer: PlainTransportObserver =
+			new EnhancedEventEmitter<PlainTransportObserverEvents>();
+
+		super(options, observer);
 
 		logger.debug('constructor()');
 
@@ -194,6 +201,15 @@ export class PlainTransport<
 		};
 
 		this.handleWorkerNotifications();
+	}
+
+	/**
+	 * Observer.
+	 *
+	 * @override
+	 */
+	get observer(): PlainTransportObserver {
+		return super.observer;
 	}
 
 	/**

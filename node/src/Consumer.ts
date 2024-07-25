@@ -179,6 +179,8 @@ export type ConsumerEvents = {
 	'@producerclose': [];
 };
 
+export type ConsumerObserver = EnhancedEventEmitter<ConsumerObserverEvents>;
+
 export type ConsumerObserverEvents = {
 	close: [];
 	pause: [];
@@ -318,7 +320,8 @@ export class Consumer<
 	#currentLayers?: ConsumerLayers;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<ConsumerObserverEvents>();
+	readonly #observer: ConsumerObserver =
+		new EnhancedEventEmitter<ConsumerObserverEvents>();
 
 	/**
 	 * @private
@@ -459,7 +462,7 @@ export class Consumer<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ConsumerObserverEvents> {
+	get observer(): ConsumerObserver {
 		return this.#observer;
 	}
 

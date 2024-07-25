@@ -1,4 +1,5 @@
 import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import { UnsupportedError } from './errors';
 import {
 	BaseTransportDump,
@@ -44,6 +45,9 @@ export type DirectTransportEvents = TransportEvents & {
 	rtcp: [Buffer];
 };
 
+export type DirectTransportObserver =
+	EnhancedEventEmitter<DirectTransportObserverEvents>;
+
 export type DirectTransportObserverEvents = TransportObserverEvents & {
 	rtcp: [Buffer];
 };
@@ -64,7 +68,7 @@ export class DirectTransport<
 > extends Transport<
 	DirectTransportAppData,
 	DirectTransportEvents,
-	DirectTransportObserverEvents
+	DirectTransportObserver
 > {
 	// DirectTransport data.
 	readonly #data: DirectTransportData;
@@ -75,7 +79,10 @@ export class DirectTransport<
 	constructor(
 		options: DirectTransportConstructorOptions<DirectTransportAppData>
 	) {
-		super(options);
+		const observer: DirectTransportObserver =
+			new EnhancedEventEmitter<DirectTransportObserverEvents>();
+
+		super(options, observer);
 
 		logger.debug('constructor()');
 
@@ -84,6 +91,15 @@ export class DirectTransport<
 		};
 
 		this.handleWorkerNotifications();
+	}
+
+	/**
+	 * Observer.
+	 *
+	 * @override
+	 */
+	get observer(): DirectTransportObserver {
+		return super.observer;
 	}
 
 	/**
