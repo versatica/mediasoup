@@ -810,6 +810,19 @@ namespace RTC
 			return;
 		}
 
+		// If the packet belongs to current spatial layer being sent and packet does
+		// not have payload other than padding, then drop it.
+		if (spatialLayer == this->currentSpatialLayer && packet->GetPayloadLength() == 0)
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
+#endif
+
+			return;
+		}
+
 		// Whether this is the first packet after re-sync.
 		const bool isSyncPacket = this->syncRequired;
 

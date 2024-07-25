@@ -4,6 +4,7 @@
 
 - Worker: Test, fix buffer overflow ([PR #1419](https://github.com/versatica/mediasoup/pull/1419)).
 - Bump up Meson from 1.3.0 to 1.5.0 ([PR #1424](https://github.com/versatica/mediasoup/pull/1424)).
+- Fix frozen video in simulcast due to wrong dropping of payload only packets ([PR #1431](https://github.com/versatica/mediasoup/pull/1431), thanks to @quanli168).
 
 ### 3.14.8
 
