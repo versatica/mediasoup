@@ -223,6 +223,8 @@ export type TransportEvents = {
 	'@listenserverclose': [];
 };
 
+export type TransportObserver = EnhancedEventEmitter<TransportObserverEvents>;
+
 export type TransportObserverEvents = {
 	close: [];
 	newproducer: [Producer];
@@ -317,10 +319,10 @@ type RecvRtpHeaderExtensions = {
 
 const logger = new Logger('Transport');
 
-export class Transport<
+export abstract class Transport<
 	TransportAppData extends AppData = AppData,
 	Events extends TransportEvents = TransportEvents,
-	ObserverEvents extends TransportObserverEvents = TransportObserverEvents,
+	Observer extends TransportObserver = TransportObserver,
 > extends EnhancedEventEmitter<Events> {
 	// Internal data.
 	protected readonly internal: TransportInternal;
@@ -375,21 +377,24 @@ export class Transport<
 	#nextSctpStreamId = 0;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
+	readonly #observer: Observer;
 
 	/**
 	 * @private
 	 * @interface
 	 */
-	constructor({
-		internal,
-		data,
-		channel,
-		appData,
-		getRouterRtpCapabilities,
-		getProducerById,
-		getDataProducerById,
-	}: TransportConstructorOptions<TransportAppData>) {
+	constructor(
+		{
+			internal,
+			data,
+			channel,
+			appData,
+			getRouterRtpCapabilities,
+			getProducerById,
+			getDataProducerById,
+		}: TransportConstructorOptions<TransportAppData>,
+		observer: Observer
+	) {
 		super();
 
 		logger.debug('constructor()');
@@ -401,6 +406,7 @@ export class Transport<
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
+		this.#observer = observer;
 	}
 
 	/**
@@ -434,7 +440,7 @@ export class Transport<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ObserverEvents> {
+	get observer(): Observer {
 		return this.#observer;
 	}
 

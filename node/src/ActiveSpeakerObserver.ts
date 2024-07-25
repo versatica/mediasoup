@@ -33,6 +33,9 @@ export type ActiveSpeakerObserverEvents = RtpObserverEvents & {
 	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
 
+export type ActiveSpeakerObserverObserver =
+	EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>;
+
 export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
 	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
 };
@@ -46,7 +49,8 @@ export class ActiveSpeakerObserver<
 	ActiveSpeakerObserverAppData extends AppData = AppData,
 > extends RtpObserver<
 	ActiveSpeakerObserverAppData,
-	ActiveSpeakerObserverEvents
+	ActiveSpeakerObserverEvents,
+	ActiveSpeakerObserverObserver
 > {
 	/**
 	 * @private
@@ -54,15 +58,20 @@ export class ActiveSpeakerObserver<
 	constructor(
 		options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>
 	) {
-		super(options);
+		const observer: ActiveSpeakerObserverObserver =
+			new EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>();
+
+		super(options, observer);
 
 		this.handleWorkerNotifications();
 	}
 
 	/**
 	 * Observer.
+	 *
+	 * @override
 	 */
-	get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents> {
+	get observer(): ActiveSpeakerObserverObserver {
 		return super.observer;
 	}
 

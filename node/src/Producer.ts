@@ -140,6 +140,8 @@ export type ProducerEvents = {
 	'@close': [];
 };
 
+export type ProducerObserver = EnhancedEventEmitter<ProducerObserverEvents>;
+
 export type ProducerObserverEvents = {
 	close: [];
 	pause: [];
@@ -198,7 +200,8 @@ export class Producer<
 	#score: ProducerScore[] = [];
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<ProducerObserverEvents>();
+	readonly #observer: ProducerObserver =
+		new EnhancedEventEmitter<ProducerObserverEvents>();
 
 	/**
 	 * @private
@@ -304,7 +307,7 @@ export class Producer<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<ProducerObserverEvents> {
+	get observer(): ProducerObserver {
 		return this.#observer;
 	}
 

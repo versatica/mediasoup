@@ -55,6 +55,9 @@ export type AudioLevelObserverEvents = RtpObserverEvents & {
 	silence: [];
 };
 
+export type AudioLevelObserverObserver =
+	EnhancedEventEmitter<AudioLevelObserverObserverEvents>;
+
 export type AudioLevelObserverObserverEvents = RtpObserverObserverEvents & {
 	volumes: [AudioLevelObserverVolume[]];
 	silence: [];
@@ -67,22 +70,31 @@ const logger = new Logger('AudioLevelObserver');
 
 export class AudioLevelObserver<
 	AudioLevelObserverAppData extends AppData = AppData,
-> extends RtpObserver<AudioLevelObserverAppData, AudioLevelObserverEvents> {
+> extends RtpObserver<
+	AudioLevelObserverAppData,
+	AudioLevelObserverEvents,
+	AudioLevelObserverObserver
+> {
 	/**
 	 * @private
 	 */
 	constructor(
 		options: AudioLevelObserverConstructorOptions<AudioLevelObserverAppData>
 	) {
-		super(options);
+		const observer: AudioLevelObserverObserver =
+			new EnhancedEventEmitter<AudioLevelObserverObserverEvents>();
+
+		super(options, observer);
 
 		this.handleWorkerNotifications();
 	}
 
 	/**
 	 * Observer.
+	 *
+	 * @override
 	 */
-	get observer(): EnhancedEventEmitter<AudioLevelObserverObserverEvents> {
+	get observer(): AudioLevelObserverObserver {
 		return super.observer;
 	}
 

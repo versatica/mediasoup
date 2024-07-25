@@ -1,5 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import {
 	parseSctpState,
 	parseBaseTransportDump,
@@ -215,6 +216,9 @@ export type WebRtcTransportEvents = TransportEvents & {
 	sctpstatechange: [SctpState];
 };
 
+export type WebRtcTransportObserver =
+	EnhancedEventEmitter<WebRtcTransportObserverEvents>;
+
 export type WebRtcTransportObserverEvents = TransportObserverEvents & {
 	icestatechange: [IceState];
 	iceselectedtuplechange: [TransportTuple];
@@ -258,7 +262,7 @@ export class WebRtcTransport<
 > extends Transport<
 	WebRtcTransportAppData,
 	WebRtcTransportEvents,
-	WebRtcTransportObserverEvents
+	WebRtcTransportObserver
 > {
 	// WebRtcTransport data.
 	readonly #data: WebRtcTransportData;
@@ -269,7 +273,10 @@ export class WebRtcTransport<
 	constructor(
 		options: WebRtcTransportConstructorOptions<WebRtcTransportAppData>
 	) {
-		super(options);
+		const observer: WebRtcTransportObserver =
+			new EnhancedEventEmitter<WebRtcTransportObserverEvents>();
+
+		super(options, observer);
 
 		logger.debug('constructor()');
 
@@ -289,6 +296,15 @@ export class WebRtcTransport<
 		};
 
 		this.handleWorkerNotifications();
+	}
+
+	/**
+	 * Observer.
+	 *
+	 * @override
+	 */
+	get observer(): WebRtcTransportObserver {
+		return super.observer;
 	}
 
 	/**

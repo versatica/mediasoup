@@ -1,5 +1,6 @@
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
 import {
 	BaseTransportDump,
@@ -131,6 +132,9 @@ export type PipeTransportEvents = TransportEvents & {
 	sctpstatechange: [SctpState];
 };
 
+export type PipeTransportObserver =
+	EnhancedEventEmitter<PipeTransportObserverEvents>;
+
 export type PipeTransportObserverEvents = TransportObserverEvents & {
 	sctpstatechange: [SctpState];
 };
@@ -161,7 +165,7 @@ export class PipeTransport<
 > extends Transport<
 	PipeTransportAppData,
 	PipeTransportEvents,
-	PipeTransportObserverEvents
+	PipeTransportObserver
 > {
 	// PipeTransport data.
 	readonly #data: PipeTransportData;
@@ -170,7 +174,10 @@ export class PipeTransport<
 	 * @private
 	 */
 	constructor(options: PipeTransportConstructorOptions<PipeTransportAppData>) {
-		super(options);
+		const observer: PipeTransportObserver =
+			new EnhancedEventEmitter<PipeTransportObserverEvents>();
+
+		super(options, observer);
 
 		logger.debug('constructor()');
 
@@ -185,6 +192,15 @@ export class PipeTransport<
 		};
 
 		this.handleWorkerNotifications();
+	}
+
+	/**
+	 * Observer.
+	 *
+	 * @override
+	 */
+	get observer(): PipeTransportObserver {
+		return super.observer;
 	}
 
 	/**

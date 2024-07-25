@@ -67,6 +67,9 @@ export type DataProducerEvents = {
 	'@close': [];
 };
 
+export type DataProducerObserver =
+	EnhancedEventEmitter<DataProducerObserverEvents>;
+
 export type DataProducerObserverEvents = {
 	close: [];
 	pause: [];
@@ -113,7 +116,8 @@ export class DataProducer<
 	#appData: DataProducerAppData;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<DataProducerObserverEvents>();
+	readonly #observer: DataProducerObserver =
+		new EnhancedEventEmitter<DataProducerObserverEvents>();
 
 	/**
 	 * @private
@@ -210,7 +214,7 @@ export class DataProducer<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<DataProducerObserverEvents> {
+	get observer(): DataProducerObserver {
 		return this.#observer;
 	}
 

@@ -15,6 +15,9 @@ export type RtpObserverEvents = {
 	'@close': [];
 };
 
+export type RtpObserverObserver =
+	EnhancedEventEmitter<RtpObserverObserverEvents>;
+
 export type RtpObserverObserverEvents = {
 	close: [];
 	pause: [];
@@ -43,9 +46,10 @@ export type RtpObserverAddRemoveProducerOptions = {
 	producerId: string;
 };
 
-export class RtpObserver<
+export abstract class RtpObserver<
 	RtpObserverAppData extends AppData = AppData,
 	Events extends RtpObserverEvents = RtpObserverEvents,
+	Observer extends RtpObserverObserver = RtpObserverObserver,
 > extends EnhancedEventEmitter<Events> {
 	// Internal data.
 	protected readonly internal: RtpObserverObserverInternal;
@@ -68,18 +72,21 @@ export class RtpObserver<
 	) => Producer | undefined;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<RtpObserverObserverEvents>();
+	readonly #observer: Observer;
 
 	/**
 	 * @private
 	 * @interface
 	 */
-	constructor({
-		internal,
-		channel,
-		appData,
-		getProducerById,
-	}: RtpObserverConstructorOptions<RtpObserverAppData>) {
+	constructor(
+		{
+			internal,
+			channel,
+			appData,
+			getProducerById,
+		}: RtpObserverConstructorOptions<RtpObserverAppData>,
+		observer: Observer
+	) {
 		super();
 
 		logger.debug('constructor()');
@@ -88,6 +95,7 @@ export class RtpObserver<
 		this.channel = channel;
 		this.#appData = appData || ({} as RtpObserverAppData);
 		this.getProducerById = getProducerById;
+		this.#observer = observer;
 	}
 
 	/**
@@ -128,7 +136,7 @@ export class RtpObserver<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<RtpObserverObserverEvents> {
+	get observer(): Observer {
 		return this.#observer;
 	}
 

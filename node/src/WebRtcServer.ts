@@ -34,6 +34,9 @@ export type WebRtcServerEvents = {
 	'@close': [];
 };
 
+export type WebRtcServerObserver =
+	EnhancedEventEmitter<WebRtcServerObserverEvents>;
+
 export type WebRtcServerObserverEvents = {
 	close: [];
 	webrtctransporthandled: [WebRtcTransport];
@@ -89,7 +92,8 @@ export class WebRtcServer<
 	readonly #webRtcTransports: Map<string, WebRtcTransport> = new Map();
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<WebRtcServerObserverEvents>();
+	readonly #observer: WebRtcServerObserver =
+		new EnhancedEventEmitter<WebRtcServerObserverEvents>();
 
 	/**
 	 * @private
@@ -143,7 +147,7 @@ export class WebRtcServer<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<WebRtcServerObserverEvents> {
+	get observer(): WebRtcServerObserver {
 		return this.#observer;
 	}
 
