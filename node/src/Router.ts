@@ -198,6 +198,8 @@ export type RouterEvents = {
 	'@close': [];
 };
 
+export type RouterObserver = EnhancedEventEmitter<RouterObserverEvents>;
+
 export type RouterObserverEvents = {
 	close: [];
 	newtransport: [Transport];
@@ -252,7 +254,8 @@ export class Router<
 	> = new Map();
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<RouterObserverEvents>();
+	readonly #observer: RouterObserver =
+		new EnhancedEventEmitter<RouterObserverEvents>();
 
 	/**
 	 * @private
@@ -316,7 +319,7 @@ export class Router<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<RouterObserverEvents> {
+	get observer(): RouterObserver {
 		return this.#observer;
 	}
 

@@ -210,6 +210,8 @@ export type WorkerEvents = {
 	'@failure': [Error];
 };
 
+export type WorkerObserver = EnhancedEventEmitter<WorkerObserverEvents>;
+
 export type WorkerObserverEvents = {
 	close: [];
 	newwebrtcserver: [WebRtcServer];
@@ -275,7 +277,8 @@ export class Worker<
 	readonly #routers: Set<Router> = new Set();
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<WorkerObserverEvents>();
+	readonly #observer: WorkerObserver =
+		new EnhancedEventEmitter<WorkerObserverEvents>();
 
 	/**
 	 * @private
@@ -545,7 +548,7 @@ export class Worker<
 	/**
 	 * Observer.
 	 */
-	get observer(): EnhancedEventEmitter<WorkerObserverEvents> {
+	get observer(): WorkerObserver {
 		return this.#observer;
 	}
 
