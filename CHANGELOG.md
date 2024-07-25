@@ -4,6 +4,7 @@
 
 - Worker: Test, fix buffer overflow ([PR #1419](https://github.com/versatica/mediasoup/pull/1419)).
 - Bump up Meson from 1.3.0 to 1.5.0 ([PR #1424](https://github.com/versatica/mediasoup/pull/1424)).
+- Node: Export new `WorkerObserver`, `ProducerObserver`, etc. TypeScript types ([PR #1430](https://github.com/versatica/mediasoup/pull/1430)).
 
 ### 3.14.8
 
