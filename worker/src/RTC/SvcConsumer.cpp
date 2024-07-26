@@ -639,18 +639,6 @@ namespace RTC
 			return;
 		}
 
-		// Packets with only padding are not forwarded.
-		if (packet->GetPayloadLength() == 0)
-		{
-			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
-
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
-#endif
-
-			return;
-		}
-
 		// clang-format off
 		if (
 			this->encodingContext->GetTargetSpatialLayer() == -1 ||
@@ -685,6 +673,18 @@ namespace RTC
 		{
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+#endif
+
+			return;
+		}
+
+		// Packets with only padding are not forwarded.
+		if (packet->GetPayloadLength() == 0)
+		{
+			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
 #endif
 
 			return;
