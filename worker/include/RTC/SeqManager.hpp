@@ -26,13 +26,13 @@ namespace RTC
 			bool operator()(T lhs, T rhs) const;
 		};
 
-	private:
-		static const SeqLowerThan isSeqLowerThan;   // NOLINT(readability-identifier-naming)
-		static const SeqHigherThan isSeqHigherThan; // NOLINT(readability-identifier-naming)
-
 	public:
 		static bool IsSeqLowerThan(T lhs, T rhs);
 		static bool IsSeqHigherThan(T lhs, T rhs);
+
+	private:
+		static const SeqLowerThan isSeqLowerThan;   // NOLINT(readability-identifier-naming)
+		static const SeqHigherThan isSeqHigherThan; // NOLINT(readability-identifier-naming)
 
 	public:
 		SeqManager() = default;
