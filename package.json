@@ -112,7 +112,7 @@
 		"@octokit/rest": "^21.0.1",
 		"@types/debug": "^4.1.12",
 		"@types/jest": "^29.5.12",
-		"@types/node": "^20.14.12",
+		"@types/node": "^22.1.0",
 		"@typescript-eslint/eslint-plugin": "^7.17.0",
 		"@typescript-eslint/parser": "^7.17.0",
 		"eslint": "^8.57.0",

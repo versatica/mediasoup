@@ -42,7 +42,7 @@ jobs:
             cxx: cl
         # A single Node.js version should be fine for C++.
         node:
-          - 20
+          - 22
         build-type:
           - Release
           - Debug

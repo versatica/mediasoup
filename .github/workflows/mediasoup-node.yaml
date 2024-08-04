@@ -17,21 +17,27 @@ jobs:
             node: 18
           - os: ubuntu-22.04
             node: 20
+          - os: ubuntu-22.04
+            node: 22
           - os: ubuntu-24.04
-            node: 20
+            node: 22
             meson_args: '-Db_sanitize=address'
           - os: ubuntu-24.04
-            node: 20
+            node: 22
             meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-24.04
-            node: 20
+            node: 22
             meson_args: '-Db_sanitize=thread'
           - os: macos-12
             node: 18
           - os: macos-14
             node: 20
+          - os: macos-14
+            node: 22
           - os: windows-2022
             node: 20
+          - os: windows-2022
+            node: 22
         build-type:
           - Release
           - Debug

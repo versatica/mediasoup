@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- CI: Support Node 22 ([PR #1434](https://github.com/versatica/mediasoup/pull/1434)).
+
 ### 3.14.9
 
 - Worker: Test, fix buffer overflow ([PR #1419](https://github.com/versatica/mediasoup/pull/1419)).
