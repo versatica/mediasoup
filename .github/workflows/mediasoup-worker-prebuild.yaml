@@ -32,7 +32,7 @@ jobs:
             cc: cl
             cxx: cl
         node:
-          - 20
+          - 22
 
     runs-on: ${{ matrix.build.os }}
 
