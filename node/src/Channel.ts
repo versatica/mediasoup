@@ -94,7 +94,6 @@ export class Channel extends EnhancedEventEmitter {
 
 			let msgStart = 0;
 
-			// eslint-disable-next-line no-constant-condition
 			while (true) {
 				const readLen = this.#recvBuffer.length - msgStart;
 
@@ -320,7 +319,11 @@ export class Channel extends EnhancedEventEmitter {
 			);
 		}
 
-		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
+		if (this.#nextId < 4294967295) {
+			++this.#nextId;
+		} else {
+			this.#nextId = 1;
+		}
 
 		const id = this.#nextId;
 
@@ -408,7 +411,7 @@ export class Channel extends EnhancedEventEmitter {
 
 		if (!sent) {
 			logger.error(
-				`received response does not match any sent request [id:${response.id}]`
+				`received response does not match any sent request [id:${response.id()}]`
 			);
 
 			return;

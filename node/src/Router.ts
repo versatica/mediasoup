@@ -278,7 +278,7 @@ export class Router<
 		this.#internal = internal;
 		this.#data = data;
 		this.#channel = channel;
-		this.#appData = appData || ({} as RouterAppData);
+		this.#appData = appData ?? ({} as RouterAppData);
 	}
 
 	/**
@@ -627,21 +627,23 @@ export class Router<
 
 		const webRtcTransportData = parseWebRtcTransportDumpResponse(data);
 
-		const transport = new WebRtcTransport<WebRtcTransportAppData>({
-			internal: {
-				...this.#internal,
-				transportId: transportId,
-			},
-			data: webRtcTransportData,
-			channel: this.#channel,
-			appData,
-			getRouterRtpCapabilities: (): RtpCapabilities =>
-				this.#data.rtpCapabilities,
-			getProducerById: (producerId: string): Producer | undefined =>
-				this.#producers.get(producerId),
-			getDataProducerById: (dataProducerId: string): DataProducer | undefined =>
-				this.#dataProducers.get(dataProducerId),
-		});
+		const transport: WebRtcTransport<WebRtcTransportAppData> =
+			new WebRtcTransport({
+				internal: {
+					...this.#internal,
+					transportId: transportId,
+				},
+				data: webRtcTransportData,
+				channel: this.#channel,
+				appData,
+				getRouterRtpCapabilities: (): RtpCapabilities =>
+					this.#data.rtpCapabilities,
+				getProducerById: (producerId: string): Producer | undefined =>
+					this.#producers.get(producerId),
+				getDataProducerById: (
+					dataProducerId: string
+				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
+			});
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
@@ -797,21 +799,24 @@ export class Router<
 
 		const plainTransportData = parsePlainTransportDumpResponse(data);
 
-		const transport = new PlainTransport<PlainTransportAppData>({
-			internal: {
-				...this.#internal,
-				transportId: transportId,
-			},
-			data: plainTransportData,
-			channel: this.#channel,
-			appData,
-			getRouterRtpCapabilities: (): RtpCapabilities =>
-				this.#data.rtpCapabilities,
-			getProducerById: (producerId: string): Producer | undefined =>
-				this.#producers.get(producerId),
-			getDataProducerById: (dataProducerId: string): DataProducer | undefined =>
-				this.#dataProducers.get(dataProducerId),
-		});
+		const transport: PlainTransport<PlainTransportAppData> = new PlainTransport(
+			{
+				internal: {
+					...this.#internal,
+					transportId: transportId,
+				},
+				data: plainTransportData,
+				channel: this.#channel,
+				appData,
+				getRouterRtpCapabilities: (): RtpCapabilities =>
+					this.#data.rtpCapabilities,
+				getProducerById: (producerId: string): Producer | undefined =>
+					this.#producers.get(producerId),
+				getDataProducerById: (
+					dataProducerId: string
+				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
+			}
+		);
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
@@ -935,7 +940,7 @@ export class Router<
 
 		const plainTransportData = parsePipeTransportDumpResponse(data);
 
-		const transport = new PipeTransport<PipeTransportAppData>({
+		const transport: PipeTransport<PipeTransportAppData> = new PipeTransport({
 			internal: {
 				...this.#internal,
 				transportId,
@@ -1030,21 +1035,23 @@ export class Router<
 
 		const directTransportData = parseDirectTransportDumpResponse(data);
 
-		const transport = new DirectTransport<DirectTransportAppData>({
-			internal: {
-				...this.#internal,
-				transportId: transportId,
-			},
-			data: directTransportData,
-			channel: this.#channel,
-			appData,
-			getRouterRtpCapabilities: (): RtpCapabilities =>
-				this.#data.rtpCapabilities,
-			getProducerById: (producerId: string): Producer | undefined =>
-				this.#producers.get(producerId),
-			getDataProducerById: (dataProducerId: string): DataProducer | undefined =>
-				this.#dataProducers.get(dataProducerId),
-		});
+		const transport: DirectTransport<DirectTransportAppData> =
+			new DirectTransport({
+				internal: {
+					...this.#internal,
+					transportId: transportId,
+				},
+				data: directTransportData,
+				channel: this.#channel,
+				appData,
+				getRouterRtpCapabilities: (): RtpCapabilities =>
+					this.#data.rtpCapabilities,
+				getProducerById: (producerId: string): Producer | undefined =>
+					this.#producers.get(producerId),
+				getDataProducerById: (
+					dataProducerId: string
+				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
+			});
 
 		this.#transports.set(transport.id, transport);
 		transport.on('@close', () => this.#transports.delete(transport.id));
@@ -1217,7 +1224,7 @@ export class Router<
 							remotePipeTransport.close();
 						}
 
-						reject(error);
+						reject(error instanceof Error ? error : new Error(String(error)));
 					});
 			});
 
@@ -1242,9 +1249,9 @@ export class Router<
 
 				pipeProducer = await remotePipeTransport!.produce({
 					id: producer.id,
-					kind: pipeConsumer!.kind,
-					rtpParameters: pipeConsumer!.rtpParameters,
-					paused: pipeConsumer!.producerPaused,
+					kind: pipeConsumer.kind,
+					rtpParameters: pipeConsumer.rtpParameters,
+					paused: pipeConsumer.producerPaused,
 					appData: producer.appData,
 				});
 
@@ -1264,9 +1271,9 @@ export class Router<
 				}
 
 				// Pipe events from the pipe Consumer to the pipe Producer.
-				pipeConsumer!.observer.on('close', () => pipeProducer!.close());
-				pipeConsumer!.observer.on('pause', () => pipeProducer!.pause());
-				pipeConsumer!.observer.on('resume', () => pipeProducer!.resume());
+				pipeConsumer.observer.on('close', () => pipeProducer!.close());
+				pipeConsumer.observer.on('pause', () => void pipeProducer!.pause());
+				pipeConsumer.observer.on('resume', () => void pipeProducer!.resume());
 
 				// Pipe events from the pipe Producer to the pipe Consumer.
 				pipeProducer.observer.on('close', () => pipeConsumer!.close());
@@ -1299,9 +1306,9 @@ export class Router<
 
 				pipeDataProducer = await remotePipeTransport!.produceData({
 					id: dataProducer.id,
-					sctpStreamParameters: pipeDataConsumer!.sctpStreamParameters,
-					label: pipeDataConsumer!.label,
-					protocol: pipeDataConsumer!.protocol,
+					sctpStreamParameters: pipeDataConsumer.sctpStreamParameters,
+					label: pipeDataConsumer.label,
+					protocol: pipeDataConsumer.protocol,
 					appData: dataProducer.appData,
 				});
 
@@ -1311,7 +1318,7 @@ export class Router<
 				}
 
 				// Pipe events from the pipe DataConsumer to the pipe DataProducer.
-				pipeDataConsumer!.observer.on('close', () => pipeDataProducer!.close());
+				pipeDataConsumer.observer.on('close', () => pipeDataProducer!.close());
 
 				// Pipe events from the pipe DataProducer to the pipe DataConsumer.
 				pipeDataProducer.observer.on('close', () => pipeDataConsumer!.close());
@@ -1323,13 +1330,8 @@ export class Router<
 					error
 				);
 
-				if (pipeDataConsumer) {
-					pipeDataConsumer.close();
-				}
-
-				if (pipeDataProducer) {
-					pipeDataProducer.close();
-				}
+				pipeDataConsumer?.close();
+				pipeDataProducer?.close();
 
 				throw error;
 			}
@@ -1412,8 +1414,8 @@ export class Router<
 			this.#internal.routerId
 		);
 
-		const activeSpeakerObserver =
-			new ActiveSpeakerObserver<ActiveSpeakerObserverAppData>({
+		const activeSpeakerObserver: ActiveSpeakerObserver<ActiveSpeakerObserverAppData> =
+			new ActiveSpeakerObserver({
 				internal: {
 					...this.#internal,
 					rtpObserverId: rtpObserverId,
@@ -1488,8 +1490,8 @@ export class Router<
 			this.#internal.routerId
 		);
 
-		const audioLevelObserver =
-			new AudioLevelObserver<AudioLevelObserverAppData>({
+		const audioLevelObserver: AudioLevelObserver<AudioLevelObserverAppData> =
+			new AudioLevelObserver({
 				internal: {
 					...this.#internal,
 					rtpObserverId: rtpObserverId,

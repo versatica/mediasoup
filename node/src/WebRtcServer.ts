@@ -113,7 +113,7 @@ export class WebRtcServer<
 
 		this.#internal = internal;
 		this.#channel = channel;
-		this.#appData = appData || ({} as WebRtcServerAppData);
+		this.#appData = appData ?? ({} as WebRtcServerAppData);
 	}
 
 	/**
@@ -280,7 +280,7 @@ function parseIceUserNameFragment(
 
 function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash {
 	return {
-		tupleHash: Number(binary.tupleHash()!),
+		tupleHash: Number(binary.tupleHash()),
 		webRtcTransportId: binary.webRtcTransportId()!,
 	};
 }

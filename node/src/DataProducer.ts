@@ -143,7 +143,7 @@ export class DataProducer<
 		this.#data = data;
 		this.#channel = channel;
 		this.#paused = paused;
-		this.#appData = appData || ({} as DataProducerAppData);
+		this.#appData = appData ?? ({} as DataProducerAppData);
 
 		this.handleWorkerNotifications();
 	}

@@ -3,6 +3,7 @@
 ### NEXT
 
 - CI: Support Node 22 ([PR #1434](https://github.com/versatica/mediasoup/pull/1434)).
+- Update ESLint to version 9 ([PR #1435](https://github.com/versatica/mediasoup/pull/1435)).
 
 ### 3.14.9
 
@@ -864,7 +865,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 ### 3.6.6
 
 - Update `usrsctp` library.
-- Update ESlint and TypeScript related dependencies.
+- Update ESLint and TypeScript related dependencies.
 
 ### 3.6.5
 

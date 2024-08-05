@@ -925,7 +925,7 @@ function parseDtlsParameters(
 
 	return {
 		fingerprints: fingerprints,
-		role: binary.role() === null ? undefined : dtlsRoleFromFbs(binary.role()!),
+		role: binary.role() === null ? undefined : dtlsRoleFromFbs(binary.role()),
 	};
 }
 

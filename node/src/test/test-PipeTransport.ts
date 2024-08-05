@@ -477,7 +477,7 @@ test('router.pipeToRouter() succeeds with video', async () => {
 }, 2000);
 
 test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);
 
 	await expect(
@@ -495,7 +495,7 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router1!.createPipeTransport({ listenIp: ['127.0.0.1'] })
 	).rejects.toThrow(TypeError);
 
@@ -508,7 +508,7 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	await expect(
 		ctx.router1!.createPipeTransport({
 			listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
@@ -658,7 +658,7 @@ test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset',
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: 'invalid',
 		})
 	).rejects.toThrow(TypeError);
@@ -688,7 +688,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: 1,
 		})
 	).rejects.toThrow(TypeError);
@@ -698,7 +698,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: {
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -711,7 +711,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
 			},
@@ -724,7 +724,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			ip: '127.0.0.2',
 			port: 9999,
 			srtpParameters: {
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				cryptoSuite: 'FOO',
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -738,7 +738,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			ip: '127.0.0.2',
 			port: 9999,
 			srtpParameters: {
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				cryptoSuite: 123,
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -753,7 +753,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			port: 9999,
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				keyBase64: [],
 			},
 		})
@@ -907,7 +907,7 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	await ctx.videoProducer!.close();
+	ctx.videoProducer!.close();
 
 	expect(ctx.videoProducer!.closed).toBe(true);
 
@@ -1010,7 +1010,7 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
 		dataProducerId: ctx.dataProducer!.id,
 	});
 
-	await ctx.dataProducer!.close();
+	ctx.dataProducer!.close();
 
 	expect(ctx.dataProducer!.closed).toBe(true);
 

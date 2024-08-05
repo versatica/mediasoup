@@ -289,11 +289,11 @@ test('dataConsumer.pause() and resume() succeed', async () => {
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
-	dataConsumer.pause();
-	dataConsumer.resume();
-	dataConsumer.pause();
-	dataConsumer.pause();
-	dataConsumer.pause();
+	void dataConsumer.pause();
+	void dataConsumer.resume();
+	void dataConsumer.pause();
+	void dataConsumer.pause();
+	void dataConsumer.pause();
 	await dataConsumer.resume();
 
 	expect(onObserverPause).toHaveBeenCalledTimes(3);

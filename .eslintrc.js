@@ -88,7 +88,7 @@ const eslintConfig = {
 		'no-undef': 2,
 		'no-unmodified-loop-condition': 2,
 		'no-unreachable': 2,
-		'no-unused-vars': [1, { vars: 'all', args: 'after-used' }],
+		'no-unused-vars': [2, { vars: 'all', args: 'after-used' }],
 		'no-use-before-define': 0,
 		'no-useless-call': 2,
 		'no-useless-computed-key': 2,

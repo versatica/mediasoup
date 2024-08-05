@@ -59,7 +59,7 @@ test('router.createDirectTransport() succeeds', async () => {
 
 test('router.createDirectTransport() with wrong arguments rejects with TypeError', async () => {
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createDirectTransport({ maxMessageSize: 'foo' })
 	).rejects.toThrow(TypeError);
 
@@ -168,7 +168,7 @@ test('dataProducer.send() succeeds', async () => {
 		dataProducer.on('listenererror', (eventName, error) => {
 			reject(
 				new Error(
-					`dataProducer 'listenererror' [eventName:${eventName}]: ${error}`
+					`dataProducer 'listenererror' [eventName:${eventName}]: ${error.toString()}`
 				)
 			);
 		});
@@ -176,7 +176,7 @@ test('dataProducer.send() succeeds', async () => {
 		dataConsumer.on('listenererror', (eventName, error) => {
 			reject(
 				new Error(
-					`dataConsumer 'listenererror' [eventName:${eventName}]: ${error}`
+					`dataConsumer 'listenererror' [eventName:${eventName}]: ${error.toString()}`
 				)
 			);
 		});

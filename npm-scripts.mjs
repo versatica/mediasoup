@@ -26,9 +26,12 @@ const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check. Converted to string for convenience.
-const ESLINT_PATHS = ['node/src', 'npm-scripts.mjs', 'worker/scripts'].join(
-	' '
-);
+const ESLINT_PATHS = [
+	'eslint.config.mjs',
+	'node/src',
+	'npm-scripts.mjs',
+	'worker/scripts',
+].join(' ');
 // Paths for ESLint to ignore. Converted to string argument for convenience.
 const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
 	.map(entry => `--ignore-pattern ${entry}`)
@@ -42,9 +45,9 @@ const PRETTIER_PATHS = [
 	'README.md',
 	'doc',
 	'node/src',
-	'node/tsconfig.json',
 	'npm-scripts.mjs',
 	'package.json',
+	'tsconfig.json',
 	'worker/scripts',
 ].join(' ');
 
@@ -140,7 +143,7 @@ async function run() {
 
 		case 'typescript:watch': {
 			deleteNodeLib();
-			executeCmd(`tsc --project node --watch ${args}`);
+			executeCmd(`tsc --watch ${args}`);
 
 			break;
 		}
@@ -327,7 +330,7 @@ function buildTypescript({ force = false } = { force: false }) {
 	logInfo('buildTypescript()');
 
 	deleteNodeLib();
-	executeCmd('tsc --project node');
+	executeCmd('tsc');
 }
 
 function buildWorker() {
@@ -356,10 +359,10 @@ function lintNode() {
 
 	// Ensure there are no rules that are unnecessary or conflict with Prettier
 	// rules.
-	executeCmd('eslint-config-prettier .eslintrc.js');
+	executeCmd('eslint-config-prettier eslint.config.mjs');
 
 	executeCmd(
-		`eslint -c .eslintrc.js --ext=ts,js,mjs --max-warnings 0 ${ESLINT_IGNORE_PATTERN_ARGS} ${ESLINT_PATHS}`
+		`eslint -c eslint.config.mjs --max-warnings 0 ${ESLINT_IGNORE_PATTERN_ARGS} ${ESLINT_PATHS}`
 	);
 
 	executeCmd(`prettier --check ${PRETTIER_PATHS}`);

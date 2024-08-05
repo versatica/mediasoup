@@ -217,16 +217,16 @@ test('worker.createWebRtcServer() without specifying port/portRange succeeds', a
 }, 2000);
 
 test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.worker!.createWebRtcServer({})).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createWebRtcServer({ listenInfos: ['NOT-AN-OBJECT'] })
 	).rejects.toThrow(Error);
 

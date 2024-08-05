@@ -93,7 +93,7 @@ export abstract class RtpObserver<
 
 		this.internal = internal;
 		this.channel = channel;
-		this.#appData = appData || ({} as RtpObserverAppData);
+		this.#appData = appData ?? ({} as RtpObserverAppData);
 		this.getProducerById = getProducerById;
 		this.#observer = observer;
 	}
