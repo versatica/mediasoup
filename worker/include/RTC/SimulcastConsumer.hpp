@@ -115,7 +115,7 @@ namespace RTC
 		bool syncRequired{ false };
 		int16_t spatialLayerToSync{ -1 };
 		bool lastSentPacketHasMarker{ false };
-		RTC::SeqManager<uint16_t> rtpSeqManager;
+		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t provisionalTargetSpatialLayer{ -1 };
