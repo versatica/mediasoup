@@ -4,6 +4,7 @@
 
 - CI: Support Node 22 ([PR #1434](https://github.com/versatica/mediasoup/pull/1434)).
 - Update ESLint to version 9 ([PR #1435](https://github.com/versatica/mediasoup/pull/1435)).
+- Mitigate libsrtp wraparound with loss decryption failure ([PR #1438](https://github.com/versatica/mediasoup/pull/1438)).
 
 ### 3.14.9
 
