@@ -5,6 +5,7 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/SimpleConsumer.hpp"
 
@@ -35,6 +36,14 @@ namespace RTC
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
+
+		// Let's chosee an initial output seq number between 1000 and 32768 to avoid
+		// libsrtp bug:
+		// https://github.com/versatica/mediasoup/issues/1437
+		const uint16_t initialOutputSeq =
+		  Utils::Crypto::GetRandomUInt(1000u, std::numeric_limits<uint16_t>::max() / 2);
+
+		this->rtpSeqManager.reset(new RTC::SeqManager<uint16_t>(initialOutputSeq));
 
 		// Create the encoding context for Opus.
 		if (
@@ -340,7 +349,7 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  packet->GetTimestamp());
 
-			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
@@ -363,7 +372,7 @@ namespace RTC
 		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
-			this->rtpSeqManager.Drop(packet->GetSequenceNumber());
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
@@ -383,7 +392,7 @@ namespace RTC
 				MS_DEBUG_TAG(rtp, "sync key frame received");
 			}
 
-			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
+			this->rtpSeqManager->Sync(packet->GetSequenceNumber() - 1);
 
 			this->syncRequired = false;
 		}
@@ -391,7 +400,7 @@ namespace RTC
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
 
-		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
+		this->rtpSeqManager->Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
 		auto origSsrc = packet->GetSsrc();

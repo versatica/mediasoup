@@ -36,6 +36,7 @@ namespace RTC
 
 	public:
 		SeqManager() = default;
+		SeqManager(T initialOutput);
 
 	public:
 		void Sync(T input);
@@ -50,6 +51,7 @@ namespace RTC
 	private:
 		// Whether at least a sequence number has been inserted.
 		bool started{ false };
+		T initialOutput{ 0 };
 		T base{ 0 };
 		T maxOutput{ 0 };
 		T maxInput{ 0 };

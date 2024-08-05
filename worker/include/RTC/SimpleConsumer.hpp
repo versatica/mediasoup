@@ -87,7 +87,7 @@ namespace RTC
 		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
-		RTC::SeqManager<uint16_t> rtpSeqManager;
+		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
 		bool managingBitrate{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 	};
