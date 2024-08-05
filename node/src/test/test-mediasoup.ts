@@ -22,7 +22,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 
 	// Mangle retrieved codecs to check that, if called again,
 	// getSupportedRtpCapabilities() returns a cloned object.
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	rtpCapabilities.codecs = 'bar';
 
 	const rtpCapabilities2 = getSupportedRtpCapabilities();

@@ -81,7 +81,7 @@ test('createWorker() succeeds', async () => {
 }, 2000);
 
 test('createWorker() with wrong settings rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(mediasoup.createWorker({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
 	);
@@ -104,7 +104,7 @@ test('createWorker() with wrong settings rejects with TypeError', async () => {
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -124,7 +124,7 @@ test('worker.updateSettings() succeeds', async () => {
 test('worker.updateSettings() with wrong settings rejects with TypeError', async () => {
 	const worker = await mediasoup.createWorker();
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(worker.updateSettings({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
 	);

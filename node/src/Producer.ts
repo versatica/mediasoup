@@ -227,7 +227,7 @@ export class Producer<
 		this.#data = data;
 		this.#channel = channel;
 		this.#paused = paused;
-		this.#appData = appData || ({} as ProducerAppData);
+		this.#appData = appData ?? ({} as ProducerAppData);
 
 		this.handleWorkerNotifications();
 	}
@@ -626,6 +626,10 @@ export function producerTypeToFbs(type: ProducerType): FbsRtpParameters.Type {
 
 		case 'svc': {
 			return FbsRtpParameters.Type.SVC;
+		}
+
+		default: {
+			throw new TypeError(`invalid ProducerType: ${type}`);
 		}
 	}
 }

@@ -9,7 +9,7 @@ export type ScalabilityMode = {
 };
 
 export function parse(scalabilityMode?: string): ScalabilityMode {
-	const match = ScalabilityModeRegex.exec(scalabilityMode || '');
+	const match = ScalabilityModeRegex.exec(scalabilityMode ?? '');
 
 	if (match) {
 		return {

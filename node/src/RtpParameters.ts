@@ -640,8 +640,7 @@ export function parseParameters(data: any): any {
 				const value = new FbsBoolean();
 
 				fbsParameter.value(value);
-
-				parameters[String(fbsParameter.name()!)] = value.value();
+				parameters[String(fbsParameter.name())] = value.value();
 
 				break;
 			}
@@ -650,8 +649,7 @@ export function parseParameters(data: any): any {
 				const value = new FbsInteger32();
 
 				fbsParameter.value(value);
-
-				parameters[String(fbsParameter.name()!)] = value.value();
+				parameters[String(fbsParameter.name())] = value.value();
 
 				break;
 			}
@@ -660,8 +658,7 @@ export function parseParameters(data: any): any {
 				const value = new FbsDouble();
 
 				fbsParameter.value(value);
-
-				parameters[String(fbsParameter.name()!)] = value.value();
+				parameters[String(fbsParameter.name())] = value.value();
 
 				break;
 			}
@@ -670,8 +667,7 @@ export function parseParameters(data: any): any {
 				const value = new FbsString();
 
 				fbsParameter.value(value);
-
-				parameters[String(fbsParameter.name()!)] = value.value();
+				parameters[String(fbsParameter.name())] = value.value();
 
 				break;
 			}
@@ -680,8 +676,7 @@ export function parseParameters(data: any): any {
 				const value = new FbsInteger32Array();
 
 				fbsParameter.value(value);
-
-				parameters[String(fbsParameter.name()!)] = value.valueArray();
+				parameters[String(fbsParameter.name())] = value.valueArray();
 
 				break;
 			}
@@ -843,7 +838,7 @@ export function parseRtpEncodingParameters(
 		rid: data.rid() ?? undefined,
 		codecPayloadType:
 			data.codecPayloadType() !== null ? data.codecPayloadType()! : undefined,
-		rtx: data.rtx() ? { ssrc: data.rtx()!.ssrc()! } : undefined,
+		rtx: data.rtx() ? { ssrc: data.rtx()!.ssrc() } : undefined,
 		dtx: data.dtx(),
 		scalabilityMode: data.scalabilityMode() ?? undefined,
 		maxBitrate: data.maxBitrate() !== null ? data.maxBitrate()! : undefined,

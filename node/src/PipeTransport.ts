@@ -390,7 +390,7 @@ export class PipeTransport<
 			type: 'pipe' as ConsumerType,
 		};
 
-		const consumer = new Consumer<ConsumerAppData>({
+		const consumer: Consumer<ConsumerAppData> = new Consumer({
 			internal: {
 				...this.internal,
 				consumerId,

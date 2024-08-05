@@ -106,13 +106,13 @@ test('worker.createRouter() succeeds', async () => {
 }, 2000);
 
 test('worker.createRouter() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.worker!.createRouter({ mediaCodecs: {} })).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createRouter({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);

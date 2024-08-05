@@ -184,7 +184,7 @@ export class DataConsumer<
 		this.#paused = paused;
 		this.#dataProducerPaused = dataProducerPaused;
 		this.#subchannels = subchannels;
-		this.#appData = appData || ({} as DataConsumerAppData);
+		this.#appData = appData ?? ({} as DataConsumerAppData);
 
 		this.handleWorkerNotifications();
 	}

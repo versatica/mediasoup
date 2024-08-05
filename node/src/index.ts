@@ -4,6 +4,7 @@ import { workerBin, Worker, WorkerSettings } from './Worker';
 import * as utils from './utils';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import { RtpCapabilities } from './RtpParameters';
+
 import * as types from './types';
 
 /**
@@ -14,7 +15,7 @@ export { types };
 /**
  * Expose mediasoup version.
  */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 export const version: string = require('../../package.json').version;
 
 /**
@@ -63,7 +64,7 @@ export async function createWorker<
 		throw new TypeError('if given, appData must be an object');
 	}
 
-	const worker = new Worker<WorkerAppData>({
+	const worker: Worker<WorkerAppData> = new Worker({
 		logLevel,
 		logTags,
 		rtcMinPort,

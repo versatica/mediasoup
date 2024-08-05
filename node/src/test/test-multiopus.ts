@@ -84,7 +84,7 @@ const ctx: TestContext = {
 				},
 				{
 					kind: 'audio',
-					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
 					preferredId: 4,
 					preferredEncrypt: false,
 				},

@@ -72,7 +72,7 @@ export function parseVector<Type>(
 		if (parseFn) {
 			array.push(parseFn(binary[methodName](i)));
 		} else {
-			array.push(binary[methodName](i));
+			array.push(binary[methodName](i) as Type);
 		}
 	}
 
@@ -165,7 +165,7 @@ export function parseStringStringArrayVector(
 		const values: string[] = [];
 
 		for (let i2 = 0; i2 < kv.valuesLength(); ++i2) {
-			values.push(kv.values(i2)!);
+			values.push(kv.values(i2)! as string);
 		}
 
 		array.push({ key: kv.key(), values });
