@@ -176,6 +176,21 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		validate(seqManager2, inputs);
 	}
 
+	SECTION("receive out of order numbers with a big jump")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{      4,     4, false, false },
+			{      3,     3, false, false },
+			{  65535, 65535, false, false },
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
 	SECTION("receive mixed numbers with a big jump, drop before jump")
 	{
 		// clang-format off
@@ -846,6 +861,21 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 
 		SeqManager<uint16_t, 15> seqManager2(/*initialOutput*/ 32000u);
 		validate(seqManager2, inputs2);
+	}
+
+	SECTION("receive out of order numbers with a big jump (with initial output)")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{      4, 1004, false, false },
+			{      3, 1003, false, false },
+			{  65535,  999, false, false },
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000u);
+		validate(seqManager, inputs);
 	}
 
 	SECTION("receive mixed numbers with a big jump, drop before jump (with initial output)")
