@@ -1400,4 +1400,19 @@ SCENARIO("SeqManager", "[rtc][SeqMananger]")
 		SeqManager<uint16_t> seqManager(/*initialOutput*/ 1000);
 		validate(seqManager, inputs);
 	}
+
+	SECTION("map packets prior to first mapped packet")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{  4,  4, false, false },
+			{  3,  3, false, false },
+			{  65535,  65535, false, false },
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
 }
