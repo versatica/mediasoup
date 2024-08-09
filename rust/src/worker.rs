@@ -413,7 +413,7 @@ impl Inner {
             ));
         }
 
-        if enable_liburing {
+        if !enable_liburing {
             spawn_args.push("--disable_liburing".to_string());
         }
 
