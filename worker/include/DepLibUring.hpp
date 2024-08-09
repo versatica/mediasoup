@@ -49,7 +49,8 @@ public:
 	static void SetActive();
 	static bool IsActive();
 
-	class LibUring;
+	private:
+		class LibUring;
 
 	// Whether liburing is enabled or not after runtime checks.
 	static bool enabled;
