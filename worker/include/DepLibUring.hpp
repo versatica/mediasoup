@@ -49,15 +49,14 @@ public:
 	static void SetActive();
 	static bool IsActive();
 
-	private:
-		class LibUring;
+	class LibUring;
 
 	// Whether liburing is enabled or not after runtime checks.
 	static bool enabled;
 	thread_local static LibUring* liburing;
 
-private:
-	// Private singleton.
+public:
+	// Singleton.
 	class LibUring
 	{
 	public:
