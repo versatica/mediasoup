@@ -114,7 +114,36 @@ inline static void onFdEvent(uv_poll_t* handle, int status, int events)
 
 /* Static class methods */
 
-bool DepLibUring::IsRuntimeSupported()
+void DepLibUring::ClassInit()
+{
+	const auto mayor = io_uring_major_version();
+	const auto minor = io_uring_minor_version();
+
+	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
+
+	// This must be called first.
+	DepLibUring::CheckRuntimeSupport();
+
+	if (DepLibUring::IsRuntimeSupported())
+	{
+		DepLibUring::liburing = new LibUring();
+
+		MS_DEBUG_TAG(info, "liburing supported, enabled");
+	}
+	else
+	{
+		MS_DEBUG_TAG(info, "liburing not supported, not enabled");
+	}
+}
+
+void DepLibUring::ClassDestroy()
+{
+	MS_TRACE();
+
+	delete DepLibUring::liburing;
+}
+
+void DepLibUring::CheckRuntimeSupport()
 {
 	// clang-format off
 	struct utsname buffer{};
@@ -134,33 +163,12 @@ bool DepLibUring::IsRuntimeSupported()
 
 	// liburing `sento` capabilities are supported for kernel versions greather
 	// than or equal to 6.
-	return kernelMayorLong >= 6;
+	DepLibUring::runtimeSupported = kernelMayorLong >= 6;
 }
 
-void DepLibUring::ClassInit()
+bool DepLibUring::IsRuntimeSupported()
 {
-	const auto mayor = io_uring_major_version();
-	const auto minor = io_uring_minor_version();
-
-	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
-
-	if (DepLibUring::IsRuntimeSupported())
-	{
-		DepLibUring::liburing = new LibUring();
-
-		MS_DEBUG_TAG(info, "liburing supported, enabled");
-	}
-	else
-	{
-		MS_DEBUG_TAG(info, "liburing not supported, not enabled");
-	}
-}
-
-void DepLibUring::ClassDestroy()
-{
-	MS_TRACE();
-
-	delete DepLibUring::liburing;
+	return DepLibUring::runtimeSupported;
 }
 
 flatbuffers::Offset<FBS::LibUring::Dump> DepLibUring::FillBuffer(flatbuffers::FlatBufferBuilder& builder)
@@ -580,7 +588,7 @@ void DepLibUring::LibUring::Submit()
 	MS_TRACE();
 
 	// Unset active flag.
-	this->active = false;
+	SetInactive();
 
 	auto err = io_uring_submit(std::addressof(this->ring));
 

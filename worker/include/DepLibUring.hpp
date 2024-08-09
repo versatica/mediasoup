@@ -33,9 +33,10 @@ public:
 
 	using SendBuffer = uint8_t[SendBufferSize];
 
-	static bool IsRuntimeSupported();
 	static void ClassInit();
 	static void ClassDestroy();
+	static void CheckRuntimeSupport();
+	static bool IsRuntimeSupported();
 	static flatbuffers::Offset<FBS::LibUring::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder);
 	static void StartPollingCQEs();
 	static void StopPollingCQEs();
@@ -51,8 +52,10 @@ public:
 	class LibUring;
 
 	thread_local static LibUring* liburing;
+	static bool runtimeSupported{ false };
 
-public:
+private:
+	// Private singleton.
 	class LibUring
 	{
 	public:
@@ -98,6 +101,10 @@ public:
 		}
 
 	private:
+		void SetInactive()
+		{
+			this->active = false;
+		}
 		UserData* GetUserData();
 		bool IsDataInSendBuffers(const uint8_t* data) const
 		{
