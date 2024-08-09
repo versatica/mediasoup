@@ -23,7 +23,7 @@ beforeEach(async () => {
 	// Set node-sctp default PMTU to 1200.
 	sctp.defaults({ PMTU: 1200 });
 
-	ctx.worker = await mediasoup.createWorker();
+	ctx.worker = await mediasoup.createWorker({ disableLiburing: true });
 	ctx.router = await ctx.worker.createRouter();
 	ctx.plainTransport = await ctx.router.createPlainTransport({
 		// https://github.com/nodejs/node/issues/14900.
