@@ -19,6 +19,8 @@ jobs:
             cc: gcc
             cxx: g++
           # Worker prebuild for Linux with kernel version 6 Ubuntu (22.04).
+          # Let's not use Ubutu 24.04 to avoid same potential problem as described
+          # above.
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
