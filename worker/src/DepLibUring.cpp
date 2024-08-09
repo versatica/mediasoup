@@ -175,7 +175,7 @@ flatbuffers::Offset<FBS::LibUring::Dump> DepLibUring::FillBuffer(flatbuffers::Fl
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	return DepLibUring::liburing->FillBuffer(builder);
 }
@@ -184,7 +184,7 @@ void DepLibUring::StartPollingCQEs()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	DepLibUring::liburing->StartPollingCQEs();
 }
@@ -193,7 +193,7 @@ void DepLibUring::StopPollingCQEs()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	DepLibUring::liburing->StopPollingCQEs();
 }
@@ -202,7 +202,7 @@ uint8_t* DepLibUring::GetSendBuffer()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	return DepLibUring::liburing->GetSendBuffer();
 }
@@ -212,7 +212,7 @@ bool DepLibUring::PrepareSend(
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	return DepLibUring::liburing->PrepareSend(sockfd, data, len, addr, cb);
 }
@@ -222,7 +222,7 @@ bool DepLibUring::PrepareWrite(
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	return DepLibUring::liburing->PrepareWrite(sockfd, data1, len1, data2, len2, cb);
 }
@@ -231,7 +231,7 @@ void DepLibUring::Submit()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	DepLibUring::liburing->Submit();
 }
@@ -240,7 +240,7 @@ void DepLibUring::SetActive()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	DepLibUring::liburing->SetActive();
 }
@@ -249,7 +249,7 @@ bool DepLibUring::IsActive()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not enabled");
 
 	return DepLibUring::liburing->IsActive();
 }
