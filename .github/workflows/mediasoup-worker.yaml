@@ -31,6 +31,12 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
+          - os: ubuntu-24.04
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-24.04
+            cc: clang
+            cxx: clang++
           - os: macos-12
             cc: gcc
             cxx: g++

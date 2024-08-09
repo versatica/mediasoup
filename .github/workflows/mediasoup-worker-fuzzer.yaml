@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             cc: clang
             cxx: clang++
         build-type:

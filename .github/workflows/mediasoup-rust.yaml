@@ -18,6 +18,7 @@ jobs:
         ci:
           - os: ubuntu-20.04
           - os: ubuntu-22.04
+          - os: ubuntu-24.04
           - os: macos-12
           - os: macos-14
           - os: windows-2022
