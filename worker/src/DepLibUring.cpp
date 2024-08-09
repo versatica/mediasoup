@@ -124,15 +124,15 @@ void DepLibUring::ClassInit()
 	// This must be called first.
 	DepLibUring::CheckRuntimeSupport();
 
-	if (DepLibUring::IsRuntimeSupported())
+	if (DepLibUring::IsEnabled())
 	{
 		DepLibUring::liburing = new LibUring();
 
-		MS_DEBUG_TAG(info, "liburing supported, enabled");
+		MS_DEBUG_TAG(info, "liburing enabled");
 	}
 	else
 	{
-		MS_DEBUG_TAG(info, "liburing not supported, not enabled");
+		MS_DEBUG_TAG(info, "liburing not enabled");
 	}
 }
 
@@ -163,22 +163,19 @@ void DepLibUring::CheckRuntimeSupport()
 
 	// liburing `sento` capabilities are supported for kernel versions greather
 	// than or equal to 6.
-	DepLibUring::runtimeSupported = kernelMayorLong >= 6;
+	DepLibUring::enabled = kernelMayorLong >= 6;
 }
 
-bool DepLibUring::IsRuntimeSupported()
+bool DepLibUring::IsEnabled()
 {
-	return DepLibUring::runtimeSupported;
+	return DepLibUring::enabled;
 }
 
 flatbuffers::Offset<FBS::LibUring::Dump> DepLibUring::FillBuffer(flatbuffers::FlatBufferBuilder& builder)
 {
 	MS_TRACE();
 
-	if (!DepLibUring::liburing)
-	{
-		return 0;
-	}
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	return DepLibUring::liburing->FillBuffer(builder);
 }
@@ -187,10 +184,7 @@ void DepLibUring::StartPollingCQEs()
 {
 	MS_TRACE();
 
-	if (!DepLibUring::liburing)
-	{
-		return;
-	}
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	DepLibUring::liburing->StartPollingCQEs();
 }
@@ -199,10 +193,7 @@ void DepLibUring::StopPollingCQEs()
 {
 	MS_TRACE();
 
-	if (!DepLibUring::liburing)
-	{
-		return;
-	}
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	DepLibUring::liburing->StopPollingCQEs();
 }
@@ -211,7 +202,7 @@ uint8_t* DepLibUring::GetSendBuffer()
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::liburing, "DepLibUring::liburing is not set");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	return DepLibUring::liburing->GetSendBuffer();
 }
@@ -221,7 +212,7 @@ bool DepLibUring::PrepareSend(
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::liburing, "DepLibUring::liburing is not set");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	return DepLibUring::liburing->PrepareSend(sockfd, data, len, addr, cb);
 }
@@ -231,7 +222,7 @@ bool DepLibUring::PrepareWrite(
 {
 	MS_TRACE();
 
-	MS_ASSERT(DepLibUring::liburing, "DepLibUring::liburing is not set");
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	return DepLibUring::liburing->PrepareWrite(sockfd, data1, len1, data2, len2, cb);
 }
@@ -240,10 +231,7 @@ void DepLibUring::Submit()
 {
 	MS_TRACE();
 
-	if (!DepLibUring::liburing)
-	{
-		return;
-	}
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	DepLibUring::liburing->Submit();
 }
@@ -252,10 +240,7 @@ void DepLibUring::SetActive()
 {
 	MS_TRACE();
 
-	if (!DepLibUring::liburing)
-	{
-		return;
-	}
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	DepLibUring::liburing->SetActive();
 }
@@ -264,10 +249,7 @@ bool DepLibUring::IsActive()
 {
 	MS_TRACE();
 
-	if (!DepLibUring::liburing)
-	{
-		return false;
-	}
+	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
 	return DepLibUring::liburing->IsActive();
 }

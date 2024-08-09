@@ -36,7 +36,7 @@ public:
 	static void ClassInit();
 	static void ClassDestroy();
 	static void CheckRuntimeSupport();
-	static bool IsRuntimeSupported();
+	static bool IsEnabled();
 	static flatbuffers::Offset<FBS::LibUring::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder);
 	static void StartPollingCQEs();
 	static void StopPollingCQEs();
@@ -52,7 +52,8 @@ public:
 	class LibUring;
 
 	thread_local static LibUring* liburing;
-	static bool runtimeSupported{ false };
+	// Whether liburing is enabled or not after runtime checks.
+	static bool enabled{ false };
 
 private:
 	// Private singleton.
