@@ -4,6 +4,7 @@
 #include "DepLibUring.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Settings.hpp"
 #include "Utils.hpp"
 #include <sys/eventfd.h>
 #include <sys/resource.h>
@@ -11,9 +12,9 @@
 
 /* Static variables. */
 bool DepLibUring::enabled{ false };
-/* liburing instance per thread. */
+// liburing instance per thread.
 thread_local DepLibUring::LibUring* DepLibUring::liburing{ nullptr };
-/* Completion queue entry array used to retrieve processes tasks. */
+// Completion queue entry array used to retrieve processes tasks.
 thread_local struct io_uring_cqe* cqes[DepLibUring::QueueDepth];
 
 /* Static methods for UV callbacks. */
@@ -120,6 +121,13 @@ void DepLibUring::ClassInit()
 	const auto minor = io_uring_minor_version();
 
 	MS_DEBUG_TAG(info, "liburing version: \"%i.%i\"", mayor, minor);
+
+	if (Settings::configuration.liburingDisabled)
+	{
+		MS_DEBUG_TAG(info, "liburing disabled by user settings");
+
+		return;
+	}
 
 	// This must be called first.
 	DepLibUring::CheckRuntimeSupport();

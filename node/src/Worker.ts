@@ -84,6 +84,11 @@ export type WorkerSettings<WorkerAppData extends AppData = AppData> = {
 	libwebrtcFieldTrials?: string;
 
 	/**
+	 * Disable liburing (io_uring) despite it's supported in current host.
+	 */
+	disableLiburing?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: WorkerAppData;
@@ -287,6 +292,7 @@ export class Worker<
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
 		libwebrtcFieldTrials,
+		disableLiburing,
 		appData,
 	}: WorkerSettings<WorkerAppData>) {
 		super();
@@ -336,6 +342,10 @@ export class Worker<
 
 		if (typeof libwebrtcFieldTrials === 'string' && libwebrtcFieldTrials) {
 			spawnArgs.push(`--libwebrtcFieldTrials=${libwebrtcFieldTrials}`);
+		}
+
+		if (disableLiburing) {
+			spawnArgs.push(`--disableLiburing`);
 		}
 
 		logger.debug(
