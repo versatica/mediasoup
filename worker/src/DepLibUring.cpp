@@ -186,7 +186,6 @@ void DepLibUring::StartPollingCQEs()
 
 	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
 
-
 	DepLibUring::liburing->StartPollingCQEs();
 }
 

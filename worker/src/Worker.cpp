@@ -156,7 +156,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	  channelMessageHandlers
 #ifdef MS_LIBURING_SUPPORTED
 	  ,
-	  DepLibUring::FillBuffer(builder)
+	  DepLibUring::IsEnabled() ? DepLibUring::FillBuffer(builder) : nullptr
 #endif
 	);
 }
