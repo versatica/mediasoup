@@ -44,8 +44,11 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	DepUsrSCTP::CreateChecker();
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Start polling CQEs, which will create a uv_pool_t handle.
-	DepLibUring::StartPollingCQEs();
+	if (DepLibUring::IsEnabled())
+	{
+		// Start polling CQEs, which will create a uv_pool_t handle.
+		DepLibUring::StartPollingCQEs();
+	}
 #endif
 
 	// Tell the Node process that we are running.
@@ -106,8 +109,11 @@ void Worker::Close()
 	DepUsrSCTP::CloseChecker();
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Stop polling CQEs, which will close the uv_pool_t handle.
-	DepLibUring::StopPollingCQEs();
+	if (DepLibUring::IsEnabled())
+	{
+		// Stop polling CQEs, which will close the uv_pool_t handle.
+		DepLibUring::StopPollingCQEs();
+	}
 #endif
 
 	// Close the Channel.
@@ -142,17 +148,26 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	// Add channelMessageHandlers.
 	auto channelMessageHandlers = this->shared->channelMessageRegistrator->FillBuffer(builder);
 
-	return FBS::Worker::CreateDumpResponseDirect(
-	  builder,
-	  Logger::Pid,
-	  &webRtcServerIds,
-	  &routerIds,
-	  channelMessageHandlers
 #ifdef MS_LIBURING_SUPPORTED
-	  ,
-	  DepLibUring::FillBuffer(builder)
+	if (DepLibUring::IsEnabled())
+	{
+		return FBS::Worker::CreateDumpResponseDirect(
+		  builder,
+		  Logger::Pid,
+		  &webRtcServerIds,
+		  &routerIds,
+		  channelMessageHandlers,
+		  DepLibUring::FillBuffer(builder));
+	}
+	else
+	{
+		return FBS::Worker::CreateDumpResponseDirect(
+		  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
+	}
+#else
+	return FBS::Worker::CreateDumpResponseDirect(
+	  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 #endif
-	);
 }
 
 flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResourceUsage(

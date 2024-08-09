@@ -13,9 +13,10 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             cc: clang
             cxx: clang++
+            pip-break-system-packages: true
         build-type:
           - Release
           - Debug
@@ -34,12 +35,12 @@ jobs:
         uses: actions/checkout@v4
 
       # We need to install pip invoke manually.
-      - if: runner.os != 'macOS'
+      - if: ${{ !matrix.build.pip-break-system-packages }}
         name: pip3 install invoke
         run: pip3 install invoke
 
-      # In macOS we need to specify this option.
-      - if: runner.os == 'macOS'
+      # In modern OSs we need to run pip with this option.
+      - if: ${{ matrix.build.pip-break-system-packages }}
         name: pip3 install --break-system-packages invoke
         run: pip3 install --break-system-packages invoke
 
