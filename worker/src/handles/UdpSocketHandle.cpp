@@ -88,11 +88,14 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
-	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-	if (err != 0)
+	if (DepLibUring::IsEnabled())
 	{
-		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+		if (err != 0)
+		{
+			MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		}
 	}
 #endif
 }
@@ -144,6 +147,7 @@ void UdpSocketHandle::Send(
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
+	if (DepLibUring::IsEnabled())
 	{
 		if (!DepLibUring::IsActive())
 		{

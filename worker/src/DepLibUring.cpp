@@ -10,7 +10,7 @@
 #include <sys/utsname.h>
 
 /* Static variables. */
-
+bool DepLibUring::enabled{ false };
 /* liburing instance per thread. */
 thread_local DepLibUring::LibUring* DepLibUring::liburing{ nullptr };
 /* Completion queue entry array used to retrieve processes tasks. */
@@ -185,6 +185,7 @@ void DepLibUring::StartPollingCQEs()
 	MS_TRACE();
 
 	MS_ASSERT(DepLibUring::enabled, "DepLibUring::liburing not supported");
+
 
 	DepLibUring::liburing->StartPollingCQEs();
 }

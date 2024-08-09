@@ -51,9 +51,9 @@ public:
 
 	class LibUring;
 
-	thread_local static LibUring* liburing;
 	// Whether liburing is enabled or not after runtime checks.
-	static bool enabled{ false };
+	static bool enabled;
+	thread_local static LibUring* liburing;
 
 private:
 	// Private singleton.

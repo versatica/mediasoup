@@ -265,8 +265,11 @@ void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
 	usrsctp_handle_timers(elapsedMs);
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Submit all prepared submission entries.
-	DepLibUring::Submit();
+	if (DepLibUring::IsEnabled())
+	{
+		// Submit all prepared submission entries.
+		DepLibUring::Submit();
+	}
 #endif
 
 	this->lastCalledAtMs = nowMs;

@@ -44,8 +44,11 @@ Worker::Worker(::Channel::ChannelSocket* channel) : channel(channel)
 	DepUsrSCTP::CreateChecker();
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Start polling CQEs, which will create a uv_pool_t handle.
-	DepLibUring::StartPollingCQEs();
+	if (DepLibUring::IsEnabled())
+	{
+		// Start polling CQEs, which will create a uv_pool_t handle.
+		DepLibUring::StartPollingCQEs();
+	}
 #endif
 
 	// Tell the Node process that we are running.
@@ -106,8 +109,11 @@ void Worker::Close()
 	DepUsrSCTP::CloseChecker();
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Stop polling CQEs, which will close the uv_pool_t handle.
-	DepLibUring::StopPollingCQEs();
+	if (DepLibUring::IsEnabled())
+	{
+		// Stop polling CQEs, which will close the uv_pool_t handle.
+		DepLibUring::StopPollingCQEs();
+	}
 #endif
 
 	// Close the Channel.
