@@ -162,11 +162,11 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 	else
 	{
 		return FBS::Worker::CreateDumpResponseDirect(
-		  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers, );
+		  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 	}
 #else
 	return FBS::Worker::CreateDumpResponseDirect(
-	  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers, );
+	  builder, Logger::Pid, &webRtcServerIds, &routerIds, channelMessageHandlers);
 #endif
 }
 
