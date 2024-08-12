@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `Worker`: Fix `disableLiburing` option in `WorkerSettings` ([PR #1444](https://github.com/versatica/mediasoup/pull/1444)).
+
 ### 3.14.10
 
 - CI: Support Node 22 ([PR #1434](https://github.com/versatica/mediasoup/pull/1434)).
