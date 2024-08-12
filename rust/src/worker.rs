@@ -414,7 +414,7 @@ impl Inner {
         }
 
         if !enable_liburing {
-            spawn_args.push("--disableLiburing".to_string());
+            spawn_args.push("--disableLiburing=true".to_string());
         }
 
         let id = WorkerId::new();

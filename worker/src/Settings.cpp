@@ -79,7 +79,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	{
 		if (!optarg)
 		{
-			MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+			MS_THROW_TYPE_ERROR("missing value in command line argument in option '%c'", c);
 		}
 
 		switch (c)
