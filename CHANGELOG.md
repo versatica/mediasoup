@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.14.10
+
 - CI: Support Node 22 ([PR #1434](https://github.com/versatica/mediasoup/pull/1434)).
 - Update ESLint to version 9 ([PR #1435](https://github.com/versatica/mediasoup/pull/1435)).
 - `Worker`: Add `disableLiburing` boolean option (`false` by default) to disable `io_uring` even if it's supported by the prebuilt `mediasoup-worker` and by current host ([PR #1442](https://github.com/versatica/mediasoup/pull/1442)).
