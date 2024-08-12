@@ -63,7 +63,6 @@ test('createWorker() succeeds', async () => {
 		dtlsCertificateFile: path.join(__dirname, 'data', 'dtls-cert.pem'),
 		dtlsPrivateKeyFile: path.join(__dirname, 'data', 'dtls-key.pem'),
 		libwebrtcFieldTrials: 'WebRTC-Bwe-AlrLimitedBackoff/Disabled/',
-		disableLiburing: true,
 		appData: { foo: 456 },
 	});
 
