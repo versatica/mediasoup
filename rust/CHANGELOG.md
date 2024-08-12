@@ -3,6 +3,7 @@
 # NEXT
 
 - Update Rust toolchain channel to version 1.79.0 (PR #1409).
+- Updates from mediasoup TypeScript `3.14.7..=3.14.10`.
 
 # 0.17.0
 
