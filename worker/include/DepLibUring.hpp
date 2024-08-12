@@ -35,7 +35,7 @@ public:
 
 	static void ClassInit();
 	static void ClassDestroy();
-	static void CheckRuntimeSupport();
+	static bool CheckRuntimeSupport();
 	static bool IsEnabled();
 	static flatbuffers::Offset<FBS::LibUring::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder);
 	static void StartPollingCQEs();
