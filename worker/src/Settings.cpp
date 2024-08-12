@@ -60,7 +60,8 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "dtlsCertificateFile",  optional_argument, nullptr, 'c' },
 		{ "dtlsPrivateKeyFile",   optional_argument, nullptr, 'p' },
 		{ "libwebrtcFieldTrials", optional_argument, nullptr, 'W' },
-		{ nullptr, 0, nullptr, 0 }
+		{ "disableLiburing",      optional_argument, nullptr, 'd' },
+		{ nullptr,                0,                 nullptr,  0  }
 	};
 	// clang-format on
 	std::string stringValue;
@@ -73,11 +74,12 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.
+
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
 		if (!optarg)
 		{
-			MS_THROW_TYPE_ERROR("unknown configuration parameter: %s", optarg);
+			MS_THROW_TYPE_ERROR("missing value in command line argument in option '%c'", c);
 		}
 
 		switch (c)
@@ -153,6 +155,18 @@ void Settings::SetConfiguration(int argc, char* argv[])
 					  "overriding default value of libwebrtcFieldTrials may generate crashes in mediasoup-worker");
 
 					Settings::configuration.libwebrtcFieldTrials = stringValue;
+				}
+
+				break;
+			}
+
+			case 'd':
+			{
+				stringValue = std::string(optarg);
+
+				if (stringValue == "true")
+				{
+					Settings::configuration.liburingDisabled = true;
 				}
 
 				break;
