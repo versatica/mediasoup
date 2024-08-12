@@ -60,7 +60,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "dtlsCertificateFile",  optional_argument, nullptr, 'c' },
 		{ "dtlsPrivateKeyFile",   optional_argument, nullptr, 'p' },
 		{ "libwebrtcFieldTrials", optional_argument, nullptr, 'W' },
-		{ "disableLiburing",      no_argument,       nullptr, 'd' },
+		{ "disableLiburing",      optional_argument, nullptr, 'd' },
 		{ nullptr,                0,                 nullptr,  0  }
 	};
 	// clang-format on
@@ -77,15 +77,15 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
+		if (!optarg)
+		{
+			MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+		}
+
 		switch (c)
 		{
 			case 'l':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				stringValue = std::string(optarg);
 				SetLogLevel(stringValue);
 
@@ -94,11 +94,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 't':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				stringValue = std::string(optarg);
 				logTags.push_back(stringValue);
 
@@ -107,11 +102,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'm':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				try
 				{
 					Settings::configuration.rtcMinPort = static_cast<uint16_t>(std::stoi(optarg));
@@ -126,11 +116,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'M':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				try
 				{
 					Settings::configuration.rtcMaxPort = static_cast<uint16_t>(std::stoi(optarg));
@@ -145,11 +130,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'c':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				stringValue                                 = std::string(optarg);
 				Settings::configuration.dtlsCertificateFile = stringValue;
 
@@ -158,11 +138,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'p':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				stringValue                                = std::string(optarg);
 				Settings::configuration.dtlsPrivateKeyFile = stringValue;
 
@@ -171,11 +146,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'W':
 			{
-				if (!optarg)
-				{
-					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
-				}
-
 				stringValue = std::string(optarg);
 
 				if (stringValue != Settings::configuration.libwebrtcFieldTrials)
@@ -192,7 +162,12 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'd':
 			{
-				Settings::configuration.liburingDisabled = true;
+				stringValue = std::string(optarg);
+
+				if (stringValue == "true")
+				{
+					Settings::configuration.liburingDisabled = true;
+				}
 
 				break;
 			}

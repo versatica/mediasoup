@@ -345,7 +345,7 @@ export class Worker<
 		}
 
 		if (disableLiburing) {
-			spawnArgs.push(`--disableLiburing`);
+			spawnArgs.push(`--disableLiburing=true`);
 		}
 
 		logger.debug(
