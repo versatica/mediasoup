@@ -192,11 +192,8 @@ pub struct WorkerSettings {
     /// "WebRTC-Bwe-AlrLimitedBackoff/Enabled/".
     #[doc(hidden)]
     pub libwebrtc_field_trials: Option<String>,
-    /// Enable liburing  This option is ignored if io_uring is not supported by
-    /// current host.
-    ///
-    /// Default `true`.
-    pub enable_liburing: bool,
+    /// Disable liburing (io_uring) despite it's supported in current host.
+    pub disable_liburing: Option<bool>,
     /// Function that will be called under worker thread before worker starts, can be used for
     /// pinning worker threads to CPU cores.
     pub thread_initializer: Option<Arc<dyn Fn() + Send + Sync>>,
@@ -226,7 +223,7 @@ impl Default for WorkerSettings {
             rtc_port_range: 10000..=59999,
             dtls_files: None,
             libwebrtc_field_trials: None,
-            enable_liburing: true,
+            disable_liburing: None,
             thread_initializer: None,
             app_data: AppData::default(),
         }
@@ -241,7 +238,7 @@ impl fmt::Debug for WorkerSettings {
             rtc_port_range,
             dtls_files,
             libwebrtc_field_trials,
-            enable_liburing,
+            disable_liburing,
             thread_initializer,
             app_data,
         } = self;
@@ -252,7 +249,7 @@ impl fmt::Debug for WorkerSettings {
             .field("rtc_port_range", &rtc_port_range)
             .field("dtls_files", &dtls_files)
             .field("libwebrtc_field_trials", &libwebrtc_field_trials)
-            .field("enable_liburing", &enable_liburing)
+            .field("disable_liburing", &disable_liburing)
             .field(
                 "thread_initializer",
                 &thread_initializer.as_ref().map(|_| "ThreadInitializer"),
@@ -364,7 +361,7 @@ impl Inner {
             rtc_port_range,
             dtls_files,
             libwebrtc_field_trials,
-            enable_liburing,
+            disable_liburing,
             thread_initializer,
             app_data,
         }: WorkerSettings,
@@ -413,8 +410,8 @@ impl Inner {
             ));
         }
 
-        if enable_liburing {
-            spawn_args.push("--disable_liburing".to_string());
+        if let Some(disable_liburing) = disable_liburing {
+            spawn_args.push(format!("--disable_liburing"));
         }
 
         let id = WorkerId::new();
