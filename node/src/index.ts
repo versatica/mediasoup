@@ -56,6 +56,7 @@ export async function createWorker<
 	dtlsCertificateFile,
 	dtlsPrivateKeyFile,
 	libwebrtcFieldTrials,
+	disableLiburing,
 	appData,
 }: WorkerSettings<WorkerAppData> = {}): Promise<Worker<WorkerAppData>> {
 	logger.debug('createWorker()');
@@ -72,6 +73,7 @@ export async function createWorker<
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
 		libwebrtcFieldTrials,
+		disableLiburing,
 		appData,
 	});
 
