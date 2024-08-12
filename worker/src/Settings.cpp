@@ -60,8 +60,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{ "dtlsCertificateFile",  optional_argument, nullptr, 'c' },
 		{ "dtlsPrivateKeyFile",   optional_argument, nullptr, 'p' },
 		{ "libwebrtcFieldTrials", optional_argument, nullptr, 'W' },
-		{ "disableLiburing",      no_argument,       nullptr, 'd' },
-		{ nullptr,                0,                 nullptr,  0  }
+		{ nullptr, 0, nullptr, 0 }
 	};
 	// clang-format on
 	std::string stringValue;
@@ -74,9 +73,13 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.
-
 	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
 	{
+		if (!optarg)
+		{
+			MS_THROW_TYPE_ERROR("unknown configuration parameter: %s", optarg);
+		}
+
 		switch (c)
 		{
 			case 'l':
@@ -151,13 +154,6 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 					Settings::configuration.libwebrtcFieldTrials = stringValue;
 				}
-
-				break;
-			}
-
-			case 'd':
-			{
-				Settings::configuration.liburingDisabled = true;
 
 				break;
 			}
