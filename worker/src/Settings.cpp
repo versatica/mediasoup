@@ -81,6 +81,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 		{
 			case 'l':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				stringValue = std::string(optarg);
 				SetLogLevel(stringValue);
 
@@ -89,6 +94,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 't':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				stringValue = std::string(optarg);
 				logTags.push_back(stringValue);
 
@@ -97,6 +107,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'm':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				try
 				{
 					Settings::configuration.rtcMinPort = static_cast<uint16_t>(std::stoi(optarg));
@@ -111,6 +126,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'M':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				try
 				{
 					Settings::configuration.rtcMaxPort = static_cast<uint16_t>(std::stoi(optarg));
@@ -125,6 +145,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'c':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				stringValue                                 = std::string(optarg);
 				Settings::configuration.dtlsCertificateFile = stringValue;
 
@@ -133,6 +158,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'p':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				stringValue                                = std::string(optarg);
 				Settings::configuration.dtlsPrivateKeyFile = stringValue;
 
@@ -141,6 +171,11 @@ void Settings::SetConfiguration(int argc, char* argv[])
 
 			case 'W':
 			{
+				if (!optarg)
+				{
+					MS_THROW_TYPE_ERROR("missing value in command line argument: %s", optarg);
+				}
+
 				stringValue = std::string(optarg);
 
 				if (stringValue != Settings::configuration.libwebrtcFieldTrials)
