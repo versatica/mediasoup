@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `Worker`: Fix `io_uring` support detection ([PR #1445](https://github.com/versatica/mediasoup/pull/1445)).
+
 ### 3.14.11
 
 - `Worker`: Fix `disableLiburing` option in `WorkerSettings` ([PR #1444](https://github.com/versatica/mediasoup/pull/1444)).
