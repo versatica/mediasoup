@@ -682,7 +682,7 @@ namespace RTC
 			this->mapSsrcRtpStream[encoding.ssrc]            = rtpStream;
 			this->mapRtpStreamSyncRequired[rtpStream]        = false;
 
-			// Let's chosee an initial output seq number between 1000 and 32768 to avoid
+			// Let's choose an initial output seq number between 1000 and 32768 to avoid
 			// libsrtp bug:
 			// https://github.com/versatica/mediasoup/issues/1437
 			const uint16_t initialOutputSeq =
