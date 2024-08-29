@@ -2,7 +2,12 @@
 
 # NEXT
 
+# 0.17.1
+
 - Update Rust toolchain channel to version 1.79.0 (PR #1409).
+- Updates from mediasoup TypeScript `3.14.7..=3.14.10`.
+- General mediasoup changes:
+  - Worker: Add `enable_liburing` boolean option (`true` by default) to disable `io_uring` even if it's supported by the prebuilt `mediasoup-worker` and by current host (PR #1442).
 
 # 0.17.0
 

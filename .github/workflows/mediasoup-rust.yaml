@@ -18,6 +18,7 @@ jobs:
         ci:
           - os: ubuntu-20.04
           - os: ubuntu-22.04
+          - os: ubuntu-24.04
           - os: macos-12
           - os: macos-14
           - os: windows-2022
@@ -46,7 +47,7 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
       # NOTE: In Windows this will build and test libmediasoupworker in release
-      # mode twice since build.rs doesn't allow debug mode for Windows.
+      # mode twice since build.rs doesn't allow debug mode on Windows.
       - name: cargo test
         run: |
           cargo test --verbose
