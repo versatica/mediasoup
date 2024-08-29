@@ -25,9 +25,8 @@ export class EnhancedEventEmitter<
 			return super.emit(eventName, ...args);
 		} catch (error) {
 			enhancedEventEmitterLogger.error(
-				'safeEmit() | event listener threw an error [eventName:%s]:%o',
-				eventName,
-				error
+				`safeEmit() | event listener threw an error [eventName:${eventName}]:`,
+				error as Error
 			);
 
 			try {

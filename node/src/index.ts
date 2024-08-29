@@ -1,4 +1,4 @@
-import { Logger } from './Logger';
+import { Logger, LoggerEmitter } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import { workerBin, Worker, WorkerSettings } from './Worker';
 import * as utils from './utils';
@@ -42,6 +42,64 @@ export { observer };
 export { workerBin };
 
 const logger = new Logger();
+
+/**
+ * Event listeners for mediasoup generated logs.
+ */
+export type LogEventListeners = {
+	ondebug?: (namespace: string, log: string) => void;
+	onwarn?: (namespace: string, log: string) => void;
+	onerror?: (namespace: string, log: string, error?: Error) => void;
+};
+
+/**
+ * Set event listeners for mediasoup generated logs. If called with no arguments
+ * then no events will be emitted.
+ *
+ * @example
+ * ```ts
+ * mediasoup.setLogEventListeners({
+ *   ondebug: undefined,
+ *   onwarn: (namespace: string, log: string) => {
+ *     MyEnterpriseLogger.warn(`${namespace} ${log}`);
+ *   },
+ *   onerror: (namespace: string, log: string, error?: Error) => {
+ *     if (error) {
+ *       MyEnterpriseLogger.error(`${namespace} ${log}: ${error}`);
+ *     } else {
+ *       MyEnterpriseLogger.error(`${namespace} ${log}`);
+ *     }
+ *   }
+ * });
+ * ```
+ */
+export function setLogEventListeners(listeners?: LogEventListeners): void {
+	logger.debug('setLogEventListeners()');
+
+	let debugLogEmitter: LoggerEmitter | undefined;
+	let warnLogEmitter: LoggerEmitter | undefined;
+	let errorLogEmitter: LoggerEmitter | undefined;
+
+	if (listeners?.ondebug) {
+		debugLogEmitter = new EnhancedEventEmitter();
+
+		debugLogEmitter.on('debuglog', listeners.ondebug);
+	}
+
+	if (listeners?.onwarn) {
+		warnLogEmitter = new EnhancedEventEmitter();
+
+		warnLogEmitter.on('warnlog', listeners.onwarn);
+	}
+
+	if (listeners?.onerror) {
+		errorLogEmitter = new EnhancedEventEmitter();
+
+		errorLogEmitter.on('errorlog', listeners.onerror);
+	}
+
+	Logger.setEmitters(debugLogEmitter, warnLogEmitter, errorLogEmitter);
+}
 
 /**
  * Create a Worker.
