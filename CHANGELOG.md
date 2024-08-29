@@ -3,6 +3,7 @@
 ### NEXT
 
 - `Worker`: Fix `io_uring` support detection ([PR #1445](https://github.com/versatica/mediasoup/pull/1445)).
+- Mitigate libsrtp wraparound with loss decryption failure ([PR #1438](https://github.com/versatica/mediasoup/pull/1438)).
 
 ### 3.14.11
 

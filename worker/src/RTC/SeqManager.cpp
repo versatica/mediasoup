@@ -40,8 +40,16 @@ namespace RTC
 	}
 
 	template<typename T, uint8_t N>
+	SeqManager<T, N>::SeqManager(T initialOutput) : initialOutput(initialOutput)
+	{
+		MS_TRACE();
+	}
+
+	template<typename T, uint8_t N>
 	void SeqManager<T, N>::Sync(T input)
 	{
+		MS_TRACE();
+
 		// Update base.
 		this->base = (this->maxOutput - input) & MaxValue;
 
@@ -55,6 +63,8 @@ namespace RTC
 	template<typename T, uint8_t N>
 	void SeqManager<T, N>::Drop(T input)
 	{
+		MS_TRACE();
+
 		// Mark as dropped if 'input' is higher than anyone already processed.
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
@@ -71,6 +81,8 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::Input(T input, T& output)
 	{
+		MS_TRACE();
+
 		auto base = this->base;
 
 		// No dropped inputs to consider.
@@ -140,6 +152,8 @@ namespace RTC
 			}
 		}
 
+		output = (output + this->initialOutput) & MaxValue;
+
 		return true;
 	}
 
@@ -162,6 +176,8 @@ namespace RTC
 	template<typename T, uint8_t N>
 	void SeqManager<T, N>::ClearDropped()
 	{
+		MS_TRACE();
+
 		// Cleanup dropped values.
 		if (this->dropped.empty())
 		{
