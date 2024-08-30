@@ -667,7 +667,7 @@ export abstract class Transport<
 	 * Set maximum incoming bitrate for receiving media.
 	 */
 	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
-		logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
+		logger.debug(`setMaxIncomingBitrate() [bitrate:${bitrate}]`);
 
 		/* Build Request. */
 		const requestOffset =
@@ -688,7 +688,7 @@ export abstract class Transport<
 	 * Set maximum outgoing bitrate for sending media.
 	 */
 	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
-		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
+		logger.debug(`setMaxOutgoingBitrate() [bitrate:${bitrate}]`);
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
@@ -707,7 +707,7 @@ export abstract class Transport<
 	 * Set minimum outgoing bitrate for sending media.
 	 */
 	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
-		logger.debug('setMinOutgoingBitrate() [bitrate:%s]', bitrate);
+		logger.debug(`setMinOutgoingBitrate() [bitrate:${bitrate}]`);
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(

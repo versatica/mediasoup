@@ -1,11 +1,34 @@
 import debug from 'debug';
+import { EnhancedEventEmitter } from './enhancedEvents';
 
 const APP_NAME = 'mediasoup';
 
+export type LoggerEmitterEvents = {
+	debuglog: [string, string];
+	warnlog: [string, string];
+	errorlog: [string, string, Error?];
+};
+
+export type LoggerEmitter = EnhancedEventEmitter<LoggerEmitterEvents>;
+
 export class Logger {
+	private static debugLogEmitter?: LoggerEmitter;
+	private static warnLogEmitter?: LoggerEmitter;
+	private static errorLogEmitter?: LoggerEmitter;
+
 	readonly #debug: debug.Debugger;
 	readonly #warn: debug.Debugger;
 	readonly #error: debug.Debugger;
+
+	static setEmitters(
+		debugLogEmitter?: LoggerEmitter,
+		warnLogEmitter?: LoggerEmitter,
+		errorLogEmitter?: LoggerEmitter
+	): void {
+		Logger.debugLogEmitter = debugLogEmitter;
+		Logger.warnLogEmitter = warnLogEmitter;
+		Logger.errorLogEmitter = errorLogEmitter;
+	}
 
 	constructor(prefix?: string) {
 		if (prefix) {
@@ -25,15 +48,26 @@ export class Logger {
 		/* eslint-enable no-console */
 	}
 
-	get debug(): debug.Debugger {
-		return this.#debug;
+	debug(log: string): void {
+		this.#debug(log);
+
+		Logger.debugLogEmitter?.safeEmit('debuglog', this.#debug.namespace, log);
 	}
 
-	get warn(): debug.Debugger {
-		return this.#warn;
+	warn(log: string): void {
+		this.#warn(log);
+
+		Logger.warnLogEmitter?.safeEmit('warnlog', this.#warn.namespace, log);
 	}
 
-	get error(): debug.Debugger {
-		return this.#error;
+	error(log: string, error?: Error): void {
+		this.#error(log, error);
+
+		Logger.errorLogEmitter?.safeEmit(
+			'errorlog',
+			this.#error.namespace,
+			log,
+			error
+		);
 	}
 }

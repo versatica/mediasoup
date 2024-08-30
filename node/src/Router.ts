@@ -1212,7 +1212,7 @@ export class Router<
 					})
 					.catch(error => {
 						logger.error(
-							'pipeToRouter() | error creating PipeTransport pair:%o',
+							'pipeToRouter() | error creating PipeTransport pair:',
 							error
 						);
 
@@ -1281,8 +1281,8 @@ export class Router<
 				return { pipeConsumer, pipeProducer };
 			} catch (error) {
 				logger.error(
-					'pipeToRouter() | error creating pipe Consumer/Producer pair:%o',
-					error
+					'pipeToRouter() | error creating pipe Consumer/Producer pair:',
+					error as Error
 				);
 
 				if (pipeConsumer) {
@@ -1326,8 +1326,8 @@ export class Router<
 				return { pipeDataConsumer, pipeDataProducer };
 			} catch (error) {
 				logger.error(
-					'pipeToRouter() | error creating pipe DataConsumer/DataProducer pair:%o',
-					error
+					'pipeToRouter() | error creating pipe DataConsumer/DataProducer pair:',
+					error as Error
 				);
 
 				pipeDataConsumer?.close();
@@ -1526,10 +1526,7 @@ export class Router<
 		const producer = this.#producers.get(producerId);
 
 		if (!producer) {
-			logger.error(
-				'canConsume() | Producer with id "%s" not found',
-				producerId
-			);
+			logger.error(`canConsume() | Producer with id "${producerId}" not found`);
 
 			return false;
 		}
@@ -1543,7 +1540,7 @@ export class Router<
 				clonedRtpCapabilities
 			);
 		} catch (error) {
-			logger.error('canConsume() | unexpected error: %s', String(error));
+			logger.error(`canConsume() | unexpected error: ${error}`);
 
 			return false;
 		}

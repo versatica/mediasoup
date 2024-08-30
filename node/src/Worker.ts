@@ -348,11 +348,7 @@ export class Worker<
 			spawnArgs.push(`--disableLiburing=true`);
 		}
 
-		logger.debug(
-			'spawning worker process: %s %s',
-			spawnBin,
-			spawnArgs.join(' ')
-		);
+		logger.debug(`spawning worker process: ${spawnBin} ${spawnArgs.join(' ')}`);
 
 		this.#child = spawn(
 			// command
@@ -398,7 +394,7 @@ export class Worker<
 			if (!spawnDone && event === Event.WORKER_RUNNING) {
 				spawnDone = true;
 
-				logger.debug('worker process running [pid:%s]', this.#pid);
+				logger.debug(`worker process running [pid:${this.#pid}]`);
 
 				this.emit('@success');
 			}
@@ -415,18 +411,14 @@ export class Worker<
 
 				if (code === 42) {
 					logger.error(
-						'worker process failed due to wrong settings [pid:%s]',
-						this.#pid
+						`worker process failed due to wrong settings [pid:${this.#pid}]`
 					);
 
 					this.close();
 					this.emit('@failure', new TypeError('wrong settings'));
 				} else {
 					logger.error(
-						'worker process failed unexpectedly [pid:%s, code:%s, signal:%s]',
-						this.#pid,
-						code,
-						signal
+						`worker process failed unexpectedly [pid:${this.#pid}, code:${code}, signal:${signal}]`
 					);
 
 					this.close();
@@ -437,10 +429,7 @@ export class Worker<
 				}
 			} else {
 				logger.error(
-					'worker process died unexpectedly [pid:%s, code:%s, signal:%s]',
-					this.#pid,
-					code,
-					signal
+					`worker process died unexpectedly [pid:${this.#pid}, code:${code}, signal:${signal}]`
 				);
 
 				this.workerDied(
@@ -459,18 +448,14 @@ export class Worker<
 				spawnDone = true;
 
 				logger.error(
-					'worker process failed [pid:%s]: %s',
-					this.#pid,
-					error.message
+					`worker process failed [pid:${this.#pid}]: ${error.message}`
 				);
 
 				this.close();
 				this.emit('@failure', error);
 			} else {
 				logger.error(
-					'worker process error [pid:%s]: %s',
-					this.#pid,
-					error.message
+					`worker process error [pid:${this.#pid}]: ${error.message}`
 				);
 
 				this.workerDied(error);
@@ -479,10 +464,7 @@ export class Worker<
 
 		this.#child.on('close', (code, signal) => {
 			logger.debug(
-				'worker subprocess closed [pid:%s, code:%s, signal:%s]',
-				this.#pid,
-				code,
-				signal
+				`worker subprocess closed [pid:${this.#pid}, code:${code}, signal:${signal}]`
 			);
 
 			this.#subprocessClosed = true;

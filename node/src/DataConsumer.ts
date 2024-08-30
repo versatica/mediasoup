@@ -430,7 +430,7 @@ export class DataConsumer<
 	 * Set buffered amount low threshold.
 	 */
 	async setBufferedAmountLowThreshold(threshold: number): Promise<void> {
-		logger.debug('setBufferedAmountLowThreshold() [threshold:%s]', threshold);
+		logger.debug(`setBufferedAmountLowThreshold() [threshold:${threshold}]`);
 
 		/* Build Request. */
 		const requestOffset =
@@ -714,10 +714,7 @@ export class DataConsumer<
 					}
 
 					default: {
-						logger.error(
-							'ignoring unknown event "%s" in channel listener',
-							event
-						);
+						logger.error(`ignoring unknown event "${event}"`);
 					}
 				}
 			}
