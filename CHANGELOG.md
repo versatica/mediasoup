@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.14.12
+
 - `Worker`: Fix `io_uring` support detection ([PR #1445](https://github.com/versatica/mediasoup/pull/1445)).
 - Mitigate libsrtp wraparound with loss decryption failure ([PR #1438](https://github.com/versatica/mediasoup/pull/1438)).
 - Node: New `setLogEventListeners()` utility to get log events ([PR #1448](https://github.com/versatica/mediasoup/pull/1448)).
