@@ -2,6 +2,10 @@
 
 ### NEXT
 
+### 3.14.13
+
+- Node: Fix regression in exported `mediasoup.types` (classes are now exported as classes instead of types).
+
 ### 3.14.12
 
 - `Worker`: Fix `io_uring` support detection ([PR #1445](https://github.com/versatica/mediasoup/pull/1445)).
