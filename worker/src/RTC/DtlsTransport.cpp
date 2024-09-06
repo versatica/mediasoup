@@ -549,11 +549,6 @@ namespace RTC
 		// Don't use sessions cache.
 		SSL_CTX_set_session_cache_mode(DtlsTransport::sslCtx, SSL_SESS_CACHE_OFF);
 
-		// Read always as much into the buffer as possible.
-		// NOTE: This is the default for DTLS, but a bug in non latest OpenSSL
-		// versions makes this call required.
-		SSL_CTX_set_read_ahead(DtlsTransport::sslCtx, 1);
-
 		SSL_CTX_set_verify_depth(DtlsTransport::sslCtx, 4);
 
 		// Require certificate from peer.
