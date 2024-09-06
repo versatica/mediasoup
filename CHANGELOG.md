@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Sign self generated DTLS certificate with SHA256 ([PR #1450](https://github.com/versatica/mediasoup/pull/1450)).
+
 ### 3.14.13
 
 - Node: Fix regression in exported `mediasoup.types` (classes are now exported as classes instead of types).

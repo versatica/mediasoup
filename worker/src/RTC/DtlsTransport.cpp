@@ -415,7 +415,7 @@ namespace RTC
 		}
 
 		// Sign the certificate with its own private key.
-		ret = X509_sign(DtlsTransport::certificate, DtlsTransport::privateKey, EVP_sha1());
+		ret = X509_sign(DtlsTransport::certificate, DtlsTransport::privateKey, EVP_sha256());
 
 		if (ret == 0)
 		{
