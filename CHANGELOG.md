@@ -3,6 +3,7 @@
 ### NEXT
 
 - Sign self generated DTLS certificate with SHA256 ([PR #1450](https://github.com/versatica/mediasoup/pull/1450)).
+- Node: Fix `mediasoup.types` exported types are empty.
 
 ### 3.14.13
 

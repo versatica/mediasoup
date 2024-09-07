@@ -1,4 +1,4 @@
-export type * from './index';
+export type { Observer, ObserverEvents, LogEventListeners } from './index';
 export type * from './RtpParameters';
 export type * from './SctpParameters';
 export type * from './SrtpParameters';
