@@ -109,12 +109,12 @@
 		"tar": "^7.4.3"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.9.1",
+		"@eslint/js": "^9.10.0",
 		"@octokit/rest": "^21.0.2",
 		"@types/debug": "^4.1.12",
 		"@types/jest": "^29.5.12",
 		"@types/node": "^22.5.4",
-		"eslint": "^9.9.1",
+		"eslint": "^9.10.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-jest": "^28.8.3",
 		"eslint-plugin-prettier": "^5.2.1",
