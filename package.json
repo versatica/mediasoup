@@ -109,12 +109,12 @@
 		"tar": "^7.4.3"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.10.0",
+		"@eslint/js": "^9.11.1",
 		"@octokit/rest": "^21.0.2",
 		"@types/debug": "^4.1.12",
 		"@types/jest": "^29.5.13",
-		"@types/node": "^22.5.5",
-		"eslint": "^9.10.0",
+		"@types/node": "^22.6.1",
+		"eslint": "^9.11.1",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-jest": "^28.8.3",
 		"eslint-plugin-prettier": "^5.2.1",
@@ -127,6 +127,6 @@
 		"sctp": "^1.0.0",
 		"ts-jest": "^29.2.5",
 		"typescript": "^5.6.2",
-		"typescript-eslint": "^8.6.0"
+		"typescript-eslint": "^8.7.0"
 	}
 }
