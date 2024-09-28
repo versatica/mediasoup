@@ -231,8 +231,7 @@ struct Handlers {
 #[serde(tag = "event", rename_all = "lowercase", content = "data")]
 enum Notification {
     Trace(TransportTraceEventData),
-    // TODO.
-    // Rtcp,
+    Rtcp(Vec<u8>),
 }
 
 impl Notification {
@@ -252,17 +251,18 @@ impl Notification {
 
                 Ok(Notification::Trace(trace_notification))
             }
-            /*
-             * TODO.
             notification::Event::DirecttransportRtcp => {
-                let Ok(Some(notification::BodyRef::RtcpNotification(_body))) = notification.body()
+                let Ok(Some(notification::BodyRef::DirectTransportRtcpNotification(body))) =
+                    notification.body()
                 else {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                Ok(Notification::Rtcp)
+                let rtcp_notification_fbs =
+                    direct_transport::RtcpNotification::try_from(body).unwrap();
+
+                Ok(Notification::Rtcp(rtcp_notification_fbs.data))
             }
-            */
             _ => Err(NotificationParseError::InvalidEvent),
         }
     }
@@ -574,14 +574,12 @@ impl DirectTransport {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);
-                        } /*
-                           * TODO.
-                          Notification::Rtcp => {
-                              handlers.rtcp.call(|callback| {
-                                  callback(notification);
-                              });
-                          }
-                          */
+                        }
+                        Notification::Rtcp(data) => {
+                            handlers.rtcp.call(|callback| {
+                                callback(&data);
+                            });
+                        }
                     },
                     Err(error) => {
                         error!("Failed to parse notification: {}", error);
