@@ -593,8 +593,7 @@ enum Notification {
     ProducerClose,
     ProducerPause,
     ProducerResume,
-    // TODO.
-    // Rtp,
+    Rtp(Vec<u8>),
     Score(ConsumerScore),
     LayersChange(Option<ConsumerLayers>),
     Trace(ConsumerTraceEventData),
@@ -608,6 +607,17 @@ impl Notification {
             notification::Event::ConsumerProducerClose => Ok(Notification::ProducerClose),
             notification::Event::ConsumerProducerPause => Ok(Notification::ProducerPause),
             notification::Event::ConsumerProducerResume => Ok(Notification::ProducerResume),
+            notification::Event::ConsumerRtp => {
+                let Ok(Some(notification::BodyRef::ConsumerRtpNotification(body))) =
+                    notification.body()
+                else {
+                    panic!("Wrong message from worker: {notification:?}");
+                };
+
+                let rtp_notification_fbs = consumer::RtpNotification::try_from(body).unwrap();
+
+                Ok(Notification::Rtp(rtp_notification_fbs.data))
+            }
             notification::Event::ConsumerScore => {
                 let Ok(Some(notification::BodyRef::ConsumerScoreNotification(body))) =
                     notification.body()
@@ -841,14 +851,11 @@ impl Consumer {
                                 handlers.resume.call_simple();
                             }
                         }
-                        /*
-                         * TODO.
-                        Notification::Rtp => {
+                        Notification::Rtp(data) => {
                             handlers.rtp.call(|callback| {
-                                callback(notification);
+                                callback(&data);
                             });
                         }
-                        */
                         Notification::Score(consumer_score) => {
                             *score.lock() = consumer_score.clone();
                             handlers.score.call_simple(&consumer_score);
