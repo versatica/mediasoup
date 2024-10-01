@@ -1,6 +1,6 @@
 [wrap-file]
 directory = abseil-cpp-20240722.0
-source_url = https://github.com/abseil/abseil-cpp/archive/abseil-cpp-20240722.0.tar.gz
+source_url = https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz
 source_filename = abseil-cpp-20240722.0.tar.gz
 source_hash = f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3
 patch_filename = abseil-cpp_20240722.0-1_patch.zip
