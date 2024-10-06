@@ -12,43 +12,67 @@ jobs:
   ci:
     strategy:
       matrix:
-        ci:
+        build:
           - os: ubuntu-20.04
             node: 18
+            cc: gcc
+            cxx: g++
           - os: ubuntu-22.04
             node: 20
+            cc: gcc
+            cxx: g++
           - os: ubuntu-22.04
             node: 22
+            cc: gcc
+            cxx: g++
           - os: ubuntu-24.04
             node: 22
+            cc: gcc
+            cxx: g++
             meson_args: '-Db_sanitize=address'
           - os: ubuntu-24.04
             node: 22
+            cc: clang
+            cxx: clang++
             meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-24.04
             node: 22
+            cc: gcc
+            cxx: g++
             meson_args: '-Db_sanitize=thread'
           - os: macos-12
             node: 18
+            cc: clang
+            cxx: clang++
           - os: macos-14
             node: 20
+            cc: clang
+            cxx: clang++
           - os: macos-14
             node: 22
+            cc: clang
+            cxx: clang++
           - os: windows-2022
             node: 20
+            cc: cl
+            cxx: cl
           - os: windows-2022
+            cc: cl
+            cxx: cl
             node: 22
         build-type:
           - Release
           - Debug
 
-    runs-on: ${{ matrix.ci.os }}
+    runs-on: ${{ matrix.build.os }}
 
     env:
+      CC: ${{ matrix.build.cc }}
+      CXX: ${{ matrix.build.cxx }}
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
       MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
-      MESON_ARGS: ${{ matrix.ci.meson_args }}
+      MESON_ARGS: ${{ matrix.build.meson_args }}
 
     steps:
       - name: Checkout
@@ -57,21 +81,22 @@ jobs:
       - name: Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.ci.node }}
+          node-version: ${{ matrix.build.node }}
 
       - name: Configure cache
         uses: actions/cache@v3
         with:
           path: |
             ~/.npm
-          key: ${{ matrix.ci.os }}-node-${{ hashFiles('**/package.json') }}
+          key: ${{ matrix.build.os }}-node-${{ hashFiles('**/package.json') }}
           restore-keys: |
-            ${{ matrix.ci.os }}-node-
+            ${{ matrix.build.os }}-node-
 
       - name: npm ci
         run: npm ci --foreground-scripts
         env:
-          # Disable leak detection because it's detected by the tool flatc uses to build.
+          # Disable leak detection because it's detected by the tool flatc uses
+          # to build.
           ASAN_OPTIONS: 'detect_leaks=0'
 
       - name: npm run lint:node

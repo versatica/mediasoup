@@ -15,7 +15,7 @@ jobs:
   ci:
     strategy:
       matrix:
-        ci:
+        build:
           - os: ubuntu-20.04
           - os: ubuntu-22.04
           - os: ubuntu-24.04
@@ -23,7 +23,7 @@ jobs:
           - os: macos-14
           - os: windows-2022
 
-    runs-on: ${{ matrix.ci.os }}
+    runs-on: ${{ matrix.build.os }}
 
     env:
       KEEP_BUILD_ARTIFACTS: '1'
@@ -38,7 +38,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ matrix.ci.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ matrix.build.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt
         run: cargo fmt --all -- --check

@@ -21,35 +21,67 @@ jobs:
             # Workaround for this issue in Ubunt 20.04:
             # https://github.com/versatica/mediasoup/actions/runs/9992113733/job/27616379442?pr=1427
             workaround-ubuntu-20-04: true
+            run-test-asan-address: true
+            # Skip test-asan-undefined in Linux with GCC due to a bug in GCC
+            # that affects abseil-cpp:
+            # https://github.com/abseil/abseil-cpp/issues/1634
+            run-test-asan-undefined: false
+            run-test-asan-thread: true
           - os: ubuntu-20.04
             cc: clang
             cxx: clang++
             workaround-ubuntu-20-04: true
+            run-test-asan-address: true
+            run-test-asan-undefined: true
+            run-test-asan-thread: true
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
+            run-test-asan-address: true
+            run-test-asan-undefined: false
+            run-test-asan-thread: true
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
+            run-test-asan-address: true
+            run-test-asan-undefined: true
+            run-test-asan-thread: true
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
             pip-break-system-packages: true
+            run-test-asan-address: true
+            run-test-asan-undefined: false
+            run-test-asan-thread: true
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
+            run-test-asan-address: true
+            run-test-asan-undefined: true
+            run-test-asan-thread: true
           - os: macos-12
             cc: gcc
             cxx: g++
             pip-break-system-packages: true
+            # Address Sanitizer does not work on MacOS.
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
           - os: macos-14
             cc: clang
             cxx: clang++
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
             pip-break-system-packages: true
           - os: windows-2022
             cc: cl
             cxx: cl
+            # Address Sanitizer does not work on Windows.
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
         # A single Node.js version should be fine for C++.
         node:
           - 22
@@ -118,20 +150,17 @@ jobs:
         name: invoke -r worker test
         run: invoke -r worker test
 
-      # Address Sanitizer only works on Linux.
       # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: runner.os == 'Linux'
+      - if: ${{ matrix.build.run-test-asan-address }}
         name: invoke -r worker test-asan-address
         run: invoke -r worker clean-all && invoke -r worker test-asan-address
 
-      # Address Sanitizer only works on Linux.
       # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: runner.os == 'Linux'
+      - if: ${{ matrix.build.run-test-asan-undefined }}
         name: invoke -r worker test-asan-undefined
         run: invoke -r worker clean-all && invoke -r worker test-asan-undefined
 
-      # Address Sanitizer only works on Linux.
       # Let's clean everything before rebuilding worker tests with ASAN.
-      - if: runner.os == 'Linux'
+      - if: ${{ matrix.build.run-test-asan-thread }}
         name: invoke -r worker test-asan-thread
         run: invoke -r worker clean-all && invoke -r worker test-asan-thread
