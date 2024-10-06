@@ -2,6 +2,10 @@
 
 ### NEXT
 
+### 3.14.15
+
+- Update worker abseil-cpp dependency to 20240722.0 LTS (fixes compilation for FreeBSD systems) ([PR #1457](https://github.com/versatica/mediasoup/pull/1457), credits to @garrettboone).
+
 ### 3.14.14
 
 - Sign self generated DTLS certificate with SHA256 ([PR #1450](https://github.com/versatica/mediasoup/pull/1450)).
