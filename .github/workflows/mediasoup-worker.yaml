@@ -60,7 +60,7 @@ jobs:
             run-test-asan-address: true
             run-test-asan-undefined: true
             run-test-asan-thread: true
-          - os: macos-12
+          - os: macos-13
             cc: gcc
             cxx: g++
             pip-break-system-packages: true
@@ -69,6 +69,13 @@ jobs:
             run-test-asan-undefined: false
             run-test-asan-thread: false
           - os: macos-14
+            cc: clang
+            cxx: clang++
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
+            pip-break-system-packages: true
+          - os: macos-15
             cc: clang
             cxx: clang++
             run-test-asan-address: false
