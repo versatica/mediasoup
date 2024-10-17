@@ -40,7 +40,7 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=thread'
-          - os: macos-12
+          - os: macos-13
             node: 18
             cc: clang
             cxx: clang++
@@ -48,7 +48,7 @@ jobs:
             node: 20
             cc: clang
             cxx: clang++
-          - os: macos-14
+          - os: macos-15
             node: 22
             cc: clang
             cxx: clang++
@@ -57,9 +57,9 @@ jobs:
             cc: cl
             cxx: cl
           - os: windows-2022
+            node: 22
             cc: cl
             cxx: cl
-            node: 22
         build-type:
           - Release
           - Debug
