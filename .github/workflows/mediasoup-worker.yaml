@@ -71,17 +71,17 @@ jobs:
           - os: macos-14
             cc: clang
             cxx: clang++
+            pip-break-system-packages: true
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
-            pip-break-system-packages: true
           - os: macos-15
             cc: clang
             cxx: clang++
+            pip-break-system-packages: true
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
-            pip-break-system-packages: true
           - os: windows-2022
             cc: cl
             cxx: cl
