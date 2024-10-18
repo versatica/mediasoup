@@ -2,6 +2,10 @@
 
 ### NEXT
 
+### 3.14.16
+
+- `SimulcastConsumer`: Fix cannot switch layers if initial `tsReferenceSpatialLayer disappears` disappears ([PR #1459](https://github.com/versatica/mediasoup/pull/1459) by @Lynnworld).
+
 ### 3.14.15
 
 - Update worker abseil-cpp dependency to 20240722.0 LTS (fixes compilation for FreeBSD systems) ([PR #1457](https://github.com/versatica/mediasoup/pull/1457), credits to @garrettboone).
