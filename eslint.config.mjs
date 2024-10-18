@@ -173,13 +173,4 @@ const config = tsEslint.config(
 	prettierRecommendedEslint
 );
 
-// console.log('*** config:***\n', config);
-
-// console.log(
-// 	'---tsEslint.configs.strictTypeChecked: %o',
-// 	tsEslint.configs.strictTypeChecked
-// );
-
-// process.exit(1);
-
 export default config;
