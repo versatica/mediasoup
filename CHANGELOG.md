@@ -3,6 +3,7 @@
 ### NEXT
 
 - `Worker`: Drop VP8 packets with a higher temporal layer than the current one ([PR #1009](https://github.com/versatica/mediasoup/pull/1009)).
+- Fix the problem of the TCC package being omitted from being sent ([PR #1492](https://github.com/versatica/mediasoup/pull/1492) by @penguinol).
 
 ### 3.15.3
 

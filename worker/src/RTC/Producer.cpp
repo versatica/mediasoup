@@ -7,6 +7,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #include <absl/container/inlined_vector.h>
@@ -1246,7 +1247,7 @@ namespace RTC
 
 			// Add urn:ietf:params:rtp-hdrext:sdes:mid.
 			{
-				extenLen = RTC::MidMaxLength;
+				extenLen = RTC::Consts::MidRtpExtensionMaxLength;
 
 				extensions.emplace_back(
 				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID), extenLen, bufferPtr);
