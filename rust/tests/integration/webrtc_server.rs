@@ -10,6 +10,11 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+#[derive(Debug, PartialEq)]
+struct CustomAppData {
+    foo: u32,
+}
+
 async fn init() -> (Worker, Worker) {
     {
         let mut builder = env_logger::builder();
@@ -52,11 +57,6 @@ fn create_webrtc_server_succeeds() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         let webrtc_server = worker1
             .create_webrtc_server({
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
@@ -64,6 +64,7 @@ fn create_webrtc_server_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: Some(port1),
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -73,6 +74,7 @@ fn create_webrtc_server_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("foo.bar.org".to_string()),
                     port: Some(port2),
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -148,11 +150,6 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         let webrtc_server = worker1
             .create_webrtc_server({
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
@@ -160,6 +157,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -169,6 +167,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("1.2.3.4".to_string()),
                     port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -229,11 +228,6 @@ fn unavailable_infos_fails() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         // Using an unavailable listen IP.
         {
             let create_result = worker1
@@ -243,6 +237,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
                         port: Some(port1),
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -252,6 +247,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4)),
                         announced_address: None,
                         port: Some(port2),
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -276,6 +272,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
                         port: Some(port1),
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -285,6 +282,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                         announced_address: Some("1.2.3.4".to_string()),
                         port: Some(port1),
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -309,6 +307,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
                         port: Some(port1),
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -324,6 +323,7 @@ fn unavailable_infos_fails() {
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
                         port: Some(port1),
+                        port_range: None,
                         flags: None,
                         send_buffer_size: None,
                         recv_buffer_size: None,
@@ -353,6 +353,7 @@ fn close_event() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: Some(port),
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,

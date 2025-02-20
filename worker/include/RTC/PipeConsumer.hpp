@@ -73,7 +73,8 @@ namespace RTC
 		absl::flat_hash_map<uint32_t, RTC::RtpStreamSend*> mapSsrcRtpStream;
 		bool keyFrameSupported{ false };
 		absl::flat_hash_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
-		absl::flat_hash_map<RTC::RtpStreamSend*, RTC::SeqManager<uint16_t>> mapRtpStreamRtpSeqManager;
+		absl::flat_hash_map<RTC::RtpStreamSend*, std::unique_ptr<RTC::SeqManager<uint16_t>>>
+		  mapRtpStreamRtpSeqManager;
 	};
 } // namespace RTC
 

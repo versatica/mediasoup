@@ -1,8 +1,9 @@
 import * as os from 'node:os';
 import { Duplex } from 'node:stream';
+import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
+import { EnhancedEventEmitter } from './enhancedEvents';
 import { InvalidStateError } from './errors';
 import { Body as RequestBody, Method, Request } from './fbs/request';
 import { Response } from './fbs/response';
@@ -52,9 +53,6 @@ export class Channel extends EnhancedEventEmitter {
 	// flatbuffers builder.
 	#bufferBuilder: flatbuffers.Builder = new flatbuffers.Builder(1024);
 
-	/**
-	 * @private
-	 */
 	constructor({
 		producerSocket,
 		consumerSocket,
@@ -93,7 +91,6 @@ export class Channel extends EnhancedEventEmitter {
 
 			let msgStart = 0;
 
-			// eslint-disable-next-line no-constant-condition
 			while (true) {
 				const readLen = this.#recvBuffer.length - msgStart;
 
@@ -156,8 +153,7 @@ export class Channel extends EnhancedEventEmitter {
 						}
 
 						default: {
-							// eslint-disable-next-line no-console
-							console.warn(
+							warn(
 								`worker[pid:${pid}] unexpected data: ${payload.toString(
 									'utf8',
 									1
@@ -201,9 +197,6 @@ export class Channel extends EnhancedEventEmitter {
 		return this.#bufferBuilder;
 	}
 
-	/**
-	 * @private
-	 */
 	close(): void {
 		if (this.#closed) {
 			return;
@@ -237,9 +230,6 @@ export class Channel extends EnhancedEventEmitter {
 		} catch (error) {}
 	}
 
-	/**
-	 * @private
-	 */
 	notify(
 		event: Event,
 		bodyType?: NotificationBody,
@@ -320,7 +310,11 @@ export class Channel extends EnhancedEventEmitter {
 			);
 		}
 
-		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
+		if (this.#nextId < 4294967295) {
+			++this.#nextId;
+		} else {
+			this.#nextId = 1;
+		}
 
 		const id = this.#nextId;
 
@@ -408,7 +402,7 @@ export class Channel extends EnhancedEventEmitter {
 
 		if (!sent) {
 			logger.error(
-				`received response does not match any sent request [id:${response.id}]`
+				`received response does not match any sent request [id:${response.id()}]`
 			);
 
 			return;
@@ -482,8 +476,7 @@ export class Channel extends EnhancedEventEmitter {
 
 			// 'X' (a dump log).
 			case 'X': {
-				// eslint-disable-next-line no-console
-				console.log(logData.slice(1));
+				info(logData.slice(1));
 
 				break;
 			}

@@ -88,11 +88,14 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
-	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-	if (err != 0)
+	if (DepLibUring::IsEnabled())
 	{
-		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+		if (err != 0)
+		{
+			MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		}
 	}
 #endif
 }
@@ -103,33 +106,8 @@ UdpSocketHandle::~UdpSocketHandle()
 
 	if (!this->closed)
 	{
-		Close();
+		InternalClose();
 	}
-}
-
-void UdpSocketHandle::Close()
-{
-	MS_TRACE();
-
-	if (this->closed)
-	{
-		return;
-	}
-
-	this->closed = true;
-
-	// Tell the UV handle that the UdpSocketHandle has been closed.
-	this->uvHandle->data = nullptr;
-
-	// Don't read more.
-	const int err = uv_udp_recv_stop(this->uvHandle);
-
-	if (err != 0)
-	{
-		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
-	}
-
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseUdp));
 }
 
 void UdpSocketHandle::Dump() const
@@ -169,6 +147,7 @@ void UdpSocketHandle::Send(
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
+	if (DepLibUring::IsEnabled())
 	{
 		if (!DepLibUring::IsActive())
 		{
@@ -336,6 +315,31 @@ void UdpSocketHandle::SetRecvBufferSize(uint32_t size)
 	{
 		MS_THROW_ERROR("uv_recv_buffer_size() failed: %s", uv_strerror(err));
 	}
+}
+
+void UdpSocketHandle::InternalClose()
+{
+	MS_TRACE();
+
+	if (this->closed)
+	{
+		return;
+	}
+
+	this->closed = true;
+
+	// Tell the UV handle that the UdpSocketHandle has been closed.
+	this->uvHandle->data = nullptr;
+
+	// Don't read more.
+	const int err = uv_udp_recv_stop(this->uvHandle);
+
+	if (err != 0)
+	{
+		MS_ABORT("uv_udp_recv_stop() failed: %s", uv_strerror(err));
+	}
+
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseUdp));
 }
 
 bool UdpSocketHandle::SetLocalAddress()

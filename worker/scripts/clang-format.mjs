@@ -4,7 +4,7 @@ import clangFormat from 'clang-format';
 
 const task = process.argv.slice(2).join(' ');
 
-run();
+void run();
 
 async function run() {
 	const clangFormatNativeBinary = clangFormat.getNativeBinary();

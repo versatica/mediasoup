@@ -20,6 +20,8 @@ namespace RTC
 
 			if (len < 1)
 			{
+				MS_WARN_DEV("ignoring empty payload");
+
 				return nullptr;
 			}
 
@@ -40,6 +42,8 @@ namespace RTC
 			{
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (1)");
+
 					return nullptr;
 				}
 
@@ -49,6 +53,8 @@ namespace RTC
 				{
 					if (len < ++offset + 1)
 					{
+						MS_WARN_DEV("ignoring invalid payload (2)");
+
 						return nullptr;
 					}
 
@@ -69,6 +75,8 @@ namespace RTC
 			{
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (3)");
+
 					return nullptr;
 				}
 
@@ -83,6 +91,8 @@ namespace RTC
 
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (4)");
+
 					return nullptr;
 				}
 

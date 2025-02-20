@@ -502,10 +502,10 @@ namespace RTC
 		  // minOutgoingBitrate.
 		  this->minOutgoingBitrate ? flatbuffers::Optional<uint32_t>(this->minOutgoingBitrate)
 		                           : flatbuffers::nullopt,
-		  // packetLossReceived.
+		  // rtpPacketLossReceived.
 		  this->tccServer ? flatbuffers::Optional<double>(this->tccServer->GetPacketLoss())
 		                  : flatbuffers::nullopt,
-		  // packetLossSent.
+		  // rtpPacketLossSent.
 		  this->tccClient ? flatbuffers::Optional<double>(this->tccClient->GetPacketLoss())
 		                  : flatbuffers::nullopt);
 	}
@@ -2158,8 +2158,11 @@ namespace RTC
 		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
 
 #ifdef MS_LIBURING_SUPPORTED
-		// Activate liburing usage.
-		DepLibUring::SetActive();
+		if (DepLibUring::IsEnabled())
+		{
+			// Activate liburing usage.
+			DepLibUring::SetActive();
+		}
 #endif
 
 		for (auto& kv : this->mapConsumers)
@@ -2207,8 +2210,11 @@ namespace RTC
 		}
 
 #ifdef MS_LIBURING_SUPPORTED
-		// Submit all prepared submission entries.
-		DepLibUring::Submit();
+		if (DepLibUring::IsEnabled())
+		{
+			// Submit all prepared submission entries.
+			DepLibUring::Submit();
+		}
 #endif
 	}
 

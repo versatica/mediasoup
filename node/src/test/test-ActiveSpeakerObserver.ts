@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents, ActiveSpeakerObserverEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -8,7 +10,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -31,9 +33,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -48,6 +48,7 @@ test('router.createActiveSpeakerObserver() succeeds', async () => {
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(activeSpeakerObserver);
 	expect(typeof activeSpeakerObserver.id).toBe('string');
 	expect(activeSpeakerObserver.closed).toBe(false);
+	expect(activeSpeakerObserver.type).toBe('activespeaker');
 	expect(activeSpeakerObserver.paused).toBe(false);
 	expect(activeSpeakerObserver.appData).toEqual({});
 
@@ -59,14 +60,14 @@ test('router.createActiveSpeakerObserver() succeeds', async () => {
 test('router.createActiveSpeakerObserver() with wrong arguments rejects with TypeError', async () => {
 	await expect(
 		ctx.router!.createActiveSpeakerObserver(
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			{ interval: false }
 		)
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router!.createActiveSpeakerObserver(
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			{ appData: 'NOT-AN-OBJECT' }
 		)
 	).rejects.toThrow(TypeError);
@@ -85,8 +86,8 @@ test('activeSpeakerObserver.pause() and resume() succeed', async () => {
 }, 2000);
 
 test('activeSpeakerObserver.close() succeeds', async () => {
-	const activeSpeakerObserver = await ctx.router!.createAudioLevelObserver({
-		maxEntries: 8,
+	const activeSpeakerObserver = await ctx.router!.createActiveSpeakerObserver({
+		interval: 500,
 	});
 
 	let dump = await ctx.router!.dump();
@@ -103,23 +104,29 @@ test('activeSpeakerObserver.close() succeeds', async () => {
 }, 2000);
 
 test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () => {
-	const activeSpeakerObserver = await ctx.router!.createAudioLevelObserver();
+	const activeSpeakerObserver = await ctx.router!.createActiveSpeakerObserver();
 
-	await new Promise<void>(resolve => {
-		activeSpeakerObserver.on('routerclose', resolve);
-		ctx.router!.close();
-	});
+	const promise = enhancedOnce<ActiveSpeakerObserverEvents>(
+		activeSpeakerObserver,
+		'routerclose'
+	);
+
+	ctx.router!.close();
+	await promise;
 
 	expect(activeSpeakerObserver.closed).toBe(true);
 }, 2000);
 
 test('ActiveSpeakerObserver emits "routerclose" if Worker is closed', async () => {
-	const activeSpeakerObserver = await ctx.router!.createAudioLevelObserver();
+	const activeSpeakerObserver = await ctx.router!.createActiveSpeakerObserver();
 
-	await new Promise<void>(resolve => {
-		activeSpeakerObserver.on('routerclose', resolve);
-		ctx.worker!.close();
-	});
+	const promise = enhancedOnce<ActiveSpeakerObserverEvents>(
+		activeSpeakerObserver,
+		'routerclose'
+	);
+
+	ctx.worker!.close();
+	await promise;
 
 	expect(activeSpeakerObserver.closed).toBe(true);
 }, 2000);

@@ -72,9 +72,9 @@ namespace RTC
 			return nullptr;
 		}
 
-		const auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
+		const uint16_t idx = seq - oldestItem->sequenceNumber;
 
-		if (idx > static_cast<uint16_t>(this->buffer.size() - 1))
+		if (static_cast<size_t>(idx) > this->buffer.size() - 1)
 		{
 			return nullptr;
 		}
@@ -198,14 +198,13 @@ namespace RTC
 
 			// Calculate how many blank slots it would be necessary to add when
 			// pushing new item to the back of the buffer.
-			auto numBlankSlots = static_cast<uint16_t>(seq - newestItem->sequenceNumber - 1);
+			uint16_t numBlankSlots = seq - newestItem->sequenceNumber - 1;
 
 			// We may have to remove oldest items not to exceed the maximum size of
 			// the buffer.
 			if (this->buffer.size() + numBlankSlots + 1 > this->maxItems)
 			{
-				const auto numItemsToRemove =
-				  static_cast<uint16_t>(this->buffer.size() + numBlankSlots + 1 - this->maxItems);
+				const uint16_t numItemsToRemove = this->buffer.size() + numBlankSlots + 1 - this->maxItems;
 
 				// If num of items to be removed exceed buffer size minus one (needed to
 				// allocate current packet) then we must clear the entire buffer.
@@ -286,7 +285,7 @@ namespace RTC
 
 			// Calculate how many blank slots it would be necessary to add when
 			// pushing new item to the fton of the buffer.
-			const auto numBlankSlots = static_cast<uint16_t>(oldestItem->sequenceNumber - seq - 1);
+			const uint16_t numBlankSlots = oldestItem->sequenceNumber - seq - 1;
 
 			// If adding this packet (and needed blank slots) to the front makes the
 			// buffer exceed its max size, discard this packet.
@@ -339,11 +338,11 @@ namespace RTC
 			}
 
 			// idx is the intended position of the received packet in the buffer.
-			const auto idx = static_cast<uint16_t>(seq - oldestItem->sequenceNumber);
+			const uint16_t idx = seq - oldestItem->sequenceNumber;
 
 			// Validate that packet timestamp is equal or higher than the timestamp of
 			// the immediate older packet (if any).
-			for (auto idx2 = static_cast<int32_t>(idx - 1); idx2 >= 0; --idx2)
+			for (int32_t idx2 = idx - 1; idx2 >= 0; --idx2)
 			{
 				const auto* olderItem = this->buffer.at(idx2);
 
@@ -374,7 +373,7 @@ namespace RTC
 
 			// Validate that packet timestamp is equal or less than the timestamp of
 			// the immediate newer packet (if any).
-			for (auto idx2 = static_cast<size_t>(idx + 1); idx2 < this->buffer.size(); ++idx2)
+			for (size_t idx2 = idx + 1; idx2 < this->buffer.size(); ++idx2)
 			{
 				const auto* newerItem = this->buffer.at(idx2);
 
@@ -535,7 +534,7 @@ namespace RTC
 		  numItems,
 		  this->buffer.size());
 
-		const auto intendedBufferSize = this->buffer.size() - numItems;
+		const size_t intendedBufferSize = this->buffer.size() - numItems;
 
 		while (this->buffer.size() > intendedBufferSize)
 		{

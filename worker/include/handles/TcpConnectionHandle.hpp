@@ -49,12 +49,12 @@ public:
 	virtual ~TcpConnectionHandle();
 
 public:
-	void Close();
+	void TriggerClose();
 	bool IsClosed() const
 	{
 		return this->closed;
 	}
-	virtual void Dump() const;
+	void Dump() const;
 	void Setup(
 	  Listener* listener,
 	  struct sockaddr_storage* localAddr,
@@ -110,6 +110,7 @@ public:
 	}
 
 private:
+	void InternalClose();
 	bool SetPeerAddress();
 
 	/* Callbacks fired by UV events. */

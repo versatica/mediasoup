@@ -1,5 +1,12 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type {
+	WorkerEvents,
+	ConsumerEvents,
+	ProducerObserverEvents,
+	DataConsumerEvents,
+} from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -22,7 +29,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -35,7 +42,7 @@ const ctx: TestContext = {
 			clockRate: 90000,
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -64,7 +71,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 'bar1' },
 	}),
-	videoProducerOptions: utils.deepFreeze({
+	videoProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'video',
 		rtpParameters: {
 			mid: 'VIDEO',
@@ -102,7 +109,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 'bar2' },
 	}),
-	dataProducerOptions: utils.deepFreeze({
+	dataProducerOptions: utils.deepFreeze<mediasoup.types.DataProducerOptions>({
 		sctpStreamParameters: {
 			streamId: 666,
 			ordered: false,
@@ -111,59 +118,61 @@ const ctx: TestContext = {
 		label: 'foo',
 		protocol: 'bar',
 	}),
-	consumerDeviceCapabilities: utils.deepFreeze({
-		codecs: [
-			{
-				kind: 'audio',
-				mimeType: 'audio/opus',
-				preferredPayloadType: 100,
-				clockRate: 48000,
-				channels: 2,
-			},
-			{
-				kind: 'video',
-				mimeType: 'video/VP8',
-				preferredPayloadType: 101,
-				clockRate: 90000,
-				rtcpFeedback: [
-					{ type: 'nack' },
-					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'transport-cc' },
-				],
-			},
-			{
-				kind: 'video',
-				mimeType: 'video/rtx',
-				preferredPayloadType: 102,
-				clockRate: 90000,
-				parameters: {
-					apt: 101,
+	consumerDeviceCapabilities: utils.deepFreeze<mediasoup.types.RtpCapabilities>(
+		{
+			codecs: [
+				{
+					kind: 'audio',
+					mimeType: 'audio/opus',
+					preferredPayloadType: 100,
+					clockRate: 48000,
+					channels: 2,
 				},
-				rtcpFeedback: [],
-			},
-		],
-		headerExtensions: [
-			{
-				kind: 'video',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
-				preferredId: 4,
-				preferredEncrypt: false,
-				direction: 'sendrecv',
-			},
-			{
-				kind: 'video',
-				uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
-				preferredId: 5,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				preferredId: 10,
-				preferredEncrypt: false,
-			},
-		],
-	}),
+				{
+					kind: 'video',
+					mimeType: 'video/VP8',
+					preferredPayloadType: 101,
+					clockRate: 90000,
+					rtcpFeedback: [
+						{ type: 'nack' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'transport-cc' },
+					],
+				},
+				{
+					kind: 'video',
+					mimeType: 'video/rtx',
+					preferredPayloadType: 102,
+					clockRate: 90000,
+					parameters: {
+						apt: 101,
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					kind: 'video',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					preferredId: 4,
+					preferredEncrypt: false,
+					direction: 'sendrecv',
+				},
+				{
+					kind: 'video',
+					uri: 'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01',
+					preferredId: 5,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+					preferredId: 10,
+					preferredEncrypt: false,
+				},
+			],
+		}
+	),
 };
 
 beforeEach(async () => {
@@ -199,15 +208,11 @@ afterEach(async () => {
 	ctx.worker2?.close();
 
 	if (ctx.worker1?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker1?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker1, 'subprocessclose');
 	}
 
 	if (ctx.worker2?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker2?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker2, 'subprocessclose');
 	}
 });
 
@@ -266,6 +271,12 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
+			encrypt: false,
+			parameters: {},
+		},
 	]);
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
@@ -305,6 +316,12 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
 			encrypt: false,
 			parameters: {},
 		},
@@ -382,6 +399,12 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
+			encrypt: false,
+			parameters: {},
+		},
 	]);
 
 	expect(pipeConsumer.type).toBe('pipe');
@@ -443,20 +466,36 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
+			encrypt: false,
+			parameters: {},
+		},
 	]);
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
 test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);
+
+	await expect(
+		ctx.router1!.createPipeTransport({
+			listenInfo: {
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				portRange: { min: 4000, max: 3000 },
+			},
+		})
+	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router1!.createPipeTransport({ listenIp: '123' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router1!.createPipeTransport({ listenIp: ['127.0.0.1'] })
 	).rejects.toThrow(TypeError);
 
@@ -469,7 +508,7 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	await expect(
 		ctx.router1!.createPipeTransport({
 			listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
@@ -477,9 +516,15 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 
 test('router.createPipeTransport() with enableRtx succeeds', async () => {
 	const pipeTransport = await ctx.router1!.createPipeTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			portRange: { min: 2000, max: 3000 },
+		},
 		enableRtx: true,
 	});
+
+	expect(pipeTransport.type).toBe('pipe');
 
 	const pipeConsumer = await pipeTransport.consume({
 		producerId: ctx.videoProducer!.id,
@@ -542,6 +587,12 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
+			encrypt: false,
+			parameters: {},
+		},
 	]);
 
 	expect(pipeConsumer.type).toBe('pipe');
@@ -581,7 +632,11 @@ test('pipeTransport.connect() with valid SRTP parameters succeeds', async () => 
 
 test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset', async () => {
 	const pipeTransport = await ctx.router1!.createPipeTransport({
-		listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
+		listenInfo: {
+			protocol: 'udp',
+			ip: '127.0.0.1',
+			portRange: { min: 2000, max: 3000 },
+		},
 		enableRtx: true,
 	});
 
@@ -605,7 +660,7 @@ test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset',
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: 'invalid',
 		})
 	).rejects.toThrow(TypeError);
@@ -635,7 +690,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: 1,
 		})
 	).rejects.toThrow(TypeError);
@@ -645,7 +700,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: {
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -658,7 +713,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
 			},
@@ -671,7 +726,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			ip: '127.0.0.2',
 			port: 9999,
 			srtpParameters: {
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				cryptoSuite: 'FOO',
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -685,7 +740,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			ip: '127.0.0.2',
 			port: 9999,
 			srtpParameters: {
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				cryptoSuite: 123,
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -700,7 +755,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			port: 9999,
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				keyBase64: [],
 			},
 		})
@@ -791,7 +846,13 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 
 test('producer.pause() and producer.resume() are transmitted to pipe Consumer', async () => {
 	await ctx.videoProducer!.pause();
-	await ctx.router1!.pipeToRouter({
+
+	// We need to obtain the pipeProducer to await for its 'puase' and 'resume'
+	// events, otherwise we may get errors like this:
+	// InvalidStateError: Channel closed, pending request aborted [method:PRODUCER_PAUSE, id:8]
+	// See related fixed issue:
+	// https://github.com/versatica/mediasoup/issues/1374
+	const { pipeProducer: pipeVideoProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
@@ -807,25 +868,34 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 
 	// NOTE: Let's use a Promise since otherwise there may be race conditions
 	// between events and await lines below.
-	const promise1 = new Promise<void>(resolve =>
-		videoConsumer.once('producerresume', resolve)
+	const promise1 = enhancedOnce<ConsumerEvents>(
+		videoConsumer,
+		'producerresume'
+	);
+	const promise2 = enhancedOnce<ProducerObserverEvents>(
+		pipeVideoProducer!.observer,
+		'resume'
 	);
 
 	await ctx.videoProducer!.resume();
-	await promise1;
+	await Promise.all([promise1, promise2]);
 
 	expect(videoConsumer.producerPaused).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
+	expect(pipeVideoProducer!.paused).toBe(false);
 
-	const promise2 = new Promise<void>(resolve =>
-		videoConsumer.once('producerpause', resolve)
+	const promise3 = enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
+	const promise4 = enhancedOnce<ProducerObserverEvents>(
+		pipeVideoProducer!.observer,
+		'pause'
 	);
 
 	await ctx.videoProducer!.pause();
-	await promise2;
+	await Promise.all([promise3, promise4]);
 
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.paused).toBe(false);
+	expect(pipeVideoProducer!.paused).toBe(true);
 }, 2000);
 
 test('producer.close() is transmitted to pipe Consumer', async () => {
@@ -839,14 +909,12 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	await ctx.videoProducer!.close();
+	ctx.videoProducer!.close();
 
 	expect(ctx.videoProducer!.closed).toBe(true);
 
 	if (!videoConsumer.closed) {
-		await new Promise<void>(resolve =>
-			videoConsumer.once('producerclose', resolve)
-		);
+		await enhancedOnce<ConsumerEvents>(videoConsumer, 'producerclose');
 	}
 
 	expect(videoConsumer.closed).toBe(true);
@@ -944,14 +1012,12 @@ test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
 		dataProducerId: ctx.dataProducer!.id,
 	});
 
-	await ctx.dataProducer!.close();
+	ctx.dataProducer!.close();
 
 	expect(ctx.dataProducer!.closed).toBe(true);
 
 	if (!dataConsumer.closed) {
-		await new Promise<void>(resolve =>
-			dataConsumer.once('dataproducerclose', resolve)
-		);
+		await enhancedOnce<DataConsumerEvents>(dataConsumer, 'dataproducerclose');
 	}
 
 	expect(dataConsumer.closed).toBe(true);
@@ -998,7 +1064,7 @@ test('router.pipeToRouter() called twice generates a single PipeTransport pair',
 	expect(dump2.transportIds.length).toBe(1);
 }, 2000);
 
-test('router.pipeToRouter() called in two Routers passing one to each other as argument generates a single a single PipeTransport pair', async () => {
+test('router.pipeToRouter() called in two Routers passing one to each other as argument generates a single PipeTransport pair', async () => {
 	const routerA = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
 	});
@@ -1017,7 +1083,7 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	const pipeTransportsB = new Map();
 
 	routerA.observer.on('newtransport', transport => {
-		if (transport.constructor.name !== 'PipeTransport') {
+		if (transport.constructor.name !== 'PipeTransportImpl') {
 			return;
 		}
 
@@ -1026,7 +1092,7 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	});
 
 	routerB.observer.on('newtransport', transport => {
-		if (transport.constructor.name !== 'PipeTransport') {
+		if (transport.constructor.name !== 'PipeTransportImpl') {
 			return;
 		}
 

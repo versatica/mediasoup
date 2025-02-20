@@ -4,6 +4,7 @@
 #include "RTC/WebRtcServer.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Settings.hpp"
 #include "Utils.hpp"
 #include <cmath> // std::pow()
 
@@ -94,13 +95,36 @@ namespace RTC
 					// This may throw.
 					RTC::UdpSocket* udpSocket;
 
-					if (listenInfo->port() != 0)
+					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
+					{
+						uint64_t portRangeHash{ 0u };
+
+						udpSocket = new RTC::UdpSocket(
+						  this,
+						  ip,
+						  listenInfo->portRange()->min(),
+						  listenInfo->portRange()->max(),
+						  flags,
+						  portRangeHash);
+					}
+					else if (listenInfo->port() != 0)
 					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
+					// NOTE: This is temporal to allow deprecated usage of worker port range.
+					// In the future this should throw since |port| or |portRange| will be
+					// required.
 					else
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, flags);
+						uint64_t portRangeHash{ 0u };
+
+						udpSocket = new RTC::UdpSocket(
+						  this,
+						  ip,
+						  Settings::configuration.rtcMinPort,
+						  Settings::configuration.rtcMaxPort,
+						  flags,
+						  portRangeHash);
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedAddress);
@@ -126,13 +150,38 @@ namespace RTC
 					// This may throw.
 					RTC::TcpServer* tcpServer;
 
-					if (listenInfo->port() != 0)
+					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
+					{
+						uint64_t portRangeHash{ 0u };
+
+						tcpServer = new RTC::TcpServer(
+						  this,
+						  this,
+						  ip,
+						  listenInfo->portRange()->min(),
+						  listenInfo->portRange()->max(),
+						  flags,
+						  portRangeHash);
+					}
+					else if (listenInfo->port() != 0)
 					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}
+					// NOTE: This is temporal to allow deprecated usage of worker port range.
+					// In the future this should throw since |port| or |portRange| will be
+					// required.
 					else
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, flags);
+						uint64_t portRangeHash{ 0u };
+
+						tcpServer = new RTC::TcpServer(
+						  this,
+						  this,
+						  ip,
+						  Settings::configuration.rtcMinPort,
+						  Settings::configuration.rtcMaxPort,
+						  flags,
+						  portRangeHash);
 					}
 
 					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedAddress);
@@ -183,7 +232,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->closing = true;
+
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
+
+		// NOTE: We need to close WebRtcTransports first since they may need to
+		// send DTLS Close Alert so UDP sockets and TCP connections must remain
+		// open.
+		for (auto* webRtcTransport : this->webRtcTransports)
+		{
+			webRtcTransport->ListenServerClosed();
+		}
+		this->webRtcTransports.clear();
 
 		for (auto& item : this->udpSocketOrTcpServers)
 		{
@@ -194,12 +254,6 @@ namespace RTC
 			item.tcpServer = nullptr;
 		}
 		this->udpSocketOrTcpServers.clear();
-
-		for (auto* webRtcTransport : this->webRtcTransports)
-		{
-			webRtcTransport->ListenServerClosed();
-		}
-		this->webRtcTransports.clear();
 	}
 
 	flatbuffers::Offset<FBS::WebRtcServer::DumpResponse> WebRtcServer::FillBuffer(
@@ -448,7 +502,14 @@ namespace RTC
 		  this->webRtcTransports.find(webRtcTransport) != this->webRtcTransports.end(),
 		  "WebRtcTransport not handled");
 
-		this->webRtcTransports.erase(webRtcTransport);
+		// NOTE: If WebRtcServer is closing then do not remove the transport from
+		// the set since it would modify the set while the WebRtcServer destructor
+		// is iterating it.
+		// See: https://github.com/versatica/mediasoup/pull/1369#issuecomment-2044672247
+		if (!this->closing)
+		{
+			this->webRtcTransports.erase(webRtcTransport);
+		}
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportLocalIceUsernameFragmentAdded(

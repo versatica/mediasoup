@@ -106,6 +106,8 @@ namespace RTC
 		absl::flat_hash_map<std::string, RTC::WebRtcTransport*> mapLocalIceUsernameFragmentWebRtcTransport;
 		// Map of WebRtcTransports indexed by TransportTuple.hash.
 		absl::flat_hash_map<uint64_t, RTC::WebRtcTransport*> mapTupleWebRtcTransport;
+		// Whether the destructor has been called.
+		bool closing{ false };
 	};
 } // namespace RTC
 

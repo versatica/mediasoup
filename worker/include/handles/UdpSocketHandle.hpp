@@ -42,12 +42,11 @@ public:
 	virtual ~UdpSocketHandle();
 
 public:
-	void Close();
 	bool IsClosed() const
 	{
 		return this->closed;
 	}
-	virtual void Dump() const;
+	void Dump() const;
 	void Send(
 	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb);
 	const struct sockaddr* GetLocalAddress() const
@@ -80,6 +79,7 @@ public:
 	void SetRecvBufferSize(uint32_t size);
 
 private:
+	void InternalClose();
 	bool SetLocalAddress();
 
 	/* Callbacks fired by UV events. */

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <absl/container/btree_map.h>
 #include <cmath> // std::lround()
 
 namespace RTC

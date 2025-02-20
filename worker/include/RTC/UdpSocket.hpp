@@ -22,8 +22,14 @@ namespace RTC
 		};
 
 	public:
-		UdpSocket(Listener* listener, std::string& ip, RTC::Transport::SocketFlags& flags);
 		UdpSocket(Listener* listener, std::string& ip, uint16_t port, RTC::Transport::SocketFlags& flags);
+		UdpSocket(
+		  Listener* listener,
+		  std::string& ip,
+		  uint16_t minPort,
+		  uint16_t maxPort,
+		  RTC::Transport::SocketFlags& flags,
+		  uint64_t& portRangeHash);
 		~UdpSocket() override;
 
 		/* Pure virtual methods inherited from ::UdpSocketHandle. */
@@ -34,6 +40,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		bool fixedPort{ false };
+		uint64_t portRangeHash{ 0u };
 	};
 } // namespace RTC
 

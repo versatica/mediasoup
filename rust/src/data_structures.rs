@@ -13,7 +13,7 @@ use std::any::Any;
 use std::borrow::Cow;
 use std::fmt;
 use std::net::IpAddr;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, RangeInclusive};
 use std::sync::Arc;
 
 /// Container for arbitrary data attached to mediasoup entities.
@@ -52,7 +52,7 @@ impl AppData {
 /// # Notes on usage
 /// If you use "0.0.0.0" or "::" as ip value, then you need to also provide
 /// `announced_address`.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListenInfo {
     /// Network protocol.
@@ -66,6 +66,9 @@ pub struct ListenInfo {
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
+    /// Listening port range. If given then |port| will be ignored.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port_range: Option<RangeInclusive<u16>>,
     /// Socket flags.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flags: Option<SocketFlags>,
@@ -90,6 +93,13 @@ impl ListenInfo {
                 .as_ref()
                 .map(|address| address.to_string()),
             port: self.port.unwrap_or(0),
+            port_range: match &self.port_range {
+                Some(port_range) => Box::new(transport::PortRange {
+                    min: *port_range.start(),
+                    max: *port_range.end(),
+                }),
+                None => Box::new(transport::PortRange { min: 0, max: 0 }),
+            },
             flags: Box::new(self.flags.unwrap_or_default().to_fbs()),
             send_buffer_size: self.send_buffer_size.unwrap_or(0),
             recv_buffer_size: self.recv_buffer_size.unwrap_or(0),
@@ -518,12 +528,15 @@ pub enum DtlsFingerprint {
     },
 }
 
-fn hex_as_bytes(input: &str, output: &mut [u8]) {
+fn hex_as_bytes<const N: usize>(input: &str) -> [u8; N] {
+    let mut output = [0_u8; N];
     for (i, o) in input.split(':').zip(&mut output.iter_mut()) {
         *o = u8::from_str_radix(i, 16).unwrap_or_else(|error| {
             panic!("Failed to parse value {i} as series of hex bytes: {error}")
         });
     }
+
+    output
 }
 
 impl DtlsFingerprint {
@@ -555,45 +568,35 @@ impl DtlsFingerprint {
     pub(crate) fn from_fbs(fingerprint: &web_rtc_transport::Fingerprint) -> DtlsFingerprint {
         match fingerprint.algorithm {
             web_rtc_transport::FingerprintAlgorithm::Sha1 => {
-                let mut value_result = [0_u8; 20];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<20>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha1 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha224 => {
-                let mut value_result = [0_u8; 28];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<28>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha224 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha256 => {
-                let mut value_result = [0_u8; 32];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<32>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha256 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha384 => {
-                let mut value_result = [0_u8; 48];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<48>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha384 {
                     value: value_result,
                 }
             }
             web_rtc_transport::FingerprintAlgorithm::Sha512 => {
-                let mut value_result = [0_u8; 64];
-
-                hex_as_bytes(fingerprint.value.as_str(), &mut value_result);
+                let value_result = hex_as_bytes::<64>(fingerprint.value.as_str());
 
                 DtlsFingerprint::Sha512 {
                     value: value_result,

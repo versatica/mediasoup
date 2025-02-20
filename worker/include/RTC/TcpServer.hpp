@@ -28,13 +28,16 @@ namespace RTC
 		  Listener* listener,
 		  RTC::TcpConnection::Listener* connListener,
 		  std::string& ip,
+		  uint16_t port,
 		  RTC::Transport::SocketFlags& flags);
 		TcpServer(
 		  Listener* listener,
 		  RTC::TcpConnection::Listener* connListener,
 		  std::string& ip,
-		  uint16_t port,
-		  RTC::Transport::SocketFlags& flags);
+		  uint16_t minPort,
+		  uint16_t maxPort,
+		  RTC::Transport::SocketFlags& flags,
+		  uint64_t& portRangeHash);
 		~TcpServer() override;
 
 		/* Pure virtual methods inherited from ::TcpServerHandle. */
@@ -47,6 +50,7 @@ namespace RTC
 		Listener* listener{ nullptr };
 		RTC::TcpConnection::Listener* connListener{ nullptr };
 		bool fixedPort{ false };
+		uint64_t portRangeHash{ 0u };
 	};
 } // namespace RTC
 

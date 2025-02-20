@@ -317,6 +317,11 @@ namespace RTC
 			this->videoOrientationExtensionId = id;
 		}
 
+		void SetPlayoutDelayExtensionId(uint8_t id)
+		{
+			this->playoutDelayExtensionId = id;
+		}
+
 		bool ReadMid(std::string& mid) const
 		{
 			uint8_t extenLen;
@@ -494,6 +499,22 @@ namespace RTC
 					rotation = 0;
 			}
 
+			return true;
+		}
+
+		bool ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->playoutDelayExtensionId, extenLen);
+
+			if (extenLen != 3)
+			{
+				return false;
+			}
+
+			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
+			minDelay   = v >> 12u;
+			maxDelay   = v & 0xFFFu;
 			return true;
 		}
 
@@ -680,6 +701,7 @@ namespace RTC
 		uint8_t frameMarkingExtensionId{ 0u };
 		uint8_t ssrcAudioLevelExtensionId{ 0u };
 		uint8_t videoOrientationExtensionId{ 0u };
+		uint8_t playoutDelayExtensionId{ 0u };
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0u };
 		uint8_t payloadPadding{ 0u };

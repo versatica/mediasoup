@@ -21,10 +21,9 @@ SCENARIO("parse H264 payload descriptor", "[codecs][h264]")
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		const auto* payloadDescriptor = Codecs::H264::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<Codecs::H264::PayloadDescriptor> payloadDescriptor{ Codecs::H264::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(payloadDescriptor);
-
-		delete payloadDescriptor;
 	}
 }

@@ -22,8 +22,10 @@ public:
 	~SignalHandle();
 
 public:
-	void Close();
 	void AddSignal(int signum, const std::string& name);
+
+private:
+	void InternalClose();
 
 	/* Callbacks fired by UV events. */
 public:

@@ -39,7 +39,6 @@ fn main() {
             .expect("Failed to generate Rust code from flatbuffers"),
     )
     .expect("Failed to write generated Rust flatbuffers into fbs.rs");
-
     if env::var("DOCS_RS").is_ok() {
         // Skip everything when building docs on docs.rs
         return;

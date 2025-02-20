@@ -100,7 +100,7 @@ namespace RTC
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool syncRequired{ false };
-		RTC::SeqManager<uint16_t> rtpSeqManager;
+		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
 		int16_t preferredSpatialLayer{ -1 };
 		int16_t preferredTemporalLayer{ -1 };
 		int16_t provisionalTargetSpatialLayer{ -1 };

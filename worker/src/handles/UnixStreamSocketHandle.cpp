@@ -57,11 +57,6 @@ inline static void onClosePipe(uv_handle_t* handle)
 	delete reinterpret_cast<uv_pipe_t*>(handle);
 }
 
-inline static void onCloseShutdown(uv_handle_t* handle)
-{
-	delete reinterpret_cast<uv_shutdown_t*>(handle);
-}
-
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	auto* handle = req->handle;
@@ -69,7 +64,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 	delete req;
 
 	// Now do close the handle.
-	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseShutdown));
+	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onClosePipe));
 }
 
 /* Instance methods. */
@@ -126,14 +121,16 @@ UnixStreamSocketHandle::~UnixStreamSocketHandle()
 {
 	MS_TRACE_STD();
 
-	delete[] this->buffer;
-
 	if (!this->closed)
 	{
 		Close();
 	}
+
+	delete[] this->buffer;
 }
 
+// NOTE: In UnixStreamSocketHandle we need a poublic Close() method and cannot
+// just rely on the destructor plus a private InternalClose() method.
 void UnixStreamSocketHandle::Close()
 {
 	MS_TRACE_STD();

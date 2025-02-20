@@ -43,22 +43,8 @@ TimerHandle::~TimerHandle()
 
 	if (!this->closed)
 	{
-		Close();
+		InternalClose();
 	}
-}
-
-void TimerHandle::Close()
-{
-	MS_TRACE();
-
-	if (this->closed)
-	{
-		return;
-	}
-
-	this->closed = true;
-
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTimer));
 }
 
 void TimerHandle::Start(uint64_t timeout, uint64_t repeat)
@@ -152,6 +138,20 @@ void TimerHandle::Restart()
 	{
 		MS_THROW_ERROR("uv_timer_start() failed: %s", uv_strerror(err));
 	}
+}
+
+void TimerHandle::InternalClose()
+{
+	MS_TRACE();
+
+	if (this->closed)
+	{
+		return;
+	}
+
+	this->closed = true;
+
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTimer));
 }
 
 inline void TimerHandle::OnUvTimer()

@@ -585,6 +585,10 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
     AbsCaptureTime,
+    /// <http://www.webrtc.org/experiments/rtp-hdrext/playout-delay>
+    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay")]
+    PlayoutDelay,
+
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
     Unsupported,
@@ -620,6 +624,9 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime
             }
+            RtpHeaderExtensionUri::PlayoutDelay => {
+                rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay
+            }
             RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
         }
     }
@@ -653,6 +660,9 @@ impl RtpHeaderExtensionUri {
             rtp_parameters::RtpHeaderExtensionUri::AbsCaptureTime => {
                 RtpHeaderExtensionUri::AbsCaptureTime
             }
+            rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay => {
+                RtpHeaderExtensionUri::PlayoutDelay
+            }
         }
     }
 }
@@ -679,6 +689,7 @@ impl FromStr for RtpHeaderExtensionUri {
             "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time" => {
                 Ok(Self::AbsCaptureTime)
             }
+            "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay" => Ok(Self::PlayoutDelay),
             _ => Err(RtpHeaderExtensionUriParseError::Unsupported),
         }
     }
@@ -709,6 +720,9 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time"
+            }
+            RtpHeaderExtensionUri::PlayoutDelay => {
+                "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }
@@ -905,7 +919,6 @@ impl RtpParameters {
         })
     }
 
-    #[allow(dead_code)]
     pub(crate) fn into_fbs(self) -> rtp_parameters::RtpParameters {
         rtp_parameters::RtpParameters {
             mid: self.mid,
@@ -943,21 +956,19 @@ impl RtpParameters {
                             })
                             .collect(),
                     ),
-                    rtcp_feedback: match &codec {
-                        RtpCodecParameters::Audio { .. } => None,
-                        RtpCodecParameters::Video { rtcp_feedback, .. } => Some(
-                            rtcp_feedback
-                                .iter()
-                                .map(|rtcp_feedback| {
-                                    let (r#type, parameter) = rtcp_feedback.as_type_parameter();
-                                    rtp_parameters::RtcpFeedback {
-                                        type_: r#type.to_string(),
-                                        parameter: Some(parameter.to_string()),
-                                    }
-                                })
-                                .collect(),
-                        ),
-                    },
+                    rtcp_feedback: Some(
+                        codec
+                            .rtcp_feedback()
+                            .iter()
+                            .map(|rtcp_feedback| {
+                                let (r#type, parameter) = rtcp_feedback.as_type_parameter();
+                                rtp_parameters::RtcpFeedback {
+                                    type_: r#type.to_string(),
+                                    parameter: Some(parameter.to_string()),
+                                }
+                            })
+                            .collect(),
+                    ),
                 })
                 .collect(),
             header_extensions: self
@@ -1116,6 +1127,11 @@ impl RtpCodecParameters {
     pub(crate) fn parameters(&self) -> &RtpCodecParametersParameters {
         let (Self::Audio { parameters, .. } | Self::Video { parameters, .. }) = self;
         parameters
+    }
+
+    pub(crate) fn rtcp_feedback(&self) -> &[RtcpFeedback] {
+        let (Self::Audio { rtcp_feedback, .. } | Self::Video { rtcp_feedback, .. }) = self;
+        rtcp_feedback
     }
 
     pub(crate) fn rtcp_feedback_mut(&mut self) -> &mut Vec<RtcpFeedback> {

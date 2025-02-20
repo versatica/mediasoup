@@ -1,6 +1,8 @@
-import { once } from 'node:events';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents, ConsumerEvents } from '../types';
+import type { ConsumerImpl } from '../Consumer';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 import {
@@ -24,7 +26,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -51,7 +53,7 @@ const ctx: TestContext = {
 			},
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -86,7 +88,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
-	videoProducerOptions: utils.deepFreeze({
+	videoProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'video',
 		rtpParameters: {
 			mid: 'VIDEO',
@@ -134,95 +136,97 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
-	consumerDeviceCapabilities: utils.deepFreeze({
-		codecs: [
-			{
-				mimeType: 'audio/opus',
-				kind: 'audio',
-				preferredPayloadType: 100,
-				clockRate: 48000,
-				channels: 2,
-				rtcpFeedback: [{ type: 'nack', parameter: '' }],
-			},
-			{
-				mimeType: 'video/H264',
-				kind: 'video',
-				preferredPayloadType: 101,
-				clockRate: 90000,
-				parameters: {
-					'level-asymmetry-allowed': 1,
-					'packetization-mode': 1,
-					'profile-level-id': '4d0032',
+	consumerDeviceCapabilities: utils.deepFreeze<mediasoup.types.RtpCapabilities>(
+		{
+			codecs: [
+				{
+					mimeType: 'audio/opus',
+					kind: 'audio',
+					preferredPayloadType: 100,
+					clockRate: 48000,
+					channels: 2,
+					rtcpFeedback: [{ type: 'nack', parameter: '' }],
 				},
-				rtcpFeedback: [
-					{ type: 'nack', parameter: '' },
-					{ type: 'nack', parameter: 'pli' },
-					{ type: 'ccm', parameter: 'fir' },
-					{ type: 'goog-remb', parameter: '' },
-				],
-			},
-			{
-				mimeType: 'video/rtx',
-				kind: 'video',
-				preferredPayloadType: 102,
-				clockRate: 90000,
-				parameters: {
-					apt: 101,
+				{
+					mimeType: 'video/H264',
+					kind: 'video',
+					preferredPayloadType: 101,
+					clockRate: 90000,
+					parameters: {
+						'level-asymmetry-allowed': 1,
+						'packetization-mode': 1,
+						'profile-level-id': '4d0032',
+					},
+					rtcpFeedback: [
+						{ type: 'nack', parameter: '' },
+						{ type: 'nack', parameter: 'pli' },
+						{ type: 'ccm', parameter: 'fir' },
+						{ type: 'goog-remb', parameter: '' },
+					],
 				},
-				rtcpFeedback: [],
-			},
-		],
-		headerExtensions: [
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId: 1,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
-				preferredId: 1,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
-				preferredId: 2,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-				preferredId: 4,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-				preferredId: 4,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'audio',
-				uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-				preferredId: 10,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:3gpp:video-orientation',
-				preferredId: 11,
-				preferredEncrypt: false,
-			},
-			{
-				kind: 'video',
-				uri: 'urn:ietf:params:rtp-hdrext:toffset',
-				preferredId: 12,
-				preferredEncrypt: false,
-			},
-		],
-	}),
+				{
+					mimeType: 'video/rtx',
+					kind: 'video',
+					preferredPayloadType: 102,
+					clockRate: 90000,
+					parameters: {
+						apt: 101,
+					},
+					rtcpFeedback: [],
+				},
+			],
+			headerExtensions: [
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					preferredId: 1,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:mid',
+					preferredId: 1,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+					preferredId: 2,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					preferredId: 4,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time',
+					preferredId: 4,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'audio',
+					uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+					preferredId: 10,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:3gpp:video-orientation',
+					preferredId: 11,
+					preferredEncrypt: false,
+				},
+				{
+					kind: 'video',
+					uri: 'urn:ietf:params:rtp-hdrext:toffset',
+					preferredId: 12,
+					preferredEncrypt: false,
+				},
+			],
+		}
+	),
 };
 
 beforeEach(async () => {
@@ -246,9 +250,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -453,7 +455,7 @@ test('transport.consume() succeeds', async () => {
 	});
 	expect(videoPipeConsumer.preferredLayers).toBeUndefined();
 	expect(videoPipeConsumer.currentLayers).toBeUndefined();
-	expect(videoPipeConsumer.appData).toBeUndefined;
+	expect(videoPipeConsumer.appData).toEqual({});
 
 	const dump2 = await ctx.router!.dump();
 
@@ -817,11 +819,11 @@ test('consumer.pause() and resume() succeed', async () => {
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
-	audioConsumer.pause();
-	audioConsumer.resume();
-	audioConsumer.pause();
-	audioConsumer.pause();
-	audioConsumer.pause();
+	void audioConsumer.pause();
+	void audioConsumer.resume();
+	void audioConsumer.pause();
+	void audioConsumer.pause();
+	void audioConsumer.pause();
 	await audioConsumer.resume();
 
 	expect(onObserverPause).toHaveBeenCalledTimes(3);
@@ -908,22 +910,22 @@ test('consumer.setPreferredLayers() with wrong arguments rejects with TypeError'
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(videoConsumer.setPreferredLayers({})).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		videoConsumer.setPreferredLayers({ foo: '123' })
 	).rejects.toThrow(TypeError);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(videoConsumer.setPreferredLayers('foo')).rejects.toThrow(
 		TypeError
 	);
 
 	// Missing spatialLayer.
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		videoConsumer.setPreferredLayers({ temporalLayer: 2 })
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -944,12 +946,12 @@ test('consumer.setPriority() with wrong arguments rejects with TypeError', async
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(videoConsumer.setPriority()).rejects.toThrow(TypeError);
 
 	await expect(videoConsumer.setPriority(0)).rejects.toThrow(TypeError);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(videoConsumer.setPriority('foo')).rejects.toThrow(TypeError);
 }, 2000);
 
@@ -974,13 +976,13 @@ test('consumer.enableTraceEvent() succeed', async () => {
 
 	expect(dump1.traceEventTypes).toEqual(expect.arrayContaining(['rtp', 'pli']));
 
-	await audioConsumer.enableTraceEvent([]);
+	await audioConsumer.enableTraceEvent();
 
 	const dump2 = await audioConsumer.dump();
 
 	expect(dump2.traceEventTypes).toEqual(expect.arrayContaining([]));
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await audioConsumer.enableTraceEvent(['nack', 'FOO', 'fir']);
 
 	const dump3 = await audioConsumer.dump();
@@ -1002,16 +1004,16 @@ test('consumer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioConsumer.enableTraceEvent(123)).rejects.toThrow(TypeError);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioConsumer.enableTraceEvent('rtp')).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		audioConsumer.enableTraceEvent(['fir', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -1023,7 +1025,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 	});
 
 	await Promise.all([
-		once(audioConsumer, 'producerpause'),
+		enhancedOnce<ConsumerEvents>(audioConsumer, 'producerpause'),
 
 		// Let's await for pause() to resolve to avoid aborted channel requests
 		// due to worker closure.
@@ -1034,7 +1036,7 @@ test('Consumer emits "producerpause" and "producerresume"', async () => {
 	expect(audioConsumer.producerPaused).toBe(true);
 
 	await Promise.all([
-		once(audioConsumer, 'producerresume'),
+		enhancedOnce<ConsumerEvents>(audioConsumer, 'producerresume'),
 
 		// Let's await for resume() to resolve to avoid aborted channel requests
 		// due to worker closure.
@@ -1051,8 +1053,8 @@ test('Consumer emits "score"', async () => {
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	// Private API.
-	const channel = audioConsumer.channelForTesting;
+	// API not exposed in the interface.
+	const channel = (audioConsumer as ConsumerImpl).channelForTesting;
 	const onScore = jest.fn();
 
 	audioConsumer.on('score', onScore);
@@ -1143,7 +1145,7 @@ test('Consumer methods reject if closed', async () => {
 
 	await expect(audioConsumer.resume()).rejects.toThrow(Error);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioConsumer.setPreferredLayers({})).rejects.toThrow(Error);
 
 	await expect(audioConsumer.setPriority(2)).rejects.toThrow(Error);
@@ -1160,10 +1162,10 @@ test('Consumer emits "producerclose" if Producer is closed', async () => {
 
 	audioConsumer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		audioConsumer.on('producerclose', resolve);
-		ctx.audioProducer!.close();
-	});
+	const promise = enhancedOnce<ConsumerEvents>(audioConsumer, 'producerclose');
+
+	ctx.audioProducer!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(audioConsumer.closed).toBe(true);
@@ -1179,10 +1181,10 @@ test('Consumer emits "transportclose" if Transport is closed', async () => {
 
 	videoConsumer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		videoConsumer.on('transportclose', resolve);
-		ctx.webRtcTransport2!.close();
-	});
+	const promise = enhancedOnce<ConsumerEvents>(videoConsumer, 'transportclose');
+
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoConsumer.closed).toBe(true);

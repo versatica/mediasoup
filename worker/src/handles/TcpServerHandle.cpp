@@ -65,32 +65,8 @@ TcpServerHandle::~TcpServerHandle()
 
 	if (!this->closed)
 	{
-		Close();
+		InternalClose();
 	}
-}
-
-void TcpServerHandle::Close()
-{
-	MS_TRACE();
-
-	if (this->closed)
-	{
-		return;
-	}
-
-	this->closed = true;
-
-	// Tell the UV handle that the TcpServerHandle has been closed.
-	this->uvHandle->data = nullptr;
-
-	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
-
-	for (auto* connection : this->connections)
-	{
-		delete connection;
-	}
-
-	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
 void TcpServerHandle::Dump() const
@@ -217,6 +193,30 @@ void TcpServerHandle::AcceptTcpConnection(TcpConnectionHandle* connection)
 
 	// Store it.
 	this->connections.insert(connection);
+}
+
+void TcpServerHandle::InternalClose()
+{
+	MS_TRACE();
+
+	if (this->closed)
+	{
+		return;
+	}
+
+	this->closed = true;
+
+	// Tell the UV handle that the TcpServerHandle has been closed.
+	this->uvHandle->data = nullptr;
+
+	MS_DEBUG_DEV("closing %zu active connections", this->connections.size());
+
+	for (auto* connection : this->connections)
+	{
+		delete connection;
+	}
+
+	uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
 bool TcpServerHandle::SetLocalAddress()

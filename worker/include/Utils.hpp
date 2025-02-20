@@ -28,7 +28,10 @@ namespace Utils
 		static bool CompareAddresses(const struct sockaddr* addr1, const struct sockaddr* addr2)
 		{
 			// Compare family.
-			if (addr1->sa_family != addr2->sa_family || (addr1->sa_family != AF_INET && addr1->sa_family != AF_INET6))
+			if (
+			  addr1->sa_family != addr2->sa_family ||
+			  (addr1->sa_family != AF_INET && addr1->sa_family != AF_INET6) ||
+			  (addr2->sa_family != AF_INET && addr2->sa_family != AF_INET6))
 			{
 				return false;
 			}

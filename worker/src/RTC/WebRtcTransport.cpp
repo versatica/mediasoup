@@ -4,6 +4,7 @@
 #include "RTC/WebRtcTransport.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Settings.hpp"
 #include "Utils.hpp"
 #include "FBS/webRtcTransport.h"
 #include <cmath> // std::pow()
@@ -75,13 +76,36 @@ namespace RTC
 				{
 					RTC::UdpSocket* udpSocket;
 
-					if (listenInfo->port() != 0)
+					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
+					{
+						uint64_t portRangeHash{ 0u };
+
+						udpSocket = new RTC::UdpSocket(
+						  this,
+						  ip,
+						  listenInfo->portRange()->min(),
+						  listenInfo->portRange()->max(),
+						  flags,
+						  portRangeHash);
+					}
+					else if (listenInfo->port() != 0)
 					{
 						udpSocket = new RTC::UdpSocket(this, ip, listenInfo->port(), flags);
 					}
+					// NOTE: This is temporal to allow deprecated usage of worker port range.
+					// In the future this should throw since |port| or |portRange| will be
+					// required.
 					else
 					{
-						udpSocket = new RTC::UdpSocket(this, ip, flags);
+						uint64_t portRangeHash{ 0u };
+
+						udpSocket = new RTC::UdpSocket(
+						  this,
+						  ip,
+						  Settings::configuration.rtcMinPort,
+						  Settings::configuration.rtcMaxPort,
+						  flags,
+						  portRangeHash);
 					}
 
 					this->udpSockets[udpSocket] = announcedAddress;
@@ -117,13 +141,38 @@ namespace RTC
 				{
 					RTC::TcpServer* tcpServer;
 
-					if (listenInfo->port() != 0)
+					if (listenInfo->portRange()->min() != 0 && listenInfo->portRange()->max() != 0)
+					{
+						uint64_t portRangeHash{ 0u };
+
+						tcpServer = new RTC::TcpServer(
+						  this,
+						  this,
+						  ip,
+						  listenInfo->portRange()->min(),
+						  listenInfo->portRange()->max(),
+						  flags,
+						  portRangeHash);
+					}
+					else if (listenInfo->port() != 0)
 					{
 						tcpServer = new RTC::TcpServer(this, this, ip, listenInfo->port(), flags);
 					}
+					// NOTE: This is temporal to allow deprecated usage of worker port range.
+					// In the future this should throw since |port| or |portRange| will be
+					// required.
 					else
 					{
-						tcpServer = new RTC::TcpServer(this, this, ip, flags);
+						uint64_t portRangeHash{ 0u };
+
+						tcpServer = new RTC::TcpServer(
+						  this,
+						  this,
+						  ip,
+						  Settings::configuration.rtcMinPort,
+						  Settings::configuration.rtcMaxPort,
+						  flags,
+						  portRangeHash);
 					}
 
 					this->tcpServers[tcpServer] = announcedAddress;
@@ -1131,9 +1180,9 @@ namespace RTC
 		}
 
 		// If this is a TCP tuple, close its underlaying TCP connection.
-		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP && !tuple->IsClosed())
+		if (tuple->GetProtocol() == RTC::TransportTuple::Protocol::TCP)
 		{
-			tuple->Close();
+			tuple->CloseTcpConnection();
 		}
 	}
 

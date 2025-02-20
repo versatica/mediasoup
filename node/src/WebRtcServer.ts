@@ -1,69 +1,22 @@
 import { Logger } from './Logger';
-import { EnhancedEventEmitter } from './EnhancedEventEmitter';
-import { Channel } from './Channel';
-import { TransportListenInfo } from './Transport';
-import { WebRtcTransport } from './WebRtcTransport';
-import { AppData } from './types';
-import * as utils from './utils';
+import { EnhancedEventEmitter } from './enhancedEvents';
+import type { Channel } from './Channel';
+import type {
+	WebRtcServer,
+	IpPort,
+	IceUserNameFragment,
+	TupleHash,
+	WebRtcServerDump,
+	WebRtcServerEvents,
+	WebRtcServerObserver,
+	WebRtcServerObserverEvents,
+} from './WebRtcServerTypes';
+import type { WebRtcTransport } from './WebRtcTransportTypes';
+import type { AppData } from './types';
+import * as fbsUtils from './fbsUtils';
 import { Body as RequestBody, Method } from './fbs/request';
 import * as FbsWorker from './fbs/worker';
 import * as FbsWebRtcServer from './fbs/web-rtc-server';
-
-export type WebRtcServerOptions<WebRtcServerAppData extends AppData = AppData> =
-	{
-		/**
-		 * Listen infos.
-		 */
-		listenInfos: TransportListenInfo[];
-
-		/**
-		 * Custom application data.
-		 */
-		appData?: WebRtcServerAppData;
-	};
-
-/**
- * @deprecated
- * Use TransportListenInfo instead.
- */
-export type WebRtcServerListenInfo = TransportListenInfo;
-
-export type WebRtcServerEvents = {
-	workerclose: [];
-	listenererror: [string, Error];
-	// Private events.
-	'@close': [];
-};
-
-export type WebRtcServerObserverEvents = {
-	close: [];
-	webrtctransporthandled: [WebRtcTransport];
-	webrtctransportunhandled: [WebRtcTransport];
-};
-
-export type WebRtcServerDump = {
-	id: string;
-	udpSockets: IpPort[];
-	tcpServers: IpPort[];
-	webRtcTransportIds: string[];
-	localIceUsernameFragments: IceUserNameFragment[];
-	tupleHashes: TupleHash[];
-};
-
-type IpPort = {
-	ip: string;
-	port: number;
-};
-
-type IceUserNameFragment = {
-	localIceUsernameFragment: string;
-	webRtcTransportId: string;
-};
-
-type TupleHash = {
-	tupleHash: number;
-	webRtcTransportId: string;
-};
 
 type WebRtcServerInternal = {
 	webRtcServerId: string;
@@ -71,9 +24,10 @@ type WebRtcServerInternal = {
 
 const logger = new Logger('WebRtcServer');
 
-export class WebRtcServer<
-	WebRtcServerAppData extends AppData = AppData,
-> extends EnhancedEventEmitter<WebRtcServerEvents> {
+export class WebRtcServerImpl<WebRtcServerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<WebRtcServerEvents>
+	implements WebRtcServer
+{
 	// Internal data.
 	readonly #internal: WebRtcServerInternal;
 
@@ -90,11 +44,9 @@ export class WebRtcServer<
 	readonly #webRtcTransports: Map<string, WebRtcTransport> = new Map();
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<WebRtcServerObserverEvents>();
+	readonly #observer: WebRtcServerObserver =
+		new EnhancedEventEmitter<WebRtcServerObserverEvents>();
 
-	/**
-	 * @private
-	 */
 	constructor({
 		internal,
 		channel,
@@ -110,55 +62,38 @@ export class WebRtcServer<
 
 		this.#internal = internal;
 		this.#channel = channel;
-		this.#appData = appData || ({} as WebRtcServerAppData);
+		this.#appData = appData ?? ({} as WebRtcServerAppData);
+
+		this.handleListenerError();
 	}
 
-	/**
-	 * WebRtcServer id.
-	 */
 	get id(): string {
 		return this.#internal.webRtcServerId;
 	}
 
-	/**
-	 * Whether the WebRtcServer is closed.
-	 */
 	get closed(): boolean {
 		return this.#closed;
 	}
 
-	/**
-	 * App custom data.
-	 */
 	get appData(): WebRtcServerAppData {
 		return this.#appData;
 	}
 
-	/**
-	 * App custom data setter.
-	 */
 	set appData(appData: WebRtcServerAppData) {
 		this.#appData = appData;
 	}
 
-	/**
-	 * Observer.
-	 */
-	get observer(): EnhancedEventEmitter<WebRtcServerObserverEvents> {
+	get observer(): WebRtcServerObserver {
 		return this.#observer;
 	}
 
 	/**
-	 * @private
 	 * Just for testing purposes.
 	 */
 	get webRtcTransportsForTesting(): Map<string, WebRtcTransport> {
 		return this.#webRtcTransports;
 	}
 
-	/**
-	 * Close the WebRtcServer.
-	 */
 	close(): void {
 		if (this.#closed) {
 			return;
@@ -196,11 +131,6 @@ export class WebRtcServer<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Worker was closed.
-	 *
-	 * @private
-	 */
 	workerClosed(): void {
 		if (this.#closed) {
 			return;
@@ -220,9 +150,6 @@ export class WebRtcServer<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Dump WebRtcServer.
-	 */
 	async dump(): Promise<WebRtcServerDump> {
 		logger.debug('dump()');
 
@@ -241,9 +168,6 @@ export class WebRtcServer<
 		return parseWebRtcServerDump(dump);
 	}
 
-	/**
-	 * @private
-	 */
 	handleWebRtcTransport(webRtcTransport: WebRtcTransport): void {
 		this.#webRtcTransports.set(webRtcTransport.id, webRtcTransport);
 
@@ -255,6 +179,15 @@ export class WebRtcServer<
 
 			// Emit observer event.
 			this.#observer.safeEmit('webrtctransportunhandled', webRtcTransport);
+		});
+	}
+
+	private handleListenerError(): void {
+		this.on('listenererror', (eventName, error) => {
+			logger.error(
+				`event listener threw an error [eventName:${eventName}]:`,
+				error
+			);
 		});
 	}
 }
@@ -277,7 +210,7 @@ function parseIceUserNameFragment(
 
 function parseTupleHash(binary: FbsWebRtcServer.TupleHash): TupleHash {
 	return {
-		tupleHash: Number(binary.tupleHash()!),
+		tupleHash: Number(binary.tupleHash()),
 		webRtcTransportId: binary.webRtcTransportId()!,
 	};
 }
@@ -287,14 +220,14 @@ function parseWebRtcServerDump(
 ): WebRtcServerDump {
 	return {
 		id: data.id()!,
-		udpSockets: utils.parseVector(data, 'udpSockets', parseIpPort),
-		tcpServers: utils.parseVector(data, 'tcpServers', parseIpPort),
-		webRtcTransportIds: utils.parseVector(data, 'webRtcTransportIds'),
-		localIceUsernameFragments: utils.parseVector(
+		udpSockets: fbsUtils.parseVector(data, 'udpSockets', parseIpPort),
+		tcpServers: fbsUtils.parseVector(data, 'tcpServers', parseIpPort),
+		webRtcTransportIds: fbsUtils.parseVector(data, 'webRtcTransportIds'),
+		localIceUsernameFragments: fbsUtils.parseVector(
 			data,
 			'localIceUsernameFragments',
 			parseIceUserNameFragment
 		),
-		tupleHashes: utils.parseVector(data, 'tupleHashes', parseTupleHash),
+		tupleHashes: fbsUtils.parseVector(data, 'tupleHashes', parseTupleHash),
 	};
 }

@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents, DataProducerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -11,7 +13,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	dataProducerOptions1: utils.deepFreeze({
+	dataProducerOptions1: utils.deepFreeze<mediasoup.types.DataProducerOptions>({
 		sctpStreamParameters: {
 			streamId: 666,
 		},
@@ -19,7 +21,7 @@ const ctx: TestContext = {
 		protocol: 'bar',
 		appData: { foo: 1, bar: '2' },
 	}),
-	dataProducerOptions2: utils.deepFreeze({
+	dataProducerOptions2: utils.deepFreeze<mediasoup.types.DataProducerOptions>({
 		sctpStreamParameters: {
 			streamId: 777,
 			maxRetransmits: 3,
@@ -48,9 +50,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -146,7 +146,7 @@ test('webRtcTransport1.produceData() with wrong arguments rejects with TypeError
 	// Missing or empty sctpStreamParameters.streamId.
 	await expect(
 		ctx.webRtcTransport1!.produceData({
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			sctpStreamParameters: { foo: 'foo' },
 		})
 	).rejects.toThrow(TypeError);
@@ -271,11 +271,11 @@ test('dataProducer.pause() and resume() succeed', async () => {
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
-	dataProducer1.pause();
-	dataProducer1.resume();
-	dataProducer1.pause();
-	dataProducer1.pause();
-	dataProducer1.pause();
+	void dataProducer1.pause();
+	void dataProducer1.resume();
+	void dataProducer1.pause();
+	void dataProducer1.pause();
+	void dataProducer1.pause();
 	await dataProducer1.resume();
 
 	expect(onObserverPause).toHaveBeenCalledTimes(3);
@@ -353,11 +353,13 @@ test('DataProducer emits "transportclose" if Transport is closed', async () => {
 
 	dataProducer2.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		dataProducer2.on('transportclose', resolve);
+	const promise = enhancedOnce<DataProducerEvents>(
+		dataProducer2,
+		'transportclose'
+	);
 
-		ctx.webRtcTransport2!.close();
-	});
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(dataProducer2.closed).toBe(true);

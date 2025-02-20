@@ -125,11 +125,18 @@ namespace RTC
 			bool udpReusePort{ false };
 		};
 
+		struct PortRange
+		{
+			uint16_t min{ 0u };
+			uint16_t max{ 0u };
+		};
+
 		struct ListenInfo
 		{
 			std::string ip;
 			std::string announcedAddress;
 			uint16_t port{ 0u };
+			PortRange portRange;
 			SocketFlags flags;
 			uint32_t sendBufferSize{ 0u };
 			uint32_t recvBufferSize{ 0u };

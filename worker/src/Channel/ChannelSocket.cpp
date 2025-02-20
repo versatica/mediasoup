@@ -162,7 +162,7 @@ namespace Channel
 
 		this->bufferBuilder.FinishSizePrefixed(message);
 		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
-		this->bufferBuilder.Reset();
+		this->bufferBuilder.Clear();
 	}
 
 	bool ChannelSocket::CallbackRead()
@@ -247,7 +247,7 @@ namespace Channel
 		return free != nullptr;
 	}
 
-	inline void ChannelSocket::SendImpl(const uint8_t* payload, uint32_t payloadLen)
+	void ChannelSocket::SendImpl(const uint8_t* payload, uint32_t payloadLen)
 	{
 		MS_TRACE_STD();
 

@@ -759,7 +759,7 @@ impl Producer {
                 match Notification::from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Score(scores) => {
-                            *score.lock() = scores.clone();
+                            score.lock().clone_from(&scores);
                             handlers.score.call(|callback| {
                                 callback(&scores);
                             });
@@ -899,9 +899,9 @@ impl Producer {
             .inner()
             .channel
             .request(self.id(), ProducerGetStatsRequest {})
-            .await;
+            .await?;
 
-        if let Ok(response::Body::ProducerGetStatsResponse(data)) = response {
+        if let response::Body::ProducerGetStatsResponse(data) = response {
             Ok(data.stats.iter().map(ProducerStat::from_fbs).collect())
         } else {
             panic!("Wrong message from worker");

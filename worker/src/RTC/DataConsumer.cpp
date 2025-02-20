@@ -527,6 +527,12 @@ namespace RTC
 
 		if (!IsActive())
 		{
+			if (cb)
+			{
+				(*cb)(false, false);
+				delete cb;
+			}
+
 			return;
 		}
 
@@ -536,6 +542,12 @@ namespace RTC
 		  requiredSubchannel.has_value() &&
 		  this->subchannels.find(requiredSubchannel.value()) == this->subchannels.end())
 		{
+			if (cb)
+			{
+				(*cb)(false, false);
+				delete cb;
+			}
+
 			return;
 		}
 
@@ -557,6 +569,12 @@ namespace RTC
 
 			if (!subchannelMatched)
 			{
+				if (cb)
+				{
+					(*cb)(false, false);
+					delete cb;
+				}
+
 				return;
 			}
 		}
@@ -568,6 +586,12 @@ namespace RTC
 			  "given message exceeds maxMessageSize value [maxMessageSize:%zu, len:%zu]",
 			  len,
 			  this->maxMessageSize);
+
+			if (cb)
+			{
+				(*cb)(false, false);
+				delete cb;
+			}
 
 			return;
 		}

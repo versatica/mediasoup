@@ -1,5 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents, ProducerEvents } from '../types';
+import type { ProducerImpl } from '../Producer';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 import {
@@ -20,7 +23,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -48,7 +51,7 @@ const ctx: TestContext = {
 			rtcpFeedback: [], // Will be ignored.
 		},
 	]),
-	audioProducerOptions: utils.deepFreeze({
+	audioProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'audio',
 		rtpParameters: {
 			mid: 'AUDIO',
@@ -83,7 +86,7 @@ const ctx: TestContext = {
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
-	videoProducerOptions: utils.deepFreeze({
+	videoProducerOptions: utils.deepFreeze<mediasoup.types.ProducerOptions>({
 		kind: 'video',
 		rtpParameters: {
 			mid: 'VIDEO',
@@ -148,9 +151,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -271,9 +272,9 @@ test('webRtcTransport1.produce() without header extensions and rtcp succeeds', a
 test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', async () => {
 	await expect(
 		ctx.webRtcTransport1!.produce({
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			kind: 'chicken',
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			rtpParameters: {},
 		})
 	).rejects.toThrow(TypeError);
@@ -281,7 +282,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 	await expect(
 		ctx.webRtcTransport1!.produce({
 			kind: 'audio',
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			rtpParameters: {},
 		})
 	).rejects.toThrow(TypeError);
@@ -293,7 +294,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 			rtpParameters: {
 				codecs: [],
 				headerExtensions: [],
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				encodings: [{ ssrc: '1111' }],
 				rtcp: { cname: 'qwerty' },
 			},
@@ -633,11 +634,11 @@ test('producer.pause() and resume() succeed', async () => {
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
-	audioProducer.pause();
-	audioProducer.resume();
-	audioProducer.pause();
-	audioProducer.pause();
-	audioProducer.pause();
+	void audioProducer.pause();
+	void audioProducer.resume();
+	void audioProducer.pause();
+	void audioProducer.pause();
+	void audioProducer.pause();
 	await audioProducer.resume();
 
 	expect(onObserverPause).toHaveBeenCalledTimes(3);
@@ -680,13 +681,13 @@ test('producer.enableTraceEvent() succeed', async () => {
 
 	expect(dump1.traceEventTypes).toEqual(expect.arrayContaining(['rtp', 'pli']));
 
-	await audioProducer.enableTraceEvent([]);
+	await audioProducer.enableTraceEvent();
 
 	const dump2 = await audioProducer.dump();
 
 	expect(dump2.traceEventTypes).toEqual(expect.arrayContaining([]));
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await audioProducer.enableTraceEvent(['nack', 'FOO', 'fir']);
 
 	const dump3 = await audioProducer.dump();
@@ -707,16 +708,16 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 		ctx.audioProducerOptions
 	);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioProducer.enableTraceEvent(123)).rejects.toThrow(TypeError);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioProducer.enableTraceEvent('rtp')).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		audioProducer.enableTraceEvent(['fir', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -726,8 +727,8 @@ test('Producer emits "score"', async () => {
 		ctx.videoProducerOptions
 	);
 
-	// Private API.
-	const channel = videoProducer.channelForTesting;
+	// API not exposed in the interface.
+	const channel = (videoProducer as ProducerImpl).channelForTesting;
 	const onScore = jest.fn();
 
 	videoProducer.on('score', onScore);
@@ -806,11 +807,8 @@ test('Producer methods reject if closed', async () => {
 	audioProducer.close();
 
 	await expect(audioProducer.dump()).rejects.toThrow(Error);
-
 	await expect(audioProducer.getStats()).rejects.toThrow(Error);
-
 	await expect(audioProducer.pause()).rejects.toThrow(Error);
-
 	await expect(audioProducer.resume()).rejects.toThrow(Error);
 }, 2000);
 
@@ -823,10 +821,10 @@ test('Producer emits "transportclose" if Transport is closed', async () => {
 
 	videoProducer.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		videoProducer.on('transportclose', resolve);
-		ctx.webRtcTransport2!.close();
-	});
+	const promise = enhancedOnce<ProducerEvents>(videoProducer, 'transportclose');
+
+	ctx.webRtcTransport2!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(videoProducer.closed).toBe(true);

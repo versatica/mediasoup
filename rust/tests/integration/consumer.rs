@@ -291,7 +291,16 @@ fn consumer_device_capabilities() -> RtpCapabilities {
 }
 
 // Keeps executor threads running until dropped
-struct ExecutorGuard(Vec<async_oneshot::Sender<()>>);
+struct ExecutorGuard {
+    // Silence clippy warnings
+    _senders: Vec<async_oneshot::Sender<()>>,
+}
+
+impl ExecutorGuard {
+    fn new(_senders: Vec<async_oneshot::Sender<()>>) -> Self {
+        Self { _senders }
+    }
+}
 
 fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
     let executor = Arc::new(Executor::new());
@@ -318,7 +327,7 @@ fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
         })
         .collect();
 
-    (ExecutorGuard(senders), executor)
+    (ExecutorGuard::new(senders), executor)
 }
 
 async fn init() -> (
@@ -356,6 +365,7 @@ async fn init() -> (
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_address: None,
             port: None,
+            port_range: None,
             flags: None,
             send_buffer_size: None,
             recv_buffer_size: None,
@@ -976,7 +986,7 @@ fn dump_succeeds() {
                     ssrc: audio_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .ssrc,
                     rid: None,
@@ -1085,13 +1095,13 @@ fn dump_succeeds() {
                     ssrc: video_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .ssrc,
                     rtx: video_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .rtx,
                     dtx: None,
@@ -1164,7 +1174,7 @@ fn get_stats_succeeds() {
                 audio_consumer
                     .rtp_parameters()
                     .encodings
-                    .get(0)
+                    .first()
                     .unwrap()
                     .ssrc
                     .unwrap()
@@ -1213,7 +1223,7 @@ fn get_stats_succeeds() {
                 video_consumer
                     .rtp_parameters()
                     .encodings
-                    .get(0)
+                    .first()
                     .unwrap()
                     .ssrc
                     .unwrap()

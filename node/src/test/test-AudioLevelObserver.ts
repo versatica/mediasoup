@@ -1,4 +1,6 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents, AudioLevelObserverEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -8,7 +10,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -31,9 +33,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -48,6 +48,7 @@ test('router.createAudioLevelObserver() succeeds', async () => {
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(audioLevelObserver);
 	expect(typeof audioLevelObserver.id).toBe('string');
 	expect(audioLevelObserver.closed).toBe(false);
+	expect(audioLevelObserver.type).toBe('audiolevel');
 	expect(audioLevelObserver.paused).toBe(false);
 	expect(audioLevelObserver.appData).toEqual({});
 
@@ -66,17 +67,17 @@ test('router.createAudioLevelObserver() with wrong arguments rejects with TypeEr
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createAudioLevelObserver({ threshold: 'foo' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createAudioLevelObserver({ interval: false })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -114,10 +115,13 @@ test('audioLevelObserver.close() succeeds', async () => {
 test('AudioLevelObserver emits "routerclose" if Router is closed', async () => {
 	const audioLevelObserver = await ctx.router!.createAudioLevelObserver();
 
-	await new Promise<void>(resolve => {
-		audioLevelObserver.on('routerclose', resolve);
-		ctx.router!.close();
-	});
+	const promise = enhancedOnce<AudioLevelObserverEvents>(
+		audioLevelObserver,
+		'routerclose'
+	);
+
+	ctx.router!.close();
+	await promise;
 
 	expect(audioLevelObserver.closed).toBe(true);
 }, 2000);
@@ -125,10 +129,13 @@ test('AudioLevelObserver emits "routerclose" if Router is closed', async () => {
 test('AudioLevelObserver emits "routerclose" if Worker is closed', async () => {
 	const audioLevelObserver = await ctx.router!.createAudioLevelObserver();
 
-	await new Promise<void>(resolve => {
-		audioLevelObserver.on('routerclose', resolve);
-		ctx.worker!.close();
-	});
+	const promise = enhancedOnce<AudioLevelObserverEvents>(
+		audioLevelObserver,
+		'routerclose'
+	);
+
+	ctx.worker!.close();
+	await promise;
 
 	expect(audioLevelObserver.closed).toBe(true);
 }, 2000);

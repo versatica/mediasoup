@@ -192,6 +192,11 @@ namespace RTC
 			{
 				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
 			}
+
+			if (this->rtpHeaderExtensionIds.playoutDelay == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			{
+				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
+			}
 		}
 
 		// Set the RTCP report generation interval.
@@ -1264,6 +1269,19 @@ namespace RTC
 				bufferPtr += extenLen;
 			}
 
+			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+			extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
+
+			if (extenValue)
+			{
+				std::memcpy(bufferPtr, extenValue, extenLen);
+
+				extensions.emplace_back(
+				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY), extenLen, bufferPtr);
+
+				bufferPtr += extenLen;
+			}
+
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
 				// Proxy urn:ietf:params:rtp-hdrext:ssrc-audio-level.
@@ -1396,6 +1414,8 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
 			packet->SetVideoOrientationExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION));
+			packet->SetPlayoutDelayExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY));
 		}
 
 		return true;

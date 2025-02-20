@@ -1,4 +1,7 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { DirectTransportEvents } from '../DirectTransportTypes';
+import type { WorkerEvents } from '../types';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -16,9 +19,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -39,13 +40,13 @@ test('router.createDirectTransport() succeeds', async () => {
 	expect(onObserverNewTransport).toHaveBeenCalledTimes(1);
 	expect(onObserverNewTransport).toHaveBeenCalledWith(directTransport);
 	expect(typeof directTransport.id).toBe('string');
+	expect(directTransport.type).toBe('direct');
 	expect(directTransport.closed).toBe(false);
 	expect(directTransport.appData).toEqual({ foo: 'bar' });
 
 	const dump = await directTransport.dump();
 
 	expect(dump.id).toBe(directTransport.id);
-	expect(dump.direct).toBe(true);
 	expect(dump.producerIds).toEqual([]);
 	expect(dump.consumerIds).toEqual([]);
 	expect(dump.dataProducerIds).toEqual([]);
@@ -59,7 +60,7 @@ test('router.createDirectTransport() succeeds', async () => {
 
 test('router.createDirectTransport() with wrong arguments rejects with TypeError', async () => {
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createDirectTransport({ maxMessageSize: 'foo' })
 	).rejects.toThrow(TypeError);
 
@@ -168,7 +169,7 @@ test('dataProducer.send() succeeds', async () => {
 		dataProducer.on('listenererror', (eventName, error) => {
 			reject(
 				new Error(
-					`dataProducer 'listenererror' [eventName:${eventName}]: ${error}`
+					`dataProducer 'listenererror' [eventName:${eventName}]: ${error.toString()}`
 				)
 			);
 		});
@@ -176,7 +177,7 @@ test('dataProducer.send() succeeds', async () => {
 		dataConsumer.on('listenererror', (eventName, error) => {
 			reject(
 				new Error(
-					`dataConsumer 'listenererror' [eventName:${eventName}]: ${error}`
+					`dataConsumer 'listenererror' [eventName:${eventName}]: ${error.toString()}`
 				)
 			);
 		});
@@ -397,11 +398,13 @@ test('DirectTransport emits "routerclose" if Router is closed', async () => {
 
 	directTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		directTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<DirectTransportEvents>(
+		directTransport,
+		'routerclose'
+	);
 
-		ctx.router!.close();
-	});
+	ctx.router!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);
@@ -413,11 +416,13 @@ test('DirectTransport emits "routerclose" if Worker is closed', async () => {
 
 	directTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		directTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<DirectTransportEvents>(
+		directTransport,
+		'routerclose'
+	);
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(directTransport.closed).toBe(true);

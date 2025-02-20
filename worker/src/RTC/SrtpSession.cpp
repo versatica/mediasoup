@@ -204,6 +204,7 @@ namespace RTC
 		uint8_t* encryptBuffer = EncryptBuffer;
 
 #ifdef MS_LIBURING_SUPPORTED
+		if (DepLibUring::IsEnabled())
 		{
 			if (!DepLibUring::IsActive())
 			{

@@ -2,6 +2,8 @@ import * as os from 'node:os';
 import * as process from 'node:process';
 import * as path from 'node:path';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents } from '../types';
 import { InvalidStateError } from '../errors';
 
 test('Worker.workerBin matches mediasoup-worker absolute path', () => {
@@ -41,14 +43,14 @@ test('createWorker() succeeds', async () => {
 
 	expect(onObserverNewWorker).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWorker).toHaveBeenCalledWith(worker1);
-	expect(worker1.constructor.name).toBe('Worker');
+	expect(worker1.constructor.name).toBe('WorkerImpl');
 	expect(typeof worker1.pid).toBe('number');
 	expect(worker1.closed).toBe(false);
 	expect(worker1.died).toBe(false);
 
 	worker1.close();
 
-	await new Promise<void>(resolve => worker1.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker1, 'subprocessclose');
 
 	expect(worker1.closed).toBe(true);
 	expect(worker1.died).toBe(false);
@@ -61,10 +63,11 @@ test('createWorker() succeeds', async () => {
 		dtlsCertificateFile: path.join(__dirname, 'data', 'dtls-cert.pem'),
 		dtlsPrivateKeyFile: path.join(__dirname, 'data', 'dtls-key.pem'),
 		libwebrtcFieldTrials: 'WebRTC-Bwe-AlrLimitedBackoff/Disabled/',
+		disableLiburing: true,
 		appData: { foo: 456 },
 	});
 
-	expect(worker2.constructor.name).toBe('Worker');
+	expect(worker2.constructor.name).toBe('WorkerImpl');
 	expect(typeof worker2.pid).toBe('number');
 	expect(worker2.closed).toBe(false);
 	expect(worker2.died).toBe(false);
@@ -72,14 +75,14 @@ test('createWorker() succeeds', async () => {
 
 	worker2.close();
 
-	await new Promise<void>(resolve => worker2.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker2, 'subprocessclose');
 
 	expect(worker2.closed).toBe(true);
 	expect(worker2.died).toBe(false);
 }, 2000);
 
 test('createWorker() with wrong settings rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(mediasoup.createWorker({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
 	);
@@ -102,7 +105,7 @@ test('createWorker() with wrong settings rejects with TypeError', async () => {
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -116,20 +119,20 @@ test('worker.updateSettings() succeeds', async () => {
 
 	worker.close();
 
-	await new Promise<void>(resolve => worker.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 }, 2000);
 
 test('worker.updateSettings() with wrong settings rejects with TypeError', async () => {
 	const worker = await mediasoup.createWorker();
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(worker.updateSettings({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
 	);
 
 	worker.close();
 
-	await new Promise<void>(resolve => worker.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 }, 2000);
 
 test('worker.updateSettings() rejects with InvalidStateError if closed', async () => {
@@ -137,7 +140,7 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 
 	worker.close();
 
-	await new Promise<void>(resolve => worker.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
 	await expect(worker.updateSettings({ logLevel: 'error' })).rejects.toThrow(
 		InvalidStateError
@@ -165,7 +168,7 @@ test('worker.dump() rejects with InvalidStateError if closed', async () => {
 
 	worker.close();
 
-	await new Promise<void>(resolve => worker.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
 	await expect(worker.dump()).rejects.toThrow(InvalidStateError);
 }, 2000);
@@ -177,7 +180,7 @@ test('worker.getResourceUsage() succeeds', async () => {
 
 	worker.close();
 
-	await new Promise<void>(resolve => worker.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 }, 2000);
 
 test('worker.close() succeeds', async () => {
@@ -187,7 +190,7 @@ test('worker.close() succeeds', async () => {
 	worker.observer.once('close', onObserverClose);
 	worker.close();
 
-	await new Promise<void>(resolve => worker.on('subprocessclose', resolve));
+	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
@@ -224,7 +227,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () => {
 	});
 
 	if (!worker1.subprocessClosed) {
-		await new Promise<void>(resolve => worker1.on('subprocessclose', resolve));
+		await enhancedOnce<WorkerEvents>(worker1, 'subprocessclose');
 	}
 
 	expect(onDied).toHaveBeenCalledTimes(1);
@@ -258,7 +261,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () => {
 	});
 
 	if (!worker2.subprocessClosed) {
-		await new Promise<void>(resolve => worker2.on('subprocessclose', resolve));
+		await enhancedOnce<WorkerEvents>(worker2, 'subprocessclose');
 	}
 
 	expect(onDied).toHaveBeenCalledTimes(1);
@@ -292,7 +295,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () => {
 	});
 
 	if (!worker3.subprocessClosed) {
-		await new Promise<void>(resolve => worker3.on('subprocessclose', resolve));
+		await enhancedOnce<WorkerEvents>(worker3, 'subprocessclose');
 	}
 
 	expect(onDied).toHaveBeenCalledTimes(1);

@@ -6,7 +6,7 @@ RUN set -x \
 	&& apt-get install --yes \
 		gcc g++ clang pkg-config bash-completion wget curl \
 		screen python3-pip python3-yaml pkg-config zlib1g-dev \
-		libgss-dev libssl-dev libxml2-dev
+		libgss-dev libssl-dev libxml2-dev gdb
 
 # Install node 20.
 RUN set -x \
@@ -20,6 +20,10 @@ RUN set -x \
 	> /etc/apt/sources.list.d/nodesource.list \
 	&& apt-get update \
 	&& apt-get install nodejs --yes
+
+# Enable core dumps.
+RUN set -x \
+	&& echo "mkdir -p /tmp/cores && chmod 777 /tmp/cores && echo \"/tmp/cores/core.%e.sig%s.%p\" > /proc/sys/kernel/core_pattern && ulimit -c unlimited" >> ~/.bashrc
 
 # Make CC and CXX point to clang/clang++ installed above.
 ENV LANG="C.UTF-8"

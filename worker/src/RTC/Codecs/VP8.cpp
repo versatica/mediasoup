@@ -21,6 +21,8 @@ namespace RTC
 
 			if (len < 1)
 			{
+				MS_WARN_DEV("ignoring empty payload");
+
 				return nullptr;
 			}
 
@@ -36,12 +38,16 @@ namespace RTC
 
 			if (!payloadDescriptor->extended)
 			{
+				MS_WARN_DEV("ignoring invalid payload (1)");
+
 				return nullptr;
 			}
 			else
 			{
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (2)");
+
 					return nullptr;
 				}
 
@@ -57,6 +63,8 @@ namespace RTC
 			{
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (3)");
+
 					return nullptr;
 				}
 
@@ -66,6 +74,8 @@ namespace RTC
 				{
 					if (len < ++offset + 1)
 					{
+						MS_WARN_DEV("ignoring invalid payload (4)");
+
 						return nullptr;
 					}
 
@@ -86,6 +96,8 @@ namespace RTC
 			{
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (5)");
+
 					return nullptr;
 				}
 
@@ -97,6 +109,8 @@ namespace RTC
 			{
 				if (len < ++offset + 1)
 				{
+					MS_WARN_DEV("ignoring invalid payload (6)");
+
 					return nullptr;
 				}
 
@@ -345,7 +359,7 @@ namespace RTC
 			// clang-format off
 			if (
 				this->payloadDescriptor->hasTlIndex &&
-				this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer()
+				this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer()
 			)
 			// clang-format on
 			{
@@ -359,6 +373,12 @@ namespace RTC
 			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
 			{
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
+			}
+
+			// Do not send tlIndex higher than current one.
+			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+			{
+				return false;
 			}
 
 			// clang-format off

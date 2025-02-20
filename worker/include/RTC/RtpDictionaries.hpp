@@ -127,6 +127,7 @@ namespace RTC
 			VIDEO_ORIENTATION      = 11,
 			TOFFSET                = 12,
 			ABS_CAPTURE_TIME       = 13,
+			PLAYOUT_DELAY          = 14,
 		};
 
 	public:

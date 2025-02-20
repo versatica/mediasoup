@@ -261,6 +261,7 @@ async fn init() -> (
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_address: None,
             port: None,
+            port_range: None,
             flags: None,
             send_buffer_size: None,
             recv_buffer_size: None,
@@ -349,6 +350,11 @@ fn pipe_to_router_succeeds_with_audio() {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
                     id: 13,
                     encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
+                    encrypt: false,
                 }
             ],
         );
@@ -394,7 +400,12 @@ fn pipe_to_router_succeeds_with_audio() {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
                     id: 13,
                     encrypt: false,
-                }
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
+                    encrypt: false,
+                },
             ],
         );
         assert!(!pipe_producer.paused());
@@ -498,6 +509,11 @@ fn pipe_to_router_succeeds_with_video() {
                     id: 13,
                     encrypt: false,
                 },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
+                    encrypt: false,
+                },
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
@@ -555,6 +571,11 @@ fn pipe_to_router_succeeds_with_video() {
                     id: 13,
                     encrypt: false,
                 },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
+                    encrypt: false,
+                },
             ],
         );
         assert!(pipe_producer.paused());
@@ -606,6 +627,7 @@ fn weak() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -641,6 +663,7 @@ fn create_with_fixed_port_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: Some(port),
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -665,6 +688,7 @@ fn create_with_enable_rtx_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -749,6 +773,11 @@ fn create_with_enable_rtx_succeeds() {
                     id: 13,
                     encrypt: false,
                 },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::PlayoutDelay,
+                    id: 14,
+                    encrypt: false,
+                },
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
@@ -778,6 +807,7 @@ fn create_with_enable_srtp_succeeds() {
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
                     port: None,
+                    port_range: None,
                     flags: None,
                     send_buffer_size: None,
                     recv_buffer_size: None,
@@ -834,6 +864,7 @@ fn create_with_invalid_srtp_parameters_fails() {
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_address: None,
                 port: None,
+                port_range: None,
                 flags: None,
                 send_buffer_size: None,
                 recv_buffer_size: None,
@@ -1161,6 +1192,7 @@ fn pipe_to_router_called_twice_generates_single_pair() {
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_address: None,
                 port: None,
+                port_range: None,
                 flags: None,
                 send_buffer_size: None,
                 recv_buffer_size: None,

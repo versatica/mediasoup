@@ -1,8 +1,12 @@
 import { pickPort } from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerEvents, WebRtcTransportEvents } from '../types';
+import type { WebRtcTransportImpl } from '../WebRtcTransport';
+import type { TransportTuple } from '../TransportTypes';
+import { serializeProtocol } from '../Transport';
 import * as utils from '../utils';
-import { serializeProtocol, TransportTuple } from '../Transport';
 import {
 	Notification,
 	Body as NotificationBody,
@@ -18,7 +22,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -57,9 +61,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -70,12 +72,42 @@ test('router.createWebRtcTransport() succeeds', async () => {
 
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
-			{ protocol: 'tcp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
-			{ protocol: 'udp', ip: '0.0.0.0', announcedAddress: 'foo1.bar.org' },
-			{ protocol: 'tcp', ip: '0.0.0.0', announcedAddress: 'foo2.bar.org' },
-			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: undefined },
-			{ protocol: 'tcp', ip: '127.0.0.1', announcedAddress: undefined },
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				announcedAddress: '9.9.9.1',
+				portRange: { min: 2000, max: 3000 },
+			},
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedAddress: '9.9.9.1',
+				portRange: { min: 2000, max: 3000 },
+			},
+			{
+				protocol: 'udp',
+				ip: '0.0.0.0',
+				announcedAddress: 'foo1.bar.org',
+				portRange: { min: 2000, max: 3000 },
+			},
+			{
+				protocol: 'tcp',
+				ip: '0.0.0.0',
+				announcedAddress: 'foo2.bar.org',
+				portRange: { min: 2000, max: 3000 },
+			},
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				announcedAddress: undefined,
+				portRange: { min: 2000, max: 3000 },
+			},
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedAddress: undefined,
+				portRange: { min: 2000, max: 3000 },
+			},
 		],
 		enableTcp: true,
 		preferUdp: true,
@@ -93,6 +125,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(onObserverNewTransport).toHaveBeenCalledWith(webRtcTransport);
 	expect(typeof webRtcTransport.id).toBe('string');
 	expect(webRtcTransport.closed).toBe(false);
+	expect(webRtcTransport.type).toBe('webrtc');
 	expect(webRtcTransport.appData).toEqual({ foo: 'bar' });
 	expect(webRtcTransport.iceRole).toBe('controlled');
 	expect(typeof webRtcTransport.iceParameters).toBe('object');
@@ -152,7 +185,6 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	const dump = await webRtcTransport.dump();
 
 	expect(dump.id).toBe(webRtcTransport.id);
-	expect(dump.direct).toBe(false);
 	expect(dump.producerIds).toEqual([]);
 	expect(dump.consumerIds).toEqual([]);
 	expect(dump.iceRole).toBe(webRtcTransport.iceRole);
@@ -197,31 +229,94 @@ test('router.createWebRtcTransport() with deprecated listenIps succeeds', async 
 	expect(iceCandidates[0].priority).toBeGreaterThan(iceCandidates[1].priority);
 }, 2000);
 
+test('router.createWebRtcTransport() with fixed port succeeds', async () => {
+	const port = await pickPort({
+		type: 'tcp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+	const webRtcTransport = await ctx.router!.createWebRtcTransport({
+		listenInfos: [
+			// NOTE: udpReusePort flag will be ignored since protocol is TCP.
+			{ protocol: 'tcp', ip: '127.0.0.1', port, flags: { udpReusePort: true } },
+		],
+	});
+
+	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
+}, 2000);
+
+test('router.createWebRtcTransport() with portRange succeeds', async () => {
+	const portRange = { min: 11111, max: 11112 };
+
+	const webRtcTransport1 = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
+	});
+
+	const iceCandidate1 = webRtcTransport1.iceCandidates[0];
+
+	expect(iceCandidate1.ip).toBe('127.0.0.1');
+	expect(
+		iceCandidate1.port >= portRange.min && iceCandidate1.port <= portRange.max
+	).toBe(true);
+	expect(iceCandidate1.protocol).toBe('udp');
+
+	const webRtcTransport2 = await ctx.router!.createWebRtcTransport({
+		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
+	});
+
+	const iceCandidate2 = webRtcTransport2.iceCandidates[0];
+
+	expect(iceCandidate2.ip).toBe('127.0.0.1');
+	expect(
+		iceCandidate1.port >= portRange.min && iceCandidate1.port <= portRange.max
+	).toBe(true);
+	expect(iceCandidate2.protocol).toBe('udp');
+
+	// No more available ports so it must fail.
+	await expect(
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
+		})
+	).rejects.toThrow(Error);
+}, 2000);
+
 test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router!.createWebRtcTransport({})).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		ctx.router!.createWebRtcTransport({
+			listenInfos: [
+				{
+					protocol: 'udp',
+					ip: '127.0.0.1',
+					portRange: { min: 4000, max: 3000 },
+				},
+			],
+		})
+	).rejects.toThrow(TypeError);
+
+	await expect(
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createWebRtcTransport({ listenIps: [123] })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router!.createWebRtcTransport({
 			listenIps: ['127.0.0.1'],
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
@@ -230,7 +325,7 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 		ctx.router!.createWebRtcTransport({
 			listenIps: ['127.0.0.1'],
 			enableSctp: true,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			numSctpStreams: 'foo',
 		})
 	).rejects.toThrow(TypeError);
@@ -239,7 +334,9 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 test('router.createWebRtcTransport() with non bindable IP rejects with Error', async () => {
 	await expect(
 		ctx.router!.createWebRtcTransport({
-			listenInfos: [{ protocol: 'udp', ip: '8.8.8.8' }],
+			listenInfos: [
+				{ protocol: 'udp', ip: '8.8.8.8', portRange: { min: 2000, max: 3000 } },
+			],
 		})
 	).rejects.toThrow(Error);
 }, 2000);
@@ -247,7 +344,12 @@ test('router.createWebRtcTransport() with non bindable IP rejects with Error', a
 test('webRtcTransport.getStats() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				announcedAddress: '9.9.9.1',
+				portRange: { min: 2000, max: 3000 },
+			},
 		],
 	});
 
@@ -283,7 +385,12 @@ test('webRtcTransport.getStats() succeeds', async () => {
 test('webRtcTransport.connect() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				announcedAddress: '9.9.9.1',
+				portRange: { min: 2000, max: 3000 },
+			},
 		],
 	});
 
@@ -317,19 +424,24 @@ test('webRtcTransport.connect() succeeds', async () => {
 test('webRtcTransport.connect() with wrong arguments rejects with TypeError', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				announcedAddress: '9.9.9.1',
+				portRange: { min: 2000, max: 3000 },
+			},
 		],
 	});
 
 	let dtlsRemoteParameters: mediasoup.types.DtlsParameters;
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.connect({})).rejects.toThrow(TypeError);
 
 	dtlsRemoteParameters = {
 		fingerprints: [
 			{
-				// @ts-ignore.
+				// @ts-expect-error --- Testing purposes..
 				algorithm: 'sha-256000',
 				value:
 					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
@@ -350,7 +462,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
 			},
 		],
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		role: 'chicken',
 	};
 
@@ -377,7 +489,12 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenInfos: [
-			{ protocol: 'udp', ip: '127.0.0.1', announcedAddress: '9.9.9.1' },
+			{
+				protocol: 'udp',
+				ip: '127.0.0.1',
+				announcedAddress: '9.9.9.1',
+				portRange: { min: 2000, max: 3000 },
+			},
 		],
 	});
 
@@ -393,7 +510,9 @@ test('webRtcTransport.setMaxIncomingBitrate() succeeds', async () => {
 
 test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	await expect(
@@ -408,7 +527,9 @@ test('webRtcTransport.setMaxOutgoingBitrate() succeeds', async () => {
 
 test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	await expect(
@@ -423,7 +544,9 @@ test('webRtcTransport.setMinOutgoingBitrate() succeeds', async () => {
 
 test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than current min limit', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	await expect(
@@ -442,7 +565,9 @@ test('webRtcTransport.setMaxOutgoingBitrate() fails if value is lower than curre
 
 test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than current max limit', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	await expect(
@@ -461,7 +586,9 @@ test('webRtcTransport.setMinOutgoingBitrate() fails if value is higher than curr
 
 test('webRtcTransport.restartIce() succeeds', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	const previousIceUsernameFragment =
@@ -484,21 +611,23 @@ test('webRtcTransport.restartIce() succeeds', async () => {
 
 test('transport.enableTraceEvent() succeed', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await webRtcTransport.enableTraceEvent(['foo', 'probation']);
 	await expect(webRtcTransport.dump()).resolves.toMatchObject({
 		traceEventTypes: ['probation'],
 	});
 
-	await webRtcTransport.enableTraceEvent([]);
+	await webRtcTransport.enableTraceEvent();
 	await expect(webRtcTransport.dump()).resolves.toMatchObject({
 		traceEventTypes: [],
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await webRtcTransport.enableTraceEvent(['probation', 'FOO', 'bwe', 'BAR']);
 	await expect(webRtcTransport.dump()).resolves.toMatchObject({
 		traceEventTypes: ['probation', 'bwe'],
@@ -512,32 +641,36 @@ test('transport.enableTraceEvent() succeed', async () => {
 
 test('transport.enableTraceEvent() with wrong arguments rejects with TypeError', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.enableTraceEvent(123)).rejects.toThrow(
 		TypeError
 	);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.enableTraceEvent('probation')).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		webRtcTransport.enableTraceEvent(['probation', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
 
 test('WebRtcTransport events succeed', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
-	// Private API.
-	const channel = webRtcTransport.channelForTesting;
+	// API not exposed in the interface.
+	const channel = (webRtcTransport as WebRtcTransportImpl).channelForTesting;
 	const onIceStateChange = jest.fn();
 
 	webRtcTransport.on('icestatechange', onIceStateChange);
@@ -664,7 +797,9 @@ test('WebRtcTransport events succeed', async () => {
 
 test('WebRtcTransport methods reject if closed', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	const onObserverClose = jest.fn();
@@ -683,7 +818,7 @@ test('WebRtcTransport methods reject if closed', async () => {
 
 	await expect(webRtcTransport.getStats()).rejects.toThrow(Error);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.connect({})).rejects.toThrow(Error);
 
 	await expect(webRtcTransport.setMaxIncomingBitrate(200000)).rejects.toThrow(
@@ -701,24 +836,6 @@ test('WebRtcTransport methods reject if closed', async () => {
 	await expect(webRtcTransport.restartIce()).rejects.toThrow(Error);
 }, 2000);
 
-test('router.createWebRtcTransport() with fixed port succeeds', async () => {
-	const port = await pickPort({
-		type: 'tcp',
-		ip: '127.0.0.1',
-		reserveTimeout: 0,
-	});
-	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [
-			// NOTE: udpReusePort flag will be ignored since protocol is TCP.
-			{ protocol: 'tcp', ip: '127.0.0.1', port, flags: { udpReusePort: true } },
-		],
-	});
-
-	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
-
-	webRtcTransport.close();
-}, 2000);
-
 test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
 		listenIps: ['127.0.0.1'],
@@ -729,11 +846,13 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
 
 	webRtcTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		webRtcTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<WebRtcTransportEvents>(
+		webRtcTransport,
+		'routerclose'
+	);
 
-		ctx.router!.close();
-	});
+	ctx.router!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(webRtcTransport.closed).toBe(true);
@@ -745,18 +864,22 @@ test('WebRtcTransport emits "routerclose" if Router is closed', async () => {
 
 test('WebRtcTransport emits "routerclose" if Worker is closed', async () => {
 	const webRtcTransport = await ctx.router!.createWebRtcTransport({
-		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1' }],
+		listenInfos: [
+			{ protocol: 'udp', ip: '127.0.0.1', portRange: { min: 2000, max: 3000 } },
+		],
 	});
 
 	const onObserverClose = jest.fn();
 
 	webRtcTransport.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		webRtcTransport.on('routerclose', resolve);
+	const promise = enhancedOnce<WebRtcTransportEvents>(
+		webRtcTransport,
+		'routerclose'
+	);
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(webRtcTransport.closed).toBe(true);

@@ -1,4 +1,7 @@
 import * as mediasoup from '../';
+import { enhancedOnce } from '../enhancedEvents';
+import type { WorkerImpl } from '../Worker';
+import type { WorkerEvents, RouterEvents } from '../types';
 import { InvalidStateError } from '../errors';
 import * as utils from '../utils';
 
@@ -8,7 +11,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -46,9 +49,7 @@ afterEach(async () => {
 	ctx.worker?.close();
 
 	if (ctx.worker?.subprocessClosed === false) {
-		await new Promise<void>(resolve =>
-			ctx.worker?.on('subprocessclose', resolve)
-		);
+		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
 });
 
@@ -94,25 +95,25 @@ test('worker.createRouter() succeeds', async () => {
 		mapDataConsumerIdDataProducerId: {},
 	});
 
-	// Private API.
-	expect(ctx.worker!.routersForTesting.size).toBe(1);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).routersForTesting.size).toBe(1);
 
 	ctx.worker!.close();
 
 	expect(router.closed).toBe(true);
 
-	// Private API.
-	expect(ctx.worker!.routersForTesting.size).toBe(0);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).routersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createRouter() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.worker!.createRouter({ mediaCodecs: {} })).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createRouter({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -148,11 +149,10 @@ test('Router emits "workerclose" if Worker is closed', async () => {
 
 	router.observer.once('close', onObserverClose);
 
-	await new Promise<void>(resolve => {
-		router.on('workerclose', resolve);
+	const promise = enhancedOnce<RouterEvents>(router, 'workerclose');
 
-		ctx.worker!.close();
-	});
+	ctx.worker!.close();
+	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(router.closed).toBe(true);

@@ -49,11 +49,11 @@ SCENARIO("RTCP Feedback PS RPSI parsing", "[parser][rtcp][feedback-ps][rpsi]")
 
 	SECTION("parse FeedbackPsRpsiPacket")
 	{
-		FeedbackPsRpsiPacket* packet = FeedbackPsRpsiPacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<FeedbackPsRpsiPacket> packet{ FeedbackPsRpsiPacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
-		verify(packet);
+		verify(packet.get());
 
 		SECTION("serialize packet instance")
 		{
@@ -66,7 +66,5 @@ SCENARIO("RTCP Feedback PS RPSI parsing", "[parser][rtcp][feedback-ps][rpsi]")
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 }

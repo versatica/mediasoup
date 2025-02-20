@@ -56,11 +56,6 @@ inline static void onCloseTcp(uv_handle_t* handle)
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
-inline static void onCloseShutdown(uv_handle_t* handle)
-{
-	delete reinterpret_cast<uv_shutdown_t*>(handle);
-}
-
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	auto* handle = req->handle;
@@ -68,7 +63,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 	delete req;
 
 	// Now do close the handle.
-	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseShutdown));
+	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
 /* Instance methods. */
@@ -90,13 +85,13 @@ TcpConnectionHandle::~TcpConnectionHandle()
 
 	if (!this->closed)
 	{
-		Close();
+		InternalClose();
 	}
 
 	delete[] this->buffer;
 }
 
-void TcpConnectionHandle::Close()
+void TcpConnectionHandle::TriggerClose()
 {
 	MS_TRACE();
 
@@ -105,41 +100,9 @@ void TcpConnectionHandle::Close()
 		return;
 	}
 
-	int err;
+	InternalClose();
 
-	this->closed = true;
-
-	// Tell the UV handle that the TcpConnectionHandle has been closed.
-	this->uvHandle->data = nullptr;
-
-	// Don't read more.
-	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
-
-	if (err != 0)
-	{
-		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
-	}
-
-	// If there is no error and the peer didn't close its connection side then close gracefully.
-	if (!this->hasError && !this->isClosedByPeer)
-	{
-		// Use uv_shutdown() so pending data to be written will be sent to the peer
-		// before closing.
-		auto* req = new uv_shutdown_t;
-		req->data = static_cast<void*>(this);
-		err       = uv_shutdown(
-      req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
-
-		if (err != 0)
-		{
-			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
-		}
-	}
-	// Otherwise directly close the socket.
-	else
-	{
-		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
-	}
+	this->listener->OnTcpConnectionClosed(this);
 }
 
 void TcpConnectionHandle::Dump() const
@@ -205,11 +168,14 @@ void TcpConnectionHandle::Start()
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
-	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-	if (err != 0)
+	if (DepLibUring::IsEnabled())
 	{
-		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+		if (err != 0)
+		{
+			MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		}
 	}
 #endif
 }
@@ -246,6 +212,7 @@ void TcpConnectionHandle::Write(
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
+	if (DepLibUring::IsEnabled())
 	{
 		if (!DepLibUring::IsActive())
 		{
@@ -366,9 +333,55 @@ void TcpConnectionHandle::ErrorReceiving()
 {
 	MS_TRACE();
 
-	Close();
+	InternalClose();
 
 	this->listener->OnTcpConnectionClosed(this);
+}
+
+void TcpConnectionHandle::InternalClose()
+{
+	MS_TRACE();
+
+	if (this->closed)
+	{
+		return;
+	}
+
+	int err;
+
+	this->closed = true;
+
+	// Tell the UV handle that the TcpConnectionHandle has been closed.
+	this->uvHandle->data = nullptr;
+
+	// Don't read more.
+	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
+
+	if (err != 0)
+	{
+		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+	}
+
+	// If there is no error and the peer didn't close its connection side then close gracefully.
+	if (!this->hasError && !this->isClosedByPeer)
+	{
+		// Use uv_shutdown() so pending data to be written will be sent to the peer
+		// before closing.
+		auto* req = new uv_shutdown_t;
+		req->data = static_cast<void*>(this);
+		err       = uv_shutdown(
+      req, reinterpret_cast<uv_stream_t*>(this->uvHandle), static_cast<uv_shutdown_cb>(onShutdown));
+
+		if (err != 0)
+		{
+			MS_ABORT("uv_shutdown() failed: %s", uv_strerror(err));
+		}
+	}
+	// Otherwise directly close the socket.
+	else
+	{
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onCloseTcp));
+	}
 }
 
 bool TcpConnectionHandle::SetPeerAddress()
@@ -450,7 +463,7 @@ inline void TcpConnectionHandle::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/
 		this->isClosedByPeer = true;
 
 		// Close server side of the connection.
-		Close();
+		InternalClose();
 
 		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
@@ -463,7 +476,7 @@ inline void TcpConnectionHandle::OnUvRead(ssize_t nread, const uv_buf_t* /*buf*/
 		this->hasError = true;
 
 		// Close server side of the connection.
-		Close();
+		InternalClose();
 
 		// Notify the listener.
 		this->listener->OnTcpConnectionClosed(this);
@@ -497,7 +510,7 @@ inline void TcpConnectionHandle::OnUvWrite(int status, TcpConnectionHandle::onSe
 			(*cb)(false);
 		}
 
-		Close();
+		InternalClose();
 
 		this->listener->OnTcpConnectionClosed(this);
 	}

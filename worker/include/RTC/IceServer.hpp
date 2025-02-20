@@ -139,6 +139,7 @@ namespace RTC
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		TimerHandle* consentCheckTimer{ nullptr };
 		uint64_t lastConsentRequestReceivedAtMs{ 0u };
+		bool isRemovingTuples{ false };
 	};
 } // namespace RTC
 
