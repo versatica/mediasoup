@@ -101,7 +101,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= MaxSize)
+			if (GetSize() <= RTC::MaxPacketSize)
 			{
 				return true;
 			}
@@ -160,7 +160,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= MaxSize)
+			if (GetSize() <= RTC::MaxPacketSize)
 			{
 				return true;
 			}
@@ -206,7 +206,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= MaxSize)
+			if (GetSize() <= RTC::MaxPacketSize)
 			{
 				return true;
 			}

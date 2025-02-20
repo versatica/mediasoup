@@ -465,7 +465,7 @@ namespace RTC
 					MS_DEBUG_TAG(
 					  rtx,
 					  "ignoring retransmission for a packet already resent in the last RTT ms "
-					  "[seq:%" PRIu16 ", rtt:%" PRIu32 "]",
+					  "[seq:%" PRIu16 ", rtt:%" PRIu16 "]",
 					  packet->GetSequenceNumber(),
 					  rtt);
 				}

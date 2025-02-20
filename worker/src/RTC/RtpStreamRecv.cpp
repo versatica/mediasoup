@@ -191,7 +191,7 @@ namespace RTC
 	RtpStreamRecv::RtpStreamRecv(
 	  RTC::RtpStreamRecv::Listener* listener,
 	  RTC::RtpStream::Params& params,
-	  unsigned int sendNackDelayMs,
+	  uint32_t sendNackDelayMs,
 	  bool useRtpInactivityCheck)
 	  : RTC::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
 	    useRtpInactivityCheck(useRtpInactivityCheck),
