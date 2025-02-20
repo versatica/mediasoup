@@ -233,7 +233,7 @@ namespace RTC
 
 				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
 				{
-					// Send ongoing feedback packet
+					// Send ongoing feedback packet.
 					auto sent = SendTransportCcFeedback();
 
 					if (sent)
