@@ -760,7 +760,7 @@ namespace RTC
 					if (createTccServer)
 					{
 						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
-						  this, bweType, RTC::Consts::MidRtpExtensionMaxLength);
+						  this, bweType, RTC::Consts::RtcpPacketMaxSize);
 
 						if (this->maxIncomingBitrate != 0u)
 						{
