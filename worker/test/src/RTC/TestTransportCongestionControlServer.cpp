@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -88,7 +89,7 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 {
 	TestTransportCongestionControlServerListener listener;
 	auto tccServer =
-	  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::MtuSize);
+	  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
 
 	tccServer.SetMaxIncomingBitrate(150000);
 	tccServer.TransportConnected();

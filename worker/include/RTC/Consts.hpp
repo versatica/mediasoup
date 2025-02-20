@@ -19,7 +19,7 @@ namespace RTC
 		     added to an RTCP packet by srtp_protect_rtcp().
 		     srtp.h: SRTP_MAX_TRAILER_LEN (SRTP_MAX_TAG_LEN + SRTP_MAX_MKI_LEN).
 		 */
-		constexpr size_t RtcpPacketMaxSize{ MtuSize - 40 - 20 - 148u };
+		constexpr size_t RtcpPacketMaxSize{ RTC::Consts::MtuSize - 40 - 20 - 148u };
 
 		/**
 		 * MID RTP header extension max length (just used when setting/updating MID

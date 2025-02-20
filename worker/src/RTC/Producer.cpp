@@ -525,7 +525,7 @@ namespace RTC
 				// Increase receive transmission.
 				this->listener->OnProducerReceiveData(this, len);
 
-				if (len > RTC::MtuSize + 100)
+				if (len > RTC::Consts::MtuSize + 100)
 				{
 					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%i]", len);
 
@@ -536,7 +536,7 @@ namespace RTC
 				// receiving buffer now.
 				if (!Producer::buffer)
 				{
-					Producer::buffer = new uint8_t[RTC::MtuSize + 100];
+					Producer::buffer = new uint8_t[RTC::Consts::MtuSize + 100];
 				}
 
 				// Copy the received packet into this buffer so it can be expanded later.
