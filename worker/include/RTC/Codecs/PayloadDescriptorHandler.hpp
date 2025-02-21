@@ -55,18 +55,18 @@ namespace RTC
 
 			int16_t GetLayer(uint16_t pictureId) const
 			{
-				if (this->list.size() > 1)
+				if (this->list.empty())
 				{
-					for (auto it = std::next(this->list.begin()); it != this->list.end(); ++it)
-					{
-						if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, pictureId))
-						{
-							return std::prev(it)->second;
-						}
-					}
+					return -1;
 				}
 
-				return -1;
+				for (auto it = std::next(this->list.begin()); it != this->list.end(); ++it)
+				{
+					if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, pictureId))
+					{
+						return std::prev(it)->second;
+					}
+				}
 			}
 
 		private:
