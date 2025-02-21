@@ -376,7 +376,7 @@ namespace RTC
 			}
 
 			// Filter temporal layers higher than current one.
-			uint16_t tmpTemporalLayerCheck =
+			uint16_t temporalLayerForPictureId =
 			  isOldPacket ? context->GetCurrentTemporalLayer(this->payloadDescriptor->pictureId)
 			              : tmpTemporalLayer;
 			if (packetTemporalLayer > tmpTemporalLayerCheck)
