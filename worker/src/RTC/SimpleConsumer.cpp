@@ -320,6 +320,8 @@ namespace RTC
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
 #endif
 
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 			return;
 		}
 
@@ -334,6 +336,8 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
+
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -355,6 +359,8 @@ namespace RTC
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
 #endif
 
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 			return;
 		}
 
@@ -366,17 +372,19 @@ namespace RTC
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
 #endif
 
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 			return;
 		}
 
 		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
 #endif
+
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 			return;
 		}
