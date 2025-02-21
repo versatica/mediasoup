@@ -311,12 +311,12 @@ namespace RTC
 			// * different than the current one when KSVC is enabled and this is not a keyframe
 			// (interframe p bit = 1)
 			uint16_t spatialLayerForPictureId =
-			  isOldPacket ? context->GetCurrentSpatialLayer(this->payloadDescriptor->pictureId)
+			  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
 			              : tmpSpatialLayer;
 			// clang-format off
 			if (
-				packetSpatialLayer > tmpSpatialLayerCheck ||
-				(context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != tmpSpatialLayerCheck)
+				packetSpatialLayer > spatialLayerForPictureId ||
+				(context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != spatialLayerForPictureId)
 			)
 			// clang-format on
 			{
@@ -376,9 +376,9 @@ namespace RTC
 
 			// Filter temporal layers higher than current one.
 			uint16_t temporalLayerForPictureId =
-			  isOldPacket ? context->GetCurrentTemporalLayer(this->payloadDescriptor->pictureId)
+			  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
 			              : tmpTemporalLayer;
-			if (packetTemporalLayer > tmpTemporalLayerCheck)
+			if (packetTemporalLayer > temporalLayerForPictureId)
 			{
 				return false;
 			}
