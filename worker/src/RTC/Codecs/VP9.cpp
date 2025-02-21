@@ -243,19 +243,18 @@ namespace RTC
 
 			if (!isOldPacket)
 			{
-                                 // Upgrade current spatial layer if needed.
+				// Upgrade current spatial layer if needed.
 				if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 				{
 					if (this->payloadDescriptor->isKeyFrame)
 					{
 						MS_DEBUG_DEV(
 						  "upgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8 ":%" PRIu8
-						  ") old:%d",
+						  ")",
 						  context->GetCurrentSpatialLayer(),
 						  context->GetTargetSpatialLayer(),
 						  packetSpatialLayer,
-						  packetTemporalLayer,
-						  isOldPacket);
+						  packetTemporalLayer);
 
 						tmpSpatialLayer  = context->GetTargetSpatialLayer();
 						tmpTemporalLayer = 0; // Just in case.
