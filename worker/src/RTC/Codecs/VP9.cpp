@@ -241,7 +241,6 @@ namespace RTC
 			);
 			// clang-format on
 
-			// Upgrade current spatial layer if needed.
 			if (!isOldPacket)
 			{
                                  // Upgrade current spatial layer if needed.
