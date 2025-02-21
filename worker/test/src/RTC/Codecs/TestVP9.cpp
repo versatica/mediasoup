@@ -91,22 +91,23 @@ SCENARIO("process VP9 payload descriptor", "[codecs][vp9]")
 		context.SetCurrentTemporalLayer(2, start + 5);
 		context.SetCurrentTemporalLayer(0, start + 6);
 
-		REQUIRE(context.GetCurrentTemporalLayer(start + 0) == 0);
-		REQUIRE(context.GetCurrentTemporalLayer(start + 1) == 1);
-		REQUIRE(context.GetCurrentTemporalLayer(start + 2) == 1);
-		REQUIRE(context.GetCurrentTemporalLayer(start + 5) == 2);
-		REQUIRE(context.GetCurrentTemporalLayer(start + 6) == 0);
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 0) == 0);
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 1) == 1);
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 2) == 1);
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 5) == 2);
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 6) == 0);
 
 		context.SetCurrentTemporalLayer(1, start + 1000);
 		context.SetCurrentTemporalLayer(2, start + 1001); // This will drop the first item.
 
-		REQUIRE(context.GetCurrentTemporalLayer(start + 1000) == 1);
-		REQUIRE(context.GetCurrentTemporalLayer(start + 0) == 1); // It will get the item at start+1.
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 1000) == 1);
+		REQUIRE(context.GetTemporalLayerForPictureId(start + 0) == 1); // It will get the item at start+1.
 
 		context.SetCurrentTemporalLayer(0, 0); // This will drop items from start to start+999.
 
-		REQUIRE(context.GetCurrentTemporalLayer(0) == 0);
-		REQUIRE(context.GetCurrentTemporalLayer(start + 0) == 1); // It will get the item at start+1000.
+		REQUIRE(context.GetTemporalLayerForPictureId(0) == 0);
+		REQUIRE(
+		  context.GetTemporalLayerForPictureId(start + 0) == 1); // It will get the item at start+1000.
 	}
 
 	SECTION("drop packets that belong to other temporal layers with unordered pictureID")
