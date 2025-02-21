@@ -166,7 +166,7 @@ namespace RTC
 
 				this->currentTemporalLayer = temporalLayer;
 			}
-			int16_t GetCurrentSpatialLayer(uint16_t pictureId) const
+			int16_t GetSpatialLayerForPictureId(uint16_t pictureId) const
 			{
 				int16_t layer = this->spatialLayerPictureIdList.GetLayer(pictureId);
 				if (layer > -1)
