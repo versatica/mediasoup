@@ -55,7 +55,7 @@ namespace RTC
 
 			int16_t GetLayer(uint16_t pictureId) const
 			{
-				if (this->list.empty())
+				if (this->list.size() <= 1)
 				{
 					return -1;
 				}
