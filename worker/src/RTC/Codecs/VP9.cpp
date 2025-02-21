@@ -244,6 +244,7 @@ namespace RTC
 			// Upgrade current spatial layer if needed.
 			if (!isOldPacket)
 			{
+                                 // Upgrade current spatial layer if needed.
 				if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 				{
 					if (this->payloadDescriptor->isKeyFrame)
