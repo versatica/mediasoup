@@ -67,6 +67,8 @@ namespace RTC
 						return std::prev(it)->second;
 					}
 				}
+
+				return -1;
 			}
 
 		private:
