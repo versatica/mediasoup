@@ -311,7 +311,7 @@ namespace RTC
 			// * higher than current one
 			// * different than the current one when KSVC is enabled and this is not a keyframe
 			// (interframe p bit = 1)
-			uint16_t tmpSpatialLayerCheck =
+			uint16_t spatialLayerForPictureId =
 			  isOldPacket ? context->GetCurrentSpatialLayer(this->payloadDescriptor->pictureId)
 			              : tmpSpatialLayer;
 			// clang-format off
