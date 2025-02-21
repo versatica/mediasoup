@@ -48,6 +48,7 @@ namespace RTC
 						break;
 					}
 				}
+
 				this->list.push_back({ pictureId, layer });
 			}
 
