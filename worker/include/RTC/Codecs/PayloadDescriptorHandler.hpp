@@ -24,6 +24,7 @@ namespace RTC
 			explicit PictureIdList()
 			{
 			}
+
 			~PictureIdList()
 			{
 				this->list.clear();
