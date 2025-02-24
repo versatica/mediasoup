@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `Consumer`: Fix sequence number gap ([PR #1494](https://github.com/versatica/mediasoup/pull/1494)).
+
 ### 3.15.4
 
 - `Worker`: Drop VP8 packets with a higher temporal layer than the current one ([PR #1009](https://github.com/versatica/mediasoup/pull/1009)).
