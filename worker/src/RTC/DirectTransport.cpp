@@ -3,6 +3,7 @@
 
 #include "RTC/DirectTransport.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 
 namespace RTC
 {
@@ -102,7 +103,7 @@ namespace RTC
 				// Increase receive transmission.
 				RTC::Transport::DataReceived(len);
 
-				if (len > RTC::MtuSize + 100)
+				if (len > RTC::Consts::MtuSize + 100)
 				{
 					MS_WARN_TAG(rtp, "given RTCP packet exceeds maximum size [len:%i]", len);
 

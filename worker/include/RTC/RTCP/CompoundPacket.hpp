@@ -7,7 +7,6 @@
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
-#include "RTC/RtpPacket.hpp" // MaxPacketSize.
 #include <vector>
 
 namespace RTC

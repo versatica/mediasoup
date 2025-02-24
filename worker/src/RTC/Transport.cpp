@@ -11,6 +11,7 @@
 #include "Utils.hpp"
 #include "FBS/transport.h"
 #include "RTC/BweType.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -759,7 +760,7 @@ namespace RTC
 					if (createTccServer)
 					{
 						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
-						  this, bweType, RTC::MaxPacketSize);
+						  this, bweType, RTC::Consts::RtcpPacketMaxSize);
 
 						if (this->maxIncomingBitrate != 0u)
 						{

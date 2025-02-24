@@ -1,8 +1,8 @@
 #include "RTC/FuzzerRateCalculator.hpp"
 #include "DepLibUV.hpp"
 #include "Utils.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RateCalculator.hpp"
-#include "RTC/RtpPacket.hpp" // RTC::MtuSize
 
 static ::RTC::RateCalculator rateCalculator;
 static uint64_t nowMs;
@@ -25,8 +25,8 @@ void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	auto size =
-	  static_cast<size_t>(Utils::Crypto::GetRandomUInt(0u, static_cast<uint32_t>(::RTC::MtuSize)));
+	auto size = static_cast<size_t>(
+	  Utils::Crypto::GetRandomUInt(0u, static_cast<uint32_t>(::RTC::Consts::MtuSize)));
 
 	nowMs += Utils::Crypto::GetRandomUInt(0u, 1000u);
 

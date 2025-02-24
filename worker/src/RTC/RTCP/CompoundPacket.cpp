@@ -3,6 +3,7 @@
 
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 
 namespace RTC
 {
@@ -101,7 +102,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= RTC::MaxPacketSize)
+			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
 			{
 				return true;
 			}
@@ -160,7 +161,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= RTC::MaxPacketSize)
+			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
 			{
 				return true;
 			}
@@ -206,7 +207,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= RTC::MaxPacketSize)
+			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
 			{
 				return true;
 			}
