@@ -782,6 +782,7 @@ namespace RTC
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 				return;
 			}
 
@@ -942,6 +943,7 @@ namespace RTC
 #endif
 
 					this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 					return;
 				}
 
@@ -1031,8 +1033,6 @@ namespace RTC
 			// Rewrite payload if needed. Drop packet if necessary.
 			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 			{
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
 #endif
