@@ -240,8 +240,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 
 	SECTION("outgoing RTP packets are forwarded with increased sequence number")
 	{
-		auto* listener = new ConsumerListener();
-		auto consumer  = CreateConsumer(listener);
+		auto listener = std::make_unique<ConsumerListener>();
+		auto consumer = CreateConsumer(listener.get());
 
 		// Indicate that the transport is connected in order to activate the consumer.
 		dynamic_cast<Consumer*>(consumer.get())->TransportConnected();
