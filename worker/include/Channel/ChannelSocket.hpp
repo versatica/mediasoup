@@ -82,8 +82,9 @@ namespace Channel
 		};
 
 	public:
-		// For testing purposes only.
+#ifdef MS_TEST
 		explicit ChannelSocket();
+#endif
 		explicit ChannelSocket(int consumerFd, int producerFd);
 		explicit ChannelSocket(
 		  ChannelReadFn channelReadFn,
