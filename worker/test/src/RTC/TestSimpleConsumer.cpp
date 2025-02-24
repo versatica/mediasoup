@@ -153,131 +153,131 @@ RtpStreamRecv* CreateRtpStreamRecv()
 
 SCENARIO("SimpleConsumer", "[rtp][consumer]")
 {
-	// clang-format off
+    // clang-format off
     uint8_t buffer[] =
     {
         0x80, 0x01, 0x00, 0x08,
         0x00, 0x00, 0x00, 0x04,
         0x00, 0x00, 0x00, 0x05
     };
-	// clang-format on
+    // clang-format on
 
-	SECTION("RTP packets are not forwarded when the consumer is not active")
-	{
-		auto* listener = new ConsumerListener();
-		auto* consumer = CreateConsumer(listener);
+    SECTION("RTP packets are not forwarded when the consumer is not active")
+    {
+        auto* listener = new ConsumerListener();
+        auto* consumer = CreateConsumer(listener);
 
-		auto* rtpStream = CreateRtpStreamRecv();
+        auto* rtpStream = CreateRtpStreamRecv();
 
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
+        // Set producer scores and producer stream.
+        std::vector<uint8_t> scores{ 10 };
 
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream, 1234);
+        consumer->ProducerRtpStreamScores(&scores);
+        consumer->ProducerNewRtpStream(rtpStream, 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+        std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
+        std::shared_ptr<RtpPacket> sharedPacket;
 
-		packet->SetPayloadType(PayloadType);
-		packet->SetPayloadLength(64);
+        packet->SetPayloadType(PayloadType);
+        packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		listener->Verify(0);
-	}
+        listener->Verify(0);
+    }
 
-	SECTION("RTP packets are not forwarded for unsupported payload types")
-	{
-		auto* listener = new ConsumerListener();
-		auto* consumer = CreateConsumer(listener);
+    SECTION("RTP packets are not forwarded for unsupported payload types")
+    {
+        auto* listener = new ConsumerListener();
+        auto* consumer = CreateConsumer(listener);
 
-		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(consumer)->TransportConnected();
+        // Indicate that the transport is connected in order to activate the consumer.
+        dynamic_cast<Consumer*>(consumer)->TransportConnected();
 
-		auto* rtpStream = CreateRtpStreamRecv();
+        auto* rtpStream = CreateRtpStreamRecv();
 
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
+        // Set producer scores and producer stream.
+        std::vector<uint8_t> scores{ 10 };
 
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream, 1234);
+        consumer->ProducerRtpStreamScores(&scores);
+        consumer->ProducerNewRtpStream(rtpStream, 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+        std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
+        std::shared_ptr<RtpPacket> sharedPacket;
 
-		packet->SetPayloadType(PayloadType + 1);
-		packet->SetPayloadLength(64);
+        packet->SetPayloadType(PayloadType + 1);
+        packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		listener->Verify(0);
-	}
+        listener->Verify(0);
+    }
 
-	SECTION("RTP packets with empty payload are not forwarded")
-	{
-		auto* listener = new ConsumerListener();
-		auto* consumer = CreateConsumer(listener);
+    SECTION("RTP packets with empty payload are not forwarded")
+    {
+        auto* listener = new ConsumerListener();
+        auto* consumer = CreateConsumer(listener);
 
-		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(consumer)->TransportConnected();
+        // Indicate that the transport is connected in order to activate the consumer.
+        dynamic_cast<Consumer*>(consumer)->TransportConnected();
 
-		auto* rtpStream = CreateRtpStreamRecv();
+        auto* rtpStream = CreateRtpStreamRecv();
 
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
+        // Set producer scores and producer stream.
+        std::vector<uint8_t> scores{ 10 };
 
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream, 1234);
+        consumer->ProducerRtpStreamScores(&scores);
+        consumer->ProducerNewRtpStream(rtpStream, 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+        std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
+        std::shared_ptr<RtpPacket> sharedPacket;
 
-		packet->SetPayloadType(PayloadType + 1);
-		packet->SetPayloadLength(0);
+        packet->SetPayloadType(PayloadType + 1);
+        packet->SetPayloadLength(0);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		listener->Verify(0);
-	}
+        listener->Verify(0);
+    }
 
-	SECTION("outgoing RTP packets are forwarded with increased sequence number")
-	{
-		auto* listener = new ConsumerListener();
-		auto* consumer = CreateConsumer(listener);
+    SECTION("outgoing RTP packets are forwarded with increased sequence number")
+    {
+        auto* listener = new ConsumerListener();
+        auto* consumer = CreateConsumer(listener);
 
-		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(consumer)->TransportConnected();
+        // Indicate that the transport is connected in order to activate the consumer.
+        dynamic_cast<Consumer*>(consumer)->TransportConnected();
 
-		auto* rtpStream = CreateRtpStreamRecv();
+        auto* rtpStream = CreateRtpStreamRecv();
 
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
+        // Set producer scores and producer stream.
+        std::vector<uint8_t> scores{ 10 };
 
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream, 1234);
+        consumer->ProducerRtpStreamScores(&scores);
+        consumer->ProducerNewRtpStream(rtpStream, 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+        std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
+        std::shared_ptr<RtpPacket> sharedPacket;
 
-		uint16_t seq = 1;
+        uint16_t seq = 1;
 
-		packet->SetSequenceNumber(seq++);
-		packet->SetPayloadType(PayloadType);
-		packet->SetPayloadLength(64);
+        packet->SetSequenceNumber(seq++);
+        packet->SetPayloadType(PayloadType);
+        packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		packet->SetSequenceNumber(seq++);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        packet->SetSequenceNumber(seq++);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		packet->SetSequenceNumber(seq++);
-		packet->SetPayloadLength(0);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        packet->SetSequenceNumber(seq++);
+        packet->SetPayloadLength(0);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		packet->SetSequenceNumber(seq++);
-		packet->SetPayloadLength(20);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+        packet->SetSequenceNumber(seq++);
+        packet->SetPayloadLength(20);
+        consumer->SendRtpPacket(packet.get(), sharedPacket);
 
-		listener->Verify(3);
-	}
+        listener->Verify(3);
+    }
 }
