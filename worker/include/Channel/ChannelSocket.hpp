@@ -82,6 +82,8 @@ namespace Channel
 		};
 
 	public:
+		// For testing purposes only.
+		explicit ChannelSocket();
 		explicit ChannelSocket(int consumerFd, int producerFd);
 		explicit ChannelSocket(
 		  ChannelReadFn channelReadFn,
