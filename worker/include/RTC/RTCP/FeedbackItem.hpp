@@ -31,7 +31,7 @@ namespace RTC
 				return this->isCorrect;
 			}
 
-		protected:
+		public:
 			virtual ~FeedbackItem()
 			{
 				delete[] this->raw;

@@ -185,7 +185,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		stream->ReceiveNack(&nackPacket);
 
-		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 0);
+		REQUIRE(testRtpStreamListener.retransmittedPackets.empty());
 
 		testRtpStreamListener.retransmittedPackets.clear();
 	}
@@ -236,7 +236,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		stream->ReceiveNack(&nackPacket);
 
-		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 0);
+		REQUIRE(testRtpStreamListener.retransmittedPackets.empty());
 
 		testRtpStreamListener.retransmittedPackets.clear();
 	}
@@ -454,7 +454,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		// Process the NACK packet on stream1.
 		stream->ReceiveNack(&nackPacket2);
 
-		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 0);
+		REQUIRE(testRtpStreamListener.retransmittedPackets.empty());
 	}
 
 #ifdef PERFORMANCE_TEST

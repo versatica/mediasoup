@@ -5,7 +5,6 @@
 #include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "handles/UnixStreamSocketHandle.hpp"
-#include <string>
 
 namespace Channel
 {

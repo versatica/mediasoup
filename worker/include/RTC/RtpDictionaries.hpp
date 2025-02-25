@@ -159,7 +159,7 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
-		void CheckCodec();
+		void CheckCodec() const;
 
 	public:
 		RtpCodecMimeType mimeType;

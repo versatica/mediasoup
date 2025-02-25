@@ -2,7 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpPacket.hpp"
+#ifdef MS_RTC_LOGGER_RTP
 #include "DepLibUV.hpp"
+#endif
 #include "Logger.hpp"
 #include "RTC/Consts.hpp"
 #include <cstring>  // std::memcpy(), std::memmove(), std::memset()
