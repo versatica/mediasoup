@@ -520,19 +520,6 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 	switch (signum)
 	{
 		case SIGINT:
-		{
-			if (this->closed)
-			{
-				return;
-			}
-
-			MS_DEBUG_DEV("INT signal received, closing myself");
-
-			Close();
-
-			break;
-		}
-
 		case SIGTERM:
 		{
 			if (this->closed)
@@ -540,7 +527,7 @@ void Worker::OnSignal(SignalHandle* /*signalHandle*/, int signum)
 				return;
 			}
 
-			MS_DEBUG_DEV("TERM signal received, closing myself");
+			MS_DEBUG_DEV("%s signal received, closing myself", signum == SIGINT ? "INT" : "TERM");
 
 			Close();
 

@@ -60,7 +60,7 @@ namespace RTC
 
 			if (this->preferredSpatialLayer > encoding.spatialLayers - 1)
 			{
-				this->preferredSpatialLayer = encoding.spatialLayers - 1;
+				this->preferredSpatialLayer = static_cast<int16_t>(encoding.spatialLayers - 1);
 			}
 
 			if (preferredLayers->temporalLayer().has_value())
@@ -69,20 +69,20 @@ namespace RTC
 
 				if (this->preferredTemporalLayer > encoding.temporalLayers - 1)
 				{
-					this->preferredTemporalLayer = encoding.temporalLayers - 1;
+					this->preferredTemporalLayer = static_cast<int16_t>(encoding.temporalLayers - 1);
 				}
 			}
 			else
 			{
-				this->preferredTemporalLayer = encoding.temporalLayers - 1;
+				this->preferredTemporalLayer = static_cast<int16_t>(encoding.temporalLayers - 1);
 			}
 		}
 		else
 		{
 			// Initially set preferredSpatialLayer and preferredTemporalLayer to the
 			// maximum value.
-			this->preferredSpatialLayer  = encoding.spatialLayers - 1;
-			this->preferredTemporalLayer = encoding.temporalLayers - 1;
+			this->preferredSpatialLayer  = static_cast<int16_t>(encoding.spatialLayers - 1);
+			this->preferredTemporalLayer = static_cast<int16_t>(encoding.temporalLayers - 1);
 		}
 
 		// Reserve space for the Producer RTP streams by filling all the possible
@@ -245,7 +245,7 @@ namespace RTC
 
 				if (this->preferredSpatialLayer > this->rtpStream->GetSpatialLayers() - 1)
 				{
-					this->preferredSpatialLayer = this->rtpStream->GetSpatialLayers() - 1;
+					this->preferredSpatialLayer = static_cast<int16_t>(this->rtpStream->GetSpatialLayers() - 1);
 				}
 
 				// preferredTemporaLayer is optional.
@@ -255,12 +255,12 @@ namespace RTC
 
 					if (this->preferredTemporalLayer > this->rtpStream->GetTemporalLayers() - 1)
 					{
-						this->preferredTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+						this->preferredTemporalLayer = static_cast<int16_t>(this->rtpStream->GetTemporalLayers() - 1);
 					}
 				}
 				else
 				{
-					this->preferredTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+					this->preferredTemporalLayer = static_cast<int16_t>(this->rtpStream->GetTemporalLayers() - 1);
 				}
 
 				MS_DEBUG_DEV(
@@ -1563,7 +1563,7 @@ namespace RTC
 			}
 			else if (newTargetSpatialLayer < this->preferredSpatialLayer)
 			{
-				newTargetTemporalLayer = this->rtpStream->GetTemporalLayers() - 1;
+				newTargetTemporalLayer = static_cast<int16_t>(this->rtpStream->GetTemporalLayers() - 1);
 			}
 			else
 			{
