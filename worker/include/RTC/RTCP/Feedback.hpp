@@ -2,7 +2,6 @@
 #define MS_RTC_RTCP_FEEDBACK_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/FeedbackItem.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include <absl/container/flat_hash_map.h>
 
