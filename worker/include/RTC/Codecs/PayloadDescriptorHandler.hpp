@@ -27,12 +27,12 @@ namespace RTC
 
 			~PictureIdList()
 			{
-				this->list.clear();
+				this->layerChanges.clear();
 			}
 
 			void Push(uint16_t pictureId, int16_t layer)
 			{
-				for (const auto& it : this->list)
+				for (const auto& it : this->layerChanges)
 				{
 					// Layers can be changed only with ordered pictureId values.
 					// If pictureId is lower than the previous one, then it has rolled over the max value.
@@ -42,7 +42,7 @@ namespace RTC
 
 					if (diff > MaxCurrentLayerPictureIdNum)
 					{
-						this->list.pop_front();
+						this->layerChanges.pop_front();
 					}
 					else
 					{
@@ -50,12 +50,12 @@ namespace RTC
 					}
 				}
 
-				this->list.push_back({ pictureId, layer });
+				this->layerChanges.push_back({ pictureId, layer });
 			}
 
 			int16_t GetLayer(uint16_t pictureId) const
 			{
-				if (this->list.size() <= 1)
+				if (this->layerChanges.size() <= 1)
 				{
 					return -1;
 				}
@@ -72,7 +72,9 @@ namespace RTC
 			}
 
 		private:
-			std::deque<std::pair<uint16_t, int16_t>> list;
+			// List populated with the spatial/temporal layer changes
+			// indexed by the corresponding pictureId.
+			std::deque<std::pair<uint16_t, int16_t>> layerChanges;
 		};
 
 		// Encoding context used by PayloadDescriptorHandler to properly rewrite the
@@ -199,6 +201,7 @@ namespace RTC
 			bool ignoreDtx{ false };
 
 		private:
+			// List of spatial/temporal layer changes indexed by the corresponding pictureId.
 			PictureIdList spatialLayerPictureIdList;
 			PictureIdList temporalLayerPictureIdList;
 		};
