@@ -165,7 +165,6 @@ namespace RTC
 				}
 
 				this->temporalLayerPictureIdList.Push(pictureId, temporalLayer);
-
 				this->currentTemporalLayer = temporalLayer;
 			}
 			int16_t GetSpatialLayerForPictureId(uint16_t pictureId) const
