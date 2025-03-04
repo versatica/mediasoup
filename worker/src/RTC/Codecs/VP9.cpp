@@ -379,6 +379,7 @@ namespace RTC
 			uint16_t temporalLayerForPictureId =
 			  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
 			              : tmpTemporalLayer;
+
 			if (packetTemporalLayer > temporalLayerForPictureId)
 			{
 				return false;
