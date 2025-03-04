@@ -147,7 +147,6 @@ namespace RTC
 				this->ignoreDtx = ignoreDtx;
 			}
 			virtual void SyncRequired() = 0;
-
 			void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t pictureId)
 			{
 				if (this->currentSpatialLayer == spatialLayer)
