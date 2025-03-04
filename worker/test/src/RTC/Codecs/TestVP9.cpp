@@ -135,7 +135,6 @@ SCENARIO("process VP9 payload descriptor", "[codecs][vp9]")
 			{ start + 10, 1, -1, true },
 			{ start + 11, 0, -1, true },
 			{ start + 11, 1, -1, true },
-
 			{ start + 3, 0, -1, true }, // old packet
 			{ start + 3, 1, -1, false },
 			{ start + 12, 0, -1, true },
