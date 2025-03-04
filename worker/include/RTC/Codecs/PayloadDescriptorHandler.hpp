@@ -182,6 +182,7 @@ namespace RTC
 			int16_t GetTemporalLayerForPictureId(uint16_t pictureId) const
 			{
 				int16_t layer = this->temporalLayerPictureIdList.GetLayer(pictureId);
+
 				if (layer > -1)
 				{
 					return layer;
