@@ -313,6 +313,7 @@ namespace RTC
 			uint16_t spatialLayerForPictureId =
 			  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
 			              : tmpSpatialLayer;
+
 			// clang-format off
 			if (
 				packetSpatialLayer > spatialLayerForPictureId ||
