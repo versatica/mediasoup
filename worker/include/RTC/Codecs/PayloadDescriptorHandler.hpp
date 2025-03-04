@@ -60,7 +60,7 @@ namespace RTC
 					return -1;
 				}
 
-				for (auto it = std::next(this->list.begin()); it != this->list.end(); ++it)
+				for (auto it = std::next(this->layerChanges.begin()); it != this->layerChanges.end(); ++it)
 				{
 					if (RTC::SeqManager<uint16_t, 15>::IsSeqHigherThan(it->first, pictureId))
 					{
