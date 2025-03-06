@@ -20,6 +20,9 @@ pub enum ExitError {
     /// Settings error.
     #[error("Worker exited with settings error")]
     Settings,
+    /// Feature not enabled.
+    #[error("Worker exited with feature not enabled error")]
+    FeatureNotEnabled,
     /// Unknown error.
     #[error("Worker exited with unknown error and status code {status_code}")]
     Unknown {
@@ -91,6 +94,7 @@ where
                 0 => Ok(()),
                 1 => Err(ExitError::Generic),
                 42 => Err(ExitError::Settings),
+                43 => Err(ExitError::FeatureNotEnabled),
                 status_code => Err(ExitError::Unknown { status_code }),
             });
         })

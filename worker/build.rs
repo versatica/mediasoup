@@ -1,17 +1,17 @@
+#[cfg(feature = "worker")]
 use std::process::Command;
 use std::{env, fs};
 
 fn main() {
-    // On Windows Rust always links against release version of MSVC runtime, thus requires
-    // Release build here
-    let build_type = if cfg!(all(debug_assertions, not(windows))) {
-        "Debug"
-    } else {
-        "Release"
-    };
-
     let out_dir = env::var("OUT_DIR").unwrap();
 
+    compile_flatbuffers(&out_dir);
+
+    #[cfg(feature = "worker")]
+    compile_worker(&out_dir);
+}
+
+fn compile_flatbuffers(out_dir: &str) {
     // Compile Rust flatbuffers
     let flatbuffers_declarations = planus_translation::translate_files(
         &fs::read_dir("fbs")
@@ -39,10 +39,22 @@ fn main() {
             .expect("Failed to generate Rust code from flatbuffers"),
     )
     .expect("Failed to write generated Rust flatbuffers into fbs.rs");
+}
+
+#[cfg(feature = "worker")]
+fn compile_worker(out_dir: &str) {
     if env::var("DOCS_RS").is_ok() {
-        // Skip everything when building docs on docs.rs
+        // Skip building libmediasoup-worker when building docs on docs.rs
         return;
     }
+
+    // On Windows Rust always links against release version of MSVC runtime, thus requires
+    // Release build here
+    let build_type = if cfg!(all(debug_assertions, not(windows))) {
+        "Debug"
+    } else {
+        "Release"
+    };
 
     // Force forward slashes on Windows too so that is plays well with our tasks.py
     let mediasoup_out_dir = format!("{}/out", out_dir.replace('\\', "/"));

@@ -56,6 +56,15 @@ mediasoup and its client side libraries provide a super low level API. They are 
 - Data message exchange (via WebRTC DataChannels, SCTP over plain UDP, and direct termination in Node.js/Rust).
 - Extremely powerful (media worker thread/subprocess coded in C++ on top of [libuv](https://libuv.org)).
 
+## Including as a Dependency
+
+If you are including mediasoup a a dependency for it's prelude types and do not need access to the libmediasoup-worker bindings, you can include the project without the `worker` feature enabled to speed up compile times and reduce build dependencies.
+
+```toml
+[dependencies]
+mediasoup = { version = "0", default-features = false }
+```
+
 ## Demo Online
 
 [![][mediasoup-demo-screenshot]][mediasoup-demo]

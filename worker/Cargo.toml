@@ -30,6 +30,10 @@ include = [
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
+[features]
+default = ["worker"]
+worker = []
+
 [build-dependencies]
 planus-codegen = "0.4.0"
 planus-translation = "0.4.0"

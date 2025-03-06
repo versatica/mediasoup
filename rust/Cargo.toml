@@ -20,6 +20,10 @@ include = [
 default-target = "x86_64-unknown-linux-gnu"
 targets = []
 
+[features]
+default = ["worker"]
+worker = ["mediasoup-sys/worker"]
+
 [dependencies]
 async-channel = "1.7.1"
 async-executor = "1.4.1"
@@ -47,6 +51,8 @@ version = "0.8.1"
 [dependencies.mediasoup-sys]
 path = "../worker"
 version = "0.9.1"
+default-features = false
+features = []
 
 [dependencies.parking_lot]
 version = "0.12.1"
