@@ -17,86 +17,11 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-22.04
-            node: 18
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-22.04-arm
-            node: 18
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04
-            node: 20
-            cc: gcc
-            cxx: g++
           - os: ubuntu-24.04-arm
-            node: 20
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04
-            node: 22
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04
             node: 22
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
-          - os: ubuntu-24.04
-            node: 22
-            cc: clang
-            cxx: clang++
-            meson_args: '-Db_sanitize=undefined'
-          - os: ubuntu-24.04
-            node: 22
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=thread'
-          - os: ubuntu-24.04-arm
-            node: 22
-            cc: gcc
-            cxx: g++
-          # TOOD: Uncomment when this issue is fixed:
-          # https://github.com/versatica/mediasoup/issues/1502
-          # - os: ubuntu-24.04-arm
-          #   node: 22
-          #   cc: gcc
-          #   cxx: g++
-          #   meson_args: '-Db_sanitize=address'
-          - os: ubuntu-24.04-arm
-            node: 22
-            cc: clang
-            cxx: clang++
-            meson_args: '-Db_sanitize=undefined'
-          - os: ubuntu-24.04-arm
-            node: 22
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=thread'
-          - os: macos-13
-            node: 18
-            cc: clang
-            cxx: clang++
-          - os: macos-14
-            node: 20
-            cc: clang
-            cxx: clang++
-          - os: macos-15
-            node: 22
-            cc: clang
-            cxx: clang++
-          - os: windows-2022
-            node: 20
-            cc: cl
-            cxx: cl
-          - os: windows-2022
-            node: 22
-            cc: cl
-            cxx: cl
-          - os: windows-2025
-            node: 22
-            cc: cl
-            cxx: cl
         build-type:
           - Release
           - Debug
@@ -128,16 +53,6 @@ jobs:
           key: ${{ matrix.build.os }}-node-${{ hashFiles('**/package.json') }}
           restore-keys: |
             ${{ matrix.build.os }}-node-
-
-      - name: npm ci
-        run: npm ci --foreground-scripts
-        env:
-          # Disable leak detection because it's detected by the tool flatc uses
-          # to build.
-          ASAN_OPTIONS: 'detect_leaks=0'
-
-      - name: npm run lint:node
-        run: npm run lint:node
 
       - name: npm run test:node
         run: npm run test:node

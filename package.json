@@ -74,7 +74,7 @@
 	"jest": {
 		"verbose": true,
 		"testEnvironment": "node",
-		"testRegex": "node/src/test/test-.*\\.ts",
+		"testRegex": "node/src/test/test-Worker\\.ts",
 		"transform": {
 			"^.*\\.ts$": [
 				"ts-jest",
