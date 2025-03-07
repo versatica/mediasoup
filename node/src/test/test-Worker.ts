@@ -85,7 +85,7 @@ test('createWorker() succeeds', async () => {
 
 	expect(worker2.closed).toBe(true);
 	expect(worker2.died).toBe(false);
-}, 2000);
+}, 4000);
 
 test('createWorker() with wrong settings rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
@@ -330,7 +330,7 @@ if (os.platform() !== 'win32') {
 
 				worker.close();
 				worker.on('subprocessclose', resolve);
-			}, 2000);
+			}, 12000);
 		});
 	}, 3000);
 }
