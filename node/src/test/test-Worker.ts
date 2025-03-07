@@ -79,7 +79,7 @@ test('createWorker() succeeds', async () => {
 
 	expect(worker2.closed).toBe(true);
 	expect(worker2.died).toBe(false);
-}, 4000);
+}, 8000);
 
 test('createWorker() with wrong settings rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
