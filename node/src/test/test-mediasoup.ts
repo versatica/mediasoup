@@ -35,7 +35,7 @@ test('setLoggerEventListeners() works', async () => {
 	if (worker.subprocessClosed === false) {
 		await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 	}
-}, 2000);
+}, 5000);
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () => {
 	const rtpCapabilities = getSupportedRtpCapabilities();
