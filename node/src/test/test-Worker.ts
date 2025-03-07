@@ -330,7 +330,7 @@ if (os.platform() !== 'win32') {
 
 				worker.close();
 				worker.on('subprocessclose', resolve);
-			}, 12000);
+			}, 2000);
 		});
 	}, 3000);
 }
