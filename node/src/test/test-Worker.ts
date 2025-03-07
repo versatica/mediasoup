@@ -34,6 +34,12 @@ test('Worker.workerBin matches mediasoup-worker absolute path', () => {
 	expect(mediasoup.workerBin).toBe(workerBin);
 });
 
+test('createWorker() FOO succeeds', async () => {
+	const worker = await mediasoup.createWorker();
+
+	worker.close();
+}, 20000);
+
 test('createWorker() succeeds', async () => {
 	const onObserverNewWorker = jest.fn();
 
