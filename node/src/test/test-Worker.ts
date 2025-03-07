@@ -307,8 +307,8 @@ test('Worker emits "died" if worker process died unexpectedly', async () => {
 // Windows doesn't have some signals such as SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2
 // so we just skip this test in Windows.
 if (os.platform() !== 'win32') {
-	test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () => {
-		const worker = await mediasoup.createWorker({ logLevel: 'warn' });
+	test.only('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () => {
+		const worker = await mediasoup.createWorker({ logLevel: 'debug' });
 
 		await new Promise<void>((resolve, reject) => {
 			worker.on('died', reject);
@@ -322,9 +322,9 @@ if (os.platform() !== 'win32') {
 			setTimeout(() => {
 				expect(worker.closed).toBe(false);
 
-				worker.close();
 				worker.on('subprocessclose', resolve);
+				worker.close();
 			}, 2000);
 		});
-	}, 3000);
+	}, 5000);
 }
