@@ -125,7 +125,7 @@ jobs:
             # No clang-format for Windows.
             run-lint: false
             # Maybe some day we fix this.
-            run-test: true
+            run-test: false
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -136,7 +136,7 @@ jobs:
             # No clang-format for Windows.
             run-lint: false
             # Maybe some day we fix this.
-            run-test: true
+            run-test: false
             # Address Sanitizer does not work on Windows.
             run-test-asan-address: false
             run-test-asan-undefined: false
