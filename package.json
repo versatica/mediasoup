@@ -74,7 +74,7 @@
 	"jest": {
 		"verbose": true,
 		"testEnvironment": "node",
-		"testMatch": ["node/src/test/test-mediasoup.ts", "node/src/test/test-Worker.ts"],
+		"testRegex": "node/src/test/test-Worker\\.ts",
 		"transform": {
 			"^.*\\.ts$": [
 				"ts-jest",
