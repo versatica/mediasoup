@@ -74,6 +74,13 @@ jobs:
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
+          - os: windows-2025
+            cc: cl
+            cxx: cl
+            # Address Sanitizer does not work on Windows.
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
         # A single Node.js version should be fine for C++.
         node:
           - 22
