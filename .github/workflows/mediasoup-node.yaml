@@ -15,6 +15,7 @@ concurrency:
 jobs:
   ci:
     strategy:
+      fail-fast: false
       matrix:
         build:
           - os: ubuntu-22.04-arm
