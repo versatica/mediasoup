@@ -2,7 +2,7 @@ name: mediasoup-node
 
 on:
   push:
-    branches: [ v3 ]
+    branches: [v3]
   pull_request:
   workflow_dispatch:
 
@@ -17,15 +17,15 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             node: 18
             cc: gcc
             cxx: g++
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             node: 20
             cc: gcc
             cxx: g++
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             node: 22
             cc: gcc
             cxx: g++
@@ -61,6 +61,10 @@ jobs:
             cc: cl
             cxx: cl
           - os: windows-2022
+            node: 22
+            cc: cl
+            cxx: cl
+          - os: windows-2025
             node: 22
             cc: cl
             cxx: cl
