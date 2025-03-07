@@ -17,7 +17,7 @@ test('mediasoup.version matches version field in package.json', () => {
 	expect(version).toBe(PKG.version);
 });
 
-test('setLoggerEventListeners() works', async () => {
+test('mediasoup.setLoggerEventListeners() works', async () => {
 	const onDebug = jest.fn();
 
 	mediasoup.setLogEventListeners({
@@ -52,7 +52,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
 });
 
-test('parseScalabilityMode() works', () => {
+test('mediasoup.parseScalabilityMode() works', () => {
 	expect(parseScalabilityMode('L1T3')).toEqual({
 		spatialLayers: 1,
 		temporalLayers: 3,

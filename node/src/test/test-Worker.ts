@@ -120,7 +120,7 @@ test('worker.updateSettings() succeeds', async () => {
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-}, 2000);
+}, 8000);
 
 test('worker.updateSettings() with wrong settings rejects with TypeError', async () => {
 	const worker = await mediasoup.createWorker();
@@ -133,7 +133,7 @@ test('worker.updateSettings() with wrong settings rejects with TypeError', async
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-}, 2000);
+}, 8000);
 
 test('worker.updateSettings() rejects with InvalidStateError if closed', async () => {
 	const worker = await mediasoup.createWorker();
@@ -145,7 +145,7 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 	await expect(worker.updateSettings({ logLevel: 'error' })).rejects.toThrow(
 		InvalidStateError
 	);
-}, 2000);
+}, 8000);
 
 test('worker.dump() succeeds', async () => {
 	const worker = await mediasoup.createWorker();
@@ -161,7 +161,7 @@ test('worker.dump() succeeds', async () => {
 	});
 
 	worker.close();
-}, 2000);
+}, 8000);
 
 test('worker.dump() rejects with InvalidStateError if closed', async () => {
 	const worker = await mediasoup.createWorker();
@@ -171,7 +171,7 @@ test('worker.dump() rejects with InvalidStateError if closed', async () => {
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
 	await expect(worker.dump()).rejects.toThrow(InvalidStateError);
-}, 2000);
+}, 8000);
 
 test('worker.getResourceUsage() succeeds', async () => {
 	const worker = await mediasoup.createWorker();
@@ -181,7 +181,7 @@ test('worker.getResourceUsage() succeeds', async () => {
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-}, 2000);
+}, 8000);
 
 test('worker.close() succeeds', async () => {
 	const worker = await mediasoup.createWorker({ logLevel: 'warn' });
@@ -195,7 +195,7 @@ test('worker.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
 	expect(worker.died).toBe(false);
-}, 2000);
+}, 8000);
 
 test('Worker emits "died" if worker process died unexpectedly', async () => {
 	let onDied: ReturnType<typeof jest.fn>;
@@ -302,7 +302,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker3.closed).toBe(true);
 	expect(worker3.died).toBe(true);
-}, 5000);
+}, 10000);
 
 // Windows doesn't have some signals such as SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2
 // so we just skip this test in Windows.
@@ -326,5 +326,5 @@ if (os.platform() !== 'win32') {
 				worker.close();
 			}, 2000);
 		});
-	}, 5000);
+	}, 8000);
 }

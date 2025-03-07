@@ -62,7 +62,5 @@ jobs:
           # to build.
           ASAN_OPTIONS: 'detect_leaks=0'
 
-      - run: gcc --version
-
       - name: npm run test:node
         run: npm run test:node
