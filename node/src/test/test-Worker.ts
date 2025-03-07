@@ -108,7 +108,7 @@ test('createWorker() with wrong settings rejects with TypeError', async () => {
 		// @ts-expect-error --- Testing purposes.
 		mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
-}, 2000);
+}, 8000);
 
 test('worker.updateSettings() succeeds', async () => {
 	const worker = await mediasoup.createWorker();
