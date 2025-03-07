@@ -18,6 +18,9 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
+          - os: ubuntu-22.04-arm
+            cc: gcc
+            cxx: g++
           - os: macos-13
             cc: clang
             cxx: clang++

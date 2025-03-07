@@ -21,7 +21,15 @@ jobs:
             node: 18
             cc: gcc
             cxx: g++
+          - os: ubuntu-22.04-arm
+            node: 18
+            cc: gcc
+            cxx: g++
           - os: ubuntu-24.04
+            node: 20
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-24.04-arm
             node: 20
             cc: gcc
             cxx: g++
@@ -40,6 +48,25 @@ jobs:
             cxx: clang++
             meson_args: '-Db_sanitize=undefined'
           - os: ubuntu-24.04
+            node: 22
+            cc: gcc
+            cxx: g++
+            meson_args: '-Db_sanitize=thread'
+          - os: ubuntu-24.04-arm
+            node: 22
+            cc: gcc
+            cxx: g++
+          - os: ubuntu-24.04-arm
+            node: 22
+            cc: gcc
+            cxx: g++
+            meson_args: '-Db_sanitize=address'
+          - os: ubuntu-24.04-arm
+            node: 22
+            cc: clang
+            cxx: clang++
+            meson_args: '-Db_sanitize=undefined'
+          - os: ubuntu-24.04-arm
             node: 22
             cc: gcc
             cxx: g++

@@ -2,7 +2,7 @@ name: mediasoup-worker-fuzzer
 
 on:
   push:
-    branches: [ v3 ]
+    branches: [v3]
   pull_request:
   workflow_dispatch:
 
@@ -18,6 +18,10 @@ jobs:
       matrix:
         build:
           - os: ubuntu-24.04
+            cc: clang
+            cxx: clang++
+            pip-break-system-packages: true
+          - os: ubuntu-24.04-arm
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
