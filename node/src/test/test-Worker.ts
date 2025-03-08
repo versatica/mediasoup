@@ -10,7 +10,7 @@ import { InvalidStateError } from '../errors';
 // value to avoid problems in ubuntu-24.04-arm in Debug mode in CI.
 // See https://github.com/versatica/mediasoup/pull/1503
 
-test('Worker.workerBin matches mediasoup-worker absolute path', () => {
+test('mediasoup.workerBin matches mediasoup-worker absolute path', () => {
 	const workerBin = process.env.MEDIASOUP_WORKER_BIN
 		? process.env.MEDIASOUP_WORKER_BIN
 		: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
@@ -38,7 +38,7 @@ test('Worker.workerBin matches mediasoup-worker absolute path', () => {
 	expect(mediasoup.workerBin).toBe(workerBin);
 });
 
-test('createWorker() succeeds', async () => {
+test('mediasoup.createWorker() succeeds', async () => {
 	const onObserverNewWorker = jest.fn();
 
 	mediasoup.observer.once('newworker', onObserverNewWorker);
@@ -85,7 +85,7 @@ test('createWorker() succeeds', async () => {
 	expect(worker2.died).toBe(false);
 }, 8000);
 
-test('createWorker() with wrong settings rejects with TypeError', async () => {
+test('mediasoup.createWorker() with wrong settings rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
 	await expect(mediasoup.createWorker({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
@@ -201,7 +201,7 @@ test('worker.close() succeeds', async () => {
 	expect(worker.died).toBe(false);
 }, 8000);
 
-test('Worker emits "died" if worker process died unexpectedly', async () => {
+test('Worker emits "died" if mediasoup-worker process died unexpectedly', async () => {
 	let onDied: ReturnType<typeof jest.fn>;
 	let onObserverClose: ReturnType<typeof jest.fn>;
 
@@ -311,7 +311,7 @@ test('Worker emits "died" if worker process died unexpectedly', async () => {
 // Windows doesn't have some signals such as SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2
 // so we just skip this test in Windows.
 if (os.platform() !== 'win32') {
-	test('worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () => {
+	test('mediasoup-worker process ignores PIPE, HUP, ALRM, USR1 and USR2 signals', async () => {
 		const worker = await mediasoup.createWorker({ logLevel: 'warn' });
 
 		await new Promise<void>((resolve, reject) => {
