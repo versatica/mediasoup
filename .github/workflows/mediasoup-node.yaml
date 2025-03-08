@@ -144,6 +144,6 @@ jobs:
       - name: npm run lint:node
         run: npm run lint:node
 
-      - if: ${{ (!matrix.build.skip-test-in-debug-build-type) || (matrix.build-type != "Debug") }}
+      - if: ${{ !matrix.build.skip-test-in-debug-build-type || matrix.build-type != 'Debug' }}
         name: npm run test:node
         run: npm run test:node
