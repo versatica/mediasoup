@@ -13,11 +13,15 @@ const PKG = JSON.parse(
 const { version, getSupportedRtpCapabilities, parseScalabilityMode } =
 	mediasoup;
 
+// NOTE: In tests that invoke mediasoup.createWorker() let's use a high timeout
+// value to avoid problems in ubuntu-24.04-arm in Debug mode in CI.
+// See https://github.com/versatica/mediasoup/pull/1503
+
 test('mediasoup.version matches version field in package.json', () => {
 	expect(version).toBe(PKG.version);
 });
 
-test('setLoggerEventListeners() works', async () => {
+test('mediasoup.setLoggerEventListeners() succeeds', async () => {
 	const onDebug = jest.fn();
 
 	mediasoup.setLogEventListeners({
@@ -35,7 +39,7 @@ test('setLoggerEventListeners() works', async () => {
 	if (worker.subprocessClosed === false) {
 		await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 	}
-}, 2000);
+}, 8000);
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () => {
 	const rtpCapabilities = getSupportedRtpCapabilities();
@@ -52,7 +56,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
 });
 
-test('parseScalabilityMode() works', () => {
+test('mediasoup.parseScalabilityMode() succeeds', () => {
 	expect(parseScalabilityMode('L1T3')).toEqual({
 		spatialLayers: 1,
 		temporalLayers: 3,
