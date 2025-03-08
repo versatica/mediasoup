@@ -13,10 +13,6 @@ const PKG = JSON.parse(
 const { version, getSupportedRtpCapabilities, parseScalabilityMode } =
 	mediasoup;
 
-// NOTE: In tests that invoke mediasoup.createWorker() let's use a high timeout
-// value to avoid problems in ubuntu-24.04-arm in Debug mode in CI.
-// See https://github.com/versatica/mediasoup/pull/1503
-
 test('mediasoup.version matches version field in package.json', () => {
 	expect(version).toBe(PKG.version);
 });
@@ -39,7 +35,7 @@ test('mediasoup.setLoggerEventListeners() succeeds', async () => {
 	if (worker.subprocessClosed === false) {
 		await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 	}
-}, 8000);
+}, 2000);
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () => {
 	const rtpCapabilities = getSupportedRtpCapabilities();

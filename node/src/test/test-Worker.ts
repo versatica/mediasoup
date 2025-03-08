@@ -6,10 +6,6 @@ import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
 import { InvalidStateError } from '../errors';
 
-// NOTE: In tests that invoke mediasoup.createWorker() let's use a high timeout
-// value to avoid problems in ubuntu-24.04-arm in Debug mode in CI.
-// See https://github.com/versatica/mediasoup/pull/1503
-
 test('mediasoup.workerBin matches mediasoup-worker absolute path', () => {
 	const workerBin = process.env.MEDIASOUP_WORKER_BIN
 		? process.env.MEDIASOUP_WORKER_BIN
@@ -83,7 +79,7 @@ test('mediasoup.createWorker() succeeds', async () => {
 
 	expect(worker2.closed).toBe(true);
 	expect(worker2.died).toBe(false);
-}, 8000);
+}, 2000);
 
 test('mediasoup.createWorker() with wrong settings rejects with TypeError', async () => {
 	// @ts-expect-error --- Testing purposes.
@@ -112,7 +108,7 @@ test('mediasoup.createWorker() with wrong settings rejects with TypeError', asyn
 		// @ts-expect-error --- Testing purposes.
 		mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
-}, 8000);
+}, 2000);
 
 test('worker.updateSettings() succeeds', async () => {
 	const worker = await mediasoup.createWorker();
@@ -124,7 +120,7 @@ test('worker.updateSettings() succeeds', async () => {
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-}, 8000);
+}, 2000);
 
 test('worker.updateSettings() with wrong settings rejects with TypeError', async () => {
 	const worker = await mediasoup.createWorker();
@@ -137,7 +133,7 @@ test('worker.updateSettings() with wrong settings rejects with TypeError', async
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-}, 8000);
+}, 2000);
 
 test('worker.updateSettings() rejects with InvalidStateError if closed', async () => {
 	const worker = await mediasoup.createWorker();
@@ -149,7 +145,7 @@ test('worker.updateSettings() rejects with InvalidStateError if closed', async (
 	await expect(worker.updateSettings({ logLevel: 'error' })).rejects.toThrow(
 		InvalidStateError
 	);
-}, 8000);
+}, 2000);
 
 test('worker.dump() succeeds', async () => {
 	const worker = await mediasoup.createWorker();
@@ -165,7 +161,7 @@ test('worker.dump() succeeds', async () => {
 	});
 
 	worker.close();
-}, 8000);
+}, 2000);
 
 test('worker.dump() rejects with InvalidStateError if closed', async () => {
 	const worker = await mediasoup.createWorker();
@@ -175,7 +171,7 @@ test('worker.dump() rejects with InvalidStateError if closed', async () => {
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
 
 	await expect(worker.dump()).rejects.toThrow(InvalidStateError);
-}, 8000);
+}, 2000);
 
 test('worker.getResourceUsage() succeeds', async () => {
 	const worker = await mediasoup.createWorker();
@@ -185,7 +181,7 @@ test('worker.getResourceUsage() succeeds', async () => {
 	worker.close();
 
 	await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-}, 8000);
+}, 2000);
 
 test('worker.close() succeeds', async () => {
 	const worker = await mediasoup.createWorker({ logLevel: 'warn' });
@@ -199,7 +195,7 @@ test('worker.close() succeeds', async () => {
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
 	expect(worker.died).toBe(false);
-}, 8000);
+}, 2000);
 
 test('Worker emits "died" if mediasoup-worker process died unexpectedly', async () => {
 	let onDied: ReturnType<typeof jest.fn>;
@@ -330,5 +326,5 @@ if (os.platform() !== 'win32') {
 				worker.close();
 			}, 2000);
 		});
-	}, 10000);
+	}, 4000);
 }

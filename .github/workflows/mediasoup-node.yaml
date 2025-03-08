@@ -61,6 +61,10 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
+            # In Ubuntu 24.04 ARM in Debug build type, createWorker() takes lot
+            # of time.
+            # See https://github.com/versatica/mediasoup/pull/1503.
+            skip-test-in-debug-build-type: true
           - os: ubuntu-24.04-arm
             node: 22
             cc: clang
@@ -140,5 +144,6 @@ jobs:
       - name: npm run lint:node
         run: npm run lint:node
 
-      - name: npm run test:node
+      - if: ${{ (!matrix.build.skip-test-in-debug-build-type) || (matrix.build-type != "Debug") }}
+        name: npm run test:node
         run: npm run test:node
