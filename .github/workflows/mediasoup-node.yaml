@@ -127,6 +127,9 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-
 
+      - name: npm run worker:prebuild-name
+        run: npm run worker:prebuild-name
+
       - name: npm ci
         run: npm ci --foreground-scripts
         env:

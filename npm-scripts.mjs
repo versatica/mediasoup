@@ -20,8 +20,6 @@ const WORKER_RELEASE_BIN = IS_WINDOWS
 	: 'mediasoup-worker';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
-const WORKER_PREBUILD_TAR = getWorkerPrebuildTarName();
-const WORKER_PREBUILD_TAR_PATH = `${WORKER_PREBUILD_DIR}/${WORKER_PREBUILD_TAR}`;
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
@@ -150,6 +148,12 @@ async function run() {
 
 		case 'worker:build': {
 			buildWorker();
+
+			break;
+		}
+
+		case 'worker:prebuild-name': {
+			getWorkerPrebuildTarName();
 
 			break;
 		}
@@ -284,17 +288,23 @@ function getPython() {
 }
 
 function getWorkerPrebuildTarName() {
-	let name = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
+	let workerPrebuildTarName = `mediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
 
 	// In Linux we want to know about kernel version since kernel >= 6 supports
 	// io-uring.
 	if (os.platform() === 'linux') {
 		const kernelMajorVersion = Number(os.release().split('.')[0]);
 
-		name += `-kernel${kernelMajorVersion}`;
+		workerPrebuildTarName += `-kernel${kernelMajorVersion}`;
 	}
 
-	return `${name}.tgz`;
+	workerPrebuildTarName = `${workerPrebuildTarName}.tgz`;
+
+	logInfo(
+		`getWorkerPrebuildTarName() [workerPrebuildTarName:${workerPrebuildTarName}]`
+	);
+
+	return workerPrebuildTarName;
 }
 
 function installInvoke() {
@@ -490,6 +500,9 @@ async function prebuildWorker() {
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
+	const workerPrebuildTar = getWorkerPrebuildTarName();
+	const workerPrebuildTarPath = `${WORKER_PREBUILD_DIR}/${workerPrebuildTar}`;
+
 	return new Promise((resolve, reject) => {
 		// Generate a gzip file which just contains mediasoup-worker binary without
 		// any folder.
@@ -501,7 +514,7 @@ async function prebuildWorker() {
 				},
 				[WORKER_RELEASE_BIN]
 			)
-			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
+			.pipe(fs.createWriteStream(workerPrebuildTarPath))
 			.on('finish', resolve)
 			.on('error', reject);
 	});
@@ -516,16 +529,19 @@ async function downloadPrebuiltWorker() {
 			.replace(/^git\+/, '')
 			.replace(/\.git$/, '')}/releases/download`;
 
-	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
+	const workerPrebuildTar = getWorkerPrebuildTarName();
+	const workerPrebuildTarUrl = `${releaseBase}/${PKG.version}/${workerPrebuildTar}`;
 
-	logInfo(`downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
+	logInfo(
+		`downloadPrebuiltWorker() [workerPrebuildTarUrl:${workerPrebuildTarUrl}]`
+	);
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
 	let res;
 
 	try {
-		res = await fetch(tarUrl);
+		res = await fetch(workerPrebuildTarUrl);
 
 		if (res.status === 404) {
 			logInfo(

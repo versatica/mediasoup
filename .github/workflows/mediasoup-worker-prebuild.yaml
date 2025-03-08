@@ -57,6 +57,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: npm run worker:prebuild-name
+        run: npm run worker:prebuild-name
+
       # We need to install some NPM production deps for npm-scripts.mjs to
       # work.
       - name: npm ci --ignore-scripts
