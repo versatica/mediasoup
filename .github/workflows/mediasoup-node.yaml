@@ -56,13 +56,11 @@ jobs:
             node: 22
             cc: gcc
             cxx: g++
-          # TOOD: Uncomment when this issue is fixed:
-          # https://github.com/versatica/mediasoup/issues/1502
-          # - os: ubuntu-24.04-arm
-          #   node: 22
-          #   cc: gcc
-          #   cxx: g++
-          #   meson_args: '-Db_sanitize=address'
+          - os: ubuntu-24.04-arm
+            node: 22
+            cc: gcc
+            cxx: g++
+            meson_args: '-Db_sanitize=address'
           - os: ubuntu-24.04-arm
             node: 22
             cc: clang
