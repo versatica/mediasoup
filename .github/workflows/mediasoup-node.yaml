@@ -29,10 +29,6 @@ jobs:
             node: 20
             cc: gcc
             cxx: g++
-          - os: ubuntu-24.04-arm
-            node: 20
-            cc: gcc
-            cxx: g++
           - os: ubuntu-24.04
             node: 22
             cc: gcc
@@ -52,6 +48,10 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=thread'
+          - os: ubuntu-24.04-arm
+            node: 20
+            cc: gcc
+            cxx: g++
           - os: ubuntu-24.04-arm
             node: 22
             cc: gcc
