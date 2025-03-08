@@ -61,8 +61,8 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=address'
-            # In Ubuntu 24.04 ARM in Debug build type, createWorker() takes lot
-            # of time.
+            # In Ubuntu 24.04 ARM in Debug build type with ASAN, createWorker()
+            # takes lot of time.
             # See https://github.com/versatica/mediasoup/pull/1503.
             skip-test-in-debug-build-type: true
           - os: ubuntu-24.04-arm
