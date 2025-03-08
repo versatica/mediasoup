@@ -131,15 +131,15 @@ jobs:
           restore-keys: |
             ${{ matrix.build.os }}-node-
 
-      - name: npm run worker:prebuild-name
-        run: npm run worker:prebuild-name
-
       - name: npm ci
         run: npm ci --foreground-scripts
         env:
           # Disable leak detection because it's detected by the tool flatc uses
           # to build.
           ASAN_OPTIONS: 'detect_leaks=0'
+
+      - name: npm run worker:prebuild-name
+        run: npm run worker:prebuild-name
 
       - name: npm run lint:node
         run: npm run lint:node

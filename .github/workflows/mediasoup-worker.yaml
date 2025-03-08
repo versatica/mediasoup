@@ -185,9 +185,6 @@ jobs:
         name: pip3 install --break-system-packages invoke
         run: pip3 install --break-system-packages invoke
 
-      - name: npm run worker:prebuild-name
-        run: npm run worker:prebuild-name
-
       # We need to install npm deps of worker/scripts/package.json.
       - if: ${{ matrix.build.run-lint }}
         name: npm ci --prefix worker/scripts
