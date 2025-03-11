@@ -24,15 +24,9 @@ jobs:
           - os: macos-13
             cc: clang
             cxx: clang++
-          - os: macos-14
-            cc: clang
-            cxx: clang++
           - os: macos-15
             cc: clang
             cxx: clang++
-          - os: windows-2022
-            cc: cl
-            cxx: cl
           - os: windows-2025
             cc: cl
             cxx: cl
