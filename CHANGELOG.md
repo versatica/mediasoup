@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- CI: Remove redundant hosts `macos-14` and `windows-2022` from `mediasoup-worker-prebuild` job ([PR #1506](https://github.com/versatica/mediasoup/pull/1506)).
+
 ### 3.15.6
 
 - CI: Remove deprecated `ubuntu-20.04` host and add `windows-2025`, `ubuntu-22.04-arm` and `ubuntu-24.04-arm` hosts ([PR #1500](https://github.com/versatica/mediasoup/pull/1500)).
