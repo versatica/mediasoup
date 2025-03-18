@@ -35,11 +35,11 @@ namespace RTC
 		// Video codecs:
 		{ "vp8",             RtpCodecMimeType::Subtype::VP8             },
 		{ "vp9",             RtpCodecMimeType::Subtype::VP9             },
-		{ "av1",             RtpCodecMimeType::Subtype::AV1             },
 		{ "h264",            RtpCodecMimeType::Subtype::H264            },
 		{ "h264-svc",        RtpCodecMimeType::Subtype::H264_SVC        },
 		{ "x-h264uc",        RtpCodecMimeType::Subtype::X_H264UC        },
 		{ "h265",            RtpCodecMimeType::Subtype::H265            },
+		{ "av1",             RtpCodecMimeType::Subtype::AV1             },
 		// Complementary codecs:
 		{ "cn",              RtpCodecMimeType::Subtype::CN              },
 		{ "telephone-event", RtpCodecMimeType::Subtype::TELEPHONE_EVENT },
@@ -64,11 +64,11 @@ namespace RTC
 		// Video codecs:
 		{ RtpCodecMimeType::Subtype::VP8,             "VP8"             },
 		{ RtpCodecMimeType::Subtype::VP9,             "VP9"             },
-		{ RtpCodecMimeType::Subtype::AV1,             "AV1"             },
 		{ RtpCodecMimeType::Subtype::H264,            "H264"            },
 		{ RtpCodecMimeType::Subtype::H264_SVC,        "H264-SVC"        },
 		{ RtpCodecMimeType::Subtype::X_H264UC,        "X-H264UC"        },
 		{ RtpCodecMimeType::Subtype::H265,            "H265"            },
+		{ RtpCodecMimeType::Subtype::AV1,             "AV1"             },
 		// Complementary codecs:
 		{ RtpCodecMimeType::Subtype::CN,              "CN"              },
 		{ RtpCodecMimeType::Subtype::TELEPHONE_EVENT, "telephone-event" },
