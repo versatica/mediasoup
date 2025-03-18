@@ -188,7 +188,7 @@ namespace RTC
 			do
 			{
 				this->templateDependencyStructure->templateLayers.emplace_back(
-				  Template{ spatialId, temporalId });
+				  FameDependencyTemplate{ spatialId, temporalId });
 
 				if (this->bitStream.GetLeftBits() < 2)
 				{

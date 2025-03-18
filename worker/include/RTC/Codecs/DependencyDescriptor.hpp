@@ -8,7 +8,7 @@ namespace RTC
 	{
 		struct DependencyDescriptor
 		{
-			struct Template
+			struct FameDependencyTemplate
 			{
 				uint32_t spatialLayer;
 				uint32_t temporalLayer;
@@ -18,7 +18,7 @@ namespace RTC
 			{
 				uint32_t spatialLayers{ 0 };
 				uint32_t temporalLayers{ 0 };
-				std::vector<Template> templateLayers;
+				std::vector<FameDependencyTemplate> templateLayers;
 			};
 
 			bool startOfFrame{ false };
