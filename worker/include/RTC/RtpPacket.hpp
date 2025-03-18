@@ -308,6 +308,11 @@ namespace RTC
 			this->playoutDelayExtensionId = id;
 		}
 
+		void SetDependencyDescriptorExtensionId(uint8_t id)
+		{
+			this->dependencyDescriptorExtensionId = id;
+		}
+
 		bool ReadMid(std::string& mid) const
 		{
 			uint8_t extenLen;
@@ -504,6 +509,30 @@ namespace RTC
 			return true;
 		}
 
+		bool ReadDependencyDescriptor(
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		    templateDependencyStructure) const
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+
+			auto* value =
+			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
+
+			if (!value)
+			{
+				return false;
+			}
+
+			dependencyDescriptor.reset(value);
+
+			// TMP: Just for dev purposes.
+			dependencyDescriptor->Dump();
+
+			return true;
+		}
+
 		bool HasExtension(uint8_t id) const
 		{
 			if (id == 0u)
@@ -688,6 +717,7 @@ namespace RTC
 		uint8_t ssrcAudioLevelExtensionId{ 0u };
 		uint8_t videoOrientationExtensionId{ 0u };
 		uint8_t playoutDelayExtensionId{ 0u };
+		uint8_t dependencyDescriptorExtensionId{ 0u };
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0u };
 		uint8_t payloadPadding{ 0u };

@@ -2,6 +2,7 @@
 #define MS_RTC_CODECS_PAYLOAD_DESCRIPTOR_HANDLER_HPP
 
 #include "common.hpp"
+#include "DependencyDescriptor.hpp"
 #include "RTC/SeqManager.hpp"
 #include <deque>
 

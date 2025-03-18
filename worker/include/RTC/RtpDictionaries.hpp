@@ -45,6 +45,7 @@ namespace RTC
 			// Video codecs:
 			VP8 = 200,
 			VP9,
+			AV1,
 			H264,
 			H264_SVC,
 			X_H264UC,
@@ -123,6 +124,7 @@ namespace RTC
 			TRANSPORT_WIDE_CC_01   = 5,
 			FRAME_MARKING_07       = 6, // NOTE: Remove once RFC.
 			FRAME_MARKING          = 7,
+			DEPENDENCY_DESCRIPTOR  = 8,
 			SSRC_AUDIO_LEVEL       = 10,
 			VIDEO_ORIENTATION      = 11,
 			TOFFSET                = 12,
