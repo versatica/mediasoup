@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "RTC/Codecs/BitStream.hpp"
+#include "Utils.hpp" // BitStream.
 #include <cstdint>
 
 namespace RTC
@@ -56,7 +56,7 @@ namespace RTC
 			bool ReadFrameDependencyDefinition();
 
 		private:
-			BitStream bitStream;
+			Utils::BitStream bitStream;
 		};
 
 	} // namespace Codecs
