@@ -39,6 +39,11 @@ namespace RTC
 			// Read dependency descriptor.
 			packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
 
+			if (!dependencyDescriptor)
+			{
+				return;
+			}
+
 			PayloadDescriptor* payloadDescriptor = AV1::Parse(dependencyDescriptor.get());
 
 			if (!payloadDescriptor)

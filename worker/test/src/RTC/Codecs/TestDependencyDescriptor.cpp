@@ -74,8 +74,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		// clang-format on
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
-		auto* dependencyDescriptor =
-		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure);
+		auto dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
+		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->startOfFrame == true);
