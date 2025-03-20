@@ -152,7 +152,11 @@ test('dataProducer.send() succeeds', async () => {
 
 		dataProducer.send(message);
 
-		const messageSize = Buffer.from(message).byteLength;
+		if (typeof message === 'string') {
+				message = Buffer.from(message);
+		}
+		const messageSize = message.byteLength;
+
 
 		sentMessageBytes += messageSize;
 
