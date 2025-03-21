@@ -434,6 +434,8 @@ pub enum ConsumerStats {
     JustConsumer((ConsumerStat,)),
     /// RTC statistics with producer
     WithProducer((ConsumerStat, ProducerStat)),
+    /// RTC statistics with multiple consumers (pipe).
+    MultipleConsumers(Vec<ConsumerStat>),
 }
 
 impl ConsumerStats {
@@ -442,6 +444,7 @@ impl ConsumerStats {
         match self {
             ConsumerStats::JustConsumer((consumer_stat,)) => consumer_stat,
             ConsumerStats::WithProducer((consumer_stat, _)) => consumer_stat,
+            ConsumerStats::MultipleConsumers(consumer_stats) => &consumer_stats[0],
         }
     }
 }
@@ -1038,10 +1041,12 @@ impl Consumer {
                     Ok(ConsumerStats::JustConsumer((consumer_stat,)))
                 }
                 _ => {
-                    let consumer_stat = ConsumerStat::from_fbs(&data.stats[0]);
-                    let producer_stat = ProducerStat::from_fbs(&data.stats[1]);
+                    let mut stats = Vec::<ConsumerStat>::with_capacity(data.stats.len());
+                    for stat in data.stats {
+                        stats.push(ConsumerStat::from_fbs(&stat));
+                    }
 
-                    Ok(ConsumerStats::WithProducer((consumer_stat, producer_stat)))
+                    Ok(ConsumerStats::MultipleConsumers(stats))
                 }
             }
         } else {
