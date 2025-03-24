@@ -447,11 +447,10 @@ fn consume_data_from_a_direct_data_producer_succeeds() {
             .expect("Failed to create data producer");
 
         let data_consumer = webrtc_transport
-            .consume_data({
-                let options = DataConsumerOptions::new_direct(direct_data_producer.id(), None);
-
-                options
-            })
+            .consume_data(DataConsumerOptions::new_direct(
+                direct_data_producer.id(),
+                None,
+            ))
             .await
             .expect("Failed to consume data");
 
@@ -497,14 +496,10 @@ fn dump_consuming_from_a_direct_data_producer_succeeds() {
             .expect("Failed to create data producer");
 
         let data_consumer = webrtc_transport
-            .consume_data({
-                let options = DataConsumerOptions::new_sctp_unordered_with_retransmits(
-                    direct_data_producer.id(),
-                    2,
-                );
-
-                options
-            })
+            .consume_data(DataConsumerOptions::new_sctp_unordered_with_retransmits(
+                direct_data_producer.id(),
+                2,
+            ))
             .await
             .expect("Failed to consume data");
 
