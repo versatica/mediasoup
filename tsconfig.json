@@ -9,7 +9,7 @@
 		"declarationMap": true,
 		"emitDeclarationOnly": false,
 		"declarationDir": "node/lib",
-		"isolatedModules": false,
+		"isolatedModules": true,
 		"verbatimModuleSyntax": false,
 		"useDefineForClassFields": true,
 		"esModuleInterop": false,

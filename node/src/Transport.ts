@@ -830,15 +830,39 @@ export abstract class TransportImpl<
 		let sctpStreamParameters: SctpStreamParameters | undefined;
 		let sctpStreamId: number;
 
+		// If this is a DirectTransport, sctpStreamParameters must not be used.
+		if (this.type === 'direct') {
+			type = 'direct';
+
+			if (
+				ordered !== undefined ||
+				maxPacketLifeTime !== undefined ||
+				maxRetransmits !== undefined
+			) {
+				logger.warn(
+					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport'
+				);
+			}
+		}
 		// If this is not a DirectTransport, use sctpStreamParameters from the
 		// DataProducer (if type 'sctp') unless they are given in method parameters.
-		if (this.type !== 'direct') {
+		// If the DataProducer is type 'sctp' and no sctpStreamParameters are given,
+		// generate proper ones.
+		else {
 			type = 'sctp';
 
-			sctpStreamParameters =
-				utils.clone<SctpStreamParameters | undefined>(
-					dataProducer.sctpStreamParameters
-				) ?? ({} as SctpStreamParameters);
+			// This may throw.
+			sctpStreamId = this.getNextSctpStreamId();
+
+			sctpStreamParameters = dataProducer.sctpStreamParameters
+				? utils.clone<SctpStreamParameters>(dataProducer.sctpStreamParameters)
+				: {
+						streamId: sctpStreamId,
+						ordered: true,
+					};
+
+			this.#sctpStreamIds![sctpStreamId] = 1;
+			sctpStreamParameters.streamId = sctpStreamId;
 
 			// Override if given.
 			if (ordered !== undefined) {
@@ -851,26 +875,6 @@ export abstract class TransportImpl<
 
 			if (maxRetransmits !== undefined) {
 				sctpStreamParameters.maxRetransmits = maxRetransmits;
-			}
-
-			// This may throw.
-			sctpStreamId = this.getNextSctpStreamId();
-
-			this.#sctpStreamIds![sctpStreamId] = 1;
-			sctpStreamParameters.streamId = sctpStreamId;
-		}
-		// If this is a DirectTransport, sctpStreamParameters must not be used.
-		else {
-			type = 'direct';
-
-			if (
-				ordered !== undefined ||
-				maxPacketLifeTime !== undefined ||
-				maxRetransmits !== undefined
-			) {
-				logger.warn(
-					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport'
-				);
 			}
 		}
 
