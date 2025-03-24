@@ -27,6 +27,10 @@
 		"./types": {
 			"types": "./node/lib/types.d.ts",
 			"default": "./node/lib/types.js"
+		},
+		"./extras": {
+			"types": "./node/lib/extras.d.ts",
+			"default": "./node/lib/extras.js"
 		}
 	},
 	"files": [
