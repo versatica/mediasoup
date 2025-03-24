@@ -143,35 +143,45 @@ test('router.createWebRtcTransport() succeeds', async () => {
 
 	const iceCandidates = webRtcTransport.iceCandidates;
 
-	expect(iceCandidates[0].ip).toBe('9.9.9.1');
-	expect(iceCandidates[0].protocol).toBe('udp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBeUndefined();
-	expect(iceCandidates[1].ip).toBe('9.9.9.1');
-	expect(iceCandidates[1].protocol).toBe('tcp');
-	expect(iceCandidates[1].type).toBe('host');
-	expect(iceCandidates[1].tcpType).toBe('passive');
-	expect(iceCandidates[2].ip).toBe('foo1.bar.org');
-	expect(iceCandidates[2].protocol).toBe('udp');
-	expect(iceCandidates[2].type).toBe('host');
-	expect(iceCandidates[2].tcpType).toBeUndefined();
-	expect(iceCandidates[3].ip).toBe('foo2.bar.org');
-	expect(iceCandidates[3].protocol).toBe('tcp');
-	expect(iceCandidates[3].type).toBe('host');
-	expect(iceCandidates[3].tcpType).toBe('passive');
-	expect(iceCandidates[4].ip).toBe('127.0.0.1');
-	expect(iceCandidates[4].protocol).toBe('udp');
-	expect(iceCandidates[4].type).toBe('host');
-	expect(iceCandidates[4].tcpType).toBeUndefined();
-	expect(iceCandidates[5].ip).toBe('127.0.0.1');
-	expect(iceCandidates[5].protocol).toBe('tcp');
-	expect(iceCandidates[5].type).toBe('host');
-	expect(iceCandidates[5].tcpType).toBe('passive');
-	expect(iceCandidates[0].priority).toBeGreaterThan(iceCandidates[1].priority);
-	expect(iceCandidates[1].priority).toBeGreaterThan(iceCandidates[2].priority);
-	expect(iceCandidates[2].priority).toBeGreaterThan(iceCandidates[3].priority);
-	expect(iceCandidates[3].priority).toBeGreaterThan(iceCandidates[4].priority);
-	expect(iceCandidates[4].priority).toBeGreaterThan(iceCandidates[5].priority);
+	expect(iceCandidates[0]!.ip).toBe('9.9.9.1');
+	expect(iceCandidates[0]!.protocol).toBe('udp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBeUndefined();
+	expect(iceCandidates[1]!.ip).toBe('9.9.9.1');
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
+	expect(iceCandidates[2]!.ip).toBe('foo1.bar.org');
+	expect(iceCandidates[2]!.protocol).toBe('udp');
+	expect(iceCandidates[2]!.type).toBe('host');
+	expect(iceCandidates[2]!.tcpType).toBeUndefined();
+	expect(iceCandidates[3]!.ip).toBe('foo2.bar.org');
+	expect(iceCandidates[3]!.protocol).toBe('tcp');
+	expect(iceCandidates[3]!.type).toBe('host');
+	expect(iceCandidates[3]!.tcpType).toBe('passive');
+	expect(iceCandidates[4]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[4]!.protocol).toBe('udp');
+	expect(iceCandidates[4]!.type).toBe('host');
+	expect(iceCandidates[4]!.tcpType).toBeUndefined();
+	expect(iceCandidates[5]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[5]!.protocol).toBe('tcp');
+	expect(iceCandidates[5]!.type).toBe('host');
+	expect(iceCandidates[5]!.tcpType).toBe('passive');
+	expect(iceCandidates[0]!.priority).toBeGreaterThan(
+		iceCandidates[1]!.priority
+	);
+	expect(iceCandidates[1]!.priority).toBeGreaterThan(
+		iceCandidates[2]!.priority
+	);
+	expect(iceCandidates[2]!.priority).toBeGreaterThan(
+		iceCandidates[3]!.priority
+	);
+	expect(iceCandidates[3]!.priority).toBeGreaterThan(
+		iceCandidates[4]!.priority
+	);
+	expect(iceCandidates[4]!.priority).toBeGreaterThan(
+		iceCandidates[5]!.priority
+	);
 
 	expect(webRtcTransport.iceState).toBe('new');
 	expect(webRtcTransport.iceSelectedTuple).toBeUndefined();
@@ -218,15 +228,17 @@ test('router.createWebRtcTransport() with deprecated listenIps succeeds', async 
 
 	const iceCandidates = webRtcTransport.iceCandidates;
 
-	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].protocol).toBe('udp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBeUndefined();
-	expect(iceCandidates[1].ip).toBe('127.0.0.1');
-	expect(iceCandidates[1].protocol).toBe('tcp');
-	expect(iceCandidates[1].type).toBe('host');
-	expect(iceCandidates[1].tcpType).toBe('passive');
-	expect(iceCandidates[0].priority).toBeGreaterThan(iceCandidates[1].priority);
+	expect(iceCandidates[0]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[0]!.protocol).toBe('udp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBeUndefined();
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
+	expect(iceCandidates[0]!.priority).toBeGreaterThan(
+		iceCandidates[1]!.priority
+	);
 }, 2000);
 
 test('router.createWebRtcTransport() with fixed port succeeds', async () => {
@@ -242,7 +254,7 @@ test('router.createWebRtcTransport() with fixed port succeeds', async () => {
 		],
 	});
 
-	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
+	expect(webRtcTransport.iceCandidates[0]!.port).toEqual(port);
 }, 2000);
 
 test('router.createWebRtcTransport() with portRange succeeds', async () => {
@@ -252,7 +264,7 @@ test('router.createWebRtcTransport() with portRange succeeds', async () => {
 		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
 	});
 
-	const iceCandidate1 = webRtcTransport1.iceCandidates[0];
+	const iceCandidate1 = webRtcTransport1.iceCandidates[0]!;
 
 	expect(iceCandidate1.ip).toBe('127.0.0.1');
 	expect(
@@ -264,7 +276,7 @@ test('router.createWebRtcTransport() with portRange succeeds', async () => {
 		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
 	});
 
-	const iceCandidate2 = webRtcTransport2.iceCandidates[0];
+	const iceCandidate2 = webRtcTransport2.iceCandidates[0]!;
 
 	expect(iceCandidate2.ip).toBe('127.0.0.1');
 	expect(
@@ -357,29 +369,29 @@ test('webRtcTransport.getStats() succeeds', async () => {
 
 	expect(Array.isArray(stats)).toBe(true);
 	expect(stats.length).toBe(1);
-	expect(stats[0].type).toBe('webrtc-transport');
-	expect(stats[0].transportId).toBe(webRtcTransport.id);
-	expect(typeof stats[0].timestamp).toBe('number');
-	expect(stats[0].iceRole).toBe('controlled');
-	expect(stats[0].iceState).toBe('new');
-	expect(stats[0].dtlsState).toBe('new');
-	expect(stats[0].sctpState).toBeUndefined();
-	expect(stats[0].bytesReceived).toBe(0);
-	expect(stats[0].recvBitrate).toBe(0);
-	expect(stats[0].bytesSent).toBe(0);
-	expect(stats[0].sendBitrate).toBe(0);
-	expect(stats[0].rtpBytesReceived).toBe(0);
-	expect(stats[0].rtpRecvBitrate).toBe(0);
-	expect(stats[0].rtpBytesSent).toBe(0);
-	expect(stats[0].rtpSendBitrate).toBe(0);
-	expect(stats[0].rtxBytesReceived).toBe(0);
-	expect(stats[0].rtxRecvBitrate).toBe(0);
-	expect(stats[0].rtxBytesSent).toBe(0);
-	expect(stats[0].rtxSendBitrate).toBe(0);
-	expect(stats[0].probationBytesSent).toBe(0);
-	expect(stats[0].probationSendBitrate).toBe(0);
-	expect(stats[0].iceSelectedTuple).toBeUndefined();
-	expect(stats[0].maxIncomingBitrate).toBeUndefined();
+	expect(stats[0]!.type).toBe('webrtc-transport');
+	expect(stats[0]!.transportId).toBe(webRtcTransport.id);
+	expect(typeof stats[0]!.timestamp).toBe('number');
+	expect(stats[0]!.iceRole).toBe('controlled');
+	expect(stats[0]!.iceState).toBe('new');
+	expect(stats[0]!.dtlsState).toBe('new');
+	expect(stats[0]!.sctpState).toBeUndefined();
+	expect(stats[0]!.bytesReceived).toBe(0);
+	expect(stats[0]!.recvBitrate).toBe(0);
+	expect(stats[0]!.bytesSent).toBe(0);
+	expect(stats[0]!.sendBitrate).toBe(0);
+	expect(stats[0]!.rtpBytesReceived).toBe(0);
+	expect(stats[0]!.rtpRecvBitrate).toBe(0);
+	expect(stats[0]!.rtpBytesSent).toBe(0);
+	expect(stats[0]!.rtpSendBitrate).toBe(0);
+	expect(stats[0]!.rtxBytesReceived).toBe(0);
+	expect(stats[0]!.rtxRecvBitrate).toBe(0);
+	expect(stats[0]!.rtxBytesSent).toBe(0);
+	expect(stats[0]!.rtxSendBitrate).toBe(0);
+	expect(stats[0]!.probationBytesSent).toBe(0);
+	expect(stats[0]!.probationSendBitrate).toBe(0);
+	expect(stats[0]!.iceSelectedTuple).toBeUndefined();
+	expect(stats[0]!.maxIncomingBitrate).toBeUndefined();
 }, 2000);
 
 test('webRtcTransport.connect() succeeds', async () => {

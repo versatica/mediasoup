@@ -3,6 +3,7 @@
 ### NEXT
 
 - CI: Remove redundant hosts `macos-14` and `windows-2022` from `mediasoup-worker-prebuild` job ([PR #1506](https://github.com/versatica/mediasoup/pull/1506)).
+- Node: Modernize code ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.15.6
 

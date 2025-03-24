@@ -34,9 +34,9 @@ import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 // If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
 // Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
 // Otherwise use the Release binary.
-export const workerBin = process.env.MEDIASOUP_WORKER_BIN
-	? process.env.MEDIASOUP_WORKER_BIN
-	: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
+export const workerBin = process.env['MEDIASOUP_WORKER_BIN']
+	? process.env['MEDIASOUP_WORKER_BIN']
+	: process.env['MEDIASOUP_BUILDTYPE'] === 'Debug'
 		? path.join(
 				__dirname,
 				'..',
@@ -112,12 +112,12 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		let spawnBin = workerBin;
 		let spawnArgs: string[] = [];
 
-		if (process.env.MEDIASOUP_USE_VALGRIND === 'true') {
-			spawnBin = process.env.MEDIASOUP_VALGRIND_BIN ?? 'valgrind';
+		if (process.env['MEDIASOUP_USE_VALGRIND'] === 'true') {
+			spawnBin = process.env['MEDIASOUP_VALGRIND_BIN'] ?? 'valgrind';
 
-			if (process.env.MEDIASOUP_VALGRIND_OPTIONS) {
+			if (process.env['MEDIASOUP_VALGRIND_OPTIONS']) {
 				spawnArgs = spawnArgs.concat(
-					process.env.MEDIASOUP_VALGRIND_OPTIONS.split(/\s+/)
+					process.env['MEDIASOUP_VALGRIND_OPTIONS'].split(/\s+/)
 				);
 			}
 

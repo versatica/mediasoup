@@ -19,8 +19,21 @@
 	},
 	"main": "node/lib/index.js",
 	"types": "node/lib/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./node/lib/index.d.ts",
+			"default": "./node/lib/index.js"
+		},
+		"./types": {
+			"types": "./node/lib/types.d.ts",
+			"default": "./node/lib/types.js"
+		}
+	},
 	"files": [
+		"LICENSE",
+		"README.md",
 		"node/lib",
+		"npm-scripts.mjs",
 		"worker/deps/libwebrtc",
 		"worker/fbs",
 		"worker/fuzzer/include",
@@ -36,8 +49,7 @@
 		"worker/test/src",
 		"worker/meson.build",
 		"worker/meson_options.txt",
-		"worker/tasks.py",
-		"npm-scripts.mjs"
+		"worker/tasks.py"
 	],
 	"engines": {
 		"node": ">=18"
@@ -71,33 +83,6 @@
 		"coverage:node": "node npm-scripts.mjs coverage:node",
 		"release:check": "node npm-scripts.mjs release:check",
 		"release": "node npm-scripts.mjs release"
-	},
-	"jest": {
-		"verbose": true,
-		"testEnvironment": "node",
-		"testRegex": "node/src/test/test-.*\\.ts",
-		"transform": {
-			"^.*\\.ts$": [
-				"ts-jest",
-				{
-					"diagnostics": {
-						"ignoreCodes": [
-							"TS151001"
-						]
-					}
-				}
-			]
-		},
-		"coveragePathIgnorePatterns": [
-			"node/src/fbs",
-			"node/src/test"
-		],
-		"cacheDirectory": ".cache/jest",
-		"modulePathIgnorePatterns": [
-			"worker",
-			"rust",
-			"target"
-		]
 	},
 	"dependencies": {
 		"@types/ini": "^4.1.1",

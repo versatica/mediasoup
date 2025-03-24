@@ -828,9 +828,9 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 		},
 	]);
 	expect(videoConsumer.rtpParameters.encodings?.length).toBe(1);
-	expect(typeof videoConsumer.rtpParameters.encodings?.[0].ssrc).toBe('number');
-	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx).toBe('object');
-	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc).toBe(
+	expect(typeof videoConsumer.rtpParameters.encodings![0]!.ssrc).toBe('number');
+	expect(typeof videoConsumer.rtpParameters.encodings![0]!.rtx).toBe('object');
+	expect(typeof videoConsumer.rtpParameters.encodings![0]!.rtx?.ssrc).toBe(
 		'number'
 	);
 	expect(videoConsumer.type).toBe('simulcast');

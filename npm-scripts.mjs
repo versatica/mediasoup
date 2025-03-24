@@ -26,14 +26,17 @@ const GH_REPO = 'mediasoup';
 // Paths for ESLint to check. Converted to string for convenience.
 const ESLINT_PATHS = [
 	'eslint.config.mjs',
+	'jest.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
 	'worker/scripts',
 ].join(' ');
+
 // Paths for ESLint to ignore. Converted to string argument for convenience.
 const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
 	.map(entry => `--ignore-pattern ${entry}`)
 	.join(' ');
+
 // Paths for Prettier to check/write. Converted to string for convenience.
 // NOTE: Prettier ignores paths in .gitignore so we don't need to care about
 // node/src/fbs.
@@ -42,6 +45,8 @@ const PRETTIER_PATHS = [
 	'CONTRIBUTING.md',
 	'README.md',
 	'doc',
+	'eslint.config.mjs',
+	'jest.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
 	'package.json',
@@ -64,7 +69,7 @@ if (process.env.PYTHONPATH) {
 	process.env.PYTHONPATH = PIP_INVOKE_DIR;
 }
 
-run();
+void run();
 
 async function run() {
 	logInfo(args ? `[args:"${args}"]` : '');
@@ -133,15 +138,13 @@ async function run() {
 		}
 
 		case 'typescript:build': {
-			installNodeDeps();
 			buildTypescript({ force: true });
 
 			break;
 		}
 
 		case 'typescript:watch': {
-			deleteNodeLib();
-			executeCmd(`tsc --watch ${args}`);
+			watchTypescript();
 
 			break;
 		}
@@ -203,7 +206,6 @@ async function run() {
 		}
 
 		case 'test:node': {
-			buildTypescript({ force: false });
 			testNode();
 
 			break;
@@ -216,7 +218,6 @@ async function run() {
 		}
 
 		case 'coverage:node': {
-			buildTypescript({ force: false });
 			executeCmd(`jest --coverage ${args}`);
 			executeCmd('open-cli coverage/lcov-report/index.html');
 
@@ -317,8 +318,7 @@ function installInvoke() {
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`,
-		/* exitOnError */ true
+		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`
 	);
 }
 
@@ -332,7 +332,7 @@ function deleteNodeLib() {
 	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
-function buildTypescript({ force = false } = { force: false }) {
+function buildTypescript({ force }) {
 	if (!force && fs.existsSync('node/lib')) {
 		return;
 	}
@@ -340,7 +340,16 @@ function buildTypescript({ force = false } = { force: false }) {
 	logInfo('buildTypescript()');
 
 	deleteNodeLib();
-	executeCmd('tsc');
+
+	executeCmd(`tsc ${args}`);
+}
+
+function watchTypescript() {
+	logInfo('watchTypescript()');
+
+	deleteNodeLib();
+
+	executeCmd(`tsc --watch ${args}`);
 }
 
 function buildWorker() {
@@ -358,8 +367,10 @@ function cleanWorkerArtifacts() {
 
 	// Clean build artifacts except `mediasoup-worker`.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-build`);
+
 	// Clean downloaded dependencies.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-subprojects`);
+
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-pip`);
 }
@@ -470,6 +481,7 @@ function installNodeDeps() {
 
 	// Install/update Node deps.
 	executeCmd('npm ci --ignore-scripts');
+
 	// Update package-lock.json.
 	executeCmd('npm install --package-lock-only --ignore-scripts');
 }
@@ -679,19 +691,15 @@ async function getVersionChanges() {
 	);
 }
 
-function executeCmd(command, exitOnError = true) {
+function executeCmd(command) {
 	logInfo(`executeCmd(): ${command}`);
 
 	try {
 		execSync(command, { stdio: ['ignore', process.stdout, process.stderr] });
 	} catch (error) {
-		if (exitOnError) {
-			logError(`executeCmd() failed, exiting: ${error}`);
+		logError(`executeCmd() failed, exiting: ${error}`);
 
-			exitWithError();
-		} else {
-			logInfo(`executeCmd() failed, ignoring: ${error}`);
-		}
+		exitWithError();
 	}
 }
 

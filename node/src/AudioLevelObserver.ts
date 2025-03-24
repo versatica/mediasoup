@@ -46,7 +46,7 @@ export class AudioLevelObserverImpl<
 		return 'audiolevel';
 	}
 
-	get observer(): AudioLevelObserverObserver {
+	override get observer(): AudioLevelObserverObserver {
 		return super.observer;
 	}
 

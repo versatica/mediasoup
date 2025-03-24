@@ -429,11 +429,11 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	const iceCandidates = transport.iceCandidates;
 
 	expect(iceCandidates.length).toBe(1);
-	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].port).toBe(port2);
-	expect(iceCandidates[0].protocol).toBe('tcp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBe('passive');
+	expect(iceCandidates[0]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[0]!.port).toBe(port2);
+	expect(iceCandidates[0]!.protocol).toBe('tcp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBe('passive');
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();
@@ -528,16 +528,16 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	const iceCandidates = transport.iceCandidates;
 
 	expect(iceCandidates.length).toBe(2);
-	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].port).toBe(port1);
-	expect(iceCandidates[0].protocol).toBe('udp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBeUndefined();
-	expect(iceCandidates[1].ip).toBe('127.0.0.1');
-	expect(iceCandidates[1].port).toBe(port2);
-	expect(iceCandidates[1].protocol).toBe('tcp');
-	expect(iceCandidates[1].type).toBe('host');
-	expect(iceCandidates[1].tcpType).toBe('passive');
+	expect(iceCandidates[0]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[0]!.port).toBe(port1);
+	expect(iceCandidates[0]!.protocol).toBe('udp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBeUndefined();
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.port).toBe(port2);
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();

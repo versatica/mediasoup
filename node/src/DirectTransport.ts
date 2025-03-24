@@ -72,11 +72,11 @@ export class DirectTransportImpl<
 		return 'direct';
 	}
 
-	get observer(): DirectTransportObserver {
+	override get observer(): DirectTransportObserver {
 		return super.observer;
 	}
 
-	close(): void {
+	override close(): void {
 		if (this.closed) {
 			return;
 		}
@@ -84,7 +84,7 @@ export class DirectTransportImpl<
 		super.close();
 	}
 
-	routerClosed(): void {
+	override routerClosed(): void {
 		if (this.closed) {
 			return;
 		}
@@ -134,21 +134,21 @@ export class DirectTransportImpl<
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
-	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
+	override async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
 			'setMaxIncomingBitrate() not implemented in DirectTransport'
 		);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
-	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
+	override async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
 			'setMaxOutgoingBitrate() not implemented in DirectTransport'
 		);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/require-await
-	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
+	override async setMinOutgoingBitrate(bitrate: number): Promise<void> {
 		throw new UnsupportedError(
 			'setMinOutgoingBitrate() not implemented in DirectTransport'
 		);

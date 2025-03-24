@@ -259,15 +259,15 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		{ payloadType: 112, mappedPayloadType: 102 },
 	]);
 
-	expect(rtpMapping.encodings[0].ssrc).toBe(11111111);
-	expect(rtpMapping.encodings[0].rid).toBeUndefined();
-	expect(typeof rtpMapping.encodings[0].mappedSsrc).toBe('number');
-	expect(rtpMapping.encodings[1].ssrc).toBe(21111111);
-	expect(rtpMapping.encodings[1].rid).toBeUndefined();
-	expect(typeof rtpMapping.encodings[1].mappedSsrc).toBe('number');
-	expect(rtpMapping.encodings[2].ssrc).toBeUndefined();
-	expect(rtpMapping.encodings[2].rid).toBe('high');
-	expect(typeof rtpMapping.encodings[2].mappedSsrc).toBe('number');
+	expect(rtpMapping.encodings[0]!.ssrc).toBe(11111111);
+	expect(rtpMapping.encodings[0]!.rid).toBeUndefined();
+	expect(typeof rtpMapping.encodings[0]!.mappedSsrc).toBe('number');
+	expect(rtpMapping.encodings[1]!.ssrc).toBe(21111111);
+	expect(rtpMapping.encodings[1]!.rid).toBeUndefined();
+	expect(typeof rtpMapping.encodings[1]!.mappedSsrc).toBe('number');
+	expect(rtpMapping.encodings[2]!.ssrc).toBeUndefined();
+	expect(rtpMapping.encodings[2]!.rid).toBe('high');
+	expect(typeof rtpMapping.encodings[2]!.mappedSsrc).toBe('number');
 
 	const consumableRtpParameters = ortc.getConsumableRtpParameters(
 		'video',
@@ -276,32 +276,32 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		rtpMapping
 	);
 
-	expect(consumableRtpParameters.codecs[0].mimeType).toBe('video/H264');
-	expect(consumableRtpParameters.codecs[0].payloadType).toBe(101);
-	expect(consumableRtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(consumableRtpParameters.codecs[0].parameters).toEqual({
+	expect(consumableRtpParameters.codecs[0]!.mimeType).toBe('video/H264');
+	expect(consumableRtpParameters.codecs[0]!.payloadType).toBe(101);
+	expect(consumableRtpParameters.codecs[0]!.clockRate).toBe(90000);
+	expect(consumableRtpParameters.codecs[0]!.parameters).toEqual({
 		foo: 1234,
 		'packetization-mode': 1,
 		'profile-level-id': '4d0032',
 	});
 
-	expect(consumableRtpParameters.codecs[1].mimeType).toBe('video/rtx');
-	expect(consumableRtpParameters.codecs[1].payloadType).toBe(102);
-	expect(consumableRtpParameters.codecs[1].clockRate).toBe(90000);
-	expect(consumableRtpParameters.codecs[1].parameters).toEqual({ apt: 101 });
+	expect(consumableRtpParameters.codecs[1]!.mimeType).toBe('video/rtx');
+	expect(consumableRtpParameters.codecs[1]!.payloadType).toBe(102);
+	expect(consumableRtpParameters.codecs[1]!.clockRate).toBe(90000);
+	expect(consumableRtpParameters.codecs[1]!.parameters).toEqual({ apt: 101 });
 
 	expect(consumableRtpParameters.encodings?.[0]).toEqual({
-		ssrc: rtpMapping.encodings[0].mappedSsrc,
+		ssrc: rtpMapping.encodings[0]!.mappedSsrc,
 		maxBitrate: 111111,
 		scalabilityMode: 'L1T3',
 	});
 	expect(consumableRtpParameters.encodings?.[1]).toEqual({
-		ssrc: rtpMapping.encodings[1].mappedSsrc,
+		ssrc: rtpMapping.encodings[1]!.mappedSsrc,
 		maxBitrate: 222222,
 		scalabilityMode: 'L1T3',
 	});
 	expect(consumableRtpParameters.encodings?.[2]).toEqual({
-		ssrc: rtpMapping.encodings[2].mappedSsrc,
+		ssrc: rtpMapping.encodings[2]!.mappedSsrc,
 		maxBitrate: 333333,
 		scalabilityMode: 'L1T3',
 	});
@@ -428,12 +428,12 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		rtcpFeedback: [],
 	});
 
-	expect(consumerRtpParameters.encodings?.length).toBe(1);
-	expect(typeof consumerRtpParameters.encodings?.[0].ssrc).toBe('number');
-	expect(typeof consumerRtpParameters.encodings?.[0].rtx).toBe('object');
-	expect(typeof consumerRtpParameters.encodings?.[0].rtx?.ssrc).toBe('number');
-	expect(consumerRtpParameters.encodings?.[0].scalabilityMode).toBe('L3T3');
-	expect(consumerRtpParameters.encodings?.[0].maxBitrate).toBe(333333);
+	expect(consumerRtpParameters.encodings!.length).toBe(1);
+	expect(typeof consumerRtpParameters.encodings![0]!.ssrc).toBe('number');
+	expect(typeof consumerRtpParameters.encodings![0]!.rtx).toBe('object');
+	expect(typeof consumerRtpParameters.encodings![0]!.rtx?.ssrc).toBe('number');
+	expect(consumerRtpParameters.encodings![0]!.scalabilityMode).toBe('L3T3');
+	expect(consumerRtpParameters.encodings![0]!.maxBitrate).toBe(333333);
 
 	expect(consumerRtpParameters.headerExtensions).toEqual([
 		{
@@ -482,25 +482,25 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 		],
 	});
 
-	expect(pipeConsumerRtpParameters.encodings?.length).toBe(3);
-	expect(typeof pipeConsumerRtpParameters.encodings?.[0].ssrc).toBe('number');
-	expect(pipeConsumerRtpParameters.encodings?.[0].rtx).toBeUndefined();
-	expect(typeof pipeConsumerRtpParameters.encodings?.[0].maxBitrate).toBe(
+	expect(pipeConsumerRtpParameters.encodings!.length).toBe(3);
+	expect(typeof pipeConsumerRtpParameters.encodings![0]!.ssrc).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings![0]!.rtx).toBeUndefined();
+	expect(typeof pipeConsumerRtpParameters.encodings![0]!.maxBitrate).toBe(
 		'number'
 	);
-	expect(pipeConsumerRtpParameters.encodings?.[0].scalabilityMode).toBe('L1T3');
-	expect(typeof pipeConsumerRtpParameters.encodings?.[1].ssrc).toBe('number');
-	expect(pipeConsumerRtpParameters.encodings?.[1].rtx).toBeUndefined();
-	expect(typeof pipeConsumerRtpParameters.encodings?.[1].maxBitrate).toBe(
+	expect(pipeConsumerRtpParameters.encodings![0]!.scalabilityMode).toBe('L1T3');
+	expect(typeof pipeConsumerRtpParameters.encodings![1]!.ssrc).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings![1]!.rtx).toBeUndefined();
+	expect(typeof pipeConsumerRtpParameters.encodings![1]!.maxBitrate).toBe(
 		'number'
 	);
-	expect(pipeConsumerRtpParameters.encodings?.[1].scalabilityMode).toBe('L1T3');
-	expect(typeof pipeConsumerRtpParameters.encodings?.[2].ssrc).toBe('number');
-	expect(pipeConsumerRtpParameters.encodings?.[2].rtx).toBeUndefined();
-	expect(typeof pipeConsumerRtpParameters.encodings?.[2].maxBitrate).toBe(
+	expect(pipeConsumerRtpParameters.encodings![1]!.scalabilityMode).toBe('L1T3');
+	expect(typeof pipeConsumerRtpParameters.encodings![2]!.ssrc).toBe('number');
+	expect(pipeConsumerRtpParameters.encodings![2]!.rtx).toBeUndefined();
+	expect(typeof pipeConsumerRtpParameters.encodings![2]!.maxBitrate).toBe(
 		'number'
 	);
-	expect(pipeConsumerRtpParameters.encodings?.[2].scalabilityMode).toBe('L1T3');
+	expect(pipeConsumerRtpParameters.encodings![2]!.scalabilityMode).toBe('L1T3');
 
 	expect(pipeConsumerRtpParameters.rtcp).toEqual({
 		cname: rtpParameters.rtcp?.cname,
