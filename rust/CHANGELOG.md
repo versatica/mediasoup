@@ -2,6 +2,8 @@
 
 # NEXT
 
+- Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+
 # 0.17.2
 
 - Fix `PipeConsumer::get_stats()` (PR #1511).

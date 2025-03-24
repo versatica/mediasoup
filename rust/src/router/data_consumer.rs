@@ -100,7 +100,7 @@ impl DataConsumerOptions {
     pub fn new_sctp_ordered(data_producer_id: DataProducerId) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(true),
             max_packet_life_time: None,
             max_retransmits: None,
             paused: false,
@@ -118,7 +118,7 @@ impl DataConsumerOptions {
     ) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(false),
             max_packet_life_time: Some(max_packet_life_time),
             max_retransmits: None,
             paused: false,
@@ -135,7 +135,7 @@ impl DataConsumerOptions {
     ) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(false),
             max_packet_life_time: None,
             max_retransmits: Some(max_retransmits),
             paused: false,
