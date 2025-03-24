@@ -867,13 +867,22 @@ export abstract class TransportImpl<
 			// Override if given.
 			if (ordered !== undefined) {
 				sctpStreamParameters.ordered = ordered;
+
+				if (ordered) {
+					maxPacketLifeTime = undefined;
+					maxRetransmits = undefined;
+					sctpStreamParameters.maxPacketLifeTime = undefined;
+					sctpStreamParameters.maxRetransmits = undefined;
+				}
 			}
 
 			if (maxPacketLifeTime !== undefined) {
+				sctpStreamParameters.ordered = undefined;
 				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
 			}
 
 			if (maxRetransmits !== undefined) {
+				sctpStreamParameters.ordered = undefined;
 				sctpStreamParameters.maxRetransmits = maxRetransmits;
 			}
 		}

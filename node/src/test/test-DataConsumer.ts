@@ -4,25 +4,27 @@ import type { WorkerEvents, DataConsumerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
-	dataProducerOptions: mediasoup.types.DataProducerOptions;
+	sctpDataProducerOptions: mediasoup.types.DataProducerOptions;
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
 	webRtcTransport1?: mediasoup.types.WebRtcTransport;
 	webRtcTransport2?: mediasoup.types.WebRtcTransport;
 	directTransport?: mediasoup.types.DirectTransport;
-	dataProducer?: mediasoup.types.DataProducer;
+	sctpDataProducer?: mediasoup.types.DataProducer;
+	directDataProducer?: mediasoup.types.DataProducer;
 };
 
 const ctx: TestContext = {
-	dataProducerOptions: utils.deepFreeze<mediasoup.types.DataProducerOptions>({
-		sctpStreamParameters: {
-			streamId: 12345,
-			ordered: false,
-			maxPacketLifeTime: 5000,
-		},
-		label: 'foo',
-		protocol: 'bar',
-	}),
+	sctpDataProducerOptions:
+		utils.deepFreeze<mediasoup.types.DataProducerOptions>({
+			sctpStreamParameters: {
+				streamId: 12345,
+				ordered: false,
+				maxPacketLifeTime: 5000,
+			},
+			label: 'foo',
+			protocol: 'bar',
+		}),
 };
 
 beforeEach(async () => {
@@ -37,9 +39,10 @@ beforeEach(async () => {
 		enableSctp: true,
 	});
 	ctx.directTransport = await ctx.router.createDirectTransport();
-	ctx.dataProducer = await ctx.webRtcTransport1.produceData(
-		ctx.dataProducerOptions
+	ctx.sctpDataProducer = await ctx.webRtcTransport1.produceData(
+		ctx.sctpDataProducerOptions
 	);
+	ctx.directDataProducer = await ctx.directTransport.produceData();
 });
 
 afterEach(async () => {
@@ -58,8 +61,8 @@ test('transport.consumeData() succeeds', async () => {
 		onObserverNewDataConsumer
 	);
 
-	const dataConsumer1 = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
+		dataProducerId: ctx.sctpDataProducer!.id,
 		maxPacketLifeTime: 4000,
 		// Valid values are 0...65535 so others and duplicated ones will be
 		// discarded.
@@ -68,49 +71,49 @@ test('transport.consumeData() succeeds', async () => {
 	});
 
 	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
-	expect(onObserverNewDataConsumer).toHaveBeenCalledWith(dataConsumer1);
-	expect(typeof dataConsumer1.id).toBe('string');
-	expect(dataConsumer1.dataProducerId).toBe(ctx.dataProducer!.id);
-	expect(dataConsumer1.closed).toBe(false);
-	expect(dataConsumer1.type).toBe('sctp');
-	expect(typeof dataConsumer1.sctpStreamParameters).toBe('object');
-	expect(typeof dataConsumer1.sctpStreamParameters?.streamId).toBe('number');
-	expect(dataConsumer1.sctpStreamParameters?.ordered).toBe(false);
-	expect(dataConsumer1.sctpStreamParameters?.maxPacketLifeTime).toBe(4000);
-	expect(dataConsumer1.sctpStreamParameters?.maxRetransmits).toBeUndefined();
-	expect(dataConsumer1.label).toBe('foo');
-	expect(dataConsumer1.protocol).toBe('bar');
-	expect(dataConsumer1.paused).toBe(false);
-	expect(dataConsumer1.subchannels).toEqual(
+	expect(onObserverNewDataConsumer).toHaveBeenCalledWith(dataConsumer);
+	expect(typeof dataConsumer.id).toBe('string');
+	expect(dataConsumer.dataProducerId).toBe(ctx.sctpDataProducer!.id);
+	expect(dataConsumer.closed).toBe(false);
+	expect(dataConsumer.type).toBe('sctp');
+	expect(typeof dataConsumer.sctpStreamParameters).toBe('object');
+	expect(typeof dataConsumer.sctpStreamParameters!.streamId).toBe('number');
+	expect(dataConsumer.sctpStreamParameters!.ordered).toBe(false);
+	expect(dataConsumer.sctpStreamParameters!.maxPacketLifeTime).toBe(4000);
+	expect(dataConsumer.sctpStreamParameters!.maxRetransmits).toBeUndefined();
+	expect(dataConsumer.label).toBe('foo');
+	expect(dataConsumer.protocol).toBe('bar');
+	expect(dataConsumer.paused).toBe(false);
+	expect(dataConsumer.subchannels).toEqual(
 		expect.arrayContaining([0, 1, 2, 100, 65535])
 	);
-	expect(dataConsumer1.appData).toEqual({ baz: 'LOL' });
+	expect(dataConsumer.appData).toEqual({ baz: 'LOL' });
 
 	const dump = await ctx.router!.dump();
 
 	expect(dump.mapDataProducerIdDataConsumerIds).toEqual(
 		expect.arrayContaining([
-			{ key: ctx.dataProducer!.id, values: [dataConsumer1.id] },
+			{ key: ctx.sctpDataProducer!.id, values: [dataConsumer.id] },
 		])
 	);
 
 	expect(dump.mapDataConsumerIdDataProducerId).toEqual(
 		expect.arrayContaining([
-			{ key: dataConsumer1.id, value: ctx.dataProducer!.id },
+			{ key: dataConsumer.id, value: ctx.sctpDataProducer!.id },
 		])
 	);
 
 	await expect(ctx.webRtcTransport2!.dump()).resolves.toMatchObject({
 		id: ctx.webRtcTransport2!.id,
 		dataProducerIds: [],
-		dataConsumerIds: [dataConsumer1.id],
+		dataConsumerIds: [dataConsumer.id],
 	});
 }, 2000);
 
 test('dataConsumer.dump() succeeds', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
-		maxPacketLifeTime: 4000,
+		dataProducerId: ctx.sctpDataProducer!.id,
+		ordered: true,
 		// Valid values are 0...65535 so others and duplicated ones will be
 		// discarded.
 		subchannels: [0, 1, 1, 1, 2, 65535, 65536, 65537, 100],
@@ -124,10 +127,10 @@ test('dataConsumer.dump() succeeds', async () => {
 	expect(dump.type).toBe('sctp');
 	expect(typeof dump.sctpStreamParameters).toBe('object');
 	expect(dump.sctpStreamParameters!.streamId).toBe(
-		dataConsumer.sctpStreamParameters?.streamId
+		dataConsumer.sctpStreamParameters!.streamId
 	);
-	expect(dump.sctpStreamParameters!.ordered).toBe(false);
-	expect(dump.sctpStreamParameters!.maxPacketLifeTime).toBe(4000);
+	expect(dump.sctpStreamParameters!.ordered).toBe(true);
+	expect(dump.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
 	expect(dump.sctpStreamParameters!.maxRetransmits).toBeUndefined();
 	expect(dump.label).toBe('foo');
 	expect(dump.protocol).toBe('bar');
@@ -140,7 +143,7 @@ test('dataConsumer.dump() succeeds', async () => {
 
 test('dataConsumer.getStats() succeeds', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	await expect(dataConsumer.getStats()).resolves.toMatchObject([
@@ -156,7 +159,7 @@ test('dataConsumer.getStats() succeeds', async () => {
 
 test('dataConsumer.setSubchannels() succeeds', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	await dataConsumer.setSubchannels([999, 999, 998, 65536]);
@@ -168,7 +171,7 @@ test('dataConsumer.setSubchannels() succeeds', async () => {
 
 test('dataConsumer.addSubchannel() and .removeSubchannel() succeed', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	await dataConsumer.setSubchannels([]);
@@ -193,6 +196,83 @@ test('dataConsumer.addSubchannel() and .removeSubchannel() succeed', async () =>
 	expect(dataConsumer.subchannels).toEqual([]);
 }, 2000);
 
+test('transport.consumeData() from a direct DataProducer succeeds', async () => {
+	const onObserverNewDataConsumer = jest.fn();
+
+	ctx.webRtcTransport2!.observer.once(
+		'newdataconsumer',
+		onObserverNewDataConsumer
+	);
+
+	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
+		dataProducerId: ctx.directDataProducer!.id,
+	});
+
+	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
+	expect(onObserverNewDataConsumer).toHaveBeenCalledWith(dataConsumer);
+	expect(typeof dataConsumer.id).toBe('string');
+	expect(dataConsumer.dataProducerId).toBe(ctx.directDataProducer!.id);
+	expect(dataConsumer.closed).toBe(false);
+	expect(dataConsumer.type).toBe('sctp');
+	expect(typeof dataConsumer.sctpStreamParameters).toBe('object');
+	expect(typeof dataConsumer.sctpStreamParameters!.streamId).toBe('number');
+	expect(dataConsumer.sctpStreamParameters!.ordered).toBe(true);
+	expect(dataConsumer.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(dataConsumer.sctpStreamParameters!.maxRetransmits).toBeUndefined();
+	expect(dataConsumer.label).toBe('');
+	expect(dataConsumer.protocol).toBe('');
+	expect(dataConsumer.paused).toBe(false);
+	expect(dataConsumer.subchannels).toEqual([]);
+	expect(dataConsumer.appData).toEqual({});
+
+	const dump = await ctx.router!.dump();
+
+	expect(dump.mapDataProducerIdDataConsumerIds).toEqual(
+		expect.arrayContaining([
+			{ key: ctx.directDataProducer!.id, values: [dataConsumer.id] },
+		])
+	);
+
+	expect(dump.mapDataConsumerIdDataProducerId).toEqual(
+		expect.arrayContaining([
+			{ key: dataConsumer.id, value: ctx.directDataProducer!.id },
+		])
+	);
+
+	await expect(ctx.webRtcTransport2!.dump()).resolves.toMatchObject({
+		id: ctx.webRtcTransport2!.id,
+		dataProducerIds: [],
+		dataConsumerIds: [dataConsumer.id],
+	});
+}, 2000);
+
+test('dataConsumer.dump() consuming from a direct DataProducer succeeds', async () => {
+	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
+		dataProducerId: ctx.directDataProducer!.id,
+		ordered: false,
+		maxRetransmits: 2,
+		subchannels: [0, 1],
+	});
+
+	const dump = await dataConsumer.dump();
+
+	expect(dump.id).toBe(dataConsumer.id);
+	expect(dump.dataProducerId).toBe(dataConsumer.dataProducerId);
+	expect(dump.type).toBe('sctp');
+	expect(typeof dump.sctpStreamParameters).toBe('object');
+	expect(dump.sctpStreamParameters!.streamId).toBe(
+		dataConsumer.sctpStreamParameters!.streamId
+	);
+	expect(dump.sctpStreamParameters!.ordered).toBe(false);
+	expect(dump.sctpStreamParameters!.maxPacketLifeTime).toBeUndefined();
+	expect(dump.sctpStreamParameters!.maxRetransmits).toBe(2);
+	expect(dump.label).toBe('');
+	expect(dump.protocol).toBe('');
+	expect(dump.paused).toBe(false);
+	expect(dump.dataProducerPaused).toBe(false);
+	expect(dump.subchannels).toEqual(expect.arrayContaining([0, 1]));
+}, 2000);
+
 test('transport.consumeData() on a DirectTransport succeeds', async () => {
 	const onObserverNewDataConsumer = jest.fn();
 
@@ -202,7 +282,7 @@ test('transport.consumeData() on a DirectTransport succeeds', async () => {
 	);
 
 	const dataConsumer = await ctx.directTransport!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 		paused: true,
 		appData: { hehe: 'HEHE' },
 	});
@@ -210,7 +290,7 @@ test('transport.consumeData() on a DirectTransport succeeds', async () => {
 	expect(onObserverNewDataConsumer).toHaveBeenCalledTimes(1);
 	expect(onObserverNewDataConsumer).toHaveBeenCalledWith(dataConsumer);
 	expect(typeof dataConsumer.id).toBe('string');
-	expect(dataConsumer.dataProducerId).toBe(ctx.dataProducer!.id);
+	expect(dataConsumer.dataProducerId).toBe(ctx.sctpDataProducer!.id);
 	expect(dataConsumer.closed).toBe(false);
 	expect(dataConsumer.type).toBe('direct');
 	expect(dataConsumer.sctpStreamParameters).toBeUndefined();
@@ -221,14 +301,14 @@ test('transport.consumeData() on a DirectTransport succeeds', async () => {
 
 	await expect(ctx.directTransport!.dump()).resolves.toMatchObject({
 		id: ctx.directTransport!.id,
-		dataProducerIds: [],
+		dataProducerIds: [ctx.directDataProducer!.id],
 		dataConsumerIds: [dataConsumer.id],
 	});
 }, 2000);
 
 test('dataConsumer.dump() on a DirectTransport succeeds', async () => {
 	const dataConsumer = await ctx.directTransport!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 		paused: true,
 	});
 
@@ -246,7 +326,7 @@ test('dataConsumer.dump() on a DirectTransport succeeds', async () => {
 
 test('dataConsumer.getStats() on a DirectTransport succeeds', async () => {
 	const dataConsumer = await ctx.directTransport!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	await expect(dataConsumer.getStats()).resolves.toMatchObject([
@@ -265,7 +345,7 @@ test('dataConsumer.pause() and resume() succeed', async () => {
 	const onObserverResume = jest.fn();
 
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	dataConsumer.observer.on('pause', onObserverPause);
@@ -302,7 +382,7 @@ test('dataConsumer.pause() and resume() succeed', async () => {
 
 test('dataProducer.pause() and resume() emit events', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 	const promises = [];
 	const events: string[] = [];
@@ -315,8 +395,8 @@ test('dataProducer.pause() and resume() emit events', async () => {
 		events.push('pause');
 	});
 
-	promises.push(ctx.dataProducer!.pause());
-	promises.push(ctx.dataProducer!.resume());
+	promises.push(ctx.sctpDataProducer!.pause());
+	promises.push(ctx.sctpDataProducer!.resume());
 
 	await Promise.all(promises);
 
@@ -330,7 +410,7 @@ test('dataProducer.pause() and resume() emit events', async () => {
 test('dataConsumer.close() succeeds', async () => {
 	const onObserverClose = jest.fn();
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	dataConsumer.observer.once('close', onObserverClose);
@@ -342,7 +422,7 @@ test('dataConsumer.close() succeeds', async () => {
 	const dump = await ctx.router!.dump();
 
 	expect(dump.mapDataProducerIdDataConsumerIds).toEqual(
-		expect.arrayContaining([{ key: ctx.dataProducer!.id, values: [] }])
+		expect.arrayContaining([{ key: ctx.sctpDataProducer!.id, values: [] }])
 	);
 
 	expect(dump.mapDataConsumerIdDataProducerId).toEqual([]);
@@ -356,7 +436,7 @@ test('dataConsumer.close() succeeds', async () => {
 
 test('Consumer methods reject if closed', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 
 	dataConsumer.close();
@@ -368,7 +448,7 @@ test('Consumer methods reject if closed', async () => {
 
 test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 	const onObserverClose = jest.fn();
 
@@ -379,7 +459,7 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 		'dataproducerclose'
 	);
 
-	ctx.dataProducer!.close();
+	ctx.sctpDataProducer!.close();
 	await promise;
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
@@ -388,7 +468,7 @@ test('DataConsumer emits "dataproducerclose" if DataProducer is closed', async (
 
 test('DataConsumer emits "transportclose" if Transport is closed', async () => {
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: ctx.sctpDataProducer!.id,
 	});
 	const onObserverClose = jest.fn();
 
