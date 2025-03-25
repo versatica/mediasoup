@@ -7,6 +7,7 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "FBS/webRtcTransport.h"
+#include "RTC/SCTP/Packet.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -1425,6 +1426,19 @@ namespace RTC
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+#ifdef MS_SCTP_STACK
+		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (!packet)
+		{
+			MS_WARN_TAG(sctp, "received data is not a valid SCTP packet");
+
+			return;
+		}
+
+		delete packet;
+#endif
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);

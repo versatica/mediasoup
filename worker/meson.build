@@ -44,6 +44,12 @@ if get_option('ms_rtc_logger_rtp')
   ]
 endif
 
+if get_option('ms_sctp_stack')
+  cpp_args += [
+    '-DMS_SCTP_STACK',
+  ]
+endif
+
 cpp = meson.get_compiler('cpp')
 
 # This is a workaround to define FLATBUFFERS_LOCALE_INDEPENDENT=0 outside
@@ -110,6 +116,7 @@ common_sources = [
   'src/RTC/RtpStreamRecv.cpp',
   'src/RTC/RtpStreamSend.cpp',
   'src/RTC/RtxStream.cpp',
+  'src/RTC/SCTP/Packet.cpp',
   'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
   'src/RTC/SenderBandwidthEstimator.cpp',
