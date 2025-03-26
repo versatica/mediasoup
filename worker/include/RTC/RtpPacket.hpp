@@ -146,7 +146,7 @@ namespace RTC
 
 		const uint8_t* GetData() const
 		{
-			return (const uint8_t*)this->header;
+			return reinterpret_cast<const uint8_t*>(this->header);
 		}
 
 		size_t GetSize() const
@@ -670,7 +670,6 @@ namespace RTC
 		void ParseExtensions();
 
 	private:
-		// Passed by argument.
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };

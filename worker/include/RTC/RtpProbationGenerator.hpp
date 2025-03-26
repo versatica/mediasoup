@@ -15,7 +15,7 @@ namespace RTC
 	{
 	public:
 		explicit RtpProbationGenerator();
-		virtual ~RtpProbationGenerator();
+		~RtpProbationGenerator();
 
 	public:
 		RTC::RtpPacket* GetNextPacket(size_t size);

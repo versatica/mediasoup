@@ -866,6 +866,22 @@ namespace RTC
 			return;
 		}
 
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP(">>> sending SCTP packet...");
+
+		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (!packet)
+		{
+			MS_WARN_TAG(sctp, "data to be sent is not a valid SCTP packet");
+
+			return;
+		}
+
+		delete packet;
+#endif
+
 		this->dtlsTransport->SendApplicationData(data, len);
 	}
 
@@ -1428,6 +1444,8 @@ namespace RTC
 		MS_TRACE();
 
 #ifdef MS_SCTP_STACK
+		MS_DUMP("<<< receiving SCTP packet...");
+
 		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
 
 		if (!packet)

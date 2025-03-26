@@ -9,6 +9,29 @@ namespace RTC
 {
 	namespace SCTP
 	{
+		/* Class variables. */
+
+		// clang-format off
+		absl::flat_hash_map<Packet::ChunkType, std::string> Packet::chunkType2String =
+		{
+			{ Packet::ChunkType::DATA,              "DATA"              },
+			{ Packet::ChunkType::INIT,              "INIT"              },
+			{ Packet::ChunkType::INIT_ACK,          "INIT_ACK"          },
+			{ Packet::ChunkType::SACK,              "SACK"              },
+			{ Packet::ChunkType::HEARTBEAT,         "HEARTBEAT"         },
+			{ Packet::ChunkType::HEARTBEAT_ACK,     "HEARTBEAT_ACK"     },
+			{ Packet::ChunkType::ABORT,             "ABORT"             },
+			{ Packet::ChunkType::SHUTDOWN,          "SHUTDOWN"          },
+			{ Packet::ChunkType::SHUTDOWN_ACK,      "SHUTDOWN_ACK"      },
+			{ Packet::ChunkType::ERROR,             "ERROR"             },
+			{ Packet::ChunkType::COOKIE_ECHO,       "COOKIE_ECHO"       },
+			{ Packet::ChunkType::COOKIE_ACK,        "COOKIE_ACK"        },
+			{ Packet::ChunkType::ECNE,              "ECNE"              },
+			{ Packet::ChunkType::CWR,               "CWR"               },
+			{ Packet::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" }
+		};
+		// clang-format on
+
 		/* Class methods. */
 
 		Packet* Packet::Parse(const uint8_t* data, size_t len)
@@ -20,75 +43,44 @@ namespace RTC
 				return nullptr;
 			}
 
-			MS_DUMP("<BEGIN>");
+			auto* ptr = const_cast<uint8_t*>(data);
 
-			MS_DUMP("  [len:%zu]", len);
+			// Get the common header.
+			auto* header = reinterpret_cast<CommonHeader*>(ptr);
 
-			/**
-			 * SCTP Common Header.
-			 *
-			 *  0                   1                   2                   3
-			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |      Source Port Number       |    Destination Port Number    |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |                       Verification Tag                        |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |                           Checksum                            |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 */
+			auto* packet = new Packet(header, len);
 
-			const uint16_t sourcePort      = Utils::Byte::Get2Bytes(data, 0);
-			const uint16_t destinationPort = Utils::Byte::Get2Bytes(data, 2);
+			// TODO: Remove.
+			packet->Dump();
 
-			MS_DUMP("  [sourcePort:%" PRIu16 ", destinationPort:%" PRIu16 "]", sourcePort, destinationPort);
-
-			if (sourcePort == 0u || destinationPort == 0u)
+			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
 			{
 				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
 
+				delete packet;
 				return nullptr;
 			}
 
-			const uint32_t verificationTag = Utils::Byte::Get4Bytes(data, 4);
-			const uint32_t checksum        = Utils::Byte::Get4Bytes(data, 8);
-
-			MS_DUMP("  [verificationTag:%" PRIu32 ", checksum:%" PRIu32 "]", verificationTag, checksum);
-
-			auto* packet = new Packet();
-
-			// Start looking for attributes after SCTP common header (Byte #12).
-			size_t pos{ 12 };
-
-			/**
-			 * SCTP Chunk.
-			 *
-			 *  0                   1                   2                   3
-			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |  Chunk Type   |  Chunk Flags  |         Chunk Length          |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * \                                                               \
-			 * /                          Chunk Value                          /
-			 * \                                                               \
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 */
+			// Start looking for chunks after SCTP common header.
+			// Inspect data after the minimum header size.
+			ptr += CommonHeaderSize;
 
 			// Ensure there are at least 4 remaining bytes (chuck with 0 length).
-			while (pos + 4 <= len)
+			while (len - (ptr - data) >= 4)
 			{
 				// Get the chunk type.
-				auto chunkType = static_cast<ChunkType>(Utils::Byte::Get1Byte(data, pos));
+				auto chunkType = static_cast<ChunkType>(Utils::Byte::Get1Byte(ptr, 0));
 
 				// Get the chunk flags.
-				const uint8_t chunkFlags = Utils::Byte::Get1Byte(data, pos + 1);
+				const uint8_t chunkFlags = Utils::Byte::Get1Byte(ptr, 1);
 
 				// Get the chunk length.
-				const uint16_t chunkLength = Utils::Byte::Get2Bytes(data, pos + 2);
+				const uint16_t chunkLength = Utils::Byte::Get2Bytes(ptr, 2);
 
 				MS_DUMP(
-				  "  [chunkType:%" PRIu8 ", chunkFlags:%" PRIu8 ", chunkLength:%" PRIu16 "]",
+				  "  [chunkType:%" PRIu8 " (%s), chunkFlags:%" PRIu8 ", chunkLength:%" PRIu16 "]",
 				  chunkType,
+				  Packet::ChunkType2String(chunkType).c_str(),
 				  chunkFlags,
 				  chunkLength);
 
@@ -104,7 +96,7 @@ namespace RTC
 
 				// Ensure the chunk length is not greater than the remaining size.
 				// NOTE: Take into account that Chunk Length includes the whole chunk.
-				if ((pos + chunkLength) > len)
+				if ((ptr - data) + chunkLength > len)
 				{
 					MS_WARN_TAG(sctp, "the chunk length exceeds the remaining size, packet discarded");
 
@@ -112,15 +104,13 @@ namespace RTC
 					return nullptr;
 				}
 
-				const uint8_t* chunkValuePos = data + pos + 4;
-
 				// switch (chunkType)
 				// {
 				//   TODO
 				// }
 
 				// Set next chunk position.
-				pos = static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(pos + chunkLength)));
+				ptr += static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)));
 			}
 
 			// Ensure current position matches the total length.
@@ -129,7 +119,7 @@ namespace RTC
 			//
 			// Note: A robust implementation is expected to accept the chunk whether
 			// or not the final padding has been included in the Chunk Length.
-			if (pos != len)
+			if (ptr - data != len)
 			{
 				MS_WARN_TAG(sctp, "computed packet size does not match total size, packet discarded");
 
@@ -137,9 +127,48 @@ namespace RTC
 				return nullptr;
 			}
 
-			MS_DUMP("<END>");
-
 			return packet;
+		}
+
+		const std::string& Packet::ChunkType2String(ChunkType chunkType)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = Packet::chunkType2String.find(chunkType);
+
+			if (it == Packet::chunkType2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
+		/* Instance methods. */
+
+		Packet::Packet(CommonHeader* commonHeader, size_t size) : commonHeader(commonHeader), size(size)
+		{
+			MS_TRACE();
+		}
+
+		Packet::~Packet()
+		{
+			MS_TRACE();
+		}
+
+		void Packet::Dump() const
+		{
+			MS_TRACE();
+
+			MS_DUMP("<Packet>");
+			MS_DUMP("  size: %zu", GetSize());
+			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
+			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
+			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
+			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
+			MS_DUMP("</Packet>");
 		}
 	} // namespace SCTP
 } // namespace RTC
