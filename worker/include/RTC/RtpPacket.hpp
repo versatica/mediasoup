@@ -527,9 +527,6 @@ namespace RTC
 
 			dependencyDescriptor.reset(value);
 
-			// TMP: Just for dev purposes.
-			dependencyDescriptor->Dump();
-
 			return true;
 		}
 
