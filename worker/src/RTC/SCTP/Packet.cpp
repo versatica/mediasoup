@@ -99,9 +99,13 @@ namespace RTC
 			MS_DUMP("<Packet>");
 
 			MS_DUMP("  size: %zu", GetSize());
+
 			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
+
 			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
+
 			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
+
 			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
 
 			for (auto* chunk : this->chunks)

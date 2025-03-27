@@ -4,6 +4,7 @@
 #include "RTC/SCTP/Chunk.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <bitset> // std::bitset()
 
 namespace RTC
 {
@@ -135,10 +136,17 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<Chunk>");
+
 			MS_DUMP("  size: %zu", GetSize());
+
 			MS_DUMP("  type: %" PRIu8 " (%s)", GetType(), Chunk::ChunkType2String(GetType()).c_str());
-			MS_DUMP("  flags: %" PRIu8, GetFlags());
+
+			std::bitset<8> flagsBitset(this->GetFlags());
+
+			MS_DUMP("  flags: %s", flagsBitset.to_string().c_str());
+
 			MS_DUMP("  value length: %" PRIu16, GetValueLength());
+
 			MS_DUMP("</Chunk>");
 		}
 	} // namespace SCTP
