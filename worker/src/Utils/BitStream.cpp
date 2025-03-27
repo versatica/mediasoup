@@ -32,12 +32,12 @@ namespace Utils
 
 	uint32_t BitStream::GetLeftBits() const
 	{
-		auto leftBits = this->offset - this->len * 8;
-
-		if (leftBits <= 0)
+		if (this->offset >= this->len * 8)
 		{
 			return 0;
 		}
+
+		auto leftBits = this->len * 8 - this->offset;
 
 		return leftBits;
 	}

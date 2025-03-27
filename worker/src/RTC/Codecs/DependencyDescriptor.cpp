@@ -221,7 +221,7 @@ namespace RTC
 
 			auto templateIndex = (this->frameDependencyTemplateId + 64 - this->templateIdOffset) % 64;
 
-			if (templateIndex > this->templateDependencyStructure->templateLayers.size() + 1)
+			if (this->templateDependencyStructure->templateLayers.size() <= templateIndex)
 			{
 				MS_WARN_DEV("invalid template index %u", templateIndex);
 
