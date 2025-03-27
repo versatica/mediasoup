@@ -75,9 +75,9 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Packet::Packet(const uint8_t* data, size_t size)
-		  : data(const_cast<uint8_t*>(data)), size(size),
-		    commonHeader(reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data)))
+		Packet::Packet(const uint8_t* buffer, size_t size)
+		  : Serializable(buffer, size),
+		    commonHeader(reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(buffer)))
 		{
 			MS_TRACE();
 		}
@@ -114,6 +114,33 @@ namespace RTC
 			}
 
 			MS_DUMP("</Packet>");
+		}
+
+		size_t Packet::GetSize() const
+		{
+			MS_TRACE();
+
+			if (!NeedsSerialization())
+			{
+				return this->size;
+				;
+			}
+
+			// TODO: Here we should really calculate the packet size.
+			return this->size;
+		}
+
+		void Packet::Serialize(uint8_t* buffer, size_t size)
+		{
+			MS_TRACE();
+
+			// TODO: Do this right.
+
+			auto newSize = GetSize();
+
+			std::memcpy(buffer, this->buffer, newSize);
+
+			Serialized(buffer, newSize);
 		}
 	} // namespace SCTP
 } // namespace RTC

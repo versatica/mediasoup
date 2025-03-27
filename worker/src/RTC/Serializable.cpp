@@ -9,14 +9,9 @@
 namespace RTC
 {
 	Serializable::Serializable(const uint8_t* buffer, size_t size)
+	  : buffer(const_cast<uint8_t*>(buffer)), size(size)
 	{
 		MS_TRACE();
-
-		if (buffer)
-		{
-			this->buffer = const_cast<uint8_t*>(buffer);
-			this->size   = size;
-		}
 	}
 
 	Serializable::~Serializable()
@@ -58,7 +53,7 @@ namespace RTC
 
 		this->padding = padding;
 
-		SetSerializationNeeded(true);
+		SetSerializationNeeded();
 	}
 
 	bool Serializable::NeedsSerialization() const
@@ -68,10 +63,19 @@ namespace RTC
 		return this->serializationNeeded;
 	}
 
-	void Serializable::SetSerializationNeeded(bool flag)
+	void Serializable::SetSerializationNeeded()
 	{
 		MS_TRACE();
 
-		this->serializationNeeded = flag;
+		this->serializationNeeded = true;
+	}
+
+	void Serializable::Serialized(const uint8_t* buffer, size_t size)
+	{
+		MS_TRACE();
+
+		this->buffer              = const_cast<uint8_t*>(buffer);
+		this->size                = size;
+		this->serializationNeeded = false;
 	}
 } // namespace RTC

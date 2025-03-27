@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/Chunk.hpp"
+#include "RTC/Serializable.hpp"
+#include <cstring> // std::memcpy()
 #include <vector>
 
 namespace RTC
@@ -37,7 +39,7 @@ namespace RTC
 		 * |                           Checksum                            |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
-		class Packet
+		class Packet : public Serializable
 		{
 		public:
 			/**
@@ -80,21 +82,15 @@ namespace RTC
 			static Packet* Parse(const uint8_t* data, size_t len);
 
 		public:
-			Packet(const uint8_t* data, size_t size);
+			Packet(const uint8_t* buffer, size_t size);
 
 			~Packet();
 
-			void Dump() const;
+			void Dump() const override;
 
-			const uint8_t* GetData() const
-			{
-				return reinterpret_cast<const uint8_t*>(this->data);
-			}
+			size_t GetSize() const override;
 
-			size_t GetSize() const
-			{
-				return this->size;
-			}
+			void Serialize(uint8_t* buffer, size_t size) override;
 
 			uint16_t GetSourcePort() const
 			{
@@ -142,12 +138,8 @@ namespace RTC
 			}
 
 		private:
-			// Pointer to the data buffer containing the packet.
-			uint8_t* data{ nullptr };
-			// Full size of the packet in bytes.
-			size_t size{ 0u };
-			// Pointer to the SCTP Common Header of the packet (it points to `data`
-			// too).
+			// Pointer to the SCTP Common Header of the packet (same as this->buffer)
+			// in Serializable parent class.
 			CommonHeader* commonHeader{ nullptr };
 			// Chunks.
 			std::vector<Chunk*> chunks;

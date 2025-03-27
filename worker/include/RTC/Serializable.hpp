@@ -35,8 +35,8 @@ namespace RTC
 		const uint8_t* GetBuffer() const;
 
 		/**
-		 * Computes total size of the packet or item content if it was serialized,
-		 * including padding if any.
+		 * Computes total size of the packet or item (including padding if any) as
+		 * if it was serialized now.
 		 */
 		virtual size_t GetSize() const = 0;
 
@@ -79,14 +79,26 @@ namespace RTC
 		 *   space enough to serialize the content.
 		 *
 		 * @privateRemarks
-		 * - Classes implementing Serializable must update this->buffer and
-		 *   this->size protected members and invoke `SetSerializationNeeded(false)`
-		 *   at the end of this method.
+		 * - Classes implementing Serializable must invoke `Serialized()` in the
+		 *   parent at the end of this `Serialize()` implementation.
 		 */
 		virtual void Serialize(uint8_t* buffer, size_t size) = 0;
 
 	protected:
-		void SetSerializationNeeded(bool flag);
+		/**
+		 * To be called by child classes from public methods that affect the packet
+		 * or item content in a way that serialization is needed.
+		 */
+		void SetSerializationNeeded();
+
+		/**
+		 * To be called by child classes at the end of their `Serialize()` method.
+		 *
+		 * @param buffer - Buffer in which the content has been serialized.
+		 *
+		 * @param size - New size of the packet or item.
+		 */
+		void Serialized(const uint8_t* buffer, size_t size);
 
 	protected:
 		// Buffer holding the packet or item content.
