@@ -70,22 +70,23 @@ namespace RTC
 								break;
 							}
 
-							case RTC::RtpCodecMimeType::Subtype::AV1:
-							{
-								RTC::Codecs::AV1::ProcessRtpPacket(packet, templateDependencyStructure);
-
-								break;
-							}
-
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
 								RTC::Codecs::H264::ProcessRtpPacket(packet);
 
 								break;
 							}
+
 							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
 							{
 								RTC::Codecs::H264_SVC::ProcessRtpPacket(packet);
+
+								break;
+							}
+
+							case RTC::RtpCodecMimeType::Subtype::AV1:
+							{
+								RTC::Codecs::AV1::ProcessRtpPacket(packet, templateDependencyStructure);
 
 								break;
 							}
@@ -155,8 +156,8 @@ namespace RTC
 								switch (mimeType.subtype)
 								{
 									case RTC::RtpCodecMimeType::Subtype::VP9:
-									case RTC::RtpCodecMimeType::Subtype::AV1:
 									case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+									case RTC::RtpCodecMimeType::Subtype::AV1:
 										return true;
 									default:
 										return false;

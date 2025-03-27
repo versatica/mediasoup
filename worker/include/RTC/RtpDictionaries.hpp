@@ -45,11 +45,11 @@ namespace RTC
 			// Video codecs:
 			VP8 = 200,
 			VP9,
-			AV1,
 			H264,
 			H264_SVC,
 			X_H264UC,
 			H265,
+			AV1,
 			// Complementary codecs:
 			CN = 300,
 			TELEPHONE_EVENT,
