@@ -21,8 +21,7 @@ namespace RTC
 			payloadDescriptor->endOfFrame    = dependencyDescriptor->endOfFrame;
 			payloadDescriptor->spatialLayer  = dependencyDescriptor->spatialLayer;
 			payloadDescriptor->temporalLayer = dependencyDescriptor->temporalLayer;
-
-			payloadDescriptor->isKeyFrame = dependencyDescriptor->isKeyFrame;
+			payloadDescriptor->isKeyFrame    = dependencyDescriptor->isKeyFrame;
 
 			return payloadDescriptor.release();
 		}

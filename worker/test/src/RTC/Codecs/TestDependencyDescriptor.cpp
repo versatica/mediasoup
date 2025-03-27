@@ -10,60 +10,60 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 	{
 		/**
 		 * Taken from https://issues.webrtc.org/issues/42225660.
-		{
-		    "startOfFrame" : true,
-		    "endOfFrame" : false,
-		    "frameDependencyTemplateId" : 0,
-		    "frameNumber" : 303,
-		    "templateStructure": {
-		        "templateIdOffset" : 0,
-		        "templateInfo" : {
-		          "0" : {
-		            "spatialId" : 0,
-		            "temporalId" : 0,
-		            "dti" : [ "SWITCH", "SWITCH", "SWITCH" ],
-		            "fdiff" : [],
-		              "chains" : [0]
-		          },
-		          "1" : {
-		            "spatialId" : 0,
-		            "temporalId" : 0,
-		            "dti" : [ "SWITCH", "SWITCH", "SWITCH" ],
-		            "fdiff" : [4],
-		            "chains" : [4]
-		          },
-		          "2" : {
-		            "spatialId" : 0,
-		            "temporalId" : 1,
-		            "dti" : [ "NOT_PRESENT", "DISCARDABLE", "SWITCH" ],
-		            "fdiff" : [2],
-		            "chains" : [2]
-		          },
-		          "3" : {
-		            "spatialId" : 0,
-		            "temporalId" : 2,
-		            "dti" : [ "NOT_PRESENT", "NOT_PRESENT", "DISCARDABLE" ],
-		            "fdiff" : [1],
-		              "chains" : [1]
-		          },
-		          "4" : {
-		            "spatialId" : 0,
-		            "temporalId" : 2,
-		            "dti" : [ "NOT_PRESENT", "NOT_PRESENT", "DISCARDABLE" ],
-		            "fdiff" : [1],
-		            "chains" : [3]
-		          }
-		        },
-		        "decodeTargetInfo" : {
-		          "0" : { "protectedBy" : 0, "spatialId" : 0, "temporalId" : 0 },
-		          "1" : { "protectedBy" : 0, "spatialId" : 0, "temporalId" : 1 },
-		          "2" : { "protectedBy" : 0, "spatialId" : 0, "temporalId" : 2 }
-		        },
-		        "maxSpatialId" : 0,
-		        "maxTemporalId" : 2
-		        }
-		}
-		*/
+		 * {
+		 *     "startOfFrame" : true,
+		 *     "endOfFrame" : false,
+		 *     "frameDependencyTemplateId" : 0,
+		 *     "frameNumber" : 303,
+		 *     "templateStructure": {
+		 *         "templateIdOffset" : 0,
+		 *         "templateInfo" : {
+		 *           "0" : {
+		 *             "spatialId" : 0,
+		 *             "temporalId" : 0,
+		 *             "dti" : [ "SWITCH", "SWITCH", "SWITCH" ],
+		 *             "fdiff" : [],
+		 *               "chains" : [0]
+		 *           },
+		 *           "1" : {
+		 *             "spatialId" : 0,
+		 *             "temporalId" : 0,
+		 *             "dti" : [ "SWITCH", "SWITCH", "SWITCH" ],
+		 *             "fdiff" : [4],
+		 *             "chains" : [4]
+		 *           },
+		 *           "2" : {
+		 *             "spatialId" : 0,
+		 *             "temporalId" : 1,
+		 *             "dti" : [ "NOT_PRESENT", "DISCARDABLE", "SWITCH" ],
+		 *             "fdiff" : [2],
+		 *             "chains" : [2]
+		 *           },
+		 *           "3" : {
+		 *             "spatialId" : 0,
+		 *             "temporalId" : 2,
+		 *             "dti" : [ "NOT_PRESENT", "NOT_PRESENT", "DISCARDABLE" ],
+		 *             "fdiff" : [1],
+		 *               "chains" : [1]
+		 *           },
+		 *           "4" : {
+		 *             "spatialId" : 0,
+		 *             "temporalId" : 2,
+		 *             "dti" : [ "NOT_PRESENT", "NOT_PRESENT", "DISCARDABLE" ],
+		 *             "fdiff" : [1],
+		 *             "chains" : [3]
+		 *           }
+		 *         },
+		 *         "decodeTargetInfo" : {
+		 *           "0" : { "protectedBy" : 0, "spatialId" : 0, "temporalId" : 0 },
+		 *           "1" : { "protectedBy" : 0, "spatialId" : 0, "temporalId" : 1 },
+		 *           "2" : { "protectedBy" : 0, "spatialId" : 0, "temporalId" : 2 }
+		 *         },
+		 *         "maxSpatialId" : 0,
+		 *         "maxTemporalId" : 2
+		 *         }
+		 * }
+		 */
 
 		// clang-format off
 		uint8_t data[] =
