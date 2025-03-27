@@ -3,7 +3,10 @@
 
 void Fuzzer::RTC::Codecs::H264::Fuzz(const uint8_t* data, size_t len)
 {
-	::RTC::Codecs::H264::PayloadDescriptor* descriptor = ::RTC::Codecs::H264::Parse(data, len);
+	::RTC::Codecs::DependencyDescriptor* dependencyDescriptor{ nullptr };
+
+	::RTC::Codecs::H264::PayloadDescriptor* descriptor =
+	  ::RTC::Codecs::H264::Parse(data, len, dependencyDescriptor);
 
 	if (!descriptor)
 	{
