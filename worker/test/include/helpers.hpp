@@ -2,6 +2,7 @@
 #define MS_TEST_HELPERS_HPP
 
 #include "common.hpp"
+#include <cstring> // std::memcmp()
 #include <fstream>
 #include <string>
 
@@ -177,6 +178,16 @@ namespace helpers
 		*len = packet_size;
 
 		return true;
+	}
+
+	inline bool areBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
+	{
+		if (size1 != size2)
+		{
+			return false;
+		}
+
+		return std::memcmp(data1, data2, size1) == 0;
 	}
 } // namespace helpers
 

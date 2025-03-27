@@ -870,6 +870,13 @@ namespace RTC
 #ifdef MS_SCTP_STACK
 		MS_DUMP(">>> sending SCTP packet...");
 
+		if (!RTC::SCTP::Packet::IsSctp(data, len))
+		{
+			MS_WARN_TAG(sctp, "data to be sent is not a SCTP packet");
+
+			return;
+		}
+
 		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
 
 		if (!packet)
@@ -1445,6 +1452,13 @@ namespace RTC
 
 #ifdef MS_SCTP_STACK
 		MS_DUMP("<<< receiving SCTP packet...");
+
+		if (!RTC::SCTP::Packet::IsSctp(data, len))
+		{
+			MS_WARN_TAG(sctp, "received data is not a SCTP packet");
+
+			return;
+		}
 
 		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
 

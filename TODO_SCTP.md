@@ -12,3 +12,7 @@ Here some notes about our future SCTP implementation.
 However, in step 4 `WebRtcTransport::OnDtlsTransportApplicationDataReceived()` should instead check `RTC::SCTP::Packet.isSctp()` and then `RTC::SCTP::Packet::parse()` and call `Transport::ReceiveSctpData()` with a `SCTP::Packet` instance instead than `data` and `len`. In fact it should be named `Transport::ReceiveSctpPacket()` instead.
 
 Same in `PipeTransport` and `PlainTransport`.
+
+## Parsing
+
+- In `Xxxx::Parse()` class methods check that, if there are padding bytes, those are no more than 3, and fail otherwise.

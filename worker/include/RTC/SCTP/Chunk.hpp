@@ -89,6 +89,8 @@ namespace RTC
 
 			virtual ~Chunk();
 
+			void Dump() const;
+
 			const uint8_t* GetData() const
 			{
 				return reinterpret_cast<const uint8_t*>(this->data);
@@ -98,8 +100,6 @@ namespace RTC
 			{
 				return this->size;
 			}
-
-			void Dump() const;
 
 			ChunkType GetType() const
 			{
