@@ -3,35 +3,11 @@
 
 #include "RTC/SCTP/Packet.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
 
 namespace RTC
 {
 	namespace SCTP
 	{
-		/* Class variables. */
-
-		// clang-format off
-		absl::flat_hash_map<Packet::ChunkType, std::string> Packet::chunkType2String =
-		{
-			{ Packet::ChunkType::DATA,              "DATA"              },
-			{ Packet::ChunkType::INIT,              "INIT"              },
-			{ Packet::ChunkType::INIT_ACK,          "INIT_ACK"          },
-			{ Packet::ChunkType::SACK,              "SACK"              },
-			{ Packet::ChunkType::HEARTBEAT,         "HEARTBEAT"         },
-			{ Packet::ChunkType::HEARTBEAT_ACK,     "HEARTBEAT_ACK"     },
-			{ Packet::ChunkType::ABORT,             "ABORT"             },
-			{ Packet::ChunkType::SHUTDOWN,          "SHUTDOWN"          },
-			{ Packet::ChunkType::SHUTDOWN_ACK,      "SHUTDOWN_ACK"      },
-			{ Packet::ChunkType::ERROR,             "ERROR"             },
-			{ Packet::ChunkType::COOKIE_ECHO,       "COOKIE_ECHO"       },
-			{ Packet::ChunkType::COOKIE_ACK,        "COOKIE_ACK"        },
-			{ Packet::ChunkType::ECNE,              "ECNE"              },
-			{ Packet::ChunkType::CWR,               "CWR"               },
-			{ Packet::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" }
-		};
-		// clang-format on
-
 		/* Class methods. */
 
 		Packet* Packet::Parse(const uint8_t* data, size_t len)
@@ -40,19 +16,18 @@ namespace RTC
 
 			if (!Packet::IsSctp(data, len))
 			{
+				MS_WARN_TAG(sctp, "not an SCTP packet");
+
 				return nullptr;
 			}
 
+			auto* packet = new Packet(data, len);
+
+			// Pointer that initially points to the given data buffer and is later
+			// incremented to point to other parts of the packet.
 			auto* ptr = const_cast<uint8_t*>(data);
 
-			// Get the common header.
-			auto* header = reinterpret_cast<CommonHeader*>(ptr);
-
-			auto* packet = new Packet(header, len);
-
-			// TODO: Remove.
-			packet->Dump();
-
+			// TODO: Move this to some Validate() method.
 			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
 			{
 				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
@@ -61,64 +36,29 @@ namespace RTC
 				return nullptr;
 			}
 
-			// Start looking for chunks after SCTP common header.
-			// Inspect data after the minimum header size.
+			// Inspect data after the minimum header size. Start looking for chunks
+			// after SCTP Common Header.
 			ptr += CommonHeaderSize;
 
-			// Ensure there are at least 4 remaining bytes (chuck with 0 length).
-			while (len - (ptr - data) >= 4)
+			while (len > (ptr - data))
 			{
-				// Get the chunk type.
-				auto chunkType = static_cast<ChunkType>(Utils::Byte::Get1Byte(ptr, 0));
+				auto* chunk = Chunk::Parse(ptr, len - (ptr - data), /*exactLen*/ false);
 
-				// Get the chunk flags.
-				const uint8_t chunkFlags = Utils::Byte::Get1Byte(ptr, 1);
-
-				// Get the chunk length.
-				const uint16_t chunkLength = Utils::Byte::Get2Bytes(ptr, 2);
-
-				MS_DUMP(
-				  "  [chunkType:%" PRIu8 " (%s), chunkFlags:%" PRIu8 ", chunkLength:%" PRIu16 "]",
-				  chunkType,
-				  Packet::ChunkType2String(chunkType).c_str(),
-				  chunkFlags,
-				  chunkLength);
-
-				// Chunk Length includes the whole chunk (type, flags, length and value)
-				// so minimum value is 4.
-				if (chunkLength < 4u)
+				if (chunk)
 				{
-					MS_WARN_TAG(sctp, "chunk length must be >= 4");
+					ptr += chunk->GetSize();
 
+					packet->AddChunk(chunk);
+				}
+				else
+				{
+					// TODO: Let' see.
 					delete packet;
 					return nullptr;
 				}
-
-				// Ensure the chunk length is not greater than the remaining size.
-				// NOTE: Take into account that Chunk Length includes the whole chunk.
-				if ((ptr - data) + chunkLength > len)
-				{
-					MS_WARN_TAG(sctp, "the chunk length exceeds the remaining size, packet discarded");
-
-					delete packet;
-					return nullptr;
-				}
-
-				// switch (chunkType)
-				// {
-				//   TODO
-				// }
-
-				// Set next chunk position.
-				ptr += static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)));
 			}
 
 			// Ensure current position matches the total length.
-			//
-			// TODO: As per RFC 9260:
-			//
-			// Note: A robust implementation is expected to accept the chunk whether
-			// or not the final padding has been included in the Chunk Length.
 			if (ptr - data != len)
 			{
 				MS_WARN_TAG(sctp, "computed packet size does not match total size, packet discarded");
@@ -127,28 +67,17 @@ namespace RTC
 				return nullptr;
 			}
 
+			// TODO: Remove.
+			packet->Dump();
+
 			return packet;
-		}
-
-		const std::string& Packet::ChunkType2String(ChunkType chunkType)
-		{
-			MS_TRACE();
-
-			static const std::string Unknown("UNKNOWN");
-
-			auto it = Packet::chunkType2String.find(chunkType);
-
-			if (it == Packet::chunkType2String.end())
-			{
-				return Unknown;
-			}
-
-			return it->second;
 		}
 
 		/* Instance methods. */
 
-		Packet::Packet(CommonHeader* commonHeader, size_t size) : commonHeader(commonHeader), size(size)
+		Packet::Packet(const uint8_t* data, size_t size)
+		  : data(const_cast<uint8_t*>(data)), size(size),
+		    commonHeader(reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(data)))
 		{
 			MS_TRACE();
 		}
@@ -156,6 +85,11 @@ namespace RTC
 		Packet::~Packet()
 		{
 			MS_TRACE();
+
+			for (auto* chunk : this->chunks)
+			{
+				delete chunk;
+			}
 		}
 
 		void Packet::Dump() const
@@ -163,11 +97,18 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP("<Packet>");
+
 			MS_DUMP("  size: %zu", GetSize());
 			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
 			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
 			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
 			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
+
+			for (auto* chunk : this->chunks)
+			{
+				chunk->Dump();
+			}
+
 			MS_DUMP("</Packet>");
 		}
 	} // namespace SCTP

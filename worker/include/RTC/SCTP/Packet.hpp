@@ -2,45 +2,47 @@
 #define MS_RTC_SCTP_PACKET_HPP
 
 #include "common.hpp"
-#include <absl/container/flat_hash_map.h>
-#include <string>
+#include "RTC/SCTP/Chunk.hpp"
+#include <vector>
 
 namespace RTC
 {
 	namespace SCTP
 	{
+		/**
+		 * SCTP Packet.
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                         Common Header                         |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                           Chunk #1                            |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                              ...                              |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                           Chunk #n                            |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 */
+
+		/**
+		 * SCTP Common Header.
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |      Source Port Number       |    Destination Port Number    |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                       Verification Tag                        |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                           Checksum                            |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 */
 		class Packet
 		{
-			/**
-			 * SCTP Common Header.
-			 *
-			 *  0                   1                   2                   3
-			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |      Source Port Number       |    Destination Port Number    |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |                       Verification Tag                        |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |                           Checksum                            |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 */
-
-			/**
-			 * SCTP Chunk.
-			 *
-			 *  0                   1                   2                   3
-			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * |  Chunk Type   |  Chunk Flags  |         Chunk Length          |
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 * \                                                               \
-			 * /                          Chunk Value                          /
-			 * \                                                               \
-			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-			 */
-
 		public:
-			/* Struct for SCTP common header. */
+			/**
+			 * Struct of a SCTP Packet Common Header.
+			 */
 			struct CommonHeader
 			{
 				uint16_t sourcePort;
@@ -49,29 +51,12 @@ namespace RTC
 				uint32_t checksum;
 			};
 
-			// Chunk type.
-			enum class ChunkType : uint8_t
-			{
-				DATA              = 0x00,
-				INIT              = 0x01,
-				INIT_ACK          = 0x02,
-				SACK              = 0x03,
-				HEARTBEAT         = 0x04,
-				HEARTBEAT_ACK     = 0x05,
-				ABORT             = 0x06,
-				SHUTDOWN          = 0x07,
-				SHUTDOWN_ACK      = 0x08,
-				ERROR             = 0x09,
-				COOKIE_ECHO       = 0x0A,
-				COOKIE_ACK        = 0x0B,
-				ECNE              = 0x0C,
-				CWR               = 0x0D,
-				SHUTDOWN_COMPLETE = 0x0E
-			};
-
 		public:
 			static const size_t CommonHeaderSize{ 12 };
 
+			/**
+			 * Whether given `data` with length `len` could be a valid SCTP packet.
+			 */
 			static bool IsSctp(const uint8_t* data, size_t len)
 			{
 				auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
@@ -85,20 +70,23 @@ namespace RTC
 				// clang-format on
 			}
 
+			/**
+			 * Parses given `data` with length `len` and returns an allocated instance
+			 * of Packet (or nullptr if it's not a valid SCTP packet).
+			 *
+			 * NOTE: Given `len` must include padding so `len` must be multiple of 4
+			 * bytes.
+			 */
 			static Packet* Parse(const uint8_t* data, size_t len);
-			static const std::string& ChunkType2String(ChunkType chunkType);
-
-		private:
-			static absl::flat_hash_map<ChunkType, std::string> chunkType2String;
 
 		public:
-			Packet(CommonHeader* commonHeader, size_t size);
+			Packet(const uint8_t* data, size_t size);
 
 			~Packet();
 
 			const uint8_t* GetData() const
 			{
-				return reinterpret_cast<const uint8_t*>(this->commonHeader);
+				return reinterpret_cast<const uint8_t*>(this->data);
 			}
 
 			size_t GetSize() const
@@ -113,9 +101,9 @@ namespace RTC
 				return uint16_t{ ntohs(this->commonHeader->sourcePort) };
 			}
 
-			void SetSourcePort(uint16_t port)
+			void SetSourcePort(uint16_t sourcePort)
 			{
-				this->commonHeader->sourcePort = uint16_t{ htons(port) };
+				this->commonHeader->sourcePort = uint16_t{ htons(sourcePort) };
 			}
 
 			uint16_t GetDestinationPort() const
@@ -123,9 +111,9 @@ namespace RTC
 				return uint16_t{ ntohs(this->commonHeader->destinationPort) };
 			}
 
-			void SetDestinationPort(uint16_t port)
+			void SetDestinationPort(uint16_t destinationPort)
 			{
-				this->commonHeader->destinationPort = uint16_t{ htons(port) };
+				this->commonHeader->destinationPort = uint16_t{ htons(destinationPort) };
 			}
 
 			uint32_t GetVerificationTag() const
@@ -148,10 +136,21 @@ namespace RTC
 				this->commonHeader->checksum = uint32_t{ htonl(checksum) };
 			}
 
+			void AddChunk(Chunk* chunk)
+			{
+				this->chunks.push_back(chunk);
+			}
+
 		private:
-			CommonHeader* commonHeader{ nullptr };
+			// Pointer to the data buffer containing the packet.
+			uint8_t* data{ nullptr };
 			// Full size of the packet in bytes.
 			size_t size{ 0u };
+			// Pointer to the SCTP Common Header of the packet (it points to `data`
+			// too).
+			CommonHeader* commonHeader{ nullptr };
+			// Chunks.
+			std::vector<Chunk*> chunks;
 		};
 	} // namespace SCTP
 } // namespace RTC

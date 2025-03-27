@@ -116,6 +116,7 @@ common_sources = [
   'src/RTC/RtpStreamRecv.cpp',
   'src/RTC/RtpStreamSend.cpp',
   'src/RTC/RtxStream.cpp',
+  'src/RTC/SCTP/Chunk.cpp',
   'src/RTC/SCTP/Packet.cpp',
   'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
