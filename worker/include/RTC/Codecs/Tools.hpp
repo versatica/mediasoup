@@ -72,7 +72,7 @@ namespace RTC
 
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
-								RTC::Codecs::H264::ProcessRtpPacket(packet);
+								RTC::Codecs::H264::ProcessRtpPacket(packet, templateDependencyStructure);
 
 								break;
 							}
