@@ -63,12 +63,12 @@ namespace RTC
 		 *
 		 * @param buffer - Buffer in which the content will be serialized.
 		 *
-		 * @throw MediaSoupError - If serialization fails due to invalid
-		 *   modifications previously made.
-		 *
 		 * @remarks
 		 * - Child classes invoke `Serialized()` at the end of their `Serialize()`
 		 *   implementation.
+		 *
+		 * @throw MediaSoupError - If serialization fails due to invalid
+		 *   modifications previously made.
 		 */
 		virtual void Serialize(uint8_t* buffer) = 0;
 
@@ -79,13 +79,18 @@ namespace RTC
 		/**
 		 * Initialize serializable size.
 		 *
-		 * @remarks
-		 * - This method must be called when constructing the serializable.
+		 * This method should be called when constructing the serializable,
+		 * specially after parsing a buffer and calling methods on the serializable
+		 * instance to fill data.
 		 *
-		 * @throw MediaSoupError - If called twice.
+		 * Rationale is that, sometimes, the parser receives a buffer but cannot
+		 * anticipate how many bytes the serializable will take until the parsing
+		 * process ends.
 		 *
 		 * @remarks
 		 * - This method internally sets the `serializationNeeded` flag to false.
+		 *
+		 * @throw MediaSoupError - If called twice.
 		 */
 		virtual void SetInitialSize(size_t size) final;
 
