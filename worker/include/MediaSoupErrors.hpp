@@ -25,14 +25,6 @@ public:
 	}
 };
 
-class MediaSoupSerializationError : public MediaSoupError
-{
-public:
-	explicit MediaSoupSerializationError(const char* description) : MediaSoupError(description)
-	{
-	}
-};
-
 // clang-format off
 #define MS_THROW_ERROR(desc, ...) \
 	do \
@@ -64,22 +56,6 @@ public:
 		MS_ERROR_STD("throwing MediaSoupTypeError: " desc, ##__VA_ARGS__); \
 		std::snprintf(MediaSoupError::buffer, MediaSoupError::BufferSize, desc, ##__VA_ARGS__); \
 		throw MediaSoupTypeError(MediaSoupError::buffer); \
-	} while (false)
-
-#define MS_THROW_SERIALIZATION_ERROR(desc, ...) \
-	do \
-	{ \
-		MS_ERROR("throwing MediaSoupSerializationError: " desc, ##__VA_ARGS__); \
-		std::snprintf(MediaSoupError::buffer, MediaSoupError::BufferSize, desc, ##__VA_ARGS__); \
-		throw MediaSoupSerializationError(MediaSoupError::buffer); \
-	} while (false)
-
-#define MS_THROW_SERIALIZATION_ERROR_STD(desc, ...) \
-	do \
-	{ \
-		MS_ERROR_STD("throwing MediaSoupSerializationError: " desc, ##__VA_ARGS__); \
-		std::snprintf(MediaSoupError::buffer, MediaSoupError::BufferSize, desc, ##__VA_ARGS__); \
-		throw MediaSoupSerializationError(MediaSoupError::buffer); \
 	} while (false)
 // clang-format on
 

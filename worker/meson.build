@@ -116,8 +116,6 @@ common_sources = [
   'src/RTC/RtpStreamRecv.cpp',
   'src/RTC/RtpStreamSend.cpp',
   'src/RTC/RtxStream.cpp',
-  'src/RTC/SCTP/Chunk.cpp',
-  'src/RTC/SCTP/Packet.cpp',
   'src/RTC/SctpAssociation.cpp',
   'src/RTC/SctpListener.cpp',
   'src/RTC/SenderBandwidthEstimator.cpp',
@@ -183,6 +181,13 @@ common_sources = [
   'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
 ]
+
+if get_option('ms_sctp_stack')
+  common_sources += [
+    'src/RTC/SCTP/Chunk.cpp',
+    'src/RTC/SCTP/Packet.cpp',
+  ]
+endif
 
 openssl_proj = subproject(
   'openssl',
