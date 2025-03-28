@@ -36,7 +36,7 @@ namespace RTC
 		return this->serializationNeeded;
 	}
 
-	void Serializable::SetInitialSize(size_t size)
+	void Serializable::InitializeSize(size_t size)
 	{
 		MS_TRACE();
 

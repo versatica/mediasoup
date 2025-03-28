@@ -110,7 +110,7 @@ public:
 			return nullptr;
 		}
 
-		foo->SetInitialSize(paddedSize);
+		foo->InitializeSize(paddedSize);
 
 		return foo;
 	}

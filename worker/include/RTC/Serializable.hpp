@@ -51,19 +51,23 @@ namespace RTC
 		virtual size_t GetSize() const = 0;
 
 		/**
-		 * Whether serialization is needed, meaning that the current `buffer`
-		 * doesn't represent the current content of the serializable (due to
-		 * modifications not applied yet).
+		 * Whether serialization is needed, meaning that the internal buffer
+		 * no longer represents the current content of the serializable (due to
+		 * modifications made after the serializable was created or serialized for
+		 * the last time).
 		 */
 		virtual bool NeedsSerialization() const final;
 
 		/**
 		 * Apply pending changes and serialize the content of the serializable
-		 * into a new `buffer`.
+		 * into the given new `buffer`. Once serialized, the previous buffer of
+		 * the serializable is no longer used and can be reused for other purposes.
 		 *
 		 * @param buffer - Buffer in which the content will be serialized.
 		 *
 		 * @remarks
+		 * - `buffer` cannot be the same as the one currently used by the
+		 *   serializable.
 		 * - Child classes invoke `Serialized()` at the end of their `Serialize()`
 		 *   implementation.
 		 *
@@ -92,7 +96,7 @@ namespace RTC
 		 *
 		 * @throw MediaSoupError - If called twice.
 		 */
-		virtual void SetInitialSize(size_t size) final;
+		virtual void InitializeSize(size_t size) final;
 
 		/**
 		 * Current buffer of the serializable, no matter serialization is needed.
