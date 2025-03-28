@@ -190,9 +190,45 @@ namespace Utils
 			data[i]     = static_cast<uint8_t>(value >> 56);
 		}
 
+		static bool IsPaddedTo4Bytes(uint8_t size)
+		{
+			return (size & 0x03) == 0u;
+		}
+
+		static bool IsPaddedTo4Bytes(uint16_t size)
+		{
+			return (size & 0x03) == 0u;
+		}
+
+		static bool IsPaddedTo4Bytes(uint32_t size)
+		{
+			return (size & 0x03) == 0u;
+		}
+
+		static bool IsPaddedTo4Bytes(uint64_t size)
+		{
+			return (size & 0x03) == 0u;
+		}
+
+		static bool IsPaddedTo4Bytes(size_t size)
+		{
+			return (size & 0x03) == 0u;
+		}
+
+		static uint8_t PadTo4Bytes(uint8_t size)
+		{
+			if (size & 0x03)
+			{
+				return (size & 0xFC) + 4;
+			}
+			else
+			{
+				return size;
+			}
+		}
+
 		static uint16_t PadTo4Bytes(uint16_t size)
 		{
-			// If size is not multiple of 32 bits then pad it.
 			if (size & 0x03)
 			{
 				return (size & 0xFFFC) + 4;
@@ -205,7 +241,6 @@ namespace Utils
 
 		static uint32_t PadTo4Bytes(uint32_t size)
 		{
-			// If size is not multiple of 32 bits then pad it.
 			if (size & 0x03)
 			{
 				return (size & 0xFFFFFFFC) + 4;
@@ -213,6 +248,30 @@ namespace Utils
 			else
 			{
 				return size;
+			}
+		}
+
+		static uint64_t PadTo4Bytes(uint64_t size)
+		{
+			if (size & 0x03)
+			{
+				return (size & 0xFFFFFFFFFFFFFFFC) + 4;
+			}
+			else
+			{
+				return size;
+			}
+		}
+
+		static size_t PadTo4Bytes(size_t size)
+		{
+			if (sizeof(size_t) == 8u)
+			{
+				return static_cast<size_t>(PadTo4Bytes(static_cast<uint64_t>(size)));
+			}
+			else
+			{
+				return static_cast<size_t>(PadTo4Bytes(static_cast<uint32_t>(size)));
 			}
 		}
 	};

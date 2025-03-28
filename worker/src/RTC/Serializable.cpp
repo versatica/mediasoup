@@ -4,8 +4,6 @@
 #include "RTC/Serializable.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include <cstring> // std::memset()
 
 namespace RTC
 {
@@ -31,18 +29,6 @@ namespace RTC
 		return this->buffer;
 	}
 
-	size_t Serializable::GetSize() const
-	{
-		MS_TRACE();
-
-		if (this->serializationNeeded)
-		{
-			MS_THROW_ERROR("serialization needed");
-		}
-
-		return this->contentSize + this->padding;
-	}
-
 	bool Serializable::NeedsSerialization() const
 	{
 		MS_TRACE();
@@ -50,28 +36,17 @@ namespace RTC
 		return this->serializationNeeded;
 	}
 
-	void Serializable::SetInitialContentSize(size_t contentSize)
+	void Serializable::SetInitialSize(size_t size)
 	{
 		MS_TRACE();
 
-		if (this->contentSize > 0u)
+		if (this->size > 0u)
 		{
-			MS_THROW_ERROR("content size already initialized");
+			MS_THROW_ERROR("size already initialized");
 		}
 
-		this->contentSize = contentSize;
-	}
-
-	void Serializable::SetInitialPadding(uint8_t padding)
-	{
-		MS_TRACE();
-
-		if (this->padding > 0u)
-		{
-			MS_THROW_ERROR("padding already initialized");
-		}
-
-		this->padding = padding;
+		this->size                = size;
+		this->serializationNeeded = false;
 	}
 
 	const uint8_t* Serializable::GetCurrentBuffer() const
@@ -81,37 +56,26 @@ namespace RTC
 		return this->buffer;
 	}
 
-	size_t Serializable::GetCurrentContentSize() const
+	size_t Serializable::GetCurrentSize() const
 	{
 		MS_TRACE();
 
-		return this->contentSize;
+		return this->size;
 	}
 
-	uint8_t Serializable::GetCurrentPadding() const
+	void Serializable::SetSerializationNeeded(bool flag)
 	{
 		MS_TRACE();
 
-		return this->padding;
+		this->serializationNeeded = flag;
 	}
 
-	void Serializable::SetSerializationNeeded()
-	{
-		MS_TRACE();
-
-		this->serializationNeeded = true;
-	}
-
-	void Serializable::Serialized(uint8_t* buffer, size_t contentSize, uint8_t padding)
+	void Serializable::Serialized(uint8_t* buffer, size_t size)
 	{
 		MS_TRACE();
 
 		this->buffer              = const_cast<uint8_t*>(buffer);
-		this->contentSize         = contentSize;
-		this->padding             = padding;
+		this->size                = size;
 		this->serializationNeeded = false;
-
-		// Fill padding bytes with zeroes.
-		std::memset(this->buffer + this->contentSize, 0x00, this->padding);
 	}
 } // namespace RTC
