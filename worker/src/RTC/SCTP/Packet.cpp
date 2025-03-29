@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/Packet.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -19,7 +20,9 @@ namespace RTC
 			return (
 				(len >= Packet::CommonHeaderSize) &&
 				// Source and destination ports cannot be 0.
-				(header->sourcePort != 0 && header->destinationPort != 0)
+				(header->sourcePort != 0 && header->destinationPort != 0) &&
+				// Size must be multiple of 4 bytes.
+				Utils::Byte::IsPaddedTo4Bytes(len)
 			);
 		}
 
