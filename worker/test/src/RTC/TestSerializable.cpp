@@ -110,7 +110,7 @@ public:
 			return nullptr;
 		}
 
-		foo->InitializeSize(paddedSize);
+		foo->Parsed(paddedSize);
 
 		return foo;
 	}
@@ -157,6 +157,20 @@ public:
 	void Serialize(uint8_t* buffer) override
 	{
 		auto size = GetSize();
+
+		// If already serialized we just need to copy current buffer to the new one
+		// and adjust pointers.
+		if (!NeedsSerialization())
+		{
+			std::memcpy(buffer, GetCurrentBuffer(), size);
+
+			this->body   = buffer + (this->body - GetCurrentBuffer());
+			this->header = reinterpret_cast<Header*>(buffer);
+
+			Serialized(buffer, size);
+
+			return;
+		}
 
 		uint8_t* ptr = buffer;
 
@@ -229,7 +243,7 @@ public:
 
 		if (!hadAppendix)
 		{
-			SetSerializationNeeded(true);
+			SetSerializationNeeded();
 		}
 	}
 
@@ -242,7 +256,7 @@ public:
 
 		if (hadAppendix)
 		{
-			SetSerializationNeeded(true);
+			SetSerializationNeeded();
 		}
 	}
 
@@ -276,7 +290,7 @@ public:
 		this->body               = body;
 		this->header->bodyLength = uint16_t{ htons(bodyLength) };
 
-		SetSerializationNeeded(true);
+		SetSerializationNeeded();
 	}
 
 private:
@@ -417,6 +431,37 @@ SCENARIO("Serializable", "[rtc][serializable]")
 		REQUIRE(
 		  helpers::areBuffersEqual(foo->GetBody(), foo->GetBodyLength(), newBody, sizeof(newBody)) ==
 		  true);
+
+		delete foo;
+	}
+
+	SECTION("serialize an already serialized Foo")
+	{
+		uint8_t newBuffer3[100];
+
+		std::memset(newBuffer3, 0xFF, 100);
+
+		REQUIRE(foo->NeedsSerialization() == false);
+
+		foo->Serialize(newBuffer3);
+
+		REQUIRE(foo->NeedsSerialization() == false);
+		REQUIRE(helpers::areBuffersEqual(buffer, originalSize, newBuffer3, foo->GetSize()) == true);
+
+		REQUIRE(foo->GetBuffer() == newBuffer3);
+		REQUIRE(foo->GetSize() == originalSize);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(foo->GetSize()) == true);
+		REQUIRE(foo->GetType() == originalType);
+		REQUIRE(foo->HasAppendix() == originalA);
+		REQUIRE(foo->GetControl() == originalControl);
+		REQUIRE(foo->HasBody() == true);
+		REQUIRE(foo->GetBodyLength() == originalBodyLength);
+		REQUIRE(foo->GetAppendix() == originalAppendix);
+		REQUIRE(
+		  helpers::areBuffersEqual(foo->GetBuffer(), foo->GetSize(), newBuffer3, originalSize) == true);
+		REQUIRE(
+		  helpers::areBuffersEqual(
+		    foo->GetBody(), foo->GetBodyLength(), newBuffer3 + 8, originalBodyLength) == true);
 
 		delete foo;
 	}

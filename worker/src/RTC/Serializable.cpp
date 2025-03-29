@@ -36,13 +36,13 @@ namespace RTC
 		return this->serializationNeeded;
 	}
 
-	void Serializable::InitializeSize(size_t size)
+	void Serializable::Parsed(size_t size)
 	{
 		MS_TRACE();
 
-		if (this->size > 0u)
+		if (this->size)
 		{
-			MS_THROW_ERROR("size already initialized");
+			MS_THROW_ERROR("Parsed() already called");
 		}
 
 		this->size                = size;
@@ -63,11 +63,11 @@ namespace RTC
 		return this->size;
 	}
 
-	void Serializable::SetSerializationNeeded(bool flag)
+	void Serializable::SetSerializationNeeded()
 	{
 		MS_TRACE();
 
-		this->serializationNeeded = flag;
+		this->serializationNeeded = true;
 	}
 
 	void Serializable::Serialized(uint8_t* buffer, size_t size)
