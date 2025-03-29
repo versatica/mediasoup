@@ -10,6 +10,19 @@ namespace RTC
 	{
 		/* Class methods. */
 
+		bool Packet::IsSctp(const uint8_t* data, size_t len)
+		{
+			auto* header =
+			  const_cast<Packet::CommonHeader*>(reinterpret_cast<const Packet::CommonHeader*>(data));
+
+			// clang-format off
+			return (
+				(len >= Packet::CommonHeaderSize) &&
+				// Source and destination ports cannot be 0.
+				(header->sourcePort != 0 && header->destinationPort != 0)
+			);
+		}
+
 		Packet* Packet::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();

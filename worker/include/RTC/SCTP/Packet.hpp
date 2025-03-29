@@ -59,18 +59,7 @@ namespace RTC
 			/**
 			 * Whether given `data` with length `len` could be a valid SCTP packet.
 			 */
-			static bool IsSctp(const uint8_t* data, size_t len)
-			{
-				auto* header = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-
-				// clang-format off
-				return (
-					(len >= CommonHeaderSize) &&
-					// Source and destination ports cannot be 0.
-					(header->sourcePort != 0 && header->destinationPort != 0)
-				);
-				// clang-format on
-			}
+			static bool IsSctp(const uint8_t* data, size_t len);
 
 			/**
 			 * Parses given `data` with length `len` and returns an allocated instance
@@ -138,8 +127,7 @@ namespace RTC
 			}
 
 		private:
-			// Pointer to the SCTP Common Header of the packet (same as this->buffer)
-			// in Serializable parent class.
+			// Pointer to the SCTP Common Header of the packet.
 			CommonHeader* commonHeader{ nullptr };
 			// Chunks.
 			std::vector<Chunk*> chunks;
