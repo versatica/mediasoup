@@ -29,11 +29,6 @@ namespace RTC
 
 	public:
 		/**
-		 * Print serializable information.
-		 */
-		virtual void Dump() const = 0;
-
-		/**
 		 * Get a buffer containing the serialized content. Combined with
 		 * `GetSize()`, the application can obtain the full sequence of bytes
 		 * of the serializable.

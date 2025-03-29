@@ -122,11 +122,6 @@ public:
 
 	/* Serializable class virtual methods. */
 
-	void Dump() const override
-	{
-		// Nothing here.
-	}
-
 	size_t GetSize() const override
 	{
 		if (!NeedsSerialization())
