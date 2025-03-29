@@ -123,6 +123,10 @@ namespace RTC
 
 			/**
 			 * The length of the Chunk Value field. It does not count any padding.
+			 *
+			 * @remarks
+			 * This is not the value of the Chunk Length field in the Chunk Header
+			 * but the real length of the Chunk Value.
 			 */
 			uint16_t GetValueLength() const
 			{

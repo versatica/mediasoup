@@ -56,8 +56,7 @@ namespace RTC
 			// Inspect data after the header size, so move to the chunk value.
 			ptr += HeaderSize;
 
-			auto valueLengthWithPadding =
-			  static_cast<size_t>(Utils::Byte::PadTo4Bytes(chunk->GetValueLength()));
+			auto valueLengthWithPadding = Utils::Byte::PadTo4Bytes(chunk->GetValueLength());
 
 			// Ensure there is space for the chunk value and its possible padding.
 			if (len - (ptr - data) < valueLengthWithPadding)

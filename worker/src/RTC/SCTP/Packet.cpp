@@ -1,146 +1,164 @@
-// #define MS_CLASS "RTC::SCTP::Packet"
-// // #define MS_LOG_DEV_LEVEL 3
+#define MS_CLASS "RTC::SCTP::Packet"
+// #define MS_LOG_DEV_LEVEL 3
 
-// #include "RTC/SCTP/Packet.hpp"
-// #include "Logger.hpp"
+#include "RTC/SCTP/Packet.hpp"
+#include "Logger.hpp"
 
-// namespace RTC
-// {
-// 	namespace SCTP
-// 	{
-// 		/* Class methods. */
+namespace RTC
+{
+	namespace SCTP
+	{
+		/* Class methods. */
 
-// 		Packet* Packet::Parse(const uint8_t* data, size_t len)
-// 		{
-// 			MS_TRACE();
+		Packet* Packet::Parse(const uint8_t* data, size_t len)
+		{
+			MS_TRACE();
 
-// 			if (!Packet::IsSctp(data, len))
-// 			{
-// 				MS_WARN_TAG(sctp, "not an SCTP packet");
+			if (!Packet::IsSctp(data, len))
+			{
+				MS_WARN_TAG(sctp, "not an SCTP packet");
 
-// 				return nullptr;
-// 			}
+				return nullptr;
+			}
 
-// 			auto* packet = new Packet(data, len);
+			// Pointer that initially points to the given data buffer and is later
+			// incremented to point to other parts of the packet.
+			uint8_t* ptr = const_cast<uint8_t*>(data);
 
-// 			// Pointer that initially points to the given data buffer and is later
-// 			// incremented to point to other parts of the packet.
-// 			auto* ptr = const_cast<uint8_t*>(data);
+			auto* packet = new Packet(ptr);
 
-// 			// TODO: Move this to some Validate() method.
-// 			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
-// 			{
-// 				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
+			// TODO: Move this to some Validate() method.
+			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
+			{
+				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
 
-// 				delete packet;
-// 				return nullptr;
-// 			}
+				delete packet;
+				return nullptr;
+			}
 
-// 			// Inspect data after the minimum header size. Start looking for chunks
-// 			// after SCTP Common Header.
-// 			ptr += CommonHeaderSize;
+			// Inspect data after the minimum header size. Start looking for chunks
+			// after SCTP Common Header.
+			ptr += CommonHeaderSize;
 
-// 			while (len > (ptr - data))
-// 			{
-// 				auto* chunk = Chunk::Parse(ptr, len - (ptr - data), /*exactLen*/ false);
+			while (len > (ptr - data))
+			{
+				auto* chunk = Chunk::Parse(ptr, len - (ptr - data), /*exactLen*/ false);
 
-// 				if (chunk)
-// 				{
-// 					ptr += chunk->GetSize();
+				if (chunk)
+				{
+					ptr += chunk->GetSize();
 
-// 					packet->AddChunk(chunk);
-// 				}
-// 				else
-// 				{
-// 					// TODO: Let' see.
-// 					delete packet;
-// 					return nullptr;
-// 				}
-// 			}
+					packet->AddChunk(chunk);
+				}
+				else
+				{
+					// TODO: Let' see.
+					delete packet;
+					return nullptr;
+				}
+			}
 
-// 			// Ensure current position matches the total length.
-// 			if (ptr - data != len)
-// 			{
-// 				MS_WARN_TAG(sctp, "computed packet size does not match total size, packet discarded");
+			size_t size = ptr - data;
 
-// 				delete packet;
-// 				return nullptr;
-// 			}
+			// Ensure computed size matches the total given length.
+			if (size != len)
+			{
+				MS_WARN_TAG(sctp, "computed packet size does not match given length, packet discarded");
 
-// 			// TODO: Remove.
-// 			packet->Dump();
+				delete packet;
+				return nullptr;
+			}
 
-// 			return packet;
-// 		}
+			packet->Parsed(size);
 
-// 		/* Instance methods. */
+			return packet;
+		}
 
-// 		Packet::Packet(const uint8_t* buffer, size_t size)
-// 		  : Serializable(buffer, size),
-// 		    commonHeader(reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(buffer)))
-// 		{
-// 			MS_TRACE();
-// 		}
+		/* Instance methods. */
 
-// 		Packet::~Packet()
-// 		{
-// 			MS_TRACE();
+		Packet::Packet(uint8_t* buffer)
+		  : Serializable(buffer), commonHeader(reinterpret_cast<CommonHeader*>(buffer))
+		{
+			MS_TRACE();
+		}
 
-// 			for (auto* chunk : this->chunks)
-// 			{
-// 				delete chunk;
-// 			}
-// 		}
+		Packet::~Packet()
+		{
+			MS_TRACE();
 
-// 		void Packet::Dump() const
-// 		{
-// 			MS_TRACE();
+			for (auto* chunk : this->chunks)
+			{
+				delete chunk;
+			}
+		}
 
-// 			MS_DUMP("<Packet>");
+		void Packet::Dump() const
+		{
+			MS_TRACE();
 
-// 			MS_DUMP("  size: %zu", GetSize());
+			MS_DUMP("<Packet>");
 
-// 			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
+			MS_DUMP("  needs serialization: %s", NeedsSerialization() ? "true" : "false");
 
-// 			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
+			MS_DUMP("  size: %zu", GetSize());
 
-// 			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
+			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
 
-// 			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
+			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
 
-// 			for (auto* chunk : this->chunks)
-// 			{
-// 				chunk->Dump();
-// 			}
+			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
 
-// 			MS_DUMP("</Packet>");
-// 		}
+			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
 
-// 		size_t Packet::GetSize() const
-// 		{
-// 			MS_TRACE();
+			for (auto* chunk : this->chunks)
+			{
+				chunk->Dump();
+			}
 
-// 			if (!NeedsSerialization())
-// 			{
-// 				return this->size;
-// 				;
-// 			}
+			MS_DUMP("</Packet>");
+		}
 
-// 			// TODO: Here we should really calculate the packet size.
-// 			return this->size;
-// 		}
+		size_t Packet::GetSize() const
+		{
+			MS_TRACE();
 
-// 		void Packet::Serialize(uint8_t* buffer, size_t size)
-// 		{
-// 			MS_TRACE();
+			if (!NeedsSerialization())
+			{
+				return GetCurrentSize();
+				;
+			}
 
-// 			// TODO: Do this right.
+			// TODO: Here we should really calculate the packet size.
+			return GetCurrentSize();
+		}
 
-// 			auto newSize = GetSize();
+		void Packet::Serialize(uint8_t* buffer)
+		{
+			MS_TRACE();
 
-// 			std::memcpy(buffer, this->buffer, newSize);
+			// TODO: Do this right.
 
-// 			Serialized(buffer, newSize);
-// 		}
-// 	} // namespace SCTP
-// } // namespace RTC
+			auto size = GetSize();
+
+			// If already serialized we just need to copy current buffer to the new one
+			// and adjust pointers.
+			if (!NeedsSerialization())
+			{
+				// TODO
+
+				// std::memcpy(buffer, GetCurrentBuffer(), size);
+
+				// this->body   = buffer + (this->body - GetCurrentBuffer());
+				// this->header = reinterpret_cast<Header*>(buffer);
+
+				// Serialized(buffer, size);
+
+				// return;
+			}
+
+			std::memcpy(buffer, GetCurrentBuffer(), size);
+
+			Serialized(buffer, size);
+		}
+	} // namespace SCTP
+} // namespace RTC
