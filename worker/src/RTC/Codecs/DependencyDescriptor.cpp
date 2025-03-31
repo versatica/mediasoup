@@ -20,7 +20,7 @@ namespace RTC
 
 			if (len < 3)
 			{
-				MS_ERROR("ignoring payload with length < 3");
+				MS_WARN_DEV("ignoring payload with length < 3");
 
 				return nullptr;
 			}

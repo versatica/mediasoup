@@ -19,10 +19,13 @@ namespace RTC
 
 				void Dump() const override;
 
+				// Fields in Dependency Descriptor extension.
 				bool startOfFrame{ false };
 				bool endOfFrame{ false };
 				uint8_t spatialLayer{ 0 };
 				uint8_t temporalLayer{ 0 };
+
+				// Parsed values.
 				bool isKeyFrame{ false };
 			};
 
