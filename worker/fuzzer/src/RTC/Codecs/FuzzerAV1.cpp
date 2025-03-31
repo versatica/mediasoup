@@ -10,6 +10,8 @@ void Fuzzer::RTC::Codecs::AV1::Fuzz(const uint8_t* data, size_t len)
 
 	auto* descriptor = ::RTC::Codecs::AV1::Parse(dependencyDescriptor);
 
+	delete dependencyDescriptor;
+
 	if (!descriptor)
 	{
 		return;

@@ -9,6 +9,7 @@
 #include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include "RTC/Codecs/FuzzerAV1.hpp"
 #include "RTC/Codecs/FuzzerDependencyDescriptor.hpp"
 #include "RTC/Codecs/FuzzerH264.hpp"
 #include "RTC/Codecs/FuzzerH264_SVC.hpp"
@@ -80,6 +81,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		Fuzzer::RTC::Codecs::VP9::Fuzz(data, len);
 		Fuzzer::RTC::Codecs::H264::Fuzz(data, len);
 		Fuzzer::RTC::Codecs::H264_SVC::Fuzz(data, len);
+		Fuzzer::RTC::Codecs::AV1::Fuzz(data, len);
 		Fuzzer::RTC::Codecs::DependencyDescriptor::Fuzz(data, len);
 	}
 
