@@ -14,6 +14,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (!dependencyDescriptor)
+			{
+				return nullptr;
+			}
+
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
 			// Read fields.
@@ -37,11 +42,6 @@ namespace RTC
 
 			// Read dependency descriptor.
 			packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
-
-			if (!dependencyDescriptor)
-			{
-				return;
-			}
 
 			PayloadDescriptor* payloadDescriptor = AV1::Parse(dependencyDescriptor.get());
 
