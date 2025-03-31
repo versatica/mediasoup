@@ -1,5 +1,5 @@
-#include "RTC/Codecs/AV1.hpp"
 #include "RTC/Codecs/FuzzerAV1.hpp"
+#include "RTC/Codecs/AV1.hpp"
 
 void Fuzzer::RTC::Codecs::AV1::Fuzz(const uint8_t* data, size_t len)
 {
