@@ -525,12 +525,16 @@ public:
 
 	void Serialize(const uint8_t* buffer, size_t bufferLength) override
 	{
-		Serializable::Serialize(buffer, bufferLength);
+		size_t itemsOffset   = GetItemsPointer() - GetBuffer();
+		size_t paddingOffset = GetPaddingPointer() - GetBuffer();
+		size_t padding       = GetLength() - (GetPaddingPointer() - GetBuffer());
+
+		// Copy all bytes from beginning of the buffer until the position of the
+		// Items.
+		std::memcpy(const_cast<uint8_t*>(buffer), GetBuffer(), itemsOffset);
 
 		// Serialize each Item into the new buffer.
-
-		size_t itemsOffset = GetItemsPointer() - GetBuffer();
-		uint8_t* ptr       = const_cast<uint8_t*>(buffer) + itemsOffset;
+		uint8_t* ptr = const_cast<uint8_t*>(buffer) + itemsOffset;
 
 		for (auto& item : this->items)
 		{
@@ -538,6 +542,13 @@ public:
 
 			ptr += item->GetLength();
 		}
+
+		// Copy padding bytes.
+		std::memcpy(const_cast<uint8_t*>(buffer) + paddingOffset, GetPaddingPointer(), padding);
+
+		// Manually update buffer and buffer length.
+		SetBuffer(buffer);
+		SetBufferLength(bufferLength);
 	}
 
 	uint8_t GetType() const

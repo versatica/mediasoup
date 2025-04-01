@@ -81,9 +81,12 @@ namespace RTC
 		 * Update the buffer length of the Serializable.
 		 **
 		 * @remarks
-		 * The child class must invoke this method after parsing completes in case
-		 * it couldn't anticipate its expected exact length. Specially useful when
-		 * parsing variable-length items within a packet.
+		 * - The child class must invoke this method after parsing completes in
+		 *   case it couldn't anticipate its expected exact length. Specially
+		 *   useful when parsing variable-length items within a packet.
+		 * - The application can also invoke this method on the Serializable if
+		 *   it has expanded or reduced the length of the buffer currently assigned
+		 *   to the Serializable.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
@@ -100,7 +103,8 @@ namespace RTC
 		 *
 		 * @remarks
 		 * - Subclasses must override this method if they hold pointers or allocated
-		 *   memory.
+		 *   memory. In that case, the subclass should manually invoke `SetBuffer()`
+		 *   and `SetBufferLenght()` methods.
 		 * - Anyway, if subclasses override this method they still need to invoke
 		 *   it in the parent too.
 		 *
@@ -110,13 +114,27 @@ namespace RTC
 		virtual void Serialize(const uint8_t* buffer, size_t bufferLength);
 
 		/**
+		 * TODO
+		 */
+		// virtual std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const;
+
+		/**
 		 * Methods to be used by classes inheriting from Serializable.
 		 */
 	protected:
 		/**
+		 * Method to be called by the child class in case it overrides the
+		 * `Serialize()` method.
+		 */
+		virtual void SetBuffer(const uint8_t* buffer) final
+		{
+			this->buffer = const_cast<uint8_t*>(buffer);
+		}
+
+		/**
 		 * Method to be called by the child class to update the current exact
 		 * length of the Serializable.
-		 **
+		 *
 		 * @remarks
 		 * The child class must invoke this method after parsing completes and
 		 * after every change in the Serializable content that affects its current
