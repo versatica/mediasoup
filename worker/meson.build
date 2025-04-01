@@ -182,6 +182,7 @@ common_sources = [
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
 ]
 
+# TODO: Move to common_sources array once it's tested.
 if get_option('ms_sctp_stack')
   common_sources += [
     'src/RTC/SCTP/Chunk.cpp',
@@ -347,7 +348,6 @@ test_sources = [
   'test/src/RTC/TestRtpStreamSend.cpp',
   'test/src/RTC/TestRtpStreamRecv.cpp',
   'test/src/RTC/TestSeqManager.cpp',
-  'test/src/RTC/TestSerializable.cpp',
   'test/src/RTC/TestSimpleConsumer.cpp',
   'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
@@ -383,6 +383,15 @@ test_sources = [
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
 ]
+
+# TODO: Move to common_sources array once it's tested.
+if get_option('ms_sctp_stack')
+  test_sources += [
+    'test/src/RTC/TestSerializable.cpp',
+    'test/src/RTC/TestSerializable/FooPacket.cpp',
+    'test/src/RTC/TestSerializable/FooItem.cpp',
+  ]
+endif
 
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',
