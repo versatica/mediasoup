@@ -13,137 +13,128 @@ namespace RTC
 	 *   from this class.
 	 * - Typically many of those packets and items may include padding bytes to
 	 *   be multiple of 4 bytes. However it's up to each packet or item to deal
-	 *   with padding. From the point of view of the Serializable class, the size
-	 *   of a serializable packet or item must include the padding in that packet
-	 *   or item (if any).
+	 *   with padding. From the point of view of the Serializable class, the
+	 *   length of a Serializable packet or item must include its padding bytes
+	 *   (if any).
 	 */
 	class Serializable
 	{
 	protected:
 		/**
 		 * @param buffer - The buffer holding the packet.
+		 * @param bufferLength - Buffer length.
+		 *
+		 * @remarks
+		 * - In same cases, `bufferLength` is the exact length of the Serializable
+		 *   and in other cases `bufferLength` is the maximum length that the
+		 *   Serializable can take.
+		 * - Always use `GetLength()` to obtain the exact length of the
+		 *   Serializable.
 		 */
-		Serializable(uint8_t* buffer);
+		Serializable(const uint8_t* buffer, size_t bufferLength)
+		  : buffer(const_cast<uint8_t*>(buffer)), bufferLength(bufferLength)
+		{
+		}
 
-		virtual ~Serializable();
+		virtual ~Serializable() = default;
 
 	public:
 		/**
-		 * Get a buffer containing the serialized content. Combined with
-		 * `GetSize()`, the application can obtain the full sequence of bytes
-		 * of the serializable.
-		 *
-		 * @remarks
-		 * The application must check `NeedsSerialization()` (and call `Serialize()`
-		 * if serialization is needed) before calling this method.
-		 *
-		 * @throw MediaSoupError - If serialization is needed (this is, if there
-		 *   are pending changes to apply so the current buffer doesn't correspond
-		 *   to the real content of the serializable).
+		 * Print Serializable state.
 		 */
-		virtual const uint8_t* GetBuffer() const final;
+		virtual void Dump() const = 0;
 
 		/**
-		 * Total size of the serializable if it was serialized now.
-		 *
-		 * @remarks
-		 * Child classes implementing this method should check `NeedsSerialization()`
-		 * and, if serialization is not needed, just return `GetCurrentSize()`.
+		 * Get a buffer containing the serialized content. Combined with the
+		 * `GetLength()` method, the application can obtain the full sequence of
+		 * bytes of the Serializable.
 		 */
-		virtual size_t GetSize() const = 0;
+		virtual const uint8_t* GetBuffer() const final
+		{
+			return this->buffer;
+		}
 
 		/**
-		 * Whether serialization is needed, meaning that the internal buffer
-		 * no longer represents the current content of the serializable (due to
-		 * modifications made after the serializable was created or after it was
-		 * last modified).
-		 */
-		virtual bool NeedsSerialization() const final;
-
-		/**
-		 * Apply pending changes and serialize the content of the serializable
-		 * into the given new `buffer`. Once serialized, the previous buffer of
-		 * the serializable is no longer used and can be reused for other purposes.
-		 *
-		 * @param buffer - Buffer in which the content will be serialized.
+		 * Current exact length of the Serializable, including padding bytes (if
+		 * any).
 		 *
 		 * @remarks
-		 * - `buffer` cannot be the same as the one currently used by the
-		 *   serializable. A separate buffer must be given.
-		 * - Child classes must call `Serialized()` at the end of their
-		 *   `Serialize()` method implementation.
-		 *
-		 * @throw MediaSoupError - If serialization fails due to invalid
-		 *   modifications previously made.
+		 * - It returns the current value of the `length` member, which can be
+		 *   updated by the child class at any time by calling `SetLength()`.
+		 * - It's guaranteed to be less or equal to `GetBufferLength()`.
 		 */
-		virtual void Serialize(uint8_t* buffer) = 0;
+		virtual const size_t GetLength() const final
+		{
+			return this->length;
+		}
+
+		/**
+		 * Maximum length the Serializable can take. This is the `bufferLength`
+		 * argument given to the constructor.
+		 */
+		virtual const size_t GetBufferLength() const final
+		{
+			return this->bufferLength;
+		}
+
+		/**
+		 * Update the buffer length of the Serializable.
+		 **
+		 * @remarks
+		 * The child class must invoke this method after parsing completes in case
+		 * it couldn't anticipate its expected exact length. Specially useful when
+		 * parsing variable-length items within a packet.
+		 *
+		 * @throw MediaSoupError - If given `bufferLength` is lower than the
+		 * current exact length of the Serializable.
+		 */
+		virtual void SetBufferLength(size_t bufferLength) final;
+
+		/**
+		 * Serialize the Serializable into a new buffer. This method copies the
+		 * bytes of the internal buffer into the new buffer and makes `GetBuffer()`
+		 * point to the new one.
+		 *
+		 * @param buffer - The new buffer holding the packet.
+		 * @param bufferLength - New buffer length.
+		 *
+		 * @remarks
+		 * - Subclasses must override this method if they hold pointers or allocated
+		 *   memory.
+		 * - Anyway, if subclasses override this method they still need to invoke
+		 *   it in the parent too.
+		 *
+		 * @throw MediaSoupError - If given `bufferLength` is lower than the
+		 * current exact length of the Serializable.
+		 */
+		virtual void Serialize(const uint8_t* buffer, size_t bufferLength);
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.
 		 */
 	protected:
 		/**
-		 * Method that must be called when constructing a serializable by parsing
-		 * a buffer.
-		 *
-		 * @param size - The serializable size computed during the parsing process.
-		 *
+		 * Method to be called by the child class to update the current exact
+		 * length of the Serializable.
+		 **
 		 * @remarks
-		 * It's recommented that classes inheriting from Serializable expose a
-		 * static `Parse()` method that reads from a buffer and creates an instance
-		 * of the class.
+		 * The child class must invoke this method after parsing completes and
+		 * after every change in the Serializable content that affects its current
+		 * length.
 		 *
-		 * While inspecting the buffer, the parser usually calls methods on the
-		 * ongoing serializable that affects its internal state and hence the
-		 * `serializationNeeded` flag is set to true. However that's not true
-		 * because, obviously, no serialization is needed. So this method
-		 * internally sets the `serializationNeeded` flag to false.
-		 *
-		 * In addition to that, in some cases the parser cannot anticipate how many
-		 * bytes the serializable will take until the parsing process completes.
-		 * That's why this method must be called with the computed serializable
-		 * size as argument once the parsing process is done.
-		 *
-		 * @throw MediaSoupError - If called twice.
+		 * @throw MediaSoupError - If given `length` is larger than the buffer
+		 * length of the Serializable.
 		 */
-		virtual void Parsed(size_t size) final;
-
-		/**
-		 * Current buffer of the serializable, no matter serialization is needed.
-		 */
-		virtual const uint8_t* GetCurrentBuffer() const final;
-
-		/**
-		 * Current serializable size, no matter serialization is needed.
-		 */
-		virtual size_t GetCurrentSize() const final;
-
-		/**
-		 * To be called from child classes' methods that affect the serializable
-		 * content in a way that serialization is needed.
-		 */
-		virtual void SetSerializationNeeded() final;
-
-		/**
-		 * To be called by child classes at the end of their `Serialize()` method.
-		 *
-		 * @param buffer - Buffer in which the content has been serialized.
-		 * @param size - New size of the serializable.
-		 *
-		 * @remarks
-		 * This method internally sets the `serializationNeeded` flag to false.
-		 */
-		virtual void Serialized(uint8_t* buffer, size_t size) final;
+		virtual void SetLength(size_t length) final;
 
 	private:
-		// Buffer holding the serializable content.
+		// Buffer holding the Serializable content.
 		uint8_t* buffer{ nullptr };
-		// Serializable size.
-		size_t size{ 0u };
-
-	private:
-		// Whether serialization is needed due to recent modifications.
-		bool serializationNeeded{ false };
+		// Length of the buffer. This is the maximum length the Serializable can
+		// take.
+		size_t bufferLength{ 0u };
+		// Serializable exact length (includes padding bytes).
+		size_t length{ 0u };
 	};
 } // namespace RTC
 

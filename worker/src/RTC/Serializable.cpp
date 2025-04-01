@@ -4,78 +4,55 @@
 #include "RTC/Serializable.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
-	Serializable::Serializable(uint8_t* buffer) : buffer(buffer)
-	{
-		MS_TRACE();
-	}
-
-	Serializable::~Serializable()
-	{
-		MS_TRACE();
-	}
-
-	const uint8_t* Serializable::GetBuffer() const
+	void Serializable::SetBufferLength(size_t bufferLength)
 	{
 		MS_TRACE();
 
-		if (this->serializationNeeded)
+		if (bufferLength < this->length)
 		{
-			MS_THROW_ERROR("serialization needed");
+			MS_THROW_TYPE_ERROR(
+			  "buffer length (%zu bytes) is lower than current length (%zu bytes)",
+			  bufferLength,
+			  this->length);
 		}
 
-		return this->buffer;
+		this->bufferLength = bufferLength;
 	}
 
-	bool Serializable::NeedsSerialization() const
+	void Serializable::Serialize(const uint8_t* buffer, size_t bufferLength)
 	{
 		MS_TRACE();
 
-		return this->serializationNeeded;
-	}
-
-	void Serializable::Parsed(size_t size)
-	{
-		MS_TRACE();
-
-		if (this->size)
+		if (bufferLength < this->length)
 		{
-			MS_THROW_ERROR("Parsed() already called");
+			MS_THROW_TYPE_ERROR(
+			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
+			  bufferLength,
+			  this->length);
 		}
 
-		this->size                = size;
-		this->serializationNeeded = false;
+		std::memcpy(const_cast<uint8_t*>(buffer), this->buffer, this->length);
+
+		this->buffer       = const_cast<uint8_t*>(buffer);
+		this->bufferLength = bufferLength;
 	}
 
-	const uint8_t* Serializable::GetCurrentBuffer() const
+	void Serializable::SetLength(size_t length)
 	{
 		MS_TRACE();
 
-		return this->buffer;
-	}
+		if (length > this->bufferLength)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "length (%zu bytes) is larger than internal buffer maximum length (%zu bytes)",
+			  length,
+			  this->bufferLength);
+		}
 
-	size_t Serializable::GetCurrentSize() const
-	{
-		MS_TRACE();
-
-		return this->size;
-	}
-
-	void Serializable::SetSerializationNeeded()
-	{
-		MS_TRACE();
-
-		this->serializationNeeded = true;
-	}
-
-	void Serializable::Serialized(uint8_t* buffer, size_t size)
-	{
-		MS_TRACE();
-
-		this->buffer              = const_cast<uint8_t*>(buffer);
-		this->size                = size;
-		this->serializationNeeded = false;
+		this->length = length;
 	}
 } // namespace RTC

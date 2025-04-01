@@ -11,7 +11,7 @@
  *
  * If the macro MS_LOG_STD is defined, all the macros log to stdout/stderr.
  *
- * If the macro MS_LOG_FILE_LINE is defied, all the logging macros print more
+ * If the macro MS_LOG_FILE_LINE is defined, all the logging macros print more
  * verbose information, including current file and line.
  *
  * MS_TRACE()
@@ -136,6 +136,15 @@
 	((value & 0x40) ? '1' : '0'), \
 	((value & 0x20) ? '1' : '0'), \
 	((value & 0x10) ? '1' : '0'), \
+	((value & 0x08) ? '1' : '0'), \
+	((value & 0x04) ? '1' : '0'), \
+	((value & 0x02) ? '1' : '0'), \
+	((value & 0x01) ? '1' : '0')
+
+// Usage:
+//   MS_DEBUG_DEV("Leading text "MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(value));
+#define MS_UINT8_4BITS_TO_BINARY_PATTERN "%c%c%c%c"
+#define MS_UINT8_4BITS_TO_BINARY(value) \
 	((value & 0x08) ? '1' : '0'), \
 	((value & 0x04) ? '1' : '0'), \
 	((value & 0x02) ? '1' : '0'), \
@@ -353,7 +362,7 @@ public:
 #define MS_DUMP_DATA(data, len) \
 	do \
 	{ \
-		const int loggerWritten = std::snprintf(Logger::buffer, Logger::BufferSize, "X(data) " _MS_LOG_STR, _MS_LOG_ARG); \
+		const int loggerWritten = std::snprintf(Logger::buffer, Logger::BufferSize, "X" _MS_LOG_STR, _MS_LOG_ARG); \
 		Logger::channel->SendLog(Logger::buffer, static_cast<uint32_t>(loggerWritten)); \
 		size_t bufferDataLen{ 0 }; \
 		for (size_t i{0}; i < len; ++i) \
@@ -381,7 +390,7 @@ public:
 #define MS_DUMP_DATA_STD(data, len) \
 	do \
 	{ \
-		std::fprintf(stdout, "(data) " _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
+		std::fprintf(stdout, _MS_LOG_STR _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG); \
 		size_t bufferDataLen{ 0 }; \
 		for (size_t i{0}; i < len; ++i) \
 		{ \

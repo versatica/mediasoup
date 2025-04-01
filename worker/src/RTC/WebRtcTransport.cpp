@@ -868,27 +868,27 @@ namespace RTC
 
 // TODO: For testing purposes. Must be removed.
 #ifdef MS_SCTP_STACK
-		MS_DUMP(">>> sending SCTP packet...");
+		// MS_DUMP(">>> sending SCTP packet...");
 
-		if (!RTC::SCTP::Packet::IsSctp(data, len))
-		{
-			MS_WARN_TAG(sctp, "data to be sent is not a SCTP packet");
+		// if (!RTC::SCTP::Packet::IsSctp(data, len))
+		// {
+		// 	MS_WARN_TAG(sctp, "data to be sent is not a SCTP packet");
 
-			return;
-		}
+		// 	return;
+		// }
 
-		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
+		// RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
 
-		if (!packet)
-		{
-			MS_WARN_TAG(sctp, "data to be sent is not a valid SCTP packet");
+		// if (!packet)
+		// {
+		// 	MS_WARN_TAG(sctp, "data to be sent is not a valid SCTP packet");
 
-			return;
-		}
+		// 	return;
+		// }
 
-		packet->Dump();
+		// packet->Dump();
 
-		delete packet;
+		// delete packet;
 #endif
 
 		this->dtlsTransport->SendApplicationData(data, len);
@@ -1454,27 +1454,27 @@ namespace RTC
 
 // TODO: For testing purposes. Must be removed.
 #ifdef MS_SCTP_STACK
-		MS_DUMP("<<< receiving SCTP packet...");
+		// MS_DUMP("<<< receiving SCTP packet...");
 
-		if (!RTC::SCTP::Packet::IsSctp(data, len))
-		{
-			MS_WARN_TAG(sctp, "received data is not a SCTP packet");
+		// if (!RTC::SCTP::Packet::IsSctp(data, len))
+		// {
+		// 	MS_WARN_TAG(sctp, "received data is not a SCTP packet");
 
-			return;
-		}
+		// 	return;
+		// }
 
-		RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
+		// RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
 
-		if (!packet)
-		{
-			MS_WARN_TAG(sctp, "received data is not a valid SCTP packet");
+		// if (!packet)
+		// {
+		// 	MS_WARN_TAG(sctp, "received data is not a valid SCTP packet");
 
-			return;
-		}
+		// 	return;
+		// }
 
-		packet->Dump();
+		// packet->Dump();
 
-		delete packet;
+		// delete packet;
 #endif
 
 		// Pass it to the parent transport.
