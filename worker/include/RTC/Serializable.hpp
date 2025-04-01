@@ -19,7 +19,7 @@ namespace RTC
 	 */
 	class Serializable
 	{
-	protected:
+	public:
 		/**
 		 * @param buffer - The buffer holding the packet.
 		 * @param bufferLength - Buffer length.
@@ -114,9 +114,9 @@ namespace RTC
 		virtual void Serialize(const uint8_t* buffer, size_t bufferLength);
 
 		/**
-		 * TODO
+		 * TODO: Document.
 		 */
-		// virtual std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const;
+		virtual std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.

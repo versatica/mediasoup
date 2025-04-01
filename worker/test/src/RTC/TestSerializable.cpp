@@ -221,6 +221,21 @@ public:
 		MS_DUMP("</FooItem>");
 	}
 
+	std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const override
+	{
+		MS_TRACE();
+
+		std::memcpy(const_cast<uint8_t*>(buffer), GetBuffer(), GetLength());
+
+		auto clonedFooItem =
+		  std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ false));
+
+		// Need to manually set Serializable length.
+		clonedFooItem->SetLength(GetLength());
+
+		return clonedFooItem;
+	}
+
 	uint8_t GetId() const
 	{
 		return GetHeaderPointer()->id;
@@ -549,6 +564,20 @@ public:
 		// Manually update buffer and buffer length.
 		SetBuffer(buffer);
 		SetBufferLength(bufferLength);
+	}
+
+	std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const override
+	{
+		MS_TRACE();
+
+		auto clonedFoo = std::unique_ptr<Foo>(new Foo(buffer, bufferLength, /*initializeHeader*/ false));
+
+		// TODO: Clone items.
+
+		// Need to manually set Serializable length.
+		clonedFoo->SetLength(GetLength());
+
+		return clonedFoo;
 	}
 
 	uint8_t GetType() const
@@ -1273,20 +1302,19 @@ TEST_CASE("create and modify FooItem item", "[rtc][serializable]")
 
 	/* Serialize Item into another buffer. */
 
-	uint8_t newBuffer[17];
+	uint8_t newBuffer1[17];
 
-	std::memset(newBuffer, 0xFF, sizeof(newBuffer));
+	std::memset(newBuffer1, 0xFF, sizeof(newBuffer1));
 
-	item->Serialize(newBuffer, sizeof(newBuffer));
+	item->Serialize(newBuffer1, sizeof(newBuffer1));
 
 	// Compare new and old buffers.
-	REQUIRE(helpers::areBuffersEqual(newBuffer, 6, buffer, 6) == true);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 6));
 
 	// Once done fill the old buffer with 1s.
 	std::memset(buffer, 0xFF, sizeof(buffer));
 
-	REQUIRE(sizeof(newValue) == 4);
-	REQUIRE(item->GetBuffer() == newBuffer);
+	REQUIRE(item->GetBuffer() == newBuffer1);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 6);
 	REQUIRE(item->GetId() == 14);
@@ -1296,6 +1324,44 @@ TEST_CASE("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(item->GetValue()[1] == 0xEE);
 	REQUIRE(item->GetValue()[2] == 0xDD);
 	REQUIRE(item->GetValue()[3] == 0xCC);
-	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), newBuffer, 6) == true);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), newBuffer1, 6) == true);
 	REQUIRE(helpers::areBuffersEqual(item->GetValue(), item->GetValueLength(), newValue, 4) == true);
+
+	/* Clone Item into another buffer. */
+
+	uint8_t newBuffer2[100];
+
+	std::memset(newBuffer2, 0xFF, sizeof(newBuffer2));
+
+	auto* previousBuffer      = item->GetBuffer();
+	auto previousBufferLength = item->GetBufferLength();
+
+	std::unique_ptr<Serializable> genericClonedItem = item->Clone(newBuffer2, sizeof(newBuffer2));
+	std::unique_ptr<FooItem> clonedItem =
+	  std::unique_ptr<FooItem>(static_cast<FooItem*>(genericClonedItem.release()));
+
+	// Compare the buffers of the original item and the cloned one.
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer1, item->GetLength()) == true);
+
+	// Once done fill the original buffer with 1s (this is, we are running original
+	// Item despite it still exists since we have jsut cloned it).
+	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
+
+	REQUIRE(clonedItem->GetBuffer() == newBuffer2);
+	REQUIRE(clonedItem->GetBufferLength() == 100);
+	REQUIRE(clonedItem->GetLength() == 6);
+	REQUIRE(clonedItem->GetId() == 14);
+	REQUIRE(clonedItem->GetFlags() == 0b1111);
+	REQUIRE(clonedItem->GetValueLength() == 4);
+	REQUIRE(clonedItem->GetValue()[0] == 0xFF);
+	REQUIRE(clonedItem->GetValue()[1] == 0xEE);
+	REQUIRE(clonedItem->GetValue()[2] == 0xDD);
+	REQUIRE(clonedItem->GetValue()[3] == 0xCC);
+	REQUIRE(
+	  helpers::areBuffersEqual(clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer2, 6) == true);
+	REQUIRE(
+	  helpers::areBuffersEqual(clonedItem->GetValue(), clonedItem->GetValueLength(), newValue, 4) ==
+	  true);
 }
