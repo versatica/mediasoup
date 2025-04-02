@@ -1,10 +1,4 @@
-// TODO: REMOVE
-#define MS_CLASS "RTC::TestSerializable"
-#define MS_LOG_DEV_LEVEL 3
-
 #include "common.hpp"
-// TODO: REMOVE
-#include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "helpers.hpp"
@@ -27,10 +21,10 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 		0x01, 0b10000000, 0x00, 0x13,
 		// Appendix: 0x00BC614E
 		0x00, 0xBC, 0x61, 0x4E,
-		// Item 1: Id:9, Flags:0b0101, Length:2, Value: 0x1234
-		0b10010101, 0x02, 0x12, 0x34,
-		// Item 2: Id:7, Flags:0b0011, Length:5, , Value: 0xA987654321.
-		0b01110011, 0x05, 0xA9, 0x87,
+		// FooItem 1: Id:1, Flags:0b0101, Length:2, Value: 0x1234
+		0b00010101, 0x02, 0x12, 0x34,
+		// FooItem 2: Id:2, Flags:0b0011, Length:5, , Value: 0xA987654321.
+		0b00100011, 0x05, 0xA9, 0x87,
 		// 1 byte of padding.
 		0x65, 0x43, 0x21, 0x00
 	};
@@ -58,7 +52,7 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	REQUIRE(item1->GetBuffer() == buffer + 8);
 	REQUIRE(item1->GetBufferLength() == 4);
 	REQUIRE(item1->GetLength() == 4);
-	REQUIRE(item1->GetId() == 9);
+	REQUIRE(item1->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item1->GetFlags() == 0b0101);
 	REQUIRE(item1->GetValueLength() == 2);
 	REQUIRE(item1->GetValue()[0] == 0x12);
@@ -73,7 +67,7 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	// the first byte of item 2 until available packet length (padding excluded).
 	REQUIRE(item2->GetBufferLength() == 7);
 	REQUIRE(item2->GetLength() == 7);
-	REQUIRE(item2->GetId() == 7);
+	REQUIRE(item2->GetId() == FooItem::ItemId::EVENT);
 	REQUIRE(item2->GetFlags() == 0b0011);
 	REQUIRE(item2->GetValueLength() == 5);
 	REQUIRE(item2->GetValue()[0] == 0xA9);
@@ -95,10 +89,10 @@ SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][ser
 		0x01, 0b10000000, 0x00, 0x13,
 		// Appendix: 0x00BC614E
 		0x00, 0xBC, 0x61, 0x4E,
-		// Item 1: Id:9, Flags:0b0101, Length:2, Value: 0x1234
-		0b10010101, 0x02, 0x12, 0x34,
-		// Item 2: Id:7, Flags:0b0011, Length:5, , Value: 0xA987654321.
-		0b01110011, 0x05, 0xA9, 0x87,
+		// FooItem 1: Id:1 Flags:0b0101, Length:2, Value: 0x1234
+		0b00010101, 0x02, 0x12, 0x34,
+		// FooItem 2: Id:2, Flags:0b0011, Length:5, , Value: 0xA987654321.
+		0b00100011, 0x05, 0xA9, 0x87,
 		// 1 byte of padding.
 		0x65, 0x43, 0x21, 0x00,
 		// Extra bytes that make the packet invalid.
@@ -122,9 +116,6 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 
 	auto fooPacket = FooPacket::Factory(buffer, sizeof(buffer), /*type*/ 55);
 
-	MS_DEBUG_DEV("***** fooPacket, initial");
-	fooPacket->Dump();
-
 	REQUIRE(sizeof(buffer) == 256);
 	REQUIRE(fooPacket);
 	REQUIRE(fooPacket->GetBuffer() == buffer);
@@ -144,9 +135,6 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	fooPacket->SetType(125);
 	fooPacket->SetAppendix(0x12345678);
 
-	MS_DEBUG_DEV("***** fooPacket, set type and add appendix");
-	fooPacket->Dump();
-
 	REQUIRE(fooPacket->GetBuffer() == buffer);
 	REQUIRE(fooPacket->GetBufferLength() == 256);
 	// Header (4 bytes) + Appendix (4 bytes).
@@ -163,9 +151,6 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 
 	fooPacket->SetAppendix(0u);
 
-	MS_DEBUG_DEV("***** fooPacket, remove appendix");
-	fooPacket->Dump();
-
 	REQUIRE(fooPacket->GetBuffer() == buffer);
 	REQUIRE(fooPacket->GetBufferLength() == 256);
 	// Header (4 bytes).
@@ -178,35 +163,40 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(fooPacket->GetItemsCount() == 0);
 	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 4) == true);
 
-	/* Add an Item. */
+	/* Add a FooItem. */
 
 	uint8_t item1Value[] = { 0xAA, 0xBB, 0xCC };
 	uint8_t item2Value[] = { 0xAB, 0xCD };
 
-	// Item 1 (5 bytes).
+	// FooItem 1 (5 bytes).
 	auto item1 = FooItem::Factory(
-	  itemBuffer, sizeof(itemBuffer), /*id*/ 1, /*flags*/ 0b1000, item1Value, sizeof(item1Value));
+	  itemBuffer,
+	  sizeof(itemBuffer),
+	  /*id*/ FooItem::ItemId::DATA,
+	  /*flags*/ 0b1000,
+	  item1Value,
+	  sizeof(item1Value));
 
-	// Hold the item1 pointer for tests below.
+	// Hold item1 pointer for tests below.
 	auto* item1Ptr = item1.get();
 
 	fooPacket->AddItem(std::move(item1));
 
-	// Item 2 (4 bytes).
+	// FooItem 2 (4 bytes).
 	auto item2 = FooItem::Factory(
-	  itemBuffer, sizeof(itemBuffer), /*id*/ 2, /*flags*/ 0b1001, item2Value, sizeof(item2Value));
+	  itemBuffer,
+	  sizeof(itemBuffer),
+	  /*id*/ FooItem::ItemId::EVENT,
+	  /*flags*/ 0b1001,
+	  item2Value,
+	  sizeof(item2Value));
 
-	// Hold the item2 pointer for tests below.
+	// Hold item2 pointer for tests below.
 	auto* item2Ptr = item2.get();
 
 	fooPacket->AddItem(std::move(item2));
 
-	MS_DEBUG_DEV("***** fooPacket, add items");
-	fooPacket->Dump();
-
 	auto foo2 = FooPacket::Parse(fooPacket->GetBuffer(), fooPacket->GetLength());
-	MS_DEBUG_DEV("*****  foo2, parsed from fooPacket");
-	foo2->Dump();
 
 	REQUIRE(fooPacket->GetBuffer() == buffer);
 	REQUIRE(fooPacket->GetBufferLength() == 256);
@@ -225,7 +215,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// We know this will be same as item length.
 	REQUIRE(item1Ptr->GetBufferLength() == 5);
 	REQUIRE(item1Ptr->GetLength() == 5);
-	REQUIRE(item1Ptr->GetId() == 1);
+	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
 	REQUIRE(item1Ptr->GetValueLength() == 3);
 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
@@ -238,7 +228,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// We know this will be same as item length.
 	REQUIRE(item2Ptr->GetBufferLength() == 4);
 	REQUIRE(item2Ptr->GetLength() == 4);
-	REQUIRE(item2Ptr->GetId() == 2);
+	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::EVENT);
 	REQUIRE(item2Ptr->GetFlags() == 0b1001);
 	REQUIRE(item2Ptr->GetValueLength() == 2);
 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
@@ -251,9 +241,6 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	/* Add Appendix. */
 
 	fooPacket->SetAppendix(666u);
-
-	MS_DEBUG_DEV("***** fooPacket, keep items and add appendix");
-	fooPacket->Dump();
 
 	REQUIRE(fooPacket->GetBuffer() == buffer);
 	REQUIRE(fooPacket->GetBufferLength() == 256);
@@ -273,7 +260,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// We know this will be same as item length.
 	REQUIRE(item1Ptr->GetBufferLength() == 5);
 	REQUIRE(item1Ptr->GetLength() == 5);
-	REQUIRE(item1Ptr->GetId() == 1);
+	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
 	REQUIRE(item1Ptr->GetValueLength() == 3);
 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
@@ -286,7 +273,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// We know this will be same as item length.
 	REQUIRE(item2Ptr->GetBufferLength() == 4);
 	REQUIRE(item2Ptr->GetLength() == 4);
-	REQUIRE(item2Ptr->GetId() == 2);
+	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::EVENT);
 	REQUIRE(item2Ptr->GetFlags() == 0b1001);
 	REQUIRE(item2Ptr->GetValueLength() == 2);
 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
@@ -297,13 +284,10 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 
 	REQUIRE(!fooPacket->GetItem(2));
 
-	/* Remove Appendix and change flags of Item 2. */
+	/* Remove Appendix and change flags of FooItem 2. */
 
 	fooPacket->SetAppendix(0u);
 	fooPacket->GetItem(1)->SetFlags(0b1111);
-
-	MS_DEBUG_DEV("***** fooPacket, keep items and remove appendix");
-	fooPacket->Dump();
 
 	REQUIRE(fooPacket->GetBuffer() == buffer);
 	REQUIRE(fooPacket->GetBufferLength() == 256);
@@ -322,7 +306,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// We know this will be same as item length.
 	REQUIRE(item1Ptr->GetBufferLength() == 5);
 	REQUIRE(item1Ptr->GetLength() == 5);
-	REQUIRE(item1Ptr->GetId() == 1);
+	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
 	REQUIRE(item1Ptr->GetValueLength() == 3);
 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
@@ -335,7 +319,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// We know this will be same as item length.
 	REQUIRE(item2Ptr->GetBufferLength() == 4);
 	REQUIRE(item2Ptr->GetLength() == 4);
-	REQUIRE(item2Ptr->GetId() == 2);
+	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::EVENT);
 	REQUIRE(item2Ptr->GetFlags() == 0b1111);
 	REQUIRE(item2Ptr->GetValueLength() == 2);
 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
@@ -347,25 +331,19 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 
 	/* Serialize FooPacket into another buffer. */
 
-	uint8_t newBuffer[256];
+	uint8_t newBuffer1[256];
 
-	std::memset(newBuffer, 0xFF, sizeof(newBuffer));
+	std::memset(newBuffer1, 0xFF, sizeof(newBuffer1));
 
-	fooPacket->Serialize(newBuffer, sizeof(newBuffer));
-
-	MS_DEBUG_DEV("***** serialize fooPacket");
-	fooPacket->Dump();
-
-	MS_DUMP_DATA(buffer, 16);
-	MS_DUMP_DATA(newBuffer, 16);
+	fooPacket->Serialize(newBuffer1, sizeof(newBuffer1));
 
 	// Compare new and old buffers.
-	REQUIRE(helpers::areBuffersEqual(newBuffer, 16, buffer, 16) == true);
+	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 16));
 
 	// Once done fill the old buffer with 1s.
 	std::memset(buffer, 0xFF, sizeof(buffer));
 
-	REQUIRE(fooPacket->GetBuffer() == newBuffer);
+	REQUIRE(fooPacket->GetBuffer() == newBuffer1);
 	REQUIRE(fooPacket->GetBufferLength() == 256);
 	// Header (4 bytes) + items (9 bytes) + padding (3 bytes);
 	REQUIRE(fooPacket->GetLength() == 16);
@@ -376,44 +354,110 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(fooPacket->HasItems() == true);
 	REQUIRE(fooPacket->GetItemsCount() == 2);
 	REQUIRE(
-	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer, 16) == true);
+	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer1, 16) == true);
 
 	REQUIRE(item1Ptr == fooPacket->GetItem(0).get());
 	// We know this will be same as item length.
 	REQUIRE(item1Ptr->GetBufferLength() == 5);
 	REQUIRE(item1Ptr->GetLength() == 5);
-	REQUIRE(item1Ptr->GetId() == 1);
+	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
 	REQUIRE(item1Ptr->GetValueLength() == 3);
 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
 	REQUIRE(item1Ptr->GetValue()[1] == 0xBB);
 	REQUIRE(item1Ptr->GetValue()[2] == 0xCC);
 	REQUIRE(
-	  helpers::areBuffersEqual(item1Ptr->GetBuffer(), item1Ptr->GetLength(), newBuffer + 4, 5) == true);
+	  helpers::areBuffersEqual(item1Ptr->GetBuffer(), item1Ptr->GetLength(), newBuffer1 + 4, 5) == true);
 
 	REQUIRE(item2Ptr == fooPacket->GetItem(1).get());
 	// We know this will be same as item length.
 	REQUIRE(item2Ptr->GetBufferLength() == 4);
 	REQUIRE(item2Ptr->GetLength() == 4);
-	REQUIRE(item2Ptr->GetId() == 2);
+	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::EVENT);
 	REQUIRE(item2Ptr->GetFlags() == 0b1111);
 	REQUIRE(item2Ptr->GetValueLength() == 2);
 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
 	REQUIRE(item2Ptr->GetValue()[1] == 0xCD);
 	REQUIRE(
-	  helpers::areBuffersEqual(item2Ptr->GetBuffer(), item2Ptr->GetLength(), newBuffer + 4 + 5, 4) ==
+	  helpers::areBuffersEqual(item2Ptr->GetBuffer(), item2Ptr->GetLength(), newBuffer1 + 4 + 5, 4) ==
 	  true);
 
 	REQUIRE(!fooPacket->GetItem(2));
+
+	/* Clone FooPacket into another buffer. */
+
+	uint8_t newBuffer2[100];
+
+	std::memset(newBuffer2, 0xFF, sizeof(newBuffer2));
+
+	auto* previousBuffer      = fooPacket->GetBuffer();
+	auto previousBufferLength = fooPacket->GetBufferLength();
+
+	// FooPacket::Clone() returns a unique_ptr<Serializable>. We need to release
+	// its pointer, cast it to FooPacket*, and then create a unique_ptr<FooPacket>
+	// with it.
+	auto* clonedFooPacketPtr =
+	  static_cast<FooPacket*>(fooPacket->Clone(newBuffer2, sizeof(newBuffer2)).release());
+	auto clonedFooPacket = std::unique_ptr<FooPacket>(clonedFooPacketPtr);
+
+	// Compare the buffers of the original FooPacket and the cloned one.
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    clonedFooPacket->GetBuffer(), clonedFooPacket->GetLength(), newBuffer1, fooPacket->GetLength()) ==
+	  true);
+
+	// Once done fill the original buffer with 1s (this is, we are running original
+	// FooPacket despite it still exists since we have jsut cloned it).
+	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
+
+	REQUIRE(clonedFooPacket->GetBuffer() == newBuffer2);
+	REQUIRE(clonedFooPacket->GetBufferLength() == 100);
+	// Header (4 bytes) + items (9 bytes) + padding (3 bytes);
+	REQUIRE(clonedFooPacket->GetLength() == 16);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(clonedFooPacket->GetLength()) == true);
+	REQUIRE(clonedFooPacket->GetType() == 125);
+	REQUIRE(clonedFooPacket->HasAppendix() == false);
+	REQUIRE(clonedFooPacket->GetAppendix() == 0u);
+	REQUIRE(clonedFooPacket->HasItems() == true);
+	REQUIRE(clonedFooPacket->GetItemsCount() == 2);
+
+	auto& clonedItem1 = clonedFooPacket->GetItem(0);
+
+	REQUIRE(clonedItem1->GetBufferLength() == 5);
+	REQUIRE(clonedItem1->GetLength() == 5);
+	REQUIRE(clonedItem1->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(clonedItem1->GetFlags() == 0b1000);
+	REQUIRE(clonedItem1->GetValueLength() == 3);
+	REQUIRE(clonedItem1->GetValue()[0] == 0xAA);
+	REQUIRE(clonedItem1->GetValue()[1] == 0xBB);
+	REQUIRE(clonedItem1->GetValue()[2] == 0xCC);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    clonedItem1->GetBuffer(), clonedItem1->GetLength(), newBuffer2 + 4, 5) == true);
+
+	auto& clonedItem2 = clonedFooPacket->GetItem(1);
+
+	REQUIRE(clonedItem2->GetBufferLength() == 4);
+	REQUIRE(clonedItem2->GetLength() == 4);
+	REQUIRE(clonedItem2->GetId() == FooItem::ItemId::EVENT);
+	REQUIRE(clonedItem2->GetFlags() == 0b1111);
+	REQUIRE(clonedItem2->GetValueLength() == 2);
+	REQUIRE(clonedItem2->GetValue()[0] == 0xAB);
+	REQUIRE(clonedItem2->GetValue()[1] == 0xCD);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    clonedItem2->GetBuffer(), clonedItem2->GetLength(), newBuffer2 + 4 + 5, 4) == true);
+
+	REQUIRE(!clonedFooPacket->GetItem(2));
 }
 
-SCENARIO("parse FooItem item", "[rtc][serializable]")
+SCENARIO("parse FooItem", "[rtc][serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// Item 1: Id:10, Flags:0b1111, Value Length:1, Value: 0xEE
-		0b10101111, 0x01, 0xEE
+		// FooItem 1: Id:3, Flags:0b1111, Value Length:1, Value: 0xEE
+		0b00111111, 0x01, 0xEE
 	};
 	// clang-format on
 
@@ -424,7 +468,7 @@ SCENARIO("parse FooItem item", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 3);
 	REQUIRE(item->GetLength() == 3);
-	REQUIRE(item->GetId() == 10);
+	REQUIRE(item->GetId() == FooItem::ItemId::CONTROL);
 	REQUIRE(item->GetFlags() == 0b1111);
 	REQUIRE(item->GetValueLength() == 1);
 	REQUIRE(item->GetValue()[0] == 0xEE);
@@ -434,11 +478,10 @@ SCENARIO("parse FooItem item", "[rtc][serializable]")
 SCENARIO("parse FooItem by passing to it a buffer larger than the length of the item", "[rtc][serializable]")
 {
 	// Item length is 7 but given buffer is 8 bytes. Not a problem.
-	//
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// Item 1: Id:1, Flags:0b0000, Value Length:5, Value: 0xFFFFFFFFFF
+		// FooItem 1: Id:1, Flags:0b0000, Value Length:5, Value: 0xFFFFFFFFFF
 		0b00010000, 0x05, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0x00
 	};
@@ -451,7 +494,7 @@ SCENARIO("parse FooItem by passing to it a buffer larger than the length of the 
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 8);
 	REQUIRE(item->GetLength() == 7);
-	REQUIRE(item->GetId() == 1);
+	REQUIRE(item->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item->GetFlags() == 0b0000);
 	REQUIRE(item->GetValueLength() == 5);
 	REQUIRE(item->GetValue()[0] == 0xFF);
@@ -462,29 +505,25 @@ SCENARIO("parse FooItem by passing to it a buffer larger than the length of the 
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 7) == true);
 }
 
-SCENARIO("parse invalid FooItem item", "[rtc][serializable]")
+SCENARIO("parse invalid FooItem with buffer too small", "[rtc][serializable]")
 {
-	SECTION("buffer too small")
+	// Item length should be 7 but given buffer is only 6 bytes.
+	// clang-format off
+	uint8_t buffer[] =
 	{
-		// Item length should be 7 but given buffer is only 6 bytes.
+		// FooItem 1: Id:1, Flags:0b0000, Value Length:5
+		0b00010000, 0x05, 0xFF, 0xFF,
+		0xFF, 0xFF
+	};
+	// clang-format on
 
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			// Item 1: Id:1, Flags:0b0000, Value Length:5
-			0b00010000, 0x05, 0xFF, 0xFF,
-			0xFF, 0xFF
-		};
-		// clang-format on
+	auto item = FooItem::Parse(buffer, sizeof(buffer));
 
-		auto item = FooItem::Parse(buffer, sizeof(buffer));
-
-		REQUIRE(sizeof(buffer) == 6);
-		REQUIRE(!item);
-	}
+	REQUIRE(sizeof(buffer) == 6);
+	REQUIRE(!item);
 }
 
-SCENARIO("create and modify FooItem item", "[rtc][serializable]")
+SCENARIO("create and modify FooItem", "[rtc][serializable]")
 {
 	// Max length of a FooItem is 17 bytes.
 	uint8_t buffer[17];
@@ -494,8 +533,8 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	// FooItem:Factory()).
 	std::memset(buffer, 0xFF, sizeof(buffer));
 
-	auto item =
-	  FooItem::Factory(buffer, sizeof(buffer), /*id*/ 9, /*flags*/ 0b1010, value, sizeof(value));
+	auto item = FooItem::Factory(
+	  buffer, sizeof(buffer), /*id*/ FooItem::ItemId::DATA, /*flags*/ 0b1010, value, sizeof(value));
 
 	REQUIRE(sizeof(buffer) == 17);
 	REQUIRE(sizeof(value) == 3);
@@ -503,7 +542,7 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 5);
-	REQUIRE(item->GetId() == 9);
+	REQUIRE(item->GetId() == FooItem::ItemId::DATA);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetValueLength() == 3);
 	REQUIRE(item->GetValue()[0] == 0x11);
@@ -512,11 +551,11 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 5) == true);
 	REQUIRE(helpers::areBuffersEqual(item->GetValue(), item->GetValueLength(), value, 3) == true);
 
-	/* Modify Item. */
+	/* Modify FooItem. */
 
 	uint8_t newValue[] = { 0xFF, 0xEE, 0xDD, 0xCC };
 
-	item->SetId(14);
+	item->SetId(FooItem::ItemId::CONTROL);
 	item->SetFlags(0b1111);
 	item->SetValue(newValue, sizeof(newValue));
 
@@ -524,7 +563,7 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 6);
-	REQUIRE(item->GetId() == 14);
+	REQUIRE(item->GetId() == FooItem::ItemId::CONTROL);
 	REQUIRE(item->GetFlags() == 0b1111);
 	REQUIRE(item->GetValueLength() == 4);
 	REQUIRE(item->GetValue()[0] == 0xFF);
@@ -534,7 +573,7 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 6) == true);
 	REQUIRE(helpers::areBuffersEqual(item->GetValue(), item->GetValueLength(), newValue, 4) == true);
 
-	/* Serialize Item into another buffer. */
+	/* Serialize FooItem into another buffer. */
 
 	uint8_t newBuffer1[17];
 
@@ -551,7 +590,7 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == newBuffer1);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 6);
-	REQUIRE(item->GetId() == 14);
+	REQUIRE(item->GetId() == FooItem::ItemId::CONTROL);
 	REQUIRE(item->GetFlags() == 0b1111);
 	REQUIRE(item->GetValueLength() == 4);
 	REQUIRE(item->GetValue()[0] == 0xFF);
@@ -561,7 +600,7 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), newBuffer1, 6) == true);
 	REQUIRE(helpers::areBuffersEqual(item->GetValue(), item->GetValueLength(), newValue, 4) == true);
 
-	/* Clone Item into another buffer. */
+	/* Clone FooItem into another buffer. */
 
 	uint8_t newBuffer2[100];
 
@@ -570,23 +609,25 @@ SCENARIO("create and modify FooItem item", "[rtc][serializable]")
 	auto* previousBuffer      = item->GetBuffer();
 	auto previousBufferLength = item->GetBufferLength();
 
-	std::unique_ptr<Serializable> genericClonedItem = item->Clone(newBuffer2, sizeof(newBuffer2));
-	std::unique_ptr<FooItem> clonedItem =
-	  std::unique_ptr<FooItem>(static_cast<FooItem*>(genericClonedItem.release()));
+	// FooItem::Clone() returns a unique_ptr<Serializable>. We need to release
+	// its pointer, cast it to FooItem*, and then create a unique_ptr<FooItem>
+	// with it.
+	auto* clonedItemPtr = static_cast<FooItem*>(item->Clone(newBuffer2, sizeof(newBuffer2)).release());
+	auto clonedItem = std::unique_ptr<FooItem>(clonedItemPtr);
 
-	// Compare the buffers of the original item and the cloned one.
+	// Compare the buffers of the original FooItem and the cloned one.
 	REQUIRE(
 	  helpers::areBuffersEqual(
 	    clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer1, item->GetLength()) == true);
 
 	// Once done fill the original buffer with 1s (this is, we are running original
-	// Item despite it still exists since we have jsut cloned it).
+	// FooItem despite it still exists since we have jsut cloned it).
 	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
 
 	REQUIRE(clonedItem->GetBuffer() == newBuffer2);
 	REQUIRE(clonedItem->GetBufferLength() == 100);
 	REQUIRE(clonedItem->GetLength() == 6);
-	REQUIRE(clonedItem->GetId() == 14);
+	REQUIRE(clonedItem->GetId() == FooItem::ItemId::CONTROL);
 	REQUIRE(clonedItem->GetFlags() == 0b1111);
 	REQUIRE(clonedItem->GetValueLength() == 4);
 	REQUIRE(clonedItem->GetValue()[0] == 0xFF);

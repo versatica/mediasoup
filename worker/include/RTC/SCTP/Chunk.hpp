@@ -79,6 +79,7 @@ namespace RTC
 			 * must include padding if needed).
 			 */
 			static Chunk* Parse(const uint8_t* data, size_t len, bool exactLen);
+
 			static const std::string& ChunkType2String(ChunkType chunkType);
 
 		private:

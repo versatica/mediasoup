@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TestSerializable::FooItem"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooItem.hpp"
 #include "common.hpp"
@@ -8,14 +8,27 @@
 #include "Utils.hpp"
 #include "helpers.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstring> // std::memset(), std::memcpy()
-#include <utility> // std::move()
+#include <cstring> // std::memcpy()
 #include <vector>
 
 using namespace RTC;
 
+/* Class variables. */
+
+// clang-format off
+std::unordered_map<FooItem::ItemId, std::string> FooItem::itemId2String =
+{
+	{ FooItem::ItemId::NONE,    "NONE"    },
+	{ FooItem::ItemId::DATA,    "DATA"    },
+	{ FooItem::ItemId::EVENT,   "EVENT"   },
+	{ FooItem::ItemId::CONTROL, "CONTROL" }
+};
+// clang-format on
+
 std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
+	MS_TRACE();
+
 	// No space for header.
 	if (bufferLength < ItemHeaderLength)
 	{
@@ -34,18 +47,10 @@ std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLeng
 	// NOTE: We are parsing so we don't want to initialize the header.
 	auto item = std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ false));
 
-	printf(
-	  "FooItem::Parse() START [ptr+:%zu, Value Length:%" PRIu8 ", bufferLength:%zu]\n",
-	  ptr - buffer,
-	  item->GetValueLengthField(),
-	  bufferLength);
-
 	// Move to the value.
 	if (item->HasValue())
 	{
 		ptr = item->GetValuePointer();
-
-		printf("FooItem::Parse() has value [ptr+:%zu]\n", ptr - buffer);
 
 		// No space for value.
 		if (ptr + item->GetValueLength() > end)
@@ -61,8 +66,6 @@ std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLeng
 
 	const size_t computedLength = ptr - buffer;
 
-	printf("FooItem::Parse() END [ptr+:%zu, computedLength:%zu]\n", ptr - buffer, computedLength);
-
 	// It's mandatory to call SetLength() once we are done and we know the
 	// exact length of the item.
 	item->SetLength(computedLength);
@@ -73,11 +76,13 @@ std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLeng
 std::unique_ptr<FooItem> FooItem::Factory(
   const uint8_t* buffer,
   size_t bufferLength,
-  uint8_t id,
+  ItemId id,
   uint8_t flags,
   const uint8_t* value,
   uint8_t valueLength)
 {
+	MS_TRACE();
+
 	const size_t computedLength = ItemHeaderLength + valueLength;
 
 	// No space for header.
@@ -85,8 +90,6 @@ std::unique_ptr<FooItem> FooItem::Factory(
 	{
 		MS_THROW_TYPE_ERROR("no space for Item Header");
 	}
-
-	printf("FooItem::Factory() [computedLength:%zu, bufferLength:%zu]\n", computedLength, bufferLength);
 
 	// We want to initialize the header since we are creating an item from
 	// scratch.
@@ -102,12 +105,30 @@ std::unique_ptr<FooItem> FooItem::Factory(
 	return item;
 }
 
+const std::string& FooItem::ItemId2String(ItemId id)
+{
+	MS_TRACE();
+
+	static const std::string Unknown("UNKNOWN");
+
+	auto it = FooItem::itemId2String.find(id);
+
+	if (it == FooItem::itemId2String.end())
+	{
+		return Unknown;
+	}
+
+	return it->second;
+}
+
 FooItem::FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHeader)
   : Serializable(buffer, bufferLength)
 {
+	MS_TRACE();
+
 	if (initializeHeader)
 	{
-		SetId(0u);
+		SetId(ItemId::NONE);
 		SetFlags(0u);
 		SetValueLengthField(0u);
 
@@ -118,6 +139,7 @@ FooItem::FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHead
 
 FooItem::~FooItem()
 {
+	MS_TRACE();
 }
 
 void FooItem::Dump() const
@@ -126,7 +148,7 @@ void FooItem::Dump() const
 
 	MS_DUMP("<FooItem>");
 	MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-	MS_DUMP("  id: %" PRIu8, GetId());
+	MS_DUMP("  id: %" PRIu8 " (%s)", GetId(), FooItem::ItemId2String(GetId()).c_str());
 	MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
 	MS_DUMP(
 	  "  value length field: %" PRIu8 " (computed value length: %" PRIu8 ")",
@@ -155,6 +177,8 @@ std::unique_ptr<Serializable> FooItem::Clone(const uint8_t* buffer, size_t buffe
 
 void FooItem::SetValue(const uint8_t* value, uint8_t valueLength)
 {
+	MS_TRACE();
+
 	auto previousValueLength = GetValueLength();
 
 	// Update the Value Length field.

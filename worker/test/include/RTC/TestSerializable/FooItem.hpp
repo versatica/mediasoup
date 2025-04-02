@@ -3,6 +3,8 @@
 
 #include "common.hpp"
 #include "RTC/Serializable.hpp"
+#include <string>
+#include <unordered_map>
 
 using namespace RTC;
 
@@ -31,15 +33,26 @@ class FooItem : public Serializable
 {
 public:
 	/**
+	 * Item Id.
+	 */
+	enum class ItemId : uint8_t
+	{
+		NONE    = 0x0,
+		DATA    = 0x1,
+		EVENT   = 0x2,
+		CONTROL = 0x3,
+	};
+
+	/**
 	 * Struct of a the FooItem Header.
 	 */
 	struct ItemHeader
 	{
 #if defined(MS_LITTLE_ENDIAN)
 		uint8_t flags : 4;
-		uint8_t id : 4;
+		ItemId id : 4;
 #elif defined(MS_BIG_ENDIAN)
-		uint8_t id : 4;
+		ItemId id : 4;
 		uint8_t flags : 4;
 #endif
 		uint8_t valueLength;
@@ -60,10 +73,15 @@ public:
 	static std::unique_ptr<FooItem> Factory(
 	  const uint8_t* buffer,
 	  size_t bufferLength,
-	  uint8_t id,
+	  ItemId id,
 	  uint8_t flags,
 	  const uint8_t* value,
 	  uint8_t valueLength);
+
+	static const std::string& ItemId2String(ItemId id);
+
+private:
+	static std::unordered_map<ItemId, std::string> itemId2String;
 
 private:
 	/**
@@ -79,12 +97,12 @@ public:
 
 	std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const override;
 
-	uint8_t GetId() const
+	ItemId GetId() const
 	{
 		return GetHeaderPointer()->id;
 	}
 
-	void SetId(uint8_t id)
+	void SetId(ItemId id)
 	{
 		GetHeaderPointer()->id = id;
 	}
