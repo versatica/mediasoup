@@ -1,15 +1,10 @@
 #define MS_CLASS "RTC::TestSerializable::FooItem"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooItem.hpp"
-#include "common.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include "helpers.hpp"
-#include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
-#include <vector>
 
 using namespace RTC;
 
@@ -25,14 +20,53 @@ std::unordered_map<FooItem::ItemId, std::string> FooItem::itemId2String =
 };
 // clang-format on
 
+bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& itemId, uint8_t& valueLength)
+{
+	MS_TRACE();
+
+	itemId      = FooItem::ItemId::NONE;
+	valueLength = 0u;
+
+	if (bufferLength < FooItem::ItemHeaderLength)
+	{
+		MS_WARN_DEV("no space for FooItem header");
+
+		return false;
+	}
+
+	const auto* itemHeader = reinterpret_cast<const FooItem::ItemHeader*>(buffer);
+
+	if (bufferLength < FooItem::ItemHeaderLength + itemHeader->valueLength)
+	{
+		MS_WARN_DEV("no space for FooItem value");
+
+		return false;
+	}
+
+	if (itemHeader->id == FooItem::ItemId::NONE)
+	{
+		MS_WARN_DEV("invalid itemId NONE");
+
+		return false;
+	}
+
+	itemId      = itemHeader->id;
+	valueLength = itemHeader->valueLength;
+
+	return true;
+}
+
+// TODO: REMOVE THIS.
+// Sure? Then how will FooPacket::Parse() call Parse() on the specific
+// FooXxxItem class before knowing its id? Should it read id manually?
 std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
 	// No space for header.
-	if (bufferLength < ItemHeaderLength)
+	if (bufferLength < FooItem::ItemHeaderLength)
 	{
-		MS_WARN_DEV("no space for Item Header");
+		MS_WARN_DEV("no space for FooItem Header");
 
 		return nullptr;
 	}
@@ -55,7 +89,7 @@ std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLeng
 		// No space for value.
 		if (ptr + item->GetValueLength() > end)
 		{
-			MS_WARN_DEV("no space for Item Value");
+			MS_WARN_DEV("no space for FooItem value");
 
 			return nullptr;
 		}
@@ -83,7 +117,7 @@ std::unique_ptr<FooItem> FooItem::Factory(
 {
 	MS_TRACE();
 
-	const size_t computedLength = ItemHeaderLength + valueLength;
+	const size_t computedLength = FooItem::ItemHeaderLength + valueLength;
 
 	// No space for header.
 	if (bufferLength < computedLength)
@@ -133,7 +167,7 @@ FooItem::FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHead
 		SetValueLengthField(0u);
 
 		// Update Serializable length.
-		SetLength(ItemHeaderLength);
+		SetLength(FooItem::ItemHeaderLength);
 	}
 }
 
@@ -156,13 +190,18 @@ void FooItem::Dump() const
 	  GetValueLength());
 	MS_DUMP("  value:");
 	MS_DUMP_DATA(GetValue(), GetValueLength());
-	MS_DUMP("");
 	MS_DUMP("</FooItem>");
 }
 
 std::unique_ptr<Serializable> FooItem::Clone(const uint8_t* buffer, size_t bufferLength) const
 {
 	MS_TRACE();
+
+	if (bufferLength < GetLength())
+	{
+		MS_THROW_TYPE_ERROR(
+		  "bufferLength (%zu bytes) is lower than current length (%zu bytes)", bufferLength, GetLength());
+	}
 
 	std::memcpy(const_cast<uint8_t*>(buffer), GetBuffer(), GetLength());
 

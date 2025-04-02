@@ -9,7 +9,8 @@
 using namespace RTC;
 
 /**
- * Foo Item.
+ * FooItem.
+ *
  *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -21,6 +22,7 @@ using namespace RTC;
  * - Id (4 bits): Unsigned integer.
  * - Flags (4 bits).
  * - Value Length (8 bits): Length of the Value field. It can be 0.
+ * - Value (variable length).
  *
  * Given that Value Length field is the length of the Value field, the total
  * length of a FooItem can be between 2 and 17 bytes.
@@ -34,6 +36,11 @@ class FooItem : public Serializable
 public:
 	/**
 	 * Item Id.
+	 *
+	 * @remarks
+	 * - NONE is not a valid value, so a FooItem with id NONE should be
+	 *   considered invalid and parsing should fail.
+	 * - Values other than the defined must be accepted as unknown FooItem.
 	 */
 	enum class ItemId : uint8_t
 	{
@@ -63,6 +70,20 @@ public:
 
 public:
 	/**
+	 * Whether given buffer could be a a valid FooItem.
+	 *
+	 * @param buffer
+	 * @param bufferLength
+	 * @param itemId - If given buffer is a valid FooItem then `itemId` is
+	 *   rewritten to parsed ItemId. Otherwuise it's rewritten to ItemId::NONE
+	 *   (0).
+	 * @param valueLength - If given buffer is a valid FooItem then `valueLength`
+	 *   is rewritten to the value of the Value Length field. Otherwise it's
+	 *   rewritten to 0.
+	 */
+	static bool IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& itemId, uint8_t& valueLength);
+
+	/**
 	 * Parse a FooItem.
 	 *
 	 * @remarks
@@ -83,47 +104,54 @@ public:
 private:
 	static std::unordered_map<ItemId, std::string> itemId2String;
 
-private:
+protected:
 	/**
-	 * Constructor is private because we only want to create FooItem instances
-	 * via Parse() and Factory().
+	 * Constructor is protected because we only want to create FooItem instances
+	 * via Parse() and Factory() in subclasses.
 	 */
 	FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHeader);
 
 public:
-	~FooItem() override;
+	virtual ~FooItem() override;
 
-	void Dump() const override;
+	/**
+	 * NOTE: Should be overridden by each subclass.
+	 */
+	virtual void Dump() const override;
 
+	/**
+	 * Could be overridden by each subclass.
+	 */
 	std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const override;
 
-	ItemId GetId() const
+	virtual ItemId GetId() const final
 	{
 		return GetHeaderPointer()->id;
 	}
 
-	void SetId(ItemId id)
+	virtual void SetId(ItemId id) final
 	{
 		GetHeaderPointer()->id = id;
 	}
 
-	uint8_t GetFlags() const
+	virtual uint8_t GetFlags() const final
 	{
 		return GetHeaderPointer()->flags;
 	}
 
-	void SetFlags(uint8_t flags)
+	virtual void SetFlags(uint8_t flags) final
 	{
 		GetHeaderPointer()->flags = flags;
 	}
 
-	bool HasValue() const
+	virtual bool HasValue() const final
 	{
 		return GetValueLengthField() > 0u;
 		;
 	}
 
-	const uint8_t* GetValue() const
+	// TODO: Make it protected since the app should use subclasses instead.
+	virtual const uint8_t* GetValue() const final
 	{
 		if (!HasValue())
 		{
@@ -133,7 +161,8 @@ public:
 		return GetValuePointer();
 	}
 
-	uint8_t GetValueLength() const
+	// TODO: Make it protected since the app should use subclasses instead.
+	virtual uint8_t GetValueLength() const final
 	{
 		if (!HasValue())
 		{
@@ -143,9 +172,10 @@ public:
 		return GetValueLengthField();
 	}
 
-	void SetValue(const uint8_t* value, uint8_t valueLength);
+	// TODO: Make it protected since the app should use subclasses instead.
+	virtual void SetValue(const uint8_t* value, uint8_t valueLength) final;
 
-private:
+protected:
 	ItemHeader* GetHeaderPointer() const
 	{
 		return reinterpret_cast<ItemHeader*>(const_cast<uint8_t*>(GetBuffer()));

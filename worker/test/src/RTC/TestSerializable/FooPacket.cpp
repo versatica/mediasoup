@@ -1,15 +1,12 @@
 #define MS_CLASS "RTC::TestSerializable:FooPacket"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include "helpers.hpp"
-#include <catch2/catch_test_macros.hpp>
+#include "RTC/TestSerializable/FooDataItem.hpp"
 #include <cstring> // std::memcpy()
 #include <utility> // std::move()
-#include <vector>
 
 std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length)
 {
@@ -57,7 +54,7 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 	{
 		if (fooPacket->GetLengthField() > length)
 		{
-			MS_WARN_DEV("no space for Items");
+			MS_WARN_DEV("no space for items");
 
 			return nullptr;
 		}
@@ -66,7 +63,48 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 
 		while (ptr < buffer + fooPacket->GetLengthField())
 		{
-			auto item = FooItem::Parse(ptr, buffer + fooPacket->GetLengthField() - ptr);
+			// The remaining length in the buffer is the potential buffer length of
+			// the item.
+			size_t itemBufferLength = length - (ptr - buffer);
+
+			// Here we need to read the id of the FooItem in advance to use the
+			// proper parser.
+			FooItem::ItemId itemId;
+			uint8_t valueLength;
+
+			if (!FooItem::IsFooItem(ptr, itemBufferLength, itemId, valueLength))
+			{
+				MS_WARN_DEV("not a FooItem");
+
+				return nullptr;
+			}
+
+			MS_DEBUG_DEV("parsing FooItem [id:%" PRIu8 ", valueLength:%" PRIu8 "]", itemId, valueLength);
+
+			// TODO
+			switch (itemId)
+			{
+				case FooItem::ItemId::DATA:
+				{
+					auto item = FooDataItem::Parse(ptr, itemBufferLength);
+
+					if (item)
+					{
+						// TODO
+						item->Dump();
+					}
+					else
+					{
+						// TODO
+					}
+
+					break;
+				}
+			}
+
+			// TODO: Remove this, but still we have to call methods below in the item,
+			// and we must do it no matter the exact FooXxxxItem class.
+			auto item = FooItem::Parse(ptr, itemBufferLength);
 
 			if (item)
 			{
@@ -88,7 +126,7 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 			}
 			else
 			{
-				MS_WARN_DEV("wrong Item");
+				MS_WARN_DEV("wrong FooItem");
 
 				return nullptr;
 			}
@@ -185,6 +223,12 @@ void FooPacket::Serialize(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
+	if (bufferLength < GetLength())
+	{
+		MS_THROW_TYPE_ERROR(
+		  "bufferLength (%zu bytes) is lower than current length (%zu bytes)", bufferLength, GetLength());
+	}
+
 	size_t itemsOffset   = GetItemsPointer() - GetBuffer();
 	size_t paddingOffset = GetPaddingPointer() - GetBuffer();
 	size_t padding       = GetLength() - (GetPaddingPointer() - GetBuffer());
@@ -214,6 +258,12 @@ void FooPacket::Serialize(const uint8_t* buffer, size_t bufferLength)
 std::unique_ptr<Serializable> FooPacket::Clone(const uint8_t* buffer, size_t bufferLength) const
 {
 	MS_TRACE();
+
+	if (bufferLength < GetLength())
+	{
+		MS_THROW_TYPE_ERROR(
+		  "bufferLength (%zu bytes) is lower than current length (%zu bytes)", bufferLength, GetLength());
+	}
 
 	size_t itemsOffset   = GetItemsPointer() - GetBuffer();
 	size_t paddingOffset = GetPaddingPointer() - GetBuffer();

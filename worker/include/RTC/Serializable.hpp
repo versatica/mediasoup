@@ -98,15 +98,14 @@ namespace RTC
 		 * bytes of the internal buffer into the new buffer and makes `GetBuffer()`
 		 * point to the new one.
 		 *
-		 * @param buffer - The new buffer holding the packet.
+		 * @param buffer - The new buffer in which the Serializable will be
+		 *   serialized.
 		 * @param bufferLength - New buffer length.
 		 *
 		 * @remarks
-		 * - Subclasses must override this method if they hold pointers or allocated
-		 *   memory. In that case, the subclass should manually invoke `SetBuffer()`
-		 *   and `SetBufferLenght()` methods.
-		 * - Anyway, if subclasses override this method they still need to invoke
-		 *   it in the parent too.
+		 * The subclass must override this method if it hold pointers or allocated
+		 * memory. In that case, the overridden method must manually invoke
+		 * `SetBuffer()` and `SetBufferLenght()`.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
@@ -114,7 +113,21 @@ namespace RTC
 		virtual void Serialize(const uint8_t* buffer, size_t bufferLength);
 
 		/**
-		 * TODO: Document.
+		 * Clone the Serializable into a new buffer. This method returns a new
+		 * instance of Serializable which doesn't share any memory with the original
+		 * one.
+		 *
+		 * @param buffer - The new buffer in which the cloned Serializable will be
+		 *   serialized.
+		 * @param bufferLength - New buffer length.
+		 *
+		 * @remarks
+		 * - The subclass need to clone any pointer or allocated memory it holds
+		 * internally.
+		 * - The `Clone()` method of the subclass must manually invoke `SetLength()`.
+		 *
+		 * @throw MediaSoupError - If given `bufferLength` is lower than the
+		 * current exact length of the Serializable.
 		 */
 		virtual std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const = 0;
 

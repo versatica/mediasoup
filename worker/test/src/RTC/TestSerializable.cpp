@@ -3,6 +3,7 @@
 #include "Utils.hpp"
 #include "helpers.hpp"
 #include "RTC/Serializable.hpp"
+#include "RTC/TestSerializable/FooDataItem.hpp"
 #include "RTC/TestSerializable/FooItem.hpp"
 #include "RTC/TestSerializable/FooPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -103,6 +104,24 @@ SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][ser
 	auto fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 23);
+	REQUIRE(!fooPacket);
+}
+
+SCENARIO("parse invalid FooPacket with FooItem with invalid id NONE", "[rtc][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Type:1, A:0, Length:8
+		0x01, 0b00000000, 0x00, 0x08,
+		// FooItem 1: Id:0 Flags:0b0101, Length:2, Value: 0x1234
+		0b00000101, 0x02, 0x12, 0x34,
+	};
+	// clang-format on
+
+	auto fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
+
+	REQUIRE(sizeof(buffer) == 8);
 	REQUIRE(!fooPacket);
 }
 
@@ -456,23 +475,45 @@ SCENARIO("parse FooItem", "[rtc][serializable]")
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// FooItem 1: Id:3, Flags:0b1111, Value Length:1, Value: 0xEE
-		0b00111111, 0x01, 0xEE
+		// Id:1, Flags:0b1110, Value Length:2, Value: 0x12EF
+		0b00011110, 0x02, 0x12, 0xEF
 	};
 	// clang-format on
 
 	auto item = FooItem::Parse(buffer, sizeof(buffer));
 
-	REQUIRE(sizeof(buffer) == 3);
+	REQUIRE(sizeof(buffer) == 4);
 	REQUIRE(item);
 	REQUIRE(item->GetBuffer() == buffer);
-	REQUIRE(item->GetBufferLength() == 3);
-	REQUIRE(item->GetLength() == 3);
-	REQUIRE(item->GetId() == FooItem::ItemId::CONTROL);
-	REQUIRE(item->GetFlags() == 0b1111);
-	REQUIRE(item->GetValueLength() == 1);
-	REQUIRE(item->GetValue()[0] == 0xEE);
-	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 3) == true);
+	REQUIRE(item->GetBufferLength() == 4);
+	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(item->GetFlags() == 0b1110);
+	REQUIRE(item->GetValueLength() == 2);
+	REQUIRE(item->GetValue()[0] == 0x12);
+	REQUIRE(item->GetValue()[1] == 0xEF);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
+
+	/* Cast to DataFooItem (we know that item has id DATA. */
+
+	// We need to transfer ownership of the underlying FooItem* pointer to the
+	// new FooDataItem unique pointer, so we must use item.release() rather than
+	// item.get() (which would produce SEGFAULT due to double free).
+	auto dataItem = std::unique_ptr<FooDataItem>(static_cast<FooDataItem*>(item.release()));
+
+	// item unique pointer no longer holds the pointer.
+	REQUIRE(!item);
+	REQUIRE(dataItem);
+	REQUIRE(dataItem->GetBuffer() == buffer);
+	REQUIRE(dataItem->GetBufferLength() == 4);
+	REQUIRE(dataItem->GetLength() == 4);
+	REQUIRE(dataItem->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(dataItem->GetFlags() == 0b1110);
+	REQUIRE(dataItem->GetValueLength() == 2);
+	REQUIRE(dataItem->GetValue()[0] == 0x12);
+	REQUIRE(dataItem->GetValue()[1] == 0xEF);
+	REQUIRE(dataItem->GetNumber() == 0x12EF);
+	REQUIRE(helpers::areBuffersEqual(dataItem->GetBuffer(), dataItem->GetLength(), buffer, 4) == true);
 }
 
 SCENARIO("parse FooItem by passing to it a buffer larger than the length of the item", "[rtc][serializable]")
@@ -481,7 +522,7 @@ SCENARIO("parse FooItem by passing to it a buffer larger than the length of the 
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// FooItem 1: Id:1, Flags:0b0000, Value Length:5, Value: 0xFFFFFFFFFF
+		// Id:1, Flags:0b0000, Value Length:5, Value: 0xFFFFFFFFFF
 		0b00010000, 0x05, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0x00
 	};
@@ -511,7 +552,7 @@ SCENARIO("parse invalid FooItem with buffer too small", "[rtc][serializable]")
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// FooItem 1: Id:1, Flags:0b0000, Value Length:5
+		// Id:1, Flags:0b0000, Value Length:5
 		0b00010000, 0x05, 0xFF, 0xFF,
 		0xFF, 0xFF
 	};
@@ -520,6 +561,55 @@ SCENARIO("parse invalid FooItem with buffer too small", "[rtc][serializable]")
 	auto item = FooItem::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 6);
+	REQUIRE(!item);
+}
+
+SCENARIO("parse invalid DataFooItem with too small buffer", "[rtc][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Id:1, Flags:0b1111, Value Length:2, Value: 0xAB
+		0b00011111, 0x02, 0xAB
+	};
+	// clang-format on
+
+	auto item = FooDataItem::Parse(buffer, sizeof(buffer));
+
+	REQUIRE(sizeof(buffer) == 3);
+	REQUIRE(!item);
+}
+
+SCENARIO("parse invalid DataFooItem with wrong value length", "[rtc][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Id:1, Flags:0b1111, Value Length:1, Value: 0xAB
+		0b00011111, 0x03, 0xAB, 0xCD,
+		0xEF
+	};
+	// clang-format on
+
+	auto item = FooDataItem::Parse(buffer, sizeof(buffer));
+
+	REQUIRE(sizeof(buffer) == 5);
+	REQUIRE(!item);
+}
+
+SCENARIO("parse invalid DataFooItem with wrong id", "[rtc][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Id:3, Flags:0b1111, Value Length:1, Value: 0xABCD
+		0b00111111, 0x02, 0xAB, 0xCD
+	};
+	// clang-format on
+
+	auto item = FooDataItem::Parse(buffer, sizeof(buffer));
+
+	REQUIRE(sizeof(buffer) == 4);
 	REQUIRE(!item);
 }
 
