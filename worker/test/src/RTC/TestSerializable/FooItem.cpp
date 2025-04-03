@@ -13,10 +13,8 @@ using namespace RTC;
 // clang-format off
 std::unordered_map<FooItem::ItemId, std::string> FooItem::itemId2String =
 {
-	{ FooItem::ItemId::NONE,    "NONE"    },
-	{ FooItem::ItemId::DATA,    "DATA"    },
-	{ FooItem::ItemId::EVENT,   "EVENT"   },
-	{ FooItem::ItemId::CONTROL, "CONTROL" }
+	{ FooItem::ItemId::NUMERIC, "NUMERIC" },
+	{ FooItem::ItemId::TEXT,    "TEXT"    }
 };
 // clang-format on
 
@@ -24,8 +22,8 @@ bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& item
 {
 	MS_TRACE();
 
-	itemId      = FooItem::ItemId::NONE;
-	valueLength = 0u;
+	MS_DUMP("*** bufferLength:%zu", bufferLength);
+	;
 
 	if (bufferLength < FooItem::ItemHeaderLength)
 	{
@@ -36,6 +34,8 @@ bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& item
 
 	const auto* itemHeader = reinterpret_cast<const FooItem::ItemHeader*>(buffer);
 
+	MS_DUMP("*** id:%" PRIu8 ", valueLength:%" PRIu8, itemHeader->id, itemHeader->valueLength);
+
 	if (bufferLength < FooItem::ItemHeaderLength + itemHeader->valueLength)
 	{
 		MS_WARN_DEV("no space for FooItem value");
@@ -43,95 +43,13 @@ bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& item
 		return false;
 	}
 
-	if (itemHeader->id == FooItem::ItemId::NONE)
-	{
-		MS_WARN_DEV("invalid itemId NONE");
-
-		return false;
-	}
+	MS_DUMP(
+	  "*** GOOD !!! => id:%" PRIu8 ", valueLength:%" PRIu8, itemHeader->id, itemHeader->valueLength);
 
 	itemId      = itemHeader->id;
 	valueLength = itemHeader->valueLength;
 
 	return true;
-}
-
-// TODO: REMOVE THIS.
-// Sure? Then how will FooPacket::Parse() call Parse() on the specific
-// FooXxxItem class before knowing its id? Should it read id manually?
-std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLength)
-{
-	MS_TRACE();
-
-	// No space for header.
-	if (bufferLength < FooItem::ItemHeaderLength)
-	{
-		MS_WARN_DEV("no space for FooItem Header");
-
-		return nullptr;
-	}
-
-	// Pointer that starts at the beginning of the buffer and it's incremented
-	// to point to different parts of the item.
-	auto* ptr = buffer;
-
-	// Pointer that points to the end of the buffer.
-	auto* end = buffer + bufferLength;
-
-	// NOTE: We are parsing so we don't want to initialize the header.
-	auto item = std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ false));
-
-	// Move to the value.
-	if (item->HasValue())
-	{
-		ptr = item->GetValuePointer();
-
-		// No space for value.
-		if (ptr + item->GetValueLength() > end)
-		{
-			MS_WARN_DEV("no space for FooItem value");
-
-			return nullptr;
-		}
-	}
-
-	// Move to the end of the value.
-	ptr = item->GetEndPointer();
-
-	const size_t computedLength = ptr - buffer;
-
-	// It's mandatory to call SetLength() once we are done and we know the
-	// exact length of the item.
-	item->SetLength(computedLength);
-
-	return item;
-}
-
-std::unique_ptr<FooItem> FooItem::Factory(
-  uint8_t* buffer, size_t bufferLength, ItemId id, uint8_t flags, const uint8_t* value, uint8_t valueLength)
-{
-	MS_TRACE();
-
-	const size_t computedLength = FooItem::ItemHeaderLength + valueLength;
-
-	// No space for header.
-	if (bufferLength < computedLength)
-	{
-		MS_THROW_TYPE_ERROR("no space for Item Header");
-	}
-
-	// We want to initialize the header since we are creating an item from
-	// scratch.
-	auto item = std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ true));
-
-	item->SetId(id);
-	item->SetFlags(flags);
-	item->SetValue(value, valueLength);
-
-	// NOTE: No need to call item->SetLength() since item->SetValue() already
-	// does it.
-
-	return item;
 }
 
 const std::string& FooItem::ItemId2String(ItemId id)
@@ -150,24 +68,9 @@ const std::string& FooItem::ItemId2String(ItemId id)
 	return it->second;
 }
 
-FooItem::FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHeader)
-  : Serializable(buffer, bufferLength)
+FooItem::FooItem(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 {
 	MS_TRACE();
-
-	// TODO: I have to reconsider this. It doesn't make sense that FooItem
-	// constructor fills things since we want to rely on subclasses Parse()
-	// and Factory() and their constructors that will override these call below
-	// anyway.
-	if (initializeHeader)
-	{
-		SetId(ItemId::NONE);
-		SetFlags(0u);
-		SetValueLengthField(0u);
-
-		// Update Serializable length.
-		SetLength(FooItem::ItemHeaderLength);
-	}
 }
 
 FooItem::~FooItem()
@@ -188,7 +91,7 @@ void FooItem::Dump() const
 	  GetValueLengthField(),
 	  GetValueLength());
 	MS_DUMP("  value:");
-	MS_DUMP_DATA(GetValue(), GetValueLength());
+	MS_DUMP_DATA(GetValuePointer(), GetValueLength());
 	MS_DUMP("</FooItem>");
 }
 
@@ -204,8 +107,7 @@ std::unique_ptr<Serializable> FooItem::Clone(uint8_t* buffer, size_t bufferLengt
 
 	std::memcpy(buffer, GetBuffer(), GetLength());
 
-	auto clonedFooItem =
-	  std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ false));
+	auto clonedFooItem = std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength));
 
 	// Need to manually set Serializable length.
 	clonedFooItem->SetLength(GetLength());
@@ -213,18 +115,19 @@ std::unique_ptr<Serializable> FooItem::Clone(uint8_t* buffer, size_t bufferLengt
 	return clonedFooItem;
 }
 
-void FooItem::SetValue(const uint8_t* value, uint8_t valueLength)
-{
-	MS_TRACE();
+// TODO: REMOVE.
+// void FooItem::SetValue(const uint8_t* value, uint8_t valueLength)
+// {
+// 	MS_TRACE();
 
-	auto previousValueLength = GetValueLength();
+// 	auto previousValueLength = GetValueLength();
 
-	// Update the Value Length field.
-	SetValueLengthField(valueLength);
+// 	// Update the Value Length field.
+// 	SetValueLengthField(valueLength);
 
-	// Copy the given value into the buffer.
-	std::memcpy(GetValuePointer(), value, valueLength);
+// 	// Copy the given value into the buffer.
+// 	std::memcpy(GetValuePointer(), value, valueLength);
 
-	// Update Serializable length.
-	SetLength(GetLength() - previousValueLength + valueLength);
-}
+// 	// Update Serializable length.
+// 	SetLength(GetLength() - previousValueLength + valueLength);
+// }

@@ -4,7 +4,9 @@
 #include "RTC/TestSerializable/FooPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/TestSerializable/FooDataItem.hpp"
+#include "RTC/TestSerializable/FooNumericItem.hpp"
+#include "RTC/TestSerializable/FooTextItem.hpp"
+#include "RTC/TestSerializable/FooUnknownItem.hpp"
 #include <cstring> // std::memcpy()
 #include <utility> // std::move()
 
@@ -13,7 +15,7 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 	MS_TRACE();
 
 	// No space for header.
-	if (length < HeaderLength)
+	if (length < FooPacket::HeaderLength)
 	{
 		MS_WARN_DEV("no space for Header");
 
@@ -35,13 +37,22 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 	auto fooPacket =
 	  std::unique_ptr<FooPacket>(new FooPacket(buffer, length, /*initializeHeader*/ false));
 
+	// Length field in FooPacket means total value of the packet (exluding
+	// padding bytes).
+	if (fooPacket->GetLengthField() > length)
+	{
+		MS_WARN_DEV("Length field is greater than given length");
+
+		return nullptr;
+	}
+
 	// Move to the Appendix.
 	if (fooPacket->HasAppendix())
 	{
 		ptr = fooPacket->GetAppendixPointer();
 
 		// No space for Appendix.
-		if (ptr + AppendixLength > end)
+		if (ptr + FooPacket::AppendixLength > end)
 		{
 			MS_WARN_DEV("no space for Appendix");
 
@@ -52,84 +63,89 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 	// Move to items.
 	if (fooPacket->HasItems())
 	{
-		if (fooPacket->GetLengthField() > length)
-		{
-			MS_WARN_DEV("no space for items");
-
-			return nullptr;
-		}
-
 		ptr = fooPacket->GetItemsPointer();
 
 		while (ptr < buffer + fooPacket->GetLengthField())
 		{
-			// The remaining length in the buffer is the potential buffer length of
-			// the item.
-			size_t itemBufferLength = length - (ptr - buffer);
-
-			// Here we need to read the id of the FooItem in advance to use the
-			// proper parser.
-			FooItem::ItemId itemId;
-			uint8_t valueLength;
-
-			if (!FooItem::IsFooItem(ptr, itemBufferLength, itemId, valueLength))
+			// Here we must anticipate the id of each item to use its appropriate.
+			if (ptr + FooItem::ItemHeaderLength > end)
 			{
-				MS_WARN_DEV("not a FooItem");
+				MS_WARN_DEV("no space for item");
 
 				return nullptr;
 			}
 
-			MS_DEBUG_DEV("parsing FooItem [id:%" PRIu8 ", valueLength:%" PRIu8 "]", itemId, valueLength);
+			const auto* itemHeader = reinterpret_cast<const FooItem::ItemHeader*>(ptr);
+
+			auto itemId = itemHeader->id;
+
+			// The remaining length in the buffer (excluding padding in the packet)
+			// is the potential buffer length of the item.
+			size_t itemBufferLength = fooPacket->GetLengthField() - (ptr - buffer);
+
+			std::unique_ptr<FooItem> item;
+
+			MS_DEBUG_DEV("parsing FooItem [ptr:%zu, id:%" PRIu8 "]", ptr - buffer, itemId);
 
 			// TODO
 			switch (itemId)
 			{
-				case FooItem::ItemId::DATA:
+				case FooItem::ItemId::NUMERIC:
 				{
-					auto item = FooDataItem::Parse(ptr, itemBufferLength);
+					item = FooNumericItem::Parse(ptr, itemBufferLength);
 
-					if (item)
+					if (!item)
 					{
-						// TODO
-						item->Dump();
-					}
-					else
-					{
-						// TODO
+						MS_WARN_DEV("FooNumericItem parser failed");
+
+						return nullptr;
 					}
 
 					break;
 				}
+
+				case FooItem::ItemId::TEXT:
+				{
+					item = FooTextItem::Parse(ptr, itemBufferLength);
+
+					if (!item)
+					{
+						MS_WARN_DEV("FooTextItem parser failed");
+
+						return nullptr;
+					}
+
+					break;
+				}
+
+				default:
+				{
+					item = FooUnknownItem::Parse(ptr, itemBufferLength);
+
+					if (!item)
+					{
+						MS_WARN_DEV("FooUnknownItem parser failed");
+
+						return nullptr;
+					}
+				}
 			}
 
-			// TODO: Remove this, but still we have to call methods below in the item,
-			// and we must do it no matter the exact FooXxxxItem class.
-			auto item = FooItem::Parse(ptr, itemBufferLength);
+			// Let's fix item's buffer length. This is because we didn't know its
+			// exact length when we called FooItem::Parse() so we passed the rest
+			// of the Packet buffer as buffer length. Once item is parsed, and
+			// given that it is part of the FooPacket buffer, we can fix its
+			// buffer length by making it be equal to its real length.
+			item->SetBufferLength(item->GetLength());
 
-			if (item)
-			{
-				// Let's fix item's buffer length. This is because we didn't know its
-				// exact length when we called FooItem::Parse() so we passed the rest
-				// of the Packet buffer as buffer length. Once item is parsed, and
-				// given that it is part of the FooPacket buffer, we can fix its
-				// buffer length by making it be equal to its real length.
-				item->SetBufferLength(item->GetLength());
+			// NOTE: We are gonna move item ownership in next line so must do
+			// this before.
+			ptr += item->GetLength();
 
-				// NOTE: We are gonna move item ownership in next line so must do
-				// this before.
-				ptr += item->GetLength();
-
-				// Here we are parsing so we don't use AddItem() (that serializes the
-				// Item into the Packet buffer, but AddParsedItem().
-				// NOTE: We need to move ownership of the cloned FooItem unique pointer.
-				fooPacket->AddParsedItem(std::move(item));
-			}
-			else
-			{
-				MS_WARN_DEV("wrong FooItem");
-
-				return nullptr;
-			}
+			// Here we are parsing so we don't use AddItem() (that serializes the
+			// Item into the Packet buffer, but AddParsedItem().
+			// NOTE: We need to move ownership of the cloned FooItem unique pointer.
+			fooPacket->AddParsedItem(std::move(item));
 		}
 	}
 
@@ -158,7 +174,7 @@ std::unique_ptr<FooPacket> FooPacket::Factory(uint8_t* buffer, size_t bufferLeng
 {
 	MS_TRACE();
 
-	size_t computedLength = HeaderLength;
+	size_t computedLength = FooPacket::HeaderLength;
 
 	// No space for header.
 	if (bufferLength < computedLength)
@@ -188,10 +204,10 @@ FooPacket::FooPacket(const uint8_t* buffer, size_t bufferLength, bool initialize
 		SetType(0u);
 		SetAppendixFlag(false);
 		SetUnusedField();
-		SetLengthField(HeaderLength);
+		SetLengthField(FooPacket::HeaderLength);
 
 		// Update Serializable length.
-		SetLength(HeaderLength);
+		SetLength(FooPacket::HeaderLength);
 	}
 }
 
@@ -321,7 +337,7 @@ void FooPacket::SetAppendix(uint32_t appendix)
 	else if (!hadAppendix && appendix)
 	{
 		size_t previousLengthWithoutPadding = GetPaddingPointer() - GetBuffer();
-		size_t lengthWithoutPadding         = previousLengthWithoutPadding + AppendixLength;
+		size_t lengthWithoutPadding         = previousLengthWithoutPadding + FooPacket::AppendixLength;
 
 		// Update flag A and Length field. This will make `GetXxxxxPointer()`
 		// return different values as if there was Appendix field.
@@ -335,7 +351,9 @@ void FooPacket::SetAppendix(uint32_t appendix)
 		{
 			const auto& item = *it;
 
-			item->Serialize(const_cast<uint8_t*>(item->GetBuffer()) + AppendixLength, item->GetLength());
+			item->Serialize(
+			  const_cast<uint8_t*>(item->GetBuffer()) + FooPacket::FooPacket::AppendixLength,
+			  item->GetLength());
 		}
 
 		// Copy the given Appendix value.
@@ -345,7 +363,7 @@ void FooPacket::SetAppendix(uint32_t appendix)
 	else if (hadAppendix && !appendix)
 	{
 		size_t previousLengthWithoutPadding = GetPaddingPointer() - GetBuffer();
-		size_t lengthWithoutPadding         = previousLengthWithoutPadding - AppendixLength;
+		size_t lengthWithoutPadding         = previousLengthWithoutPadding - FooPacket::AppendixLength;
 
 		// Update flag A and Length field. This will make `GetXxxxxPointer()`
 		// return different values as if there was an Appendix field.
@@ -357,7 +375,8 @@ void FooPacket::SetAppendix(uint32_t appendix)
 
 		for (const auto& item : this->items)
 		{
-			item->Serialize(const_cast<uint8_t*>(item->GetBuffer()) - AppendixLength, item->GetLength());
+			item->Serialize(
+			  const_cast<uint8_t*>(item->GetBuffer()) - FooPacket::AppendixLength, item->GetLength());
 		}
 	}
 }

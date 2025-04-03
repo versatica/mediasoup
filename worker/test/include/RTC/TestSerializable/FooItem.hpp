@@ -38,16 +38,12 @@ public:
 	 * Item Id.
 	 *
 	 * @remarks
-	 * - NONE is not a valid value, so a FooItem with id NONE should be
-	 *   considered invalid and parsing should fail.
-	 * - Values other than the defined must be accepted as FooUnknownItem.
+	 * Values other than the defined must be accepted as FooUnknownItem.
 	 */
 	enum class ItemId : uint8_t
 	{
-		NONE    = 0x0,
-		DATA    = 0x1,
-		EVENT   = 0x2,
-		CONTROL = 0x3,
+		NUMERIC = 0x1,
+		TEXT    = 0x2
 	};
 
 	/**
@@ -75,29 +71,11 @@ public:
 	 * @param buffer
 	 * @param bufferLength
 	 * @param itemId - If given buffer is a valid FooItem then `itemId` is
-	 *   rewritten to parsed ItemId. Otherwuise it's rewritten to ItemId::NONE
-	 *   (0).
+	 *   rewritten to parsed ItemId.
 	 * @param valueLength - If given buffer is a valid FooItem then `valueLength`
-	 *   is rewritten to the value of the Value Length field. Otherwise it's
-	 *   rewritten to 0.
+	 *   is rewritten to the value of the Value Length field.
 	 */
 	static bool IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& itemId, uint8_t& valueLength);
-
-	/**
-	 * Parse a FooItem.
-	 *
-	 * @remarks
-	 * - `bufferLength` may exceed the exact length of the item.
-	 */
-	static std::unique_ptr<FooItem> Parse(const uint8_t* buffer, size_t bufferLength);
-
-	static std::unique_ptr<FooItem> Factory(
-	  uint8_t* buffer,
-	  size_t bufferLength,
-	  ItemId id,
-	  uint8_t flags,
-	  const uint8_t* value,
-	  uint8_t valueLength);
 
 	static const std::string& ItemId2String(ItemId id);
 
@@ -109,7 +87,7 @@ protected:
 	 * Constructor is protected because we only want to create FooItem instances
 	 * via Parse() and Factory() in subclasses.
 	 */
-	FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHeader);
+	FooItem(const uint8_t* buffer, size_t bufferLength);
 
 public:
 	virtual ~FooItem() override;
@@ -129,19 +107,9 @@ public:
 		return GetHeaderPointer()->id;
 	}
 
-	virtual void SetId(ItemId id) final
-	{
-		GetHeaderPointer()->id = id;
-	}
-
 	virtual uint8_t GetFlags() const final
 	{
 		return GetHeaderPointer()->flags;
-	}
-
-	virtual void SetFlags(uint8_t flags) final
-	{
-		GetHeaderPointer()->flags = flags;
 	}
 
 	virtual bool HasValue() const final
@@ -149,31 +117,6 @@ public:
 		return GetValueLengthField() > 0u;
 		;
 	}
-
-	// TODO: Make it protected since the app should use subclasses instead.
-	virtual const uint8_t* GetValue() const final
-	{
-		if (!HasValue())
-		{
-			return nullptr;
-		}
-
-		return GetValuePointer();
-	}
-
-	// TODO: Make it protected since the app should use subclasses instead.
-	virtual uint8_t GetValueLength() const final
-	{
-		if (!HasValue())
-		{
-			return 0u;
-		}
-
-		return GetValueLengthField();
-	}
-
-	// TODO: Make it protected since the app should use subclasses instead.
-	virtual void SetValue(const uint8_t* value, uint8_t valueLength) final;
 
 protected:
 	/**
@@ -183,6 +126,13 @@ protected:
 	ItemHeader* GetHeaderPointer() const
 	{
 		return reinterpret_cast<ItemHeader*>(const_cast<uint8_t*>(GetBuffer()));
+	}
+
+	void InitializeHeader(ItemId id, uint8_t flags, uint8_t valueLength)
+	{
+		GetHeaderPointer()->id    = id;
+		GetHeaderPointer()->flags = flags;
+		SetValueLengthField(valueLength);
 	}
 
 	/**
@@ -206,6 +156,16 @@ protected:
 	uint8_t* GetValuePointer() const
 	{
 		return const_cast<uint8_t*>(GetBuffer()) + ItemHeaderLength;
+	}
+
+	virtual uint8_t GetValueLength() const final
+	{
+		if (!HasValue())
+		{
+			return 0u;
+		}
+
+		return GetValueLengthField();
 	}
 
 	const uint8_t* GetEndPointer() const

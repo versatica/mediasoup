@@ -119,11 +119,11 @@ public:
 	{
 		if (HasAppendix())
 		{
-			return GetLengthField() > HeaderLength + AppendixLength;
+			return GetLengthField() > FooPacket::HeaderLength + FooPacket::AppendixLength;
 		}
 		else
 		{
-			return GetLengthField() > HeaderLength;
+			return GetLengthField() > FooPacket::HeaderLength;
 		}
 	}
 
@@ -132,13 +132,19 @@ public:
 		return this->items.size();
 	}
 
+	/**
+	 * Get the FooItem with index `idx` (starts at 0).
+	 */
 	const std::unique_ptr<FooItem>& GetItem(size_t idx) const;
 
+	template<typename T>
+	const T* GetItem(size_t idx) const;
+
 	/**
-	 * Serializes given Item into Packet's buffer.
+	 * Serializes given FooItem into Packet's buffer.
 	 *
 	 * @remarks
-	 * Once this method is called, the Item is owned by FooPacket instance.
+	 * Once this method is called, the FooItem is owned by FooPacket instance.
 	 */
 	void AddItem(std::unique_ptr<FooItem> item);
 
@@ -182,16 +188,16 @@ private:
 	 */
 	uint8_t* GetAppendixPointer() const
 	{
-		return const_cast<uint8_t*>(GetBuffer()) + HeaderLength;
+		return const_cast<uint8_t*>(GetBuffer()) + FooPacket::HeaderLength;
 	}
 
 	const uint8_t* GetItemsPointer() const
 	{
-		auto* ptr = GetBuffer() + HeaderLength;
+		auto* ptr = GetBuffer() + FooPacket::HeaderLength;
 
 		if (HasAppendix())
 		{
-			ptr += AppendixLength;
+			ptr += FooPacket::AppendixLength;
 		}
 
 		return ptr;
@@ -204,7 +210,7 @@ private:
 
 	/**
 	 * Must be used within Parse() static method (instead than AddItem()).
-	 * This method doesn't serializa the given Item into Packet's buffer since
+	 * This method doesn't serializa the given FooItem into Packet's buffer since
 	 * it's already serialized (obviously since we are parsing a buffer).
 	 */
 	void AddParsedItem(std::unique_ptr<FooItem> item)

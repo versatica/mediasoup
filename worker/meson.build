@@ -390,7 +390,9 @@ if get_option('ms_sctp_stack')
     'test/src/RTC/TestSerializable.cpp',
     'test/src/RTC/TestSerializable/FooPacket.cpp',
     'test/src/RTC/TestSerializable/FooItem.cpp',
-    'test/src/RTC/TestSerializable/FooDataItem.cpp',
+    'test/src/RTC/TestSerializable/FooNumericItem.cpp',
+    'test/src/RTC/TestSerializable/FooTextItem.cpp',
+    'test/src/RTC/TestSerializable/FooUnknownItem.cpp',
   ]
 endif
 
