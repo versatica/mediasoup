@@ -160,6 +160,10 @@ FooItem::FooItem(const uint8_t* buffer, size_t bufferLength, bool initializeHead
 {
 	MS_TRACE();
 
+	// TODO: I have to reconsider this. It doesn't make sense that FooItem
+	// constructor fills things since we want to rely on subclasses Parse()
+	// and Factory() and their constructors that will override these call below
+	// anyway.
 	if (initializeHeader)
 	{
 		SetId(ItemId::NONE);

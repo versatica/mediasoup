@@ -70,6 +70,9 @@ FooDataItem::FooDataItem(const uint8_t* buffer, size_t bufferLength, bool initia
 	if (initializeHeader)
 	{
 		SetId(FooItem::ItemId::DATA);
+
+		// FooDataItem value length is fixed.
+		SetValueLengthField(NumberLength);
 	}
 
 	// FooDataItem length is fixed.

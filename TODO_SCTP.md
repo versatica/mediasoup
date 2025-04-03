@@ -65,3 +65,8 @@ NO! Instead:
 - Then create a `Item` via `Item::Factory()` by passing `ptr` as `buffer` and `remainingBufferLength` as `bufferLength`.
 - Then also add `packet->AddInPlaceItem(item, ptr)` (or whatever) so the packet doesn't serialize (doesn't memcpy) the bytes of the `Item` into its buffer.
 - Another related option is to add specialized `AddXxxxItem()` methods in the packet class.
+
+## FooItem subclasses
+
+- If we have a FooDataItem, the app should not be able to change its id via `SetId()`, AKA make `SetId()` protected since app should use `FooXxxxItem::Factory()` static methods.
+- `FooItem` constructor: It doesn't make sense that it fills things since we want to rely on subclasses' `Parse()`, `Factory()` and constructors (that will override these calls anyway).

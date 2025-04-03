@@ -730,3 +730,109 @@ SCENARIO("create and modify FooItem", "[rtc][serializable]")
 	  helpers::areBuffersEqual(clonedItem->GetValue(), clonedItem->GetValueLength(), newValue, 4) ==
 	  true);
 }
+
+SCENARIO("create and modify FooDataItem", "[rtc][serializable]")
+{
+	// Length of a FooDataItem is 4 bytes.
+	uint8_t buffer[4];
+	uint16_t number = 0x1234;
+
+	// Let's fill the buffer with whatever (it should be overriden by
+	// FooDataItem:Factory()).
+	std::memset(buffer, 0xFF, sizeof(buffer));
+
+	auto item = FooDataItem::Factory(buffer, sizeof(buffer), /*flags*/ 0b1010, number);
+
+	REQUIRE(sizeof(buffer) == 4);
+	REQUIRE(item);
+	REQUIRE(item->GetBuffer() == buffer);
+	REQUIRE(item->GetBufferLength() == 4);
+	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(item->GetFlags() == 0b1010);
+	REQUIRE(item->GetValueLength() == 2);
+	REQUIRE(item->GetValue()[0] == 0x12);
+	REQUIRE(item->GetValue()[1] == 0x34);
+	REQUIRE(item->GetNumber() == number);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
+
+	/* Modify FooDataItem. */
+
+	uint16_t newNumber = 0x5678;
+
+	item->SetFlags(0b1111);
+	item->SetNumber(newNumber);
+
+	REQUIRE(item->GetBuffer() == buffer);
+	REQUIRE(item->GetBufferLength() == 4);
+	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(item->GetFlags() == 0b1111);
+	REQUIRE(item->GetValueLength() == 2);
+	REQUIRE(item->GetValue()[0] == 0x56);
+	REQUIRE(item->GetValue()[1] == 0x78);
+	REQUIRE(item->GetNumber() == newNumber);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
+
+	/* Serialize FooDataItem into another buffer. */
+
+	uint8_t newBuffer1[14];
+
+	std::memset(newBuffer1, 0xFF, sizeof(newBuffer1));
+
+	item->Serialize(newBuffer1, sizeof(newBuffer1));
+
+	// Compare new and old buffers.
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4));
+
+	// Once done fill the old buffer with 1s.
+	std::memset(buffer, 0xFF, sizeof(buffer));
+
+	REQUIRE(item->GetBuffer() == newBuffer1);
+	REQUIRE(item->GetBufferLength() == 14);
+	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(item->GetFlags() == 0b1111);
+	REQUIRE(item->GetValueLength() == 2);
+	REQUIRE(item->GetValue()[0] == 0x56);
+	REQUIRE(item->GetValue()[1] == 0x78);
+	REQUIRE(item->GetNumber() == newNumber);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), newBuffer1, 4) == true);
+
+	/* Clone FooDataItem into another buffer. */
+
+	uint8_t newBuffer2[12];
+
+	std::memset(newBuffer2, 0xFF, sizeof(newBuffer2));
+
+	auto* previousBuffer      = item->GetBuffer();
+	auto previousBufferLength = item->GetBufferLength();
+
+	// FooDataItem::Clone() returns a unique_ptr<Serializable>. We need to release
+	// its pointer, cast it to FooDataItem*, and then create a unique_ptr<FooDataItem>
+	// with it.
+	auto* clonedItemPtr =
+	  static_cast<FooDataItem*>(item->Clone(newBuffer2, sizeof(newBuffer2)).release());
+	auto clonedItem = std::unique_ptr<FooDataItem>(clonedItemPtr);
+
+	// Compare the buffers of the original FooDataItem and the cloned one.
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer1, item->GetLength()) == true);
+
+	// Once done fill the original buffer with 1s (this is, we are running original
+	// FooDataItem despite it still exists since we have jsut cloned it).
+	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
+
+	REQUIRE(clonedItem->GetBuffer() == newBuffer2);
+	REQUIRE(clonedItem->GetBufferLength() == 12);
+	REQUIRE(clonedItem->GetLength() == 4);
+	REQUIRE(clonedItem->GetId() == FooItem::ItemId::DATA);
+	REQUIRE(clonedItem->GetFlags() == 0b1111);
+	REQUIRE(clonedItem->GetValueLength() == 2);
+	REQUIRE(clonedItem->GetValue()[0] == 0x56);
+	REQUIRE(clonedItem->GetValue()[1] == 0x78);
+	REQUIRE(clonedItem->GetNumber() == newNumber);
+	REQUIRE(
+	  helpers::areBuffersEqual(clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer2, 4) == true);
+}
