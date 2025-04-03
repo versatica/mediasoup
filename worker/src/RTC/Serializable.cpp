@@ -23,7 +23,7 @@ namespace RTC
 		this->bufferLength = bufferLength;
 	}
 
-	void Serializable::Serialize(const uint8_t* buffer, size_t bufferLength)
+	void Serializable::Serialize(uint8_t* buffer, size_t bufferLength)
 	{
 		MS_TRACE();
 
@@ -35,9 +35,9 @@ namespace RTC
 			  this->length);
 		}
 
-		std::memcpy(const_cast<uint8_t*>(buffer), this->buffer, this->length);
+		std::memcpy(buffer, this->buffer, this->length);
 
-		this->buffer       = const_cast<uint8_t*>(buffer);
+		this->buffer       = buffer;
 		this->bufferLength = bufferLength;
 	}
 

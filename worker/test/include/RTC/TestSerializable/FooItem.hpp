@@ -40,7 +40,7 @@ public:
 	 * @remarks
 	 * - NONE is not a valid value, so a FooItem with id NONE should be
 	 *   considered invalid and parsing should fail.
-	 * - Values other than the defined must be accepted as unknown FooItem.
+	 * - Values other than the defined must be accepted as FooUnknownItem.
 	 */
 	enum class ItemId : uint8_t
 	{
@@ -92,7 +92,7 @@ public:
 	static std::unique_ptr<FooItem> Parse(const uint8_t* buffer, size_t bufferLength);
 
 	static std::unique_ptr<FooItem> Factory(
-	  const uint8_t* buffer,
+	  uint8_t* buffer,
 	  size_t bufferLength,
 	  ItemId id,
 	  uint8_t flags,
@@ -122,7 +122,7 @@ public:
 	/**
 	 * Could be overridden by each subclass.
 	 */
-	std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const override;
+	std::unique_ptr<Serializable> Clone(uint8_t* buffer, size_t bufferLength) const override;
 
 	virtual ItemId GetId() const final
 	{
@@ -176,13 +176,19 @@ public:
 	virtual void SetValue(const uint8_t* value, uint8_t valueLength) final;
 
 protected:
+	/**
+	 * NOTE: Return ItemHeader* instead of const ItemHeader* since we may
+	 * want to modify its fields.
+	 */
 	ItemHeader* GetHeaderPointer() const
 	{
 		return reinterpret_cast<ItemHeader*>(const_cast<uint8_t*>(GetBuffer()));
 	}
 
-	// We make this method private because it returns the value of the Value
-	// Length field, which is not useful for the application.
+	/**
+	 * Private private because it returns the value of the Value Length field,
+	 * which is not useful for the application.
+	 */
 	uint8_t GetValueLengthField() const
 	{
 		return GetHeaderPointer()->valueLength;
@@ -193,9 +199,13 @@ protected:
 		GetHeaderPointer()->valueLength = valueLength;
 	}
 
-	const uint8_t* GetValuePointer() const
+	/**
+	 * NOTE: Return uint8_t* instead of const uint8_t* since we may want to
+	 * modify its value.
+	 */
+	uint8_t* GetValuePointer() const
 	{
-		return GetBuffer() + ItemHeaderLength;
+		return const_cast<uint8_t*>(GetBuffer()) + ItemHeaderLength;
 	}
 
 	const uint8_t* GetEndPointer() const

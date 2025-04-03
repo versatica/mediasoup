@@ -4,6 +4,7 @@
 #include "RTC/TestSerializable/FooDataItem.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 
 using namespace RTC;
 
@@ -41,7 +42,7 @@ std::unique_ptr<FooDataItem> FooDataItem::Parse(const uint8_t* buffer, size_t bu
 }
 
 std::unique_ptr<FooDataItem> FooDataItem::Factory(
-  const uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number)
+  uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number)
 {
 	MS_TRACE();
 
@@ -98,4 +99,18 @@ void FooDataItem::Dump() const
 	  GetValueLength());
 	MS_DUMP("  number: %" PRIu16, GetNumber());
 	MS_DUMP("</FooDataItem>");
+}
+
+uint16_t FooDataItem::GetNumber() const
+{
+	MS_TRACE();
+
+	return Utils::Byte::Get2Bytes(GetValuePointer(), 0);
+}
+
+void FooDataItem::SetNumber(uint16_t number)
+{
+	MS_TRACE();
+
+	Utils::Byte::Set2Bytes(GetValuePointer(), 0, number);
 }

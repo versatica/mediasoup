@@ -22,10 +22,10 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 
 	// Pointer that starts at the beginning of the buffer and it's incremented
 	// to point to different parts of the Packet.
-	const uint8_t* ptr = buffer;
+	auto* ptr = buffer;
 
 	// Pointer that points to the end of the buffer.
-	const uint8_t* end = buffer + length;
+	auto* end = buffer + length;
 
 	// NOTE: Here we are passing `length` as `bufferLength`. However we know
 	// that, due to FooPacket nature, a FooPacket Packet must occupy the whole
@@ -154,7 +154,7 @@ std::unique_ptr<FooPacket> FooPacket::Parse(const uint8_t* buffer, size_t length
 	return fooPacket;
 }
 
-std::unique_ptr<FooPacket> FooPacket::Factory(const uint8_t* buffer, size_t bufferLength, uint8_t type)
+std::unique_ptr<FooPacket> FooPacket::Factory(uint8_t* buffer, size_t bufferLength, uint8_t type)
 {
 	MS_TRACE();
 
@@ -219,7 +219,7 @@ void FooPacket::Dump() const
 	MS_DUMP("</FooPacket>");
 }
 
-void FooPacket::Serialize(const uint8_t* buffer, size_t bufferLength)
+void FooPacket::Serialize(uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
@@ -235,10 +235,10 @@ void FooPacket::Serialize(const uint8_t* buffer, size_t bufferLength)
 
 	// Copy all bytes from beginning of the buffer until the position of the
 	// items.
-	std::memcpy(const_cast<uint8_t*>(buffer), GetBuffer(), itemsOffset);
+	std::memcpy(buffer, GetBuffer(), itemsOffset);
 
 	// Serialize each item into the new buffer.
-	uint8_t* ptr = const_cast<uint8_t*>(buffer) + itemsOffset;
+	auto* ptr = buffer + itemsOffset;
 
 	for (const auto& item : this->items)
 	{
@@ -248,14 +248,14 @@ void FooPacket::Serialize(const uint8_t* buffer, size_t bufferLength)
 	}
 
 	// Copy padding bytes.
-	std::memcpy(const_cast<uint8_t*>(buffer) + paddingOffset, GetPaddingPointer(), padding);
+	std::memcpy(buffer + paddingOffset, GetPaddingPointer(), padding);
 
 	// Manually update buffer and buffer length.
 	SetBuffer(buffer);
 	SetBufferLength(bufferLength);
 }
 
-std::unique_ptr<Serializable> FooPacket::Clone(const uint8_t* buffer, size_t bufferLength) const
+std::unique_ptr<Serializable> FooPacket::Clone(uint8_t* buffer, size_t bufferLength) const
 {
 	MS_TRACE();
 
@@ -271,13 +271,13 @@ std::unique_ptr<Serializable> FooPacket::Clone(const uint8_t* buffer, size_t buf
 
 	// Copy all bytes from beginning of the buffer until the position of the
 	// items.
-	std::memcpy(const_cast<uint8_t*>(buffer), GetBuffer(), itemsOffset);
+	std::memcpy(buffer, GetBuffer(), itemsOffset);
 
 	auto clonedFooPacket =
 	  std::unique_ptr<FooPacket>(new FooPacket(buffer, bufferLength, /*initializeHeader*/ false));
 
 	// Clone each item into the new buffer.
-	uint8_t* ptr = const_cast<uint8_t*>(buffer) + itemsOffset;
+	auto* ptr = buffer + itemsOffset;
 
 	for (const auto& item : this->items)
 	{
@@ -294,7 +294,7 @@ std::unique_ptr<Serializable> FooPacket::Clone(const uint8_t* buffer, size_t buf
 	}
 
 	// Copy padding bytes.
-	std::memcpy(const_cast<uint8_t*>(buffer) + paddingOffset, GetPaddingPointer(), padding);
+	std::memcpy(buffer + paddingOffset, GetPaddingPointer(), padding);
 
 	// Need to manually set Serializable length.
 	clonedFooPacket->SetLength(GetLength());
@@ -315,7 +315,7 @@ void FooPacket::SetAppendix(uint32_t appendix)
 	// remains the same.
 	if (hadAppendix && appendix)
 	{
-		Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetAppendixPointer()), 0, appendix);
+		Utils::Byte::Set4Bytes(GetAppendixPointer(), 0, appendix);
 	}
 	// There wasn't Appendix and we are adding it, so need to move items.
 	else if (!hadAppendix && appendix)
@@ -335,11 +335,11 @@ void FooPacket::SetAppendix(uint32_t appendix)
 		{
 			const auto& item = *it;
 
-			item->Serialize(item->GetBuffer() + AppendixLength, item->GetLength());
+			item->Serialize(const_cast<uint8_t*>(item->GetBuffer()) + AppendixLength, item->GetLength());
 		}
 
 		// Copy the given Appendix value.
-		Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetAppendixPointer()), 0, appendix);
+		Utils::Byte::Set4Bytes(GetAppendixPointer(), 0, appendix);
 	}
 	// There was Appendix and we are removing it, so need to move items.
 	else if (hadAppendix && !appendix)
@@ -357,7 +357,7 @@ void FooPacket::SetAppendix(uint32_t appendix)
 
 		for (const auto& item : this->items)
 		{
-			item->Serialize(item->GetBuffer() - AppendixLength, item->GetLength());
+			item->Serialize(const_cast<uint8_t*>(item->GetBuffer()) - AppendixLength, item->GetLength());
 		}
 	}
 }

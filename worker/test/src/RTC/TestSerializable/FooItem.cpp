@@ -73,10 +73,10 @@ std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLeng
 
 	// Pointer that starts at the beginning of the buffer and it's incremented
 	// to point to different parts of the item.
-	const uint8_t* ptr = buffer;
+	auto* ptr = buffer;
 
 	// Pointer that points to the end of the buffer.
-	const uint8_t* end = buffer + bufferLength;
+	auto* end = buffer + bufferLength;
 
 	// NOTE: We are parsing so we don't want to initialize the header.
 	auto item = std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ false));
@@ -108,12 +108,7 @@ std::unique_ptr<FooItem> FooItem::Parse(const uint8_t* buffer, size_t bufferLeng
 }
 
 std::unique_ptr<FooItem> FooItem::Factory(
-  const uint8_t* buffer,
-  size_t bufferLength,
-  ItemId id,
-  uint8_t flags,
-  const uint8_t* value,
-  uint8_t valueLength)
+  uint8_t* buffer, size_t bufferLength, ItemId id, uint8_t flags, const uint8_t* value, uint8_t valueLength)
 {
 	MS_TRACE();
 
@@ -197,7 +192,7 @@ void FooItem::Dump() const
 	MS_DUMP("</FooItem>");
 }
 
-std::unique_ptr<Serializable> FooItem::Clone(const uint8_t* buffer, size_t bufferLength) const
+std::unique_ptr<Serializable> FooItem::Clone(uint8_t* buffer, size_t bufferLength) const
 {
 	MS_TRACE();
 
@@ -207,7 +202,7 @@ std::unique_ptr<Serializable> FooItem::Clone(const uint8_t* buffer, size_t buffe
 		  "bufferLength (%zu bytes) is lower than current length (%zu bytes)", bufferLength, GetLength());
 	}
 
-	std::memcpy(const_cast<uint8_t*>(buffer), GetBuffer(), GetLength());
+	std::memcpy(buffer, GetBuffer(), GetLength());
 
 	auto clonedFooItem =
 	  std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength, /*initializeHeader*/ false));
@@ -228,7 +223,7 @@ void FooItem::SetValue(const uint8_t* value, uint8_t valueLength)
 	SetValueLengthField(valueLength);
 
 	// Copy the given value into the buffer.
-	std::memcpy(const_cast<uint8_t*>(GetValuePointer()), value, valueLength);
+	std::memcpy(GetValuePointer(), value, valueLength);
 
 	// Update Serializable length.
 	SetLength(GetLength() - previousValueLength + valueLength);

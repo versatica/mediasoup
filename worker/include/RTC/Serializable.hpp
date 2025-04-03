@@ -110,7 +110,7 @@ namespace RTC
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
 		 */
-		virtual void Serialize(const uint8_t* buffer, size_t bufferLength);
+		virtual void Serialize(uint8_t* buffer, size_t bufferLength);
 
 		/**
 		 * Clone the Serializable into a new buffer. This method returns a new
@@ -129,7 +129,7 @@ namespace RTC
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
 		 */
-		virtual std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const = 0;
+		virtual std::unique_ptr<Serializable> Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.
@@ -139,9 +139,9 @@ namespace RTC
 		 * Method to be called by the child class in case it overrides the
 		 * `Serialize()` method.
 		 */
-		virtual void SetBuffer(const uint8_t* buffer) final
+		virtual void SetBuffer(uint8_t* buffer) final
 		{
-			this->buffer = const_cast<uint8_t*>(buffer);
+			this->buffer = buffer;
 		}
 
 		/**

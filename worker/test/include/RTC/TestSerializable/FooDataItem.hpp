@@ -2,8 +2,6 @@
 #define MS_RTC_SERIALIZABLE_FOO_DATA_ITEM_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
-#include "RTC/Serializable.hpp"
 #include "RTC/TestSerializable/FooItem.hpp"
 
 using namespace RTC;
@@ -44,7 +42,7 @@ public:
 	static std::unique_ptr<FooDataItem> Parse(const uint8_t* buffer, size_t bufferLength);
 
 	static std::unique_ptr<FooDataItem> Factory(
-	  const uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number);
+	  uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number);
 
 private:
 	/**
@@ -58,18 +56,9 @@ public:
 
 	virtual void Dump() const override final;
 
-	virtual uint16_t GetNumber() const final
-	{
-		return Utils::Byte::Get2Bytes(GetValuePointer(), 0);
-	}
+	virtual uint16_t GetNumber() const final;
 
-	virtual void SetNumber(uint16_t number) final
-	{
-		// Convert number to network byte order.
-		number = uint16_t{ htons(number) };
-
-		SetValue(reinterpret_cast<const uint8_t*>(std::addressof(number)), NumberLength);
-	}
+	virtual void SetNumber(uint16_t number) final;
 };
 
 #endif

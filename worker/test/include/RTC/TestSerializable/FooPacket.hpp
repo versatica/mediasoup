@@ -67,7 +67,7 @@ public:
 	 */
 	static std::unique_ptr<FooPacket> Parse(const uint8_t* buffer, size_t length);
 
-	static std::unique_ptr<FooPacket> Factory(const uint8_t* buffer, size_t bufferLength, uint8_t type);
+	static std::unique_ptr<FooPacket> Factory(uint8_t* buffer, size_t bufferLength, uint8_t type);
 
 private:
 	/**
@@ -81,9 +81,9 @@ public:
 
 	void Dump() const override;
 
-	void Serialize(const uint8_t* buffer, size_t bufferLength) override;
+	void Serialize(uint8_t* buffer, size_t bufferLength) override;
 
-	std::unique_ptr<Serializable> Clone(const uint8_t* buffer, size_t bufferLength) const override;
+	std::unique_ptr<Serializable> Clone(uint8_t* buffer, size_t bufferLength) const override;
 
 	uint8_t GetType() const
 	{
@@ -143,13 +143,19 @@ public:
 	void AddItem(std::unique_ptr<FooItem> item);
 
 private:
+	/**
+	 * NOTE: Return Header* instead of const Header* since we may want to
+	 * modify its fields.
+	 */
 	Header* GetHeaderPointer() const
 	{
 		return reinterpret_cast<Header*>(const_cast<uint8_t*>(GetBuffer()));
 	}
 
-	// We make this method private because it returns the value of the Length
-	// field, which is not useful for the application.
+	/**
+	 * NOTE: Private because it returns the value of the Length field, which is
+	 * not useful for the application.
+	 */
 	uint16_t GetLengthField() const
 	{
 		return uint16_t{ ntohs(GetHeaderPointer()->length) };
@@ -170,9 +176,13 @@ private:
 		GetHeaderPointer()->length = uint16_t{ htons(length) };
 	}
 
-	const uint8_t* GetAppendixPointer() const
+	/**
+	 * NOTE: Return uint8_t* instead of const uint8_t* since we may want to
+	 * modify its value.
+	 */
+	uint8_t* GetAppendixPointer() const
 	{
-		return GetBuffer() + HeaderLength;
+		return const_cast<uint8_t*>(GetBuffer()) + HeaderLength;
 	}
 
 	const uint8_t* GetItemsPointer() const
@@ -187,9 +197,9 @@ private:
 		return ptr;
 	}
 
-	const uint8_t* GetPaddingPointer() const
+	uint8_t* GetPaddingPointer() const
 	{
-		return GetBuffer() + GetLengthField();
+		return const_cast<uint8_t*>(GetBuffer()) + GetLengthField();
 	}
 
 	/**
