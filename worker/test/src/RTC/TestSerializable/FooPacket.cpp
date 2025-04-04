@@ -387,7 +387,7 @@ const std::unique_ptr<FooItem>& FooPacket::GetItem(size_t idx) const
 
 	if (idx >= this->items.size())
 	{
-		static std::unique_ptr<FooItem> nullItem;
+		static const std::unique_ptr<FooItem> nullItem;
 
 		return nullItem;
 	}

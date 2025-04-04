@@ -137,9 +137,6 @@ public:
 	 */
 	const std::unique_ptr<FooItem>& GetItem(size_t idx) const;
 
-	template<typename T>
-	const T* GetItem(size_t idx) const;
-
 	/**
 	 * Serializes given FooItem into Packet's buffer.
 	 *
