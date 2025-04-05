@@ -114,20 +114,3 @@ std::unique_ptr<Serializable> FooItem::Clone(uint8_t* buffer, size_t bufferLengt
 
 	return clonedFooItem;
 }
-
-// TODO: REMOVE.
-// void FooItem::SetValue(const uint8_t* value, uint8_t valueLength)
-// {
-// 	MS_TRACE();
-
-// 	auto previousValueLength = GetValueLength();
-
-// 	// Update the Value Length field.
-// 	SetValueLengthField(valueLength);
-
-// 	// Copy the given value into the buffer.
-// 	std::memcpy(GetValuePointer(), value, valueLength);
-
-// 	// Update Serializable length.
-// 	SetLength(GetLength() - previousValueLength + valueLength);
-// }

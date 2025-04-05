@@ -49,31 +49,31 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 20) == true);
 
-	// auto& item1 = fooPacket->GetItem(0);
+	auto& item1 = fooPacket->GetItem<FooNumericItem>(0);
 
-	// REQUIRE(item1);
-	// REQUIRE(item1->GetBuffer() == buffer + 8);
-	// REQUIRE(item1->GetBufferLength() == 4);
-	// REQUIRE(item1->GetLength() == 4);
-	// REQUIRE(item1->GetId() == FooItem::ItemId::NUMERIC);
-	// REQUIRE(item1->GetFlags() == 0b0101);
-	// REQUIRE(item1->GetNumber() == 0x1234);
-	// REQUIRE(helpers::areBuffersEqual(item1->GetBuffer(), item1->GetLength(), buffer + 8, 4) == true);
+	REQUIRE(item1);
+	REQUIRE(item1->GetBuffer() == buffer + 8);
+	REQUIRE(item1->GetBufferLength() == 4);
+	REQUIRE(item1->GetLength() == 4);
+	REQUIRE(item1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item1->GetFlags() == 0b0101);
+	REQUIRE(item1->GetNumber() == 0x1234);
+	REQUIRE(helpers::areBuffersEqual(item1->GetBuffer(), item1->GetLength(), buffer + 8, 4) == true);
 
-	// auto& item2 = fooPacket->GetItem(1);
+	auto& item2 = fooPacket->GetItem<FooTextItem>(1);
 
-	// REQUIRE(item2);
-	// REQUIRE(item2->GetBuffer() == buffer + 12);
-	// // Buffer length in item 2 must be 7 since that's the remaining space from
-	// // the first byte of item 2 until available packet length (padding excluded).
-	// REQUIRE(item2->GetBufferLength() == 7);
-	// REQUIRE(item2->GetLength() == 7);
-	// REQUIRE(item2->GetId() == FooItem::ItemId::TEXT);
-	// REQUIRE(item2->GetFlags() == 0b0011);
-	// REQUIRE(item1->GetText() == 0xE282AC2B24);
-	// REQUIRE(helpers::areBuffersEqual(item2->GetBuffer(), item2->GetLength(), buffer + 12, 7) == true);
+	REQUIRE(item2);
+	REQUIRE(item2->GetBuffer() == buffer + 12);
+	// Buffer length in item 2 must be 7 since that's the remaining space from
+	// the first byte of item 2 until available packet length (padding excluded).
+	REQUIRE(item2->GetBufferLength() == 7);
+	REQUIRE(item2->GetLength() == 7);
+	REQUIRE(item2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(item2->GetFlags() == 0b0011);
+	// REQUIRE(item2->GetText() == "€+$");
+	REQUIRE(helpers::areBuffersEqual(item2->GetBuffer(), item2->GetLength(), buffer + 12, 7) == true);
 
-	REQUIRE(!fooPacket->GetItem(2));
+	// REQUIRE(!fooPacket->GetItem(2));
 }
 
 SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][serializable]")

@@ -381,19 +381,54 @@ void FooPacket::SetAppendix(uint32_t appendix)
 	}
 }
 
-const std::unique_ptr<FooItem>& FooPacket::GetItem(size_t idx) const
+// const std::unique_ptr<FooItem>& FooPacket::GetItem(size_t idx) const
+// {
+// 	MS_TRACE();
+
+// 	if (idx >= this->items.size())
+// 	{
+// 		static const std::unique_ptr<FooItem> nullItem;
+
+// 		return nullItem;
+// 	}
+
+// 	return this->items.at(idx);
+// }
+
+// template<typename T>
+// const std::unique_ptr<T>& FooPacket::GetItem(size_t idx) const
+// {
+// 	MS_TRACE();
+
+// 	if (idx >= this->items.size())
+// 	{
+// 		static std::unique_ptr<T> nullItem;
+// 		return nullItem;
+// 	}
+
+// 	return reinterpret_cast<const std::unique_ptr<T>&>(this->items.at(idx));
+// }
+
+template<typename T>
+const std::unique_ptr<T>& FooPacket::GetItem(size_t idx) const
 {
 	MS_TRACE();
 
-	if (idx >= this->items.size())
+	T* raw = dynamic_cast<T*>(this->items.at(idx).get());
+
+	if (!raw)
 	{
-		static const std::unique_ptr<FooItem> nullItem;
+		static std::unique_ptr<T> nullItem;
 
 		return nullItem;
 	}
 
-	return this->items.at(idx);
+	// Este reinterpret_cast es seguro aquí porque raw salió del unique_ptr
+	return reinterpret_cast<const std::unique_ptr<T>&>(this->items.at(idx));
 }
+
+template const std::unique_ptr<FooNumericItem>& FooPacket::GetItem<FooNumericItem>(size_t) const;
+template const std::unique_ptr<FooTextItem>& FooPacket::GetItem<FooTextItem>(size_t) const;
 
 /**
  * Serializes given Item into Packet's buffer.

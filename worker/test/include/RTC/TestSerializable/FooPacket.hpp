@@ -132,10 +132,16 @@ public:
 		return this->items.size();
 	}
 
+	// /**
+	//  * Get the FooItem with index `idx` (starts at 0).
+	//  */
+	// const std::unique_ptr<FooItem>& GetItem(size_t idx) const;
+
 	/**
 	 * Get the FooItem with index `idx` (starts at 0).
 	 */
-	const std::unique_ptr<FooItem>& GetItem(size_t idx) const;
+	template<typename T>
+	const std::unique_ptr<T>& GetItem(size_t idx) const;
 
 	/**
 	 * Serializes given FooItem into Packet's buffer.

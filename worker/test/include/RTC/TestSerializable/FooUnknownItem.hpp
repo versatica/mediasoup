@@ -48,9 +48,6 @@ public:
 	virtual void Dump() const override final;
 
 	virtual const uint8_t* GetValue() const final;
-
-	// TODO: GetValueLength() as public method, problem is that we have it in
-	// FooItem as protected.
 };
 
 #endif

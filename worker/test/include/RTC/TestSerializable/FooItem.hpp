@@ -118,6 +118,16 @@ public:
 		;
 	}
 
+	virtual uint8_t GetValueLength() const final
+	{
+		if (!HasValue())
+		{
+			return 0u;
+		}
+
+		return GetValueLengthField();
+	}
+
 protected:
 	/**
 	 * NOTE: Return ItemHeader* instead of const ItemHeader* since we may
@@ -156,16 +166,6 @@ protected:
 	uint8_t* GetValuePointer() const
 	{
 		return const_cast<uint8_t*>(GetBuffer()) + ItemHeaderLength;
-	}
-
-	virtual uint8_t GetValueLength() const final
-	{
-		if (!HasValue())
-		{
-			return 0u;
-		}
-
-		return GetValueLengthField();
 	}
 
 	const uint8_t* GetEndPointer() const
