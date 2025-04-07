@@ -2,8 +2,9 @@
 #define MS_RTC_SCTP_CHUNK_HPP
 
 #include "common.hpp"
-#include <absl/container/flat_hash_map.h>
+#include "RTC/Serializable.hpp"
 #include <string>
+#include <unordered_map>
 
 namespace RTC
 {
@@ -21,9 +22,25 @@ namespace RTC
 		 * /                          Chunk Value                          /
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * - Chunk Type (8 bits): Unsigned integer.
+		 * - Chunk Flags (8 bits).
+		 * - Chunk Length (16 bits): Unsigned integer. Total length of the Chunk
+		 *   excluding padding bytes. Minimum value is 4 (if Chunk Value is 0
+		 *   bytes).
+		 * - Chunk Value (variable length).
+		 * - Padding: Bytes of padding to make the Packet length be multiple of 4
+		 *   bytes.
 		 */
-		class Chunk
+
+		// Forward declaration.
+		class Packet;
+
+		class Chunk : public Serializable
 		{
+		private:
+			friend class Packet;
+
 		public:
 			/**
 			 * Chunk types.
@@ -50,7 +67,7 @@ namespace RTC
 			/**
 			 * Struct of a SCTP Chunk Header.
 			 */
-			struct Header
+			struct ChunkHeader
 			{
 				ChunkType type;
 				uint8_t flags;
@@ -65,88 +82,97 @@ namespace RTC
 			};
 
 		public:
-			static const size_t HeaderLength{ 4 };
+			static const size_t ChunkHeaderLength{ 4 };
 
+		public:
 			/**
-			 * Parses given `data` with length `len` and returns an allocated instance
-			 * of Chunk (or nullptr if it's not a valid SCTP chunk).
+			 * Whether given buffer could be a a valid Chunk.
 			 *
-			 * If `exactLen` is set to true, then given `len` must be the total length
-			 * of this chunk. Otherwise we assume that other chunks could follow this
-			 * one.
-			 *
-			 * So if `exactLen` is set to true, `len` must be multiple of 4 bytes (it
-			 * must include padding if needed).
+			 * @param buffer
+			 * @param bufferLength - Can be greater than real Chunk length.
+			 * @param chunkType - If given buffer is a valid FooItem then `chunkType`
+			 *   is rewritten to parsed ChunkType.
+			 * @param valueLength - If given buffer is a valid Chunk then
+			 *   `valueLength` is rewritten to the length of the Chunk.
 			 */
-			static Chunk* Parse(const uint8_t* data, size_t len, bool exactLen);
+			static bool IsChunk(
+			  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkLength);
 
 			static const std::string& ChunkType2String(ChunkType chunkType);
 
 		private:
-			static absl::flat_hash_map<ChunkType, std::string> chunkType2String;
+			static std::unordered_map<ChunkType, std::string> chunkType2String;
+
+		protected:
+			/**
+			 * Constructor is protected because we only want to create Chunk
+			 * instances via Parse() and Factory() in subclasses.
+			 */
+			Chunk(const uint8_t* buffer, size_t bufferLength);
 
 		public:
-			Chunk(const uint8_t* data, size_t size);
+			virtual ~Chunk() override;
 
-			virtual ~Chunk();
+			/**
+			 * NOTE: Should be overridden by each subclass.
+			 */
+			virtual void Dump() const override;
 
-			void Dump() const;
+			/**
+			 * Can be overridden by each subclass.
+			 */
+			virtual Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override;
 
-			const uint8_t* GetData() const
+			virtual ChunkType GetType() const final
 			{
-				return reinterpret_cast<const uint8_t*>(this->data);
+				return GetHeaderPointer()->type;
 			}
 
-			size_t GetSize() const
+			virtual uint8_t GetFlags() const final
 			{
-				return this->size;
+				return GetHeaderPointer()->flags;
 			}
 
-			ChunkType GetType() const
+			virtual bool HasValue() const final
 			{
-				return static_cast<ChunkType>(this->header->type);
+				return GetLengthField() > Chunk::ChunkHeaderLength;
 			}
 
-			void SetType(ChunkType type)
+			virtual uint16_t GetValueLength() const final
 			{
-				this->header->type = static_cast<ChunkType>(type);
+				if (!HasValue())
+				{
+					return 0u;
+				}
+
+				return GetLengthField() - Chunk::ChunkHeaderLength;
 			}
 
-			uint8_t GetFlags() const
-			{
-				return this->header->flags;
-			}
+		protected:
+			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t valueLength) final;
 
-			void SetFlags(uint8_t flags)
+			/**
+			 * NOTE: Return ChunkHeader* instead of const ChunkHeader* since we may
+			 * want to modify its fields.
+			 */
+			virtual ChunkHeader* GetHeaderPointer() const final
 			{
-				this->header->flags = flags;
+				return reinterpret_cast<ChunkHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
 
 			/**
-			 * The length of the Chunk Value field. It does not count any padding.
-			 *
-			 * @remarks
-			 * This is not the value of the Chunk Length field in the Chunk Header
-			 * but the real length of the Chunk Value.
+			 * Private private because it returns the value of the Value Length field,
+			 * which is not useful for the application.
 			 */
-			uint16_t GetValueLength() const
+			virtual uint16_t GetLengthField() const final
 			{
-				return uint16_t{ ntohs(this->header->length) } - Chunk::HeaderLength;
+				return GetHeaderPointer()->length;
 			}
 
-		private:
-			void SetSize(size_t size)
+			virtual void SetLengthField(uint16_t length) final
 			{
-				this->size = size;
+				GetHeaderPointer()->length = length;
 			}
-
-		private:
-			// Pointer to the data buffer containing the chunk.
-			uint8_t* data{ nullptr };
-			// Full size of the chunk in bytes.
-			size_t size{ 0u };
-			// Pointer to the Chunk Header (it points to `data` too).
-			Header* header{ nullptr };
 		};
 	} // namespace SCTP
 } // namespace RTC

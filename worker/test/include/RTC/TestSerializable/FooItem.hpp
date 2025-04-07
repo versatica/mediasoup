@@ -75,7 +75,7 @@ public:
 	 * Whether given buffer could be a a valid FooItem.
 	 *
 	 * @param buffer
-	 * @param bufferLength
+	 * @param bufferLength - Can be greater than real Chunk length.
 	 * @param itemId - If given buffer is a valid FooItem then `itemId` is
 	 *   rewritten to parsed ItemId.
 	 * @param valueLength - If given buffer is a valid FooItem then `valueLength`
@@ -113,6 +113,13 @@ public:
 		return GetHeaderPointer()->id;
 	}
 
+	virtual bool HasUnknownId() const final
+	{
+		auto id = GetId();
+
+		return id < ItemId::NUMERIC || id > ItemId::TEXT;
+	}
+
 	virtual uint8_t GetFlags() const final
 	{
 		return GetHeaderPointer()->flags;
@@ -121,7 +128,6 @@ public:
 	virtual bool HasValue() const final
 	{
 		return GetValueLengthField() > 0u;
-		;
 	}
 
 	virtual uint8_t GetValueLength() const final

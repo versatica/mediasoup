@@ -12,6 +12,7 @@ namespace RTC
 	{
 		/**
 		 * SCTP Packet.
+		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -23,6 +24,8 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                           Chunk #n                            |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * It's mandatory that the Packet total length is multiple of 4 bytes.
 		 */
 
 		/**
@@ -37,7 +40,13 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                           Checksum                            |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * - Source port (16 bits): Unsigned integer.
+		 * - Destination port (16 bits): Unsigned integer.
+		 * - Verification Tag (32 bits): Unsigned integer.
+		 * - Checksum (32 bits): Unsigned integer.
 		 */
+
 		class Packet : public Serializable
 		{
 		public:

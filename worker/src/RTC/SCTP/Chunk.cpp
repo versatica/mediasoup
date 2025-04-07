@@ -3,8 +3,8 @@
 
 #include "RTC/SCTP/Chunk.hpp"
 #include "Logger.hpp"
-#include "Utils.hpp"
-#include <bitset> // std::bitset()
+#include "MediaSoupErrors.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -13,7 +13,7 @@ namespace RTC
 		/* Class variables. */
 
 		// clang-format off
-		absl::flat_hash_map<Chunk::ChunkType, std::string> Chunk::chunkType2String =
+		std::unordered_map<Chunk::ChunkType, std::string> Chunk::chunkType2String =
 		{
 			{ Chunk::ChunkType::DATA,              "DATA"              },
 			{ Chunk::ChunkType::INIT,              "INIT"              },
@@ -35,69 +35,32 @@ namespace RTC
 
 		/* Class methods. */
 
-		Chunk* Chunk::Parse(const uint8_t* data, size_t len, bool exactLen)
+		bool Chunk::IsChunk(
+		  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkLength)
 		{
 			MS_TRACE();
 
-			// Ensure there are at least 4 bytes (chunk value is zero-length).
-			if (len < Chunk::HeaderLength)
+			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
-				MS_WARN_TAG(sctp, "not an SCTP chunk");
+				MS_WARN_DEV("no space for Chunk header");
 
-				return nullptr;
+				return false;
 			}
 
-			auto* chunk = new Chunk(data, len);
+			const auto* chunkHeader = reinterpret_cast<const Chunk::ChunkHeader*>(buffer);
+			auto length             = uint16_t{ ntohs(chunkHeader->length) };
 
-			// Pointer that initially points to the given data buffer and is later
-			// incremented to point to other parts of the chunk.
-			auto* ptr = const_cast<uint8_t*>(data);
-
-			// Inspect data after the header length, so move to the chunk value.
-			ptr += Chunk::HeaderLength;
-
-			auto valueLengthWithPadding = Utils::Byte::PadTo4Bytes(chunk->GetValueLength());
-
-			// Ensure there is space for the chunk value and its possible padding.
-			if (len - (ptr - data) < valueLengthWithPadding)
+			if (bufferLength < Chunk::ChunkHeaderLength + length)
 			{
-				MS_WARN_TAG(sctp, "the chunk length exceeds the remaining size, chunk discarded");
+				MS_WARN_DEV("no space for announced chunk length");
 
-				delete chunk;
-				return nullptr;
+				return false;
 			}
 
-			// switch (chunk->GetType())
-			// {
-			//   TODO
-			// }
+			chunkType   = chunkHeader->type;
+			chunkLength = length;
 
-			// Move pointer after chunk value and its padding.
-			ptr += valueLengthWithPadding;
-
-			// If `exactLen` is set, ensure current position matches the total length.
-			if (exactLen)
-			{
-				//
-				// TODO: As per RFC 9260:
-				//
-				// Note: A robust implementation is expected to accept the chunk whether
-				// or not the final padding has been included in the Chunk Length.
-				if (ptr - data != len)
-				{
-					MS_WARN_TAG(sctp, "computed chunk size does not match total size, chunk discarded");
-
-					delete chunk;
-					return nullptr;
-				}
-			}
-			// Otherwise we have to fix chunk total size.
-			else
-			{
-				chunk->SetSize(ptr - data);
-			}
-
-			return chunk;
+			return true;
 		}
 
 		const std::string& Chunk::ChunkType2String(ChunkType chunkType)
@@ -118,9 +81,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Chunk::Chunk(const uint8_t* data, size_t size)
-		  : data(const_cast<uint8_t*>(data)), size(size),
-		    header(reinterpret_cast<Header*>(const_cast<uint8_t*>(data)))
+		Chunk::Chunk(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
 		}
@@ -133,20 +94,48 @@ namespace RTC
 		void Chunk::Dump() const
 		{
 			MS_TRACE();
-
 			MS_DUMP("<Chunk>");
-
-			MS_DUMP("  size: %zu", GetSize());
-
+			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP("  type: %" PRIu8 " (%s)", GetType(), Chunk::ChunkType2String(GetType()).c_str());
-
-			std::bitset<8> flagsBitset(this->GetFlags());
-
-			MS_DUMP("  flags: %s", flagsBitset.to_string().c_str());
-
-			MS_DUMP("  value length: %" PRIu16, GetValueLength());
-
+			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
+			MS_DUMP(
+			  "  length field: %" PRIu16 " (computed chunk length: %" PRIu16 ")",
+			  GetLengthField(),
+			  GetValueLength());
 			MS_DUMP("</Chunk>");
+		}
+
+		Chunk* Chunk::Clone(uint8_t* buffer, size_t bufferLength) const
+		{
+			MS_TRACE();
+
+			if (bufferLength < GetLength())
+			{
+				MS_THROW_TYPE_ERROR(
+				  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
+				  bufferLength,
+				  GetLength());
+			}
+
+			std::memcpy(buffer, GetBuffer(), GetLength());
+
+			auto* clonedChunk = new Chunk(buffer, bufferLength);
+
+			// NOTE: The `frozen` flag will be false in the cloned Chunk by default.
+
+			// Need to manually set Serializable length.
+			clonedChunk->SetLength(GetLength());
+
+			return clonedChunk;
+		}
+
+		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t valueLength)
+		{
+			MS_TRACE();
+
+			GetHeaderPointer()->type  = chunkType;
+			GetHeaderPointer()->flags = flags;
+			SetLengthField(Chunk::ChunkHeaderLength + valueLength);
 		}
 	} // namespace SCTP
 } // namespace RTC

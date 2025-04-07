@@ -62,6 +62,7 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	REQUIRE(item1->GetLength() == 4);
 	REQUIRE(item1->IsFrozen() == true);
 	REQUIRE(item1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item1->HasUnknownId() == false);
 	REQUIRE(item1->GetFlags() == 0b0101);
 	REQUIRE(item1->GetValueLength() == 2);
 	REQUIRE(item1->GetNumber() == 0x1234);
@@ -75,6 +76,7 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	REQUIRE(item2->GetLength() == 7);
 	REQUIRE(item2->IsFrozen() == true);
 	REQUIRE(item2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(item2->HasUnknownId() == false);
 	REQUIRE(item2->GetFlags() == 0b0011);
 	REQUIRE(item2->GetValueLength() == 5);
 	REQUIRE(item2->GetText() == "€+$");
@@ -88,6 +90,7 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	REQUIRE(item3->GetLength() == 6);
 	REQUIRE(item3->IsFrozen() == true);
 	REQUIRE(item3->GetId() == static_cast<FooItem::ItemId>(3));
+	REQUIRE(item3->HasUnknownId() == true);
 	REQUIRE(item3->GetFlags() == 0b1111);
 	REQUIRE(item3->GetValueLength() == 4);
 	REQUIRE(item3->GetValue()[0] == 0x11);
@@ -243,6 +246,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// Internal items must always be frozen.
 	REQUIRE(addedItem1->IsFrozen() == true);
 	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->HasUnknownId() == false);
 	REQUIRE(addedItem1->GetFlags() == 0b1000);
 	REQUIRE(addedItem1->GetValueLength() == 2);
 	REQUIRE(addedItem1->GetNumber() == 12345);
@@ -256,6 +260,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem2->IsFrozen() == true);
 	REQUIRE(addedItem2->GetLength() == 6);
 	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->HasUnknownId() == false);
 	REQUIRE(addedItem2->GetFlags() == 0b1001);
 	REQUIRE(addedItem2->GetValueLength() == 4);
 	REQUIRE(addedItem2->GetText() == "ABCD");
@@ -294,6 +299,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem1->GetLength() == 4);
 	REQUIRE(addedItem1->IsFrozen() == true);
 	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->HasUnknownId() == false);
 	REQUIRE(addedItem1->GetFlags() == 0b1000);
 	REQUIRE(addedItem1->GetValueLength() == 2);
 	REQUIRE(addedItem1->GetNumber() == 12345);
@@ -307,6 +313,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem2->GetLength() == 6);
 	REQUIRE(addedItem2->IsFrozen() == true);
 	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->HasUnknownId() == false);
 	REQUIRE(addedItem2->GetFlags() == 0b1001);
 	REQUIRE(addedItem2->GetValueLength() == 4);
 	REQUIRE(addedItem2->GetText() == "ABCD");
@@ -366,6 +373,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// After serializing, items in the packet must remain frozen.
 	REQUIRE(addedItem1->IsFrozen() == true);
 	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->HasUnknownId() == false);
 	REQUIRE(addedItem1->GetFlags() == 0b1000);
 	REQUIRE(addedItem1->GetValueLength() == 2);
 	REQUIRE(addedItem1->GetNumber() == 12345);
@@ -380,6 +388,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// After serializing, items in the packet must remain frozen.
 	REQUIRE(addedItem2->IsFrozen() == true);
 	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->HasUnknownId() == false);
 	REQUIRE(addedItem2->GetFlags() == 0b1001);
 	REQUIRE(addedItem2->GetValueLength() == 4);
 	REQUIRE(addedItem2->GetText() == "ABCD");
@@ -413,6 +422,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem1->GetLength() == 4);
 	REQUIRE(addedItem1->IsFrozen() == true);
 	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->HasUnknownId() == false);
 	REQUIRE(addedItem1->GetFlags() == 0b1000);
 	REQUIRE(addedItem1->GetValueLength() == 2);
 	REQUIRE(addedItem1->GetNumber() == 12345);
@@ -426,6 +436,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem2->GetLength() == 6);
 	REQUIRE(addedItem2->IsFrozen() == true);
 	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->HasUnknownId() == false);
 	REQUIRE(addedItem2->GetFlags() == 0b1001);
 	REQUIRE(addedItem2->GetValueLength() == 4);
 	REQUIRE(addedItem2->GetText() == "ABCD");
@@ -439,6 +450,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem3->GetLength() == 4);
 	REQUIRE(addedItem3->IsFrozen() == true);
 	REQUIRE(addedItem3->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem3->HasUnknownId() == false);
 	REQUIRE(addedItem3->GetFlags() == 0b1100);
 	REQUIRE(addedItem3->GetValueLength() == 2);
 	REQUIRE(addedItem3->GetNumber() == 54321);
@@ -452,6 +464,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	REQUIRE(addedItem4->GetLength() == 7);
 	REQUIRE(addedItem4->IsFrozen() == true);
 	REQUIRE(addedItem4->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem4->HasUnknownId() == false);
 	REQUIRE(addedItem4->GetFlags() == 0b0011);
 	REQUIRE(addedItem4->GetValueLength() == 5);
 	REQUIRE(addedItem4->GetText() == "hello");
@@ -506,6 +519,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// After cloning the packet, items in the packet must remain frozen.
 	REQUIRE(addedItem1->IsFrozen() == true);
 	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->HasUnknownId() == false);
 	REQUIRE(addedItem1->GetFlags() == 0b1000);
 	REQUIRE(addedItem1->GetValueLength() == 2);
 	REQUIRE(addedItem1->GetNumber() == 12345);
@@ -520,6 +534,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// After cloning the packet, items in the packet must remain frozen.
 	REQUIRE(addedItem2->IsFrozen() == true);
 	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->HasUnknownId() == false);
 	REQUIRE(addedItem2->GetFlags() == 0b1001);
 	REQUIRE(addedItem2->GetValueLength() == 4);
 	REQUIRE(addedItem2->GetText() == "ABCD");
@@ -534,6 +549,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// After cloning the packet, items in the packet must remain frozen.
 	REQUIRE(addedItem3->IsFrozen() == true);
 	REQUIRE(addedItem3->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem3->HasUnknownId() == false);
 	REQUIRE(addedItem3->GetFlags() == 0b1100);
 	REQUIRE(addedItem3->GetValueLength() == 2);
 	REQUIRE(addedItem3->GetNumber() == 54321);
@@ -548,6 +564,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// After serializing, items in the packet must remain frozen.
 	REQUIRE(addedItem4->IsFrozen() == true);
 	REQUIRE(addedItem4->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem4->HasUnknownId() == false);
 	REQUIRE(addedItem4->GetFlags() == 0b0011);
 	REQUIRE(addedItem4->GetValueLength() == 5);
 	REQUIRE(addedItem4->GetText() == "hello");
@@ -570,6 +587,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	// If we clone an item in the packet, the cloned item won't be frozen.
 	REQUIRE(clonedItem1->IsFrozen() == false);
 	REQUIRE(clonedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(clonedItem1->HasUnknownId() == false);
 	REQUIRE(clonedItem1->GetFlags() == 0b1000);
 	REQUIRE(clonedItem1->GetValueLength() == 2);
 	REQUIRE(clonedItem1->GetNumber() == 12345);
@@ -601,6 +619,7 @@ SCENARIO("parse FooNumericItem", "[rtc][serializable]")
 	REQUIRE(item->GetLength() == 4);
 	REQUIRE(item->IsFrozen() == true);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1110);
 	REQUIRE(item->GetNumber() == 0x12EF);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
@@ -629,6 +648,7 @@ SCENARIO("parse FooNumericItem by passing a buffer larger than the length of the
 	REQUIRE(item->GetLength() == 4);
 	REQUIRE(item->IsFrozen() == true);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b0000);
 	REQUIRE(item->GetNumber() == 0xFFFF);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
@@ -704,6 +724,7 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	REQUIRE(item->GetLength() == 4);
 	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetNumber() == 1111);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
@@ -717,6 +738,7 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	REQUIRE(item->GetLength() == 4);
 	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetNumber() == 2222);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
@@ -752,6 +774,7 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	// After serializing the item it must be unfrozen.
 	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetNumber() == 2222);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), newBuffer1, 4) == true);
@@ -787,6 +810,7 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	// Clone() must create an unfrozen item.
 	REQUIRE(clonedItem->IsFrozen() == false);
 	REQUIRE(clonedItem->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(clonedItem->HasUnknownId() == false);
 	REQUIRE(clonedItem->GetFlags() == 0b1010);
 	REQUIRE(clonedItem->GetNumber() == 2222);
 	REQUIRE(
@@ -814,6 +838,7 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	REQUIRE(item->GetLength() == 8);
 	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetText() == text);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 8) == true);
@@ -829,6 +854,7 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	REQUIRE(item->GetLength() == 17);
 	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetText() == newText);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 17) == true);
@@ -864,6 +890,7 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	// After serializing the item it must be unfrozen.
 	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(item->HasUnknownId() == false);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetText() == newText);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), newBuffer1, 17) == true);
@@ -899,6 +926,7 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	// Clone() must create an unfrozen item.
 	REQUIRE(clonedItem->IsFrozen() == false);
 	REQUIRE(clonedItem->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(clonedItem->HasUnknownId() == false);
 	REQUIRE(clonedItem->GetFlags() == 0b1010);
 	REQUIRE(clonedItem->GetText() == newText);
 	REQUIRE(

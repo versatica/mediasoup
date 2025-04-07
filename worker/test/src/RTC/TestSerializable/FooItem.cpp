@@ -4,6 +4,7 @@
 #include "RTC/TestSerializable/FooItem.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstring> // std::memcpy()
 
 using namespace RTC;
 
@@ -16,6 +17,8 @@ std::unordered_map<FooItem::ItemId, std::string> FooItem::itemId2String =
 	{ FooItem::ItemId::TEXT,    "TEXT"    }
 };
 // clang-format on
+
+/* Class methods. */
 
 bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& itemId, uint8_t& valueLength)
 {
@@ -58,6 +61,8 @@ const std::string& FooItem::ItemId2String(ItemId id)
 
 	return it->second;
 }
+
+/* Instance methods. */
 
 FooItem::FooItem(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 {

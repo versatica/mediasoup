@@ -61,12 +61,12 @@ namespace RTC
 			// 	// of the chunk.
 			// 	size_t chunkBufferLength = packet->GetEndPointer() - ptr;
 
-			// 	// Here we must anticipate the id of each chunk to use its appropriate
+			//  // Here we must anticipate the type of each chunk to use its appropriate
 			// 	// parser.
-			// 	Chunk::ChunkId chunkId;
-			// 	uint8_t chunkLength;
+			// 	Chunk::ChunkType chunkType;
+			// 	uint16_t chunkLength;
 
-			// 	if (!Chunk::IsChunk(ptr, itemBufferLength, chunkId, chunkLength))
+			// 	if (!Chunk::IsChunk(ptr, itemBufferLength, chunkType, chunkLength))
 			// 	{
 			// 		MS_WARN_DEV("not a Chunk");
 
@@ -76,11 +76,11 @@ namespace RTC
 
 			// 	Chunk* chunk{ nullptr };
 
-			// 	MS_DEBUG_DEV("parsing Chunk [ptr:%zu, id:%" PRIu8 "]", ptr - buffer, chunkId);
+			// 	MS_DEBUG_DEV("parsing Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
-			// 	switch (chunkId)
+			// 	switch (chunkType)
 			// 	{
-			// 		case Chunk::ChunkId::XXXXX:
+			// 		case Chunk::ChunkType::XXXXX:
 			// 		{
 			// 			chunk = XxxxxChunk::Parse(ptr, itemBufferLength);
 

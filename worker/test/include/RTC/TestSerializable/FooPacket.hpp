@@ -28,10 +28,12 @@ using namespace RTC;
  * - Type (8 bits): Unsigned integer.
  * - A (1 bit): Whether the Packet contains an Appendix field.
  * - (Unusued) (7 bits).
- * - Length (16 bits): Length of the Packet excluding padding bytes.
+ * - Length (16 bits): Unsigned integer. Length of the Packet excluding padding
+ *   bytes.
  * - Appendix (32 bits): Unsigned integer. Only exists if flag A is set.
  * - Items (variable length): N items.
- * - Padding: Bytes of padding to make the Packet length be multiple of 4 bytes.
+ * - Padding: Bytes of padding to make the Packet length be multiple of 4
+ *   bytes.
  *
  * It's mandatory that the FooPacket total length is multiple of 4 bytes.
  */
@@ -65,6 +67,9 @@ public:
 public:
 	/**
 	 * Whether given buffer could be a a valid FooPacket.
+	 *
+	 * @param buffer
+	 * @param bufferLength - Can be greater than real packet length.
 	 */
 	static bool IsFooPacket(const uint8_t* buffer, size_t bufferLength);
 
@@ -72,10 +77,16 @@ public:
 	 * Parse a FooPacket.
 	 *
 	 * @remarks
-	 * - `length` must be the exact length of the Packet.
+	 * - `bufferLength` must be the exact length of the Packet.
 	 */
 	static FooPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
+	/**
+	 * Create a FooPacket.
+	 *
+	 * @remarks
+	 * - `bufferLength` could be greater than the Packet real length.
+	 */
 	static FooPacket* Factory(uint8_t* buffer, size_t bufferLength, uint8_t type);
 
 private:

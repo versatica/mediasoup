@@ -11,6 +11,8 @@
 #include <string>
 #include <utility> // std::move()
 
+/* Class methods. */
+
 bool FooPacket::IsFooPacket(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
@@ -197,6 +199,8 @@ FooPacket* FooPacket::Factory(uint8_t* buffer, size_t bufferLength, uint8_t type
 
 	return packet;
 }
+
+/* Instance methods. */
 
 FooPacket::FooPacket(const uint8_t* buffer, size_t bufferLength)
   : Serializable(buffer, bufferLength)

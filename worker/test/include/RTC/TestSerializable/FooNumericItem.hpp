@@ -40,6 +40,12 @@ public:
 	 */
 	static FooNumericItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
+	/**
+	 * Create a FooNumericItem.
+	 *
+	 * @remarks
+	 * - `bufferLength` could be greater than the item real length.
+	 */
 	static FooNumericItem* Factory(uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number);
 
 private:

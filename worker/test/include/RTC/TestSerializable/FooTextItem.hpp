@@ -38,6 +38,12 @@ public:
 	 */
 	static FooTextItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
+	/**
+	 * Create a FooTextItem.
+	 *
+	 * @remarks
+	 * - `bufferLength` could be greater than the item real length.
+	 */
 	static FooTextItem* Factory(
 	  uint8_t* buffer, size_t bufferLength, uint8_t flags, const std::string& text);
 
