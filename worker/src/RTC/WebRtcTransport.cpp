@@ -7,7 +7,7 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "FBS/webRtcTransport.h"
-#include "RTC/SCTP/Packet.hpp"
+// #include "RTC/SCTP/Packet.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
