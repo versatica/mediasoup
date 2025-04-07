@@ -14,7 +14,7 @@
 
 using namespace RTC;
 
-SCENARIO("parse FooPacket", "[rtc][serializable]")
+SCENARIO("parse FooPacket", "[serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -104,7 +104,7 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	delete fooPacket;
 }
 
-SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][serializable]")
+SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -130,7 +130,7 @@ SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][ser
 	REQUIRE(!fooPacket);
 }
 
-SCENARIO("create and modify FooPacket", "[rtc][serializable]")
+SCENARIO("create and modify FooPacket", "[serializable]")
 {
 	uint8_t buffer[256];
 	uint8_t itemBuffer[17];
@@ -600,7 +600,7 @@ SCENARIO("create and modify FooPacket", "[rtc][serializable]")
 	delete clonedItem1;
 }
 
-SCENARIO("parse FooNumericItem", "[rtc][serializable]")
+SCENARIO("parse FooNumericItem", "[serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -627,7 +627,7 @@ SCENARIO("parse FooNumericItem", "[rtc][serializable]")
 	delete item;
 }
 
-SCENARIO("parse FooNumericItem by passing a buffer larger than the length of the item", "[rtc][serializable]")
+SCENARIO("parse FooNumericItem by passing a buffer larger than the length of the item", "[serializable]")
 {
 	// Item length is 4 but given buffer is 6 bytes. Not a problem.
 	// clang-format off
@@ -656,7 +656,7 @@ SCENARIO("parse FooNumericItem by passing a buffer larger than the length of the
 	delete item;
 }
 
-SCENARIO("parse invalid FooNumericItem with too small buffer", "[rtc][serializable]")
+SCENARIO("parse invalid FooNumericItem with too small buffer", "[serializable]")
 {
 	// Item length should be 4 but given buffer is only 3 bytes.
 	// clang-format off
@@ -673,7 +673,7 @@ SCENARIO("parse invalid FooNumericItem with too small buffer", "[rtc][serializab
 	REQUIRE(!item);
 }
 
-SCENARIO("parse invalid FooNumericItem with wrong value length", "[rtc][serializable]")
+SCENARIO("parse invalid FooNumericItem with wrong value length", "[serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -690,7 +690,7 @@ SCENARIO("parse invalid FooNumericItem with wrong value length", "[rtc][serializ
 	REQUIRE(!item);
 }
 
-SCENARIO("parse invalid FooNumericItem with wrong id", "[rtc][serializable]")
+SCENARIO("parse invalid FooNumericItem with wrong id", "[serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -706,7 +706,7 @@ SCENARIO("parse invalid FooNumericItem with wrong id", "[rtc][serializable]")
 	REQUIRE(!item);
 }
 
-SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
+SCENARIO("create and modify FooNumericItem", "[serializable]")
 {
 	// Max length of a FooItem is 17 bytes.
 	uint8_t buffer[17];
@@ -820,7 +820,7 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	delete clonedItem;
 }
 
-SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
+SCENARIO("create and modify FooTextItem", "[serializable]")
 {
 	uint8_t buffer[40];
 	std::string text = "Iñaki"; // 6 bytes.

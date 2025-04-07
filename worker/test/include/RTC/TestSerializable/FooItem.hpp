@@ -175,9 +175,9 @@ protected:
 		return const_cast<uint8_t*>(GetBuffer()) + FooItem::ItemHeaderLength;
 	}
 
-	virtual const uint8_t* GetEndPointer() const final
+	virtual uint8_t* GetEndPointer() const final
 	{
-		return GetBuffer() + FooItem::ItemHeaderLength + GetValueLength();
+		return const_cast<uint8_t*>(GetBuffer()) + FooItem::ItemHeaderLength + GetValueLength();
 	}
 };
 

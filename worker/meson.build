@@ -387,6 +387,7 @@ test_sources = [
 # TODO: Move to common_sources array once it's tested.
 if get_option('ms_sctp_stack')
   test_sources += [
+    'test/src/RTC/SCTP/TestPacket.cpp',
     'test/src/RTC/TestSerializable.cpp',
     'test/src/RTC/TestSerializable/FooPacket.cpp',
     'test/src/RTC/TestSerializable/FooItem.cpp',

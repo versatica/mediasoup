@@ -59,7 +59,7 @@ namespace RTC
 			{
 				// The remaining length in the buffer is the potential buffer length
 				// of the chunk.
-				size_t chunkBufferLength = packet->GetEndPointer() - ptr;
+				size_t chunkBufferLength = bufferLength - (ptr - buffer);
 
 				// Here we must anticipate the type of each chunk to use its appropriate
 				// parser.
@@ -128,7 +128,7 @@ namespace RTC
 			// Ensure computed length matches the total given buffer length.
 			if (computedLength != bufferLength)
 			{
-				MS_WARN_DEV("computed padded length != buffer length");
+				MS_WARN_DEV("computed length != buffer length");
 
 				delete packet;
 				return nullptr;
@@ -148,9 +148,22 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			size_t computedLength = Packet::CommonHeaderLength;
 
-			return nullptr;
+			// No space for common header.
+			if (bufferLength < computedLength)
+			{
+				MS_THROW_TYPE_ERROR("no space for common header");
+			}
+
+			auto* packet = new Packet(buffer, bufferLength);
+
+			packet->InitializeHeader();
+
+			// Must always invoke SetLength() after constructing a Serializable.
+			packet->SetLength(computedLength);
+
+			return packet;
 		}
 
 		/* Instance methods. */
@@ -164,11 +177,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
-			// for (auto* chunk : this->chunks)
-			// {
-			// 	delete chunk;
-			// }
+			for (auto* chunk : this->chunks)
+			{
+				delete chunk;
+			}
 		}
 
 		void Packet::Dump() const
@@ -211,18 +223,17 @@ namespace RTC
 			// Serialize each chunk into the new buffer.
 			auto* ptr = buffer + chunksOffset;
 
-			// TODO
-			// for (auto* chunk : this->chunks)
-			// {
-			// 	chunk->Serialize(ptr, chunk->GetLength());
+			for (auto* chunk : this->chunks)
+			{
+				chunk->Serialize(ptr, chunk->GetLength());
 
-			// 	// After calling `Serialize()` on the chunk, its `frozen` flag is
-			// 	// reverted to false, but we want it to remain set because it's a
-			// 	// chunk within the packet.
-			// 	chunk->Freeze();
+				// After calling `Serialize()` on the chunk, its `frozen` flag is
+				// reverted to false, but we want it to remain set because it's a
+				// chunk within the packet.
+				chunk->Freeze();
 
-			// 	ptr += chunk->GetLength();
-			// }
+				ptr += chunk->GetLength();
+			}
 
 			// Manually update buffer and buffer length.
 			SetBuffer(buffer);
@@ -236,9 +247,40 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			if (bufferLength < GetLength())
+			{
+				MS_THROW_TYPE_ERROR(
+				  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
+				  bufferLength,
+				  GetLength());
+			}
 
-			return nullptr;
+			size_t chunksOffset = GetChunksPointer() - GetBuffer();
+
+			// Copy all bytes from beginning of the buffer until the position of the
+			// chunks.
+			std::memcpy(buffer, GetBuffer(), chunksOffset);
+
+			auto* clonedPacket = new Packet(buffer, bufferLength);
+
+			// Clone each Chunk into the new buffer.
+			auto* ptr = buffer + chunksOffset;
+
+			for (const auto* chunk : this->chunks)
+			{
+				auto* clonedChunk = chunk->Clone(ptr, chunk->GetLength());
+
+				clonedPacket->AddParsedChunk(clonedChunk);
+
+				ptr += chunk->GetLength();
+			}
+
+			// Need to manually set Serializable length.
+			clonedPacket->SetLength(GetLength());
+
+			// NOTE: The `frozen` flag will be false in the cloned packet by default.
+
+			return clonedPacket;
 		}
 
 		void Packet::AddChunk(const Chunk* chunk)
@@ -247,7 +289,18 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			// TODO
+			size_t length = GetLength() + chunk->GetLength();
+
+			// Let's append the chunk at the end of existing chunks.
+			auto* clonedChunk = chunk->Clone(GetEndPointer(), chunk->GetLength());
+
+			// Freeze the cloned chunk.
+			clonedChunk->Freeze();
+
+			this->chunks.push_back(clonedChunk);
+
+			// Update Serializable length.
+			SetLength(length);
 		}
 
 		void Packet::InitializeHeader()

@@ -203,9 +203,9 @@ namespace RTC
 				return GetBuffer() + Packet::CommonHeaderLength;
 			}
 
-			virtual const uint8_t* GetEndPointer() const final
+			virtual uint8_t* GetEndPointer() const final
 			{
-				return GetBuffer() + GetBufferLength();
+				return const_cast<uint8_t*>(GetBuffer()) + GetLength();
 			}
 
 			/**

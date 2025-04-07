@@ -147,7 +147,7 @@ FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t bufferLength)
 		ptr += item->GetLength();
 	}
 
-	// We should be in the potential padding position.
+	// We should be at the potential padding position.
 	if (ptr != packet->GetPaddingPointer())
 	{
 		MS_WARN_DEV("we should be in the padding but we are not");
@@ -192,10 +192,10 @@ FooPacket* FooPacket::Factory(uint8_t* buffer, size_t bufferLength, uint8_t type
 
 	auto* packet = new FooPacket(buffer, bufferLength);
 
-	packet->InitializeHeader(type, FooPacket::HeaderLength);
+	packet->InitializeHeader(type, computedLength);
 
 	// Must always invoke SetLength() after constructing a Serializable.
-	packet->SetLength(FooPacket::HeaderLength);
+	packet->SetLength(computedLength);
 
 	return packet;
 }
