@@ -210,7 +210,7 @@ namespace Utils
 			return (size & 0x03) == 0u;
 		}
 
-		static bool IsPaddedTo4Bytes(size_t size)
+		static bool IsPaddedTo4Bytes(std::size_t size)
 		{
 			return (size & 0x03) == 0u;
 		}
@@ -263,7 +263,7 @@ namespace Utils
 			}
 		}
 
-		static size_t PadTo4Bytes(size_t size)
+		static size_t PadTo4Bytes(std::size_t size)
 		{
 			if (sizeof(size_t) == 8u)
 			{
