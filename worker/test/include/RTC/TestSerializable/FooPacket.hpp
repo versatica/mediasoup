@@ -74,7 +74,7 @@ public:
 	 * @remarks
 	 * - `length` must be the exact length of the Packet.
 	 */
-	static FooPacket* Parse(const uint8_t* buffer, size_t length);
+	static FooPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
 	static FooPacket* Factory(uint8_t* buffer, size_t bufferLength, uint8_t type);
 

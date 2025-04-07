@@ -66,7 +66,7 @@ namespace RTC
 			 * @remarks
 			 * - `length` must be the exact length of the Packet.
 			 */
-			static Packet* Parse(const uint8_t* buffer, size_t length);
+			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
 

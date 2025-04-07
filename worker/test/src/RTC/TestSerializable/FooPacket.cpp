@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TestSerializable:FooPacket"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooPacket.hpp"
 #include "Logger.hpp"
@@ -42,21 +42,18 @@ bool FooPacket::IsFooPacket(const uint8_t* buffer, size_t bufferLength)
 	return true;
 }
 
-FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t length)
+FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
-	if (!FooPacket::IsFooPacket(buffer, length))
+	if (!FooPacket::IsFooPacket(buffer, bufferLength))
 	{
 		MS_WARN_DEV("not a FooPacket");
 
 		return nullptr;
 	}
 
-	// NOTE: Here we are passing `length` as `bufferLength`. However we know
-	// that, due to FooPacket nature, a FooPacket Packet must occupy the whole
-	// given buffer.
-	auto* packet = new FooPacket(buffer, length);
+	auto* packet = new FooPacket(buffer, bufferLength);
 
 	// Pointer that starts at the beginning of the buffer and it's incremented
 	// to point to different parts of the Packet.
@@ -67,21 +64,20 @@ FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t length)
 
 	while (ptr < buffer + packet->GetLengthField())
 	{
-		// Here we must anticipate the id of each item to use its appropriate.
-		if (ptr + FooItem::ItemHeaderLength > packet->GetPaddingPointer())
+		// The remaining length in the buffer (excluding padding in the packet)
+		// is the potential buffer length of the item.
+		size_t itemBufferLength = packet->GetPaddingPointer() - ptr;
+
+		FooItem::ItemId itemId;
+		uint8_t valueLength;
+
+		if (!FooItem::IsFooItem(ptr, itemBufferLength, itemId, valueLength))
 		{
-			MS_WARN_DEV("no space for item header");
+			MS_WARN_DEV("not a FooItem");
 
 			delete packet;
 			return nullptr;
 		}
-
-		const auto* itemHeader = reinterpret_cast<const FooItem::ItemHeader*>(ptr);
-		auto itemId            = itemHeader->id;
-
-		// The remaining length in the buffer (excluding padding in the packet)
-		// is the potential buffer length of the item.
-		size_t itemBufferLength = packet->GetPaddingPointer() - ptr;
 
 		FooItem* item{ nullptr };
 
@@ -154,9 +150,9 @@ FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t length)
 
 	const size_t computedLength = Utils::Byte::PadTo4Bytes(static_cast<size_t>(ptr - buffer));
 
-	// Ensure computed length (padded to 4 bytes) matches the total given
+	// Ensure computed length (padded to 4 bytes) matches the total given buffer
 	// length.
-	if (computedLength != length)
+	if (computedLength != bufferLength)
 	{
 		MS_WARN_DEV("computed padded length != buffer length");
 

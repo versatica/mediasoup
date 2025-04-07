@@ -27,7 +27,7 @@
 // 			);
 // 		}
 
-// 		Packet* Packet::Parse(const uint8_t* buffer, size_t length)
+// 		Packet* Packet::Parse(const uint8_t* buffer, size_t bufferLength)
 // 		{
 // 			MS_TRACE();
 
