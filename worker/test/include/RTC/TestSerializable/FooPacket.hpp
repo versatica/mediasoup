@@ -68,8 +68,8 @@ public:
 	/**
 	 * Whether given buffer could be a a valid FooPacket.
 	 *
-	 * @param buffer
-	 * @param bufferLength - Can be greater than real packet length.
+	 * @remarks
+	 * - `bufferLength` must be the exact length of the FooPacket.
 	 */
 	static bool IsFooPacket(const uint8_t* buffer, size_t bufferLength);
 

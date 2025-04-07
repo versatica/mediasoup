@@ -22,7 +22,7 @@ namespace RTC
 			  // Source and destination ports cannot be 0.
 			  (uint16_t{ ntohs(header->sourcePort) } != 0 &&
 			   uint16_t{ ntohs(header->destinationPort) } != 0) &&
-			  // Length must be multiple of 4 bytes.
+			  // Buffer length must be multiple of 4 bytes.
 			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
 		}
 

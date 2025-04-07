@@ -69,6 +69,9 @@ namespace RTC
 
 			/**
 			 * Whether given buffer could be a valid SCTP packet.
+			 *
+			 * @remarks
+			 * - `bufferLength` must be the exact length of the Packet.
 			 */
 			static bool IsPacket(const uint8_t* buffer, size_t bufferLength);
 
@@ -76,7 +79,7 @@ namespace RTC
 			 * Parse a SCTP packet.
 			 *
 			 * @remarks
-			 * - `length` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the Packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 

@@ -27,9 +27,9 @@ bool FooPacket::IsFooPacket(const uint8_t* buffer, size_t bufferLength)
 	auto* header = reinterpret_cast<const FooPacket::Header*>(buffer);
 	auto length  = uint16_t{ ntohs(header->length) };
 
-	if (bufferLength < length)
+	if (Utils::Byte::PadTo4Bytes(length) != bufferLength)
 	{
-		MS_WARN_DEV("no space for announced packet length");
+		MS_WARN_DEV("padded announced packet length does not match buffer length");
 
 		return false;
 	}
