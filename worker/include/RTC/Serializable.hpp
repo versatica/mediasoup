@@ -55,6 +55,16 @@ namespace RTC
 		}
 
 		/**
+		 * Maximum length the Serializable can take. This is the `bufferLength`
+		 * argument given to the constructor. It's guaranteed to be equal or greater
+		 * than value returned by `GetLength()`.
+		 */
+		virtual const size_t GetBufferLength() const final
+		{
+			return this->bufferLength;
+		}
+
+		/**
 		 * Current exact length of the Serializable, including padding bytes (if
 		 * any).
 		 *
@@ -69,29 +79,34 @@ namespace RTC
 		}
 
 		/**
-		 * Maximum length the Serializable can take. This is the `bufferLength`
-		 * argument given to the constructor.
+		 * Whether the Serializable is frozen, meaning that modifications are not
+		 * allowed.
 		 */
-		virtual const size_t GetBufferLength() const final
+		virtual bool IsFrozen() const final
 		{
-			return this->bufferLength;
+			return this->frozen;
 		}
 
 		/**
-		 * Update the buffer length of the Serializable.
-		 **
-		 * @remarks
-		 * - The child class must invoke this method after parsing completes in
-		 *   case it couldn't anticipate its expected exact length. Specially
-		 *   useful when parsing variable-length items within a packet.
-		 * - The application can also invoke this method on the Serializable if
-		 *   it has expanded or reduced the length of the buffer currently assigned
-		 *   to the Serializable.
+		 * Freeze the Serializable, meaning that modifications are not allowed
+		 * on it. If a modification is attempted it will throw MediasoupError.
 		 *
-		 * @throw MediaSoupError - If given `bufferLength` is lower than the
-		 * current exact length of the Serializable.
+		 * @remarks
+		 * - Subclasses should invoke `Serializable::AssertNotFrozen()` in public
+		 *   methods that modify their internal state/content.
+		 * - When calling `Serialize()` the `frozen` flag will remain the same as
+		 *   it was.
+		 * - When calling `Clone()` on a Serializable, the new instance returned
+		 *   will keep same `frozen` flag value than the original Serializable.
+		 * - In both cases, `Serialize()` and `Clone`, the Serializable class may
+		 *   explicitly revert the `frozen` flag to false (by calling `Unfreeze()`
+		 *   on its own but it should only do it in the instance itself and not in
+		 *   any interal `Serializable` member.
 		 */
-		virtual void SetBufferLength(size_t bufferLength) final;
+		virtual void Freeze() final
+		{
+			this->frozen = true;
+		}
 
 		/**
 		 * Serialize the Serializable into a new buffer. This method copies the
@@ -129,7 +144,7 @@ namespace RTC
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
 		 */
-		virtual std::unique_ptr<Serializable> Clone(uint8_t* buffer, size_t bufferLength) const = 0;
+		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.
@@ -145,6 +160,19 @@ namespace RTC
 		}
 
 		/**
+		 * Update the buffer length of the Serializable.
+		 **
+		 * @remarks
+		 * - The child class must invoke this method after parsing completes in
+		 *   case it couldn't anticipate its expected exact length. Specially
+		 *   useful when parsing variable-length items within a packet.
+		 *
+		 * @throw MediaSoupError - If given `bufferLength` is lower than the
+		 * current exact length of the Serializable.
+		 */
+		virtual void SetBufferLength(size_t bufferLength) final;
+
+		/**
 		 * Method to be called by the child class to update the current exact
 		 * length of the Serializable.
 		 *
@@ -158,6 +186,20 @@ namespace RTC
 		 */
 		virtual void SetLength(size_t length) final;
 
+		/**
+		 * Unfreeze the Serializable.
+		 */
+		virtual void Unfreeze() final
+		{
+			this->frozen = false;
+		}
+
+		/**
+		 * Assert that the Serializable is not frozen, otherwise it throws a
+		 * MediasoupError error.
+		 */
+		virtual void AssertNotFrozen() const final;
+
 	private:
 		// Buffer holding the Serializable content.
 		uint8_t* buffer{ nullptr };
@@ -166,6 +208,9 @@ namespace RTC
 		size_t bufferLength{ 0u };
 		// Serializable exact length (includes padding bytes).
 		size_t length{ 0u };
+		// Whether the Serializable is frozen, meaning that modifications are not
+		// allowed.
+		bool frozen{ false };
 	};
 } // namespace RTC
 

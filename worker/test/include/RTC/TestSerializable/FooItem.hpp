@@ -31,8 +31,14 @@ using namespace RTC;
  * it doesn't use padding bytes.
  */
 
+// Forward declaration.
+class FooPacket;
+
 class FooItem : public Serializable
 {
+private:
+	friend class FooPacket;
+
 public:
 	/**
 	 * Item Id.
@@ -98,9 +104,9 @@ public:
 	virtual void Dump() const override;
 
 	/**
-	 * Could be overridden by each subclass.
+	 * Can be overridden by each subclass.
 	 */
-	std::unique_ptr<Serializable> Clone(uint8_t* buffer, size_t bufferLength) const override;
+	virtual FooItem* Clone(uint8_t* buffer, size_t bufferLength) const override;
 
 	virtual ItemId GetId() const final
 	{
@@ -129,32 +135,27 @@ public:
 	}
 
 protected:
+	virtual void InitializeHeader(ItemId id, uint8_t flags, uint8_t valueLength) final;
+
 	/**
 	 * NOTE: Return ItemHeader* instead of const ItemHeader* since we may
 	 * want to modify its fields.
 	 */
-	ItemHeader* GetHeaderPointer() const
+	virtual ItemHeader* GetHeaderPointer() const final
 	{
 		return reinterpret_cast<ItemHeader*>(const_cast<uint8_t*>(GetBuffer()));
-	}
-
-	void InitializeHeader(ItemId id, uint8_t flags, uint8_t valueLength)
-	{
-		GetHeaderPointer()->id    = id;
-		GetHeaderPointer()->flags = flags;
-		SetValueLengthField(valueLength);
 	}
 
 	/**
 	 * Private private because it returns the value of the Value Length field,
 	 * which is not useful for the application.
 	 */
-	uint8_t GetValueLengthField() const
+	virtual uint8_t GetValueLengthField() const final
 	{
 		return GetHeaderPointer()->valueLength;
 	}
 
-	void SetValueLengthField(uint8_t valueLength)
+	virtual void SetValueLengthField(uint8_t valueLength) final
 	{
 		GetHeaderPointer()->valueLength = valueLength;
 	}
@@ -163,12 +164,12 @@ protected:
 	 * NOTE: Return uint8_t* instead of const uint8_t* since we may want to
 	 * modify its value.
 	 */
-	uint8_t* GetValuePointer() const
+	virtual uint8_t* GetValuePointer() const final
 	{
 		return const_cast<uint8_t*>(GetBuffer()) + ItemHeaderLength;
 	}
 
-	const uint8_t* GetEndPointer() const
+	virtual const uint8_t* GetEndPointer() const final
 	{
 		return GetBuffer() + ItemHeaderLength + GetValueLength();
 	}

@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TestSerializable::FooTextItem"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooTextItem.hpp"
 #include "Logger.hpp"
@@ -8,7 +8,7 @@
 
 using namespace RTC;
 
-std::unique_ptr<FooTextItem> FooTextItem::Parse(const uint8_t* buffer, size_t bufferLength)
+FooTextItem* FooTextItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
@@ -29,15 +29,18 @@ std::unique_ptr<FooTextItem> FooTextItem::Parse(const uint8_t* buffer, size_t bu
 		return nullptr;
 	}
 
-	auto item = std::unique_ptr<FooTextItem>(new FooTextItem(buffer, bufferLength));
+	auto* item = new FooTextItem(buffer, bufferLength);
 
 	// Must always invoke SetLength() after constructing a Serializable.
 	item->SetLength(FooItem::ItemHeaderLength + valueLength);
 
+	// Mark the item as frozen since we are parsing.
+	item->Freeze();
+
 	return item;
 }
 
-std::unique_ptr<FooTextItem> FooTextItem::Factory(
+FooTextItem* FooTextItem::Factory(
   uint8_t* buffer, size_t bufferLength, uint8_t flags, const std::string& text)
 {
 	MS_TRACE();
@@ -48,7 +51,7 @@ std::unique_ptr<FooTextItem> FooTextItem::Factory(
 		MS_THROW_TYPE_ERROR("too small buffer");
 	}
 
-	auto item = std::unique_ptr<FooTextItem>(new FooTextItem(buffer, bufferLength));
+	auto* item = new FooTextItem(buffer, bufferLength);
 
 	item->InitializeHeader(FooItem::ItemId::TEXT, flags, text.size());
 	item->SetText(text);
@@ -86,6 +89,13 @@ void FooTextItem::Dump() const
 	MS_DUMP("</FooTextItem>");
 }
 
+FooTextItem* FooTextItem::Clone(uint8_t* buffer, size_t bufferLength) const
+{
+	MS_TRACE();
+
+	return static_cast<FooTextItem*>(FooItem::Clone(buffer, bufferLength));
+}
+
 const std::string_view FooTextItem::GetText() const
 {
 	MS_TRACE();
@@ -96,6 +106,8 @@ const std::string_view FooTextItem::GetText() const
 void FooTextItem::SetText(const std::string& text)
 {
 	MS_TRACE();
+
+	AssertNotFrozen();
 
 	auto previousValueLength = GetValueLength();
 

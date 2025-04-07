@@ -1,13 +1,12 @@
 #define MS_CLASS "RTC::TestSerializable::FooUnknownItem"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooUnknownItem.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 
 using namespace RTC;
 
-std::unique_ptr<FooUnknownItem> FooUnknownItem::Parse(const uint8_t* buffer, size_t bufferLength)
+FooUnknownItem* FooUnknownItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
@@ -21,17 +20,13 @@ std::unique_ptr<FooUnknownItem> FooUnknownItem::Parse(const uint8_t* buffer, siz
 		return nullptr;
 	}
 
-	if (itemId != FooItem::ItemId::TEXT)
-	{
-		MS_WARN_DEV("invalid item id");
-
-		return nullptr;
-	}
-
-	auto item = std::unique_ptr<FooUnknownItem>(new FooUnknownItem(buffer, bufferLength));
+	auto* item = new FooUnknownItem(buffer, bufferLength);
 
 	// Must always invoke SetLength() after constructing a Serializable.
 	item->SetLength(FooItem::ItemHeaderLength + valueLength);
+
+	// Mark the item as frozen since we are parsing.
+	item->Freeze();
 
 	return item;
 }
@@ -60,6 +55,13 @@ void FooUnknownItem::Dump() const
 	  GetValueLengthField(),
 	  GetValueLength());
 	MS_DUMP("</FooUnknownItem>");
+}
+
+FooUnknownItem* FooUnknownItem::Clone(uint8_t* buffer, size_t bufferLength) const
+{
+	MS_TRACE();
+
+	return static_cast<FooUnknownItem*>(FooItem::Clone(buffer, bufferLength));
 }
 
 const uint8_t* FooUnknownItem::GetValue() const

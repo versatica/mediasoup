@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TestSerializable::FooNumericItem"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooNumericItem.hpp"
 #include "Logger.hpp"
@@ -8,7 +8,7 @@
 
 using namespace RTC;
 
-std::unique_ptr<FooNumericItem> FooNumericItem::Parse(const uint8_t* buffer, size_t bufferLength)
+FooNumericItem* FooNumericItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
 
@@ -36,16 +36,19 @@ std::unique_ptr<FooNumericItem> FooNumericItem::Parse(const uint8_t* buffer, siz
 		return nullptr;
 	}
 
-	auto item = std::unique_ptr<FooNumericItem>(new FooNumericItem(buffer, bufferLength));
+	auto* item = new FooNumericItem(buffer, bufferLength);
 
 	// Must always invoke SetLength() after constructing a Serializable.
 	// NOTE: FooNumericItem has fixed length.
 	item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
 
+	// Mark the item as frozen since we are parsing.
+	item->Freeze();
+
 	return item;
 }
 
-std::unique_ptr<FooNumericItem> FooNumericItem::Factory(
+FooNumericItem* FooNumericItem::Factory(
   uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number)
 {
 	MS_TRACE();
@@ -56,7 +59,7 @@ std::unique_ptr<FooNumericItem> FooNumericItem::Factory(
 		MS_THROW_TYPE_ERROR("too small buffer");
 	}
 
-	auto item = std::unique_ptr<FooNumericItem>(new FooNumericItem(buffer, bufferLength));
+	auto* item = new FooNumericItem(buffer, bufferLength);
 
 	item->InitializeHeader(FooItem::ItemId::NUMERIC, flags, FooNumericItem::NumberLength);
 	item->SetNumber(number);
@@ -95,6 +98,13 @@ void FooNumericItem::Dump() const
 	MS_DUMP("</FooNumericItem>");
 }
 
+FooNumericItem* FooNumericItem::Clone(uint8_t* buffer, size_t bufferLength) const
+{
+	MS_TRACE();
+
+	return static_cast<FooNumericItem*>(FooItem::Clone(buffer, bufferLength));
+}
+
 uint16_t FooNumericItem::GetNumber() const
 {
 	MS_TRACE();
@@ -105,6 +115,8 @@ uint16_t FooNumericItem::GetNumber() const
 void FooNumericItem::SetNumber(uint16_t number)
 {
 	MS_TRACE();
+
+	AssertNotFrozen();
 
 	Utils::Byte::Set2Bytes(GetValuePointer(), 0, number);
 

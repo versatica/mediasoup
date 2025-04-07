@@ -1,10 +1,9 @@
 #define MS_CLASS "RTC::TestSerializable::FooItem"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooItem.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memcpy()
 
 using namespace RTC;
 
@@ -22,9 +21,6 @@ bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& item
 {
 	MS_TRACE();
 
-	MS_DUMP("*** bufferLength:%zu", bufferLength);
-	;
-
 	if (bufferLength < FooItem::ItemHeaderLength)
 	{
 		MS_WARN_DEV("no space for FooItem header");
@@ -34,17 +30,12 @@ bool FooItem::IsFooItem(const uint8_t* buffer, size_t bufferLength, ItemId& item
 
 	const auto* itemHeader = reinterpret_cast<const FooItem::ItemHeader*>(buffer);
 
-	MS_DUMP("*** id:%" PRIu8 ", valueLength:%" PRIu8, itemHeader->id, itemHeader->valueLength);
-
 	if (bufferLength < FooItem::ItemHeaderLength + itemHeader->valueLength)
 	{
-		MS_WARN_DEV("no space for FooItem value");
+		MS_WARN_DEV("no space for announced value length");
 
 		return false;
 	}
-
-	MS_DUMP(
-	  "*** GOOD !!! => id:%" PRIu8 ", valueLength:%" PRIu8, itemHeader->id, itemHeader->valueLength);
 
 	itemId      = itemHeader->id;
 	valueLength = itemHeader->valueLength;
@@ -95,7 +86,7 @@ void FooItem::Dump() const
 	MS_DUMP("</FooItem>");
 }
 
-std::unique_ptr<Serializable> FooItem::Clone(uint8_t* buffer, size_t bufferLength) const
+FooItem* FooItem::Clone(uint8_t* buffer, size_t bufferLength) const
 {
 	MS_TRACE();
 
@@ -107,10 +98,21 @@ std::unique_ptr<Serializable> FooItem::Clone(uint8_t* buffer, size_t bufferLengt
 
 	std::memcpy(buffer, GetBuffer(), GetLength());
 
-	auto clonedFooItem = std::unique_ptr<FooItem>(new FooItem(buffer, bufferLength));
+	auto* clonedItem = new FooItem(buffer, bufferLength);
+
+	// NOTE: The `frozen` flag will be false in the cloned item by default.
 
 	// Need to manually set Serializable length.
-	clonedFooItem->SetLength(GetLength());
+	clonedItem->SetLength(GetLength());
 
-	return clonedFooItem;
+	return clonedItem;
+}
+
+void FooItem::InitializeHeader(ItemId id, uint8_t flags, uint8_t valueLength)
+{
+	MS_TRACE();
+
+	GetHeaderPointer()->id    = id;
+	GetHeaderPointer()->flags = flags;
+	SetValueLengthField(valueLength);
 }

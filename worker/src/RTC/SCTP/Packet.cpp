@@ -4,6 +4,7 @@
 // #include "RTC/SCTP/Packet.hpp"
 // #include "Logger.hpp"
 // #include "Utils.hpp"
+// #include <cstring> // std::memcpy()
 
 // namespace RTC
 // {
@@ -26,22 +27,21 @@
 // 			);
 // 		}
 
-// 		Packet* Packet::Parse(const uint8_t* data, size_t len)
+// 		Packet* Packet::Parse(const uint8_t* buffer, size_t length)
 // 		{
 // 			MS_TRACE();
 
-// 			if (!Packet::IsSctp(data, len))
+// 			if (!Packet::IsSctp(buffer, length))
 // 			{
 // 				MS_WARN_TAG(sctp, "not an SCTP packet");
 
 // 				return nullptr;
 // 			}
 
-// 			// Pointer that initially points to the given data buffer and is later
-// 			// incremented to point to other parts of the packet.
-// 			uint8_t* ptr = const_cast<uint8_t*>(data);
-
-// 			auto* packet = new Packet(ptr);
+// 			// NOTE: Here we are passing `length` as `bufferLength`. However we know
+// 			// that, due to FooPacket nature, an SCTP Packet must occupy the whole
+// 			// given buffer.
+// 			auto* packet = new Packet(buffer, length);
 
 // 			// TODO: Move this to some Validate() method.
 // 			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
@@ -52,12 +52,24 @@
 // 				return nullptr;
 // 			}
 
-// 			// Inspect data after the minimum header size. Start looking for chunks
-// 			// after SCTP Common Header.
-// 			ptr += CommonHeaderSize;
+// 			// Pointer that initially points to the given data buffer and is later
+// 			// incremented to point to other parts of the Packet.
+// 			auto* ptr = buffer;
 
-// 			while (len > (ptr - data))
+// 			// Move to chunks.
+// 			ptr = packet->GetChunksPointer();
+
+// 			while (ptr < buffer + length)
 // 			{
+// 				// Here we must anticipate the id of each chunk to use its appropriate.
+// 				if (ptr + Chunk::ItemHeaderLength > packet->GetPaddingPointer())
+// 				{
+// 					MS_WARN_DEV("no space for chunk header");
+
+// 					delete packet;
+// 					return nullptr;
+// 				}
+
 // 				auto* chunk = Chunk::Parse(ptr, len - (ptr - data), /*exactLen*/ false);
 
 // 				if (chunk)
@@ -92,8 +104,7 @@
 
 // 		/* Instance methods. */
 
-// 		Packet::Packet(uint8_t* buffer)
-// 		  : Serializable(buffer), commonHeader(reinterpret_cast<CommonHeader*>(buffer))
+// 		Packet::Packet(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 // 		{
 // 			MS_TRACE();
 // 		}
@@ -102,10 +113,11 @@
 // 		{
 // 			MS_TRACE();
 
-// 			for (auto* chunk : this->chunks)
-// 			{
-// 				delete chunk;
-// 			}
+// 			// TODO
+// 			// for (auto* chunk : this->chunks)
+// 			// {
+// 			// 	delete chunk;
+// 			// }
 // 		}
 
 // 		void Packet::Dump() const
@@ -113,42 +125,23 @@
 // 			MS_TRACE();
 
 // 			MS_DUMP("<Packet>");
-
 // 			MS_DUMP("  needs serialization: %s", NeedsSerialization() ? "true" : "false");
-
 // 			MS_DUMP("  size: %zu", GetSize());
-
 // 			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
-
 // 			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
-
 // 			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
-
 // 			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
 
-// 			for (auto* chunk : this->chunks)
-// 			{
-// 				chunk->Dump();
-// 			}
+// 			// TODO
+// 			// for (auto* chunk : this->chunks)
+// 			// {
+// 			// 	chunk->Dump();
+// 			// }
 
 // 			MS_DUMP("</Packet>");
 // 		}
 
-// 		size_t Packet::GetSize() const
-// 		{
-// 			MS_TRACE();
-
-// 			if (!NeedsSerialization())
-// 			{
-// 				return GetCurrentSize();
-// 				;
-// 			}
-
-// 			// TODO: Here we should really calculate the packet size.
-// 			return GetCurrentSize();
-// 		}
-
-// 		void Packet::Serialize(uint8_t* buffer)
+// 		void Packet::Serialize(uint8_t* buffer, size_t bufferLength)
 // 		{
 // 			MS_TRACE();
 

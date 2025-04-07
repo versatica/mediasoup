@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include "RTC/Serializable.hpp"
 #include "RTC/TestSerializable/FooItem.hpp"
+#include <string>
 #include <vector>
 
 using namespace RTC;
@@ -38,6 +39,9 @@ using namespace RTC;
 class FooPacket : public Serializable
 {
 public:
+	using ItemsIterator = typename std::vector<FooItem*>::const_iterator;
+
+public:
 	/**
 	 * Struct of a the FooPacket Header.
 	 */
@@ -60,39 +64,39 @@ public:
 
 public:
 	/**
+	 * Whether given buffer could be a a valid FooPacket.
+	 */
+	static bool IsFooPacket(const uint8_t* buffer, size_t bufferLength);
+
+	/**
 	 * Parse a FooPacket.
 	 *
 	 * @remarks
 	 * - `length` must be the exact length of the Packet.
 	 */
-	static std::unique_ptr<FooPacket> Parse(const uint8_t* buffer, size_t length);
+	static FooPacket* Parse(const uint8_t* buffer, size_t length);
 
-	static std::unique_ptr<FooPacket> Factory(uint8_t* buffer, size_t bufferLength, uint8_t type);
+	static FooPacket* Factory(uint8_t* buffer, size_t bufferLength, uint8_t type);
 
 private:
 	/**
 	 * Constructor is private because we only want to create FooPacket instances
 	 * via Parse() and Factory().
 	 */
-	FooPacket(const uint8_t* buffer, size_t bufferLength, bool initializeHeader);
+	FooPacket(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	~FooPacket() override;
+	~FooPacket() override final;
 
-	void Dump() const override;
+	void Dump() const override final;
 
-	void Serialize(uint8_t* buffer, size_t bufferLength) override;
+	void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
-	std::unique_ptr<Serializable> Clone(uint8_t* buffer, size_t bufferLength) const override;
+	FooPacket* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
 	uint8_t GetType() const
 	{
 		return GetHeaderPointer()->type;
-	}
-
-	void SetType(uint8_t type)
-	{
-		GetHeaderPointer()->type = type;
 	}
 
 	bool HasAppendix() const
@@ -132,26 +136,48 @@ public:
 		return this->items.size();
 	}
 
-	// /**
-	//  * Get the FooItem with index `idx` (starts at 0).
-	//  */
-	// const std::unique_ptr<FooItem>& GetItem(size_t idx) const;
+	ItemsIterator ItemsBegin() const
+	{
+		return this->items.begin();
+	}
+
+	ItemsIterator ItemsEnd() const
+	{
+		return this->items.end();
+	}
+
+	const FooItem* GetItemAt(size_t idx) const
+	{
+		if (idx >= this->items.size())
+		{
+			return nullptr;
+		}
+
+		return this->items[idx];
+	}
 
 	/**
-	 * Get the FooItem with index `idx` (starts at 0).
-	 */
-	template<typename T>
-	const std::unique_ptr<T>& GetItem(size_t idx) const;
-
-	/**
-	 * Serializes given FooItem into Packet's buffer.
+	 * Clone given FooItem into Packet's buffer.
 	 *
 	 * @remarks
-	 * Once this method is called, the FooItem is owned by FooPacket instance.
+	 * Once this method is called, the caller may want to free the original given
+	 * FooItem.
 	 */
-	void AddItem(std::unique_ptr<FooItem> item);
+	void AddItem(const FooItem* item);
+
+	/**
+	 * Create and add a FooNumericItem in the packet.
+	 */
+	void AddNumericItem(uint8_t flags, uint16_t number);
+
+	/**
+	 * Create and add a FooTextItem in the packet.
+	 */
+	void AddTextItem(uint8_t flags, const std::string& text);
 
 private:
+	virtual void InitializeHeader(uint8_t type, uint16_t length) final;
+
 	/**
 	 * NOTE: Return Header* instead of const Header* since we may want to
 	 * modify its fields.
@@ -161,6 +187,11 @@ private:
 		return reinterpret_cast<Header*>(const_cast<uint8_t*>(GetBuffer()));
 	}
 
+	void SetAppendixFlag(bool flag)
+	{
+		GetHeaderPointer()->a = flag;
+	}
+
 	/**
 	 * NOTE: Private because it returns the value of the Length field, which is
 	 * not useful for the application.
@@ -168,16 +199,6 @@ private:
 	uint16_t GetLengthField() const
 	{
 		return uint16_t{ ntohs(GetHeaderPointer()->length) };
-	}
-
-	void SetAppendixFlag(bool flag)
-	{
-		GetHeaderPointer()->a = flag;
-	}
-
-	void SetUnusedField()
-	{
-		GetHeaderPointer()->unused = 0u;
 	}
 
 	void SetLengthField(uint16_t length)
@@ -216,14 +237,11 @@ private:
 	 * This method doesn't serializa the given FooItem into Packet's buffer since
 	 * it's already serialized (obviously since we are parsing a buffer).
 	 */
-	void AddParsedItem(std::unique_ptr<FooItem> item)
-	{
-		this->items.push_back(std::move(item));
-	}
+	void AddParsedItem(FooItem* item);
 
 private:
 	// FooItem instances.
-	std::vector<std::unique_ptr<FooItem>> items;
+	std::vector<FooItem*> items;
 };
 
 #endif

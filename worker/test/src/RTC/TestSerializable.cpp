@@ -7,11 +7,10 @@
 #include "RTC/TestSerializable/FooNumericItem.hpp"
 #include "RTC/TestSerializable/FooPacket.hpp"
 #include "RTC/TestSerializable/FooTextItem.hpp"
+#include "RTC/TestSerializable/FooUnknownItem.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <string>
-#include <utility> // std::move()
-#include <vector>
 
 using namespace RTC;
 
@@ -20,60 +19,86 @@ SCENARIO("parse FooPacket", "[rtc][serializable]")
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// Type:1, A:1, Length:19
-		0x01, 0b10000000, 0x00, 0x13,
+		// Type:1, A:1, Length:25
+		0x01, 0b10000000, 0x00, 0x19,
 		// Appendix: 0x00BC614E
 		0x00, 0xBC, 0x61, 0x4E,
 		// FooItem 1: Id:1 (NUMERIC), Flags:0b0101, Length:2, Number: 0x1234
 		0b00010101, 0x02, 0x12, 0x34,
 		// FooItem 2: Id:2 (TEXT), Flags:0b0011, Length:5, , Text: 0xE282AC2B24 ("€+$")
 		0b00100011, 0x05, 0xE2, 0x82,
-		// 1 byte of padding.
-		0xAC, 0x2B, 0x24, 0x00
+		// ... FooItem 3: Id:3 (UNKNOWN), Flags:0b1111, Length:4, Value:0x11223344
+		0xAC, 0x2B, 0x24, 0b00111111,
+		0x04, 0x11, 0x22, 0x33,
+		// ... 3 bytes of padding
+		0x44, 0x00, 0x00, 0x00
 	};
 	// clang-format on
 
-	auto fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
+	REQUIRE(FooPacket::IsFooPacket(buffer, sizeof(buffer)) == true);
 
-	REQUIRE(sizeof(buffer) == 20);
+	auto* fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
+
+	REQUIRE(sizeof(buffer) == 28);
 	REQUIRE(fooPacket);
 	REQUIRE(fooPacket->GetBuffer() == buffer);
-	REQUIRE(fooPacket->GetBufferLength() == 20);
-	REQUIRE(fooPacket->GetLength() == 20);
+	REQUIRE(fooPacket->GetBufferLength() == 28);
+	REQUIRE(fooPacket->GetLength() == 28);
+	REQUIRE(fooPacket->IsFrozen() == true);
 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
 	REQUIRE(fooPacket->GetType() == 1);
 	REQUIRE(fooPacket->HasAppendix() == true);
 	REQUIRE(fooPacket->GetAppendix() == 0x00BC614E);
 	REQUIRE(fooPacket->HasItems() == true);
-	REQUIRE(fooPacket->GetItemsCount() == 2);
+	REQUIRE(fooPacket->GetItemsCount() == 3);
 	REQUIRE(
-	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 20) == true);
+	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 28) == true);
 
-	auto& item1 = fooPacket->GetItem<FooNumericItem>(0);
+	auto* item1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
 	REQUIRE(item1);
 	REQUIRE(item1->GetBuffer() == buffer + 8);
 	REQUIRE(item1->GetBufferLength() == 4);
 	REQUIRE(item1->GetLength() == 4);
+	REQUIRE(item1->IsFrozen() == true);
 	REQUIRE(item1->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(item1->GetFlags() == 0b0101);
+	REQUIRE(item1->GetValueLength() == 2);
 	REQUIRE(item1->GetNumber() == 0x1234);
 	REQUIRE(helpers::areBuffersEqual(item1->GetBuffer(), item1->GetLength(), buffer + 8, 4) == true);
 
-	auto& item2 = fooPacket->GetItem<FooTextItem>(1);
+	auto* item2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
 	REQUIRE(item2);
 	REQUIRE(item2->GetBuffer() == buffer + 12);
-	// Buffer length in item 2 must be 7 since that's the remaining space from
-	// the first byte of item 2 until available packet length (padding excluded).
 	REQUIRE(item2->GetBufferLength() == 7);
 	REQUIRE(item2->GetLength() == 7);
+	REQUIRE(item2->IsFrozen() == true);
 	REQUIRE(item2->GetId() == FooItem::ItemId::TEXT);
 	REQUIRE(item2->GetFlags() == 0b0011);
-	// REQUIRE(item2->GetText() == "€+$");
+	REQUIRE(item2->GetValueLength() == 5);
+	REQUIRE(item2->GetText() == "€+$");
 	REQUIRE(helpers::areBuffersEqual(item2->GetBuffer(), item2->GetLength(), buffer + 12, 7) == true);
 
-	// REQUIRE(!fooPacket->GetItem(2));
+	auto* item3 = static_cast<const FooUnknownItem*>(fooPacket->GetItemAt(2));
+
+	REQUIRE(item3);
+	REQUIRE(item3->GetBuffer() == buffer + 19);
+	REQUIRE(item3->GetBufferLength() == 6);
+	REQUIRE(item3->GetLength() == 6);
+	REQUIRE(item3->IsFrozen() == true);
+	REQUIRE(item3->GetId() == static_cast<FooItem::ItemId>(3));
+	REQUIRE(item3->GetFlags() == 0b1111);
+	REQUIRE(item3->GetValueLength() == 4);
+	REQUIRE(item3->GetValue()[0] == 0x11);
+	REQUIRE(item3->GetValue()[1] == 0x22);
+	REQUIRE(item3->GetValue()[2] == 0x33);
+	REQUIRE(item3->GetValue()[3] == 0x44);
+	REQUIRE(helpers::areBuffersEqual(item3->GetBuffer(), item3->GetLength(), buffer + 19, 6) == true);
+
+	REQUIRE(!fooPacket->GetItemAt(3));
+
+	delete fooPacket;
 }
 
 SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][serializable]")
@@ -96,380 +121,466 @@ SCENARIO("parse invalid FooPacket with buffer not padded to 4 bytes", "[rtc][ser
 	};
 	// clang-format on
 
-	auto fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
+	auto* fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 23);
 	REQUIRE(!fooPacket);
 }
 
-// SCENARIO("parse invalid FooPacket with FooItem with invalid id", "[rtc][serializable]")
-// {
-// 	// clang-format off
-// 	uint8_t buffer[] =
-// 	{
-// 		// Type:1, A:0, Length:8
-// 		0x01, 0b00000000, 0x00, 0x08,
-// 		// FooItem 1: Id:0, Flags:0b0101, Length:2, Value: 0x1234
-// 		0b00000101, 0x02, 0x12, 0x34,
-// 	};
-// 	// clang-format on
+SCENARIO("create and modify FooPacket", "[rtc][serializable]")
+{
+	uint8_t buffer[256];
+	uint8_t itemBuffer[17];
 
-// 	auto fooPacket = FooPacket::Parse(buffer, sizeof(buffer));
+	std::memset(buffer, 0xFF, sizeof(buffer));
+	std::memset(itemBuffer, 0xFF, sizeof(itemBuffer));
 
-// 	REQUIRE(sizeof(buffer) == 8);
-// 	REQUIRE(!fooPacket);
-// }
+	auto* fooPacket = FooPacket::Factory(buffer, sizeof(buffer), /*type*/ 55);
 
-// SCENARIO("create and modify FooPacket", "[rtc][serializable]")
-// {
-// 	uint8_t buffer[256];
-// 	uint8_t itemBuffer[17];
+	REQUIRE(sizeof(buffer) == 256);
+	REQUIRE(fooPacket);
+	REQUIRE(fooPacket->GetBuffer() == buffer);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	// Just the FooPacket header (4 bytes).
+	REQUIRE(fooPacket->GetLength() == 4);
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == false);
+	REQUIRE(fooPacket->GetAppendix() == 0);
+	REQUIRE(fooPacket->HasItems() == false);
+	REQUIRE(fooPacket->GetItemsCount() == 0);
+	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 4) == true);
 
-// 	std::memset(buffer, 0xFF, sizeof(buffer));
-// 	std::memset(itemBuffer, 0xFF, sizeof(itemBuffer));
+	/* Add Appendix. */
 
-// 	auto fooPacket = FooPacket::Factory(buffer, sizeof(buffer), /*type*/ 55);
+	fooPacket->SetAppendix(0x12345678);
 
-// 	REQUIRE(sizeof(buffer) == 256);
-// 	REQUIRE(fooPacket);
-// 	REQUIRE(fooPacket->GetBuffer() == buffer);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Just the FooPacket header (4 bytes).
-// 	REQUIRE(fooPacket->GetLength() == 4);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 55);
-// 	REQUIRE(fooPacket->HasAppendix() == false);
-// 	REQUIRE(fooPacket->GetAppendix() == 0u);
-// 	REQUIRE(fooPacket->HasItems() == false);
-// 	REQUIRE(fooPacket->GetItemsCount() == 0);
-// 	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 4) == true);
+	REQUIRE(fooPacket->GetBuffer() == buffer);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	// Header (4 bytes) + Appendix (4 bytes).
+	REQUIRE(fooPacket->GetLength() == 8);
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == true);
+	REQUIRE(fooPacket->GetAppendix() == 0x12345678);
+	REQUIRE(fooPacket->HasItems() == false);
+	REQUIRE(fooPacket->GetItemsCount() == 0);
+	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 8) == true);
 
-// 	/* Add Type and Appendix. */
+	/* Remove Appendix. */
 
-// 	fooPacket->SetType(125);
-// 	fooPacket->SetAppendix(0x12345678);
+	fooPacket->SetAppendix(0);
 
-// 	REQUIRE(fooPacket->GetBuffer() == buffer);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Header (4 bytes) + Appendix (4 bytes).
-// 	REQUIRE(fooPacket->GetLength() == 8);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 125);
-// 	REQUIRE(fooPacket->HasAppendix() == true);
-// 	REQUIRE(fooPacket->GetAppendix() == 0x12345678);
-// 	REQUIRE(fooPacket->HasItems() == false);
-// 	REQUIRE(fooPacket->GetItemsCount() == 0);
-// 	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 8) == true);
+	REQUIRE(fooPacket->GetBuffer() == buffer);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	// Header (4 bytes).
+	REQUIRE(fooPacket->GetLength() == 4);
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == false);
+	REQUIRE(fooPacket->GetAppendix() == 0);
+	REQUIRE(fooPacket->HasItems() == false);
+	REQUIRE(fooPacket->GetItemsCount() == 0);
+	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 4) == true);
 
-// 	/* Remove Appendix. */
+	/* Add a FooItem. */
 
-// 	fooPacket->SetAppendix(0u);
+	// FooItem 1 (4 bytes).
+	auto* item1 = FooNumericItem::Factory(
+	  itemBuffer,
+	  sizeof(itemBuffer),
+	  /*flags*/ 0b1000,
+	  /*number*/ 12345);
 
-// 	REQUIRE(fooPacket->GetBuffer() == buffer);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Header (4 bytes).
-// 	REQUIRE(fooPacket->GetLength() == 4);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 125);
-// 	REQUIRE(fooPacket->HasAppendix() == false);
-// 	REQUIRE(fooPacket->GetAppendix() == 0u);
-// 	REQUIRE(fooPacket->HasItems() == false);
-// 	REQUIRE(fooPacket->GetItemsCount() == 0);
-// 	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 4) == true);
+	REQUIRE(item1->IsFrozen() == false);
 
-// 	/* Add a FooItem. */
+	fooPacket->AddItem(item1);
 
-// 	uint8_t item1Value[] = { 0xAA, 0xBB, 0xCC };
-// 	uint8_t item2Value[] = { 0xAB, 0xCD };
+	// Original item remains frozen after calling `AddItem()` with it.
+	REQUIRE(item1->IsFrozen() == false);
 
-// 	// FooItem 1 (5 bytes).
-// 	auto item1 = FooItem::Factory(
-// 	  itemBuffer,
-// 	  sizeof(itemBuffer),
-// 	  /*id*/ FooItem::ItemId::NUMERIC,
-// 	  /*flags*/ 0b1000,
-// 	  item1Value,
-// 	  sizeof(item1Value));
+	// Delete the item since it's been cloned within the packet.
+	delete item1;
 
-// 	// Hold item1 pointer for tests below.
-// 	auto* item1Ptr = item1.get();
+	// FooItem 2 (6 bytes).
+	auto* item2 = FooTextItem::Factory(
+	  itemBuffer,
+	  sizeof(itemBuffer),
+	  /*flags*/ 0b1001,
+	  "ABCD");
 
-// 	fooPacket->AddItem(std::move(item1));
+	REQUIRE(item2->IsFrozen() == false);
 
-// 	// FooItem 2 (4 bytes).
-// 	auto item2 = FooItem::Factory(
-// 	  itemBuffer,
-// 	  sizeof(itemBuffer),
-// 	  /*id*/ FooItem::ItemId::TEXT,
-// 	  /*flags*/ 0b1001,
-// 	  item2Value,
-// 	  sizeof(item2Value));
+	fooPacket->AddItem(item2);
 
-// 	// Hold item2 pointer for tests below.
-// 	auto* item2Ptr = item2.get();
+	// Original item remains frozen after calling `AddItem()` with it.
+	REQUIRE(item2->IsFrozen() == false);
 
-// 	fooPacket->AddItem(std::move(item2));
+	// Delete the item since it's been cloned within the packet.
+	delete item2;
 
-// 	auto foo2 = FooPacket::Parse(fooPacket->GetBuffer(), fooPacket->GetLength());
+	REQUIRE(fooPacket->GetBuffer() == buffer);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	// Header (4 bytes) + items (10 bytes) + padding (2 bytes).
+	REQUIRE(fooPacket->GetLength() == 16);
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == false);
+	REQUIRE(fooPacket->GetAppendix() == 0);
+	REQUIRE(fooPacket->HasItems() == true);
+	REQUIRE(fooPacket->GetItemsCount() == 2);
+	REQUIRE(
+	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 16) == true);
 
-// 	REQUIRE(fooPacket->GetBuffer() == buffer);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Header (4 bytes) + items (9 bytes) + padding (3 bytes).
-// 	REQUIRE(fooPacket->GetLength() == 16);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 125);
-// 	REQUIRE(fooPacket->HasAppendix() == false);
-// 	REQUIRE(fooPacket->GetAppendix() == 0u);
-// 	REQUIRE(fooPacket->HasItems() == true);
-// 	REQUIRE(fooPacket->GetItemsCount() == 2);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 16) == true);
+	auto* addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
-// 	REQUIRE(item1Ptr == fooPacket->GetItem(0).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item1Ptr->GetBufferLength() == 5);
-// 	REQUIRE(item1Ptr->GetLength() == 5);
-// 	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::NUMERIC);
-// 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
-// 	REQUIRE(item1Ptr->GetValueLength() == 3);
-// 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
-// 	REQUIRE(item1Ptr->GetValue()[1] == 0xBB);
-// 	REQUIRE(item1Ptr->GetValue()[2] == 0xCC);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item1Ptr->GetBuffer(), item1Ptr->GetLength(), buffer + 4, 5) == true);
+	REQUIRE(addedItem1->GetBufferLength() == 4);
+	REQUIRE(addedItem1->GetLength() == 4);
+	// Internal items must always be frozen.
+	REQUIRE(addedItem1->IsFrozen() == true);
+	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->GetFlags() == 0b1000);
+	REQUIRE(addedItem1->GetValueLength() == 2);
+	REQUIRE(addedItem1->GetNumber() == 12345);
+	REQUIRE(
+	  helpers::areBuffersEqual(addedItem1->GetBuffer(), addedItem1->GetLength(), buffer + 4, 4) == true);
 
-// 	REQUIRE(item2Ptr == fooPacket->GetItem(1).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item2Ptr->GetBufferLength() == 4);
-// 	REQUIRE(item2Ptr->GetLength() == 4);
-// 	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::TEXT);
-// 	REQUIRE(item2Ptr->GetFlags() == 0b1001);
-// 	REQUIRE(item2Ptr->GetValueLength() == 2);
-// 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
-// 	REQUIRE(item2Ptr->GetValue()[1] == 0xCD);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item2Ptr->GetBuffer(), item2Ptr->GetLength(), buffer + 4 + 5, 4) == true);
+	auto* addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
-// 	REQUIRE(!fooPacket->GetItem(2));
+	REQUIRE(addedItem2->GetBufferLength() == 6);
+	// Internal items must always be frozen.
+	REQUIRE(addedItem2->IsFrozen() == true);
+	REQUIRE(addedItem2->GetLength() == 6);
+	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->GetFlags() == 0b1001);
+	REQUIRE(addedItem2->GetValueLength() == 4);
+	REQUIRE(addedItem2->GetText() == "ABCD");
+	REQUIRE(
+	  helpers::areBuffersEqual(addedItem2->GetBuffer(), addedItem2->GetLength(), buffer + 4 + 4, 6) ==
+	  true);
 
-// 	/* Add Appendix. */
+	REQUIRE(!fooPacket->GetItemAt(2));
 
-// 	fooPacket->SetAppendix(666u);
+	// Must throw if we try to modify items within the packet because they are
+	// always frozen.
+	REQUIRE_THROWS_AS(const_cast<FooNumericItem*>(addedItem1)->SetNumber(9999), MediaSoupError);
+	REQUIRE_THROWS_AS(const_cast<FooTextItem*>(addedItem2)->SetText("qweqwe"), MediaSoupError);
 
-// 	REQUIRE(fooPacket->GetBuffer() == buffer);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Header (4 bytes) + Appendix (4 bytes) + items (9 bytes) + padding (3
-// 	// bytes);
-// 	REQUIRE(fooPacket->GetLength() == 20);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 125);
-// 	REQUIRE(fooPacket->HasAppendix() == true);
-// 	REQUIRE(fooPacket->GetAppendix() == 666u);
-// 	REQUIRE(fooPacket->HasItems() == true);
-// 	REQUIRE(fooPacket->GetItemsCount() == 2);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 20) == true);
+	/* Add Appendix. */
 
-// 	REQUIRE(item1Ptr == fooPacket->GetItem(0).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item1Ptr->GetBufferLength() == 5);
-// 	REQUIRE(item1Ptr->GetLength() == 5);
-// 	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::NUMERIC);
-// 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
-// 	REQUIRE(item1Ptr->GetValueLength() == 3);
-// 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
-// 	REQUIRE(item1Ptr->GetValue()[1] == 0xBB);
-// 	REQUIRE(item1Ptr->GetValue()[2] == 0xCC);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item1Ptr->GetBuffer(), item1Ptr->GetLength(), buffer + 4 + 4, 5) == true);
+	fooPacket->SetAppendix(666);
 
-// 	REQUIRE(item2Ptr == fooPacket->GetItem(1).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item2Ptr->GetBufferLength() == 4);
-// 	REQUIRE(item2Ptr->GetLength() == 4);
-// 	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::TEXT);
-// 	REQUIRE(item2Ptr->GetFlags() == 0b1001);
-// 	REQUIRE(item2Ptr->GetValueLength() == 2);
-// 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
-// 	REQUIRE(item2Ptr->GetValue()[1] == 0xCD);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item2Ptr->GetBuffer(), item2Ptr->GetLength(), buffer + 4 + 4 + 5,
-// 4) == 	  true);
+	REQUIRE(fooPacket->GetBuffer() == buffer);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	// Header (4 bytes) + appendix (4) + items (10 bytes) + padding (2 bytes).
+	REQUIRE(fooPacket->GetLength() == 20);
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == true);
+	REQUIRE(fooPacket->GetAppendix() == 666);
+	REQUIRE(fooPacket->HasItems() == true);
+	REQUIRE(fooPacket->GetItemsCount() == 2);
+	REQUIRE(
+	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 20) == true);
 
-// 	REQUIRE(!fooPacket->GetItem(2));
+	addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
-// 	/* Remove Appendix and change flags of FooItem 2. */
+	REQUIRE(addedItem1->GetBufferLength() == 4);
+	REQUIRE(addedItem1->GetLength() == 4);
+	REQUIRE(addedItem1->IsFrozen() == true);
+	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->GetFlags() == 0b1000);
+	REQUIRE(addedItem1->GetValueLength() == 2);
+	REQUIRE(addedItem1->GetNumber() == 12345);
+	REQUIRE(
+	  helpers::areBuffersEqual(addedItem1->GetBuffer(), addedItem1->GetLength(), buffer + 4 + 4, 4) ==
+	  true);
 
-// 	fooPacket->SetAppendix(0u);
-// 	fooPacket->GetItem(1)->SetFlags(0b1111);
+	addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
-// 	REQUIRE(fooPacket->GetBuffer() == buffer);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Header (4 bytes) + items (9 bytes) + padding (3 bytes);
-// 	REQUIRE(fooPacket->GetLength() == 16);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 125);
-// 	REQUIRE(fooPacket->HasAppendix() == false);
-// 	REQUIRE(fooPacket->GetAppendix() == 0u);
-// 	REQUIRE(fooPacket->HasItems() == true);
-// 	REQUIRE(fooPacket->GetItemsCount() == 2);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 16) == true);
+	REQUIRE(addedItem2->GetBufferLength() == 6);
+	REQUIRE(addedItem2->GetLength() == 6);
+	REQUIRE(addedItem2->IsFrozen() == true);
+	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->GetFlags() == 0b1001);
+	REQUIRE(addedItem2->GetValueLength() == 4);
+	REQUIRE(addedItem2->GetText() == "ABCD");
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem2->GetBuffer(), addedItem2->GetLength(), buffer + 4 + 4 + 4, 6) == true);
 
-// 	REQUIRE(item1Ptr == fooPacket->GetItem(0).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item1Ptr->GetBufferLength() == 5);
-// 	REQUIRE(item1Ptr->GetLength() == 5);
-// 	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::NUMERIC);
-// 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
-// 	REQUIRE(item1Ptr->GetValueLength() == 3);
-// 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
-// 	REQUIRE(item1Ptr->GetValue()[1] == 0xBB);
-// 	REQUIRE(item1Ptr->GetValue()[2] == 0xCC);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item1Ptr->GetBuffer(), item1Ptr->GetLength(), buffer + 4, 5) == true);
+	REQUIRE(!fooPacket->GetItemAt(2));
 
-// 	REQUIRE(item2Ptr == fooPacket->GetItem(1).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item2Ptr->GetBufferLength() == 4);
-// 	REQUIRE(item2Ptr->GetLength() == 4);
-// 	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::TEXT);
-// 	REQUIRE(item2Ptr->GetFlags() == 0b1111);
-// 	REQUIRE(item2Ptr->GetValueLength() == 2);
-// 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
-// 	REQUIRE(item2Ptr->GetValue()[1] == 0xCD);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item2Ptr->GetBuffer(), item2Ptr->GetLength(), buffer + 4 + 5, 4) == true);
+	/* Freeze FooPacket. */
 
-// 	REQUIRE(!fooPacket->GetItem(2));
+	fooPacket->Freeze();
 
-// 	/* Serialize FooPacket into another buffer. */
+	REQUIRE(fooPacket->IsFrozen() == true);
 
-// 	uint8_t newBuffer1[256];
+	// Must throw if we try to modify the packet after freezing it.
+	REQUIRE_THROWS_AS(fooPacket->SetAppendix(9999), MediaSoupError);
+	REQUIRE_THROWS_AS(fooPacket->AddItem(addedItem1), MediaSoupError);
+	REQUIRE_THROWS_AS(fooPacket->AddNumericItem(0b1100, 54321), MediaSoupError);
+	REQUIRE_THROWS_AS(fooPacket->AddTextItem(0b0011, "hello"), MediaSoupError);
 
-// 	std::memset(newBuffer1, 0xFF, sizeof(newBuffer1));
-//
-// 	// Must throw if buffer is too small.
-//  REQUIRE_THROWS_AS(fooPacket->Serialize(newBuffer1, fooPacket->GetLength() - 1), MediaSoupTypeError);
+	/* Serialize FooPacket into another buffer. */
 
-// 	fooPacket->Serialize(newBuffer1, sizeof(newBuffer1));
+	uint8_t newBuffer1[256];
 
-// 	// Compare new and old buffers.
-// 	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 16));
+	std::memset(newBuffer1, 0xFF, sizeof(newBuffer1));
 
-// 	// Once done fill the old buffer with 1s.
-// 	std::memset(buffer, 0xFF, sizeof(buffer));
+	// Must throw if buffer is too small.
+	REQUIRE_THROWS_AS(fooPacket->Serialize(newBuffer1, fooPacket->GetLength() - 1), MediaSoupTypeError);
 
-// 	REQUIRE(fooPacket->GetBuffer() == newBuffer1);
-// 	REQUIRE(fooPacket->GetBufferLength() == 256);
-// 	// Header (4 bytes) + items (9 bytes) + padding (3 bytes);
-// 	REQUIRE(fooPacket->GetLength() == 16);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
-// 	REQUIRE(fooPacket->GetType() == 125);
-// 	REQUIRE(fooPacket->HasAppendix() == false);
-// 	REQUIRE(fooPacket->GetAppendix() == 0u);
-// 	REQUIRE(fooPacket->HasItems() == true);
-// 	REQUIRE(fooPacket->GetItemsCount() == 2);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer1, 16) == true);
+	fooPacket->Serialize(newBuffer1, sizeof(newBuffer1));
 
-// 	REQUIRE(item1Ptr == fooPacket->GetItem(0).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item1Ptr->GetBufferLength() == 5);
-// 	REQUIRE(item1Ptr->GetLength() == 5);
-// 	REQUIRE(item1Ptr->GetId() == FooItem::ItemId::NUMERIC);
-// 	REQUIRE(item1Ptr->GetFlags() == 0b1000);
-// 	REQUIRE(item1Ptr->GetValueLength() == 3);
-// 	REQUIRE(item1Ptr->GetValue()[0] == 0xAA);
-// 	REQUIRE(item1Ptr->GetValue()[1] == 0xBB);
-// 	REQUIRE(item1Ptr->GetValue()[2] == 0xCC);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item1Ptr->GetBuffer(), item1Ptr->GetLength(), newBuffer1 + 4, 5) == true);
+	// Compare new and old buffers.
+	REQUIRE(helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 20));
 
-// 	REQUIRE(item2Ptr == fooPacket->GetItem(1).get());
-// 	// We know this will be same as item length.
-// 	REQUIRE(item2Ptr->GetBufferLength() == 4);
-// 	REQUIRE(item2Ptr->GetLength() == 4);
-// 	REQUIRE(item2Ptr->GetId() == FooItem::ItemId::TEXT);
-// 	REQUIRE(item2Ptr->GetFlags() == 0b1111);
-// 	REQUIRE(item2Ptr->GetValueLength() == 2);
-// 	REQUIRE(item2Ptr->GetValue()[0] == 0xAB);
-// 	REQUIRE(item2Ptr->GetValue()[1] == 0xCD);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(item2Ptr->GetBuffer(), item2Ptr->GetLength(), newBuffer1 + 4 + 5,
-// 4) == 	  true);
+	// Once done fill the old buffer with 1s.
+	std::memset(buffer, 0xFF, sizeof(buffer));
 
-// 	REQUIRE(!fooPacket->GetItem(2));
+	REQUIRE(fooPacket->GetBuffer() == newBuffer1);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	REQUIRE(fooPacket->GetLength() == 20);
+	// After serializing, the packet must be unfrozen.
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == true);
+	REQUIRE(fooPacket->GetAppendix() == 666);
+	REQUIRE(fooPacket->HasItems() == true);
+	REQUIRE(fooPacket->GetItemsCount() == 2);
+	REQUIRE(
+	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer1, 20) == true);
 
-// 	/* Clone FooPacket into another buffer. */
+	addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
-// 	uint8_t newBuffer2[100];
+	REQUIRE(addedItem1->GetBufferLength() == 4);
+	REQUIRE(addedItem1->GetLength() == 4);
+	// After serializing, items in the packet must remain frozen.
+	REQUIRE(addedItem1->IsFrozen() == true);
+	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->GetFlags() == 0b1000);
+	REQUIRE(addedItem1->GetValueLength() == 2);
+	REQUIRE(addedItem1->GetNumber() == 12345);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem1->GetBuffer(), addedItem1->GetLength(), newBuffer1 + 4 + 4, 4) == true);
 
-// 	std::memset(newBuffer2, 0xFF, sizeof(newBuffer2));
-//
-// 	// Must throw if buffer is too small.
-// REQUIRE_THROWS_AS(fooPacket->Clone(newBuffer2, fooPacket->GetLength() - 1), MediaSoupTypeError);
+	addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
-// 	auto* previousBuffer      = fooPacket->GetBuffer();
-// 	auto previousBufferLength = fooPacket->GetBufferLength();
+	REQUIRE(addedItem2->GetBufferLength() == 6);
+	REQUIRE(addedItem2->GetLength() == 6);
+	// After serializing, items in the packet must remain frozen.
+	REQUIRE(addedItem2->IsFrozen() == true);
+	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->GetFlags() == 0b1001);
+	REQUIRE(addedItem2->GetValueLength() == 4);
+	REQUIRE(addedItem2->GetText() == "ABCD");
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem2->GetBuffer(), addedItem2->GetLength(), newBuffer1 + 4 + 4 + 4, 6) == true);
 
-// 	// FooPacket::Clone() returns a unique_ptr<Serializable>. We need to release
-// 	// its pointer, cast it to FooPacket*, and then create a unique_ptr<FooPacket>
-// 	// with it.
-// 	auto* clonedFooPacketPtr =
-// 	  static_cast<FooPacket*>(fooPacket->Clone(newBuffer2, sizeof(newBuffer2)).release());
-// 	auto clonedFooPacket = std::unique_ptr<FooPacket>(clonedFooPacketPtr);
+	REQUIRE(!fooPacket->GetItemAt(2));
 
-// 	// Compare the buffers of the original FooPacket and the cloned one.
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(
-// 	    clonedFooPacket->GetBuffer(), clonedFooPacket->GetLength(), newBuffer1,
-// fooPacket->GetLength()) == 	  true);
+	/* Add a new FooNumericItem and FooTextItem in place. */
 
-// 	// Once done fill the original buffer with 1s (this is, we are ruining original
-// 	// FooPacket despite it still exists since we have jsut cloned it).
-// 	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
+	fooPacket->AddNumericItem(/*flags*/ 0b1100, /*number*/ 54321); // 4 bytes.
+	fooPacket->AddTextItem(/*flags*/ 0b0011, /*number*/ "hello");  // 7 bytes.
 
-// 	REQUIRE(clonedFooPacket->GetBuffer() == newBuffer2);
-// 	REQUIRE(clonedFooPacket->GetBufferLength() == 100);
-// 	// Header (4 bytes) + items (9 bytes) + padding (3 bytes);
-// 	REQUIRE(clonedFooPacket->GetLength() == 16);
-// 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(clonedFooPacket->GetLength()) == true);
-// 	REQUIRE(clonedFooPacket->GetType() == 125);
-// 	REQUIRE(clonedFooPacket->HasAppendix() == false);
-// 	REQUIRE(clonedFooPacket->GetAppendix() == 0u);
-// 	REQUIRE(clonedFooPacket->HasItems() == true);
-// 	REQUIRE(clonedFooPacket->GetItemsCount() == 2);
+	REQUIRE(fooPacket->GetBuffer() == newBuffer1);
+	REQUIRE(fooPacket->GetBufferLength() == 256);
+	REQUIRE(fooPacket->GetLength() == 32);
+	REQUIRE(fooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(fooPacket->GetLength()) == true);
+	REQUIRE(fooPacket->GetType() == 55);
+	REQUIRE(fooPacket->HasAppendix() == true);
+	REQUIRE(fooPacket->GetAppendix() == 666);
+	REQUIRE(fooPacket->HasItems() == true);
+	REQUIRE(fooPacket->GetItemsCount() == 4);
+	REQUIRE(
+	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer1, 32) == true);
 
-// 	auto& clonedItem1 = clonedFooPacket->GetItem(0);
+	addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
-// 	REQUIRE(clonedItem1->GetBufferLength() == 5);
-// 	REQUIRE(clonedItem1->GetLength() == 5);
-// 	REQUIRE(clonedItem1->GetId() == FooItem::ItemId::NUMERIC);
-// 	REQUIRE(clonedItem1->GetFlags() == 0b1000);
-// 	REQUIRE(clonedItem1->GetValueLength() == 3);
-// 	REQUIRE(clonedItem1->GetValue()[0] == 0xAA);
-// 	REQUIRE(clonedItem1->GetValue()[1] == 0xBB);
-// 	REQUIRE(clonedItem1->GetValue()[2] == 0xCC);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(
-// 	    clonedItem1->GetBuffer(), clonedItem1->GetLength(), newBuffer2 + 4, 5) == true);
+	REQUIRE(addedItem1->GetBufferLength() == 4);
+	REQUIRE(addedItem1->GetLength() == 4);
+	REQUIRE(addedItem1->IsFrozen() == true);
+	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->GetFlags() == 0b1000);
+	REQUIRE(addedItem1->GetValueLength() == 2);
+	REQUIRE(addedItem1->GetNumber() == 12345);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem1->GetBuffer(), addedItem1->GetLength(), newBuffer1 + 4 + 4, 4) == true);
 
-// 	auto& clonedItem2 = clonedFooPacket->GetItem(1);
+	addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
-// 	REQUIRE(clonedItem2->GetBufferLength() == 4);
-// 	REQUIRE(clonedItem2->GetLength() == 4);
-// 	REQUIRE(clonedItem2->GetId() == FooItem::ItemId::TEXT);
-// 	REQUIRE(clonedItem2->GetFlags() == 0b1111);
-// 	REQUIRE(clonedItem2->GetValueLength() == 2);
-// 	REQUIRE(clonedItem2->GetValue()[0] == 0xAB);
-// 	REQUIRE(clonedItem2->GetValue()[1] == 0xCD);
-// 	REQUIRE(
-// 	  helpers::areBuffersEqual(
-// 	    clonedItem2->GetBuffer(), clonedItem2->GetLength(), newBuffer2 + 4 + 5, 4) == true);
+	REQUIRE(addedItem2->GetBufferLength() == 6);
+	REQUIRE(addedItem2->GetLength() == 6);
+	REQUIRE(addedItem2->IsFrozen() == true);
+	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->GetFlags() == 0b1001);
+	REQUIRE(addedItem2->GetValueLength() == 4);
+	REQUIRE(addedItem2->GetText() == "ABCD");
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem2->GetBuffer(), addedItem2->GetLength(), newBuffer1 + 4 + 4 + 4, 6) == true);
 
-// 	REQUIRE(!clonedFooPacket->GetItem(2));
-// }
+	auto* addedItem3 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(2));
+
+	REQUIRE(addedItem3->GetBufferLength() == 4);
+	REQUIRE(addedItem3->GetLength() == 4);
+	REQUIRE(addedItem3->IsFrozen() == true);
+	REQUIRE(addedItem3->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem3->GetFlags() == 0b1100);
+	REQUIRE(addedItem3->GetValueLength() == 2);
+	REQUIRE(addedItem3->GetNumber() == 54321);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem3->GetBuffer(), addedItem3->GetLength(), newBuffer1 + 4 + 4 + 4 + 6, 4) == true);
+
+	auto* addedItem4 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(3));
+
+	REQUIRE(addedItem4->GetBufferLength() == 7);
+	REQUIRE(addedItem4->GetLength() == 7);
+	REQUIRE(addedItem4->IsFrozen() == true);
+	REQUIRE(addedItem4->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem4->GetFlags() == 0b0011);
+	REQUIRE(addedItem4->GetValueLength() == 5);
+	REQUIRE(addedItem4->GetText() == "hello");
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem4->GetBuffer(), addedItem4->GetLength(), newBuffer1 + 4 + 4 + 4 + 6 + 4, 7) == true);
+
+	REQUIRE(!fooPacket->GetItemAt(4));
+
+	/* Clone FooPacket into another buffer. */
+
+	uint8_t newBuffer2[100];
+
+	std::memset(newBuffer2, 0xFF, sizeof(newBuffer2));
+
+	// Must throw if buffer is too small.
+	REQUIRE_THROWS_AS(fooPacket->Clone(newBuffer2, fooPacket->GetLength() - 1), MediaSoupTypeError);
+
+	auto* previousBuffer      = fooPacket->GetBuffer();
+	auto previousBufferLength = fooPacket->GetBufferLength();
+	auto* clonedFooPacket     = fooPacket->Clone(newBuffer2, sizeof(newBuffer2));
+
+	// Compare the buffers of the original FooPacket and the cloned one.
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    clonedFooPacket->GetBuffer(), clonedFooPacket->GetLength(), newBuffer1, fooPacket->GetLength()) ==
+	  true);
+
+	// Once done fill the original buffer with 1s (this is, we are ruining original
+	// FooPacket despite it still exists since we have jsut cloned it).
+	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
+
+	// Freeze the original packet again.
+	fooPacket->Freeze();
+
+	REQUIRE(clonedFooPacket->GetBuffer() == newBuffer2);
+	REQUIRE(clonedFooPacket->GetBufferLength() == 100);
+	REQUIRE(clonedFooPacket->GetLength() == 32);
+	// After cloning, the cloned packet must be unfrozen.
+	REQUIRE(clonedFooPacket->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(clonedFooPacket->GetLength()) == true);
+	REQUIRE(clonedFooPacket->GetType() == 55);
+	REQUIRE(clonedFooPacket->HasAppendix() == true);
+	REQUIRE(clonedFooPacket->GetAppendix() == 666);
+	REQUIRE(clonedFooPacket->HasItems() == true);
+	REQUIRE(clonedFooPacket->GetItemsCount() == 4);
+
+	addedItem1 = static_cast<const FooNumericItem*>(clonedFooPacket->GetItemAt(0));
+
+	REQUIRE(addedItem1->GetBufferLength() == 4);
+	REQUIRE(addedItem1->GetLength() == 4);
+	// After cloning the packet, items in the packet must remain frozen.
+	REQUIRE(addedItem1->IsFrozen() == true);
+	REQUIRE(addedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem1->GetFlags() == 0b1000);
+	REQUIRE(addedItem1->GetValueLength() == 2);
+	REQUIRE(addedItem1->GetNumber() == 12345);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem1->GetBuffer(), addedItem1->GetLength(), newBuffer2 + 4 + 4, 4) == true);
+
+	addedItem2 = static_cast<const FooTextItem*>(clonedFooPacket->GetItemAt(1));
+
+	REQUIRE(addedItem2->GetBufferLength() == 6);
+	REQUIRE(addedItem2->GetLength() == 6);
+	// After cloning the packet, items in the packet must remain frozen.
+	REQUIRE(addedItem2->IsFrozen() == true);
+	REQUIRE(addedItem2->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem2->GetFlags() == 0b1001);
+	REQUIRE(addedItem2->GetValueLength() == 4);
+	REQUIRE(addedItem2->GetText() == "ABCD");
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem2->GetBuffer(), addedItem2->GetLength(), newBuffer2 + 4 + 4 + 4, 6) == true);
+
+	addedItem3 = static_cast<const FooNumericItem*>(clonedFooPacket->GetItemAt(2));
+
+	REQUIRE(addedItem3->GetBufferLength() == 4);
+	REQUIRE(addedItem3->GetLength() == 4);
+	// After cloning the packet, items in the packet must remain frozen.
+	REQUIRE(addedItem3->IsFrozen() == true);
+	REQUIRE(addedItem3->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(addedItem3->GetFlags() == 0b1100);
+	REQUIRE(addedItem3->GetValueLength() == 2);
+	REQUIRE(addedItem3->GetNumber() == 54321);
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem3->GetBuffer(), addedItem3->GetLength(), newBuffer2 + 4 + 4 + 4 + 6, 4) == true);
+
+	addedItem4 = static_cast<const FooTextItem*>(clonedFooPacket->GetItemAt(3));
+
+	REQUIRE(addedItem4->GetBufferLength() == 7);
+	REQUIRE(addedItem4->GetLength() == 7);
+	// After serializing, items in the packet must remain frozen.
+	REQUIRE(addedItem4->IsFrozen() == true);
+	REQUIRE(addedItem4->GetId() == FooItem::ItemId::TEXT);
+	REQUIRE(addedItem4->GetFlags() == 0b0011);
+	REQUIRE(addedItem4->GetValueLength() == 5);
+	REQUIRE(addedItem4->GetText() == "hello");
+	REQUIRE(
+	  helpers::areBuffersEqual(
+	    addedItem4->GetBuffer(), addedItem4->GetLength(), newBuffer2 + 4 + 4 + 4 + 6 + 4, 7) == true);
+
+	REQUIRE(!clonedFooPacket->GetItemAt(4));
+
+	/* Clone a FooItem in the packet. */
+
+	uint8_t newBuffer3[8];
+
+	std::memset(newBuffer3, 0xFF, sizeof(newBuffer3));
+
+	auto* clonedItem1 = addedItem1->Clone(newBuffer3, sizeof(newBuffer3));
+
+	REQUIRE(clonedItem1->GetBufferLength() == 8);
+	REQUIRE(clonedItem1->GetLength() == 4);
+	// If we clone an item in the packet, the cloned item won't be frozen.
+	REQUIRE(clonedItem1->IsFrozen() == false);
+	REQUIRE(clonedItem1->GetId() == FooItem::ItemId::NUMERIC);
+	REQUIRE(clonedItem1->GetFlags() == 0b1000);
+	REQUIRE(clonedItem1->GetValueLength() == 2);
+	REQUIRE(clonedItem1->GetNumber() == 12345);
+	REQUIRE(
+	  helpers::areBuffersEqual(clonedItem1->GetBuffer(), clonedItem1->GetLength(), newBuffer3, 4) ==
+	  true);
+
+	delete fooPacket;
+	delete clonedFooPacket;
+	delete clonedItem1;
+}
 
 SCENARIO("parse FooNumericItem", "[rtc][serializable]")
 {
@@ -481,17 +592,20 @@ SCENARIO("parse FooNumericItem", "[rtc][serializable]")
 	};
 	// clang-format on
 
-	auto item = FooNumericItem::Parse(buffer, sizeof(buffer));
+	auto* item = FooNumericItem::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 4);
 	REQUIRE(item);
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 4);
 	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->IsFrozen() == true);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(item->GetFlags() == 0b1110);
 	REQUIRE(item->GetNumber() == 0x12EF);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
+
+	delete item;
 }
 
 SCENARIO("parse FooNumericItem by passing a buffer larger than the length of the item", "[rtc][serializable]")
@@ -506,17 +620,20 @@ SCENARIO("parse FooNumericItem by passing a buffer larger than the length of the
 	};
 	// clang-format on
 
-	auto item = FooNumericItem::Parse(buffer, sizeof(buffer));
+	auto* item = FooNumericItem::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 6);
 	REQUIRE(item);
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 6);
 	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->IsFrozen() == true);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(item->GetFlags() == 0b0000);
 	REQUIRE(item->GetNumber() == 0xFFFF);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
+
+	delete item;
 }
 
 SCENARIO("parse invalid FooNumericItem with too small buffer", "[rtc][serializable]")
@@ -530,7 +647,7 @@ SCENARIO("parse invalid FooNumericItem with too small buffer", "[rtc][serializab
 	};
 	// clang-format on
 
-	auto item = FooNumericItem::Parse(buffer, sizeof(buffer));
+	auto* item = FooNumericItem::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 3);
 	REQUIRE(!item);
@@ -547,7 +664,7 @@ SCENARIO("parse invalid FooNumericItem with wrong value length", "[rtc][serializ
 	};
 	// clang-format on
 
-	auto item = FooNumericItem::Parse(buffer, sizeof(buffer));
+	auto* item = FooNumericItem::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 5);
 	REQUIRE(!item);
@@ -563,7 +680,7 @@ SCENARIO("parse invalid FooNumericItem with wrong id", "[rtc][serializable]")
 	};
 	// clang-format on
 
-	auto item = FooNumericItem::Parse(buffer, sizeof(buffer));
+	auto* item = FooNumericItem::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 4);
 	REQUIRE(!item);
@@ -578,13 +695,14 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	// FooNumericItem:Factory()).
 	std::memset(buffer, 0xFF, sizeof(buffer));
 
-	auto item = FooNumericItem::Factory(buffer, sizeof(buffer), /*flags*/ 0b1010, 1111);
+	auto* item = FooNumericItem::Factory(buffer, sizeof(buffer), /*flags*/ 0b1010, 1111);
 
 	REQUIRE(sizeof(buffer) == 17);
 	REQUIRE(item);
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetNumber() == 1111);
@@ -597,10 +715,19 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 4);
+	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetNumber() == 2222);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 4) == true);
+
+	/* Freeze FooNumericItem. */
+
+	item->Freeze();
+
+	REQUIRE(item->IsFrozen() == true);
+	// Must throw if we try to modify the item.
+	REQUIRE_THROWS_AS(item->SetNumber(1122), MediaSoupError);
 
 	/* Serialize FooNumericItem into another buffer. */
 
@@ -622,6 +749,8 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == newBuffer1);
 	REQUIRE(item->GetBufferLength() == 17);
 	REQUIRE(item->GetLength() == 4);
+	// After serializing the item it must be unfrozen.
+	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetNumber() == 2222);
@@ -636,15 +765,12 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	// Must throw if buffer is too small.
 	REQUIRE_THROWS_AS(item->Clone(newBuffer2, item->GetLength() - 1), MediaSoupTypeError);
 
+	// Serialize the original item again just for testing.
+	item->Freeze();
+
 	auto* previousBuffer      = item->GetBuffer();
 	auto previousBufferLength = item->GetBufferLength();
-
-	// FooNumericItem::Clone() returns a unique_ptr<Serializable>. We need to release
-	// its pointer, cast it to FooNumericItem*, and then create a
-	// unique_ptr<FooNumericItem> with it.
-	auto* clonedItemPtr =
-	  static_cast<FooNumericItem*>(item->Clone(newBuffer2, sizeof(newBuffer2)).release());
-	auto clonedItem = std::unique_ptr<FooNumericItem>(clonedItemPtr);
+	auto* clonedItem          = item->Clone(newBuffer2, sizeof(newBuffer2));
 
 	// Compare the buffers of the original FooNumericItem and the cloned one.
 	REQUIRE(
@@ -658,11 +784,16 @@ SCENARIO("create and modify FooNumericItem", "[rtc][serializable]")
 	REQUIRE(clonedItem->GetBuffer() == newBuffer2);
 	REQUIRE(clonedItem->GetBufferLength() == 100);
 	REQUIRE(clonedItem->GetLength() == 4);
+	// Clone() must create an unfrozen item.
+	REQUIRE(clonedItem->IsFrozen() == false);
 	REQUIRE(clonedItem->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(clonedItem->GetFlags() == 0b1010);
 	REQUIRE(clonedItem->GetNumber() == 2222);
 	REQUIRE(
 	  helpers::areBuffersEqual(clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer2, 4) == true);
+
+	delete item;
+	delete clonedItem;
 }
 
 SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
@@ -674,13 +805,14 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	// FooTextItem:Factory()).
 	std::memset(buffer, 0xFF, sizeof(buffer));
 
-	auto item = FooTextItem::Factory(buffer, sizeof(buffer), /*flags*/ 0b1010, text);
+	auto* item = FooTextItem::Factory(buffer, sizeof(buffer), /*flags*/ 0b1010, text);
 
 	REQUIRE(sizeof(buffer) == 40);
 	REQUIRE(item);
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 40);
 	REQUIRE(item->GetLength() == 8);
+	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::TEXT);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetText() == text);
@@ -695,10 +827,19 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == buffer);
 	REQUIRE(item->GetBufferLength() == 40);
 	REQUIRE(item->GetLength() == 17);
+	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::TEXT);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetText() == newText);
 	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 17) == true);
+
+	/* Freeze FooTextItem. */
+
+	item->Freeze();
+
+	REQUIRE(item->IsFrozen() == true);
+	// Must throw if we try to modify the item.
+	REQUIRE_THROWS_AS(item->SetText("zzz!!!"), MediaSoupError);
 
 	/* Serialize FooTextItem into another buffer. */
 
@@ -720,6 +861,8 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	REQUIRE(item->GetBuffer() == newBuffer1);
 	REQUIRE(item->GetBufferLength() == 22);
 	REQUIRE(item->GetLength() == 17);
+	// After serializing the item it must be unfrozen.
+	REQUIRE(item->IsFrozen() == false);
 	REQUIRE(item->GetId() == FooItem::ItemId::TEXT);
 	REQUIRE(item->GetFlags() == 0b1010);
 	REQUIRE(item->GetText() == newText);
@@ -734,15 +877,12 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	// Must throw if buffer is too small.
 	REQUIRE_THROWS_AS(item->Clone(newBuffer2, item->GetLength() - 1), MediaSoupTypeError);
 
+	// Serialize the original item again just for testing.
+	item->Freeze();
+
 	auto* previousBuffer      = item->GetBuffer();
 	auto previousBufferLength = item->GetBufferLength();
-
-	// FooTextItem::Clone() returns a unique_ptr<Serializable>. We need to release
-	// its pointer, cast it to FooTextItem*, and then create a
-	// unique_ptr<FooTextItem> with it.
-	auto* clonedItemPtr =
-	  static_cast<FooTextItem*>(item->Clone(newBuffer2, sizeof(newBuffer2)).release());
-	auto clonedItem = std::unique_ptr<FooTextItem>(clonedItemPtr);
+	auto* clonedItem          = item->Clone(newBuffer2, sizeof(newBuffer2));
 
 	// Compare the buffers of the original FooTextItem and the cloned one.
 	REQUIRE(
@@ -756,10 +896,15 @@ SCENARIO("create and modify FooTextItem", "[rtc][serializable]")
 	REQUIRE(clonedItem->GetBuffer() == newBuffer2);
 	REQUIRE(clonedItem->GetBufferLength() == 100);
 	REQUIRE(clonedItem->GetLength() == 17);
+	// Clone() must create an unfrozen item.
+	REQUIRE(clonedItem->IsFrozen() == false);
 	REQUIRE(clonedItem->GetId() == FooItem::ItemId::TEXT);
 	REQUIRE(clonedItem->GetFlags() == 0b1010);
 	REQUIRE(clonedItem->GetText() == newText);
 	REQUIRE(
 	  helpers::areBuffersEqual(clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer2, 17) ==
 	  true);
+
+	delete item;
+	delete clonedItem;
 }

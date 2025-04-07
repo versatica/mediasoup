@@ -38,10 +38,9 @@ public:
 	 * @remarks
 	 * - `bufferLength` may exceed the exact length of the item.
 	 */
-	static std::unique_ptr<FooNumericItem> Parse(const uint8_t* buffer, size_t bufferLength);
+	static FooNumericItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
-	static std::unique_ptr<FooNumericItem> Factory(
-	  uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number);
+	static FooNumericItem* Factory(uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number);
 
 private:
 	/**
@@ -50,9 +49,11 @@ private:
 	FooNumericItem(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	virtual ~FooNumericItem() override;
+	virtual ~FooNumericItem() override final;
 
 	virtual void Dump() const override final;
+
+	virtual FooNumericItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
 	virtual uint16_t GetNumber() const final;
 

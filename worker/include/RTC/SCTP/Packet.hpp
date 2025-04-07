@@ -1,138 +1,173 @@
-// #ifndef MS_RTC_SCTP_PACKET_HPP
-// #define MS_RTC_SCTP_PACKET_HPP
+#ifndef MS_RTC_SCTP_PACKET_HPP
+#define MS_RTC_SCTP_PACKET_HPP
 
-// #include "common.hpp"
+#include "common.hpp"
 // #include "RTC/SCTP/Chunk.hpp"
-// #include "RTC/Serializable.hpp"
-// #include <cstring> // std::memcpy()
-// #include <vector>
+#include "RTC/Serializable.hpp"
+#include <vector>
 
-// namespace RTC
-// {
-// 	namespace SCTP
-// 	{
-// 		/**
-// 		 * SCTP Packet.
-// 		 *  0                   1                   2                   3
-// 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |                         Common Header                         |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |                           Chunk #1                            |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |                              ...                              |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |                           Chunk #n                            |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 */
+namespace RTC
+{
+	namespace SCTP
+	{
+		/**
+		 * SCTP Packet.
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                         Common Header                         |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                           Chunk #1                            |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                              ...                              |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                           Chunk #n                            |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 */
 
-// 		/**
-// 		 * SCTP Common Header.
-// 		 *
-// 		 *  0                   1                   2                   3
-// 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |      Source Port Number       |    Destination Port Number    |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |                       Verification Tag                        |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 * |                           Checksum                            |
-// 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// 		 */
-// 		class Packet : public Serializable
-// 		{
-// 		public:
-// 			/**
-// 			 * Struct of a SCTP Packet Common Header.
-// 			 */
-// 			struct CommonHeader
-// 			{
-// 				uint16_t sourcePort;
-// 				uint16_t destinationPort;
-// 				uint32_t verificationTag;
-// 				uint32_t checksum;
-// 			};
+		/**
+		 * SCTP Common Header.
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |      Source Port Number       |    Destination Port Number    |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                       Verification Tag                        |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                           Checksum                            |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 */
+		class Packet : public Serializable
+		{
+		public:
+			/**
+			 * Struct of a SCTP Packet Common Header.
+			 */
+			struct CommonHeader
+			{
+				uint16_t sourcePort;
+				uint16_t destinationPort;
+				uint32_t verificationTag;
+				uint32_t checksum;
+			};
 
-// 		public:
-// 			static const size_t CommonHeaderSize{ 12 };
+		public:
+			static const size_t CommonHeaderLength{ 12 };
 
-// 			/**
-// 			 * Whether given `data` with length `len` could be a valid SCTP packet.
-// 			 */
-// 			static bool IsSctp(const uint8_t* data, size_t len);
+			/**
+			 * Whether given buffer could be a valid SCTP packet.
+			 */
+			static bool IsSctp(const uint8_t* buffer, size_t bufferLength);
 
-// 			/**
-// 			 * Parses given `data` with length `len` and returns an allocated instance
-// 			 * of Packet (or nullptr if it's not a valid SCTP packet).
-// 			 *
-// 			 * NOTE: Given `len` must include padding so `len` must be multiple of 4
-// 			 * bytes.
-// 			 */
-// 			static Packet* Parse(const uint8_t* data, size_t len);
+			/**
+			 * Parse a SCTP packet.
+			 *
+			 * @remarks
+			 * - `length` must be the exact length of the Packet.
+			 */
+			static Packet* Parse(const uint8_t* buffer, size_t length);
 
-// 		public:
-// 			Packet(uint8_t* buffer);
+			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
 
-// 			~Packet();
+		private:
+			/**
+			 * Constructor is private because we only want to create Packet instances
+			 * via Parse() and Factory().
+			 */
+			Packet(const uint8_t* buffer, size_t bufferLength);
 
-// 			void Dump() const;
+		public:
+			~Packet() override final;
+			;
 
-// 			size_t GetSize() const override;
+			void Dump() const override final;
 
-// 			void Serialize(uint8_t* buffer) override;
+			void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
-// 			uint16_t GetSourcePort() const
-// 			{
-// 				return uint16_t{ ntohs(this->commonHeader->sourcePort) };
-// 			}
+			Packet* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-// 			void SetSourcePort(uint16_t sourcePort)
-// 			{
-// 				this->commonHeader->sourcePort = uint16_t{ htons(sourcePort) };
-// 			}
+			uint16_t GetSourcePort() const
+			{
+				return uint16_t{ ntohs(GetCommonHeaderPointer()->sourcePort) };
+			}
 
-// 			uint16_t GetDestinationPort() const
-// 			{
-// 				return uint16_t{ ntohs(this->commonHeader->destinationPort) };
-// 			}
+			void SetSourcePort(uint16_t sourcePort)
+			{
+				AssertNotFrozen();
 
-// 			void SetDestinationPort(uint16_t destinationPort)
-// 			{
-// 				this->commonHeader->destinationPort = uint16_t{ htons(destinationPort) };
-// 			}
+				GetCommonHeaderPointer()->sourcePort = uint16_t{ htons(sourcePort) };
+			}
 
-// 			uint32_t GetVerificationTag() const
-// 			{
-// 				return uint32_t{ ntohl(this->commonHeader->verificationTag) };
-// 			}
+			uint16_t GetDestinationPort() const
+			{
+				return uint16_t{ ntohs(GetCommonHeaderPointer()->destinationPort) };
+			}
 
-// 			void SetVerificationTag(uint32_t verificationTag)
-// 			{
-// 				this->commonHeader->verificationTag = uint32_t{ htonl(verificationTag) };
-// 			}
+			void SetDestinationPort(uint16_t destinationPort)
+			{
+				AssertNotFrozen();
 
-// 			uint32_t GetChecksum() const
-// 			{
-// 				return uint32_t{ ntohl(this->commonHeader->checksum) };
-// 			}
+				GetCommonHeaderPointer()->destinationPort = uint16_t{ htons(destinationPort) };
+			}
 
-// 			void SetChecksum(uint32_t checksum)
-// 			{
-// 				this->commonHeader->checksum = uint32_t{ htonl(checksum) };
-// 			}
+			uint32_t GetVerificationTag() const
+			{
+				return uint32_t{ ntohl(GetCommonHeaderPointer()->verificationTag) };
+			}
 
-// 			void AddChunk(Chunk* chunk)
-// 			{
-// 				this->chunks.push_back(chunk);
-// 			}
+			void SetVerificationTag(uint32_t verificationTag)
+			{
+				AssertNotFrozen();
 
-// 		private:
-// 			// Pointer to the SCTP Common Header of the packet.
-// 			CommonHeader* commonHeader{ nullptr };
-// 			// Chunks.
-// 			std::vector<Chunk*> chunks;
-// 		};
-// 	} // namespace SCTP
-// } // namespace RTC
+				GetCommonHeaderPointer()->verificationTag = uint32_t{ htonl(verificationTag) };
+			}
 
-// #endif
+			uint32_t GetChecksum() const
+			{
+				return uint32_t{ ntohl(GetCommonHeaderPointer()->checksum) };
+			}
+
+			void SetChecksum(uint32_t checksum)
+			{
+				AssertNotFrozen();
+
+				GetCommonHeaderPointer()->checksum = uint32_t{ htonl(checksum) };
+			}
+
+			// void AddChunk(Chunk* chunk)
+			// {
+			// 	this->chunks.push_back(chunk);
+			// }
+
+		private:
+			/**
+			 * NOTE: Return CommonHeader* instead of const CommonHeader* since we may
+			 * want to modify its fields.
+			 */
+			CommonHeader* GetCommonHeaderPointer() const
+			{
+				return reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(GetBuffer()));
+			}
+
+			const uint8_t* GetChunksPointer() const
+			{
+				return GetBuffer() + Packet::CommonHeaderLength;
+			}
+
+			/**
+			 * Must be used within Parse() static method (instead than AddChunk()).
+			 * This method doesn't serializa the given Chunk into Packet's buffer
+			 * since it's already serialized (obviously since we are parsing a
+			 * buffer).
+			 */
+			// void AddParsedChunk(Chunk* chunk);
+
+		private:
+			// Chunks.
+			// std::vector<Chunk*> chunks;
+		};
+	} // namespace SCTP
+} // namespace RTC
+
+#endif

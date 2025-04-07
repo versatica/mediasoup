@@ -36,9 +36,9 @@ public:
 	 * @remarks
 	 * - `bufferLength` may exceed the exact length of the item.
 	 */
-	static std::unique_ptr<FooTextItem> Parse(const uint8_t* buffer, size_t bufferLength);
+	static FooTextItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
-	static std::unique_ptr<FooTextItem> Factory(
+	static FooTextItem* Factory(
 	  uint8_t* buffer, size_t bufferLength, uint8_t flags, const std::string& text);
 
 private:
@@ -48,9 +48,11 @@ private:
 	FooTextItem(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	virtual ~FooTextItem() override;
+	virtual ~FooTextItem() override final;
 
 	virtual void Dump() const override final;
+
+	virtual FooTextItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
 	virtual const std::string_view GetText() const final;
 

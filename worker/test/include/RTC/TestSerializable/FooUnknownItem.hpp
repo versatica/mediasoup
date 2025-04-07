@@ -12,17 +12,19 @@ using namespace RTC;
  *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |   Id  | Flags | Value Length  |            Text               |
+ * |   Id  | Flags | Value Length  |            Value              |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |                              ...                              |
+ * \                                                               \
+ * /                             Value                             /
+ * \                                                               \
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  *
- * - Id (4 bits): Unsigned integer. Anyone but well defined ones.
+ * - Id (4 bits): Unsigned integer.
  * - Flags (4 bits).
  * - Value Length (8 bits): Length of the Value field.
- * - Text (variable length bits): Whatever.
+ * - Value (variable length).
  *
- * Length of a FooUnknownItem is therefore variable.
+ * Length of a FooUnknownItem must be 4 bytes.
  */
 
 class FooUnknownItem : public FooItem
@@ -34,18 +36,20 @@ public:
 	 * @remarks
 	 * - `bufferLength` may exceed the exact length of the item.
 	 */
-	static std::unique_ptr<FooUnknownItem> Parse(const uint8_t* buffer, size_t bufferLength);
+	static FooUnknownItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
 private:
 	/**
-	 * Private constructor used by Parse() static method.
+	 * Private constructor used by Parse() method.
 	 */
 	FooUnknownItem(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	virtual ~FooUnknownItem() override;
+	virtual ~FooUnknownItem() override final;
 
 	virtual void Dump() const override final;
+
+	virtual FooUnknownItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
 	virtual const uint8_t* GetValue() const final;
 };

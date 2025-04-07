@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Serializable"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Serializable.hpp"
 #include "Logger.hpp"
@@ -8,21 +8,6 @@
 
 namespace RTC
 {
-	void Serializable::SetBufferLength(size_t bufferLength)
-	{
-		MS_TRACE();
-
-		if (bufferLength < this->length)
-		{
-			MS_THROW_TYPE_ERROR(
-			  "buffer length (%zu bytes) is lower than current length (%zu bytes)",
-			  bufferLength,
-			  this->length);
-		}
-
-		this->bufferLength = bufferLength;
-	}
-
 	void Serializable::Serialize(uint8_t* buffer, size_t bufferLength)
 	{
 		MS_TRACE();
@@ -39,6 +24,9 @@ namespace RTC
 
 		this->buffer       = buffer;
 		this->bufferLength = bufferLength;
+
+		// May unfreeze the Serializable.
+		Unfreeze();
 	}
 
 	void Serializable::SetLength(size_t length)
@@ -54,5 +42,30 @@ namespace RTC
 		}
 
 		this->length = length;
+	}
+
+	void Serializable::SetBufferLength(size_t bufferLength)
+	{
+		MS_TRACE();
+
+		if (bufferLength < this->length)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "buffer length (%zu bytes) is lower than current length (%zu bytes)",
+			  bufferLength,
+			  this->length);
+		}
+
+		this->bufferLength = bufferLength;
+	}
+
+	void Serializable::AssertNotFrozen() const
+	{
+		MS_TRACE();
+
+		if (this->frozen)
+		{
+			MS_THROW_ERROR("Serializable is frozen");
+		}
 	}
 } // namespace RTC
