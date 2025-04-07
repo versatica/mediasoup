@@ -128,6 +128,13 @@ namespace RTC
 				return GetHeaderPointer()->type;
 			}
 
+			virtual bool HasUnknownType() const final
+			{
+				auto type = GetType();
+
+				return type < ChunkType::DATA || type > ChunkType::SHUTDOWN_COMPLETE;
+			}
+
 			virtual uint8_t GetFlags() const final
 			{
 				return GetHeaderPointer()->flags;

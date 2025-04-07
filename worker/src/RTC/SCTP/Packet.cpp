@@ -13,7 +13,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		bool Packet::IsSctp(const uint8_t* buffer, size_t bufferLength)
+		bool Packet::IsPacket(const uint8_t* buffer, size_t bufferLength)
 		{
 			auto* header = reinterpret_cast<const Packet::CommonHeader*>(buffer);
 
@@ -30,7 +30,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!Packet::IsSctp(buffer, bufferLength))
+			if (!Packet::IsPacket(buffer, bufferLength))
 			{
 				MS_WARN_TAG(sctp, "not an SCTP packet");
 
@@ -55,73 +55,73 @@ namespace RTC
 			// Move to chunks.
 			ptr = packet->GetChunksPointer();
 
-			// while (ptr < buffer + bufferLength)
-			// {
-			// 	// The remaining length in the buffer is the potential buffer length
-			// 	// of the chunk.
-			// 	size_t chunkBufferLength = packet->GetEndPointer() - ptr;
+			while (ptr < buffer + bufferLength)
+			{
+				// The remaining length in the buffer is the potential buffer length
+				// of the chunk.
+				size_t chunkBufferLength = packet->GetEndPointer() - ptr;
 
-			//  // Here we must anticipate the type of each chunk to use its appropriate
-			// 	// parser.
-			// 	Chunk::ChunkType chunkType;
-			// 	uint16_t chunkLength;
+				// Here we must anticipate the type of each chunk to use its appropriate
+				// parser.
+				Chunk::ChunkType chunkType;
+				uint16_t chunkLength;
 
-			// 	if (!Chunk::IsChunk(ptr, itemBufferLength, chunkType, chunkLength))
-			// 	{
-			// 		MS_WARN_DEV("not a Chunk");
+				if (!Chunk::IsChunk(ptr, chunkBufferLength, chunkType, chunkLength))
+				{
+					MS_WARN_DEV("not a Chunk");
 
-			// 		delete packet;
-			// 		return nullptr;
-			// 	}
+					delete packet;
+					return nullptr;
+				}
 
-			// 	Chunk* chunk{ nullptr };
+				Chunk* chunk{ nullptr };
 
-			// 	MS_DEBUG_DEV("parsing Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
+				MS_DEBUG_DEV("parsing Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
-			// 	switch (chunkType)
-			// 	{
-			// 		case Chunk::ChunkType::XXXXX:
-			// 		{
-			// 			chunk = XxxxxChunk::Parse(ptr, itemBufferLength);
+				switch (chunkType)
+				{
+					// case Chunk::ChunkType::XXXXX:
+					// {
+					// 	chunk = XxxxxChunk::Parse(ptr, chunkBufferLength);
 
-			// 			if (!chunk)
-			// 			{
-			// 				MS_WARN_DEV("XxxxxChunk parser failed");
+					// 	if (!chunk)
+					// 	{
+					// 		MS_WARN_DEV("XxxxxChunk parser failed");
 
-			// 				delete packet;
-			// 				return nullptr;
-			// 			}
+					// 		delete packet;
+					// 		return nullptr;
+					// 	}
 
-			// 			break;
-			// 		}
+					// 	break;
+					// }
 
-			// 		default:
-			// 		{
-			// 			chunk = UnknownChunk::Parse(ptr, itemBufferLength);
+					// default:
+					// {
+					// 	chunk = UnknownChunk::Parse(ptr, chunkBufferLength);
 
-			// 			if (!chunk)
-			// 			{
-			// 				MS_WARN_DEV("UnknownChunk parser failed");
+					// 	if (!chunk)
+					// 	{
+					// 		MS_WARN_DEV("UnknownChunk parser failed");
 
-			// 				delete packet;
-			// 				return nullptr;
-			// 			}
-			// 		}
-			// 	}
+					// 		delete packet;
+					// 		return nullptr;
+					// 	}
+					// }
+				}
 
-			// 	// Let's fix chunk's buffer length. This is because we didn't know its
-			// 	// exact length when we called FooItem::Parse() so we passed the rest
-			// 	// of the Packet buffer as buffer length. Once chunk is parsed, and
-			// 	// given that it is part of the Packet buffer, we can fix its buffer
-			// 	// length by making it be equal to its real length.
-			// 	chunk->SetBufferLength(chunk->GetLength());
+				// Let's fix chunk's buffer length. This is because we didn't know its
+				// exact length when we called Chunk::Parse() so we passed the rest
+				// of the Packet buffer as buffer length. Once chunk is parsed, and
+				// given that it is part of the Packet buffer, we can fix its buffer
+				// length by making it be equal to its real length.
+				chunk->SetBufferLength(chunk->GetLength());
 
-			// 	// Here we are parsing so we don't use AddChunk() (that clones the
-			// 	// Chunk into the Packet buffer) but AddParsedChunk().
-			// 	packet->AddParsedChunk(chunk);
+				// Here we are parsing so we don't use AddChunk() (that clones the
+				// Chunk into the Packet buffer) but AddParsedChunk().
+				packet->AddParsedChunk(chunk);
 
-			// 	ptr += chunk->GetLength();
-			// }
+				ptr += chunk->GetLength();
+			}
 
 			const size_t computedLength = ptr - buffer;
 
@@ -181,13 +181,12 @@ namespace RTC
 			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
 			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
 			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
-			// TODO
-			// MS_DUMP("  has chunks: %s", HasChunks() ? "yes" : "no");
-			// MS_DUMP("  chunks count: %zu", GetChunksCount());
-			// for (auto* chunk : this->chunks)
-			// {
-			// 	chunk->Dump();
-			// }
+			MS_DUMP("  has chunks: %s", HasChunks() ? "yes" : "no");
+			MS_DUMP("  chunks count: %zu", GetChunksCount());
+			for (auto* chunk : this->chunks)
+			{
+				chunk->Dump();
+			}
 			MS_DUMP("</Packet>");
 		}
 
@@ -229,7 +228,7 @@ namespace RTC
 			SetBuffer(buffer);
 			SetBufferLength(bufferLength);
 
-			// May unfreeze the packet (but not its items).
+			// May unfreeze the packet (but not its chunks).
 			Unfreeze();
 		}
 
@@ -240,6 +239,35 @@ namespace RTC
 			// TODO
 
 			return nullptr;
+		}
+
+		void Packet::AddChunk(const Chunk* chunk)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			// TODO
+		}
+
+		void Packet::InitializeHeader()
+		{
+			MS_TRACE();
+
+			SetSourcePort(0u);
+			SetDestinationPort(0u);
+			SetVerificationTag(0u);
+			SetChecksum(0u);
+		}
+
+		void Packet::AddParsedChunk(Chunk* chunk)
+		{
+			MS_TRACE();
+
+			// Freeze the chunk.
+			chunk->Freeze();
+
+			this->chunks.push_back(chunk);
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_PACKET_HPP
 
 #include "common.hpp"
-// #include "RTC/SCTP/Chunk.hpp"
+#include "RTC/SCTP/Chunk.hpp"
 #include "RTC/Serializable.hpp"
 #include <vector>
 
@@ -50,6 +50,9 @@ namespace RTC
 		class Packet : public Serializable
 		{
 		public:
+			using ChunksIterator = typename std::vector<Chunk*>::const_iterator;
+
+		public:
 			/**
 			 * Struct of a SCTP Packet Common Header.
 			 */
@@ -67,7 +70,7 @@ namespace RTC
 			/**
 			 * Whether given buffer could be a valid SCTP packet.
 			 */
-			static bool IsSctp(const uint8_t* buffer, size_t bufferLength);
+			static bool IsPacket(const uint8_t* buffer, size_t bufferLength);
 
 			/**
 			 * Parse a SCTP packet.
@@ -98,65 +101,99 @@ namespace RTC
 
 			uint16_t GetSourcePort() const
 			{
-				return uint16_t{ ntohs(GetCommonHeaderPointer()->sourcePort) };
+				return uint16_t{ ntohs(GetHeaderPointer()->sourcePort) };
 			}
 
 			void SetSourcePort(uint16_t sourcePort)
 			{
 				AssertNotFrozen();
 
-				GetCommonHeaderPointer()->sourcePort = uint16_t{ htons(sourcePort) };
+				GetHeaderPointer()->sourcePort = uint16_t{ htons(sourcePort) };
 			}
 
 			uint16_t GetDestinationPort() const
 			{
-				return uint16_t{ ntohs(GetCommonHeaderPointer()->destinationPort) };
+				return uint16_t{ ntohs(GetHeaderPointer()->destinationPort) };
 			}
 
 			void SetDestinationPort(uint16_t destinationPort)
 			{
 				AssertNotFrozen();
 
-				GetCommonHeaderPointer()->destinationPort = uint16_t{ htons(destinationPort) };
+				GetHeaderPointer()->destinationPort = uint16_t{ htons(destinationPort) };
 			}
 
 			uint32_t GetVerificationTag() const
 			{
-				return uint32_t{ ntohl(GetCommonHeaderPointer()->verificationTag) };
+				return uint32_t{ ntohl(GetHeaderPointer()->verificationTag) };
 			}
 
 			void SetVerificationTag(uint32_t verificationTag)
 			{
 				AssertNotFrozen();
 
-				GetCommonHeaderPointer()->verificationTag = uint32_t{ htonl(verificationTag) };
+				GetHeaderPointer()->verificationTag = uint32_t{ htonl(verificationTag) };
 			}
 
 			uint32_t GetChecksum() const
 			{
-				return uint32_t{ ntohl(GetCommonHeaderPointer()->checksum) };
+				return uint32_t{ ntohl(GetHeaderPointer()->checksum) };
 			}
 
 			void SetChecksum(uint32_t checksum)
 			{
 				AssertNotFrozen();
 
-				GetCommonHeaderPointer()->checksum = uint32_t{ htonl(checksum) };
+				GetHeaderPointer()->checksum = uint32_t{ htonl(checksum) };
 			}
 
-			// void AddChunk(Chunk* chunk)
-			// {
-			// AssertNotFrozen();
-			//
-			// 	this->chunks.push_back(chunk);
-			// }
+			bool HasChunks() const
+			{
+				return GetLength() > Packet::CommonHeaderLength;
+			}
+
+			size_t GetChunksCount() const
+			{
+				return this->chunks.size();
+			}
+
+			ChunksIterator ChunksBegin() const
+			{
+				return this->chunks.begin();
+			}
+
+			ChunksIterator ChunksEnd() const
+			{
+				return this->chunks.end();
+			}
+
+			const Chunk* GetChunkAt(size_t idx) const
+			{
+				if (idx >= this->chunks.size())
+				{
+					return nullptr;
+				}
+
+				return this->chunks[idx];
+			}
+
+			/**
+			 * Clone given Chunk into Packet's buffer.
+			 *
+			 * @remarks
+			 * Once this method is called, the caller may want to free the original
+			 * given Chunk.
+			 */
+			void AddChunk(const Chunk* chunk);
 
 		private:
+			virtual void InitializeHeader() final;
+
 			/**
 			 * NOTE: Return CommonHeader* instead of const CommonHeader* since we may
 			 * want to modify its fields.
 			 */
-			CommonHeader* GetCommonHeaderPointer() const
+			CommonHeader* GetHeaderPointer() const
 			{
 				return reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
@@ -177,11 +214,11 @@ namespace RTC
 			 * since it's already serialized (obviously since we are parsing a
 			 * buffer).
 			 */
-			// void AddParsedChunk(Chunk* chunk);
+			void AddParsedChunk(Chunk* chunk);
 
 		private:
 			// Chunks.
-			// std::vector<Chunk*> chunks;
+			std::vector<Chunk*> chunks;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::TestSerializable:FooPacket"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/TestSerializable/FooPacket.hpp"
 #include "Logger.hpp"
