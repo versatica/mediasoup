@@ -1,173 +1,245 @@
-// #define MS_CLASS "RTC::SCTP::Packet"
-// // #define MS_LOG_DEV_LEVEL 3
+#define MS_CLASS "RTC::SCTP::Packet"
+// #define MS_LOG_DEV_LEVEL 3
 
-// #include "RTC/SCTP/Packet.hpp"
-// #include "Logger.hpp"
-// #include "Utils.hpp"
-// #include <cstring> // std::memcpy()
+#include "RTC/SCTP/Packet.hpp"
+#include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
+#include <cstring> // std::memcpy()
 
-// namespace RTC
-// {
-// 	namespace SCTP
-// 	{
-// 		/* Class methods. */
+namespace RTC
+{
+	namespace SCTP
+	{
+		/* Class methods. */
 
-// 		bool Packet::IsSctp(const uint8_t* data, size_t len)
-// 		{
-// 			auto* header =
-// 			  const_cast<Packet::CommonHeader*>(reinterpret_cast<const Packet::CommonHeader*>(data));
+		bool Packet::IsSctp(const uint8_t* buffer, size_t bufferLength)
+		{
+			auto* header = reinterpret_cast<const Packet::CommonHeader*>(buffer);
 
-// 			// clang-format off
-// 			return (
-// 				(len >= Packet::CommonHeaderSize) &&
-// 				// Source and destination ports cannot be 0.
-// 				(header->sourcePort != 0 && header->destinationPort != 0) &&
-// 				// Size must be multiple of 4 bytes.
-// 				Utils::Byte::IsPaddedTo4Bytes(len)
-// 			);
-// 		}
+			return (
+			  (bufferLength >= Packet::CommonHeaderLength) &&
+			  // Source and destination ports cannot be 0.
+			  (uint16_t{ ntohs(header->sourcePort) } != 0 &&
+			   uint16_t{ ntohs(header->destinationPort) } != 0) &&
+			  // Length must be multiple of 4 bytes.
+			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
+		}
 
-// 		Packet* Packet::Parse(const uint8_t* buffer, size_t bufferLength)
-// 		{
-// 			MS_TRACE();
+		Packet* Packet::Parse(const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
 
-// 			if (!Packet::IsSctp(buffer, length))
-// 			{
-// 				MS_WARN_TAG(sctp, "not an SCTP packet");
+			if (!Packet::IsSctp(buffer, bufferLength))
+			{
+				MS_WARN_TAG(sctp, "not an SCTP packet");
 
-// 				return nullptr;
-// 			}
+				return nullptr;
+			}
 
-// 			// NOTE: Here we are passing `length` as `bufferLength`. However we know
-// 			// that, due to FooPacket nature, an SCTP Packet must occupy the whole
-// 			// given buffer.
-// 			auto* packet = new Packet(buffer, length);
+			auto* packet = new Packet(buffer, bufferLength);
 
-// 			// TODO: Move this to some Validate() method.
-// 			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
-// 			{
-// 				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
+			// TODO: Move this to some Validate() method.
+			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
+			{
+				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
 
-// 				delete packet;
-// 				return nullptr;
-// 			}
+				delete packet;
+				return nullptr;
+			}
 
-// 			// Pointer that initially points to the given data buffer and is later
-// 			// incremented to point to other parts of the Packet.
-// 			auto* ptr = buffer;
+			// Pointer that initially points to the given data buffer and is later
+			// incremented to point to other parts of the Packet.
+			auto* ptr = buffer;
 
-// 			// Move to chunks.
-// 			ptr = packet->GetChunksPointer();
+			// Move to chunks.
+			ptr = packet->GetChunksPointer();
 
-// 			while (ptr < buffer + length)
-// 			{
-// 				// Here we must anticipate the id of each chunk to use its appropriate.
-// 				if (ptr + Chunk::ItemHeaderLength > packet->GetPaddingPointer())
-// 				{
-// 					MS_WARN_DEV("no space for chunk header");
+			// while (ptr < buffer + bufferLength)
+			// {
+			// 	// The remaining length in the buffer is the potential buffer length
+			// 	// of the chunk.
+			// 	size_t chunkBufferLength = packet->GetEndPointer() - ptr;
 
-// 					delete packet;
-// 					return nullptr;
-// 				}
+			// 	// Here we must anticipate the id of each chunk to use its appropriate
+			// 	// parser.
+			// 	Chunk::ChunkId chunkId;
+			// 	uint8_t chunkLength;
 
-// 				auto* chunk = Chunk::Parse(ptr, len - (ptr - data), /*exactLen*/ false);
+			// 	if (!Chunk::IsChunk(ptr, itemBufferLength, chunkId, chunkLength))
+			// 	{
+			// 		MS_WARN_DEV("not a Chunk");
 
-// 				if (chunk)
-// 				{
-// 					ptr += chunk->GetSize();
+			// 		delete packet;
+			// 		return nullptr;
+			// 	}
 
-// 					packet->AddChunk(chunk);
-// 				}
-// 				else
-// 				{
-// 					// TODO: Let' see.
-// 					delete packet;
-// 					return nullptr;
-// 				}
-// 			}
+			// 	Chunk* chunk{ nullptr };
 
-// 			size_t size = ptr - data;
+			// 	MS_DEBUG_DEV("parsing Chunk [ptr:%zu, id:%" PRIu8 "]", ptr - buffer, chunkId);
 
-// 			// Ensure computed size matches the total given length.
-// 			if (size != len)
-// 			{
-// 				MS_WARN_TAG(sctp, "computed packet size does not match given length, packet discarded");
+			// 	switch (chunkId)
+			// 	{
+			// 		case Chunk::ChunkId::XXXXX:
+			// 		{
+			// 			chunk = XxxxxChunk::Parse(ptr, itemBufferLength);
 
-// 				delete packet;
-// 				return nullptr;
-// 			}
+			// 			if (!chunk)
+			// 			{
+			// 				MS_WARN_DEV("XxxxxChunk parser failed");
 
-// 			packet->Parsed(size);
+			// 				delete packet;
+			// 				return nullptr;
+			// 			}
 
-// 			return packet;
-// 		}
+			// 			break;
+			// 		}
 
-// 		/* Instance methods. */
+			// 		default:
+			// 		{
+			// 			chunk = UnknownChunk::Parse(ptr, itemBufferLength);
 
-// 		Packet::Packet(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
-// 		{
-// 			MS_TRACE();
-// 		}
+			// 			if (!chunk)
+			// 			{
+			// 				MS_WARN_DEV("UnknownChunk parser failed");
 
-// 		Packet::~Packet()
-// 		{
-// 			MS_TRACE();
+			// 				delete packet;
+			// 				return nullptr;
+			// 			}
+			// 		}
+			// 	}
 
-// 			// TODO
-// 			// for (auto* chunk : this->chunks)
-// 			// {
-// 			// 	delete chunk;
-// 			// }
-// 		}
+			// 	// Let's fix chunk's buffer length. This is because we didn't know its
+			// 	// exact length when we called FooItem::Parse() so we passed the rest
+			// 	// of the Packet buffer as buffer length. Once chunk is parsed, and
+			// 	// given that it is part of the Packet buffer, we can fix its buffer
+			// 	// length by making it be equal to its real length.
+			// 	chunk->SetBufferLength(chunk->GetLength());
 
-// 		void Packet::Dump() const
-// 		{
-// 			MS_TRACE();
+			// 	// Here we are parsing so we don't use AddChunk() (that clones the
+			// 	// Chunk into the Packet buffer) but AddParsedChunk().
+			// 	packet->AddParsedChunk(chunk);
 
-// 			MS_DUMP("<Packet>");
-// 			MS_DUMP("  needs serialization: %s", NeedsSerialization() ? "true" : "false");
-// 			MS_DUMP("  size: %zu", GetSize());
-// 			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
-// 			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
-// 			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
-// 			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
+			// 	ptr += chunk->GetLength();
+			// }
 
-// 			// TODO
-// 			// for (auto* chunk : this->chunks)
-// 			// {
-// 			// 	chunk->Dump();
-// 			// }
+			const size_t computedLength = ptr - buffer;
 
-// 			MS_DUMP("</Packet>");
-// 		}
+			// Ensure computed length matches the total given buffer length.
+			if (computedLength != bufferLength)
+			{
+				MS_WARN_DEV("computed padded length != buffer length");
 
-// 		void Packet::Serialize(uint8_t* buffer, size_t bufferLength)
-// 		{
-// 			MS_TRACE();
+				delete packet;
+				return nullptr;
+			}
 
-// 			// TODO: Do this right.
+			// It's mandatory to call SetLength() once we are done and we know the
+			// exact length of the Packet.
+			packet->SetLength(computedLength);
 
-// 			auto size = GetSize();
+			// Mark the packet as frozen since we are parsing.
+			packet->Freeze();
 
-// 			// If already serialized we just need to copy current buffer to the new one
-// 			// and adjust pointers.
-// 			if (!NeedsSerialization())
-// 			{
-// 				// TODO
+			return packet;
+		}
 
-// 				// std::memcpy(buffer, GetCurrentBuffer(), size);
+		Packet* Packet::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
 
-// 				// this->body   = buffer + (this->body - GetCurrentBuffer());
-// 				// this->header = reinterpret_cast<Header*>(buffer);
+			// TODO
 
-// 				// Serialized(buffer, size);
+			return nullptr;
+		}
 
-// 				// return;
-// 			}
+		/* Instance methods. */
 
-// 			std::memcpy(buffer, GetCurrentBuffer(), size);
+		Packet::Packet(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
+		{
+			MS_TRACE();
+		}
 
-// 			Serialized(buffer, size);
-// 		}
-// 	} // namespace SCTP
-// } // namespace RTC
+		Packet::~Packet()
+		{
+			MS_TRACE();
+
+			// TODO
+			// for (auto* chunk : this->chunks)
+			// {
+			// 	delete chunk;
+			// }
+		}
+
+		void Packet::Dump() const
+		{
+			MS_TRACE();
+
+			MS_DUMP("<Packet>");
+			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
+			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
+			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
+			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
+			// TODO
+			// MS_DUMP("  has chunks: %s", HasChunks() ? "yes" : "no");
+			// MS_DUMP("  chunks count: %zu", GetChunksCount());
+			// for (auto* chunk : this->chunks)
+			// {
+			// 	chunk->Dump();
+			// }
+			MS_DUMP("</Packet>");
+		}
+
+		void Packet::Serialize(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < GetLength())
+			{
+				MS_THROW_TYPE_ERROR(
+				  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
+				  bufferLength,
+				  GetLength());
+			}
+
+			size_t chunksOffset = GetChunksPointer() - GetBuffer();
+
+			// Copy all bytes from beginning of the buffer until the position of the
+			// chunks.
+			std::memcpy(buffer, GetBuffer(), chunksOffset);
+
+			// Serialize each chunk into the new buffer.
+			auto* ptr = buffer + chunksOffset;
+
+			// TODO
+			// for (auto* chunk : this->chunks)
+			// {
+			// 	chunk->Serialize(ptr, chunk->GetLength());
+
+			// 	// After calling `Serialize()` on the chunk, its `frozen` flag is
+			// 	// reverted to false, but we want it to remain set because it's a
+			// 	// chunk within the packet.
+			// 	chunk->Freeze();
+
+			// 	ptr += chunk->GetLength();
+			// }
+
+			// Manually update buffer and buffer length.
+			SetBuffer(buffer);
+			SetBufferLength(bufferLength);
+
+			// May unfreeze the packet (but not its items).
+			Unfreeze();
+		}
+
+		Packet* Packet::Clone(uint8_t* buffer, size_t bufferLength) const
+		{
+			MS_TRACE();
+
+			// TODO
+
+			return nullptr;
+		}
+	} // namespace SCTP
+} // namespace RTC

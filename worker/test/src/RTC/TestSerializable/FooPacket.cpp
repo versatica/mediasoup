@@ -68,6 +68,8 @@ FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t bufferLength)
 		// is the potential buffer length of the item.
 		size_t itemBufferLength = packet->GetPaddingPointer() - ptr;
 
+		// Here we must anticipate the id of each item to use its appropriate
+		// parser.
 		FooItem::ItemId itemId;
 		uint8_t valueLength;
 
@@ -136,17 +138,21 @@ FooPacket* FooPacket::Parse(const uint8_t* buffer, size_t bufferLength)
 		// buffer length by making it be equal to its real length.
 		item->SetBufferLength(item->GetLength());
 
-		// NOTE: We are gonna move item ownership in next line so must do
-		// this before.
-		ptr += item->GetLength();
-
 		// Here we are parsing so we don't use AddItem() (that clones the Item into
 		// the Packet buffer) but AddParsedItem().
 		packet->AddParsedItem(item);
+
+		ptr += item->GetLength();
 	}
 
-	// Move to the possible padding.
-	ptr = packet->GetPaddingPointer();
+	// We should be in the potential padding position.
+	if (ptr != packet->GetPaddingPointer())
+	{
+		MS_WARN_DEV("we should be in the padding but we are not");
+
+		delete packet;
+		return nullptr;
+	}
 
 	const size_t computedLength = Utils::Byte::PadTo4Bytes(static_cast<size_t>(ptr - buffer));
 

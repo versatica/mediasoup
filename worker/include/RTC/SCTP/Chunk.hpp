@@ -65,7 +65,7 @@ namespace RTC
 			};
 
 		public:
-			static const size_t HeaderSize{ 4 };
+			static const size_t HeaderLength{ 4 };
 
 			/**
 			 * Parses given `data` with length `len` and returns an allocated instance
@@ -131,7 +131,7 @@ namespace RTC
 			 */
 			uint16_t GetValueLength() const
 			{
-				return uint16_t{ ntohs(this->header->length) } - HeaderSize;
+				return uint16_t{ ntohs(this->header->length) } - Chunk::HeaderLength;
 			}
 
 		private:

@@ -40,7 +40,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Ensure there are at least 4 bytes (chunk value is zero-length).
-			if (len < HeaderSize)
+			if (len < Chunk::HeaderLength)
 			{
 				MS_WARN_TAG(sctp, "not an SCTP chunk");
 
@@ -53,8 +53,8 @@ namespace RTC
 			// incremented to point to other parts of the chunk.
 			auto* ptr = const_cast<uint8_t*>(data);
 
-			// Inspect data after the header size, so move to the chunk value.
-			ptr += HeaderSize;
+			// Inspect data after the header length, so move to the chunk value.
+			ptr += Chunk::HeaderLength;
 
 			auto valueLengthWithPadding = Utils::Byte::PadTo4Bytes(chunk->GetValueLength());
 

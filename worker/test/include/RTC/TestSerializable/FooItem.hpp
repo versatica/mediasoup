@@ -166,12 +166,12 @@ protected:
 	 */
 	virtual uint8_t* GetValuePointer() const final
 	{
-		return const_cast<uint8_t*>(GetBuffer()) + ItemHeaderLength;
+		return const_cast<uint8_t*>(GetBuffer()) + FooItem::ItemHeaderLength;
 	}
 
 	virtual const uint8_t* GetEndPointer() const final
 	{
-		return GetBuffer() + ItemHeaderLength + GetValueLength();
+		return GetBuffer() + FooItem::ItemHeaderLength + GetValueLength();
 	}
 };
 

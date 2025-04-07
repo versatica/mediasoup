@@ -137,6 +137,8 @@ namespace RTC
 
 			// void AddChunk(Chunk* chunk)
 			// {
+			// AssertNotFrozen();
+			//
 			// 	this->chunks.push_back(chunk);
 			// }
 
@@ -153,6 +155,11 @@ namespace RTC
 			const uint8_t* GetChunksPointer() const
 			{
 				return GetBuffer() + Packet::CommonHeaderLength;
+			}
+
+			virtual const uint8_t* GetEndPointer() const final
+			{
+				return GetBuffer() + GetBufferLength();
 			}
 
 			/**
