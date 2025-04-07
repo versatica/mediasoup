@@ -8,6 +8,8 @@
 
 using namespace RTC;
 
+/* Class methods. */
+
 FooNumericItem* FooNumericItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
@@ -70,6 +72,8 @@ FooNumericItem* FooNumericItem::Factory(
 
 	return item;
 }
+
+/* Instance methods. */
 
 FooNumericItem::FooNumericItem(const uint8_t* buffer, size_t bufferLength)
   : FooItem(buffer, bufferLength)

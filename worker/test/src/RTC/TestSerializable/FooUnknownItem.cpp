@@ -6,6 +6,8 @@
 
 using namespace RTC;
 
+/* Class methods. */
+
 FooUnknownItem* FooUnknownItem::Parse(const uint8_t* buffer, size_t bufferLength)
 {
 	MS_TRACE();
@@ -30,6 +32,8 @@ FooUnknownItem* FooUnknownItem::Parse(const uint8_t* buffer, size_t bufferLength
 
 	return item;
 }
+
+/* Instance methods. */
 
 FooUnknownItem::FooUnknownItem(const uint8_t* buffer, size_t bufferLength)
   : FooItem(buffer, bufferLength)

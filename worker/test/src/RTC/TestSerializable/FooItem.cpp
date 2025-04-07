@@ -86,8 +86,6 @@ void FooItem::Dump() const
 	  "  value length field: %" PRIu8 " (computed value length: %" PRIu8 ")",
 	  GetValueLengthField(),
 	  GetValueLength());
-	MS_DUMP("  value:");
-	MS_DUMP_DATA(GetValuePointer(), GetValueLength());
 	MS_DUMP("</FooItem>");
 }
 

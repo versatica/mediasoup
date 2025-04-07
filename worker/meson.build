@@ -186,6 +186,7 @@ common_sources = [
 if get_option('ms_sctp_stack')
   common_sources += [
     'src/RTC/SCTP/Chunk.cpp',
+    'src/RTC/SCTP/DataChunk.cpp',
     'src/RTC/SCTP/Packet.cpp',
   ]
 endif
