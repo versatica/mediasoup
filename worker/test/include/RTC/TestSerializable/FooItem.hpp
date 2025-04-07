@@ -166,18 +166,9 @@ protected:
 		GetHeaderPointer()->valueLength = valueLength;
 	}
 
-	/**
-	 * NOTE: Return uint8_t* instead of const uint8_t* since we may want to
-	 * modify its value.
-	 */
 	virtual uint8_t* GetValuePointer() const final
 	{
 		return const_cast<uint8_t*>(GetBuffer()) + FooItem::ItemHeaderLength;
-	}
-
-	virtual uint8_t* GetEndPointer() const final
-	{
-		return const_cast<uint8_t*>(GetBuffer()) + FooItem::ItemHeaderLength + GetValueLength();
 	}
 };
 

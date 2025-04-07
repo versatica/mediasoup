@@ -187,12 +187,8 @@ public:
 	void AddTextItem(uint8_t flags, const std::string& text);
 
 private:
-	virtual void InitializeHeader(uint8_t type, uint16_t length) final;
+	void InitializeHeader(uint8_t type, uint16_t length);
 
-	/**
-	 * NOTE: Return Header* instead of const Header* since we may want to
-	 * modify its fields.
-	 */
 	Header* GetHeaderPointer() const
 	{
 		return reinterpret_cast<Header*>(const_cast<uint8_t*>(GetBuffer()));

@@ -292,7 +292,8 @@ namespace RTC
 			size_t length = GetLength() + chunk->GetLength();
 
 			// Let's append the chunk at the end of existing chunks.
-			auto* clonedChunk = chunk->Clone(GetEndPointer(), chunk->GetLength());
+			auto* clonedChunk =
+			  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), chunk->GetLength());
 
 			// Freeze the cloned chunk.
 			clonedChunk->Freeze();

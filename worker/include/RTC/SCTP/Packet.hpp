@@ -187,7 +187,7 @@ namespace RTC
 			void AddChunk(const Chunk* chunk);
 
 		private:
-			virtual void InitializeHeader() final;
+			void InitializeHeader();
 
 			/**
 			 * NOTE: Return CommonHeader* instead of const CommonHeader* since we may
@@ -198,14 +198,9 @@ namespace RTC
 				return reinterpret_cast<CommonHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
 
-			const uint8_t* GetChunksPointer() const
+			uint8_t* GetChunksPointer() const
 			{
-				return GetBuffer() + Packet::CommonHeaderLength;
-			}
-
-			virtual uint8_t* GetEndPointer() const final
-			{
-				return const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				return const_cast<uint8_t*>(GetBuffer()) + Packet::CommonHeaderLength;
 			}
 
 			/**
