@@ -44,9 +44,9 @@ SCENARIO("parse empty SCTP Packet", "[sctp][serializable]")
 	// Must throw if we try to modify the packet since Parse() returns a frozen
 	// Packet.
 	REQUIRE_THROWS_AS(packet->SetSourcePort(10), MediaSoupError);
-	REQUIRE_THROWS_AS(packet->SetDestinationPort(99), MediaSoupError);
+	REQUIRE_THROWS_AS(packet->SetDestinationPort(9999), MediaSoupError);
 	REQUIRE_THROWS_AS(packet->SetVerificationTag(12345), MediaSoupError);
-	REQUIRE_THROWS_AS(packet->SetChecksum(666), MediaSoupError);
+	REQUIRE_THROWS_AS(packet->SetChecksum(6666), MediaSoupError);
 	REQUIRE_THROWS_AS(packet->AddChunk(nullptr), MediaSoupError);
 
 	delete packet;
@@ -71,6 +71,26 @@ SCENARIO("create and modify SCTP Packet", "[sctp][serializable]")
 	REQUIRE(packet->GetDestinationPort() == 0);
 	REQUIRE(packet->GetVerificationTag() == 0);
 	REQUIRE(packet->GetChecksum() == 0);
+	REQUIRE(packet->HasChunks() == false);
+	REQUIRE(packet->GetChunksCount() == 0);
+	REQUIRE(helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, 12) == true);
+
+	/* Modify the packet. */
+
+	packet->SetSourcePort(10);
+	packet->SetDestinationPort(9999);
+	packet->SetVerificationTag(12345);
+	packet->SetChecksum(6666);
+
+	REQUIRE(packet->GetBuffer() == buffer);
+	REQUIRE(packet->GetBufferLength() == 256);
+	REQUIRE(packet->GetLength() == 12);
+	REQUIRE(packet->IsFrozen() == false);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
+	REQUIRE(packet->GetSourcePort() == 10);
+	REQUIRE(packet->GetDestinationPort() == 9999);
+	REQUIRE(packet->GetVerificationTag() == 12345);
+	REQUIRE(packet->GetChecksum() == 6666);
 	REQUIRE(packet->HasChunks() == false);
 	REQUIRE(packet->GetChunksCount() == 0);
 	REQUIRE(helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, 12) == true);
