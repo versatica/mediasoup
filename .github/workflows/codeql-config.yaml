@@ -1,4 +1,7 @@
 name: 'Custom configuration for CodeQL'
+
+on: []
+
 paths-ignore:
   - 'art/**'
   - 'doc/**'
