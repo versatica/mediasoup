@@ -132,11 +132,12 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 4294967292u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 4294967295u }) == false);
 
-// Check if size_t in current host is 64 bits. Otherwise the test would fail.
-#if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551612u }) == true);
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551615u }) == false);
-#endif
+		// Check if size_t in current host is 64 bits. Otherwise the test would fail.
+		if (sizeof(size_t) == 8)
+		{
+			REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551612u }) == true);
+			REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551615u }) == false);
+		}
 	}
 
 	SECTION("Utils::Byte::PadTo4Bytes()")
@@ -211,10 +212,11 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 65535u }) == 65536u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 4294967292u }) == 4294967292u);
 
-// Check if size_t in current host is 64 bits. Otherwise the test would fail.
-#if SIZE_MAX == 0xFFFFFFFFFFFFFFFF
-		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551612u }) == 18446744073709551612u);
-		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551615u }) == 0u);
-#endif
+		// Check if size_t in current host is 64 bits. Otherwise the test would fail.
+		if (sizeof(size_t) == 8)
+		{
+			REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551612u }) == 18446744073709551612u);
+			REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551615u }) == 0u);
+		}
 	}
 }
