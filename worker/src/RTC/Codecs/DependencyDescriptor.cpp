@@ -64,7 +64,8 @@ namespace RTC
 
 		DependencyDescriptor::DependencyDescriptor(
 		  const uint8_t* data, size_t len, TemplateDependencyStructure* templateDependencyStructure)
-		  : templateDependencyStructure(templateDependencyStructure), bitStream(data, len)
+		  : templateDependencyStructure(templateDependencyStructure),
+		    bitStream(const_cast<uint8_t*>(data), len)
 		{
 			MS_TRACE();
 		}
@@ -112,6 +113,15 @@ namespace RTC
 			}
 
 			MS_DUMP("</DependencyDescriptor>");
+		}
+
+		void DependencyDescriptor::SetFrameNumber(uint16_t frameNumber)
+		{
+			MS_TRACE();
+
+			static unsigned maxFrameNumber = std::numeric_limits<uint16_t>::max();
+
+			this->bitStream.Write(8, maxFrameNumber + 1, frameNumber);
 		}
 
 		bool DependencyDescriptor::ReadMandatoryDescriptorFields()

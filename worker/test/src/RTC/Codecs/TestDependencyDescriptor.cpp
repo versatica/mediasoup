@@ -97,4 +97,36 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		REQUIRE(templateStructure->templateLayers[4].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[4].temporalLayer == 2);
 	}
+
+	SECTION("Write Dependency Descriptor Frame Number")
+	{
+		/**
+		 * Taken from https://issues.webrtc.org/issues/42225660.
+		 * See previous test.
+		 */
+
+		// clang-format off
+		uint8_t data[] =
+		{
+			0x80, 0x01, 0x2F, 0x80, 0x02, 0x14, 0xEA, 0xA8,
+			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
+		};
+
+		// clang-format on
+		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
+		auto dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
+		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+		REQUIRE(dependencyDescriptor->frameNumber == 303);
+
+		const auto frameNumber = 2332;
+		dependencyDescriptor->SetFrameNumber(frameNumber);
+
+		dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
+		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+		REQUIRE(dependencyDescriptor->frameNumber == frameNumber);
+	}
 }

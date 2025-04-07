@@ -1419,8 +1419,8 @@ namespace RTC
 				}
 			}
 
-			// Set the new extensions into the packet using One-Byte format.
-			packet->SetExtensions(1, extensions);
+			// Set the new extensions into the packet.
+			packet->SetExtensions(packet->HasTwoBytesExtensions() ? 2 : 1, extensions);
 
 			// Assign mediasoup RTP header extension ids (just those that mediasoup may
 			// be interested in after passing it to the Router).
