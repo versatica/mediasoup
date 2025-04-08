@@ -7,7 +7,10 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "FBS/webRtcTransport.h"
-// #include "RTC/SCTP/Packet.hpp"
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/Packet.hpp"
+#endif
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -870,14 +873,14 @@ namespace RTC
 #ifdef MS_SCTP_STACK
 		// MS_DUMP(">>> sending SCTP packet...");
 
-		// if (!RTC::SCTP::Packet::IsSctp(data, len))
+		// if (!RTC::SCTP::Packet::IsPacket(data, len))
 		// {
 		// 	MS_WARN_TAG(sctp, "data to be sent is not a SCTP packet");
 
 		// 	return;
 		// }
 
-		// RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
+		// auto* packet = RTC::SCTP::Packet::Parse(data, len);
 
 		// if (!packet)
 		// {
@@ -1456,14 +1459,14 @@ namespace RTC
 #ifdef MS_SCTP_STACK
 		// MS_DUMP("<<< receiving SCTP packet...");
 
-		// if (!RTC::SCTP::Packet::IsSctp(data, len))
+		// if (!RTC::SCTP::Packet::IsPacket(data, len))
 		// {
 		// 	MS_WARN_TAG(sctp, "received data is not a SCTP packet");
 
 		// 	return;
 		// }
 
-		// RTC::SCTP::Packet* packet = RTC::SCTP::Packet::Parse(data, len);
+		// auto* packet = RTC::SCTP::Packet::Parse(data, len);
 
 		// if (!packet)
 		// {
