@@ -582,6 +582,11 @@ fn consume_succeeds() {
                 "LOL"
             );
 
+            video_consumer
+                .get_stats()
+                .await
+                .expect("Failed to get consumer stats");
+
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {

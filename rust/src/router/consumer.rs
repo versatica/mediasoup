@@ -394,11 +394,11 @@ pub struct ConsumerStat {
 impl ConsumerStat {
     pub(crate) fn from_fbs(stats: &rtp_stream::Stats) -> Self {
         let rtp_stream::StatsData::SendStats(ref stats) = stats.data else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {stats:?}");
         };
 
         let rtp_stream::StatsData::BaseStats(ref base) = stats.base.data else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {stats:?}");
         };
 
         Self {
@@ -1061,7 +1061,7 @@ impl Consumer {
                 }
             }
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 

@@ -624,22 +624,26 @@ impl TransportGeneric for PlainTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::PlainTransportDumpResponse(data) = self.dump_impl().await? {
-            Ok(PlainTransportDump::from_fbs(*data).expect("Error parsing dump response"))
+        let response = self.dump_impl().await?;
+
+        if let response::Body::PlainTransportDumpResponse(data) = response {
+            Ok(PlainTransportDump::from_fbs(*data)
+                .expect("Error parsing dump response: {response:?}"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::PlainTransportGetStatsResponse(data) = self.get_stats_impl().await? {
-            Ok(vec![
-                PlainTransportStat::from_fbs(*data).expect("Error parsing dump response")
-            ])
+        let response = self.get_stats_impl().await?;
+
+        if let response::Body::PlainTransportGetStatsResponse(data) = response {
+            Ok(vec![PlainTransportStat::from_fbs(*data)
+                .expect("Error parsing dump response: {response:?}")])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 }

@@ -309,11 +309,11 @@ pub struct ProducerStat {
 impl ProducerStat {
     pub(crate) fn from_fbs(stats: &rtp_stream::Stats) -> Self {
         let rtp_stream::StatsData::RecvStats(ref stats) = stats.data else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {stats:?}");
         };
 
         let rtp_stream::StatsData::BaseStats(ref base) = stats.base.data else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {stats:?}");
         };
 
         Self {
@@ -904,7 +904,7 @@ impl Producer {
         if let response::Body::ProducerGetStatsResponse(data) = response {
             Ok(data.stats.iter().map(ProducerStat::from_fbs).collect())
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
