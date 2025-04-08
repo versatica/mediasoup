@@ -4,7 +4,7 @@
 #include "RTC/Serializable.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memcpy()
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -20,7 +20,7 @@ namespace RTC
 			  this->length);
 		}
 
-		std::memcpy(buffer, this->buffer, this->length);
+		Utils::Buffer::MemcpyOrMemmove(buffer, this->buffer, this->length);
 
 		this->buffer       = buffer;
 		this->bufferLength = bufferLength;

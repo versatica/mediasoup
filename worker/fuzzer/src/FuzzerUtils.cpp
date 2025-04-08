@@ -45,8 +45,11 @@ void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 	::Utils::Byte::Set3Bytes(data2, len, uint32_t{ 666u });
 	::Utils::Byte::Set4Bytes(data2, len, uint32_t{ 666u });
 	::Utils::Byte::Set8Bytes(data2, len, uint64_t{ 6666u });
+	::Utils::Byte::PadTo4Bytes(static_cast<uint8_t>(len));
 	::Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(len));
 	::Utils::Byte::PadTo4Bytes(static_cast<uint32_t>(len));
+	::Utils::Byte::PadTo4Bytes(static_cast<uint64_t>(len));
+	::Utils::Byte::PadTo4Bytes(len);
 
 	/* Bits class. */
 

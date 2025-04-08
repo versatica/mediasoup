@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -37,7 +36,7 @@ namespace RTC
 		/* Class methods. */
 
 		bool Chunk::IsChunk(
-		  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkTotalLength)
+		  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, size_t& chunkTotalLength)
 		{
 			MS_TRACE();
 
@@ -63,23 +62,15 @@ namespace RTC
 
 			// Chunk total length must be multiple of 4 bytes and must include
 			// padding bytes despite Chunk Length field doesn't not include padding.
-			auto paddedChunkLength = Utils::Byte::PadTo4Bytes(chunkLength);
-
-			// NOTE: PadTo4Bytes(65535) => 0. Caution!
-			if (paddedChunkLength < chunkLength)
-			{
-				MS_WARN_TAG(
-				  sctp, "invalid computed padded chunk length: %" PRIu16 " bytes", paddedChunkLength);
-
-				return false;
-			}
+			// NOTE: We must cast to size_t, otherwise a maximum Chunk Length value
+			// of 65535 would generate a padded length of 0 bytes!
+			size_t paddedChunkLength = Utils::Byte::PadTo4Bytes(size_t{ chunkLength });
 
 			if (bufferLength < paddedChunkLength)
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "no space for padded announced Chunk Length field [paddedChunkLength:%" PRIu16
-				  ", bufferLength:%zu]",
+				  "no space for padded announced Chunk Length field [paddedChunkLength:%zu, bufferLength:%zu]",
 				  paddedChunkLength,
 				  bufferLength);
 
@@ -128,7 +119,7 @@ namespace RTC
 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP(
 			  "  type: %" PRIu8 " (%s) (unknown:%s)",
-			  GetType(),
+			  static_cast<uint8_t>(GetType()),
 			  Chunk::ChunkType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
@@ -149,7 +140,7 @@ namespace RTC
 				  GetLength());
 			}
 
-			std::memcpy(buffer, GetBuffer(), GetLength());
+			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), GetLength());
 
 			auto* clonedChunk = new Chunk(buffer, bufferLength);
 

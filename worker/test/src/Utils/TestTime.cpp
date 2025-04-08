@@ -5,7 +5,7 @@
 
 using namespace Utils;
 
-SCENARIO("Utils::Time::TimeMs2Ntp() and Utils::Time::Ntp2TimeMs()")
+SCENARIO("Utils::Time::TimeMs2Ntp() and Utils::Time::Ntp2TimeMs()", "[utils][time]")
 {
 	auto nowMs  = DepLibUV::GetTimeMs();
 	auto ntp    = Time::TimeMs2Ntp(nowMs);

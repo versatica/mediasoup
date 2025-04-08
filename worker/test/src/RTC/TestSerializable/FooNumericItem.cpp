@@ -6,127 +6,128 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 
-using namespace RTC;
-
-/* Class methods. */
-
-FooNumericItem* FooNumericItem::Parse(const uint8_t* buffer, size_t bufferLength)
+namespace RTC
 {
-	MS_TRACE();
+	/* Class methods. */
 
-	FooItem::ItemId itemId;
-	uint8_t valueLength;
-
-	if (!FooItem::IsFooItem(buffer, bufferLength, itemId, valueLength))
+	FooNumericItem* FooNumericItem::Parse(const uint8_t* buffer, size_t bufferLength)
 	{
-		MS_WARN_DEV("not a FooItem");
+		MS_TRACE();
 
-		return nullptr;
+		FooItem::ItemId itemId;
+		uint8_t valueLength;
+
+		if (!FooItem::IsFooItem(buffer, bufferLength, itemId, valueLength))
+		{
+			MS_WARN_DEV("not a FooItem");
+
+			return nullptr;
+		}
+
+		if (itemId != FooItem::ItemId::NUMERIC)
+		{
+			MS_WARN_DEV("invalid item id");
+
+			return nullptr;
+		}
+
+		if (valueLength != FooNumericItem::NumberLength)
+		{
+			MS_WARN_DEV("invalid value length");
+
+			return nullptr;
+		}
+
+		auto* item = new FooNumericItem(buffer, bufferLength);
+
+		// Must always invoke SetLength() after constructing a Serializable.
+		// NOTE: FooNumericItem has fixed length.
+		item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
+
+		// Mark the item as frozen since we are parsing.
+		item->Freeze();
+
+		return item;
 	}
 
-	if (itemId != FooItem::ItemId::NUMERIC)
+	FooNumericItem* FooNumericItem::Factory(
+	  uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number)
 	{
-		MS_WARN_DEV("invalid item id");
+		MS_TRACE();
 
-		return nullptr;
+		// DooFataItem has fixed length.
+		if (bufferLength < FooItem::ItemHeaderLength + FooNumericItem::NumberLength)
+		{
+			MS_THROW_TYPE_ERROR("too small buffer");
+		}
+
+		auto* item = new FooNumericItem(buffer, bufferLength);
+
+		item->InitializeHeader(FooItem::ItemId::NUMERIC, flags, FooNumericItem::NumberLength);
+		item->SetNumber(number);
+
+		// Must always invoke SetLength() after constructing a Serializable.
+		// NOTE: FooNumericItem has fixed length.
+		item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
+
+		return item;
 	}
 
-	if (valueLength != FooNumericItem::NumberLength)
-	{
-		MS_WARN_DEV("invalid value length");
+	/* Instance methods. */
 
-		return nullptr;
+	FooNumericItem::FooNumericItem(const uint8_t* buffer, size_t bufferLength)
+	  : FooItem(buffer, bufferLength)
+	{
+		MS_TRACE();
 	}
 
-	auto* item = new FooNumericItem(buffer, bufferLength);
-
-	// Must always invoke SetLength() after constructing a Serializable.
-	// NOTE: FooNumericItem has fixed length.
-	item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
-
-	// Mark the item as frozen since we are parsing.
-	item->Freeze();
-
-	return item;
-}
-
-FooNumericItem* FooNumericItem::Factory(
-  uint8_t* buffer, size_t bufferLength, uint8_t flags, uint16_t number)
-{
-	MS_TRACE();
-
-	// DooFataItem has fixed length.
-	if (bufferLength < FooItem::ItemHeaderLength + FooNumericItem::NumberLength)
+	FooNumericItem::~FooNumericItem()
 	{
-		MS_THROW_TYPE_ERROR("too small buffer");
+		MS_TRACE();
 	}
 
-	auto* item = new FooNumericItem(buffer, bufferLength);
+	void FooNumericItem::Dump() const
+	{
+		MS_TRACE();
 
-	item->InitializeHeader(FooItem::ItemId::NUMERIC, flags, FooNumericItem::NumberLength);
-	item->SetNumber(number);
+		MS_DUMP("<FooNumericItem>");
+		MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+		MS_DUMP(
+		  "  id: %" PRIu8 " (%s) (unknown:%s)",
+		  static_cast<uint8_t>(GetId()),
+		  FooItem::ItemId2String(GetId()).c_str(),
+		  HasUnknownId() ? "yes" : "no");
+		MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
+		MS_DUMP(
+		  "  value length field: %" PRIu8 " (computed value length: %" PRIu8 ")",
+		  GetValueLengthField(),
+		  GetValueLength());
+		MS_DUMP("  number: %" PRIu16, GetNumber());
+		MS_DUMP("</FooNumericItem>");
+	}
 
-	// Must always invoke SetLength() after constructing a Serializable.
-	// NOTE: FooNumericItem has fixed length.
-	item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
+	FooNumericItem* FooNumericItem::Clone(uint8_t* buffer, size_t bufferLength) const
+	{
+		MS_TRACE();
 
-	return item;
-}
+		return static_cast<FooNumericItem*>(FooItem::Clone(buffer, bufferLength));
+	}
 
-/* Instance methods. */
+	uint16_t FooNumericItem::GetNumber() const
+	{
+		MS_TRACE();
 
-FooNumericItem::FooNumericItem(const uint8_t* buffer, size_t bufferLength)
-  : FooItem(buffer, bufferLength)
-{
-	MS_TRACE();
-}
+		return Utils::Byte::Get2Bytes(GetValuePointer(), 0);
+	}
 
-FooNumericItem::~FooNumericItem()
-{
-	MS_TRACE();
-}
+	void FooNumericItem::SetNumber(uint16_t number)
+	{
+		MS_TRACE();
 
-void FooNumericItem::Dump() const
-{
-	MS_TRACE();
+		AssertNotFrozen();
 
-	MS_DUMP("<FooNumericItem>");
-	MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-	MS_DUMP(
-	  "  id: %" PRIu8 " (%s) (unknown:%s)",
-	  GetId(),
-	  FooItem::ItemId2String(GetId()).c_str(),
-	  HasUnknownId() ? "yes" : "no");
-	MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
-	MS_DUMP(
-	  "  value length field: %" PRIu8 " (computed value length: %" PRIu8 ")",
-	  GetValueLengthField(),
-	  GetValueLength());
-	MS_DUMP("  number: %" PRIu16, GetNumber());
-	MS_DUMP("</FooNumericItem>");
-}
+		Utils::Byte::Set2Bytes(GetValuePointer(), 0, number);
 
-FooNumericItem* FooNumericItem::Clone(uint8_t* buffer, size_t bufferLength) const
-{
-	MS_TRACE();
-
-	return static_cast<FooNumericItem*>(FooItem::Clone(buffer, bufferLength));
-}
-
-uint16_t FooNumericItem::GetNumber() const
-{
-	MS_TRACE();
-
-	return Utils::Byte::Get2Bytes(GetValuePointer(), 0);
-}
-
-void FooNumericItem::SetNumber(uint16_t number)
-{
-	MS_TRACE();
-
-	AssertNotFrozen();
-
-	Utils::Byte::Set2Bytes(GetValuePointer(), 0, number);
-
-	// NOTE: FooNumericItem has fixed value so nothing else is needed here.
-}
+		// NOTE: FooNumericItem has fixed value so nothing else is needed here.
+	}
+} // namespace RTC

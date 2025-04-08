@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			Chunk::ChunkType chunkType;
-			uint16_t chunkTotalLength;
+			size_t chunkTotalLength;
 
 			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkTotalLength))
 			{
@@ -57,7 +57,7 @@ namespace RTC
 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP(
 			  "  type: %" PRIu8 " (%s) (unknown:%s)",
-			  GetType(),
+			  static_cast<uint8_t>(GetType()),
 			  Chunk::ChunkType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));

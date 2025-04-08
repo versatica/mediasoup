@@ -4,54 +4,55 @@
 #include "common.hpp"
 #include "RTC/TestSerializable/FooItem.hpp"
 
-using namespace RTC;
-
-/**
- * FooUnknownItem.
- *
- *  0                   1                   2                   3
- *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * |   Id  | Flags | Value Length  |            Value              |
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * \                                                               \
- * /                             Value                             /
- * \                                                               \
- * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- *
- * - Id (4 bits): Unsigned integer.
- * - Flags (4 bits).
- * - Value Length (8 bits): Length of the Value field.
- * - Value (variable length).
- *
- * Length of a FooUnknownItem must be 4 bytes.
- */
-
-class FooUnknownItem : public FooItem
+namespace RTC
 {
-public:
 	/**
-	 * Parse a FooUnknownItem.
+	 * FooUnknownItem.
 	 *
-	 * @remarks
-	 * - `bufferLength` may exceed the exact length of the item.
+	 *  0                   1                   2                   3
+	 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	 * |   Id  | Flags | Value Length  |            Value              |
+	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	 * \                                                               \
+	 * /                             Value                             /
+	 * \                                                               \
+	 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	 *
+	 * - Id (4 bits): Unsigned integer.
+	 * - Flags (4 bits).
+	 * - Value Length (8 bits): Length of the Value field.
+	 * - Value (variable length).
+	 *
+	 * Length of a FooUnknownItem must be 4 bytes.
 	 */
-	static FooUnknownItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
-private:
-	/**
-	 * Private constructor used by Parse() method.
-	 */
-	FooUnknownItem(const uint8_t* buffer, size_t bufferLength);
+	class FooUnknownItem : public FooItem
+	{
+	public:
+		/**
+		 * Parse a FooUnknownItem.
+		 *
+		 * @remarks
+		 * - `bufferLength` may exceed the exact length of the item.
+		 */
+		static FooUnknownItem* Parse(const uint8_t* buffer, size_t bufferLength);
 
-public:
-	virtual ~FooUnknownItem() override;
+	private:
+		/**
+		 * Private constructor used by Parse() method.
+		 */
+		FooUnknownItem(const uint8_t* buffer, size_t bufferLength);
 
-	virtual void Dump() const override final;
+	public:
+		virtual ~FooUnknownItem() override;
 
-	virtual FooUnknownItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+		virtual void Dump() const override final;
 
-	virtual const uint8_t* GetValue() const final;
-};
+		virtual FooUnknownItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+
+		virtual const uint8_t* GetValue() const final;
+	};
+} // namespace RTC
 
 #endif

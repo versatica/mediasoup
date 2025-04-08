@@ -13,22 +13,22 @@
 
 int main(int argc, char* argv[])
 {
+	std::string logLevel{ "none" };
+	std::vector<std::string> logTags = { "info" };
+
 	const auto* logLevelPtr = std::getenv("MS_TEST_LOG_LEVEL");
 	const auto* logTagsPtr  = std::getenv("MS_TEST_LOG_TAGS");
 
 	// Get logLevel from ENV variable.
 	if (logLevelPtr)
 	{
-		auto logLevelStr = std::string(logLevelPtr);
-
-		Settings::SetLogLevel(logLevelStr);
+		logLevel = std::string(logLevelPtr);
 	}
 
 	// Get logTags from ENV variable.
 	if (logTagsPtr)
 	{
-		auto logTagsStr                  = std::string(logTagsPtr);
-		std::vector<std::string> logTags = { "info" };
+		auto logTagsStr = std::string(logTagsPtr);
 		std::istringstream iss(logTagsStr);
 		std::string logTag;
 
@@ -36,10 +36,10 @@ int main(int argc, char* argv[])
 		{
 			logTags.push_back(logTag);
 		}
-
-		Settings::SetLogTags(logTags);
 	}
 
+	Settings::SetLogLevel(logLevel);
+	Settings::SetLogTags(logTags);
 	Settings::PrintConfiguration();
 
 	// Initialize static stuff.

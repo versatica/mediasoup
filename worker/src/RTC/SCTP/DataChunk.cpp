@@ -4,7 +4,6 @@
 // #include "RTC/SCTP/DataChunk.hpp"
 // #include "Logger.hpp"
 // #include "MediaSoupErrors.hpp"
-// #include <cstring> // std::memcpy()
 
 // namespace RTC
 // {
@@ -46,7 +45,7 @@
 // 				  GetLength());
 // 			}
 
-// 			std::memcpy(buffer, GetBuffer(), GetLength());
+// 			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), GetLength());
 
 // 			auto* clonedChunk = new Chunk(buffer, bufferLength);
 

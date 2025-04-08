@@ -74,6 +74,7 @@ common_sources = [
   'src/Settings.cpp',
   'src/Worker.cpp',
   'src/ChannelMessageRegistrator.cpp',
+  'src/Utils/Buffer.cpp',
   'src/Utils/Crypto.cpp',
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
@@ -354,6 +355,12 @@ test_sources = [
   'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
   'test/src/RTC/TestTransportCongestionControlServer.cpp',
+  'test/src/RTC/TestSerializable.cpp',
+  'test/src/RTC/TestSerializable/FooPacket.cpp',
+  'test/src/RTC/TestSerializable/FooItem.cpp',
+  'test/src/RTC/TestSerializable/FooNumericItem.cpp',
+  'test/src/RTC/TestSerializable/FooTextItem.cpp',
+  'test/src/RTC/TestSerializable/FooUnknownItem.cpp',
   'test/src/RTC/Codecs/TestVP8.cpp',
   'test/src/RTC/Codecs/TestVP9.cpp',
   'test/src/RTC/Codecs/TestH264.cpp',
@@ -380,6 +387,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/Utils/TestBits.cpp',
+  'test/src/Utils/TestBuffer.cpp',
   'test/src/Utils/TestByte.cpp',
   'test/src/Utils/TestIP.cpp',
   'test/src/Utils/TestString.cpp',
@@ -390,12 +398,6 @@ test_sources = [
 if get_option('ms_sctp_stack')
   test_sources += [
     'test/src/RTC/SCTP/TestPacket.cpp',
-    'test/src/RTC/TestSerializable.cpp',
-    'test/src/RTC/TestSerializable/FooPacket.cpp',
-    'test/src/RTC/TestSerializable/FooItem.cpp',
-    'test/src/RTC/TestSerializable/FooNumericItem.cpp',
-    'test/src/RTC/TestSerializable/FooTextItem.cpp',
-    'test/src/RTC/TestSerializable/FooUnknownItem.cpp',
   ]
 endif
 
@@ -550,6 +552,14 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
+  'fuzzer/src/RTC/TestSerializable/FuzzerFooPacket.cpp',
+  # These files from test/ folder are needed for
+  # TestSerializable/FuzzerFooPacket.cpp.
+  'test/src/RTC/TestSerializable/FooPacket.cpp',
+  'test/src/RTC/TestSerializable/FooItem.cpp',
+  'test/src/RTC/TestSerializable/FooNumericItem.cpp',
+  'test/src/RTC/TestSerializable/FooTextItem.cpp',
+  'test/src/RTC/TestSerializable/FooUnknownItem.cpp',
 ]
 
 # TODO: Move to fuzzer_sources array once it's tested.
@@ -569,12 +579,14 @@ executable(
   include_directories: include_directories(
     'include',
     'fuzzer/include',
+    # We need to include header files from test/include/RTC/TestSerializable/.
+    'test/include',
   ),
   cpp_args: cpp_args + [
+    '-DMS_LOG_STD',
     '-g',
     '-O0',
     '-fsanitize=address,fuzzer',
-    '-DMS_LOG_STD',
   ],
   link_args: [
     '-fsanitize=address,fuzzer',

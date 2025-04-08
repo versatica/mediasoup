@@ -27,9 +27,9 @@ namespace RTC
 		 * - Chunk Flags (8 bits).
 		 * - Chunk Length (16 bits): Unsigned integer. Total length of the Chunk
 		 *   excluding padding bytes. Minimum value is 4 (if Chunk Value is 0
-		 *   bytes).
+		 *   bytes). Maximum value is 65535, which means 1 byte of padding.
 		 * - Chunk Value (variable length).
-		 * - Padding: Bytes of padding to make the Packet length be multiple of 4
+		 * - Padding: Bytes of padding to make the Chunk length be multiple of 4
 		 *   bytes.
 		 */
 
@@ -97,7 +97,7 @@ namespace RTC
 			 *   (including padding bytes, so it will be multiple of 4 bytes).
 			 */
 			static bool IsChunk(
-			  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkTotalLength);
+			  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, size_t& chunkTotalLength);
 
 			static const std::string& ChunkType2String(ChunkType chunkType);
 

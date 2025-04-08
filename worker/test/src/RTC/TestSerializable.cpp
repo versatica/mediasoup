@@ -706,6 +706,55 @@ SCENARIO("parse invalid FooNumericItem with wrong id", "[serializable]")
 	REQUIRE(!item);
 }
 
+SCENARIO("parse FooUnknownItem of maximum length", "[serializable]")
+{
+	// FooUnknownItem with:
+	// - ItemHeaderLength: 2 bytes
+	// - Maximum Value Length: 255 bytes
+	// - Total Item length: 2 + 255 = 257 bytes
+	// - Buffer length: 260 bytes
+	uint8_t buffer[260];
+
+	// Ininitalize every byte with 0x69.
+	std::memset(buffer, 0x69, sizeof(buffer));
+
+	// Id:0 (UNKNOWN), Flags:0b1111
+	buffer[0] = 0b00001111;
+	// Value Length:255
+	buffer[1] = 0xFF;
+	// First value byte:0x11
+	buffer[2] = 0x11;
+	// Second value byte:0x22
+	buffer[3] = 0x22;
+	// 3 remaining bytes
+	buffer[260 - 3] = 0x00;
+	buffer[260 - 2] = 0x00;
+	buffer[260 - 1] = 0x00;
+
+	auto* item = FooUnknownItem::Parse(buffer, sizeof(buffer));
+
+	REQUIRE(sizeof(buffer) == 260);
+	REQUIRE(item);
+	REQUIRE(item->GetBuffer() == buffer);
+	REQUIRE(item->GetBufferLength() == 260);
+	REQUIRE(item->GetLength() == 257);
+	REQUIRE(item->IsFrozen() == true);
+	REQUIRE(item->GetId() == static_cast<FooItem::ItemId>(0));
+	REQUIRE(item->HasUnknownId() == true);
+	REQUIRE(item->GetFlags() == 0b1111);
+	REQUIRE(item->GetValueLength() == 255);
+	REQUIRE(item->GetValue()[0] == 0x11);
+	REQUIRE(item->GetValue()[1] == 0x22);
+	REQUIRE(item->GetValue()[2] == 0x69);
+	REQUIRE(item->GetValue()[254] == 0x69);
+	REQUIRE(item->GetBuffer()[257] == 0x00);
+	REQUIRE(item->GetBuffer()[258] == 0x00);
+	REQUIRE(item->GetBuffer()[259] == 0x00);
+	REQUIRE(helpers::areBuffersEqual(item->GetBuffer(), item->GetLength(), buffer, 257) == true);
+
+	delete item;
+}
+
 SCENARIO("create and modify FooNumericItem", "[serializable]")
 {
 	// Max length of a FooItem is 17 bytes.

@@ -18,7 +18,5 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	packet->Dump();
-
 	delete packet;
 }

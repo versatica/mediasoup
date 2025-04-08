@@ -27,6 +27,7 @@
 #ifdef MS_SCTP_STACK
 #include "RTC/SCTP/FuzzerPacket.hpp"
 #endif
+#include "RTC/TestSerializable/FuzzerFooPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
 #include <sstream> // std::istringstream()
@@ -100,6 +101,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	{
 		Fuzzer::Utils::Fuzz(data, len);
 		Fuzzer::RTC::TrendCalculator::Fuzz(data, len);
+		Fuzzer::RTC::FooPacket::Fuzz(data, len);
 	}
 
 	return 0;
@@ -107,22 +109,22 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 int Init()
 {
+	std::string logLevel{ "none" };
+	std::vector<std::string> logTags = { "info" };
+
 	const auto* logLevelPtr = std::getenv("MS_FUZZ_LOG_LEVEL");
 	const auto* logTagsPtr  = std::getenv("MS_FUZZ_LOG_TAGS");
 
 	// Get logLevel from ENV variable.
 	if (logLevelPtr)
 	{
-		auto logLevelStr = std::string(logLevelPtr);
-
-		Settings::SetLogLevel(logLevelStr);
+		logLevel = std::string(logLevelPtr);
 	}
 
 	// Get logTags from ENV variable.
 	if (logTagsPtr)
 	{
-		auto logTagsStr                  = std::string(logTagsPtr);
-		std::vector<std::string> logTags = { "info" };
+		auto logTagsStr = std::string(logTagsPtr);
 		std::istringstream iss(logTagsStr);
 		std::string logTag;
 
@@ -130,10 +132,10 @@ int Init()
 		{
 			logTags.push_back(logTag);
 		}
-
-		Settings::SetLogTags(logTags);
 	}
 
+	Settings::SetLogLevel(logLevel);
+	Settings::SetLogTags(logTags);
 	Settings::PrintConfiguration();
 
 	// Select what to fuzz.
@@ -190,7 +192,7 @@ int Init()
 		fuzzUtils = true;
 	}
 
-	if (!fuzzStun && !fuzzDtls && !fuzzRtp && !fuzzRtcp && !fuzzCodecs && !fuzzSctp && !fuzzUtils)
+	if (!fuzzStun && !fuzzDtls && !fuzzSctp && !fuzzRtp && !fuzzRtcp && !fuzzCodecs && !fuzzUtils)
 	{
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 

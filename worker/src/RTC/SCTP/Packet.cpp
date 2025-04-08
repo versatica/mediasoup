@@ -6,7 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
-#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -65,7 +64,7 @@ namespace RTC
 				// Here we must anticipate the type of each chunk to use its appropriate
 				// parser.
 				Chunk::ChunkType chunkType;
-				uint16_t chunkTotalLength;
+				size_t chunkTotalLength;
 
 				if (!Chunk::IsChunk(ptr, chunkBufferLength, chunkType, chunkTotalLength))
 				{
@@ -223,7 +222,7 @@ namespace RTC
 
 			// Copy all bytes from beginning of the buffer until the position of the
 			// chunks.
-			std::memcpy(buffer, GetBuffer(), chunksOffset);
+			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), chunksOffset);
 
 			// Serialize each chunk into the new buffer.
 			auto* ptr = buffer + chunksOffset;
@@ -264,7 +263,7 @@ namespace RTC
 
 			// Copy all bytes from beginning of the buffer until the position of the
 			// chunks.
-			std::memcpy(buffer, GetBuffer(), chunksOffset);
+			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), chunksOffset);
 
 			auto* clonedPacket = new Packet(buffer, bufferLength);
 
