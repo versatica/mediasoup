@@ -309,8 +309,7 @@ namespace RTC
 			}
 
 			// Set next attribute position.
-			pos =
-			  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(pos + 4 + attrLength)));
+			pos = Utils::Byte::PadTo4Bytes(pos + 4 + attrLength);
 		}
 
 		// Ensure current position matches the total length.
@@ -630,7 +629,7 @@ namespace RTC
 
 		if (!this->username.empty())
 		{
-			usernamePaddedLen = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(this->username.length()));
+			usernamePaddedLen = Utils::Byte::PadTo4Bytes(this->username.length());
 			this->size += 4 + usernamePaddedLen;
 		}
 
