@@ -1,83 +1,88 @@
-// #define MS_CLASS "RTC::SCTP::UnknownChunk"
-// // #define MS_LOG_DEV_LEVEL 3
+#define MS_CLASS "RTC::SCTP::UnknownChunk"
+// #define MS_LOG_DEV_LEVEL 3
 
-// #include "RTC/SCTP/UnknownChunk.hpp"
-// #include "Logger.hpp"
-// #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/UnknownChunk.hpp"
+#include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 
-// namespace RTC
-// {
-// 	namespace SCTP
-// 	{
-// 		/* Class methods. */
+namespace RTC
+{
+	namespace SCTP
+	{
+		/* Class methods. */
 
-// 		UnknownChunk* UnknownChunk::Parse(const uint8_t* buffer, size_t bufferLength)
-// 		{
-// 			MS_TRACE();
+		UnknownChunk* UnknownChunk::Parse(const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
 
-// 			Chunk::ChunkType& chunkType;
-// 			uint16_t chunkLength
+			Chunk::ChunkType chunkType;
+			uint16_t chunkLength;
 
-// 			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength))
-// 			{
-// 				MS_WARN_TAG(sctp, "not an SCTP Chunk");
+			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength))
+			{
+				MS_WARN_TAG(sctp, "not an SCTP Chunk");
 
-// 				return nullptr;
-// 			}
+				return nullptr;
+			}
 
-// 			auto* chunk = new UnknownChunk(buffer, bufferLength);
+			auto* chunk = new UnknownChunk(buffer, bufferLength);
 
-// 			// Must always invoke SetLength() after constructing a Serializable.
-// 			chunk->SetLength(Chunk::ChunkHeaderLength + chunkLength);
+			// Must always invoke SetLength() after constructing a Serializable.
+			chunk->SetLength(chunkLength);
 
-// 			// Mark the Chunk as frozen since we are parsing.
-// 			chunk->Freeze();
+			// Mark the Chunk as frozen since we are parsing.
+			chunk->Freeze();
 
-// 			return chunk;
-// 		}
+			return chunk;
+		}
 
-// 		/* Instance methods. */
+		/* Instance methods. */
 
-// 		UnknownChunk::UnknownChunk(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer,
-// bufferLength)
-// 		{
-// 			MS_TRACE();
-// 		}
+		UnknownChunk::UnknownChunk(const uint8_t* buffer, size_t bufferLength)
+		  : Chunk(buffer, bufferLength)
+		{
+			MS_TRACE();
+		}
 
-// 		UnknownChunk::~UnknownChunk()
-// 		{
-// 			MS_TRACE();
-// 		}
+		UnknownChunk::~UnknownChunk()
+		{
+			MS_TRACE();
+		}
 
-// 		void UnknownChunk::Dump() const
-// 		{
-// 			MS_TRACE();
-// 			MS_DUMP("<UnknownChunk>");
-// 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-// 			MS_DUMP("  type: %" PRIu8 " (%s) (unknown:%s)", GetType(),
-// Chunk::ChunkType2String(GetType()).c_str(), HasUnknownType() ? "yes" : "no"); 			MS_DUMP("  flags: "
-// MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags())); 			MS_DUMP( 			  "  length
-// field: %" PRIu16 " (computed chunk length: %" PRIu16 ")", 			  GetLengthField(), 			  GetValueLength());
-// 			MS_DUMP("</UnknownChunk>");
-// 		}
+		void UnknownChunk::Dump() const
+		{
+			MS_TRACE();
 
-// 		UnknownChunk* UnknownChunk::Clone(uint8_t* buffer, size_t bufferLength) const
-// 		{
-// 			MS_TRACE();
+			MS_DUMP("<UnknownChunk>");
+			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP(
+			  "  type: %" PRIu8 " (%s) (unknown:%s)",
+			  GetType(),
+			  Chunk::ChunkType2String(GetType()).c_str(),
+			  HasUnknownType() ? "yes" : "no");
+			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
+			MS_DUMP(
+			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
+			MS_DUMP("</UnknownChunk>");
+		}
 
-// 			return static_cast<UnknownChunk*>(Chunk::Clone(buffer, bufferLength));
-// 		}
+		UnknownChunk* UnknownChunk::Clone(uint8_t* buffer, size_t bufferLength) const
+		{
+			MS_TRACE();
 
-// 		const uint8_t* UnknownChunk::GetValue() const
-// 		{
-// 			MS_TRACE();
+			return static_cast<UnknownChunk*>(Chunk::Clone(buffer, bufferLength));
+		}
 
-// 			if (!HasValue())
-// 			{
-// 				return nullptr;
-// 			}
+		const uint8_t* UnknownChunk::GetValue() const
+		{
+			MS_TRACE();
 
-// 			return GetValuePointer();
-// 		}
-// 	} // namespace SCTP
-// } // namespace RTC
+			if (!HasValue())
+			{
+				return nullptr;
+			}
+
+			return GetValuePointer();
+		}
+	} // namespace SCTP
+} // namespace RTC

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/SCTP/UnknownChunk.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -80,33 +81,33 @@ namespace RTC
 
 				switch (chunkType)
 				{
-					// case Chunk::ChunkType::XXXXX:
-					// {
-					// 	chunk = XxxxxChunk::Parse(ptr, chunkBufferLength);
+						// case Chunk::ChunkType::XXXXX:
+						// {
+						// 	chunk = XxxxxChunk::Parse(ptr, chunkBufferLength);
 
-					// 	if (!chunk)
-					// 	{
-					// 		MS_WARN_DEV("XxxxxChunk parser failed");
+						// 	if (!chunk)
+						// 	{
+						// 		MS_WARN_DEV("XxxxxChunk parser failed");
 
-					// 		delete packet;
-					// 		return nullptr;
-					// 	}
+						// 		delete packet;
+						// 		return nullptr;
+						// 	}
 
-					// 	break;
-					// }
+						// 	break;
+						// }
 
-					// default:
-					// {
-					// 	chunk = UnknownChunk::Parse(ptr, chunkBufferLength);
+					default:
+					{
+						chunk = UnknownChunk::Parse(ptr, chunkBufferLength);
 
-					// 	if (!chunk)
-					// 	{
-					// 		MS_WARN_DEV("UnknownChunk parser failed");
+						if (!chunk)
+						{
+							MS_WARN_DEV("UnknownChunk parser failed");
 
-					// 		delete packet;
-					// 		return nullptr;
-					// 	}
-					// }
+							delete packet;
+							return nullptr;
+						}
+					}
 				}
 
 				// Let's fix chunk's buffer length. This is because we didn't know its

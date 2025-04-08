@@ -100,6 +100,7 @@ namespace RTC
 		void Chunk::Dump() const
 		{
 			MS_TRACE();
+
 			MS_DUMP("<Chunk>");
 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP(
@@ -109,9 +110,7 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
 			MS_DUMP(
-			  "  length field: %" PRIu16 " (computed chunk length: %" PRIu16 ")",
-			  GetLengthField(),
-			  GetValueLength());
+			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
 			MS_DUMP("</Chunk>");
 		}
 

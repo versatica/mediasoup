@@ -174,12 +174,17 @@ namespace RTC
 			 */
 			virtual uint16_t GetLengthField() const final
 			{
-				return GetHeaderPointer()->length;
+				return uint16_t{ ntohs(GetHeaderPointer()->length) };
 			}
 
 			virtual void SetLengthField(uint16_t length) final
 			{
-				GetHeaderPointer()->length = length;
+				GetHeaderPointer()->length = uint16_t{ htons(length) };
+			}
+
+			virtual uint8_t* GetValuePointer() const final
+			{
+				return const_cast<uint8_t*>(GetBuffer()) + Chunk::ChunkHeaderLength;
 			}
 		};
 	} // namespace SCTP
