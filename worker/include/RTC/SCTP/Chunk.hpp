@@ -92,8 +92,9 @@ namespace RTC
 			 * @param bufferLength - Can be greater than real Chunk length.
 			 * @param chunkType - If given buffer is a valid FooItem then `chunkType`
 			 *   is rewritten to parsed ChunkType.
-			 * @param valueLength - If given buffer is a valid Chunk then
-			 *   `valueLength` is rewritten to the length of the Chunk.
+			 * @param chunkLength - If given buffer is a valid Chunk then
+			 *   `chunkLength` is rewritten to the length of the Chunk (including
+			 *   padding bytes, so it will be multiple of 4 bytes).
 			 */
 			static bool IsChunk(
 			  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkLength);

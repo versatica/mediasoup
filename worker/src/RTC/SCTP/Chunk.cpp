@@ -4,6 +4,7 @@
 #include "RTC/SCTP/Chunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include <cstring> // std::memcpy()
 
 namespace RTC
@@ -42,23 +43,28 @@ namespace RTC
 
 			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
-				MS_WARN_DEV("no space for Chunk header");
+				MS_WARN_TAG(sctp, "no space for SCTP Chunk header [bufferLength:%zu]", bufferLength);
 
 				return false;
 			}
 
 			const auto* chunkHeader = reinterpret_cast<const Chunk::ChunkHeader*>(buffer);
-			auto length             = uint16_t{ ntohs(chunkHeader->length) };
+			// Chunk total length must be multiple of 4 bytes and must include
+			// padding bytes despite Chunk Length field doesn't not include padding.
+			auto paddedChunkLength = Utils::Byte::PadTo4Bytes(uint16_t{ ntohs(chunkHeader->length) });
 
-			if (bufferLength < Chunk::ChunkHeaderLength + length)
+			if (bufferLength < paddedChunkLength)
 			{
-				MS_WARN_DEV("no space for announced chunk length");
+				MS_WARN_TAG(
+				  sctp,
+				  "no space for padded announced Chunk Length field [paddedChunkLength:%" PRIu16 "]",
+				  paddedChunkLength);
 
 				return false;
 			}
 
 			chunkType   = chunkHeader->type;
-			chunkLength = length;
+			chunkLength = paddedChunkLength;
 
 			return true;
 		}
@@ -96,7 +102,11 @@ namespace RTC
 			MS_TRACE();
 			MS_DUMP("<Chunk>");
 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP("  type: %" PRIu8 " (%s)", GetType(), Chunk::ChunkType2String(GetType()).c_str());
+			MS_DUMP(
+			  "  type: %" PRIu8 " (%s) (unknown:%s)",
+			  GetType(),
+			  Chunk::ChunkType2String(GetType()).c_str(),
+			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
 			MS_DUMP(
 			  "  length field: %" PRIu16 " (computed chunk length: %" PRIu16 ")",

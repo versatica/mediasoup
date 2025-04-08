@@ -32,7 +32,7 @@ namespace RTC
 
 			if (!Packet::IsPacket(buffer, bufferLength))
 			{
-				MS_WARN_TAG(sctp, "not an SCTP packet");
+				MS_WARN_TAG(sctp, "not an SCTP Packet");
 
 				return nullptr;
 			}
@@ -42,7 +42,7 @@ namespace RTC
 			// TODO: Move this to some Validate() method.
 			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
 			{
-				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, packet discarded");
+				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, SCTP Packet discarded");
 
 				delete packet;
 				return nullptr;
@@ -68,7 +68,7 @@ namespace RTC
 
 				if (!Chunk::IsChunk(ptr, chunkBufferLength, chunkType, chunkLength))
 				{
-					MS_WARN_DEV("not a Chunk");
+					MS_WARN_TAG(sctp, "not a SCTP Chunk");
 
 					delete packet;
 					return nullptr;
@@ -76,7 +76,7 @@ namespace RTC
 
 				Chunk* chunk{ nullptr };
 
-				MS_DEBUG_DEV("parsing Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
+				MS_DEBUG_DEV("parsing SCTP Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
 				switch (chunkType)
 				{
@@ -128,7 +128,11 @@ namespace RTC
 			// Ensure computed length matches the total given buffer length.
 			if (computedLength != bufferLength)
 			{
-				MS_WARN_DEV("computed length != buffer length");
+				MS_WARN_TAG(
+				  sctp,
+				  "computed length (%zu bytes) != buffer length (%zu bytes)",
+				  computedLength,
+				  bufferLength);
 
 				delete packet;
 				return nullptr;

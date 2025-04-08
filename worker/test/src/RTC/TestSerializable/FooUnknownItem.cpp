@@ -52,7 +52,11 @@ void FooUnknownItem::Dump() const
 
 	MS_DUMP("<FooUnknownItem>");
 	MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-	MS_DUMP("  id: %" PRIu8 " (%s)", GetId(), FooItem::ItemId2String(GetId()).c_str());
+	MS_DUMP(
+	  "  id: %" PRIu8 " (%s) (unknown:%s)",
+	  GetId(),
+	  FooItem::ItemId2String(GetId()).c_str(),
+	  HasUnknownId() ? "yes" : "no");
 	MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
 	MS_DUMP(
 	  "  value length field: %" PRIu8 " (computed value length: %" PRIu8 ")",

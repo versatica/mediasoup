@@ -25,15 +25,13 @@
 // 		void Chunk::Dump() const
 // 		{
 // 			MS_TRACE();
-// 			MS_DUMP("<Chunk>");
+// 			MS_DUMP("<DataChunk>");
 // 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-// 			MS_DUMP("  type: %" PRIu8 " (%s)", GetType(), Chunk::ChunkType2String(GetType()).c_str());
-// 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
-// 			MS_DUMP(
-// 			  "  length field: %" PRIu16 " (computed chunk length: %" PRIu16 ")",
-// 			  GetLengthField(),
-// 			  GetValueLength());
-// 			MS_DUMP("</Chunk>");
+// 			MS_DUMP("  type: %" PRIu8 " (%s) (unknown:%s)", GetType(),
+// Chunk::ChunkType2String(GetType()).c_str(), HasUnknownType() ? "yes" : "no"); 			MS_DUMP("  flags: "
+// MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags())); 			MS_DUMP( 			  "  length
+// field: %" PRIu16 " (computed chunk length: %" PRIu16 ")", 			  GetLengthField(), 			  GetValueLength());
+// 			MS_DUMP("</DataChunk>");
 // 		}
 
 // 		Chunk* Chunk::Clone(uint8_t* buffer, size_t bufferLength) const
