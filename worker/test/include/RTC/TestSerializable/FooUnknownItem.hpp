@@ -45,7 +45,7 @@ private:
 	FooUnknownItem(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	virtual ~FooUnknownItem() override final;
+	virtual ~FooUnknownItem() override;
 
 	virtual void Dump() const override final;
 

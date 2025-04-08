@@ -6,7 +6,6 @@
 #include "DepOpenSSL.hpp"
 #include "DepUsrSCTP.hpp"
 #include "FuzzerUtils.hpp"
-#include "LogLevel.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/FuzzerH264.hpp"
@@ -24,13 +23,21 @@
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/FuzzerPacket.hpp"
+#endif
 #include <cstdlib> // std::getenv()
 #include <iostream>
+#include <sstream> // std::istringstream()
 #include <stddef.h>
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 bool fuzzStun   = false;
 bool fuzzDtls   = false;
+bool fuzzSctp   = false;
 bool fuzzRtp    = false;
 bool fuzzRtcp   = false;
 bool fuzzCodecs = false;
@@ -57,6 +64,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	{
 		Fuzzer::RTC::DtlsTransport::Fuzz(data, len);
 	}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+	if (fuzzSctp)
+	{
+		Fuzzer::RTC::SCTP::Packet::Fuzz(data, len);
+	}
+#endif
 
 	if (fuzzRtp)
 	{
@@ -92,24 +107,34 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 int Init()
 {
-	LogLevel logLevel{ LogLevel::LOG_NONE };
+	const auto* logLevelPtr = std::getenv("MS_FUZZ_LOG_LEVEL");
+	const auto* logTagsPtr  = std::getenv("MS_FUZZ_LOG_TAGS");
 
 	// Get logLevel from ENV variable.
-	if (std::getenv("MS_FUZZ_LOG_LEVEL"))
+	if (logLevelPtr)
 	{
-		if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "debug")
-		{
-			logLevel = LogLevel::LOG_DEBUG;
-		}
-		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "warn")
-		{
-			logLevel = LogLevel::LOG_WARN;
-		}
-		else if (std::string(std::getenv("MS_FUZZ_LOG_LEVEL")) == "error")
-		{
-			logLevel = LogLevel::LOG_ERROR;
-		}
+		auto logLevelStr = std::string(logLevelPtr);
+
+		Settings::SetLogLevel(logLevelStr);
 	}
+
+	// Get logTags from ENV variable.
+	if (logTagsPtr)
+	{
+		auto logTagsStr                  = std::string(logTagsPtr);
+		std::vector<std::string> logTags = { "info" };
+		std::istringstream iss(logTagsStr);
+		std::string logTag;
+
+		while (iss >> logTag)
+		{
+			logTags.push_back(logTag);
+		}
+
+		Settings::SetLogTags(logTags);
+	}
+
+	Settings::PrintConfiguration();
 
 	// Select what to fuzz.
 
@@ -119,49 +144,64 @@ int Init()
 
 		fuzzStun = true;
 	}
+
 	if (std::getenv("MS_FUZZ_DTLS") && std::string(std::getenv("MS_FUZZ_DTLS")) == "1")
 	{
 		std::cout << "[fuzzer] DTLS fuzzer enabled" << std::endl;
 
 		fuzzDtls = true;
 	}
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+	if (std::getenv("MS_FUZZ_SCTP") && std::string(std::getenv("MS_FUZZ_SCTP")) == "1")
+	{
+		std::cout << "[fuzzer] SCTP fuzzer enabled" << std::endl;
+
+		fuzzSctp = true;
+	}
+#endif
+
 	if (std::getenv("MS_FUZZ_RTP") && std::string(std::getenv("MS_FUZZ_RTP")) == "1")
 	{
 		std::cout << "[fuzzer] RTP fuzzer enabled" << std::endl;
 
 		fuzzRtp = true;
 	}
+
 	if (std::getenv("MS_FUZZ_RTCP") && std::string(std::getenv("MS_FUZZ_RTCP")) == "1")
 	{
 		std::cout << "[fuzzer] RTCP fuzzer enabled" << std::endl;
 
 		fuzzRtcp = true;
 	}
+
 	if (std::getenv("MS_FUZZ_CODECS") && std::string(std::getenv("MS_FUZZ_CODECS")) == "1")
 	{
 		std::cout << "[fuzzer] codecs fuzzer enabled" << std::endl;
 
 		fuzzCodecs = true;
 	}
+
 	if (std::getenv("MS_FUZZ_UTILS") && std::string(std::getenv("MS_FUZZ_UTILS")) == "1")
 	{
 		std::cout << "[fuzzer] Utils fuzzer enabled" << std::endl;
 
 		fuzzUtils = true;
 	}
-	if (!fuzzStun && !fuzzDtls && !fuzzRtp && !fuzzRtcp && !fuzzCodecs && !fuzzUtils)
+
+	if (!fuzzStun && !fuzzDtls && !fuzzRtp && !fuzzRtcp && !fuzzCodecs && !fuzzSctp && !fuzzUtils)
 	{
 		std::cout << "[fuzzer] all fuzzers enabled" << std::endl;
 
 		fuzzStun   = true;
 		fuzzDtls   = true;
+		fuzzSctp   = true;
 		fuzzRtp    = true;
 		fuzzRtcp   = true;
 		fuzzCodecs = true;
 		fuzzUtils  = true;
 	}
-
-	Settings::configuration.logLevel = logLevel;
 
 	// Initialize static stuff.
 	DepLibUV::ClassInit();

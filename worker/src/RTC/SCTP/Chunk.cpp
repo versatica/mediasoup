@@ -37,7 +37,7 @@ namespace RTC
 		/* Class methods. */
 
 		bool Chunk::IsChunk(
-		  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkLength)
+		  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkTotalLength)
 		{
 			MS_TRACE();
 
@@ -49,22 +49,45 @@ namespace RTC
 			}
 
 			const auto* chunkHeader = reinterpret_cast<const Chunk::ChunkHeader*>(buffer);
+			auto chunkLength        = uint16_t{ ntohs(chunkHeader->length) };
+
+			if (chunkLength < Chunk::ChunkHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "Chunk Length field must have value greater or equal than %zu",
+				  Chunk::ChunkHeaderLength);
+
+				return false;
+			}
+
 			// Chunk total length must be multiple of 4 bytes and must include
 			// padding bytes despite Chunk Length field doesn't not include padding.
-			auto paddedChunkLength = Utils::Byte::PadTo4Bytes(uint16_t{ ntohs(chunkHeader->length) });
+			auto paddedChunkLength = Utils::Byte::PadTo4Bytes(chunkLength);
+
+			// NOTE: PadTo4Bytes(65535) => 0. Caution!
+			if (paddedChunkLength < chunkLength)
+			{
+				MS_WARN_TAG(
+				  sctp, "invalid computed padded chunk length: %" PRIu16 " bytes", paddedChunkLength);
+
+				return false;
+			}
 
 			if (bufferLength < paddedChunkLength)
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "no space for padded announced Chunk Length field [paddedChunkLength:%" PRIu16 "]",
-				  paddedChunkLength);
+				  "no space for padded announced Chunk Length field [paddedChunkLength:%" PRIu16
+				  ", bufferLength:%zu]",
+				  paddedChunkLength,
+				  bufferLength);
 
 				return false;
 			}
 
-			chunkType   = chunkHeader->type;
-			chunkLength = paddedChunkLength;
+			chunkType        = chunkHeader->type;
+			chunkTotalLength = paddedChunkLength;
 
 			return true;
 		}

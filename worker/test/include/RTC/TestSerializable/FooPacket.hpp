@@ -97,7 +97,7 @@ private:
 	FooPacket(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	~FooPacket() override final;
+	~FooPacket() override;
 
 	void Dump() const override final;
 

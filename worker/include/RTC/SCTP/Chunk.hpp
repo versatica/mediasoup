@@ -72,11 +72,11 @@ namespace RTC
 				ChunkType type;
 				uint8_t flags;
 				/**
-				 * The value of the Chunk Length field, which represents the size of the
-				 * chunk in bytes, including the Chunk Type, Chunk Flags, Chunk Length
-				 * and Chunk Value fields. So if the Chunk Value field is zero-length,
-				 * the Length field must be 4. The Chunk Length field does not count any
-				 * chunk padding.
+				 * The value of the Chunk Length field, which represents the total
+				 * length of the chunk in bytes, including the Chunk Type, Chunk Flags,
+				 * Chunk Length and Chunk Value fields. So if the Chunk Value field is
+				 * zero-length, the Length field must be 4. The Chunk Length field does
+				 * not count any chunk padding.
 				 */
 				uint16_t length;
 			};
@@ -92,12 +92,12 @@ namespace RTC
 			 * @param bufferLength - Can be greater than real Chunk length.
 			 * @param chunkType - If given buffer is a valid FooItem then `chunkType`
 			 *   is rewritten to parsed ChunkType.
-			 * @param chunkLength - If given buffer is a valid Chunk then
-			 *   `chunkLength` is rewritten to the length of the Chunk (including
-			 *   padding bytes, so it will be multiple of 4 bytes).
+			 * @param chunkTotalLength - If given buffer is a valid Chunk then
+			 *   `chunkTotalLength` is rewritten to the total length of the Chunk
+			 *   (including padding bytes, so it will be multiple of 4 bytes).
 			 */
 			static bool IsChunk(
-			  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkLength);
+			  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, uint16_t& chunkTotalLength);
 
 			static const std::string& ChunkType2String(ChunkType chunkType);
 

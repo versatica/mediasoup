@@ -93,7 +93,7 @@ namespace RTC
 			Packet(const uint8_t* buffer, size_t bufferLength);
 
 		public:
-			~Packet() override final;
+			~Packet() override;
 			;
 
 			void Dump() const override final;

@@ -54,7 +54,7 @@ private:
 	FooTextItem(const uint8_t* buffer, size_t bufferLength);
 
 public:
-	virtual ~FooTextItem() override final;
+	virtual ~FooTextItem() override;
 
 	virtual void Dump() const override final;
 

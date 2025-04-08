@@ -386,7 +386,7 @@ test_sources = [
   'test/src/Utils/TestTime.cpp',
 ]
 
-# TODO: Move to common_sources array once it's tested.
+# TODO: Move to test_sources array once it's tested.
 if get_option('ms_sctp_stack')
   test_sources += [
     'test/src/RTC/SCTP/TestPacket.cpp',
@@ -511,52 +511,61 @@ test(
   workdir: meson.project_source_root(),
 )
 
+fuzzer_sources = common_sources + [
+  'fuzzer/src/fuzzer.cpp',
+  'fuzzer/src/FuzzerUtils.cpp',
+  'fuzzer/src/RTC/FuzzerDtlsTransport.cpp',
+  'fuzzer/src/RTC/FuzzerRateCalculator.cpp',
+  'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
+  'fuzzer/src/RTC/FuzzerRtpRetransmissionBuffer.cpp',
+  'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
+  'fuzzer/src/RTC/FuzzerSeqManager.cpp',
+  'fuzzer/src/RTC/FuzzerStunPacket.cpp',
+  'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerOpus.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerVP8.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerVP9.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerH264.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerH264_SVC.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsFir.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsLei.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsPli.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRemb.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRpsi.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsSli.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsTst.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsVbcm.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtp.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpEcn.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpNack.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTransport.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
+  'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
+]
+
+# TODO: Move to fuzzer_sources array once it's tested.
+if get_option('ms_sctp_stack')
+  fuzzer_sources += [
+    'fuzzer/src/RTC/SCTP/FuzzerPacket.cpp'
+  ]
+endif
+
 executable(
   'mediasoup-worker-fuzzer',
   build_by_default: false,
   install: true,
   install_tag: 'mediasoup-worker-fuzzer',
   dependencies: dependencies,
-  sources: common_sources + [
-    'fuzzer/src/fuzzer.cpp',
-    'fuzzer/src/FuzzerUtils.cpp',
-    'fuzzer/src/RTC/FuzzerDtlsTransport.cpp',
-    'fuzzer/src/RTC/FuzzerRateCalculator.cpp',
-    'fuzzer/src/RTC/FuzzerRtpPacket.cpp',
-    'fuzzer/src/RTC/FuzzerRtpRetransmissionBuffer.cpp',
-    'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
-    'fuzzer/src/RTC/FuzzerSeqManager.cpp',
-    'fuzzer/src/RTC/FuzzerStunPacket.cpp',
-    'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
-    'fuzzer/src/RTC/Codecs/FuzzerOpus.cpp',
-    'fuzzer/src/RTC/Codecs/FuzzerVP8.cpp',
-    'fuzzer/src/RTC/Codecs/FuzzerVP9.cpp',
-    'fuzzer/src/RTC/Codecs/FuzzerH264.cpp',
-    'fuzzer/src/RTC/Codecs/FuzzerH264_SVC.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsFir.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsLei.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsPli.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRemb.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsRpsi.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsSli.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsTst.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsVbcm.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtp.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpEcn.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpNack.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpSrReq.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTllei.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTmmb.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerFeedbackRtpTransport.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerPacket.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerReceiverReport.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
-    'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
-  ],
+  sources: fuzzer_sources,
   include_directories: include_directories(
     'include',
     'fuzzer/include',

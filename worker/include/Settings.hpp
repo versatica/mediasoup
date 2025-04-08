@@ -44,12 +44,12 @@ public:
 
 public:
 	static void SetConfiguration(int argc, char* argv[]);
+	static void SetLogLevel(std::string& level);
+	static void SetLogTags(const std::vector<std::string>& tags);
 	static void PrintConfiguration();
 	static void HandleRequest(Channel::ChannelRequest* request);
 
 private:
-	static void SetLogLevel(std::string& level);
-	static void SetLogTags(const std::vector<std::string>& tags);
 	static void SetDtlsCertificateAndPrivateKeyFiles();
 
 public:

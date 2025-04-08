@@ -65,9 +65,9 @@ namespace RTC
 				// Here we must anticipate the type of each chunk to use its appropriate
 				// parser.
 				Chunk::ChunkType chunkType;
-				uint16_t chunkLength;
+				uint16_t chunkTotalLength;
 
-				if (!Chunk::IsChunk(ptr, chunkBufferLength, chunkType, chunkLength))
+				if (!Chunk::IsChunk(ptr, chunkBufferLength, chunkType, chunkTotalLength))
 				{
 					MS_WARN_TAG(sctp, "not a SCTP Chunk");
 

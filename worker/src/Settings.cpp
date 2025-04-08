@@ -217,6 +217,87 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	Settings::SetDtlsCertificateAndPrivateKeyFiles();
 }
 
+void Settings::SetLogLevel(std::string& level)
+{
+	MS_TRACE();
+
+	// Lowcase given level.
+	Utils::String::ToLowerCase(level);
+
+	if (Settings::String2LogLevel.find(level) == Settings::String2LogLevel.end())
+	{
+		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
+	}
+
+	Settings::configuration.logLevel = Settings::String2LogLevel[level];
+}
+
+void Settings::SetLogTags(const std::vector<std::string>& tags)
+{
+	MS_TRACE();
+
+	// Reset logTags.
+	struct LogTags logTags;
+
+	for (const auto& tag : tags)
+	{
+		if (tag == "info")
+		{
+			logTags.info = true;
+		}
+		else if (tag == "ice")
+		{
+			logTags.ice = true;
+		}
+		else if (tag == "dtls")
+		{
+			logTags.dtls = true;
+		}
+		else if (tag == "rtp")
+		{
+			logTags.rtp = true;
+		}
+		else if (tag == "srtp")
+		{
+			logTags.srtp = true;
+		}
+		else if (tag == "rtcp")
+		{
+			logTags.rtcp = true;
+		}
+		else if (tag == "rtx")
+		{
+			logTags.rtx = true;
+		}
+		else if (tag == "bwe")
+		{
+			logTags.bwe = true;
+		}
+		else if (tag == "score")
+		{
+			logTags.score = true;
+		}
+		else if (tag == "simulcast")
+		{
+			logTags.simulcast = true;
+		}
+		else if (tag == "svc")
+		{
+			logTags.svc = true;
+		}
+		else if (tag == "sctp")
+		{
+			logTags.sctp = true;
+		}
+		else if (tag == "message")
+		{
+			logTags.message = true;
+		}
+	}
+
+	Settings::configuration.logTags = logTags;
+}
+
 void Settings::PrintConfiguration()
 {
 	MS_TRACE();
@@ -350,87 +431,6 @@ void Settings::HandleRequest(Channel::ChannelRequest* request)
 			MS_THROW_ERROR("unknown method '%s'", request->methodCStr);
 		}
 	}
-}
-
-void Settings::SetLogLevel(std::string& level)
-{
-	MS_TRACE();
-
-	// Lowcase given level.
-	Utils::String::ToLowerCase(level);
-
-	if (Settings::String2LogLevel.find(level) == Settings::String2LogLevel.end())
-	{
-		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
-	}
-
-	Settings::configuration.logLevel = Settings::String2LogLevel[level];
-}
-
-void Settings::SetLogTags(const std::vector<std::string>& tags)
-{
-	MS_TRACE();
-
-	// Reset logTags.
-	struct LogTags newLogTags;
-
-	for (const auto& tag : tags)
-	{
-		if (tag == "info")
-		{
-			newLogTags.info = true;
-		}
-		else if (tag == "ice")
-		{
-			newLogTags.ice = true;
-		}
-		else if (tag == "dtls")
-		{
-			newLogTags.dtls = true;
-		}
-		else if (tag == "rtp")
-		{
-			newLogTags.rtp = true;
-		}
-		else if (tag == "srtp")
-		{
-			newLogTags.srtp = true;
-		}
-		else if (tag == "rtcp")
-		{
-			newLogTags.rtcp = true;
-		}
-		else if (tag == "rtx")
-		{
-			newLogTags.rtx = true;
-		}
-		else if (tag == "bwe")
-		{
-			newLogTags.bwe = true;
-		}
-		else if (tag == "score")
-		{
-			newLogTags.score = true;
-		}
-		else if (tag == "simulcast")
-		{
-			newLogTags.simulcast = true;
-		}
-		else if (tag == "svc")
-		{
-			newLogTags.svc = true;
-		}
-		else if (tag == "sctp")
-		{
-			newLogTags.sctp = true;
-		}
-		else if (tag == "message")
-		{
-			newLogTags.message = true;
-		}
-	}
-
-	Settings::configuration.logTags = newLogTags;
 }
 
 void Settings::SetDtlsCertificateAndPrivateKeyFiles()
