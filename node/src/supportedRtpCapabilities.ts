@@ -219,19 +219,20 @@ const supportedRtpCapabilities: RtpCapabilities = {
 				{ type: 'transport-cc' },
 			],
 		},
-		{
-			kind: 'video',
-			mimeType: 'video/AV1',
-			clockRate: 90000,
-			parameters: {},
-			rtcpFeedback: [
-				{ type: 'nack' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' },
-				{ type: 'transport-cc' },
-			],
-		},
+		// TODO: Uncomment once we are ready.
+		// {
+		// 	kind: 'video',
+		// 	mimeType: 'video/AV1',
+		// 	clockRate: 90000,
+		// 	parameters: {},
+		// 	rtcpFeedback: [
+		// 		{ type: 'nack' },
+		// 		{ type: 'nack', parameter: 'pli' },
+		// 		{ type: 'ccm', parameter: 'fir' },
+		// 		{ type: 'goog-remb' },
+		// 		{ type: 'transport-cc' },
+		// 	],
+		// },
 	],
 	headerExtensions: [
 		{

@@ -371,6 +371,10 @@ pub enum MimeTypeVideo {
     /// H265
     #[serde(rename = "video/H265")]
     H265,
+    // TODO: Uncomment when ready.
+    // /// AV1
+    // #[serde(rename = "video/AV1")]
+    // Av1,
     /// RTX
     #[serde(rename = "video/rtx")]
     Rtx,
@@ -413,6 +417,8 @@ impl MimeTypeVideo {
             Self::H264 => "video/H264",
             Self::H264Svc => "video/H264-SVC",
             Self::H265 => "video/H265",
+            // TODO: Uncomment when ready.
+            // Self::Av1 => "video/AV1",
             Self::Rtx => "video/rtx",
             Self::Red => "video/red",
             Self::Ulpfec => "video/ulpfec",
