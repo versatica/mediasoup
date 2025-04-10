@@ -26,6 +26,16 @@ namespace RTC
 				return nullptr;
 			}
 
+			if (chunkTotalLength < DataChunk::DataChunkHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "DataChunk Length field must have value greater or equal than %zu",
+				  DataChunk::DataChunkHeaderLength);
+
+				return nullptr;
+			}
+
 			if (chunkType != Chunk::ChunkType::DATA)
 			{
 				MS_WARN_DEV("invalid chunk type");
