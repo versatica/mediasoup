@@ -413,10 +413,5 @@ namespace RTC
 
 			return true;
 		}
-
-		void VP9::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)
-		{
-			MS_TRACE();
-		}
 	} // namespace Codecs
 } // namespace RTC

@@ -37,13 +37,47 @@ namespace RTC
 		public:
 			struct PayloadDescriptor : public RTC::Codecs::PayloadDescriptor
 			{
+				struct EncodingData
+				{
+					uint16_t pictureId;
+					uint8_t tl0PictureIndex;
+				};
+
+				struct Encoder : public RTC::Codecs::PayloadDescriptor::Encoder
+				{
+					~Encoder() override = default;
+					explicit Encoder(EncodingData encodingData) : encodingData(encodingData)
+					{
+					}
+					void Encode(uint8_t* data, const VP8::PayloadDescriptor* payloadDescriptor) const;
+
+					EncodingData encodingData;
+				};
+
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
-				~PayloadDescriptor() = default;
+				~PayloadDescriptor() override = default;
 
 				void Dump() const override;
 				// Rewrite the buffer with the given pictureId and tl0PictureIndex values.
 				void Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const;
+				void Encode(uint8_t* data) const;
 				void Restore(uint8_t* data) const;
+				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
+				{
+					if (this->encoder.has_value())
+					{
+						return std::make_unique<Encoder>(this->encoder.value());
+					}
+					else
+					{
+						return nullptr;
+					}
+				}
+
+				void CreateEncoder(EncodingData encodingData)
+				{
+					this->encoder = Encoder(encodingData);
+				}
 
 				// Mandatory fields.
 				uint8_t extended : 1;
@@ -68,6 +102,8 @@ namespace RTC
 				bool hasTwoBytesPictureId{ false };
 				bool hasTl0PictureIndex{ false };
 				bool hasTlIndex{ false };
+
+				std::optional<Encoder> encoder{ std::nullopt };
 			};
 
 		public:
@@ -106,7 +142,7 @@ namespace RTC
 			{
 			public:
 				explicit PayloadDescriptorHandler(PayloadDescriptor* payloadDescriptor);
-				~PayloadDescriptorHandler() = default;
+				~PayloadDescriptorHandler() override = default;
 
 			public:
 				void Dump() const override
@@ -114,6 +150,11 @@ namespace RTC
 					this->payloadDescriptor->Dump();
 				}
 				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
+				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
+				{
+					return this->payloadDescriptor->GetEncoder();
+				}
+				void Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override
 				{
@@ -129,7 +170,7 @@ namespace RTC
 				}
 
 			private:
-				std::unique_ptr<PayloadDescriptor> payloadDescriptor;
+				std::unique_ptr<VP8::PayloadDescriptor> payloadDescriptor;
 			};
 		};
 	} // namespace Codecs

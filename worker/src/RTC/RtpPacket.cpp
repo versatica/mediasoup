@@ -870,6 +870,30 @@ namespace RTC
 		return this->payloadDescriptorHandler->Process(context, this->payload, marker);
 	}
 
+	std::unique_ptr<Codecs::PayloadDescriptor::Encoder> RtpPacket::GetPayloadEncoder()
+	{
+		MS_TRACE();
+
+		if (!this->payloadDescriptorHandler)
+		{
+			return nullptr;
+		}
+
+		return this->payloadDescriptorHandler->GetEncoder();
+	}
+
+	void RtpPacket::EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder)
+	{
+		MS_TRACE();
+
+		if (!this->payloadDescriptorHandler)
+		{
+			return;
+		}
+
+		this->payloadDescriptorHandler->Encode(this->payload, encoder);
+	}
+
 	void RtpPacket::RestorePayload()
 	{
 		MS_TRACE();

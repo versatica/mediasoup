@@ -657,6 +657,10 @@ namespace RTC
 
 		bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
 
+		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder();
+
+		void EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder);
+
 		void RestorePayload();
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);

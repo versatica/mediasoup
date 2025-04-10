@@ -12,6 +12,11 @@ namespace RTC
 		// Codec payload descriptor.
 		struct PayloadDescriptor
 		{
+			struct Encoder
+			{
+				virtual ~Encoder() = default;
+			};
+
 			virtual ~PayloadDescriptor() = default;
 			virtual void Dump() const    = 0;
 		};
@@ -214,6 +219,8 @@ namespace RTC
 		public:
 			virtual void Dump() const                                                                = 0;
 			virtual bool Process(RTC::Codecs::EncodingContext* context, uint8_t* data, bool& marker) = 0;
+			virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const                   = 0;
+			virtual void Encode(uint8_t* data, PayloadDescriptor::Encoder* encoder)                  = 0;
 			virtual void Restore(uint8_t* data)                                                      = 0;
 			virtual uint8_t GetSpatialLayer() const                                                  = 0;
 			virtual uint8_t GetTemporalLayer() const                                                 = 0;

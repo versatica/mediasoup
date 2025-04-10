@@ -255,10 +255,5 @@ namespace RTC
 
 			return true;
 		}
-
-		void H264::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)
-		{
-			MS_TRACE();
-		}
 	} // namespace Codecs
 } // namespace RTC
