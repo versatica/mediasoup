@@ -38,7 +38,6 @@ namespace RTC
 
 		class Chunk : public Serializable
 		{
-		private:
 			friend class Packet;
 
 		public:

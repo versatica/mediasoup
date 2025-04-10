@@ -129,17 +129,24 @@ namespace RTC
 
 		/**
 		 * Clone the Serializable into a new buffer. This method returns a new
-		 * instance of Serializable which doesn't share any memory with the original
-		 * one.
+		 * instance of the Serializable subclass which doesn't share any memory
+		 * with the original one.
 		 *
-		 * @param buffer - The new buffer in which the cloned Serializable will be
-		 *   serialized.
-		 * @param bufferLength - New buffer length.
+		 * @param buffer - The buffer for the cloned Serializable.
+		 * @param bufferLength - Buffer length.
 		 *
 		 * @remarks
+		 * - The subclass must redeclare this method with a pointer to the subclass
+		 *   as return type.
 		 * - The subclass need to clone any pointer or allocated memory it holds
-		 * internally.
-		 * - The `Clone()` method of the subclass must manually invoke `SetLength()`.
+		 *   internally.
+		 * - In subclasses that do not hold other Serializable instances and do not
+		 *   allocate memory by themselves, the Clone() mthod can be as follows:
+		 *   ```c++
+		 *   auto* cloned = new SerializableSubclass(buffer, bufferLength);
+		 *   Serializable::CloneInto(cloned);
+		 *   return clonedItem;
+		 *   ```
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
@@ -167,8 +174,10 @@ namespace RTC
 		 *   case it couldn't anticipate its expected exact length. Specially
 		 *   useful when parsing variable-length items within a packet.
 		 *
-		 * @throw MediaSoupError - If given `bufferLength` is lower than the
-		 * current exact length of the Serializable.
+		 * @throw
+		 * - MediaSoupError - If given `bufferLength` is lower than the current
+		 *   exact length of the Serializable.
+		 * - MediaSoupError - If 0 is given.
 		 */
 		virtual void SetBufferLength(size_t bufferLength) final;
 
@@ -181,8 +190,10 @@ namespace RTC
 		 * after every change in the Serializable content that affects its current
 		 * length.
 		 *
-		 * @throw MediaSoupError - If given `length` is larger than the buffer
-		 * length of the Serializable.
+		 * @throw
+		 * - MediaSoupError - If given `length` is larger than the buffer length of
+		 *   the Serializable.
+		 * - MediaSoupError - If 0 is given.
 		 */
 		virtual void SetLength(size_t length) final;
 
@@ -193,6 +204,12 @@ namespace RTC
 		{
 			this->frozen = false;
 		}
+
+		/**
+		 * Clone Serializable into the given Serializable. Subclasses can invoke
+		 * this method within their Clone() implementation.
+		 */
+		virtual void CloneInto(Serializable* serializable) const final;
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a

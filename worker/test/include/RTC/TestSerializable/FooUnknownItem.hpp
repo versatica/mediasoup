@@ -27,8 +27,13 @@ namespace RTC
 	 * Length of a FooUnknownItem must be 4 bytes.
 	 */
 
+	// Forward declaration.
+	class FooPacket;
+
 	class FooUnknownItem : public FooItem
 	{
+		friend class FooPacket;
+
 	public:
 		/**
 		 * Parse a FooUnknownItem.
@@ -40,7 +45,8 @@ namespace RTC
 
 	private:
 		/**
-		 * Private constructor used by Parse() method.
+		 * Private constructor used by Parse() static method and by Clone() method
+		 * in FooPacket (friend class).
 		 */
 		FooUnknownItem(const uint8_t* buffer, size_t bufferLength);
 

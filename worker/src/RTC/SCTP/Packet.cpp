@@ -164,8 +164,8 @@ namespace RTC
 
 			packet->InitializeHeader();
 
-			// Must always invoke SetLength() after constructing a Serializable.
-			packet->SetLength(computedLength);
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum Packet length.
 
 			return packet;
 		}
@@ -175,6 +175,8 @@ namespace RTC
 		Packet::Packet(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
+
+			SetLength(Packet::CommonHeaderLength);
 		}
 
 		Packet::~Packet()
@@ -251,38 +253,38 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < GetLength())
-			{
-				MS_THROW_TYPE_ERROR(
-				  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-				  bufferLength,
-				  GetLength());
-			}
+			auto* clonedPacket = new Packet(buffer, bufferLength);
+
+			CloneInto(clonedPacket);
 
 			size_t chunksOffset = GetChunksPointer() - GetBuffer();
 
-			// Copy all bytes from beginning of the buffer until the position of the
-			// chunks.
-			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), chunksOffset);
-
-			auto* clonedPacket = new Packet(buffer, bufferLength);
-
-			// Clone each Chunk into the new buffer.
 			auto* ptr = buffer + chunksOffset;
 
 			for (const auto* chunk : this->chunks)
 			{
-				auto* clonedChunk = chunk->Clone(ptr, chunk->GetLength());
+				Chunk* clonedChunk{ nullptr };
 
+				switch (chunk->GetType())
+				{
+						// case ChunkType::XXXXX
+						// {
+						// 	clonedItem = new DataChunk(ptr, item->GetLength());
+
+						// 	break;
+						// }
+
+					default:
+					{
+						clonedChunk = new UnknownChunk(ptr, chunk->GetLength());
+					}
+				}
+
+				clonedChunk->SetLength(chunk->GetLength());
 				clonedPacket->AddParsedChunk(clonedChunk);
 
 				ptr += chunk->GetLength();
 			}
-
-			// Need to manually set Serializable length.
-			clonedPacket->SetLength(GetLength());
-
-			// NOTE: The `frozen` flag will be false in the cloned packet by default.
 
 			return clonedPacket;
 		}

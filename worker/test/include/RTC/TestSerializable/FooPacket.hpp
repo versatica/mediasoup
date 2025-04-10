@@ -99,11 +99,11 @@ namespace RTC
 	public:
 		~FooPacket() override;
 
-		void Dump() const override final;
+		virtual void Dump() const override final;
 
-		void Serialize(uint8_t* buffer, size_t bufferLength) override final;
+		virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
-		FooPacket* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+		virtual FooPacket* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
 		uint8_t GetType() const
 		{

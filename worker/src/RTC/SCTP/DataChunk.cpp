@@ -14,6 +14,8 @@
 // 		Chunk::Chunk(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 // 		{
 // 			MS_TRACE();
+//
+// 			SetLength(DataChunk::DataChunkHeaderLength);
 // 		}
 
 // 		Chunk::~Chunk()

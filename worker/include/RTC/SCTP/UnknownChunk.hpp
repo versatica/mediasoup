@@ -22,8 +22,13 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
+		// Forward declaration.
+		class Packet;
+
 		class UnknownChunk : public Chunk
 		{
+			friend class Packet;
+
 		public:
 			/**
 			 * Parse a UnknownChunk.

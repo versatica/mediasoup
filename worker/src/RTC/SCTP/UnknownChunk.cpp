@@ -42,6 +42,8 @@ namespace RTC
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
+
+			SetLength(Chunk::ChunkHeaderLength);
 		}
 
 		UnknownChunk::~UnknownChunk()
@@ -70,7 +72,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			return static_cast<UnknownChunk*>(Chunk::Clone(buffer, bufferLength));
+			auto* clonedItem = new UnknownChunk(buffer, bufferLength);
+
+			CloneInto(clonedItem);
+
+			return clonedItem;
 		}
 
 		const uint8_t* UnknownChunk::GetValue() const

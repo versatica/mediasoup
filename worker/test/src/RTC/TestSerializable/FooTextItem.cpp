@@ -55,11 +55,11 @@ namespace RTC
 
 		auto* item = new FooTextItem(buffer, bufferLength);
 
-		item->InitializeHeader(FooItem::ItemId::TEXT, flags, text.size());
+		item->InitializeHeader(FooItem::ItemId::TEXT, flags, 0u);
 		item->SetText(text);
 
-		// Must always invoke SetLength() after constructing a Serializable.
-		item->SetLength(FooItem::ItemHeaderLength + text.size());
+		// No need to invoke SetLength() since constructor invoked it with
+		// minimum FooTextItem length and SetText() updated it.
 
 		return item;
 	}
@@ -70,6 +70,8 @@ namespace RTC
 	  : FooItem(buffer, bufferLength)
 	{
 		MS_TRACE();
+
+		SetLength(FooItem::ItemHeaderLength);
 	}
 
 	FooTextItem::~FooTextItem()
@@ -102,7 +104,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return static_cast<FooTextItem*>(FooItem::Clone(buffer, bufferLength));
+		auto* clonedItem = new FooTextItem(buffer, bufferLength);
+
+		CloneInto(clonedItem);
+
+		return clonedItem;
 	}
 
 	const std::string_view FooTextItem::GetText() const

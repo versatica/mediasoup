@@ -3,8 +3,6 @@
 
 #include "RTC/TestSerializable/FooItem.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 
 namespace RTC
 {
@@ -97,22 +95,9 @@ std::unordered_map<FooItem::ItemId, std::string> FooItem::itemId2String =
 	{
 		MS_TRACE();
 
-		if (bufferLength < GetLength())
-		{
-			MS_THROW_TYPE_ERROR(
-			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-			  bufferLength,
-			  GetLength());
-		}
-
-		Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), GetLength());
-
 		auto* clonedItem = new FooItem(buffer, bufferLength);
 
-		// NOTE: The `frozen` flag will be false in the cloned item by default.
-
-		// Need to manually set Serializable length.
-		clonedItem->SetLength(GetLength());
+		CloneInto(clonedItem);
 
 		return clonedItem;
 	}

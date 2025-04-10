@@ -32,8 +32,13 @@ namespace RTC
 		 * TODO: Complete this.
 		 */
 
+		// Forward declaration.
+		class Packet;
+
 		class DataChunk : public Chunk
 		{
+			friend class Packet;
+
 		public:
 			static const size_t DataChunkHeaderLength{ 16 };
 

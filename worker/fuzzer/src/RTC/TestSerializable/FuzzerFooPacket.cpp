@@ -16,6 +16,16 @@ void Fuzzer::RTC::FooPacket::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
+	fooPacket->GetType();
+	fooPacket->HasAppendix();
+	fooPacket->GetAppendix();
+	fooPacket->GetItemsCount();
+	fooPacket->ItemsBegin();
+	fooPacket->ItemsEnd();
+	fooPacket->GetItemAt(0);
+	fooPacket->GetItemAt(1);
+	fooPacket->GetItemAt(666);
+
 	fooPacket->Serialize(FooPacketSerializeBuffer, sizeof(FooPacketSerializeBuffer));
 
 	fooPacket->SetAppendix(0x12345678);
@@ -55,21 +65,17 @@ void Fuzzer::RTC::FooPacket::Fuzz(const uint8_t* data, size_t len)
 
 	auto* clonedFooPacket = fooPacket->Clone(FooPacketCloneBuffer, sizeof(FooPacketCloneBuffer));
 
-	if (clonedFooPacket)
-	{
-		clonedFooPacket->SetAppendix(0x12345678);
-		clonedFooPacket->SetAppendix(0u);
-		clonedFooPacket->SetAppendix(0x87654321);
+	clonedFooPacket->SetAppendix(0x12345678);
+	clonedFooPacket->SetAppendix(0u);
+	clonedFooPacket->SetAppendix(0x87654321);
+	clonedFooPacket->AddNumericItem(0b1111, 12345);
+	clonedFooPacket->AddTextItem(0b0000, "∂ƒ®¥ƒ ƒ™ƒ™ƒ∑©∫#¢");
+	clonedFooPacket->SetAppendix(0x12345678);
+	clonedFooPacket->SetAppendix(0u);
+	clonedFooPacket->SetAppendix(0x87654321);
 
-		clonedFooPacket->AddNumericItem(0b1111, 12345);
-		clonedFooPacket->AddTextItem(0b0000, "∂ƒ®¥ƒ ƒ™ƒ™ƒ∑©∫#¢");
-
-		clonedFooPacket->SetAppendix(0x12345678);
-		clonedFooPacket->SetAppendix(0u);
-		clonedFooPacket->SetAppendix(0x87654321);
-
-		delete clonedFooPacket;
-	}
+	clonedFooPacket->Serialize(FooPacketSerializeBuffer, sizeof(FooPacketSerializeBuffer));
 
 	delete fooPacket;
+	delete clonedFooPacket;
 }

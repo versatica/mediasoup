@@ -40,9 +40,8 @@ namespace RTC
 
 		auto* item = new FooNumericItem(buffer, bufferLength);
 
-		// Must always invoke SetLength() after constructing a Serializable.
-		// NOTE: FooNumericItem has fixed length.
-		item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
+		// No need to invoke SetLength() since constructor invoked it with
+		// FooNumericItem fixed length.
 
 		// Mark the item as frozen since we are parsing.
 		item->Freeze();
@@ -66,9 +65,8 @@ namespace RTC
 		item->InitializeHeader(FooItem::ItemId::NUMERIC, flags, FooNumericItem::NumberLength);
 		item->SetNumber(number);
 
-		// Must always invoke SetLength() after constructing a Serializable.
-		// NOTE: FooNumericItem has fixed length.
-		item->SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
+		// No need to invoke SetLength() since constructor invoked it with
+		// FooNumericItem fixed length.
 
 		return item;
 	}
@@ -79,6 +77,8 @@ namespace RTC
 	  : FooItem(buffer, bufferLength)
 	{
 		MS_TRACE();
+
+		SetLength(FooItem::ItemHeaderLength + FooNumericItem::NumberLength);
 	}
 
 	FooNumericItem::~FooNumericItem()
@@ -110,7 +110,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return static_cast<FooNumericItem*>(FooItem::Clone(buffer, bufferLength));
+		auto* clonedItem = new FooNumericItem(buffer, bufferLength);
+
+		CloneInto(clonedItem);
+
+		return clonedItem;
 	}
 
 	uint16_t FooNumericItem::GetNumber() const

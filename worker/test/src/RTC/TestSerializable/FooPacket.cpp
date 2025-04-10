@@ -196,8 +196,8 @@ namespace RTC
 
 		packet->InitializeHeader(type, computedLength);
 
-		// Must always invoke SetLength() after constructing a Serializable.
-		packet->SetLength(computedLength);
+		// No need to invoke SetLength() since constructor invoked it with
+		// minimum FooPacket length.
 
 		return packet;
 	}
@@ -208,6 +208,8 @@ namespace RTC
 	  : Serializable(buffer, bufferLength)
 	{
 		MS_TRACE();
+
+		SetLength(FooPacket::HeaderLength);
 	}
 
 	FooPacket::~FooPacket()
@@ -285,47 +287,92 @@ namespace RTC
 		Unfreeze();
 	}
 
+	// FooPacket* FooPacket::Clone(uint8_t* buffer, size_t bufferLength) const
+	// {
+	// 	MS_TRACE();
+
+	// 	if (bufferLength < GetLength())
+	// 	{
+	// 		MS_THROW_TYPE_ERROR(
+	// 		  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
+	// 		  bufferLength,
+	// 		  GetLength());
+	// 	}
+
+	// 	size_t itemsOffset   = GetItemsPointer() - GetBuffer();
+	// 	size_t paddingOffset = GetPaddingPointer() - GetBuffer();
+	// 	size_t padding       = GetLength() - (GetPaddingPointer() - GetBuffer());
+
+	// 	// Copy all bytes from beginning of the buffer until the position of the
+	// 	// items.
+	// 	Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), itemsOffset);
+
+	// 	auto* clonedPacket = new FooPacket(buffer, bufferLength);
+
+	// 	// Clone each item into the new buffer.
+	// 	auto* ptr = buffer + itemsOffset;
+
+	// 	for (const auto* item : this->items)
+	// 	{
+	// 		auto* clonedItem = item->Clone(ptr, item->GetLength());
+
+	// 		clonedPacket->AddParsedItem(clonedItem);
+
+	// 		ptr += item->GetLength();
+	// 	}
+
+	// 	// Copy padding bytes.
+	// 	Utils::Buffer::MemcpyOrMemmove(buffer + paddingOffset, GetPaddingPointer(), padding);
+
+	// 	// Need to manually set Serializable length.
+	// 	clonedPacket->SetLength(GetLength());
+
+	// 	return clonedPacket;
+	// }
+
 	FooPacket* FooPacket::Clone(uint8_t* buffer, size_t bufferLength) const
 	{
 		MS_TRACE();
 
-		if (bufferLength < GetLength())
-		{
-			MS_THROW_TYPE_ERROR(
-			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-			  bufferLength,
-			  GetLength());
-		}
-
-		size_t itemsOffset   = GetItemsPointer() - GetBuffer();
-		size_t paddingOffset = GetPaddingPointer() - GetBuffer();
-		size_t padding       = GetLength() - (GetPaddingPointer() - GetBuffer());
-
-		// Copy all bytes from beginning of the buffer until the position of the
-		// items.
-		Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), itemsOffset);
-
 		auto* clonedPacket = new FooPacket(buffer, bufferLength);
 
-		// Clone each item into the new buffer.
+		CloneInto(clonedPacket);
+
+		size_t itemsOffset = GetItemsPointer() - GetBuffer();
+
 		auto* ptr = buffer + itemsOffset;
 
 		for (const auto* item : this->items)
 		{
-			auto* clonedItem = item->Clone(ptr, item->GetLength());
+			FooItem* clonedItem{ nullptr };
 
+			switch (item->GetId())
+			{
+				case FooItem::ItemId::NUMERIC:
+				{
+					clonedItem = new FooNumericItem(ptr, item->GetLength());
+
+					break;
+				}
+
+				case FooItem::ItemId::TEXT:
+				{
+					clonedItem = new FooTextItem(ptr, item->GetLength());
+
+					break;
+				}
+
+				default:
+				{
+					clonedItem = new FooUnknownItem(ptr, item->GetLength());
+				}
+			}
+
+			clonedItem->SetLength(item->GetLength());
 			clonedPacket->AddParsedItem(clonedItem);
 
 			ptr += item->GetLength();
 		}
-
-		// Copy padding bytes.
-		Utils::Buffer::MemcpyOrMemmove(buffer + paddingOffset, GetPaddingPointer(), padding);
-
-		// Need to manually set Serializable length.
-		clonedPacket->SetLength(GetLength());
-
-		// NOTE: The `frozen` flag will be false in the cloned packet by default.
 
 		return clonedPacket;
 	}

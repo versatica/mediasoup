@@ -38,7 +38,6 @@ namespace RTC
 
 	class FooItem : public Serializable
 	{
-	private:
 		friend class FooPacket;
 
 	public:

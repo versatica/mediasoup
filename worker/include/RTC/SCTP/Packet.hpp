@@ -96,11 +96,11 @@ namespace RTC
 			~Packet() override;
 			;
 
-			void Dump() const override final;
+			virtual void Dump() const override final;
 
-			void Serialize(uint8_t* buffer, size_t bufferLength) override final;
+			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
-			Packet* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			virtual Packet* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
 			uint16_t GetSourcePort() const
 			{

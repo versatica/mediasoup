@@ -27,8 +27,13 @@ namespace RTC
 	 * Length of a FooTextItem is therefore variable.
 	 */
 
+	// Forward declaration.
+	class FooPacket;
+
 	class FooTextItem : public FooItem
 	{
+		friend class FooPacket;
+
 	public:
 		/**
 		 * Parse a FooTextItem.
@@ -49,7 +54,8 @@ namespace RTC
 
 	private:
 		/**
-		 * Private constructor used by Parse() and Factory() static methods.
+		 * Private constructor used by Parse() and Factory() static methods and by
+		 * Clone() method in FooPacket (friend class).
 		 */
 		FooTextItem(const uint8_t* buffer, size_t bufferLength);
 

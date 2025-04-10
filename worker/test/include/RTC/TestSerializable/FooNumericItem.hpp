@@ -23,8 +23,13 @@ namespace RTC
 	 * Length of a FooNumericItem must be 4 bytes.
 	 */
 
+	// Forward declaration.
+	class FooPacket;
+
 	class FooNumericItem : public FooItem
 	{
+		friend class FooPacket;
+
 	public:
 		/**
 		 * FooNumericItem has fixed length.
@@ -50,7 +55,8 @@ namespace RTC
 
 	private:
 		/**
-		 * Private constructor used by Parse() and Factory() static methods.
+		 * Private constructor used by Parse() and Factory() static methods and by
+		 * Clone() method in FooPacket (friend class).
 		 */
 		FooNumericItem(const uint8_t* buffer, size_t bufferLength);
 

@@ -39,6 +39,8 @@ namespace RTC
 	  : FooItem(buffer, bufferLength)
 	{
 		MS_TRACE();
+
+		SetLength(FooItem::ItemHeaderLength);
 	}
 
 	FooUnknownItem::~FooUnknownItem()
@@ -69,7 +71,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return static_cast<FooUnknownItem*>(FooItem::Clone(buffer, bufferLength));
+		auto* clonedItem = new FooUnknownItem(buffer, bufferLength);
+
+		CloneInto(clonedItem);
+
+		return clonedItem;
 	}
 
 	const uint8_t* FooUnknownItem::GetValue() const

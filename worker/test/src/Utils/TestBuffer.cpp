@@ -8,31 +8,34 @@ using namespace Utils;
 SCENARIO("Buffer::DoBuffersOverlap()", "[utils][buffer]")
 {
 	// 8 bytes long buffer.
-	uint8_t buffer[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
-	size_t length    = sizeof(buffer);
+	uint8_t totalBuffer[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+	uint8_t* buffer{ nullptr };
+	size_t length{ 0 };
 	uint8_t* dstBuffer{ nullptr };
 
-	REQUIRE(length == 8);
-
+	buffer    = totalBuffer;
+	length    = 2;
 	dstBuffer = buffer;
 	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == true);
 
-	dstBuffer = buffer - length - 1;
+	buffer    = totalBuffer + 2;
+	length    = 2;
+	dstBuffer = totalBuffer;
 	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == false);
 
-	dstBuffer = buffer - length;
+	buffer    = totalBuffer;
+	length    = 2;
+	dstBuffer = totalBuffer + 2;
 	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == false);
 
-	dstBuffer = buffer - length + 1;
+	buffer    = totalBuffer;
+	length    = 2;
+	dstBuffer = totalBuffer + 1;
 	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == true);
 
-	dstBuffer = buffer + length + 1;
-	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == false);
-
-	dstBuffer = buffer + length;
-	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == false);
-
-	dstBuffer = buffer + length - 1;
+	buffer    = totalBuffer + 2;
+	length    = 2;
+	dstBuffer = totalBuffer + 1;
 	REQUIRE(Buffer::DoBuffersOverlap(dstBuffer, buffer, length) == true);
 }
 

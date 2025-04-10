@@ -29,21 +29,6 @@ namespace RTC
 		Unfreeze();
 	}
 
-	void Serializable::SetLength(size_t length)
-	{
-		MS_TRACE();
-
-		if (length > this->bufferLength)
-		{
-			MS_THROW_TYPE_ERROR(
-			  "length (%zu bytes) is larger than internal buffer maximum length (%zu bytes)",
-			  length,
-			  this->bufferLength);
-		}
-
-		this->length = length;
-	}
-
 	void Serializable::SetBufferLength(size_t bufferLength)
 	{
 		MS_TRACE();
@@ -56,7 +41,51 @@ namespace RTC
 			  this->length);
 		}
 
+		if (bufferLength == 0u)
+		{
+			MS_THROW_TYPE_ERROR("bufferLength cannot be 0");
+		}
+
 		this->bufferLength = bufferLength;
+	}
+
+	void Serializable::SetLength(size_t length)
+	{
+		MS_TRACE();
+
+		if (length > this->bufferLength)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "length (%zu bytes) is larger than internal buffer maximum length (%zu bytes)",
+			  length,
+			  this->bufferLength);
+		}
+
+		if (length == 0u)
+		{
+			MS_THROW_TYPE_ERROR("length cannot be 0");
+		}
+
+		this->length = length;
+	}
+
+	void Serializable::CloneInto(Serializable* serializable) const
+	{
+		MS_TRACE();
+
+		if (serializable->GetBufferLength() < GetLength())
+		{
+			MS_THROW_TYPE_ERROR(
+			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
+			  bufferLength,
+			  GetLength());
+		}
+
+		Utils::Buffer::MemcpyOrMemmove(
+		  const_cast<uint8_t*>(serializable->GetBuffer()), GetBuffer(), GetLength());
+
+		// Need to manually set Serializable length.
+		serializable->SetLength(GetLength());
 	}
 
 	void Serializable::AssertNotFrozen() const

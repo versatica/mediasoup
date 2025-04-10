@@ -54,7 +54,7 @@ SCENARIO("parse FooPacket", "[serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 28) == true);
 
-	auto* item1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
+	auto* item1 = reinterpret_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
 	REQUIRE(item1);
 	REQUIRE(item1->GetBuffer() == buffer + 8);
@@ -68,7 +68,7 @@ SCENARIO("parse FooPacket", "[serializable]")
 	REQUIRE(item1->GetNumber() == 0x1234);
 	REQUIRE(helpers::areBuffersEqual(item1->GetBuffer(), item1->GetLength(), buffer + 8, 4) == true);
 
-	auto* item2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
+	auto* item2 = reinterpret_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
 	REQUIRE(item2);
 	REQUIRE(item2->GetBuffer() == buffer + 12);
@@ -82,7 +82,7 @@ SCENARIO("parse FooPacket", "[serializable]")
 	REQUIRE(item2->GetText() == "€+$");
 	REQUIRE(helpers::areBuffersEqual(item2->GetBuffer(), item2->GetLength(), buffer + 12, 7) == true);
 
-	auto* item3 = static_cast<const FooUnknownItem*>(fooPacket->GetItemAt(2));
+	auto* item3 = reinterpret_cast<const FooUnknownItem*>(fooPacket->GetItemAt(2));
 
 	REQUIRE(item3);
 	REQUIRE(item3->GetBuffer() == buffer + 19);
@@ -239,7 +239,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 16) == true);
 
-	auto* addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
+	auto* addedItem1 = reinterpret_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
 	REQUIRE(addedItem1->GetBufferLength() == 4);
 	REQUIRE(addedItem1->GetLength() == 4);
@@ -253,7 +253,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(addedItem1->GetBuffer(), addedItem1->GetLength(), buffer + 4, 4) == true);
 
-	auto* addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
+	auto* addedItem2 = reinterpret_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
 	REQUIRE(addedItem2->GetBufferLength() == 6);
 	// Internal items must always be frozen.
@@ -293,7 +293,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), buffer, 20) == true);
 
-	addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
+	addedItem1 = reinterpret_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
 	REQUIRE(addedItem1->GetBufferLength() == 4);
 	REQUIRE(addedItem1->GetLength() == 4);
@@ -307,7 +307,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(addedItem1->GetBuffer(), addedItem1->GetLength(), buffer + 4 + 4, 4) ==
 	  true);
 
-	addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
+	addedItem2 = reinterpret_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
 	REQUIRE(addedItem2->GetBufferLength() == 6);
 	REQUIRE(addedItem2->GetLength() == 6);
@@ -366,7 +366,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer1, 20) == true);
 
-	addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
+	addedItem1 = reinterpret_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
 	REQUIRE(addedItem1->GetBufferLength() == 4);
 	REQUIRE(addedItem1->GetLength() == 4);
@@ -381,7 +381,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem1->GetBuffer(), addedItem1->GetLength(), newBuffer1 + 4 + 4, 4) == true);
 
-	addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
+	addedItem2 = reinterpret_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
 	REQUIRE(addedItem2->GetBufferLength() == 6);
 	REQUIRE(addedItem2->GetLength() == 6);
@@ -416,7 +416,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	REQUIRE(
 	  helpers::areBuffersEqual(fooPacket->GetBuffer(), fooPacket->GetLength(), newBuffer1, 32) == true);
 
-	addedItem1 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
+	addedItem1 = reinterpret_cast<const FooNumericItem*>(fooPacket->GetItemAt(0));
 
 	REQUIRE(addedItem1->GetBufferLength() == 4);
 	REQUIRE(addedItem1->GetLength() == 4);
@@ -430,7 +430,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem1->GetBuffer(), addedItem1->GetLength(), newBuffer1 + 4 + 4, 4) == true);
 
-	addedItem2 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
+	addedItem2 = reinterpret_cast<const FooTextItem*>(fooPacket->GetItemAt(1));
 
 	REQUIRE(addedItem2->GetBufferLength() == 6);
 	REQUIRE(addedItem2->GetLength() == 6);
@@ -444,7 +444,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem2->GetBuffer(), addedItem2->GetLength(), newBuffer1 + 4 + 4 + 4, 6) == true);
 
-	auto* addedItem3 = static_cast<const FooNumericItem*>(fooPacket->GetItemAt(2));
+	auto* addedItem3 = reinterpret_cast<const FooNumericItem*>(fooPacket->GetItemAt(2));
 
 	REQUIRE(addedItem3->GetBufferLength() == 4);
 	REQUIRE(addedItem3->GetLength() == 4);
@@ -458,7 +458,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem3->GetBuffer(), addedItem3->GetLength(), newBuffer1 + 4 + 4 + 4 + 6, 4) == true);
 
-	auto* addedItem4 = static_cast<const FooTextItem*>(fooPacket->GetItemAt(3));
+	auto* addedItem4 = reinterpret_cast<const FooTextItem*>(fooPacket->GetItemAt(3));
 
 	REQUIRE(addedItem4->GetBufferLength() == 7);
 	REQUIRE(addedItem4->GetLength() == 7);
@@ -512,7 +512,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	REQUIRE(clonedFooPacket->HasItems() == true);
 	REQUIRE(clonedFooPacket->GetItemsCount() == 4);
 
-	addedItem1 = static_cast<const FooNumericItem*>(clonedFooPacket->GetItemAt(0));
+	addedItem1 = reinterpret_cast<const FooNumericItem*>(clonedFooPacket->GetItemAt(0));
 
 	REQUIRE(addedItem1->GetBufferLength() == 4);
 	REQUIRE(addedItem1->GetLength() == 4);
@@ -527,7 +527,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem1->GetBuffer(), addedItem1->GetLength(), newBuffer2 + 4 + 4, 4) == true);
 
-	addedItem2 = static_cast<const FooTextItem*>(clonedFooPacket->GetItemAt(1));
+	addedItem2 = reinterpret_cast<const FooTextItem*>(clonedFooPacket->GetItemAt(1));
 
 	REQUIRE(addedItem2->GetBufferLength() == 6);
 	REQUIRE(addedItem2->GetLength() == 6);
@@ -542,7 +542,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem2->GetBuffer(), addedItem2->GetLength(), newBuffer2 + 4 + 4 + 4, 6) == true);
 
-	addedItem3 = static_cast<const FooNumericItem*>(clonedFooPacket->GetItemAt(2));
+	addedItem3 = reinterpret_cast<const FooNumericItem*>(clonedFooPacket->GetItemAt(2));
 
 	REQUIRE(addedItem3->GetBufferLength() == 4);
 	REQUIRE(addedItem3->GetLength() == 4);
@@ -557,7 +557,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  helpers::areBuffersEqual(
 	    addedItem3->GetBuffer(), addedItem3->GetLength(), newBuffer2 + 4 + 4 + 4 + 6, 4) == true);
 
-	addedItem4 = static_cast<const FooTextItem*>(clonedFooPacket->GetItemAt(3));
+	addedItem4 = reinterpret_cast<const FooTextItem*>(clonedFooPacket->GetItemAt(3));
 
 	REQUIRE(addedItem4->GetBufferLength() == 7);
 	REQUIRE(addedItem4->GetLength() == 7);
