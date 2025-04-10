@@ -44,6 +44,8 @@ namespace RTC
 			return chunk;
 		}
 
+		// TODO: Probably we should pass all fields here instead of having that
+		// InitializeExtraHeader() method.
 		DataChunk* DataChunk::Factory(
 		  uint8_t* buffer, size_t bufferLength, uint8_t flags, const uint8_t* userData, size_t userDataLength)
 		{
@@ -56,8 +58,9 @@ namespace RTC
 
 			auto* chunk = new DataChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(
-			  Chunk::ChunkType::DATA, flags, DataChunk::DataChunkHeaderLength + userDataLength);
+			chunk->InitializeHeader(Chunk::ChunkType::DATA, flags, DataChunk::DataChunkHeaderLength);
+			// Must also initialize the extra fields in the DataChunk Header.
+			chunk->InitializeExtraHeader();
 			chunk->SetUserData(userData, userDataLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
@@ -193,13 +196,28 @@ namespace RTC
 			AssertNotFrozen();
 
 			auto previousUserDataLength = GetUserDataLength();
+			auto notPaddedNewLength     = GetLength() - previousUserDataLength + userDataLength;
 
 			// Let's call SetLength() on parent with the new computed chunk length.
 			// NOTE: If there is no space in the buffer for it, it will throw.
-			SetLength(GetLength() - previousUserDataLength + userDataLength);
+			// NOTE: Chunks must be padded to 4 bytes.
+			SetLength(Utils::Byte::PadTo4Bytes(notPaddedNewLength));
 
 			// Copy the given user data into the buffer.
 			std::memmove(GetUserDataPointer(), userData, userDataLength);
+
+			// Update the Chunk Length field.
+			SetLengthField(notPaddedNewLength);
+		}
+
+		void DataChunk::InitializeExtraHeader()
+		{
+			MS_TRACE();
+
+			SetTSN(0x00);
+			SetStreamIdentifierS(0x00);
+			SetStreamSequenceNumberN(0x00);
+			SetPayloadProtocolIdentifier(0x00);
 		}
 	} // namespace SCTP
 } // namespace RTC

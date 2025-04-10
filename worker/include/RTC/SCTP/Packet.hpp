@@ -107,48 +107,28 @@ namespace RTC
 				return uint16_t{ ntohs(GetHeaderPointer()->sourcePort) };
 			}
 
-			void SetSourcePort(uint16_t sourcePort)
-			{
-				AssertNotFrozen();
-
-				GetHeaderPointer()->sourcePort = uint16_t{ htons(sourcePort) };
-			}
+			void SetSourcePort(uint16_t sourcePort);
 
 			uint16_t GetDestinationPort() const
 			{
 				return uint16_t{ ntohs(GetHeaderPointer()->destinationPort) };
 			}
 
-			void SetDestinationPort(uint16_t destinationPort)
-			{
-				AssertNotFrozen();
-
-				GetHeaderPointer()->destinationPort = uint16_t{ htons(destinationPort) };
-			}
+			void SetDestinationPort(uint16_t destinationPort);
 
 			uint32_t GetVerificationTag() const
 			{
 				return uint32_t{ ntohl(GetHeaderPointer()->verificationTag) };
 			}
 
-			void SetVerificationTag(uint32_t verificationTag)
-			{
-				AssertNotFrozen();
-
-				GetHeaderPointer()->verificationTag = uint32_t{ htonl(verificationTag) };
-			}
+			void SetVerificationTag(uint32_t verificationTag);
 
 			uint32_t GetChecksum() const
 			{
 				return uint32_t{ ntohl(GetHeaderPointer()->checksum) };
 			}
 
-			void SetChecksum(uint32_t checksum)
-			{
-				AssertNotFrozen();
-
-				GetHeaderPointer()->checksum = uint32_t{ htonl(checksum) };
-			}
+			void SetChecksum(uint32_t checksum);
 
 			bool HasChunks() const
 			{

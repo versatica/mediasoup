@@ -291,6 +291,42 @@ namespace RTC
 			return clonedPacket;
 		}
 
+		void Packet::SetSourcePort(uint16_t sourcePort)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			GetHeaderPointer()->sourcePort = uint16_t{ htons(sourcePort) };
+		}
+
+		void Packet::SetDestinationPort(uint16_t destinationPort)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			GetHeaderPointer()->destinationPort = uint16_t{ htons(destinationPort) };
+		}
+
+		void Packet::SetVerificationTag(uint32_t verificationTag)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			GetHeaderPointer()->verificationTag = uint32_t{ htonl(verificationTag) };
+		}
+
+		void Packet::SetChecksum(uint32_t checksum)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			GetHeaderPointer()->checksum = uint32_t{ htonl(checksum) };
+		}
+
 		void Packet::AddChunk(const Chunk* chunk)
 		{
 			MS_TRACE();
