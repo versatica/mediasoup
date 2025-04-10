@@ -362,24 +362,6 @@ namespace Utils
 			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
 		}
 	};
-
-	class Buffer
-	{
-	public:
-		/**
-		 * Returns true if `buffer` with length `length` would overlap if copied to
-		 * `dstBuffer`.
-		 */
-		static bool DoBuffersOverlap(const uint8_t* dstBuffer, const uint8_t* buffer, size_t length);
-
-		/**
-		 * Uses std::memcpy() to copy `buffer` with length `length` to `dstBuffer`
-		 * if there is no overlap. It uses std::memmove() otherwise.
-		 *
-		 * @return true if std::memmove() has been used.
-		 */
-		static bool MemcpyOrMemmove(uint8_t* dstBuffer, const uint8_t* buffer, size_t length);
-	};
 } // namespace Utils
 
 #endif

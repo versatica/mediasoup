@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
+#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -224,7 +225,7 @@ namespace RTC
 
 			// Copy all bytes from beginning of the buffer until the position of the
 			// chunks.
-			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), chunksOffset);
+			std::memmove(buffer, GetBuffer(), chunksOffset);
 
 			// Serialize each chunk into the new buffer.
 			auto* ptr = buffer + chunksOffset;

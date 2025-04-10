@@ -4,7 +4,7 @@
 #include "RTC/TestSerializable/FooTextItem.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
+#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -131,8 +131,7 @@ namespace RTC
 		SetLength(GetLength() - previousValueLength + text.size());
 
 		// Copy the given text into the buffer.
-		Utils::Buffer::MemcpyOrMemmove(
-		  GetValuePointer(), reinterpret_cast<const uint8_t*>(text.data()), text.size());
+		std::memmove(GetValuePointer(), reinterpret_cast<const uint8_t*>(text.data()), text.size());
 
 		// Update the Value Length field.
 		SetValueLengthField(text.size());

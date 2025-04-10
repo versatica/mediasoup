@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -132,22 +133,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < GetLength())
-			{
-				MS_THROW_TYPE_ERROR(
-				  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-				  bufferLength,
-				  GetLength());
-			}
-
-			Utils::Buffer::MemcpyOrMemmove(buffer, GetBuffer(), GetLength());
+			MS_TRACE();
 
 			auto* clonedChunk = new Chunk(buffer, bufferLength);
 
-			// NOTE: The `frozen` flag will be false in the cloned Chunk by default.
-
-			// Need to manually set Serializable length.
-			clonedChunk->SetLength(GetLength());
+			CloneInto(clonedChunk);
 
 			return clonedChunk;
 		}
