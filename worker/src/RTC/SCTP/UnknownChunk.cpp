@@ -78,17 +78,5 @@ namespace RTC
 
 			return clonedItem;
 		}
-
-		const uint8_t* UnknownChunk::GetValue() const
-		{
-			MS_TRACE();
-
-			if (!HasValue())
-			{
-				return nullptr;
-			}
-
-			return GetValuePointer();
-		}
 	} // namespace SCTP
 } // namespace RTC

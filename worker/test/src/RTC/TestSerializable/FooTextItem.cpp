@@ -47,7 +47,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// DooFataItem has fixed length.
 		if (bufferLength < FooItem::ItemHeaderLength + text.size())
 		{
 			MS_THROW_TYPE_ERROR("too small buffer");

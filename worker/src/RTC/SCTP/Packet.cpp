@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/SCTP/DataChunk.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
 #include <cstring> // std::memmove()
 
@@ -81,20 +82,20 @@ namespace RTC
 
 				switch (chunkType)
 				{
-						// case Chunk::ChunkType::XXXXX:
-						// {
-						// 	chunk = XxxxxChunk::Parse(ptr, chunkBufferLength);
+					case Chunk::ChunkType::DATA:
+					{
+						chunk = DataChunk::Parse(ptr, chunkBufferLength);
 
-						// 	if (!chunk)
-						// 	{
-						// 		MS_WARN_DEV("XxxxxChunk parser failed");
+						if (!chunk)
+						{
+							MS_WARN_DEV("XxxxxChunk parser failed");
 
-						// 		delete packet;
-						// 		return nullptr;
-						// 	}
+							delete packet;
+							return nullptr;
+						}
 
-						// 	break;
-						// }
+						break;
+					}
 
 					default:
 					{
@@ -268,12 +269,12 @@ namespace RTC
 
 				switch (chunk->GetType())
 				{
-						// case ChunkType::XXXXX
-						// {
-						// 	clonedItem = new DataChunk(ptr, item->GetLength());
+					case Chunk::ChunkType::DATA:
+					{
+						clonedChunk = new DataChunk(ptr, chunk->GetLength());
 
-						// 	break;
-						// }
+						break;
+					}
 
 					default:
 					{

@@ -80,6 +80,33 @@ namespace RTC
 				uint16_t length;
 			};
 
+			/**
+			 * Access to individual bit in the Chunk Flags field. bit0 corresponds
+			 * to the least significant bit.
+			 */
+			struct ChunkFlags
+			{
+#if defined(MS_LITTLE_ENDIAN)
+				uint8_t bit0 : 1;
+				uint8_t bit1 : 1;
+				uint8_t bit2 : 1;
+				uint8_t bit3 : 1;
+				uint8_t bit4 : 1;
+				uint8_t bit5 : 1;
+				uint8_t bit6 : 1;
+				uint8_t bit7 : 1;
+#elif defined(MS_BIG_ENDIAN)
+				uint8_t bit7 : 1;
+				uint8_t bit6 : 1;
+				uint8_t bit5 : 1;
+				uint8_t bit4 : 1;
+				uint8_t bit3 : 1;
+				uint8_t bit2 : 1;
+				uint8_t bit1 : 1;
+				uint8_t bit0 : 1;
+#endif
+			};
+
 		public:
 			static const size_t ChunkHeaderLength{ 4 };
 
@@ -140,23 +167,8 @@ namespace RTC
 				return GetHeaderPointer()->flags;
 			}
 
-			virtual bool HasValue() const final
-			{
-				return GetLengthField() > Chunk::ChunkHeaderLength;
-			}
-
-			virtual uint16_t GetValueLength() const final
-			{
-				if (!HasValue())
-				{
-					return 0u;
-				}
-
-				return GetLengthField() - Chunk::ChunkHeaderLength;
-			}
-
 		protected:
-			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t valueLength) final;
+			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;
 
 			/**
 			 * NOTE: Return ChunkHeader* instead of const ChunkHeader* since we may
@@ -165,6 +177,91 @@ namespace RTC
 			virtual ChunkHeader* GetHeaderPointer() const final
 			{
 				return reinterpret_cast<ChunkHeader*>(const_cast<uint8_t*>(GetBuffer()));
+			}
+
+			virtual ChunkFlags* GetFlagsPointer() const final
+			{
+				return reinterpret_cast<ChunkFlags*>(const_cast<uint8_t*>(GetBuffer()) + 1);
+			}
+
+			virtual bool GetBit0() const final
+			{
+				return GetFlagsPointer()->bit0;
+			}
+
+			virtual void SetBit0(bool flag) final
+			{
+				GetFlagsPointer()->bit0 = flag;
+			}
+
+			virtual bool GetBit1() const final
+			{
+				return GetFlagsPointer()->bit1;
+			}
+
+			virtual void SetBit1(bool flag) final
+			{
+				GetFlagsPointer()->bit1 = flag;
+			}
+
+			virtual bool GetBit2() const final
+			{
+				return GetFlagsPointer()->bit2;
+			}
+
+			virtual void SetBit2(bool flag) final
+			{
+				GetFlagsPointer()->bit2 = flag;
+			}
+
+			virtual bool GetBit3() const final
+			{
+				return GetFlagsPointer()->bit3;
+			}
+
+			virtual void SetBit3(bool flag) final
+			{
+				GetFlagsPointer()->bit3 = flag;
+			}
+
+			virtual bool GetBit4() const final
+			{
+				return GetFlagsPointer()->bit4;
+			}
+
+			virtual void SetBit4(bool flag) final
+			{
+				GetFlagsPointer()->bit4 = flag;
+			}
+
+			virtual bool GetBit5() const final
+			{
+				return GetFlagsPointer()->bit5;
+			}
+
+			virtual void SetBit5(bool flag) final
+			{
+				GetFlagsPointer()->bit5 = flag;
+			}
+
+			virtual bool GetBit6() const final
+			{
+				return GetFlagsPointer()->bit6;
+			}
+
+			virtual void SetBit6(bool flag) final
+			{
+				GetFlagsPointer()->bit6 = flag;
+			}
+
+			virtual bool GetBit7() const final
+			{
+				return GetFlagsPointer()->bit7;
+			}
+
+			virtual void SetBit7(bool flag) final
+			{
+				GetFlagsPointer()->bit7 = flag;
 			}
 
 			/**
@@ -181,9 +278,24 @@ namespace RTC
 				GetHeaderPointer()->length = uint16_t{ htons(length) };
 			}
 
+			virtual bool HasValue() const final
+			{
+				return GetLengthField() > Chunk::ChunkHeaderLength;
+			}
+
 			virtual uint8_t* GetValuePointer() const final
 			{
 				return const_cast<uint8_t*>(GetBuffer()) + Chunk::ChunkHeaderLength;
+			}
+
+			virtual uint16_t GetValueLength() const final
+			{
+				if (!HasValue())
+				{
+					return 0u;
+				}
+
+				return GetLengthField() - Chunk::ChunkHeaderLength;
 			}
 		};
 	} // namespace SCTP

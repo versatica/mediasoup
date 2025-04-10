@@ -67,9 +67,9 @@ namespace RTC
 
 		virtual FooNumericItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-		virtual uint16_t GetNumber() const final;
+		uint16_t GetNumber() const;
 
-		virtual void SetNumber(uint16_t number) final;
+		void SetNumber(uint16_t number);
 	};
 } // namespace RTC
 

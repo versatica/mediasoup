@@ -142,13 +142,13 @@ namespace RTC
 			return clonedChunk;
 		}
 
-		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t valueLength)
+		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue)
 		{
 			MS_TRACE();
 
 			GetHeaderPointer()->type  = chunkType;
 			GetHeaderPointer()->flags = flags;
-			SetLengthField(Chunk::ChunkHeaderLength + valueLength);
+			SetLengthField(lengthFieldValue);
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -17,7 +17,7 @@ namespace RTC
 		 * |  Chunk Type   |  Chunk Flags  |         Chunk Length          |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * \                                                               \
-		 * /                          Chunk Value                          /
+		 * /                          Unknown Data                         /
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
@@ -51,7 +51,30 @@ namespace RTC
 
 			virtual UnknownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual const uint8_t* GetValue() const final;
+			bool HasUnknownData() const
+			{
+				return GetLengthField() > Chunk::ChunkHeaderLength;
+			}
+
+			const uint8_t* GetUnknownData() const
+			{
+				if (!HasUnknownData())
+				{
+					return nullptr;
+				}
+
+				return GetValuePointer();
+			}
+
+			size_t GetUnknownDataLength() const
+			{
+				if (!HasUnknownData())
+				{
+					return 0u;
+				}
+
+				return GetLengthField() - Chunk::ChunkHeaderLength;
+			}
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -66,9 +66,9 @@ namespace RTC
 
 		virtual FooTextItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-		virtual const std::string_view GetText() const final;
+		const std::string_view GetText() const;
 
-		virtual void SetText(const std::string& text) final;
+		void SetText(const std::string& text);
 	};
 } // namespace RTC
 

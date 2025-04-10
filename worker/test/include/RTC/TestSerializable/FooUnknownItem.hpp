@@ -57,7 +57,7 @@ namespace RTC
 
 		virtual FooUnknownItem* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-		virtual const uint8_t* GetValue() const final;
+		const uint8_t* GetValue() const;
 	};
 } // namespace RTC
 
