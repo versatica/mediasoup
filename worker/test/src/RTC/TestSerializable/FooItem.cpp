@@ -24,22 +24,22 @@ std::unordered_map<FooItem::ItemId, std::string> FooItem::itemId2String =
 
 		if (bufferLength < FooItem::ItemHeaderLength)
 		{
-			MS_WARN_DEV("no space for FooItem header");
+			MS_WARN_DEV("no space for FooItem Header");
 
 			return false;
 		}
 
 		const auto* itemHeader = reinterpret_cast<const FooItem::ItemHeader*>(buffer);
 
-		if (bufferLength < FooItem::ItemHeaderLength + itemHeader->valueLength)
+		itemId      = itemHeader->id;
+		valueLength = itemHeader->valueLength;
+
+		if (bufferLength < FooItem::ItemHeaderLength + valueLength)
 		{
 			MS_WARN_DEV("no space for announced value length");
 
 			return false;
 		}
-
-		itemId      = itemHeader->id;
-		valueLength = itemHeader->valueLength;
 
 		return true;
 	}

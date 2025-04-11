@@ -71,14 +71,14 @@ namespace RTC
 		{
 			// The remaining length in the buffer (excluding padding in the packet)
 			// is the potential buffer length of the item.
-			size_t itemBufferLength = packet->GetPaddingPointer() - ptr;
+			size_t itemMaxBufferLength = packet->GetPaddingPointer() - ptr;
 
 			// Here we must anticipate the id of each item to use its appropriate
 			// parser.
 			FooItem::ItemId itemId;
 			uint8_t valueLength;
 
-			if (!FooItem::IsFooItem(ptr, itemBufferLength, itemId, valueLength))
+			if (!FooItem::IsFooItem(ptr, itemMaxBufferLength, itemId, valueLength))
 			{
 				MS_WARN_DEV("not a FooItem");
 
@@ -94,7 +94,7 @@ namespace RTC
 			{
 				case FooItem::ItemId::NUMERIC:
 				{
-					item = FooNumericItem::Parse(ptr, itemBufferLength);
+					item = FooNumericItem::Parse(ptr, FooItem::ItemHeaderLength + valueLength);
 
 					if (!item)
 					{
@@ -109,7 +109,7 @@ namespace RTC
 
 				case FooItem::ItemId::TEXT:
 				{
-					item = FooTextItem::Parse(ptr, itemBufferLength);
+					item = FooTextItem::Parse(ptr, FooItem::ItemHeaderLength + valueLength);
 
 					if (!item)
 					{
@@ -124,7 +124,7 @@ namespace RTC
 
 				default:
 				{
-					item = FooUnknownItem::Parse(ptr, itemBufferLength);
+					item = FooUnknownItem::Parse(ptr, FooItem::ItemHeaderLength + valueLength);
 
 					if (!item)
 					{
@@ -135,13 +135,6 @@ namespace RTC
 					}
 				}
 			}
-
-			// Let's fix item's buffer length. This is because we didn't know its
-			// exact length when we called FooItem::Parse() so we passed the rest
-			// of the Packet buffer as buffer length. Once item is parsed, and
-			// given that it is part of the FooPacket buffer, we can fix its
-			// buffer length by making it be equal to its real length.
-			item->SetBufferLength(item->GetLength());
 
 			// Here we are parsing so we don't use AddItem() (that clones the Item into
 			// the Packet buffer) but AddParsedItem().

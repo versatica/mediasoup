@@ -16,5 +16,6 @@ Same in `PipeTransport` and `PlainTransport`.
 ## DataChunk
 
 - In `DataChunk::Factory()` we should pass all fields instead of having that `InitializeExtraHeader() method.
+- Same in all `XxxxChunk::Factory()` methods.
 
 ## Fuzzer crashes

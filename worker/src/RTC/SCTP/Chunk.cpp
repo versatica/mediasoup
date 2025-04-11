@@ -37,19 +37,25 @@ namespace RTC
 		/* Class methods. */
 
 		bool Chunk::IsChunk(
-		  const uint8_t* buffer, size_t bufferLength, ChunkType& chunkType, size_t& chunkTotalLength)
+		  const uint8_t* buffer,
+		  size_t bufferLength,
+		  ChunkType& chunkType,
+		  size_t& chunkLength,
+		  uint8_t& padding)
 		{
 			MS_TRACE();
 
 			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
-				MS_WARN_TAG(sctp, "no space for SCTP Chunk header [bufferLength:%zu]", bufferLength);
+				MS_WARN_TAG(sctp, "no space for SCTP Chunk Header [bufferLength:%zu]", bufferLength);
 
 				return false;
 			}
 
 			const auto* chunkHeader = reinterpret_cast<const Chunk::ChunkHeader*>(buffer);
-			auto chunkLength        = uint16_t{ ntohs(chunkHeader->length) };
+
+			chunkType   = chunkHeader->type;
+			chunkLength = uint16_t{ ntohs(chunkHeader->length) };
 
 			if (chunkLength < Chunk::ChunkHeaderLength)
 			{
@@ -71,15 +77,14 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "no space for padded announced Chunk Length field [paddedChunkLength:%zu, bufferLength:%zu]",
+				  "no space for 4-byte padded announced Chunk Length [paddedChunkLength:%zu, bufferLength:%zu]",
 				  paddedChunkLength,
 				  bufferLength);
 
 				return false;
 			}
 
-			chunkType        = chunkHeader->type;
-			chunkTotalLength = paddedChunkLength;
+			padding = paddedChunkLength - chunkLength;
 
 			return true;
 		}
@@ -131,8 +136,6 @@ namespace RTC
 
 		Chunk* Chunk::Clone(uint8_t* buffer, size_t bufferLength) const
 		{
-			MS_TRACE();
-
 			MS_TRACE();
 
 			auto* clonedChunk = new Chunk(buffer, bufferLength);

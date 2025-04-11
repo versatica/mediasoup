@@ -17,22 +17,11 @@ namespace RTC
 			MS_TRACE();
 
 			Chunk::ChunkType chunkType;
-			size_t chunkTotalLength;
+			size_t chunkLength;
+			uint8_t padding;
 
-			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkTotalLength))
+			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength, padding))
 			{
-				MS_WARN_TAG(sctp, "not an SCTP Chunk");
-
-				return nullptr;
-			}
-
-			if (chunkTotalLength < DataChunk::DataChunkHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "DataChunk Length field must have value greater or equal than %zu",
-				  DataChunk::DataChunkHeaderLength);
-
 				return nullptr;
 			}
 
@@ -43,10 +32,22 @@ namespace RTC
 				return nullptr;
 			}
 
+			// UserData cannot have 0 length so we use <= rather than <.
+			if (chunkLength <= DataChunk::DataChunkHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "DataChunk Length field must have value greater than %zu",
+				  DataChunk::DataChunkHeaderLength);
+
+				return nullptr;
+			}
+
 			auto* chunk = new DataChunk(buffer, bufferLength);
 
-			// Must always invoke SetLength() after constructing a Serializable.
-			chunk->SetLength(chunkTotalLength);
+			// Must always invoke SetLength() after constructing a Serializable with
+			// not fixed length.
+			chunk->SetLength(chunkLength + padding);
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
@@ -57,7 +58,7 @@ namespace RTC
 		// TODO: Probably we should pass all fields here instead of having that
 		// InitializeExtraHeader() method.
 		DataChunk* DataChunk::Factory(
-		  uint8_t* buffer, size_t bufferLength, uint8_t flags, const uint8_t* userData, size_t userDataLength)
+		  uint8_t* buffer, size_t bufferLength, const uint8_t* userData, size_t userDataLength)
 		{
 			MS_TRACE();
 
@@ -68,7 +69,7 @@ namespace RTC
 
 			auto* chunk = new DataChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(Chunk::ChunkType::DATA, flags, DataChunk::DataChunkHeaderLength);
+			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
 			// Must also initialize the extra fields in the DataChunk Header.
 			chunk->InitializeExtraHeader();
 			chunk->SetUserData(userData, userDataLength);

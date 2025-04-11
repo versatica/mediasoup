@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/DataChunk.hpp"
+#include "RTC/SCTP/ShutdownChunk.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
 #include <cstring> // std::memmove()
 
@@ -61,14 +62,15 @@ namespace RTC
 			{
 				// The remaining length in the buffer is the potential buffer length
 				// of the chunk.
-				size_t chunkBufferLength = bufferLength - (ptr - buffer);
+				size_t chunkMaxBufferLength = bufferLength - (ptr - buffer);
 
 				// Here we must anticipate the type of each chunk to use its appropriate
 				// parser.
 				Chunk::ChunkType chunkType;
-				size_t chunkTotalLength;
+				size_t chunkLength;
+				uint8_t padding;
 
-				if (!Chunk::IsChunk(ptr, chunkBufferLength, chunkType, chunkTotalLength))
+				if (!Chunk::IsChunk(ptr, chunkMaxBufferLength, chunkType, chunkLength, padding))
 				{
 					MS_WARN_TAG(sctp, "not a SCTP Chunk");
 
@@ -84,12 +86,23 @@ namespace RTC
 				{
 					case Chunk::ChunkType::DATA:
 					{
-						chunk = DataChunk::Parse(ptr, chunkBufferLength);
+						chunk = DataChunk::Parse(ptr, chunkLength + padding);
 
 						if (!chunk)
 						{
-							MS_WARN_DEV("XxxxxChunk parser failed");
+							delete packet;
+							return nullptr;
+						}
 
+						break;
+					}
+
+					case Chunk::ChunkType::SHUTDOWN:
+					{
+						chunk = ShutdownChunk::Parse(ptr, chunkLength + padding);
+
+						if (!chunk)
+						{
 							delete packet;
 							return nullptr;
 						}
@@ -99,24 +112,15 @@ namespace RTC
 
 					default:
 					{
-						chunk = UnknownChunk::Parse(ptr, chunkBufferLength);
+						chunk = UnknownChunk::Parse(ptr, chunkLength + padding);
 
 						if (!chunk)
 						{
-							MS_WARN_DEV("UnknownChunk parser failed");
-
 							delete packet;
 							return nullptr;
 						}
 					}
 				}
-
-				// Let's fix chunk's buffer length. This is because we didn't know its
-				// exact length when we called Chunk::Parse() so we passed the rest
-				// of the Packet buffer as buffer length. Once chunk is parsed, and
-				// given that it is part of the Packet buffer, we can fix its buffer
-				// length by making it be equal to its real length.
-				chunk->SetBufferLength(chunk->GetLength());
 
 				// Here we are parsing so we don't use AddChunk() (that clones the
 				// Chunk into the Packet buffer) but AddParsedChunk().
@@ -272,6 +276,13 @@ namespace RTC
 					case Chunk::ChunkType::DATA:
 					{
 						clonedChunk = new DataChunk(ptr, chunk->GetLength());
+
+						break;
+					}
+
+					case Chunk::ChunkType::SHUTDOWN:
+					{
+						clonedChunk = new ShutdownChunk(ptr, chunk->GetLength());
 
 						break;
 					}

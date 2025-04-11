@@ -1,0 +1,80 @@
+#ifndef MS_RTC_SCTP_SHUTDOWN_CHUNK_HPP
+#define MS_RTC_SCTP_SHUTDOWN_CHUNK_HPP
+
+#include "common.hpp"
+#include "Utils.hpp"
+#include "RTC/SCTP/Chunk.hpp"
+
+namespace RTC
+{
+	namespace SCTP
+	{
+		/**
+		 * Shutdown Association Chunk (SHUTDOWN).
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |   Type = 7    |  Chunk Flags  |          Length = 8           |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |                      Cumulative TSN Ack                       |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * - Chunk Type (8 bits): 7.
+		 * - Length (16 bits): 8.
+		 * - Cumulative TSN Ack (32 bits). The largest TSN, such that all TSNs
+		 *   smaller than or equal to it have been received and the next one has
+		 *   not been received.
+		 */
+
+		// Forward declaration.
+		class Packet;
+
+		class ShutdownChunk : public Chunk
+		{
+			friend class Packet;
+
+		public:
+			static const size_t ShutdownChunkLength{ 8 };
+
+		public:
+			/**
+			 * Parse a ShutdownChunk.
+			 *
+			 * @remarks
+			 * - `bufferLength` may exceed the exact length of the Chunk.
+			 */
+			static ShutdownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Create a ShutdownChunk.
+			 *
+			 * @remarks
+			 * - `bufferLength` could be greater than the Chunk real length.
+			 */
+			static ShutdownChunk* Factory(uint8_t* buffer, size_t bufferLength, uint32_t cumulativeTsnAck);
+
+		private:
+			/**
+			 * Private constructor used by Parse() and Factory() static methods.
+			 */
+			ShutdownChunk(const uint8_t* buffer, size_t bufferLength);
+
+		public:
+			virtual ~ShutdownChunk() override;
+
+			virtual void Dump() const override final;
+
+			virtual ShutdownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+
+			uint32_t GetCumulativeTsnAck() const
+			{
+				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
+			}
+
+			void SetCumulativeTsnAck(uint32_t value);
+		};
+	} // namespace SCTP
+} // namespace RTC
+
+#endif

@@ -494,7 +494,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 	  true);
 
 	// Once done fill the original buffer with 1s (this is, we are ruining original
-	// FooPacket despite it still exists since we have jsut cloned it).
+	// FooPacket despite it still exists since we have just cloned it).
 	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
 
 	// Freeze the original packet again.
@@ -850,7 +850,7 @@ SCENARIO("create and modify FooNumericItem", "[serializable]")
 	    clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer1, item->GetLength()) == true);
 
 	// Once done fill the original buffer with 1s (this is, we are ruining original
-	// FooNumericItem despite it still exists since we have jsut cloned it).
+	// FooNumericItem despite it still exists since we have just cloned it).
 	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
 
 	REQUIRE(clonedItem->GetBuffer() == newBuffer2);
@@ -966,7 +966,7 @@ SCENARIO("create and modify FooTextItem", "[serializable]")
 	    clonedItem->GetBuffer(), clonedItem->GetLength(), newBuffer1, item->GetLength()) == true);
 
 	// Once done fill the original buffer with 1s (this is, we are ruining original
-	// FooTextItem despite it still exists since we have jsut cloned it).
+	// FooTextItem despite it still exists since we have just cloned it).
 	std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
 
 	REQUIRE(clonedItem->GetBuffer() == newBuffer2);

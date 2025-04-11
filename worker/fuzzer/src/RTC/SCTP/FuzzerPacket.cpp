@@ -29,7 +29,7 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->GetChunkAt(2);
 	packet->GetChunkAt(666);
 
-	packet->Serialize(PacketSerializeBuffer, sizeof(PacketSerializeBuffer));
+	packet->Serialize(PacketSerializeBuffer, len);
 
 	packet->GetSourcePort();
 	packet->SetSourcePort(12345);
@@ -46,7 +46,7 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->GetChunkAt(2);
 	packet->GetChunkAt(666);
 
-	auto* clonedPacket = packet->Clone(PacketCloneBuffer, sizeof(PacketCloneBuffer));
+	auto* clonedPacket = packet->Clone(PacketCloneBuffer, len);
 
 	clonedPacket->GetSourcePort();
 	clonedPacket->SetSourcePort(12345);
@@ -63,7 +63,7 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	clonedPacket->GetChunkAt(2);
 	clonedPacket->GetChunkAt(666);
 
-	clonedPacket->Serialize(PacketSerializeBuffer, sizeof(PacketSerializeBuffer));
+	clonedPacket->Serialize(PacketSerializeBuffer, len);
 
 	delete packet;
 	delete clonedPacket;

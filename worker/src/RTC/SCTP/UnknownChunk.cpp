@@ -16,19 +16,19 @@ namespace RTC
 			MS_TRACE();
 
 			Chunk::ChunkType chunkType;
-			size_t chunkTotalLength;
+			size_t chunkLength;
+			uint8_t padding;
 
-			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkTotalLength))
+			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength, padding))
 			{
-				MS_WARN_TAG(sctp, "not an SCTP Chunk");
-
 				return nullptr;
 			}
 
 			auto* chunk = new UnknownChunk(buffer, bufferLength);
 
-			// Must always invoke SetLength() after constructing a Serializable.
-			chunk->SetLength(chunkTotalLength);
+			// Must always invoke SetLength() after constructing a Serializable with
+			// not fixed length.
+			chunk->SetLength(chunkLength + padding);
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
