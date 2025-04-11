@@ -118,9 +118,10 @@ namespace RTC
 		 * @param bufferLength - New buffer length.
 		 *
 		 * @remarks
-		 * The subclass must override this method if it hold pointers or allocated
-		 * memory. In that case, the overridden method must manually invoke
-		 * `SetBuffer()` and `SetBufferLenght()`.
+		 * In addition to call this method in Serializable parent class, the
+		 * `Serialize()` implementation in the subclass must also reassign any
+		 * pointers it holds and make them point to the proper position in the new
+		 * buffer.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.
@@ -147,6 +148,10 @@ namespace RTC
 		 *   Serializable::CloneInto(cloned);
 		 *   return clonedItem;
 		 *   ```
+		 * - In addition to call this method in Serializable parent class, the
+		 *  `Clone()` implementation in the subclass must also replicate any
+		 *   pointers it holds and make them point to the proper position in the
+		 *   new buffer.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 * current exact length of the Serializable.

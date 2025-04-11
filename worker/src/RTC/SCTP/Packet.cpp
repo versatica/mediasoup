@@ -8,7 +8,6 @@
 #include "RTC/SCTP/DataChunk.hpp"
 #include "RTC/SCTP/ShutdownChunk.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
-#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -218,41 +217,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < GetLength())
-			{
-				MS_THROW_TYPE_ERROR(
-				  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-				  bufferLength,
-				  GetLength());
-			}
+			const auto* previousBuffer = GetBuffer();
 
-			size_t chunksOffset = GetChunksPointer() - GetBuffer();
+			// Invoke the parent method to copy the whole buffer.
+			Serializable::Serialize(buffer, bufferLength);
 
-			// Copy all bytes from beginning of the buffer until the position of the
-			// chunks.
-			std::memmove(buffer, GetBuffer(), chunksOffset);
-
-			// Serialize each chunk into the new buffer.
-			auto* ptr = buffer + chunksOffset;
-
+			// Reassign pointers.
 			for (auto* chunk : this->chunks)
 			{
-				chunk->Serialize(ptr, chunk->GetLength());
+				size_t offset = chunk->GetBuffer() - previousBuffer;
 
-				// After calling `Serialize()` on the chunk, its `frozen` flag is
-				// reverted to false, but we want it to remain set because it's a
-				// chunk within the packet.
-				chunk->Freeze();
-
-				ptr += chunk->GetLength();
+				chunk->SetBuffer(buffer + offset);
 			}
-
-			// Manually update buffer and buffer length.
-			SetBuffer(buffer);
-			SetBufferLength(bufferLength);
-
-			// May unfreeze the packet (but not its chunks).
-			Unfreeze();
 		}
 
 		Packet* Packet::Clone(uint8_t* buffer, size_t bufferLength) const
@@ -263,40 +239,38 @@ namespace RTC
 
 			CloneInto(clonedPacket);
 
-			size_t chunksOffset = GetChunksPointer() - GetBuffer();
-
-			auto* ptr = buffer + chunksOffset;
-
+			// Add a new parsed Chunk for each Chunk in this Packet and make it
+			// pointer point to its position in the new buffer.
 			for (const auto* chunk : this->chunks)
 			{
+				size_t offset = chunk->GetBuffer() - GetBuffer();
+
 				Chunk* clonedChunk{ nullptr };
 
 				switch (chunk->GetType())
 				{
 					case Chunk::ChunkType::DATA:
 					{
-						clonedChunk = new DataChunk(ptr, chunk->GetLength());
+						clonedChunk = new DataChunk(buffer + offset, chunk->GetLength());
 
 						break;
 					}
 
 					case Chunk::ChunkType::SHUTDOWN:
 					{
-						clonedChunk = new ShutdownChunk(ptr, chunk->GetLength());
+						clonedChunk = new ShutdownChunk(buffer + offset, chunk->GetLength());
 
 						break;
 					}
 
 					default:
 					{
-						clonedChunk = new UnknownChunk(ptr, chunk->GetLength());
+						clonedChunk = new UnknownChunk(buffer + offset, chunk->GetLength());
 					}
 				}
 
 				clonedChunk->SetLength(chunk->GetLength());
 				clonedPacket->AddParsedChunk(clonedChunk);
-
-				ptr += chunk->GetLength();
 			}
 
 			return clonedPacket;

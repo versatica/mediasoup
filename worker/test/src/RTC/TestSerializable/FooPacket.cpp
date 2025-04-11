@@ -7,7 +7,6 @@
 #include "RTC/TestSerializable/FooNumericItem.hpp"
 #include "RTC/TestSerializable/FooTextItem.hpp"
 #include "RTC/TestSerializable/FooUnknownItem.hpp"
-#include <cstring> // std::memmove()
 #include <string>
 
 namespace RTC
@@ -239,46 +238,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (bufferLength < GetLength())
-		{
-			MS_THROW_TYPE_ERROR(
-			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-			  bufferLength,
-			  GetLength());
-		}
+		const auto* previousBuffer = GetBuffer();
 
-		size_t itemsOffset   = GetItemsPointer() - GetBuffer();
-		size_t paddingOffset = GetPaddingPointer() - GetBuffer();
-		size_t padding       = GetLength() - (GetPaddingPointer() - GetBuffer());
+		// Invoke the parent method to copy the whole buffer.
+		Serializable::Serialize(buffer, bufferLength);
 
-		// Copy all bytes from beginning of the buffer until the position of the
-		// items.
-		std::memmove(buffer, GetBuffer(), itemsOffset);
-
-		// Serialize each item into the new buffer.
-		auto* ptr = buffer + itemsOffset;
-
+		// Reassign pointers.
 		for (auto* item : this->items)
 		{
-			item->Serialize(ptr, item->GetLength());
+			size_t offset = item->GetBuffer() - previousBuffer;
 
-			// After calling `Serialize()` on the item, its `frozen` flag is reverted
-			// to false, but we want it to remain set because it's an item within the
-			// packet.
-			item->Freeze();
-
-			ptr += item->GetLength();
+			item->SetBuffer(buffer + offset);
 		}
-
-		// Copy padding bytes.
-		std::memmove(buffer + paddingOffset, GetPaddingPointer(), padding);
-
-		// Manually update buffer and buffer length.
-		SetBuffer(buffer);
-		SetBufferLength(bufferLength);
-
-		// May unfreeze the packet (but not its items).
-		Unfreeze();
 	}
 
 	FooPacket* FooPacket::Clone(uint8_t* buffer, size_t bufferLength) const
@@ -289,40 +260,38 @@ namespace RTC
 
 		CloneInto(clonedPacket);
 
-		size_t itemsOffset = GetItemsPointer() - GetBuffer();
-
-		auto* ptr = buffer + itemsOffset;
-
+		// Add a new parsed item for each item in this packet and make it pointer
+		// point to its position in the new buffer.
 		for (const auto* item : this->items)
 		{
+			size_t offset = item->GetBuffer() - GetBuffer();
+
 			FooItem* clonedItem{ nullptr };
 
 			switch (item->GetId())
 			{
 				case FooItem::ItemId::NUMERIC:
 				{
-					clonedItem = new FooNumericItem(ptr, item->GetLength());
+					clonedItem = new FooNumericItem(buffer + offset, item->GetBufferLength());
 
 					break;
 				}
 
 				case FooItem::ItemId::TEXT:
 				{
-					clonedItem = new FooTextItem(ptr, item->GetLength());
+					clonedItem = new FooTextItem(buffer + offset, item->GetBufferLength());
 
 					break;
 				}
 
 				default:
 				{
-					clonedItem = new FooUnknownItem(ptr, item->GetLength());
+					clonedItem = new FooUnknownItem(buffer + offset, item->GetBufferLength());
 				}
 			}
 
 			clonedItem->SetLength(item->GetLength());
 			clonedPacket->AddParsedItem(clonedItem);
-
-			ptr += item->GetLength();
 		}
 
 		return clonedPacket;
