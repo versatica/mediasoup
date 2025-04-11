@@ -188,6 +188,8 @@ if get_option('ms_sctp_stack')
     'src/RTC/SCTP/Chunk.cpp',
     'src/RTC/SCTP/DataChunk.cpp',
     'src/RTC/SCTP/ShutdownChunk.cpp',
+    'src/RTC/SCTP/ShutdownAckChunk.cpp',
+    'src/RTC/SCTP/ShutdownCompleteChunk.cpp',
     'src/RTC/SCTP/UnknownChunk.cpp',
     'src/RTC/SCTP/Packet.cpp',
   ]

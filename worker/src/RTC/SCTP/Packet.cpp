@@ -6,7 +6,9 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/DataChunk.hpp"
+#include "RTC/SCTP/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/ShutdownChunk.hpp"
+#include "RTC/SCTP/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
 
 namespace RTC
@@ -99,6 +101,32 @@ namespace RTC
 					case Chunk::ChunkType::SHUTDOWN:
 					{
 						chunk = ShutdownChunk::Parse(ptr, chunkLength + padding);
+
+						if (!chunk)
+						{
+							delete packet;
+							return nullptr;
+						}
+
+						break;
+					}
+
+					case Chunk::ChunkType::SHUTDOWN_ACK:
+					{
+						chunk = ShutdownAckChunk::Parse(ptr, chunkLength + padding);
+
+						if (!chunk)
+						{
+							delete packet;
+							return nullptr;
+						}
+
+						break;
+					}
+
+					case Chunk::ChunkType::SHUTDOWN_COMPLETE:
+					{
+						chunk = ShutdownCompleteChunk::Parse(ptr, chunkLength + padding);
 
 						if (!chunk)
 						{
@@ -263,6 +291,20 @@ namespace RTC
 						break;
 					}
 
+					case Chunk::ChunkType::SHUTDOWN_ACK:
+					{
+						clonedChunk = new ShutdownAckChunk(buffer + offset, chunk->GetLength());
+
+						break;
+					}
+
+					case Chunk::ChunkType::SHUTDOWN_COMPLETE:
+					{
+						clonedChunk = new ShutdownCompleteChunk(buffer + offset, chunk->GetLength());
+
+						break;
+					}
+
 					default:
 					{
 						clonedChunk = new UnknownChunk(buffer + offset, chunk->GetLength());
@@ -361,6 +403,20 @@ namespace RTC
 				case Chunk::ChunkType::SHUTDOWN:
 				{
 					chunk = ShutdownChunk::Factory(ptr, chunkMaxBufferLength);
+
+					break;
+				}
+
+				case Chunk::ChunkType::SHUTDOWN_ACK:
+				{
+					chunk = ShutdownAckChunk::Factory(ptr, chunkMaxBufferLength);
+
+					break;
+				}
+
+				case Chunk::ChunkType::SHUTDOWN_COMPLETE:
+				{
+					chunk = ShutdownCompleteChunk::Factory(ptr, chunkMaxBufferLength);
 
 					break;
 				}

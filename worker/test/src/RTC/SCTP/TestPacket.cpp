@@ -4,12 +4,24 @@
 #include "helpers.hpp"
 #include "RTC/SCTP/DataChunk.hpp"
 #include "RTC/SCTP/Packet.hpp"
+#include "RTC/SCTP/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/ShutdownChunk.hpp"
+#include "RTC/SCTP/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/UnknownChunk.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
+
+void checkChunk(
+  Chunk* chunk,
+  const uint8_t* buffer,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  Chunk::ChunkType chunkType,
+  bool unknownType,
+  uint8_t flags);
 
 SCENARIO("parse SCTP Packet without Chunks", "[sctp][serializable]")
 {
@@ -76,7 +88,7 @@ SCENARIO("parse SCTP Packet with Chunks", "[sctp][serializable]")
 		0x12, 0x34, 0x12, 0x34,
 		// User Data (2 bytes): 0xABCD, 2 bytes of padding
 		0xAB, 0xCD, 0x00, 0x00,
-		// Chunk 2: Type:EE (UNKNOWN), Flags: 0b1100, Length: 7
+		// Chunk 2: Type:0xEE (UNKNOWN), Flags: 0b00001100, Length: 7
 		0xEE, 0b00001100, 0x00, 0x07,
 		// Unknown data: 0xAABBCC, 1 byte of padding
 		0xAA, 0xBB, 0xCC, 0x00,
@@ -301,7 +313,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(chunk2->IsFrozen() == true);
 	REQUIRE(chunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
 	REQUIRE(chunk2->HasUnknownType() == false);
-	REQUIRE(chunk2->GetFlags() == 0);
+	REQUIRE(chunk2->GetFlags() == 0b00000000);
 	REQUIRE(chunk2->GetCumulativeTsnAck() == 1234567890);
 
 	REQUIRE(packet->GetBuffer() == buffer);
@@ -347,7 +359,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk2->IsFrozen() == true);
 	REQUIRE(addedChunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
 	REQUIRE(addedChunk2->HasUnknownType() == false);
-	REQUIRE(addedChunk2->GetFlags() == 0);
+	REQUIRE(addedChunk2->GetFlags() == 0b00000000);
 	REQUIRE(addedChunk2->GetCumulativeTsnAck() == 1234567890);
 
 	/* Freeze Packet. */
@@ -419,7 +431,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk2->IsFrozen() == true);
 	REQUIRE(addedChunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
 	REQUIRE(addedChunk2->HasUnknownType() == false);
-	REQUIRE(addedChunk2->GetFlags() == 0);
+	REQUIRE(addedChunk2->GetFlags() == 0b00000000);
 	REQUIRE(addedChunk2->GetCumulativeTsnAck() == 1234567890);
 
 	/* Clone Packet into another buffer. */
@@ -494,9 +506,214 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk2->IsFrozen() == true);
 	REQUIRE(addedChunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
 	REQUIRE(addedChunk2->HasUnknownType() == false);
-	REQUIRE(addedChunk2->GetFlags() == 0);
+	REQUIRE(addedChunk2->GetFlags() == 0b00000000);
 	REQUIRE(addedChunk2->GetCumulativeTsnAck() == 1234567890);
 
 	delete packet;
 	delete clonedPacket;
+}
+
+SCENARIO("SCTP Payload Data Chunk", "[sctp][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Type:0 (DATA), I:1, U:0, B:1, E:1, Length: 18
+		0x00, 0b00001011, 0x00, 0x12,
+		// TSN: 0x11223344,
+		0x11, 0x22, 0x33, 0x44,
+		// Stream Identifier S: 0xFF00, Stream Sequence Number n: 0x6677
+		0xFF, 0x00, 0x66, 0x77,
+		// Payload Protocol Identifier: 0x12341234
+		0x12, 0x34, 0x12, 0x34,
+		// User Data (2 bytes): 0xABCD, 2 bytes of padding
+		0xAB, 0xCD, 0x00, 0x00,
+		// Extra bytes that should be ignored.
+		0xAA, 0xBB, 0xCC
+	};
+	// clang-format on
+
+	auto* chunk = DataChunk::Parse(buffer, sizeof(buffer));
+
+	// clang-format off
+	checkChunk(
+		/*chunk*/ chunk,
+		/*buffer*/ buffer,
+		/*bufferLength*/ sizeof(buffer),
+		/*length*/ 20,
+		/*frozen*/ true,
+		/*chunkType*/ Chunk::ChunkType::DATA,
+		/*unknownType*/ false,
+		/*flags*/ 0b00001011
+	);
+	// clang-format on
+
+	REQUIRE(chunk->GetI() == true);
+	REQUIRE(chunk->GetU() == false);
+	REQUIRE(chunk->GetI() == true);
+	REQUIRE(chunk->GetI() == true);
+	REQUIRE(chunk->GetTSN() == 0x11223344);
+	REQUIRE(chunk->GetStreamIdentifierS() == 0xFF00);
+	REQUIRE(chunk->GetStreamSequenceNumberN() == 0x6677);
+	REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0x12341234);
+	REQUIRE(chunk->HasUserData() == true);
+	REQUIRE(chunk->GetUserDataLength() == 2);
+	REQUIRE(chunk->GetUserData()[0] == 0xAB);
+	REQUIRE(chunk->GetUserData()[1] == 0xCD);
+
+	delete chunk;
+}
+
+SCENARIO("SCTP Shutdown Association Chunk", "[sctp][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Type:7 (SHUTDOWN), Flags:0x00000000, Length: 8
+		0x07, 0b00000000, 0x00, 0x08,
+		// Cumulative TSN Ack: 0x11223344,
+		0x11, 0x22, 0x33, 0x44,
+		// Extra bytes that should be ignored.
+		0xAA, 0xBB, 0xCC
+	};
+	// clang-format on
+
+	auto* chunk = ShutdownChunk::Parse(buffer, sizeof(buffer));
+
+	// clang-format off
+	checkChunk(
+		/*chunk*/ chunk,
+		/*buffer*/ buffer,
+		/*bufferLength*/ sizeof(buffer),
+		/*length*/ 8,
+		/*frozen*/ true,
+		/*chunkType*/ Chunk::ChunkType::SHUTDOWN,
+		/*unknownType*/ false,
+		/*flags*/ 0b00000000
+	);
+	// clang-format on
+
+	REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
+
+	delete chunk;
+}
+
+SCENARIO("SCTP Shutdown Ack Chunk", "[sctp][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Type:8 (SHUTDOWN_ACK), Flags:0x00000000, Length: 4
+		0x08, 0b00000000, 0x00, 0x04,
+		// Extra bytes that should be ignored.
+		0xAA, 0xBB
+	};
+	// clang-format on
+
+	auto* chunk = ShutdownAckChunk::Parse(buffer, sizeof(buffer));
+
+	// clang-format off
+	checkChunk(
+		/*chunk*/ chunk,
+		/*buffer*/ buffer,
+		/*bufferLength*/ sizeof(buffer),
+		/*length*/ 4,
+		/*frozen*/ true,
+		/*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		/*unknownType*/ false,
+		/*flags*/ 0b00000000
+	);
+	// clang-format on
+
+	delete chunk;
+}
+
+SCENARIO("SCTP Shutdown Complete Chunk", "[sctp][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Type:8 (SHUTDOWN_COMPLETE), Flags:0x00000001, T: 1, Length: 4
+		0x0E, 0b00000001, 0x00, 0x04,
+		// Extra bytes that should be ignored.
+		0xAA, 0xBB, 0xCC, 0xDD
+	};
+	// clang-format on
+
+	auto* chunk = ShutdownCompleteChunk::Parse(buffer, sizeof(buffer));
+
+	// clang-format off
+	checkChunk(
+		/*chunk*/ chunk,
+		/*buffer*/ buffer,
+		/*bufferLength*/ sizeof(buffer),
+		/*length*/ 4,
+		/*frozen*/ true,
+		/*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
+		/*unknownType*/ false,
+		/*flags*/ 0b00000001
+	);
+	// clang-format on
+
+	REQUIRE(chunk->GetT() == true);
+
+	delete chunk;
+}
+
+SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
+{
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		// Type:0xEE (UNKNOWN), Flags: 0b1100, Length: 7
+		0xEE, 0b10001100, 0x00, 0x07,
+		// Unknown data: 0xAABBCC, 1 byte of padding
+		0xAA, 0xBB, 0xCC, 0x00,
+		// Extra bytes that should be ignored.
+		0xAA, 0xBB, 0xCC
+	};
+	// clang-format on
+
+	auto* chunk = UnknownChunk::Parse(buffer, sizeof(buffer));
+
+	// clang-format off
+	checkChunk(
+		/*chunk*/ chunk,
+		/*buffer*/ buffer,
+		/*bufferLength*/ sizeof(buffer),
+		/*length*/ 8,
+		/*frozen*/ true,
+		/*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
+		/*unknownType*/ true,
+		/*flags*/ 0b10001100
+	);
+	// clang-format on
+
+	REQUIRE(chunk->HasUnknownData() == true);
+	REQUIRE(chunk->GetUnknownDataLength() == 3);
+	REQUIRE(chunk->GetUnknownData()[0] == 0xAA);
+	REQUIRE(chunk->GetUnknownData()[1] == 0xBB);
+	REQUIRE(chunk->GetUnknownData()[2] == 0xCC);
+
+	delete chunk;
+}
+
+void checkChunk(
+  Chunk* chunk,
+  const uint8_t* buffer,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  Chunk::ChunkType chunkType,
+  bool unknownType,
+  uint8_t flags)
+{
+	REQUIRE(chunk);
+	REQUIRE(chunk->GetBufferLength() == bufferLength);
+	REQUIRE(chunk->GetLength() == length);
+	REQUIRE(chunk->IsFrozen() == frozen);
+	REQUIRE(chunk->GetType() == chunkType);
+	REQUIRE(chunk->HasUnknownType() == unknownType);
+	REQUIRE(chunk->GetFlags() == flags);
+	REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
 }
