@@ -574,7 +574,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 
 	REQUIRE(!clonedFooPacket->GetItemAt(4));
 
-	/* Clone a FooItem in the packet. */
+	/* Clone a FooItem of the packet. */
 
 	uint8_t newBuffer3[8];
 
@@ -584,7 +584,7 @@ SCENARIO("create and modify FooPacket", "[serializable]")
 
 	REQUIRE(clonedItem1->GetBufferLength() == 8);
 	REQUIRE(clonedItem1->GetLength() == 4);
-	// If we clone an item in the packet, the cloned item won't be frozen.
+	// If we clone an item of the packet, the cloned item won't be frozen.
 	REQUIRE(clonedItem1->IsFrozen() == false);
 	REQUIRE(clonedItem1->GetId() == FooItem::ItemId::NUMERIC);
 	REQUIRE(clonedItem1->HasUnknownId() == false);
