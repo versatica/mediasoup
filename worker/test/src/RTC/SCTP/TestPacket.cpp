@@ -518,16 +518,16 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 	// clang-format off
 	uint8_t buffer[] =
 	{
-		// Type:0 (DATA), I:1, U:0, B:1, E:1, Length: 18
-		0x00, 0b00001011, 0x00, 0x12,
+		// Type:0 (DATA), I:1, U:0, B:1, E:1, Length: 19
+		0x00, 0b00001011, 0x00, 0x13,
 		// TSN: 0x11223344,
 		0x11, 0x22, 0x33, 0x44,
 		// Stream Identifier S: 0xFF00, Stream Sequence Number n: 0x6677
 		0xFF, 0x00, 0x66, 0x77,
 		// Payload Protocol Identifier: 0x12341234
 		0x12, 0x34, 0x12, 0x34,
-		// User Data (2 bytes): 0xABCD, 2 bytes of padding
-		0xAB, 0xCD, 0x00, 0x00,
+		// User Data (2 bytes): 0xABCD, 1 byte of padding
+		0xAB, 0xCD, 0xEF, 0x00,
 		// Extra bytes that should be ignored.
 		0xAA, 0xBB, 0xCC
 	};
@@ -557,9 +557,10 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 	REQUIRE(chunk->GetStreamSequenceNumberN() == 0x6677);
 	REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0x12341234);
 	REQUIRE(chunk->HasUserData() == true);
-	REQUIRE(chunk->GetUserDataLength() == 2);
+	REQUIRE(chunk->GetUserDataLength() == 3);
 	REQUIRE(chunk->GetUserData()[0] == 0xAB);
 	REQUIRE(chunk->GetUserData()[1] == 0xCD);
+	REQUIRE(chunk->GetUserData()[2] == 0xEF);
 
 	delete chunk;
 }
