@@ -4,7 +4,8 @@
 #include "RTC/Serializable.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memmove()
+#include <cstring> // std::memmove(), std::memset()
+#include <utility> // std::move()
 
 namespace RTC
 {
@@ -24,9 +25,28 @@ namespace RTC
 
 		this->buffer       = buffer;
 		this->bufferLength = bufferLength;
+		this->frozen       = false;
+	}
 
-		// May unfreeze the Serializable.
-		Unfreeze();
+	void Serializable::Consolidate()
+	{
+		MS_TRACE();
+
+		// Consolidating also means freezing the Serializable.
+		Freeze();
+
+		// Invoke the consolidate event listener if any.
+		if (this->consolidatedListener)
+		{
+			this->consolidatedListener();
+		}
+	}
+
+	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
+	{
+		MS_TRACE();
+
+		this->consolidatedListener = std::move(listener);
 	}
 
 	void Serializable::SetBufferLength(size_t bufferLength)
@@ -73,18 +93,33 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (serializable->GetBufferLength() < GetLength())
+		if (serializable->GetBufferLength() < this->length)
 		{
 			MS_THROW_TYPE_ERROR(
 			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
 			  bufferLength,
-			  GetLength());
+			  this->length);
 		}
 
-		std::memmove(const_cast<uint8_t*>(serializable->GetBuffer()), GetBuffer(), GetLength());
+		std::memmove(const_cast<uint8_t*>(serializable->GetBuffer()), this->buffer, this->length);
 
 		// Need to manually set Serializable length.
-		serializable->SetLength(GetLength());
+		serializable->SetLength(this->length);
+	}
+
+	void Serializable::FillPadding(uint8_t padding)
+	{
+		MS_TRACE();
+
+		AssertNotFrozen();
+
+		if (padding > this->length)
+		{
+			MS_THROW_TYPE_ERROR(
+			  "padding (%" PRIu8 " bytes) cannot be greater than length (%zu bytes)", padding, this->length);
+		}
+
+		std::memset(this->buffer + this->length - padding, 0x00, padding);
 	}
 
 	void Serializable::AssertNotFrozen() const

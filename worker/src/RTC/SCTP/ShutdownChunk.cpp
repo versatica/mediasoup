@@ -48,7 +48,7 @@ namespace RTC
 			return chunk;
 		}
 
-		ShutdownChunk* ShutdownChunk::Factory(uint8_t* buffer, size_t bufferLength, uint32_t cumulativeTsnAck)
+		ShutdownChunk* ShutdownChunk::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
@@ -60,7 +60,6 @@ namespace RTC
 			auto* chunk = new ShutdownChunk(buffer, bufferLength);
 
 			chunk->InitializeHeader(Chunk::ChunkType::SHUTDOWN, 0, ShutdownChunk::ShutdownChunkLength);
-			chunk->SetCumulativeTsnAck(cumulativeTsnAck);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// ShutdownChunk fixed length.

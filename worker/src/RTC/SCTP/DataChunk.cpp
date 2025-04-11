@@ -55,14 +55,11 @@ namespace RTC
 			return chunk;
 		}
 
-		// TODO: Probably we should pass all fields here instead of having that
-		// InitializeExtraHeader() method.
-		DataChunk* DataChunk::Factory(
-		  uint8_t* buffer, size_t bufferLength, const uint8_t* userData, size_t userDataLength)
+		DataChunk* DataChunk::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
-			if (bufferLength < DataChunk::DataChunkHeaderLength + userDataLength)
+			if (bufferLength < DataChunk::DataChunkHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
@@ -72,10 +69,9 @@ namespace RTC
 			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
 			// Must also initialize the extra fields in the DataChunk Header.
 			chunk->InitializeExtraHeader();
-			chunk->SetUserData(userData, userDataLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
-			// minimum DataChunk length and SetUserData() updated it.
+			// minimum DataChunk length.
 
 			return chunk;
 		}
@@ -207,18 +203,22 @@ namespace RTC
 			AssertNotFrozen();
 
 			auto previousUserDataLength = GetUserDataLength();
-			auto notPaddedNewLength     = GetLength() - previousUserDataLength + userDataLength;
+			auto newNotPaddedLength     = GetLength() - previousUserDataLength + userDataLength;
+			auto newPaddedLength        = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			// Let's call SetLength() on parent with the new computed chunk length.
 			// NOTE: If there is no space in the buffer for it, it will throw.
 			// NOTE: Chunks must be padded to 4 bytes.
-			SetLength(Utils::Byte::PadTo4Bytes(notPaddedNewLength));
+			SetLength(newPaddedLength);
 
 			// Copy the given user data into the buffer.
 			std::memmove(GetUserDataPointer(), userData, userDataLength);
 
 			// Update the Chunk Length field.
-			SetLengthField(notPaddedNewLength);
+			SetLengthField(newNotPaddedLength);
+
+			// Fill padding bytes with zero.
+			FillPadding(newPaddedLength - newNotPaddedLength);
 		}
 
 		void DataChunk::InitializeExtraHeader()

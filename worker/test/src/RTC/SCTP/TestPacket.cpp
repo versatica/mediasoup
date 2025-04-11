@@ -244,22 +244,28 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	uint8_t userData[] = { 0x01, 0x02, 0x03 };
 
 	// Chunk 1 (16 + 3 + 1 = 20 bytes).
-	auto* chunk1 = DataChunk::Factory(
-	  chunkBuffer,
-	  sizeof(chunkBuffer),
-	  /*userData*/ userData,
-	  /*userDataLength*/ sizeof(userData));
+	auto* chunk1 = reinterpret_cast<DataChunk*>(packet->BuildChunkInPlace(Chunk::ChunkType::DATA));
 
 	chunk1->SetI(true);
 	chunk1->SetTSN(9876);
 	chunk1->SetStreamIdentifierS(1234);
 	chunk1->SetStreamSequenceNumberN(4321);
 	chunk1->SetPayloadProtocolIdentifier(101010);
+	chunk1->SetUserData(userData, sizeof(userData));
 
-	REQUIRE(chunk1->GetBuffer() == chunkBuffer);
-	REQUIRE(chunk1->GetBufferLength() == 100);
-	REQUIRE(chunk1->GetLength() == 20);
 	REQUIRE(chunk1->IsFrozen() == false);
+
+	// Before consolidating the Chunk, it must not be present in the Packet.
+	REQUIRE(packet->HasChunks() == false);
+	REQUIRE(packet->GetChunksCount() == 0);
+
+	// Consolidate the Chunk.
+	chunk1->Consolidate();
+
+	REQUIRE(chunk1->GetBufferLength() == 20);
+	REQUIRE(chunk1->GetLength() == 20);
+	// It must be frozen after consolidating it.
+	REQUIRE(chunk1->IsFrozen() == true);
 	REQUIRE(chunk1->GetType() == Chunk::ChunkType::DATA);
 	REQUIRE(chunk1->HasUnknownType() == false);
 	REQUIRE(chunk1->GetFlags() == 0b00001000);
@@ -276,39 +282,27 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(chunk1->GetUserData()[0] == 0x01);
 	REQUIRE(chunk1->GetUserData()[1] == 0x02);
 	REQUIRE(chunk1->GetUserData()[2] == 0x03);
-	REQUIRE(helpers::areBuffersEqual(chunk1->GetBuffer(), chunk1->GetLength(), chunkBuffer, 20) == true);
+	// Must be a padding byte.
+	REQUIRE(chunk1->GetUserData()[3] == 0x00);
 
-	packet->AddChunk(chunk1);
-
-	// Original Chunk remains frozen after calling `AddChunk()` with it.
-	REQUIRE(chunk1->IsFrozen() == false);
-
-	// Delete the Chunk since it's been cloned within the packet.
-	delete chunk1;
+	// NOTE: Do not delete the Chunk since it's now part of the Packet.
 
 	// Chunk 2 (8 bytes).
-	auto* chunk2 = ShutdownChunk::Factory(
-	  chunkBuffer,
-	  sizeof(chunkBuffer),
-	  /*cumulativeTsnAck*/ 1234567890);
+	auto* chunk2 =
+	  reinterpret_cast<ShutdownChunk*>(packet->BuildChunkInPlace(Chunk::ChunkType::SHUTDOWN));
 
-	REQUIRE(chunk2->GetBuffer() == chunkBuffer);
-	REQUIRE(chunk2->GetBufferLength() == 100);
+	chunk2->SetCumulativeTsnAck(1234567890);
+
+	// Consolidate the Chunk.
+	chunk2->Consolidate();
+
+	REQUIRE(chunk2->GetBufferLength() == 8);
 	REQUIRE(chunk2->GetLength() == 8);
-	REQUIRE(chunk2->IsFrozen() == false);
+	REQUIRE(chunk2->IsFrozen() == true);
 	REQUIRE(chunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
 	REQUIRE(chunk2->HasUnknownType() == false);
 	REQUIRE(chunk2->GetFlags() == 0);
 	REQUIRE(chunk2->GetCumulativeTsnAck() == 1234567890);
-	REQUIRE(helpers::areBuffersEqual(chunk2->GetBuffer(), chunk2->GetLength(), chunkBuffer, 8) == true);
-
-	packet->AddChunk(chunk2);
-
-	// Original Chunk remains frozen after calling `AddChunk()` with it.
-	REQUIRE(chunk2->IsFrozen() == false);
-
-	// Delete the Chunk since it's been cloned within the packet.
-	delete chunk2;
 
 	REQUIRE(packet->GetBuffer() == buffer);
 	REQUIRE(packet->GetBufferLength() == 1000);

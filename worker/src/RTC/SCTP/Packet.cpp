@@ -269,7 +269,9 @@ namespace RTC
 					}
 				}
 
+				// Set the proper Chunk length.
 				clonedChunk->SetLength(chunk->GetLength());
+				// Add it to the list as it if was parsed.
 				clonedPacket->AddParsedChunk(clonedChunk);
 			}
 
@@ -331,6 +333,59 @@ namespace RTC
 
 			// Update Serializable length.
 			SetLength(length);
+		}
+
+		Chunk* Packet::BuildChunkInPlace(Chunk::ChunkType chunkType)
+		{
+			MS_TRACE();
+
+			Chunk* chunk{ nullptr };
+
+			// The new Chunk will be added after other Chunks in the Packet, this is,
+			// at the end of the Packet.
+			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+			// The remaining length in the buffer is the potential buffer length
+			// of the chunk.
+			size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+
+			switch (chunkType)
+			{
+				case Chunk::ChunkType::DATA:
+				{
+					chunk = DataChunk::Factory(ptr, chunkMaxBufferLength);
+
+					break;
+				}
+
+				case Chunk::ChunkType::SHUTDOWN:
+				{
+					chunk = ShutdownChunk::Factory(ptr, chunkMaxBufferLength);
+
+					break;
+				}
+			}
+
+			// NOTE: Do not fix/update the Chunk buffer length since the caller
+			// probably wants to modify the Chunk.
+
+			// When the application completes the Chunk it must call
+			// `chunk->Consolidate()` and that will trigger this event.
+			chunk->SetConsolidatedListener(
+			  [this, chunk]()
+			  {
+				  // Fix buffer length assigned to the Chunk.
+				  chunk->SetBufferLength(chunk->GetLength());
+
+				  // NOTE: No need to freeze the Chunk because `Consolidate()` did it.
+
+				  // Add the Chunk to the list.
+				  this->chunks.push_back(chunk);
+
+				  // Update Packet length.
+				  SetLength(GetLength() + chunk->GetLength());
+			  });
+
+			return chunk;
 		}
 
 		void Packet::InitializeHeader()

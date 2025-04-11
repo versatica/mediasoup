@@ -52,7 +52,7 @@ namespace RTC
 			 * @remarks
 			 * - `bufferLength` could be greater than the Chunk real length.
 			 */
-			static ShutdownChunk* Factory(uint8_t* buffer, size_t bufferLength, uint32_t cumulativeTsnAck);
+			static ShutdownChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

@@ -19,6 +19,8 @@ namespace RTC
 	 */
 	class Serializable
 	{
+		using ConsolidatedListener = std::function<void()>;
+
 	public:
 		/**
 		 * @param buffer - The buffer holding the packet.
@@ -159,6 +161,34 @@ namespace RTC
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
+		 * The application must call this method on a Serializable when it's been
+		 * constructed within a parent object that needs to know when this
+		 * Serializable is done to recompute its total length and internal pointers.
+		 *
+		 * @remarks
+		 * This method freezes the Serializable.
+		 *
+		 * @see SetConsolidatedListener()
+		 */
+		virtual void Consolidate() final;
+
+		/**
+		 * Set a listener that will be invoked when calling `Consolidate()` on this
+		 * Serializable.
+		 *
+		 * @see Consolidate()
+		 *
+		 * @example
+		 * ```c++
+		 * chunk->SetConsolidatedListener([this, chunk]()
+		 * {
+		 *   SetLength(GetLength() + chunk->GetLength());
+		 * });
+		 * ```
+		 */
+		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
+
+		/**
 		 * Methods to be used by classes inheriting from Serializable.
 		 */
 	protected:
@@ -203,18 +233,17 @@ namespace RTC
 		virtual void SetLength(size_t length) final;
 
 		/**
-		 * Unfreeze the Serializable.
-		 */
-		virtual void Unfreeze() final
-		{
-			this->frozen = false;
-		}
-
-		/**
 		 * Clone Serializable into the given Serializable. Subclasses can invoke
 		 * this method within their Clone() implementation.
 		 */
 		virtual void CloneInto(Serializable* serializable) const final;
+
+		/**
+		 * Fill the last `padding` bytes of the buffer with zeros.
+		 *
+		 * @remarks This method does NOT add bytes to the buffer.
+		 */
+		virtual void FillPadding(uint8_t padding) final;
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a
@@ -233,6 +262,8 @@ namespace RTC
 		// Whether the Serializable is frozen, meaning that modifications are not
 		// allowed.
 		bool frozen{ false };
+		// Event listener invoked when the Serializable is consolidated.
+		ConsolidatedListener consolidatedListener{ nullptr };
 	};
 } // namespace RTC
 

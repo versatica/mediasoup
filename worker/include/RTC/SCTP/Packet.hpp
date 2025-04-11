@@ -169,6 +169,29 @@ namespace RTC
 			 */
 			void AddChunk(const Chunk* chunk);
 
+			/**
+			 * Build a Chunk within the Packet's buffer and append it to the list of
+			 * Chunks. The caller can perform modifications in that Chunk and those
+			 * will affect the Packet body where the Chunk is serialzed.
+			 *
+			 * @returns Pointer of the created Chunk specific class.
+			 *
+			 * @remarks
+			 * - The caller MUST invoke `Consolidate()` once the Chunk is completed.
+			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Chunk is
+			 *   in progress.
+			 * - The caller MUST NOT free the obtained Chunk pointer since it's now
+			 *   part of the Packet.
+			 * - The caller may want to cast the obtained Chunk to the specific Chunk
+			 *   subclass based on given `chunkType`:
+			 *   ```c++
+			 *   auto* chunk = reinterpret_cast<DataChunk*>(
+			 *     packet->BuildChunkInPlace(Chunk::ChunkType::DATA)
+			 *   );
+			 *   ```
+			 */
+			Chunk* BuildChunkInPlace(Chunk::ChunkType chunkType);
+
 		private:
 			void InitializeHeader();
 

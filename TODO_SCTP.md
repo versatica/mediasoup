@@ -13,9 +13,4 @@ However, in step 4 `WebRtcTransport::OnDtlsTransportApplicationDataReceived()` s
 
 Same in `PipeTransport` and `PlainTransport`.
 
-## TODO
-
-- Remove `Factory()` in item classes and add `AppendChunkInPlace()` that creates a chunk at the end of the packet and returns the pointer so the app can modify it (and make larger) and then call chunk->Consolidate() that should freeze the chunk and emit event on Packet that will recompute its length and so on.
-- So probably make `Freeze()` protected or private. And `Unfreeze()`?
-
 ## Fuzzer crashes

@@ -89,8 +89,7 @@ namespace RTC
 			 * @remarks
 			 * - `bufferLength` could be greater than the Chunk real length.
 			 */
-			static DataChunk* Factory(
-			  uint8_t* buffer, size_t bufferLength, const uint8_t* userData, size_t userDataLength);
+			static DataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**
