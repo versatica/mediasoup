@@ -89,24 +89,12 @@ namespace RTC
 					{
 						chunk = DataChunk::Parse(ptr, chunkLength + padding);
 
-						if (!chunk)
-						{
-							delete packet;
-							return nullptr;
-						}
-
 						break;
 					}
 
 					case Chunk::ChunkType::SHUTDOWN:
 					{
 						chunk = ShutdownChunk::Parse(ptr, chunkLength + padding);
-
-						if (!chunk)
-						{
-							delete packet;
-							return nullptr;
-						}
 
 						break;
 					}
@@ -115,12 +103,6 @@ namespace RTC
 					{
 						chunk = ShutdownAckChunk::Parse(ptr, chunkLength + padding);
 
-						if (!chunk)
-						{
-							delete packet;
-							return nullptr;
-						}
-
 						break;
 					}
 
@@ -128,25 +110,19 @@ namespace RTC
 					{
 						chunk = ShutdownCompleteChunk::Parse(ptr, chunkLength + padding);
 
-						if (!chunk)
-						{
-							delete packet;
-							return nullptr;
-						}
-
 						break;
 					}
 
 					default:
 					{
 						chunk = UnknownChunk::Parse(ptr, chunkLength + padding);
-
-						if (!chunk)
-						{
-							delete packet;
-							return nullptr;
-						}
 					}
+				}
+
+				if (!chunk)
+				{
+					delete packet;
+					return nullptr;
 				}
 
 				// Here we are parsing so we don't use AddChunk() (that clones the
