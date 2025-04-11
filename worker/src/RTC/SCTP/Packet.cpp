@@ -271,7 +271,8 @@ namespace RTC
 
 				// Set the proper Chunk length.
 				clonedChunk->SetLength(chunk->GetLength());
-				// Add it to the list as it if was parsed.
+				// Add it to the list as it if had been parsed (because it's already in
+				// the new buffer).
 				clonedPacket->AddParsedChunk(clonedChunk);
 			}
 

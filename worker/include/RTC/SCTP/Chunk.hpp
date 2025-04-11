@@ -38,6 +38,7 @@ namespace RTC
 
 		class Chunk : public Serializable
 		{
+			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:

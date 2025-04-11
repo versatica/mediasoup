@@ -35,18 +35,12 @@ namespace RTC
 		// Consolidating also means freezing the Serializable.
 		Freeze();
 
-		// Invoke the consolidate event listener if any.
-		if (this->consolidatedListener)
+		if (!this->consolidatedListener)
 		{
-			this->consolidatedListener();
+			MS_THROW_ERROR("consolidated listener not set");
 		}
-	}
 
-	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
-	{
-		MS_TRACE();
-
-		this->consolidatedListener = std::move(listener);
+		this->consolidatedListener();
 	}
 
 	void Serializable::SetBufferLength(size_t bufferLength)
@@ -120,6 +114,13 @@ namespace RTC
 		}
 
 		std::memset(this->buffer + this->length - padding, 0x00, padding);
+	}
+
+	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
+	{
+		MS_TRACE();
+
+		this->consolidatedListener = std::move(listener);
 	}
 
 	void Serializable::AssertNotFrozen() const

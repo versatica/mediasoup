@@ -168,25 +168,12 @@ namespace RTC
 		 * @remarks
 		 * This method freezes the Serializable.
 		 *
+		 * @throw MediaSoupError - If `SetConsolidatedListener()` was not called
+		 *   first.
+		 *
 		 * @see SetConsolidatedListener()
 		 */
 		virtual void Consolidate() final;
-
-		/**
-		 * Set a listener that will be invoked when calling `Consolidate()` on this
-		 * Serializable.
-		 *
-		 * @see Consolidate()
-		 *
-		 * @example
-		 * ```c++
-		 * chunk->SetConsolidatedListener([this, chunk]()
-		 * {
-		 *   SetLength(GetLength() + chunk->GetLength());
-		 * });
-		 * ```
-		 */
-		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
 
 		/**
 		 * Methods to be used by classes inheriting from Serializable.
@@ -244,6 +231,22 @@ namespace RTC
 		 * @remarks This method does NOT add bytes to the buffer.
 		 */
 		virtual void FillPadding(uint8_t padding) final;
+
+		/**
+		 * Set a listener that will be invoked when calling `Consolidate()` on this
+		 * Serializable.
+		 *
+		 * @see Consolidate()
+		 *
+		 * @example
+		 * ```c++
+		 * chunk->SetConsolidatedListener([this, chunk]()
+		 * {
+		 *   SetLength(GetLength() + chunk->GetLength());
+		 * });
+		 * ```
+		 */
+		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a

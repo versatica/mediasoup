@@ -911,7 +911,6 @@ SCENARIO("create and modify FooTextItem", "[serializable]")
 	/* Freeze FooTextItem. */
 
 	item->Freeze();
-	item->Consolidate();
 
 	REQUIRE(item->IsFrozen() == true);
 	// Must throw if we try to modify the item.
