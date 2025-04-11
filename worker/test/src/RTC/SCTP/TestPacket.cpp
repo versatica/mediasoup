@@ -513,7 +513,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	delete clonedPacket;
 }
 
-SCENARIO("SCTP Payload Data Chunk", "[sctp][serializable]")
+SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -564,7 +564,7 @@ SCENARIO("SCTP Payload Data Chunk", "[sctp][serializable]")
 	delete chunk;
 }
 
-SCENARIO("SCTP Shutdown Association Chunk", "[sctp][serializable]")
+SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -598,13 +598,13 @@ SCENARIO("SCTP Shutdown Association Chunk", "[sctp][serializable]")
 	delete chunk;
 }
 
-SCENARIO("SCTP Shutdown Ack Chunk", "[sctp][serializable]")
+SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
 	{
 		// Type:8 (SHUTDOWN_ACK), Flags:0x00000000, Length: 4
-		0x08, 0b00000000, 0x00, 0x04,
+		0x08, 0b01000000, 0x00, 0x04,
 		// Extra bytes that should be ignored.
 		0xAA, 0xBB
 	};
@@ -621,14 +621,14 @@ SCENARIO("SCTP Shutdown Ack Chunk", "[sctp][serializable]")
 		/*frozen*/ true,
 		/*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		/*unknownType*/ false,
-		/*flags*/ 0b00000000
+		/*flags*/ 0b01000000
 	);
 	// clang-format on
 
 	delete chunk;
 }
 
-SCENARIO("SCTP Shutdown Complete Chunk", "[sctp][serializable]")
+SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -660,7 +660,7 @@ SCENARIO("SCTP Shutdown Complete Chunk", "[sctp][serializable]")
 	delete chunk;
 }
 
-SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
+SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 {
 	// clang-format off
 	uint8_t buffer[] =
