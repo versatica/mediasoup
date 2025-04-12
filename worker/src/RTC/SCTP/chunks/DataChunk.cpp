@@ -69,10 +69,10 @@ namespace RTC
 			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
 
 			// Must also initialize extra fields in the header.
-			SetTSN(0);
-			SetStreamIdentifierS(0);
-			SetStreamSequenceNumberN(0);
-			SetPayloadProtocolIdentifier(0);
+			chunk->SetTSN(0);
+			chunk->SetStreamIdentifierS(0);
+			chunk->SetStreamSequenceNumberN(0);
+			chunk->SetPayloadProtocolIdentifier(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum DataChunk length.

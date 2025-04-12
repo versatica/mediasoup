@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "helpers.hpp"
+#include "RTC/SCTP/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
@@ -452,6 +453,118 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*length*/ 4,
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
+		  /*unknownType*/ false,
+		  /*flags*/ 0b00000000);
+
+		// Compare buffers.
+		REQUIRE(
+		  helpers::areBuffersEqual(
+		    parsedChunk->GetBuffer(), parsedChunk->GetLength(), chunk->GetBuffer(), chunk->GetLength()) ==
+		  true);
+
+		delete chunk;
+		delete parsedChunk;
+	}
+}
+
+SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
+{
+	resetBuffers();
+
+	SECTION("CookieAckChunk::Parse()")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			// Type:11 (COOKIE_ACK), Flags:0x00000001, T: 1, Length: 4
+			0x0B, 0b00000101, 0x00, 0x04,
+			// Extra bytes that should be ignored.
+			0xAA
+		};
+		// clang-format on
+
+		auto* chunk = CookieAckChunk::Parse(buffer, sizeof(buffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 4,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
+		  /*unknownType*/ false,
+		  /*flags*/ 0b00000101);
+
+		/* Serialize it. */
+
+		chunk->Serialize(ChunkSerializeBuffer, sizeof(ChunkSerializeBuffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ ChunkSerializeBuffer,
+		  /*bufferLength*/ sizeof(ChunkSerializeBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
+		  /*unknownType*/ false,
+		  /*flags*/ 0b00000101);
+
+		/* Clone it. */
+
+		auto* clonedChunk = chunk->Clone(ChunkCloneBuffer, sizeof(ChunkCloneBuffer));
+
+		delete chunk;
+
+		checkChunk(
+		  /*chunk*/ clonedChunk,
+		  /*buffer*/ ChunkCloneBuffer,
+		  /*bufferLength*/ sizeof(ChunkCloneBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
+		  /*unknownType*/ false,
+		  /*flags*/ 0b00000101);
+
+		delete clonedChunk;
+	}
+
+	SECTION("CookieAckChunk::Factory()")
+	{
+		auto* chunk = CookieAckChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ ChunkFactoryBuffer,
+		  /*bufferLength*/ sizeof(ChunkFactoryBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
+		  /*unknownType*/ false,
+		  /*flags*/ 0b00000000);
+
+		/* Modify it. */
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ ChunkFactoryBuffer,
+		  /*bufferLength*/ sizeof(ChunkFactoryBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
+		  /*unknownType*/ false,
+		  /*flags*/ 0b00000000);
+
+		/* Parse itself and compare. */
+
+		auto* parsedChunk = CookieAckChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+
+		checkChunk(
+		  /*chunk*/ parsedChunk,
+		  /*buffer*/ ChunkFactoryBuffer,
+		  /*bufferLength*/ chunk->GetLength(),
+		  /*length*/ 4,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*flags*/ 0b00000000);
 

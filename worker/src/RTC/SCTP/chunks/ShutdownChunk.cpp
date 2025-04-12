@@ -61,7 +61,7 @@ namespace RTC
 			chunk->InitializeHeader(Chunk::ChunkType::SHUTDOWN, 0, ShutdownChunk::ShutdownChunkLength);
 
 			// Must also initialize extra fields in the header.
-			SetCumulativeTsnAck(0);
+			chunk->SetCumulativeTsnAck(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// ShutdownChunk fixed length.
