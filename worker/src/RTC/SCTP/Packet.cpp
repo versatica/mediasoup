@@ -5,11 +5,11 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/DataChunk.hpp"
-#include "RTC/SCTP/ShutdownAckChunk.hpp"
-#include "RTC/SCTP/ShutdownChunk.hpp"
-#include "RTC/SCTP/ShutdownCompleteChunk.hpp"
-#include "RTC/SCTP/UnknownChunk.hpp"
+#include "RTC/SCTP/chunks/DataChunk.hpp"
+#include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
+#include "RTC/SCTP/chunks/ShutdownChunk.hpp"
+#include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
+#include "RTC/SCTP/chunks/UnknownChunk.hpp"
 
 namespace RTC
 {

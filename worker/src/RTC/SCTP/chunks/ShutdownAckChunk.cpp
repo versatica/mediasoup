@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::ShutdownAckChunk"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/ShutdownAckChunk.hpp"
+#include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 

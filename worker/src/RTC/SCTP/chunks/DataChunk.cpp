@@ -1,7 +1,7 @@
 #define MS_CLASS "RTC::SCTP::DataChunk"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/DataChunk.hpp"
+#include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove()

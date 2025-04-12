@@ -1,9 +1,8 @@
 #define MS_CLASS "RTC::SCTP::UnknownChunk"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/UnknownChunk.hpp"
+#include "RTC/SCTP/chunks/UnknownChunk.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {

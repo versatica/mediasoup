@@ -186,11 +186,11 @@ common_sources = [
 if get_option('ms_sctp_stack')
   common_sources += [
     'src/RTC/SCTP/Chunk.cpp',
-    'src/RTC/SCTP/DataChunk.cpp',
-    'src/RTC/SCTP/ShutdownChunk.cpp',
-    'src/RTC/SCTP/ShutdownAckChunk.cpp',
-    'src/RTC/SCTP/ShutdownCompleteChunk.cpp',
-    'src/RTC/SCTP/UnknownChunk.cpp',
+    'src/RTC/SCTP/chunks/DataChunk.cpp',
+    'src/RTC/SCTP/chunks/ShutdownChunk.cpp',
+    'src/RTC/SCTP/chunks/ShutdownAckChunk.cpp',
+    'src/RTC/SCTP/chunks/ShutdownCompleteChunk.cpp',
+    'src/RTC/SCTP/chunks/UnknownChunk.cpp',
     'src/RTC/SCTP/Packet.cpp',
   ]
 endif
