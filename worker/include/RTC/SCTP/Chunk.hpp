@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_CHUNK_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/Serializable.hpp"
 #include <string>
 #include <unordered_map>
@@ -42,8 +43,11 @@ namespace RTC
 			friend class Packet;
 
 		public:
+			using ParametersIterator = typename std::vector<ChunkParameter*>::const_iterator;
+
+		public:
 			/**
-			 * Chunk types.
+			 * Chunk Type.
 			 */
 			enum class ChunkType : uint8_t
 			{
@@ -85,7 +89,7 @@ namespace RTC
 				uint8_t flags;
 				/**
 				 * The value of the Chunk Length field, which represents the total
-				 * length of the chunk in bytes, including the Chunk Type, Chunk Flags,
+				 * length of the Chunk in bytes, including the Chunk Type, Chunk Flags,
 				 * Chunk Length and Chunk Value fields. So if the Chunk Value field is
 				 * zero-length, the Length field must be 4. The Chunk Length field does
 				 * not count any chunk padding.
@@ -173,11 +177,13 @@ namespace RTC
 				return GetHeaderPointer()->type;
 			}
 
-			virtual bool HasUnknownType() const final
+			/**
+			 * False by default. UnknownChunk class overrides this method to return
+			 * true instead.
+			 */
+			virtual bool HasUnknownType() const
 			{
-				auto type = GetType();
-
-				return type < ChunkType::DATA || type > ChunkType::SHUTDOWN_COMPLETE;
+				return false;
 			}
 
 			virtual ActionForUnknownChunkType GetActionForUnknownChunkType() const final

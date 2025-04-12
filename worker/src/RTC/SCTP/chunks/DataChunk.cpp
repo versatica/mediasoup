@@ -32,8 +32,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			// UserData cannot have 0 length so we use <= rather than <.
-			if (chunkLength <= DataChunk::DataChunkHeaderLength)
+			if (chunkLength < DataChunk::DataChunkHeaderLength)
 			{
 				MS_WARN_TAG(
 				  sctp,

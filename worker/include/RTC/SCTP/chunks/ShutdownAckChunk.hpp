@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_SHUTDOWN_ACK_CHUNK_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/Chunk.hpp"
 
 namespace RTC

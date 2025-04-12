@@ -1,0 +1,74 @@
+#ifndef MS_RTC_SCTP_HEARTBEAT_CHUNK_HPP
+#define MS_RTC_SCTP_HEARTBEAT_CHUNK_HPP
+
+#include "common.hpp"
+#include "RTC/SCTP/Chunk.hpp"
+
+namespace RTC
+{
+	namespace SCTP
+	{
+		/**
+		 * Heartbeat Request (HEARTBEAT) (4).
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |   Type = 4    |  Chunk Flags  |       Heartbeat Length        |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * \                                                               \
+		 * /          Heartbeat Information TLV (Variable-Length)          /
+		 * \                                                               \
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * - Chunk Type (8 bits): 4.
+		 * - Length (16 bits).
+		 * - Heartbeat Information (variable length): Contains a variable-length
+		 *   Heartbeat Info parameter.
+		 */
+
+		// Forward declaration.
+		class Packet;
+
+		class HeartbeatChunk : public Chunk
+		{
+			// We need that Packet calls protected and private methods in this class.
+			friend class Packet;
+
+		public:
+			static const size_t HeartbeatChunkHeaderLength{ 4 };
+
+		public:
+			/**
+			 * Parse a HeartbeatChunk.
+			 *
+			 * @remarks
+			 * - `bufferLength` may exceed the exact length of the Chunk.
+			 */
+			static HeartbeatChunk* Parse(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Create a HeartbeatChunk.
+			 *
+			 * @remarks
+			 * - `bufferLength` could be greater than the Chunk real length.
+			 */
+			static HeartbeatChunk* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
+			 * Private constructor used by Parse() and Factory() static methods.
+			 */
+			HeartbeatChunk(const uint8_t* buffer, size_t bufferLength);
+
+		public:
+			virtual ~HeartbeatChunk() override;
+
+			virtual void Dump() const override final;
+
+			virtual HeartbeatChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+		};
+	} // namespace SCTP
+} // namespace RTC
+
+#endif

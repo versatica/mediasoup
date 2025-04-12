@@ -52,6 +52,11 @@ namespace RTC
 
 			virtual UnknownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual bool HasUnknownType() const override
+			{
+				return true;
+			}
+
 			bool HasUnknownData() const
 			{
 				return GetLengthField() > Chunk::ChunkHeaderLength;
