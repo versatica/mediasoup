@@ -399,6 +399,7 @@ test_sources = [
 if get_option('ms_sctp_stack')
   test_sources += [
     'test/src/RTC/SCTP/TestPacket.cpp',
+    'test/src/RTC/SCTP/TestChunk.cpp',
   ]
 endif
 

@@ -74,6 +74,9 @@ namespace RTC
 			}
 
 			void SetCumulativeTsnAck(uint32_t value);
+
+		protected:
+			void InitializeExtraHeader();
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -367,7 +367,7 @@ public:
 		size_t bufferDataLen{ 0 }; \
 		for (size_t i{0}; i < len; ++i) \
 		{ \
-		  if (i % 8 == 0) \
+		  if (i % 4 == 0) \
 		  { \
 		  	if (bufferDataLen != 0) \
 		  	{ \
@@ -394,7 +394,7 @@ public:
 		size_t bufferDataLen{ 0 }; \
 		for (size_t i{0}; i < len; ++i) \
 		{ \
-		  if (i % 8 == 0) \
+		  if (i % 4 == 0) \
 		  { \
 		  	if (bufferDataLen != 0) \
 		  	{ \

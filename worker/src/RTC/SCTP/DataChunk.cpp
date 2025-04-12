@@ -67,7 +67,7 @@ namespace RTC
 			auto* chunk = new DataChunk(buffer, bufferLength);
 
 			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
-			// Must also initialize the extra fields in the DataChunk Header.
+			// Must also initialize extra fields in the header.
 			chunk->InitializeExtraHeader();
 
 			// No need to invoke SetLength() since constructor invoked it with
@@ -225,10 +225,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetTSN(0x00);
-			SetStreamIdentifierS(0x00);
-			SetStreamSequenceNumberN(0x00);
-			SetPayloadProtocolIdentifier(0x00);
+			SetTSN(0);
+			SetStreamIdentifierS(0);
+			SetStreamSequenceNumberN(0);
+			SetPayloadProtocolIdentifier(0);
 		}
 	} // namespace SCTP
 } // namespace RTC
