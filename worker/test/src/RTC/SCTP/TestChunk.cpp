@@ -24,6 +24,7 @@ static void checkChunk(
   bool frozen,
   Chunk::ChunkType chunkType,
   bool unknownType,
+  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
   uint8_t flags);
 
 static void resetBuffers();
@@ -62,6 +63,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011);
 
 		REQUIRE(chunk->GetI() == true);
@@ -90,6 +92,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011);
 
 		REQUIRE(chunk->GetI() == true);
@@ -120,6 +123,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011);
 
 		REQUIRE(clonedChunk->GetI() == true);
@@ -151,6 +155,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(chunk->GetI() == false);
@@ -183,6 +188,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001001);
 
 		REQUIRE(chunk->GetI() == true);
@@ -213,6 +219,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001001);
 
 		REQUIRE(parsedChunk->GetI() == true);
@@ -268,6 +275,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
@@ -284,6 +292,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
@@ -302,6 +311,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 0x11223344);
@@ -321,6 +331,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
@@ -337,6 +348,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 99887766);
@@ -353,6 +365,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 99887766);
@@ -393,6 +406,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000);
 
 		/* Serialize it. */
@@ -407,6 +421,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000);
 
 		/* Clone it. */
@@ -423,6 +438,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000);
 
 		delete clonedChunk;
@@ -440,6 +456,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		/* Parse itself and compare. */
@@ -454,6 +471,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		// Compare buffers.
@@ -493,6 +511,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000101);
 
 		/* Serialize it. */
@@ -507,6 +526,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000101);
 
 		/* Clone it. */
@@ -523,6 +543,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000101);
 
 		delete clonedChunk;
@@ -540,6 +561,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		/* Modify it. */
@@ -552,6 +574,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		/* Parse itself and compare. */
@@ -566,6 +589,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		// Compare buffers.
@@ -605,6 +629,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001);
 
 		REQUIRE(chunk->GetT() == true);
@@ -621,6 +646,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001);
 
 		REQUIRE(chunk->GetT() == true);
@@ -639,6 +665,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001);
 
 		REQUIRE(clonedChunk->GetT() == true);
@@ -658,6 +685,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000);
 
 		REQUIRE(chunk->GetT() == false);
@@ -674,6 +702,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001);
 
 		REQUIRE(chunk->GetT() == true);
@@ -690,6 +719,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001);
 
 		REQUIRE(parsedChunk->GetT() == true);
@@ -724,6 +754,9 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 
 		auto* chunk = UnknownChunk::Parse(buffer, sizeof(buffer));
 
+		// NOTE: Chunk Type is 0xEE (0b11101110) so first 2 bits are 11, meaning
+		// that the action to take if we receive this Chunk Type is SKIP_AND_REPORT.
+
 		checkChunk(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
@@ -732,6 +765,7 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100);
 
 		REQUIRE(chunk->HasUnknownData() == true);
@@ -752,6 +786,7 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100);
 
 		REQUIRE(chunk->HasUnknownData() == true);
@@ -774,6 +809,7 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100);
 
 		REQUIRE(clonedChunk->HasUnknownData() == true);
@@ -794,6 +830,7 @@ void checkChunk(
   bool frozen,
   Chunk::ChunkType chunkType,
   bool unknownType,
+  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
   uint8_t flags)
 {
 	REQUIRE(chunk);
@@ -803,6 +840,7 @@ void checkChunk(
 	REQUIRE(chunk->IsFrozen() == frozen);
 	REQUIRE(chunk->GetType() == chunkType);
 	REQUIRE(chunk->HasUnknownType() == unknownType);
+	REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);
 	REQUIRE(chunk->GetFlags() == flags);
 	REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
 }

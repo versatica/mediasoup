@@ -65,6 +65,18 @@ namespace RTC
 			};
 
 			/**
+			 * Action that is taken if the processing endpoint does not recognize the
+			 * Chunk Type.
+			 */
+			enum class ActionForUnknownChunkType : uint8_t
+			{
+				STOP            = 0b00,
+				STOP_AND_REPORT = 0b01,
+				SKIP            = 0b10,
+				SKIP_AND_REPORT = 0b11
+			};
+
+			/**
 			 * Struct of a SCTP Chunk Header.
 			 */
 			struct ChunkHeader
@@ -166,6 +178,11 @@ namespace RTC
 				auto type = GetType();
 
 				return type < ChunkType::DATA || type > ChunkType::SHUTDOWN_COMPLETE;
+			}
+
+			virtual ActionForUnknownChunkType GetActionForUnknownChunkType() const final
+			{
+				return static_cast<ActionForUnknownChunkType>(static_cast<uint8_t>(GetType()) >> 6);
 			}
 
 			virtual uint8_t GetFlags() const final
