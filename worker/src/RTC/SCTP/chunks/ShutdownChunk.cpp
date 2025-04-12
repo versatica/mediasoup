@@ -59,8 +59,9 @@ namespace RTC
 			auto* chunk = new ShutdownChunk(buffer, bufferLength);
 
 			chunk->InitializeHeader(Chunk::ChunkType::SHUTDOWN, 0, ShutdownChunk::ShutdownChunkLength);
+
 			// Must also initialize extra fields in the header.
-			chunk->InitializeExtraHeader();
+			SetCumulativeTsnAck(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// ShutdownChunk fixed length.
@@ -118,13 +119,6 @@ namespace RTC
 			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
-		}
-
-		void ShutdownChunk::InitializeExtraHeader()
-		{
-			MS_TRACE();
-
-			SetCumulativeTsnAck(0);
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -89,6 +89,8 @@ namespace RTC
 
 		if (serializable->GetBufferLength() < this->length)
 		{
+			delete serializable;
+
 			MS_THROW_TYPE_ERROR(
 			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
 			  bufferLength,

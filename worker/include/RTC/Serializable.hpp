@@ -126,7 +126,7 @@ namespace RTC
 		 * buffer.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
-		 * current exact length of the Serializable.
+		 *   current exact length of the Serializable.
 		 */
 		virtual void Serialize(uint8_t* buffer, size_t bufferLength);
 
@@ -146,9 +146,14 @@ namespace RTC
 		 * - In subclasses that do not hold other Serializable instances and do not
 		 *   allocate memory by themselves, the Clone() mthod can be as follows:
 		 *   ```c++
-		 *   auto* cloned = new SerializableSubclass(buffer, bufferLength);
-		 *   Serializable::CloneInto(cloned);
-		 *   return clonedItem;
+		 *   SerializableSubclass* SerializableSubclass::Clone(uint8_t* buffer, size_t bufferLength) const
+		 *   {
+		 *     auto* cloned = new SerializableSubclass(buffer, bufferLength);
+		 *
+		 *     Serializable::CloneInto(cloned);
+		 *
+		 *     return clonedItem;
+		 *   }
 		 *   ```
 		 * - In addition to call this method in Serializable parent class, the
 		 *  `Clone()` implementation in the subclass must also replicate any
@@ -156,7 +161,7 @@ namespace RTC
 		 *   new buffer.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
-		 * current exact length of the Serializable.
+		 *   current exact length of the Serializable.
 		 */
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
@@ -222,6 +227,15 @@ namespace RTC
 		/**
 		 * Clone Serializable into the given Serializable. Subclasses can invoke
 		 * this method within their Clone() implementation.
+		 *
+		 * @remarks
+		 * If this method throws (due to the buffer length of the given Serializable
+		 * being too small, then it deletes the given `serializable` pointer and
+		 * then throws, meaning that the subclass must not delete it in case it does
+		 * try/catch.
+		 *
+		 * @throw MediaSoupError - If the buffer length of the given `serializable`
+		 *   is too small.
 		 */
 		virtual void CloneInto(Serializable* serializable) const final;
 

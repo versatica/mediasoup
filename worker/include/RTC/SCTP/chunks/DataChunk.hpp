@@ -188,9 +188,6 @@ namespace RTC
 
 			void SetUserData(const uint8_t* userData, size_t userDataLength);
 
-		protected:
-			void InitializeExtraHeader();
-
 		private:
 			uint8_t* GetUserDataPointer() const
 			{

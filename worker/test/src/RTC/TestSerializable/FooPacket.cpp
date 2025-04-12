@@ -290,7 +290,17 @@ namespace RTC
 				}
 			}
 
-			clonedItem->SetLength(item->GetLength());
+			try
+			{
+				clonedItem->SetLength(item->GetLength());
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete clonedItem;
+
+				throw;
+			}
+
 			clonedPacket->AddParsedItem(clonedItem);
 		}
 

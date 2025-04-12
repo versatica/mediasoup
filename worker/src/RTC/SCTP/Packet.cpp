@@ -43,15 +43,6 @@ namespace RTC
 
 			auto* packet = new Packet(buffer, bufferLength);
 
-			// TODO: Move this to some Validate() method.
-			if (packet->GetSourcePort() == 0u || packet->GetDestinationPort() == 0u)
-			{
-				MS_WARN_TAG(sctp, "source port and destination port cannot be 0, SCTP Packet discarded");
-
-				delete packet;
-				return nullptr;
-			}
-
 			// Pointer that initially points to the given data buffer and is later
 			// incremented to point to other parts of the Packet.
 			auto* ptr = buffer;
@@ -288,7 +279,18 @@ namespace RTC
 				}
 
 				// Set the proper Chunk length.
-				clonedChunk->SetLength(chunk->GetLength());
+				// NOTE: This should not throw but just in case.
+				try
+				{
+					clonedChunk->SetLength(chunk->GetLength());
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete clonedChunk;
+
+					throw;
+				}
+
 				// Add it to the list as it if had been parsed (because it's already in
 				// the new buffer).
 				clonedPacket->AddParsedChunk(clonedChunk);
