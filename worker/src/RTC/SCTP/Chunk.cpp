@@ -27,7 +27,7 @@ namespace RTC
 			{ Chunk::ChunkType::ABORT,             "ABORT"             },
 			{ Chunk::ChunkType::SHUTDOWN,          "SHUTDOWN"          },
 			{ Chunk::ChunkType::SHUTDOWN_ACK,      "SHUTDOWN_ACK"      },
-			{ Chunk::ChunkType::ERROR,             "ERROR"             },
+			{ Chunk::ChunkType::OPERATION_ERROR,   "OPERATION_ERROR"   },
 			{ Chunk::ChunkType::COOKIE_ECHO,       "COOKIE_ECHO"       },
 			{ Chunk::ChunkType::COOKIE_ACK,        "COOKIE_ACK"        },
 			{ Chunk::ChunkType::ECNE,              "ECNE"              },

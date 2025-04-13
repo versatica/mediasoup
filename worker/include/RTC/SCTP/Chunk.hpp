@@ -52,16 +52,17 @@ namespace RTC
 			 */
 			enum class ChunkType : uint8_t
 			{
-				DATA              = 0x00,
-				INIT              = 0x01,
-				INIT_ACK          = 0x02,
-				SACK              = 0x03,
-				HEARTBEAT         = 0x04,
-				HEARTBEAT_ACK     = 0x05,
-				ABORT             = 0x06,
-				SHUTDOWN          = 0x07,
-				SHUTDOWN_ACK      = 0x08,
-				ERROR             = 0x09,
+				DATA          = 0x00,
+				INIT          = 0x01,
+				INIT_ACK      = 0x02,
+				SACK          = 0x03,
+				HEARTBEAT     = 0x04,
+				HEARTBEAT_ACK = 0x05,
+				ABORT         = 0x06,
+				SHUTDOWN      = 0x07,
+				SHUTDOWN_ACK  = 0x08,
+				// NOTE: Let's not name it ERROR because MSVC complains.
+				OPERATION_ERROR   = 0x09,
 				COOKIE_ECHO       = 0x0A,
 				COOKIE_ACK        = 0x0B,
 				ECNE              = 0x0C,
