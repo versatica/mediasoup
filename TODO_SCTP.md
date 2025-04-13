@@ -17,5 +17,4 @@ Same in `PipeTransport` and `PlainTransport`.
 
 - In `DataChunk::SetUserData()` and `HeartbeatInfoChunkParameter::SetInfo()` we should assert that given length is not greater than max of uint16_t minus the length of the Chunk or Parameter header. This is because Length field is uint16_t but it also includes the header length.
 
-- Must be ready and test this:
-  > The Chunk Length field does not count any chunk padding. However, it does include any padding of variable-length parameters other than the last parameter in the chunk. A robust implementation is expected to accept the chunk whether or not the final padding has been included in the Chunk Length.
+- In tests make `Serialize()` and `Clone()` fail due to small buffer to see if ASAN shows some leak due to some pointer not released.

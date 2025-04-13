@@ -58,6 +58,8 @@ namespace RTC
 
 			auto* parameter = new HeartbeatInfoChunkParameter(buffer, bufferLength);
 
+			parameter->InitializeHeader(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO);
+
 			// No need to invoke SetLength() since parent constructor invoked it.
 
 			return parameter;
@@ -107,7 +109,7 @@ namespace RTC
 			return clonedItem;
 		}
 
-		void HeartbeatInfoChunkParameter::SetInfo(const uint8_t* info, size_t infoLength)
+		void HeartbeatInfoChunkParameter::SetInfo(const uint8_t* info, uint16_t infoLength)
 		{
 			MS_TRACE();
 

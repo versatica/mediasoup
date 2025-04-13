@@ -121,8 +121,6 @@ namespace RTC
 
 			CloneInto(clonedItem);
 
-			// TODO: Clone Parameters.
-
 			return clonedItem;
 		}
 	} // namespace SCTP

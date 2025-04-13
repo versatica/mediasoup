@@ -235,11 +235,22 @@ namespace RTC
 				  // NOTE: No need to freeze the Parameter because `Consolidate()` did
 				  // it.
 
+				  auto previousLength = GetLength();
+
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
 
 				  // Update Chunk length.
-				  SetLength(GetLength() + parameter->GetLength());
+				  SetLength(previousLength + parameter->GetLength());
+
+				  // Here we have to update the Chunk Value Length and this is not easy
+				  // because we have to take into account the padding of all Parameters
+				  // but the last one. So we do this:
+				  // - We assume that Parameters are always at the end of the Chunk.
+				  // - We read the Parameter Length field of the new added Parameter.
+				  // - We add it to the previous total length of the Chunk and
+				  //   set the Chunk Length field with the resulting value.
+				  SetLengthField(previousLength + parameter->GetLengthField());
 			  });
 
 			return parameter;

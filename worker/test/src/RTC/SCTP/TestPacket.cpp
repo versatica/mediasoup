@@ -319,7 +319,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetChunksCount() == 2);
 	REQUIRE(helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, 40) == true);
 
-	auto* addedChunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
+	const auto* addedChunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
 
 	REQUIRE(addedChunk1->GetBufferLength() == 20);
 	REQUIRE(addedChunk1->GetLength() == 20);
@@ -342,7 +342,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk1->GetUserData()[1] == 0x02);
 	REQUIRE(addedChunk1->GetUserData()[2] == 0x03);
 
-	auto* addedChunk2 = reinterpret_cast<const ShutdownChunk*>(packet->GetChunkAt(1));
+	const auto* addedChunk2 = reinterpret_cast<const ShutdownChunk*>(packet->GetChunkAt(1));
 
 	REQUIRE(addedChunk2->GetBufferLength() == 8);
 	REQUIRE(addedChunk2->GetLength() == 8);

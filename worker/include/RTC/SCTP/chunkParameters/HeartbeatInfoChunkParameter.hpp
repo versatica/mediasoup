@@ -70,7 +70,7 @@ namespace RTC
 				return GetValuePointer();
 			}
 
-			void SetInfo(const uint8_t* info, size_t infoLength);
+			void SetInfo(const uint8_t* info, uint16_t infoLength);
 		};
 	} // namespace SCTP
 } // namespace RTC

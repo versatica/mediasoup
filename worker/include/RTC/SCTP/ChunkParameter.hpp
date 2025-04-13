@@ -171,7 +171,7 @@ namespace RTC
 			}
 
 		protected:
-			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
+			virtual void InitializeHeader(ChunkParameterType parameterType) final;
 
 			/**
 			 * NOTE: Return ChunkParameterHeader* instead of const

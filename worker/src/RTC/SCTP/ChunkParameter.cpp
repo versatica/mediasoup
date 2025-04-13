@@ -139,12 +139,12 @@ namespace RTC
 			return clonedParameter;
 		}
 
-		void ChunkParameter::InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue)
+		void ChunkParameter::InitializeHeader(ChunkParameterType parameterType)
 		{
 			MS_TRACE();
 
 			SetType(parameterType);
-			SetLengthField(lengthFieldValue);
+			SetLengthField(ChunkParameter::ChunkParameterHeaderLength);
 		}
 	} // namespace SCTP
 } // namespace RTC
