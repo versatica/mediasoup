@@ -296,6 +296,7 @@ namespace RTC
 			}
 			catch (const MediaSoupError& error)
 			{
+				delete clonedPacket;
 				delete clonedItem;
 
 				throw;

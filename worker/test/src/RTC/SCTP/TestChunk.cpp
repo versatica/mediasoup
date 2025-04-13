@@ -1,7 +1,12 @@
 #include "common.hpp"
 #include "helpers.hpp"
+#include "RTC/SCTP/Chunk.hpp"
+#include "RTC/SCTP/ChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
@@ -16,8 +21,10 @@ thread_local static uint8_t ChunkSerializeBuffer[15000];
 thread_local static uint8_t ChunkCloneBuffer[15000];
 thread_local static uint8_t ChunkCustomDataBuffer[15000];
 
+static void resetBuffers();
+
 static void checkChunk(
-  Chunk* chunk,
+  const Chunk* chunk,
   const uint8_t* buffer,
   size_t bufferLength,
   size_t length,
@@ -25,9 +32,18 @@ static void checkChunk(
   Chunk::ChunkType chunkType,
   bool unknownType,
   Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
-  uint8_t flags);
+  uint8_t flags,
+  size_t parametersCount);
 
-static void resetBuffers();
+static void checkChunkParameter(
+  const ChunkParameter* parameter,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  ChunkParameter::ChunkParameterType parameterType,
+  bool unknownType,
+  ChunkParameter::ActionForUnknownChunkParameterType actionForUnknownParameterType,
+  uint16_t valueLength);
 
 SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 {
@@ -48,7 +64,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 			0x12, 0x34, 0x12, 0x34,
 			// User Data (2 bytes): 0xABCD, 1 byte of padding
 			0xAB, 0xCD, 0xEF, 0x00,
-			// Extra bytes that should be ignored.
+			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
@@ -64,7 +80,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00001011);
+		  /*flags*/ 0b00001011,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == true);
 		REQUIRE(chunk->GetU() == false);
@@ -93,7 +110,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00001011);
+		  /*flags*/ 0b00001011,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == true);
 		REQUIRE(chunk->GetU() == false);
@@ -124,7 +142,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00001011);
+		  /*flags*/ 0b00001011,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetI() == true);
 		REQUIRE(clonedChunk->GetU() == false);
@@ -156,7 +175,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == false);
 		REQUIRE(chunk->GetU() == false);
@@ -177,7 +197,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		chunk->SetStreamIdentifierS(9988);
 		chunk->SetStreamSequenceNumberN(2211);
 		chunk->SetPayloadProtocolIdentifier(987654321);
-		// 3 byres + 1 byte of padding.
+		// 3 bytes + 1 byte of padding.
 		chunk->SetUserData(ChunkCustomDataBuffer, 3);
 
 		checkChunk(
@@ -189,7 +209,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00001001);
+		  /*flags*/ 0b00001001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == true);
 		REQUIRE(chunk->GetU() == false);
@@ -220,7 +241,8 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00001001);
+		  /*flags*/ 0b00001001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetI() == true);
 		REQUIRE(parsedChunk->GetU() == false);
@@ -247,6 +269,312 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 	}
 }
 
+SCENARIO("SCTP Hearbeat Chunk (4)", "[sctp][serializable]")
+{
+	resetBuffers();
+
+	SECTION("HeartbeatChunk::Parse()")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			// Type:4 (HEARTBEAT), Flags:0b00000000, Length: 22
+			// NOTE: Length field must exclude the padding of the last Parameter.
+			0x04, 0b00000000, 0x00, 0x16,
+			// Parameter 1: Type:1 (HEARBEAT INFO), Length: 11
+			0x00, 0x01, 0x00, 0x0B,
+			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			0x11, 0x22, 0x33, 0x44,
+			// 1 byte of padding
+			0x55, 0x66, 0x77, 0x00,
+			// Parameter 2: Type:49159 (UNKNOWN), Length: 6
+			0xC0, 0x07, 0x00, 0x06,
+			// Unknown data: 0xABCD, 2 bytes of padding
+			0xAB, 0xCD, 0x00, 0x00,
+			// Extra bytes that should be ignored
+			0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
+		auto* chunk = HeartbeatChunk::Parse(buffer, sizeof(buffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 24,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter1->GetInfo()[1] == 0x22);
+		REQUIRE(parameter1->GetInfo()[2] == 0x33);
+		REQUIRE(parameter1->GetInfo()[3] == 0x44);
+		REQUIRE(parameter1->GetInfo()[4] == 0x55);
+		REQUIRE(parameter1->GetInfo()[5] == 0x66);
+		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+
+		auto* parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
+		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
+		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
+
+		REQUIRE(!chunk->GetParameterAt(2));
+
+		/* Serialize it. */
+
+		chunk->Serialize(ChunkSerializeBuffer, sizeof(ChunkSerializeBuffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ ChunkSerializeBuffer,
+		  /*bufferLength*/ sizeof(ChunkSerializeBuffer),
+		  /*length*/ 24,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter1->GetInfo()[1] == 0x22);
+		REQUIRE(parameter1->GetInfo()[2] == 0x33);
+		REQUIRE(parameter1->GetInfo()[3] == 0x44);
+		REQUIRE(parameter1->GetInfo()[4] == 0x55);
+		REQUIRE(parameter1->GetInfo()[5] == 0x66);
+		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+
+		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
+		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
+		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
+
+		REQUIRE(!chunk->GetParameterAt(2));
+
+		/* Clone it. */
+
+		auto* clonedChunk = chunk->Clone(ChunkCloneBuffer, sizeof(ChunkCloneBuffer));
+
+		delete chunk;
+
+		checkChunk(
+		  /*chunk*/ clonedChunk,
+		  /*buffer*/ ChunkCloneBuffer,
+		  /*bufferLength*/ sizeof(ChunkCloneBuffer),
+		  /*length*/ 24,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter1->GetInfo()[1] == 0x22);
+		REQUIRE(parameter1->GetInfo()[2] == 0x33);
+		REQUIRE(parameter1->GetInfo()[3] == 0x44);
+		REQUIRE(parameter1->GetInfo()[4] == 0x55);
+		REQUIRE(parameter1->GetInfo()[5] == 0x66);
+		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+
+		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(clonedChunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
+		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
+		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
+
+		REQUIRE(!clonedChunk->GetParameterAt(2));
+
+		delete clonedChunk;
+	}
+
+	// TODO
+	// SECTION("HeartbeatChunk::Factory()")
+	// {
+	// 	auto* chunk = HeartbeatChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
+
+	// 	checkChunk(
+	// 	  /*chunk*/ chunk,
+	// 	  /*buffer*/ ChunkFactoryBuffer,
+	// 	  /*bufferLength*/ sizeof(ChunkFactoryBuffer),
+	// 	  /*length*/ 16,
+	// 	  /*frozen*/ false,
+	// 	  /*chunkType*/ Chunk::ChunkType::DATA,
+	// 	  /*unknownType*/ false,
+	// 	  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+	// 	  /*flags*/ 0b00000000,
+	//    /*parametersCount*/ 0);
+
+	// 	REQUIRE(chunk->GetI() == false);
+	// 	REQUIRE(chunk->GetU() == false);
+	// 	REQUIRE(chunk->GetI() == false);
+	// 	REQUIRE(chunk->GetI() == false);
+	// 	REQUIRE(chunk->GetTSN() == 0);
+	// 	REQUIRE(chunk->GetStreamIdentifierS() == 0);
+	// 	REQUIRE(chunk->GetStreamSequenceNumberN() == 0);
+	// 	REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
+	// 	REQUIRE(chunk->HasUserData() == false);
+	// 	REQUIRE(chunk->GetUserDataLength() == 0);
+
+	// 	/* Modify it. */
+
+	// 	chunk->SetI(true);
+	// 	chunk->SetE(true);
+	// 	chunk->SetTSN(12345678);
+	// 	chunk->SetStreamIdentifierS(9988);
+	// 	chunk->SetStreamSequenceNumberN(2211);
+	// 	chunk->SetPayloadProtocolIdentifier(987654321);
+	// 	// 3 bytes + 1 byte of padding.
+	// 	chunk->SetUserData(ChunkCustomDataBuffer, 3);
+
+	// 	checkChunk(
+	// 	  /*chunk*/ chunk,
+	// 	  /*buffer*/ ChunkFactoryBuffer,
+	// 	  /*bufferLength*/ sizeof(ChunkFactoryBuffer),
+	// 	  /*length*/ 16 + 3 + 1,
+	// 	  /*frozen*/ false,
+	// 	  /*chunkType*/ Chunk::ChunkType::DATA,
+	// 	  /*unknownType*/ false,
+	// 	  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+	// 	  /*flags*/ 0b00001001,
+	//    /*parametersCount*/ 0);
+
+	// 	REQUIRE(chunk->GetI() == true);
+	// 	REQUIRE(chunk->GetU() == false);
+	// 	REQUIRE(chunk->GetB() == false);
+	// 	REQUIRE(chunk->GetE() == true);
+	// 	REQUIRE(chunk->GetTSN() == 12345678);
+	// 	REQUIRE(chunk->GetStreamIdentifierS() == 9988);
+	// 	REQUIRE(chunk->GetStreamSequenceNumberN() == 2211);
+	// 	REQUIRE(chunk->GetPayloadProtocolIdentifier() == 987654321);
+	// 	REQUIRE(chunk->HasUserData() == true);
+	// 	REQUIRE(chunk->GetUserDataLength() == 3);
+	// 	REQUIRE(chunk->GetUserData()[0] == 0x00);
+	// 	REQUIRE(chunk->GetUserData()[1] == 0x01);
+	// 	REQUIRE(chunk->GetUserData()[2] == 0x02);
+	// 	// Last byte must be a zero byte padding.
+	// 	REQUIRE(chunk->GetUserData()[3] == 0x00);
+
+	// 	/* Parse itself and compare. */
+
+	// 	auto* parsedChunk = HeartbeatChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+
+	// 	checkChunk(
+	// 	  /*chunk*/ parsedChunk,
+	// 	  /*buffer*/ ChunkFactoryBuffer,
+	// 	  /*bufferLength*/ chunk->GetLength(),
+	// 	  /*length*/ 16 + 3 + 1,
+	// 	  /*frozen*/ true,
+	// 	  /*chunkType*/ Chunk::ChunkType::DATA,
+	// 	  /*unknownType*/ false,
+	// 	  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+	// 	  /*flags*/ 0b00001001,
+	//    /*parametersCount*/ 0);
+
+	// 	REQUIRE(parsedChunk->GetI() == true);
+	// 	REQUIRE(parsedChunk->GetU() == false);
+	// 	REQUIRE(parsedChunk->GetB() == false);
+	// 	REQUIRE(parsedChunk->GetE() == true);
+	// 	REQUIRE(parsedChunk->GetTSN() == 12345678);
+	// 	REQUIRE(parsedChunk->GetStreamIdentifierS() == 9988);
+	// 	REQUIRE(parsedChunk->GetStreamSequenceNumberN() == 2211);
+	// 	REQUIRE(parsedChunk->GetPayloadProtocolIdentifier() == 987654321);
+	// 	REQUIRE(parsedChunk->HasUserData() == true);
+	// 	REQUIRE(parsedChunk->GetUserDataLength() == 3);
+	// 	REQUIRE(parsedChunk->GetUserData()[0] == 0x00);
+	// 	REQUIRE(parsedChunk->GetUserData()[1] == 0x01);
+	// 	REQUIRE(parsedChunk->GetUserData()[2] == 0x02);
+	// 	REQUIRE(parsedChunk->GetUserData()[3] == 0x00);
+	// 	// Compare buffers.
+	// 	REQUIRE(
+	// 	  helpers::areBuffersEqual(
+	// 	    parsedChunk->GetBuffer(), parsedChunk->GetLength(), chunk->GetBuffer(),
+	// chunk->GetLength()) == 	  true);
+
+	// 	delete chunk;
+	// 	delete parsedChunk;
+	// }
+}
+
 SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 {
 	resetBuffers();
@@ -260,7 +588,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 			0x07, 0b00000000, 0x00, 0x08,
 			// Cumulative TSN Ack: 0x11223344,
 			0x11, 0x22, 0x33, 0x44,
-			// Extra bytes that should be ignored.
+			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
@@ -276,7 +604,8 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
 
@@ -293,7 +622,8 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
 
@@ -312,7 +642,8 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 0x11223344);
 
@@ -332,7 +663,8 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
 
@@ -349,7 +681,8 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 99887766);
 
@@ -366,7 +699,8 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 99887766);
 		// Compare buffers.
@@ -391,7 +725,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		{
 			// Type:8 (SHUTDOWN_ACK), Flags:0x00000000, Length: 4
 			0x08, 0b01000000, 0x00, 0x04,
-			// Extra bytes that should be ignored.
+			// Extra bytes that should be ignored
 			0xAA, 0xBB
 		};
 		// clang-format on
@@ -407,7 +741,8 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b01000000);
+		  /*flags*/ 0b01000000,
+		  /*parametersCount*/ 0);
 
 		/* Serialize it. */
 
@@ -422,7 +757,8 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b01000000);
+		  /*flags*/ 0b01000000,
+		  /*parametersCount*/ 0);
 
 		/* Clone it. */
 
@@ -439,7 +775,8 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b01000000);
+		  /*flags*/ 0b01000000,
+		  /*parametersCount*/ 0);
 
 		delete clonedChunk;
 	}
@@ -457,7 +794,8 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		/* Parse itself and compare. */
 
@@ -472,7 +810,8 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		// Compare buffers.
 		REQUIRE(
@@ -496,7 +835,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		{
 			// Type:11 (COOKIE_ACK), Flags:0x00000001, T: 1, Length: 4
 			0x0B, 0b00000101, 0x00, 0x04,
-			// Extra bytes that should be ignored.
+			// Extra bytes that should be ignored
 			0xAA
 		};
 		// clang-format on
@@ -512,7 +851,8 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000101);
+		  /*flags*/ 0b00000101,
+		  /*parametersCount*/ 0);
 
 		/* Serialize it. */
 
@@ -527,7 +867,8 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000101);
+		  /*flags*/ 0b00000101,
+		  /*parametersCount*/ 0);
 
 		/* Clone it. */
 
@@ -544,7 +885,8 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000101);
+		  /*flags*/ 0b00000101,
+		  /*parametersCount*/ 0);
 
 		delete clonedChunk;
 	}
@@ -562,7 +904,8 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		/* Modify it. */
 
@@ -575,7 +918,8 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		/* Parse itself and compare. */
 
@@ -590,7 +934,8 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		// Compare buffers.
 		REQUIRE(
@@ -614,7 +959,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		{
 			// Type:8 (SHUTDOWN_COMPLETE), Flags:0x00000001, T: 1, Length: 4
 			0x0E, 0b00000001, 0x00, 0x04,
-			// Extra bytes that should be ignored.
+			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD
 		};
 		// clang-format on
@@ -630,7 +975,8 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000001);
+		  /*flags*/ 0b00000001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
 
@@ -647,7 +993,8 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000001);
+		  /*flags*/ 0b00000001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
 
@@ -666,7 +1013,8 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000001);
+		  /*flags*/ 0b00000001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetT() == true);
 
@@ -686,7 +1034,8 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000000);
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == false);
 
@@ -703,7 +1052,8 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000001);
+		  /*flags*/ 0b00000001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
 
@@ -720,7 +1070,8 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		  /*flags*/ 0b00000001);
+		  /*flags*/ 0b00000001,
+		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetT() == true);
 		// Compare buffers.
@@ -747,7 +1098,7 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 			0xEE, 0b10001100, 0x00, 0x07,
 			// Unknown data: 0xAABBCC, 1 byte of padding
 			0xAA, 0xBB, 0xCC, 0x00,
-			// Extra bytes that should be ignored.
+			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
@@ -766,13 +1117,14 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
-		  /*flags*/ 0b10001100);
+		  /*flags*/ 0b10001100,
+		  /*parametersCount*/ 0);
 
-		REQUIRE(chunk->HasUnknownData() == true);
-		REQUIRE(chunk->GetUnknownDataLength() == 3);
-		REQUIRE(chunk->GetUnknownData()[0] == 0xAA);
-		REQUIRE(chunk->GetUnknownData()[1] == 0xBB);
-		REQUIRE(chunk->GetUnknownData()[2] == 0xCC);
+		REQUIRE(chunk->HasUnknownValue() == true);
+		REQUIRE(chunk->GetUnknownValueLength() == 3);
+		REQUIRE(chunk->GetUnknownValue()[0] == 0xAA);
+		REQUIRE(chunk->GetUnknownValue()[1] == 0xBB);
+		REQUIRE(chunk->GetUnknownValue()[2] == 0xCC);
 
 		/* Serialize it. */
 
@@ -787,13 +1139,14 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
-		  /*flags*/ 0b10001100);
+		  /*flags*/ 0b10001100,
+		  /*parametersCount*/ 0);
 
-		REQUIRE(chunk->HasUnknownData() == true);
-		REQUIRE(chunk->GetUnknownDataLength() == 3);
-		REQUIRE(chunk->GetUnknownData()[0] == 0xAA);
-		REQUIRE(chunk->GetUnknownData()[1] == 0xBB);
-		REQUIRE(chunk->GetUnknownData()[2] == 0xCC);
+		REQUIRE(chunk->HasUnknownValue() == true);
+		REQUIRE(chunk->GetUnknownValueLength() == 3);
+		REQUIRE(chunk->GetUnknownValue()[0] == 0xAA);
+		REQUIRE(chunk->GetUnknownValue()[1] == 0xBB);
+		REQUIRE(chunk->GetUnknownValue()[2] == 0xCC);
 
 		/* Clone it. */
 
@@ -810,39 +1163,17 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
-		  /*flags*/ 0b10001100);
+		  /*flags*/ 0b10001100,
+		  /*parametersCount*/ 0);
 
-		REQUIRE(clonedChunk->HasUnknownData() == true);
-		REQUIRE(clonedChunk->GetUnknownDataLength() == 3);
-		REQUIRE(clonedChunk->GetUnknownData()[0] == 0xAA);
-		REQUIRE(clonedChunk->GetUnknownData()[1] == 0xBB);
-		REQUIRE(clonedChunk->GetUnknownData()[2] == 0xCC);
+		REQUIRE(clonedChunk->HasUnknownValue() == true);
+		REQUIRE(clonedChunk->GetUnknownValueLength() == 3);
+		REQUIRE(clonedChunk->GetUnknownValue()[0] == 0xAA);
+		REQUIRE(clonedChunk->GetUnknownValue()[1] == 0xBB);
+		REQUIRE(clonedChunk->GetUnknownValue()[2] == 0xCC);
 
 		delete clonedChunk;
 	}
-}
-
-void checkChunk(
-  Chunk* chunk,
-  const uint8_t* buffer,
-  size_t bufferLength,
-  size_t length,
-  bool frozen,
-  Chunk::ChunkType chunkType,
-  bool unknownType,
-  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
-  uint8_t flags)
-{
-	REQUIRE(chunk);
-	REQUIRE(chunk->GetBuffer() == buffer);
-	REQUIRE(chunk->GetBufferLength() == bufferLength);
-	REQUIRE(chunk->GetLength() == length);
-	REQUIRE(chunk->IsFrozen() == frozen);
-	REQUIRE(chunk->GetType() == chunkType);
-	REQUIRE(chunk->HasUnknownType() == unknownType);
-	REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);
-	REQUIRE(chunk->GetFlags() == flags);
-	REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
 }
 
 void resetBuffers()
@@ -860,4 +1191,51 @@ void resetBuffers()
 	ChunkCustomDataBuffer[5] = 0x05;
 	ChunkCustomDataBuffer[6] = 0x06;
 	ChunkCustomDataBuffer[7] = 0x07;
+}
+
+void checkChunk(
+  const Chunk* chunk,
+  const uint8_t* buffer,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  Chunk::ChunkType chunkType,
+  bool unknownType,
+  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
+  uint8_t flags,
+  size_t parametersCount)
+{
+	REQUIRE(chunk);
+	REQUIRE(chunk->GetBuffer() == buffer);
+	REQUIRE(chunk->GetBufferLength() == bufferLength);
+	REQUIRE(chunk->GetLength() == length);
+	REQUIRE(chunk->IsFrozen() == frozen);
+	REQUIRE(chunk->GetType() == chunkType);
+	REQUIRE(chunk->HasUnknownType() == unknownType);
+	REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);
+	REQUIRE(chunk->GetFlags() == flags);
+	REQUIRE(chunk->HasParameters() == parametersCount > 0);
+	REQUIRE(chunk->GetParametersCount() == parametersCount);
+	REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
+}
+
+static void checkChunkParameter(
+  const ChunkParameter* parameter,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  ChunkParameter::ChunkParameterType parameterType,
+  bool unknownType,
+  ChunkParameter::ActionForUnknownChunkParameterType actionForUnknownParameterType,
+  uint16_t valueLength)
+{
+	REQUIRE(parameter);
+	REQUIRE(parameter->GetBufferLength() == bufferLength);
+	REQUIRE(parameter->GetLength() == length);
+	REQUIRE(parameter->IsFrozen() == frozen);
+	REQUIRE(parameter->GetType() == parameterType);
+	REQUIRE(parameter->HasUnknownType() == unknownType);
+	REQUIRE(parameter->GetActionForUnknownChunkParameterType() == actionForUnknownParameterType);
+	REQUIRE(parameter->HasValue() == valueLength > 0);
+	REQUIRE(parameter->GetValueLength() == valueLength);
 }

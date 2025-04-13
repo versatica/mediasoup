@@ -176,7 +176,7 @@ namespace RTC
 				return GetUserDataPointer();
 			}
 
-			size_t GetUserDataLength() const
+			uint16_t GetUserDataLength() const
 			{
 				if (!HasUserData())
 				{
@@ -186,7 +186,7 @@ namespace RTC
 				return GetLengthField() - DataChunk::DataChunkHeaderLength;
 			}
 
-			void SetUserData(const uint8_t* userData, size_t userDataLength);
+			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
 
 		private:
 			uint8_t* GetUserDataPointer() const

@@ -195,6 +195,8 @@ if get_option('ms_sctp_stack')
     'src/RTC/SCTP/chunks/ShutdownCompleteChunk.cpp',
     'src/RTC/SCTP/chunks/UnknownChunk.cpp',
     'src/RTC/SCTP/ChunkParameter.cpp',
+    'src/RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.cpp',
+    'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
   ]
 endif
 

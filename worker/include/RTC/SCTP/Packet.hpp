@@ -132,7 +132,7 @@ namespace RTC
 
 			bool HasChunks() const
 			{
-				return GetLength() > Packet::CommonHeaderLength;
+				return this->chunks.size() > 0;
 			}
 
 			size_t GetChunksCount() const
@@ -208,14 +208,6 @@ namespace RTC
 			{
 				return const_cast<uint8_t*>(GetBuffer()) + Packet::CommonHeaderLength;
 			}
-
-			/**
-			 * Must be used within Parse() static method (instead than AddChunk()).
-			 * This method doesn't serializa the given Chunk into Packet's buffer
-			 * since it's already serialized (obviously since we are parsing a
-			 * buffer).
-			 */
-			void AddParsedChunk(Chunk* chunk);
 
 		private:
 			// Chunks.

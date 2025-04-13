@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Unknown Chunk (DATA).
+		 * Unknown Chunk.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -17,7 +17,7 @@ namespace RTC
 		 * |  Chunk Type   |  Chunk Flags  |         Chunk Length          |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * \                                                               \
-		 * /                          Unknown Data                         /
+		 * /                          Unknown Value                        /
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
@@ -57,14 +57,14 @@ namespace RTC
 				return true;
 			}
 
-			bool HasUnknownData() const
+			bool HasUnknownValue() const
 			{
 				return GetLengthField() > Chunk::ChunkHeaderLength;
 			}
 
-			const uint8_t* GetUnknownData() const
+			const uint8_t* GetUnknownValue() const
 			{
-				if (!HasUnknownData())
+				if (!HasUnknownValue())
 				{
 					return nullptr;
 				}
@@ -72,9 +72,9 @@ namespace RTC
 				return GetValuePointer();
 			}
 
-			size_t GetUnknownDataLength() const
+			size_t GetUnknownValueLength() const
 			{
-				if (!HasUnknownData())
+				if (!HasUnknownValue())
 				{
 					return 0u;
 				}

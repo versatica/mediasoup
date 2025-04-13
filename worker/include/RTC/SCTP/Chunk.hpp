@@ -6,6 +6,7 @@
 #include "RTC/Serializable.hpp"
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace RTC
 {
@@ -43,7 +44,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			using ParametersIterator = typename std::vector<ChunkParameter*>::const_iterator;
+			using ChunkParametersIterator = typename std::vector<ChunkParameter*>::const_iterator;
 
 		public:
 			/**
@@ -144,7 +145,7 @@ namespace RTC
 			  const uint8_t* buffer,
 			  size_t bufferLength,
 			  ChunkType& chunkType,
-			  size_t& chunkLength,
+			  uint16_t& chunkLength,
 			  uint8_t& padding);
 
 			static const std::string& ChunkType2String(ChunkType chunkType);
@@ -163,9 +164,11 @@ namespace RTC
 			virtual ~Chunk() override;
 
 			/**
-			 * NOTE: Should be overridden by each subclass.
+			 * Should be overridden by each subclass.
 			 */
 			virtual void Dump() const override;
+
+			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
 			/**
 			 * Can be overridden by each subclass.
@@ -188,7 +191,7 @@ namespace RTC
 
 			virtual ActionForUnknownChunkType GetActionForUnknownChunkType() const final
 			{
-				return static_cast<ActionForUnknownChunkType>(static_cast<uint8_t>(GetType()) >> 6);
+				return static_cast<ActionForUnknownChunkType>(GetBuffer()[0] >> 6);
 			}
 
 			virtual uint8_t GetFlags() const final
@@ -196,7 +199,76 @@ namespace RTC
 				return GetHeaderPointer()->flags;
 			}
 
+			virtual bool HasParameters() const final
+			{
+				return this->parameters.size() > 0;
+			}
+
+			virtual size_t GetParametersCount() const final
+			{
+				return this->parameters.size();
+			}
+
+			virtual ChunkParametersIterator ParametersBegin() const final
+			{
+				return this->parameters.begin();
+			}
+
+			virtual ChunkParametersIterator ParametersEnd() const final
+			{
+				return this->parameters.end();
+			}
+
+			virtual const ChunkParameter* GetParameterAt(size_t idx) const final
+			{
+				if (idx >= this->parameters.size())
+				{
+					return nullptr;
+				}
+
+				return this->parameters[idx];
+			}
+
+			/**
+			 * Clone given Chunk Parameter into Chunk's buffer.
+			 *
+			 * @remarks
+			 * Once this method is called, the caller may want to free the original
+			 * given Chunk Parameter.
+			 */
+			virtual void AddParameter(const ChunkParameter* parameter) final;
+
+			/**
+			 * Build a Chunk Parameter within the Chunk's buffer and append it to the
+			 * list of Chunk Parameters. The caller can perform modifications in that
+			 * Parameter and those will affect the Chunk body where the Parameter is
+			 * serialzed.
+			 *
+			 * @returns Pointer of the created Chunk Parameter specific class.
+			 *
+			 * @remarks
+			 * - The caller MUST invoke `Consolidate()` once the Parameter is
+			 *   completed.
+			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Parameter
+			 *   is in progress.
+			 * - The caller MUST NOT free the obtained Parameter pointer since it's
+			 *   now part of the Chunk.
+			 * - The caller may want to cast the obtained Parameter to the specific
+			 *   Chunk Parameter subclass based on given `parameterType`:
+			 *   ```c++
+			 *   auto* parameter = reinterpret_cast<HearbeatInfoChunkParameter*>(
+			 *     chunk->BuildParameterInPlace(
+			 *       ChunkParameter::ChunkParameterType::HEARTBEAT_INFO
+			 *     )
+			 *   );
+			 *   ```
+			 */
+			virtual ChunkParameter* BuildParameterInPlace(
+			  ChunkParameter::ChunkParameterType parameterType) final;
+
 		protected:
+			virtual void CloneInto(Serializable* serializable) const override final;
+
 			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;
 
 			/**
@@ -326,6 +398,32 @@ namespace RTC
 
 				return GetLengthField() - Chunk::ChunkHeaderLength;
 			}
+
+			/**
+			 * To be called by each subclass of Chunk if Chunk Parameters parsing is
+			 * needed.
+			 *
+			 * @param buffer Buffer where Parameters maybe located.
+			 * @param bufferLength Total length of the Parameters.
+			 *
+			 * @return True if no error happened while parsing Parameters.
+			 */
+			virtual bool ParseParameters(const uint8_t* buffer, uint16_t bufferLength) final;
+
+		private:
+			virtual void SetType(ChunkType type) final
+			{
+				GetHeaderPointer()->type = type;
+			}
+
+			virtual void SetFlags(uint8_t flags) final
+			{
+				GetHeaderPointer()->flags = flags;
+			}
+
+		private:
+			// Chunk Parameters.
+			std::vector<ChunkParameter*> parameters;
 		};
 	} // namespace SCTP
 } // namespace RTC

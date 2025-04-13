@@ -27,14 +27,14 @@ namespace RTC
 		  const uint8_t* buffer,
 		  size_t bufferLength,
 		  ChunkParameterType& parameterType,
-		  size_t& parameterLength,
+		  uint16_t& parameterLength,
 		  uint8_t& padding)
 		{
 			MS_TRACE();
 
 			if (bufferLength < ChunkParameter::ChunkParameterHeaderLength)
 			{
-				MS_WARN_TAG(sctp, "no space for SCTP Chunk Header [bufferLength:%zu]", bufferLength);
+				MS_WARN_TAG(sctp, "no space for SCTP Chunk Parameter Header [bufferLength:%zu]", bufferLength);
 
 				return false;
 			}
@@ -42,7 +42,8 @@ namespace RTC
 			const auto* parameterHeader =
 			  reinterpret_cast<const ChunkParameter::ChunkParameterHeader*>(buffer);
 
-			parameterType   = parameterHeader->type;
+			parameterType = static_cast<ChunkParameterType>(
+			  uint16_t{ ntohs(static_cast<uint16_t>(parameterHeader->type)) });
 			parameterLength = uint16_t{ ntohs(parameterHeader->length) };
 
 			if (parameterLength < ChunkParameter::ChunkParameterHeaderLength)
@@ -100,6 +101,10 @@ namespace RTC
 		  : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
+
+			// NOTE: No need to this in each subclass since header of Chunk
+			// Parameters has fixed length.
+			SetLength(ChunkParameter::ChunkParameterHeaderLength);
 		}
 
 		ChunkParameter::~ChunkParameter()
@@ -138,7 +143,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			GetHeaderPointer()->type = parameterType;
+			SetType(parameterType);
 			SetLengthField(lengthFieldValue);
 		}
 	} // namespace SCTP

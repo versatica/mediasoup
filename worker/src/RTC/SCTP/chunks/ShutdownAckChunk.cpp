@@ -16,7 +16,7 @@ namespace RTC
 			MS_TRACE();
 
 			Chunk::ChunkType chunkType;
-			size_t chunkLength;
+			uint16_t chunkLength;
 			uint8_t padding;
 
 			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength, padding))
@@ -26,7 +26,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::SHUTDOWN_ACK)
 			{
-				MS_WARN_DEV("invalid chunk type");
+				MS_WARN_DEV("invalid Chunk type");
 
 				return nullptr;
 			}

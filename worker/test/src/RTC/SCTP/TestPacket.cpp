@@ -138,11 +138,11 @@ SCENARIO("parse SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(chunk2->GetType() == static_cast<Chunk::ChunkType>(0xEE));
 	REQUIRE(chunk2->HasUnknownType() == true);
 	REQUIRE(chunk2->GetFlags() == 0b00001100);
-	REQUIRE(chunk2->HasUnknownData() == true);
-	REQUIRE(chunk2->GetUnknownDataLength() == 3);
-	REQUIRE(chunk2->GetUnknownData()[0] == 0xAA);
-	REQUIRE(chunk2->GetUnknownData()[1] == 0xBB);
-	REQUIRE(chunk2->GetUnknownData()[2] == 0xCC);
+	REQUIRE(chunk2->HasUnknownValue() == true);
+	REQUIRE(chunk2->GetUnknownValueLength() == 3);
+	REQUIRE(chunk2->GetUnknownValue()[0] == 0xAA);
+	REQUIRE(chunk2->GetUnknownValue()[1] == 0xBB);
+	REQUIRE(chunk2->GetUnknownValue()[2] == 0xCC);
 	REQUIRE(helpers::areBuffersEqual(chunk2->GetBuffer(), chunk2->GetLength(), buffer + 32, 8) == true);
 
 	// Must throw if we try to modify chunks within the packet because they are

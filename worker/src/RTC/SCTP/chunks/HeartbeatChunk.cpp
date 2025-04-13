@@ -17,7 +17,7 @@ namespace RTC
 			MS_TRACE();
 
 			Chunk::ChunkType chunkType;
-			size_t chunkLength;
+			uint16_t chunkLength;
 			uint8_t padding;
 
 			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength, padding))
@@ -27,14 +27,24 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::HEARTBEAT)
 			{
-				MS_WARN_DEV("invalid chunk type");
+				MS_WARN_DEV("invalid Chunk type");
 
 				return nullptr;
 			}
 
 			auto* chunk = new HeartbeatChunk(buffer, bufferLength);
 
-			// TODO: Parse Parameters.
+			// NOTE: We include the computed Chunk padding into the length of the Chunk
+			// Parameters to simplify the parsing so all Parameters must have a total
+			// length multiple of 4 bytes.
+
+			if (!chunk->ParseParameters(chunk->GetValuePointer(), chunk->GetValueLength() + padding))
+			{
+				MS_WARN_DEV("failed to parse Chunk Parameters");
+
+				delete chunk;
+				return nullptr;
+			}
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -92,7 +102,14 @@ namespace RTC
 			  static_cast<uint8_t>(GetType()),
 			  Chunk::ChunkType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
-			// TODO: Parameters.
+			MS_DUMP("  has parameters: %s", HasParameters() ? "yes" : "no");
+			MS_DUMP("  parameters count: %zu", GetParametersCount());
+			for (auto it = ParametersBegin(); it != ParametersEnd(); ++it)
+			{
+				const auto* parameter = *it;
+
+				parameter->Dump();
+			}
 			MS_DUMP("</HeartbeatChunk>");
 		}
 

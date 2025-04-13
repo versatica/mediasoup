@@ -17,7 +17,7 @@ namespace RTC
 			MS_TRACE();
 
 			Chunk::ChunkType chunkType;
-			size_t chunkLength;
+			uint16_t chunkLength;
 			uint8_t padding;
 
 			if (!Chunk::IsChunk(buffer, bufferLength, chunkType, chunkLength, padding))
@@ -27,7 +27,7 @@ namespace RTC
 
 			if (chunkType != Chunk::ChunkType::DATA)
 			{
-				MS_WARN_DEV("invalid chunk type");
+				MS_WARN_DEV("invalid Chunk type");
 
 				return nullptr;
 			}
@@ -112,7 +112,7 @@ namespace RTC
 			MS_DUMP("  stream identifier S: %" PRIu16, GetStreamIdentifierS());
 			MS_DUMP("  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
 			MS_DUMP("  payload protocol identifier: %" PRIu32, GetPayloadProtocolIdentifier());
-			MS_DUMP("  user data length: %zu", GetUserDataLength());
+			MS_DUMP("  user data length: %" PRIu16, GetUserDataLength());
 			MS_DUMP("</DataChunk>");
 		}
 
@@ -199,7 +199,7 @@ namespace RTC
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
-		void DataChunk::SetUserData(const uint8_t* userData, size_t userDataLength)
+		void DataChunk::SetUserData(const uint8_t* userData, uint16_t userDataLength)
 		{
 			MS_TRACE();
 
@@ -209,7 +209,7 @@ namespace RTC
 			auto newNotPaddedLength     = GetLength() - previousUserDataLength + userDataLength;
 			auto newPaddedLength        = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
-			// Let's call SetLength() on parent with the new computed chunk length.
+			// Let's call SetLength() on parent with the new computed Chunk length.
 			// NOTE: If there is no space in the buffer for it, it will throw.
 			// NOTE: Chunks must be padded to 4 bytes.
 			SetLength(newPaddedLength);

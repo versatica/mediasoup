@@ -237,7 +237,7 @@ namespace RTC
 		 * @throw MediaSoupError - If the buffer length of the given `serializable`
 		 *   is too small.
 		 */
-		virtual void CloneInto(Serializable* serializable) const final;
+		virtual void CloneInto(Serializable* serializable) const;
 
 		/**
 		 * Fill the last `padding` bytes of the buffer with zeros.

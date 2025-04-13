@@ -11,7 +11,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Optional/Variable-Length Parameter Format.
+		 * SCTP Chunk Parameter.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -101,7 +101,7 @@ namespace RTC
 			  const uint8_t* buffer,
 			  size_t bufferLength,
 			  ChunkParameterType& parameterType,
-			  size_t& parameterLength,
+			  uint16_t& parameterLength,
 			  uint8_t& padding);
 
 			static const std::string& ChunkParameterType2String(ChunkParameterType parameterType);
@@ -131,7 +131,8 @@ namespace RTC
 
 			virtual ChunkParameterType GetType() const final
 			{
-				return GetHeaderPointer()->type;
+				return static_cast<ChunkParameterType>(
+				  uint16_t{ ntohs(static_cast<uint16_t>(GetHeaderPointer()->type)) });
 			}
 
 			/**
@@ -145,15 +146,36 @@ namespace RTC
 
 			virtual ActionForUnknownChunkParameterType GetActionForUnknownChunkParameterType() const final
 			{
-				return static_cast<ActionForUnknownChunkParameterType>(static_cast<uint16_t>(GetType()) >> 6);
+				return static_cast<ActionForUnknownChunkParameterType>(GetBuffer()[0] >> 6);
+			}
+
+			/**
+			 * Whether the Parameter has a value (greater than 0 bytes).
+			 */
+			virtual bool HasValue() const final
+			{
+				return GetLengthField() > ChunkParameter::ChunkParameterHeaderLength;
+			}
+
+			/**
+			 * Length of the Parameter value.
+			 */
+			virtual uint16_t GetValueLength() const final
+			{
+				if (!HasValue())
+				{
+					return 0u;
+				}
+
+				return GetLengthField() - ChunkParameter::ChunkParameterHeaderLength;
 			}
 
 		protected:
 			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
 
 			/**
-			 * NOTE: Return ChunkParameterHeader* instead of const ChunkParameterHeader*
-			 * since we may want to modify its fields.
+			 * NOTE: Return ChunkParameterHeader* instead of const
+			 * ChunkParameterHeader* since we may want to modify its fields.
 			 */
 			virtual ChunkParameterHeader* GetHeaderPointer() const final
 			{
@@ -174,24 +196,16 @@ namespace RTC
 				GetHeaderPointer()->length = uint16_t{ htons(length) };
 			}
 
-			virtual bool HasValue() const final
-			{
-				return GetLengthField() > ChunkParameter::ChunkParameterHeaderLength;
-			}
-
 			virtual uint8_t* GetValuePointer() const final
 			{
 				return const_cast<uint8_t*>(GetBuffer()) + ChunkParameter::ChunkParameterHeaderLength;
 			}
 
-			virtual uint16_t GetValueLength() const final
+		private:
+			virtual void SetType(ChunkParameterType type) final
 			{
-				if (!HasValue())
-				{
-					return 0u;
-				}
-
-				return GetLengthField() - ChunkParameter::ChunkParameterHeaderLength;
+				GetHeaderPointer()->type =
+				  static_cast<ChunkParameterType>(uint16_t{ htons(static_cast<uint16_t>(type)) });
 			}
 		};
 	} // namespace SCTP

@@ -55,13 +55,13 @@ namespace RTC
 			while (ptr < buffer + bufferLength)
 			{
 				// The remaining length in the buffer is the potential buffer length
-				// of the chunk.
+				// of the Chunk.
 				size_t chunkMaxBufferLength = bufferLength - (ptr - buffer);
 
-				// Here we must anticipate the type of each chunk to use its appropriate
+				// Here we must anticipate the type of each Chunk to use its appropriate
 				// parser.
 				Chunk::ChunkType chunkType;
-				size_t chunkLength;
+				uint16_t chunkLength;
 				uint8_t padding;
 
 				if (!Chunk::IsChunk(ptr, chunkMaxBufferLength, chunkType, chunkLength, padding))
@@ -76,6 +76,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("parsing SCTP Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
+				// TODO
 				switch (chunkType)
 				{
 					case Chunk::ChunkType::DATA:
@@ -132,9 +133,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				// Here we are parsing so we don't use AddChunk() (that clones the
-				// Chunk into the Packet buffer) but AddParsedChunk().
-				packet->AddParsedChunk(chunk);
+				packet->chunks.push_back(chunk);
 
 				ptr += chunk->GetLength();
 			}
@@ -250,14 +249,15 @@ namespace RTC
 
 			CloneInto(clonedPacket);
 
-			// Add a new parsed Chunk for each Chunk in this Packet and make it
-			// pointer point to its position in the new buffer.
+			// Add a new parsed Chunk for each Chunk in this Packet and make it point
+			// to its position in the new buffer.
 			for (const auto* chunk : this->chunks)
 			{
 				size_t offset = chunk->GetBuffer() - GetBuffer();
 
 				Chunk* clonedChunk{ nullptr };
 
+				// TODO
 				switch (chunk->GetType())
 				{
 					case Chunk::ChunkType::DATA:
@@ -316,14 +316,16 @@ namespace RTC
 				}
 				catch (const MediaSoupError& error)
 				{
+					delete clonedPacket;
 					delete clonedChunk;
 
 					throw;
 				}
 
-				// Add it to the list as it if had been parsed (because it's already in
-				// the new buffer).
-				clonedPacket->AddParsedChunk(clonedChunk);
+				// Chunk constructors don't freeze the Chunk so we must do it manually.
+				clonedChunk->Freeze();
+
+				clonedPacket->chunks.push_back(clonedChunk);
 			}
 
 			return clonedPacket;
@@ -373,11 +375,11 @@ namespace RTC
 
 			size_t length = GetLength() + chunk->GetLength();
 
-			// Let's append the chunk at the end of existing chunks.
+			// Let's append the Chunk at the end of existing Chunks.
 			auto* clonedChunk =
 			  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), chunk->GetLength());
 
-			// Freeze the cloned chunk.
+			// Freeze the cloned Chunk.
 			clonedChunk->Freeze();
 
 			this->chunks.push_back(clonedChunk);
@@ -396,9 +398,10 @@ namespace RTC
 			// at the end of the Packet.
 			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 			// The remaining length in the buffer is the potential buffer length
-			// of the chunk.
+			// of the Chunk.
 			size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
 
+			// TODO
 			switch (chunkType)
 			{
 				case Chunk::ChunkType::DATA:
@@ -475,16 +478,6 @@ namespace RTC
 			SetDestinationPort(0u);
 			SetVerificationTag(0u);
 			SetChecksum(0u);
-		}
-
-		void Packet::AddParsedChunk(Chunk* chunk)
-		{
-			MS_TRACE();
-
-			// Freeze the chunk.
-			chunk->Freeze();
-
-			this->chunks.push_back(chunk);
 		}
 	} // namespace SCTP
 } // namespace RTC
