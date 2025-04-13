@@ -23,11 +23,7 @@
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
-// TODO: For testing purposes. Must be removed.
-#ifdef MS_SCTP_STACK
 #include "RTC/SCTP/FuzzerPacket.hpp"
-#endif
-#include "RTC/TestSerializable/FuzzerFooPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
 #include <sstream> // std::istringstream()
@@ -66,13 +62,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		Fuzzer::RTC::DtlsTransport::Fuzz(data, len);
 	}
 
-// TODO: For testing purposes. Must be removed.
-#ifdef MS_SCTP_STACK
 	if (fuzzSctp)
 	{
 		Fuzzer::RTC::SCTP::Packet::Fuzz(data, len);
 	}
-#endif
 
 	if (fuzzRtp)
 	{
@@ -101,7 +94,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	{
 		Fuzzer::Utils::Fuzz(data, len);
 		Fuzzer::RTC::TrendCalculator::Fuzz(data, len);
-		Fuzzer::RTC::FooPacket::Fuzz(data, len);
 	}
 
 	return 0;
@@ -154,15 +146,12 @@ int Init()
 		fuzzDtls = true;
 	}
 
-// TODO: For testing purposes. Must be removed.
-#ifdef MS_SCTP_STACK
 	if (std::getenv("MS_FUZZ_SCTP") && std::string(std::getenv("MS_FUZZ_SCTP")) == "1")
 	{
 		std::cout << "[fuzzer] SCTP fuzzer enabled" << std::endl;
 
 		fuzzSctp = true;
 	}
-#endif
 
 	if (std::getenv("MS_FUZZ_RTP") && std::string(std::getenv("MS_FUZZ_RTP")) == "1")
 	{

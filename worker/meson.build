@@ -180,25 +180,19 @@ common_sources = [
   'src/RTC/RTCP/XR.cpp',
   'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
+  'src/RTC/SCTP/Packet.cpp',
+  'src/RTC/SCTP/Chunk.cpp',
+  'src/RTC/SCTP/chunks/DataChunk.cpp',
+  'src/RTC/SCTP/chunks/HeartbeatChunk.cpp',
+  'src/RTC/SCTP/chunks/ShutdownChunk.cpp',
+  'src/RTC/SCTP/chunks/ShutdownAckChunk.cpp',
+  'src/RTC/SCTP/chunks/CookieAckChunk.cpp',
+  'src/RTC/SCTP/chunks/ShutdownCompleteChunk.cpp',
+  'src/RTC/SCTP/chunks/UnknownChunk.cpp',
+  'src/RTC/SCTP/ChunkParameter.cpp',
+  'src/RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.cpp',
+  'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
 ]
-
-# TODO: Move to common_sources array once it's tested.
-if get_option('ms_sctp_stack')
-  common_sources += [
-    'src/RTC/SCTP/Packet.cpp',
-    'src/RTC/SCTP/Chunk.cpp',
-    'src/RTC/SCTP/chunks/DataChunk.cpp',
-    'src/RTC/SCTP/chunks/HeartbeatChunk.cpp',
-    'src/RTC/SCTP/chunks/ShutdownChunk.cpp',
-    'src/RTC/SCTP/chunks/ShutdownAckChunk.cpp',
-    'src/RTC/SCTP/chunks/CookieAckChunk.cpp',
-    'src/RTC/SCTP/chunks/ShutdownCompleteChunk.cpp',
-    'src/RTC/SCTP/chunks/UnknownChunk.cpp',
-    'src/RTC/SCTP/ChunkParameter.cpp',
-    'src/RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.cpp',
-    'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
-  ]
-endif
 
 openssl_proj = subproject(
   'openssl',
@@ -362,12 +356,6 @@ test_sources = [
   'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
   'test/src/RTC/TestTransportCongestionControlServer.cpp',
-  'test/src/RTC/TestSerializable.cpp',
-  'test/src/RTC/TestSerializable/FooPacket.cpp',
-  'test/src/RTC/TestSerializable/FooItem.cpp',
-  'test/src/RTC/TestSerializable/FooNumericItem.cpp',
-  'test/src/RTC/TestSerializable/FooTextItem.cpp',
-  'test/src/RTC/TestSerializable/FooUnknownItem.cpp',
   'test/src/RTC/Codecs/TestVP8.cpp',
   'test/src/RTC/Codecs/TestVP9.cpp',
   'test/src/RTC/Codecs/TestH264.cpp',
@@ -393,20 +381,14 @@ test_sources = [
   'test/src/RTC/RTCP/TestSenderReport.cpp',
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
+  'test/src/RTC/SCTP/TestPacket.cpp',
+  'test/src/RTC/SCTP/TestChunk.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',
   'test/src/Utils/TestIP.cpp',
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
 ]
-
-# TODO: Move to test_sources array once it's tested.
-if get_option('ms_sctp_stack')
-  test_sources += [
-    'test/src/RTC/SCTP/TestPacket.cpp',
-    'test/src/RTC/SCTP/TestChunk.cpp',
-  ]
-endif
 
 mediasoup_worker_test = executable(
   'mediasoup-worker-test',
@@ -559,22 +541,8 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/RTCP/FuzzerSdes.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerSenderReport.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerXr.cpp',
-  'fuzzer/src/RTC/TestSerializable/FuzzerFooPacket.cpp',
-  # These files from test/ folder are needed for
-  # TestSerializable/FuzzerFooPacket.cpp.
-  'test/src/RTC/TestSerializable/FooPacket.cpp',
-  'test/src/RTC/TestSerializable/FooItem.cpp',
-  'test/src/RTC/TestSerializable/FooNumericItem.cpp',
-  'test/src/RTC/TestSerializable/FooTextItem.cpp',
-  'test/src/RTC/TestSerializable/FooUnknownItem.cpp',
+  'fuzzer/src/RTC/SCTP/FuzzerPacket.cpp'
 ]
-
-# TODO: Move to fuzzer_sources array once it's tested.
-if get_option('ms_sctp_stack')
-  fuzzer_sources += [
-    'fuzzer/src/RTC/SCTP/FuzzerPacket.cpp'
-  ]
-endif
 
 executable(
   'mediasoup-worker-fuzzer',
@@ -586,8 +554,6 @@ executable(
   include_directories: include_directories(
     'include',
     'fuzzer/include',
-    # We need to include header files from test/include/RTC/TestSerializable/.
-    'test/include',
   ),
   cpp_args: cpp_args + [
     '-DMS_LOG_STD',
