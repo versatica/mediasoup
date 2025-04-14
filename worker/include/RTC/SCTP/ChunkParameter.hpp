@@ -49,6 +49,8 @@ namespace RTC
 			enum class ChunkParameterType : uint16_t
 			{
 				HEARTBEAT_INFO = 0x0001,
+				IPV4_ADDRESS   = 0x0005,
+				IPV6_ADDRESS   = 0x0006,
 				// TODO
 			};
 
@@ -176,7 +178,7 @@ namespace RTC
 			 */
 			virtual void DumpCommon(int indentation) const final;
 
-			virtual void InitializeHeader(ChunkParameterType parameterType) final;
+			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
 
 			/**
 			 * NOTE: Return ChunkParameterHeader* instead of const

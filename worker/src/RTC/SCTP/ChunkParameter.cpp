@@ -17,6 +17,8 @@ namespace RTC
 		std::unordered_map<ChunkParameter::ChunkParameterType, std::string> ChunkParameter::chunkParameterType2String =
 		{
 			{ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO, "HEARTBEAT_INFO" },
+			{ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,   "IPV4_ADDRESS"   },
+			{ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,   "IPV6_ADDRESS"   },
 			// TODO
 		};
 		// clang-format on
@@ -101,10 +103,6 @@ namespace RTC
 		  : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
-
-			// NOTE: No need to this in each subclass since header of Chunk
-			// Parameters has fixed length.
-			SetLength(ChunkParameter::ChunkParameterHeaderLength);
 		}
 
 		ChunkParameter::~ChunkParameter()
@@ -150,12 +148,12 @@ namespace RTC
 			  GetValueLength());
 		}
 
-		void ChunkParameter::InitializeHeader(ChunkParameterType parameterType)
+		void ChunkParameter::InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue)
 		{
 			MS_TRACE();
 
 			SetType(parameterType);
-			SetLengthField(ChunkParameter::ChunkParameterHeaderLength);
+			SetLengthField(lengthFieldValue);
 		}
 
 		void ChunkParameter::SetLengthField(size_t length)

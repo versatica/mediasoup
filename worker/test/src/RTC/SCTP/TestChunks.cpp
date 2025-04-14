@@ -18,11 +18,11 @@
 
 using namespace RTC::SCTP;
 
-thread_local static uint8_t ChunkFactoryBuffer[66666];
-thread_local static uint8_t ChunkSerializeBuffer[66666];
-thread_local static uint8_t ChunkCloneBuffer[66666];
-thread_local static uint8_t ChunkCustomDataBuffer[66666];
-thread_local static uint8_t ThrowBuffer[66666];
+thread_local static uint8_t ChunkFactoryBuffer[66661];
+thread_local static uint8_t ChunkSerializeBuffer[66662];
+thread_local static uint8_t ChunkCloneBuffer[66663];
+thread_local static uint8_t ChunkCustomDataBuffer[66664];
+thread_local static uint8_t ThrowBuffer[66665];
 
 static void resetBuffers();
 
@@ -52,7 +52,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("DataChunk::Parse()")
+	SECTION("DataChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -165,7 +165,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("DataChunk::Factory()")
+	SECTION("DataChunk::Factory() succeeds")
 	{
 		auto* chunk = DataChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -309,7 +309,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("HeartbeatChunk::Parse()")
+	SECTION("HeartbeatChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -317,9 +317,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 			// Type:4 (HEARTBEAT), Flags:0b00000000, Length: 22
 			// NOTE: Length field must exclude the padding of the last Parameter.
 			0x04, 0b00000000, 0x00, 0x16,
-			// Parameter 1: Type:1 (HEARBEAT INFO), Length: 11
+			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
@@ -503,7 +503,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("HeartbeatChunk::Parse() with incorrect but valid Chunk Length field")
+	SECTION("HeartbeatChunk::Parse() with incorrect but valid Chunk Length field succeeds")
 	{
 		// Here the chunk has incorrect Chunk Length field with value 24 instead of
 		// 22. It's incorrect because, as per RFC 9260:
@@ -520,9 +520,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 			// Type:4 (HEARTBEAT), Flags:0b00000000, Length: 24
 			// NOTE: Length field must exclude the padding of the last Parameter.
 			0x04, 0b00000000, 0x00, 0x18,
-			// Parameter 1: Type:1 (HEARBEAT INFO), Length: 11
+			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
@@ -706,7 +706,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("HeartbeatChunk::Factory()")
+	SECTION("HeartbeatChunk::Factory() succeeds")
 	{
 		auto* chunk = HeartbeatChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -911,7 +911,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("HeartbeatAckChunk::Parse()")
+	SECTION("HeartbeatAckChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -919,9 +919,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 			// Type:5 (HEARTBEAT_ACK), Flags:0b00000000, Length: 22
 			// NOTE: Length field must exclude the padding of the last Parameter.
 			0x05, 0b00000000, 0x00, 0x16,
-			// Parameter 1: Type:1 (HEARBEAT INFO), Length: 11
+			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
@@ -1105,7 +1105,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("HeartbeatAckChunk::Factory()")
+	SECTION("HeartbeatAckChunk::Factory() succeeds")
 	{
 		auto* chunk = HeartbeatAckChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -1281,7 +1281,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("ShutdownChunk::Parse()")
+	SECTION("ShutdownChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -1352,7 +1352,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("ShutdownChunk::Factory()")
+	SECTION("ShutdownChunk::Factory() succeeds")
 	{
 		auto* chunk = ShutdownChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -1420,7 +1420,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("ShutdownAckChunk::Parse()")
+	SECTION("ShutdownAckChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -1483,7 +1483,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("ShutdownAckChunk::Factory()")
+	SECTION("ShutdownAckChunk::Factory() succeeds")
 	{
 		auto* chunk = ShutdownAckChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -1530,7 +1530,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("CookieAckChunk::Parse()")
+	SECTION("CookieAckChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -1593,7 +1593,7 @@ SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("CookieAckChunk::Factory()")
+	SECTION("CookieAckChunk::Factory() succeeds")
 	{
 		auto* chunk = CookieAckChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -1654,7 +1654,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("ShutdownCompleteChunk::Parse()")
+	SECTION("ShutdownCompleteChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
@@ -1723,7 +1723,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("ShutdownCompleteChunk::Factory()")
+	SECTION("ShutdownCompleteChunk::Factory() succeeds")
 	{
 		auto* chunk = ShutdownCompleteChunk::Factory(ChunkFactoryBuffer, sizeof(ChunkFactoryBuffer));
 
@@ -1791,7 +1791,7 @@ SCENARIO("SCTP Unknown Chunk (238)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("UnknownChunk::Parse()")
+	SECTION("UnknownChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =

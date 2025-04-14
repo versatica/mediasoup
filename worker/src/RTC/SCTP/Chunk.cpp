@@ -6,6 +6,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include <cstring> // std::memmove()
 
@@ -214,6 +216,20 @@ namespace RTC
 
 					break;
 				}
+
+				case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
+				{
+					parameter = IPv4AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
+
+				case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
+				{
+					parameter = IPv6AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
 			}
 
 			// NOTE: Do not fix/update the Parameter buffer length since the caller
@@ -321,6 +337,22 @@ namespace RTC
 						break;
 					}
 
+					case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
+					{
+						clonedParameter =
+						  new IPv4AddressChunkParameter(chunk->GetBuffer() + offset, parameter->GetLength());
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
+					{
+						clonedParameter =
+						  new IPv6AddressChunkParameter(chunk->GetBuffer() + offset, parameter->GetLength());
+
+						break;
+					}
+
 					default:
 					{
 						clonedParameter =
@@ -408,6 +440,20 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
 					{
 						parameter = HeartbeatInfoChunkParameter::Parse(ptr, parameterLength + padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
+					{
+						parameter = IPv4AddressChunkParameter::Parse(ptr, parameterLength + padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
+					{
+						parameter = IPv6AddressChunkParameter::Parse(ptr, parameterLength + padding);
 
 						break;
 					}

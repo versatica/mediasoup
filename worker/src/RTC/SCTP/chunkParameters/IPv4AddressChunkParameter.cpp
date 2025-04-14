@@ -1,0 +1,135 @@
+#define MS_CLASS "RTC::SCTP::IPv4AddressChunkParameter"
+// #define MS_LOG_DEV_LEVEL 3
+
+#include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
+#include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
+#include <uv.h>
+#include <cstring> // std::memset(), std::memmove()
+
+namespace RTC
+{
+	namespace SCTP
+	{
+		/* Class methods. */
+
+		IPv4AddressChunkParameter* IPv4AddressChunkParameter::Parse(const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			ChunkParameter::ChunkParameterType parameterType;
+			uint16_t parameterLength;
+			uint8_t padding;
+
+			if (!ChunkParameter::IsChunkParameter(
+			      buffer, bufferLength, parameterType, parameterLength, padding))
+			{
+				return nullptr;
+			}
+
+			if (parameterType != ChunkParameter::ChunkParameterType::IPV4_ADDRESS)
+			{
+				MS_WARN_DEV("invalid Chunk Parameter type");
+
+				return nullptr;
+			}
+
+			if (parameterLength != IPv4AddressChunkParameter::IPv4AddressChunkParameterLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "IPv4AddressChunkParameter Length field must be %zu",
+				  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength);
+
+				return nullptr;
+			}
+
+			auto* parameter = new IPv4AddressChunkParameter(buffer, bufferLength);
+
+			// Mark the Parameter as frozen since we are parsing.
+			parameter->Freeze();
+
+			return parameter;
+		}
+
+		IPv4AddressChunkParameter* IPv4AddressChunkParameter::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < IPv4AddressChunkParameter::IPv4AddressChunkParameterLength)
+			{
+				MS_THROW_TYPE_ERROR("too small buffer");
+			}
+
+			auto* parameter = new IPv4AddressChunkParameter(buffer, bufferLength);
+
+			parameter->InitializeHeader(
+			  ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
+			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength);
+
+			// Must also initialize the IPv4 field to zero.
+			std::memset(
+			  parameter->GetValuePointer(),
+			  0x00,
+			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength -
+			    ChunkParameter::ChunkParameterHeaderLength);
+
+			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return parameter;
+		}
+
+		/* Instance methods. */
+
+		IPv4AddressChunkParameter::IPv4AddressChunkParameter(const uint8_t* buffer, size_t bufferLength)
+		  : ChunkParameter(buffer, bufferLength)
+		{
+			MS_TRACE();
+
+			SetLength(IPv4AddressChunkParameter::IPv4AddressChunkParameterLength);
+		}
+
+		IPv4AddressChunkParameter::~IPv4AddressChunkParameter()
+		{
+			MS_TRACE();
+		}
+
+		void IPv4AddressChunkParameter::Dump(int indentation) const
+		{
+			MS_TRACE();
+
+			char ipStr[INET_ADDRSTRLEN] = { 0 };
+
+			uv_inet_ntop(AF_INET, GetIPv4Address(), ipStr, sizeof(ipStr));
+
+			MS_DUMP_CLEAN(indentation, "<SCTP::IPv4AddressChunkParameter>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "  ipv4 address: %s", ipStr);
+			MS_DUMP_CLEAN(indentation, "</SCTP::IPv4AddressChunkParameter>");
+		}
+
+		IPv4AddressChunkParameter* IPv4AddressChunkParameter::Clone(uint8_t* buffer, size_t bufferLength) const
+		{
+			MS_TRACE();
+
+			auto* clonedItem = new IPv4AddressChunkParameter(buffer, bufferLength);
+
+			CloneInto(clonedItem);
+
+			return clonedItem;
+		}
+
+		void IPv4AddressChunkParameter::SetIPv4Address(const uint8_t* ip)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			std::memmove(
+			  GetValuePointer(),
+			  ip,
+			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength -
+			    ChunkParameter::ChunkParameterHeaderLength);
+		}
+	} // namespace SCTP
+} // namespace RTC

@@ -43,7 +43,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// No need to invoke SetLength() since parent constructor invoked it.
+			SetLength(ChunkParameter::ChunkParameterHeaderLength);
 		}
 
 		UnknownChunkParameter::~UnknownChunkParameter()

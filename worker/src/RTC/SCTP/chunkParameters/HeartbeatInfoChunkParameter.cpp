@@ -58,7 +58,9 @@ namespace RTC
 
 			auto* parameter = new HeartbeatInfoChunkParameter(buffer, bufferLength);
 
-			parameter->InitializeHeader(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO);
+			parameter->InitializeHeader(
+			  ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+			  ChunkParameter::ChunkParameterHeaderLength);
 
 			// No need to invoke SetLength() since parent constructor invoked it.
 
@@ -72,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// No need to invoke SetLength() since parent constructor invoked it.
+			SetLength(ChunkParameter::ChunkParameterHeaderLength);
 		}
 
 		HeartbeatInfoChunkParameter::~HeartbeatInfoChunkParameter()

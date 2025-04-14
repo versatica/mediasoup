@@ -192,6 +192,8 @@ common_sources = [
   'src/RTC/SCTP/chunks/UnknownChunk.cpp',
   'src/RTC/SCTP/ChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.cpp',
+  'src/RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.cpp',
+  'src/RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
 ]
 
@@ -384,6 +386,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/RTC/SCTP/TestPacket.cpp',
   'test/src/RTC/SCTP/TestChunks.cpp',
+  'test/src/RTC/SCTP/TestChunkParameters.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',
   'test/src/Utils/TestIP.cpp',
