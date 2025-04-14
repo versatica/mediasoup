@@ -67,11 +67,6 @@ namespace RTC
 			 */
 			const uint8_t* GetIPv4Address() const
 			{
-				if (!HasValue())
-				{
-					return nullptr;
-				}
-
 				return GetValuePointer();
 			}
 

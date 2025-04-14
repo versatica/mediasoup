@@ -70,11 +70,6 @@ namespace RTC
 			 */
 			const uint8_t* GetIPv6Address() const
 			{
-				if (!HasValue())
-				{
-					return nullptr;
-				}
-
 				return GetValuePointer();
 			}
 

@@ -194,6 +194,7 @@ common_sources = [
   'src/RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.cpp',
+  'src/RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
 ]
 

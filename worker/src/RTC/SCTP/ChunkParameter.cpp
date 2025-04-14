@@ -16,9 +16,10 @@ namespace RTC
 		// clang-format off
 		std::unordered_map<ChunkParameter::ChunkParameterType, std::string> ChunkParameter::chunkParameterType2String =
 		{
-			{ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO, "HEARTBEAT_INFO" },
-			{ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,   "IPV4_ADDRESS"   },
-			{ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,   "IPV6_ADDRESS"   },
+			{ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,      "HEARTBEAT_INFO"      },
+			{ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,        "IPV4_ADDRESS"        },
+			{ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,        "IPV6_ADDRESS"        },
+			{ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE, "COOKIE_PRESERVATIVE" },
 			// TODO
 		};
 		// clang-format on

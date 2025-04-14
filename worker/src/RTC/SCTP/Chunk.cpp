@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
@@ -230,6 +231,13 @@ namespace RTC
 
 					break;
 				}
+
+				case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
+				{
+					parameter = CookiePreservativeChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
 			}
 
 			// NOTE: Do not fix/update the Parameter buffer length since the caller
@@ -353,6 +361,14 @@ namespace RTC
 						break;
 					}
 
+					case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
+					{
+						clonedParameter = new CookiePreservativeChunkParameter(
+						  chunk->GetBuffer() + offset, parameter->GetLength());
+
+						break;
+					}
+
 					default:
 					{
 						clonedParameter =
@@ -454,6 +470,13 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
 					{
 						parameter = IPv6AddressChunkParameter::Parse(ptr, parameterLength + padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
+					{
+						parameter = CookiePreservativeChunkParameter::Parse(ptr, parameterLength + padding);
 
 						break;
 					}

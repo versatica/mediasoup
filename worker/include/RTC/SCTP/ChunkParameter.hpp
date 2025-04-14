@@ -48,9 +48,10 @@ namespace RTC
 			 */
 			enum class ChunkParameterType : uint16_t
 			{
-				HEARTBEAT_INFO = 0x0001,
-				IPV4_ADDRESS   = 0x0005,
-				IPV6_ADDRESS   = 0x0006,
+				HEARTBEAT_INFO      = 0x0001,
+				IPV4_ADDRESS        = 0x0005,
+				IPV6_ADDRESS        = 0x0006,
+				COOKIE_PRESERVATIVE = 0x0009,
 				// TODO
 			};
 
