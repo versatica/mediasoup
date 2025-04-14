@@ -141,15 +141,6 @@
 	((value & 0x02) ? '1' : '0'), \
 	((value & 0x01) ? '1' : '0')
 
-// Usage:
-//   MS_DEBUG_DEV("Leading text "MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(value));
-#define MS_UINT8_4BITS_TO_BINARY_PATTERN "%c%c%c%c"
-#define MS_UINT8_4BITS_TO_BINARY(value) \
-	((value & 0x08) ? '1' : '0'), \
-	((value & 0x04) ? '1' : '0'), \
-	((value & 0x02) ? '1' : '0'), \
-	((value & 0x01) ? '1' : '0')
-
 class Logger
 {
 public:

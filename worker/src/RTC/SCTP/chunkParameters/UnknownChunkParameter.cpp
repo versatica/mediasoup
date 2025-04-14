@@ -58,7 +58,7 @@ namespace RTC
 			MS_DUMP("<UnknownChunkParameter>");
 			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP(
-			  "  type: %" PRIu16 " (%s) (unknown:%s)",
+			  "  type: %" PRIu16 " (%s) (unknown: %s)",
 			  static_cast<uint16_t>(GetType()),
 			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
