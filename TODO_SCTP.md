@@ -15,6 +15,4 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
-- In `DataChunk::SetUserData()` and `HeartbeatInfoChunkParameter::SetInfo()` we should assert that given length is not greater than max of uint16_t minus the length of the Chunk or Parameter header. This is because Length field is uint16_t but it also includes the header length.
-
-- In tests make `Serialize()` and `Clone()` fail due to small buffer to see if ASAN shows some leak due to some pointer not released.
+- In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?

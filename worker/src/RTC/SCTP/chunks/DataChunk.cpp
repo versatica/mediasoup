@@ -104,6 +104,12 @@ namespace RTC
 			  static_cast<uint8_t>(GetType()),
 			  Chunk::ChunkType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
+			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
+			MS_DUMP(
+			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  HasValue() ? "yes" : "no",
+			  GetValueLength());
 			MS_DUMP("  flag I: %" PRIu8, GetI());
 			MS_DUMP("  flag U: %" PRIu8, GetU());
 			MS_DUMP("  flag B: %" PRIu8, GetB());
@@ -112,7 +118,10 @@ namespace RTC
 			MS_DUMP("  stream identifier S: %" PRIu16, GetStreamIdentifierS());
 			MS_DUMP("  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
 			MS_DUMP("  payload protocol identifier: %" PRIu32, GetPayloadProtocolIdentifier());
-			MS_DUMP("  user data length: %" PRIu16, GetUserDataLength());
+			MS_DUMP(
+			  "  user data length: %" PRIu16 " (has user data:%s)",
+			  GetUserDataLength(),
+			  HasUserData() ? "yes" : "no");
 			MS_DUMP("</DataChunk>");
 		}
 
@@ -205,20 +214,34 @@ namespace RTC
 
 			AssertNotFrozen();
 
+			auto previousLength         = GetLength();
+			auto previousLengthField    = GetLengthField();
 			auto previousUserDataLength = GetUserDataLength();
-			auto newNotPaddedLength     = GetLength() - previousUserDataLength + userDataLength;
+			auto newNotPaddedLength     = previousLength - previousUserDataLength + userDataLength;
 			auto newPaddedLength        = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
-			// Let's call SetLength() on parent with the new computed Chunk length.
-			// NOTE: If there is no space in the buffer for it, it will throw.
-			// NOTE: Chunks must be padded to 4 bytes.
-			SetLength(newPaddedLength);
+			try
+			{
+				// Let's call SetLength() on parent with the new computed Chunk length.
+				// NOTE: If there is no space in the buffer for it, it will throw.
+				// NOTE: Chunks must be padded to 4 bytes.
+				SetLength(newPaddedLength);
+
+				// Update the Chunk Length field.
+				// NOTE: This will throw if computed value is too big.
+				SetLengthField(newNotPaddedLength);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
 
 			// Copy the given user data into the buffer.
 			std::memmove(GetUserDataPointer(), userData, userDataLength);
-
-			// Update the Chunk Length field.
-			SetLengthField(newNotPaddedLength);
 
 			// Fill padding bytes with zero.
 			FillPadding(newPaddedLength - newNotPaddedLength);

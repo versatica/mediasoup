@@ -137,7 +137,10 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
 			MS_DUMP(
-			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
+			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  HasValue() ? "yes" : "no",
+			  GetValueLength());
 			MS_DUMP("  has parameters: %s", HasParameters() ? "yes" : "no");
 			MS_DUMP("  parameters count: %zu", GetParametersCount());
 			for (auto* parameter : this->parameters)
@@ -188,13 +191,22 @@ namespace RTC
 			auto* clonedParameter =
 			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), parameter->GetLength());
 
+			// Update Serializable length.
+			try
+			{
+				SetLength(length);
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete clonedParameter;
+
+				throw;
+			}
+
 			// Freeze the cloned Parameter.
 			clonedParameter->Freeze();
 
 			this->parameters.push_back(clonedParameter);
-
-			// Update Serializable length.
-			SetLength(length);
 		}
 
 		ChunkParameter* Chunk::BuildParameterInPlace(ChunkParameter::ChunkParameterType parameterType)
@@ -235,22 +247,38 @@ namespace RTC
 				  // NOTE: No need to freeze the Parameter because `Consolidate()` did
 				  // it.
 
-				  auto previousLength = GetLength();
+				  auto previousLength      = GetLength();
+				  auto previousLengthField = GetLengthField();
+
+				  try
+				  {
+					  // Update Chunk length.
+					  // NOTE: This will throw if there is no enough space in the Chunk
+					  // buffer.
+					  SetLength(previousLength + parameter->GetLength());
+
+					  // Here we have to update the Chunk Value Length and this is not easy
+					  // because we have to take into account the padding of all Parameters
+					  // but the last one. So we do this:
+					  // - We assume that Parameters are always at the end of the Chunk.
+					  // - We read the Parameter Length field of the new added Parameter.
+					  // - We add it to the previous total length of the Chunk and
+					  //   set the Chunk Length field with the resulting value.
+					  //
+					  // NOTE: This will throw if computed Length field value is too big.
+					  SetLengthField(previousLength + parameter->GetLengthField());
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+					  // Rollback.
+					  SetLength(previousLength);
+					  SetLengthField(previousLengthField);
+
+					  throw;
+				  }
 
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
-
-				  // Update Chunk length.
-				  SetLength(previousLength + parameter->GetLength());
-
-				  // Here we have to update the Chunk Value Length and this is not easy
-				  // because we have to take into account the padding of all Parameters
-				  // but the last one. So we do this:
-				  // - We assume that Parameters are always at the end of the Chunk.
-				  // - We read the Parameter Length field of the new added Parameter.
-				  // - We add it to the previous total length of the Chunk and
-				  //   set the Chunk Length field with the resulting value.
-				  SetLengthField(previousLength + parameter->GetLengthField());
 			  });
 
 			return parameter;
@@ -319,6 +347,18 @@ namespace RTC
 			SetType(chunkType);
 			SetFlags(flags);
 			SetLengthField(lengthFieldValue);
+		}
+
+		void Chunk::SetLengthField(size_t length)
+		{
+			MS_TRACE();
+
+			if (length > 65535u)
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
+			}
+
+			GetHeaderPointer()->length = uint16_t{ htons(length) };
 		}
 
 		bool Chunk::ParseParameters(const uint8_t* buffer, uint16_t bufferLength)

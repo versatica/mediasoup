@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
 #include "helpers.hpp"
 #include "RTC/SCTP/Chunk.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
@@ -16,10 +17,11 @@
 
 using namespace RTC::SCTP;
 
-thread_local static uint8_t ChunkFactoryBuffer[15000];
-thread_local static uint8_t ChunkSerializeBuffer[15000];
-thread_local static uint8_t ChunkCloneBuffer[15000];
-thread_local static uint8_t ChunkCustomDataBuffer[15000];
+thread_local static uint8_t ChunkFactoryBuffer[66666];
+thread_local static uint8_t ChunkSerializeBuffer[66666];
+thread_local static uint8_t ChunkCloneBuffer[66666];
+thread_local static uint8_t ChunkCustomDataBuffer[66666];
+thread_local static uint8_t ThrowBuffer[66666];
 
 static void resetBuffers();
 
@@ -266,6 +268,39 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		delete chunk;
 		delete parsedChunk;
+	}
+
+	SECTION("DataChunk::SetUserData() throws if userDataLength is too big")
+	{
+		auto* chunk = DataChunk::Factory(ThrowBuffer, sizeof(ThrowBuffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ ThrowBuffer,
+		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*length*/ 16,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
+
+		REQUIRE_THROWS_AS(chunk->SetUserData(ThrowBuffer, 65535), MediaSoupError);
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ ThrowBuffer,
+		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*length*/ 16,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
+
+		delete chunk;
 	}
 }
 
@@ -839,6 +874,35 @@ SCENARIO("SCTP Hearbeat Chunk (4)", "[sctp][serializable]")
 
 		delete chunk;
 		delete parsedChunk;
+	}
+
+	SECTION("HeartbeatInfoChunkParameter::SetInfo() throws if infoLength is too big")
+	{
+		auto* parameter = HeartbeatInfoChunkParameter::Factory(ThrowBuffer, sizeof(ThrowBuffer));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter,
+		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 0);
+
+		REQUIRE_THROWS_AS(parameter->SetInfo(ThrowBuffer, 65535), MediaSoupError);
+
+		checkChunkParameter(
+		  /*parameter*/ parameter,
+		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 0);
+
+		delete parameter;
 	}
 }
 
@@ -1449,6 +1513,7 @@ void resetBuffers()
 	std::memset(ChunkSerializeBuffer, 0xBB, sizeof(ChunkSerializeBuffer));
 	std::memset(ChunkCloneBuffer, 0xCC, sizeof(ChunkCloneBuffer));
 	std::memset(ChunkCustomDataBuffer, 0xDD, sizeof(ChunkCustomDataBuffer));
+	std::memset(ThrowBuffer, 0xEE, sizeof(ThrowBuffer));
 
 	ChunkCustomDataBuffer[0] = 0x00;
 	ChunkCustomDataBuffer[1] = 0x01;
@@ -1484,6 +1549,44 @@ void checkChunk(
 	REQUIRE(chunk->HasParameters() == parametersCount > 0);
 	REQUIRE(chunk->GetParametersCount() == parametersCount);
 	REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
+
+	// Also assert that Serialize() throws if a too small buffer is given.
+	REQUIRE_THROWS_AS(const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, length - 1), MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(3, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(7, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(11, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(15, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(19, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(23, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(27, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, std::min<size_t>(31, length - 1)),
+	  MediaSoupError);
+
+	// Also assert that Clone() throws if a too small buffer is given.
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, length - 1), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(3, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(7, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(11, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(15, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(19, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(23, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(27, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, std::min<size_t>(31, length - 1)), MediaSoupError);
 }
 
 static void checkChunkParameter(
@@ -1505,4 +1608,43 @@ static void checkChunkParameter(
 	REQUIRE(parameter->GetActionForUnknownChunkParameterType() == actionForUnknownParameterType);
 	REQUIRE(parameter->HasValue() == valueLength > 0);
 	REQUIRE(parameter->GetValueLength() == valueLength);
+
+	// Also assert that Serialize() throws if a too small buffer is given.
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, length - 1), MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(3, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(7, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(11, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(15, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(19, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(23, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(27, length - 1)),
+	  MediaSoupError);
+	REQUIRE_THROWS_AS(
+	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(31, length - 1)),
+	  MediaSoupError);
+
+	// Also assert that Clone() throws if a too small buffer is given.
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, length - 1), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(3, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(7, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(11, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(15, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(19, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(23, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(27, length - 1)), MediaSoupError);
+	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(31, length - 1)), MediaSoupError);
 }

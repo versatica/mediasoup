@@ -146,5 +146,17 @@ namespace RTC
 			SetType(parameterType);
 			SetLengthField(ChunkParameter::ChunkParameterHeaderLength);
 		}
+
+		void ChunkParameter::SetLengthField(size_t length)
+		{
+			MS_TRACE();
+
+			if (length > 65535u)
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
+			}
+
+			GetHeaderPointer()->length = uint16_t{ htons(length) };
+		}
 	} // namespace SCTP
 } // namespace RTC

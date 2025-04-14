@@ -63,7 +63,10 @@ namespace RTC
 			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP(
-			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
+			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  HasValue() ? "yes" : "no",
+			  GetValueLength());
 			MS_DUMP("</UnknownChunkParameter>");
 		}
 

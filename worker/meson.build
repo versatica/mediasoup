@@ -382,7 +382,7 @@ test_sources = [
   'test/src/RTC/RTCP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestXr.cpp',
   'test/src/RTC/SCTP/TestPacket.cpp',
-  'test/src/RTC/SCTP/TestChunk.cpp',
+  'test/src/RTC/SCTP/TestChunks.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',
   'test/src/Utils/TestIP.cpp',

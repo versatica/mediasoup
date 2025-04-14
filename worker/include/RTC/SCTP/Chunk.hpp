@@ -375,10 +375,11 @@ namespace RTC
 				return uint16_t{ ntohs(GetHeaderPointer()->length) };
 			}
 
-			virtual void SetLengthField(uint16_t length) final
-			{
-				GetHeaderPointer()->length = uint16_t{ htons(length) };
-			}
+			/**
+			 * @throw MediaSoupError - If given `length` is higher than mazimmun
+			 *   allowed one (65535).
+			 */
+			virtual void SetLengthField(size_t length) final;
 
 			virtual bool HasValue() const final
 			{

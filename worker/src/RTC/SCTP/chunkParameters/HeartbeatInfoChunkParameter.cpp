@@ -92,7 +92,10 @@ namespace RTC
 			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP(
-			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
+			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  HasValue() ? "yes" : "no",
+			  GetValueLength());
 			MS_DUMP("  info length: %" PRIu16, GetValueLength());
 			MS_DUMP("</HeartbeatInfoChunkParameter>");
 		}
@@ -115,20 +118,34 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousInfoLength = GetValueLength();
-			auto newNotPaddedLength = GetLength() - previousInfoLength + infoLength;
-			auto newPaddedLength    = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+			auto previousLength      = GetLength();
+			auto previousLengthField = GetLengthField();
+			auto previousInfoLength  = GetValueLength();
+			auto newNotPaddedLength  = previousLength - previousInfoLength + infoLength;
+			auto newPaddedLength     = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
-			// Let's call SetLength() on parent with the new computed Parameter length.
-			// NOTE: If there is no space in the buffer for it, it will throw.
-			// NOTE: Parameters must be padded to 4 bytes.
-			SetLength(newPaddedLength);
+			try
+			{
+				// Let's call SetLength() on parent with the new computed Parameter length.
+				// NOTE: If there is no space in the buffer for it, it will throw.
+				// NOTE: Parameters must be padded to 4 bytes.
+				SetLength(newPaddedLength);
+
+				// Update the Parameter Length field.
+				// NOTE: This will throw if computed value is too big.
+				SetLengthField(newNotPaddedLength);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
 
 			// Copy the given info into the buffer.
 			std::memmove(GetValuePointer(), info, infoLength);
-
-			// Update the Parameter Length field.
-			SetLengthField(newNotPaddedLength);
 
 			// Fill padding bytes with zero.
 			FillPadding(newPaddedLength - newNotPaddedLength);

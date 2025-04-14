@@ -379,13 +379,22 @@ namespace RTC
 			auto* clonedChunk =
 			  chunk->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), chunk->GetLength());
 
+			// Update Serializable length.
+			try
+			{
+				SetLength(length);
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete clonedChunk;
+
+				throw;
+			}
+
 			// Freeze the cloned Chunk.
 			clonedChunk->Freeze();
 
 			this->chunks.push_back(clonedChunk);
-
-			// Update Serializable length.
-			SetLength(length);
 		}
 
 		Chunk* Packet::BuildChunkInPlace(Chunk::ChunkType chunkType)
@@ -460,11 +469,13 @@ namespace RTC
 
 				  // NOTE: No need to freeze the Chunk because `Consolidate()` did it.
 
+				  // Update Packet length.
+				  // NOTE: This will throw if there is no enough space in the Packet
+				  // buffer.
+				  SetLength(GetLength() + chunk->GetLength());
+
 				  // Add the Chunk to the list.
 				  this->chunks.push_back(chunk);
-
-				  // Update Packet length.
-				  SetLength(GetLength() + chunk->GetLength());
 			  });
 
 			return chunk;

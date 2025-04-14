@@ -63,7 +63,10 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP("  flags: " MS_UINT8_4BITS_TO_BINARY_PATTERN, MS_UINT8_4BITS_TO_BINARY(GetFlags()));
 			MS_DUMP(
-			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
+			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  HasValue() ? "yes" : "no",
+			  GetValueLength());
 			MS_DUMP("</UnknownChunk>");
 		}
 
