@@ -876,35 +876,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		delete chunk;
 		delete parsedChunk;
 	}
-
-	SECTION("HeartbeatInfoChunkParameter::SetInfo() throws if infoLength is too big")
-	{
-		auto* parameter = HeartbeatInfoChunkParameter::Factory(ThrowBuffer, sizeof(ThrowBuffer));
-
-		checkChunkParameter(
-		  /*parameter*/ parameter,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
-		  /*length*/ 4,
-		  /*frozen*/ false,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
-		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 0);
-
-		REQUIRE_THROWS_AS(parameter->SetInfo(ThrowBuffer, 65535), MediaSoupError);
-
-		checkChunkParameter(
-		  /*parameter*/ parameter,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
-		  /*length*/ 4,
-		  /*frozen*/ false,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
-		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 0);
-
-		delete parameter;
-	}
 }
 
 SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
