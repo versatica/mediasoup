@@ -58,7 +58,7 @@ namespace RTC
 		public:
 			virtual ~ShutdownAckChunk() override;
 
-			virtual void Dump() const override final;
+			virtual void Dump(int indentation = 0) const override final;
 
 			virtual ShutdownAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 		};

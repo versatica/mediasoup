@@ -83,24 +83,13 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void CookieAckChunk::Dump() const
+		void CookieAckChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<CookieAckChunk>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP(
-			  "  type: %" PRIu8 " (%s) (unknown: %s)",
-			  static_cast<uint8_t>(GetType()),
-			  Chunk::ChunkType2String(GetType()).c_str(),
-			  HasUnknownType() ? "yes" : "no");
-			MS_DUMP("  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
-			MS_DUMP(
-			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
-			  GetLengthField(),
-			  HasValue() ? "yes" : "no",
-			  GetValueLength());
-			MS_DUMP("</CookieAckChunk>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::CookieAckChunk>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "</SCTP::CookieAckChunk>");
 		}
 
 		CookieAckChunk* CookieAckChunk::Clone(uint8_t* buffer, size_t bufferLength) const

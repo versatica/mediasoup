@@ -16,3 +16,5 @@ Same in `PipeTransport` and `PlainTransport`.
 ## TODO
 
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
+
+- Check all pending "TODO" comments.

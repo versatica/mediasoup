@@ -96,7 +96,7 @@ namespace RTC
 			~Packet() override;
 			;
 
-			virtual void Dump() const override final;
+			virtual void Dump(int indentation = 0) const override final;
 
 			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 

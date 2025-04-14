@@ -167,7 +167,7 @@ namespace RTC
 			/**
 			 * Should be overridden by each subclass.
 			 */
-			virtual void Dump() const override;
+			virtual void Dump(int indentation = 0) const override;
 
 			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
@@ -268,6 +268,11 @@ namespace RTC
 			  ChunkParameter::ChunkParameterType parameterType) final;
 
 		protected:
+			/**
+			 * Subclasses must invoke this method within their Dump() method.
+			 */
+			virtual void DumpCommon(int indentation) const final;
+
 			virtual void CloneInto(Serializable* serializable) const override final;
 
 			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;

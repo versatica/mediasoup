@@ -51,23 +51,13 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void UnknownChunkParameter::Dump() const
+		void UnknownChunkParameter::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<UnknownChunkParameter>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP(
-			  "  type: %" PRIu16 " (%s) (unknown: %s)",
-			  static_cast<uint16_t>(GetType()),
-			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
-			  HasUnknownType() ? "yes" : "no");
-			MS_DUMP(
-			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
-			  GetLengthField(),
-			  HasValue() ? "yes" : "no",
-			  GetValueLength());
-			MS_DUMP("</UnknownChunkParameter>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::UnknownChunkParameter>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "</SCTP::UnknownChunkParameter>");
 		}
 
 		UnknownChunkParameter* UnknownChunkParameter::Clone(uint8_t* buffer, size_t bufferLength) const

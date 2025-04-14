@@ -80,24 +80,14 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void HeartbeatInfoChunkParameter::Dump() const
+		void HeartbeatInfoChunkParameter::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<HeartbeatInfoChunkParameter>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP(
-			  "  type: %" PRIu16 " (%s) (unknown: %s)",
-			  static_cast<uint16_t>(GetType()),
-			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
-			  HasUnknownType() ? "yes" : "no");
-			MS_DUMP(
-			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
-			  GetLengthField(),
-			  HasValue() ? "yes" : "no",
-			  GetValueLength());
-			MS_DUMP("  info length: %" PRIu16, GetValueLength());
-			MS_DUMP("</HeartbeatInfoChunkParameter>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::HeartbeatInfoChunkParameter>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "  info length: %" PRIu16, GetValueLength());
+			MS_DUMP_CLEAN(indentation, "</SCTP::HeartbeatInfoChunkParameter>");
 		}
 
 		HeartbeatInfoChunkParameter* HeartbeatInfoChunkParameter::Clone(

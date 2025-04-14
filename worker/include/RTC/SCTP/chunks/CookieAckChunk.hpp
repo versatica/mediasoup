@@ -59,7 +59,7 @@ namespace RTC
 		public:
 			virtual ~CookieAckChunk() override;
 
-			virtual void Dump() const override final;
+			virtual void Dump(int indentation = 0) const override final;
 
 			virtual CookieAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 		};

@@ -48,7 +48,7 @@ namespace RTC
 		public:
 			virtual ~UnknownChunkParameter() override;
 
-			virtual void Dump() const override final;
+			virtual void Dump(int indentation = 0) const override final;
 
 			virtual UnknownChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 

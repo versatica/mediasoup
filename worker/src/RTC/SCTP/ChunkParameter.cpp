@@ -112,20 +112,13 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void ChunkParameter::Dump() const
+		void ChunkParameter::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ChunkParameter>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP(
-			  "  type: %" PRIu16 " (%s) (unknown: %s)",
-			  static_cast<uint16_t>(GetType()),
-			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
-			  HasUnknownType() ? "yes" : "no");
-			MS_DUMP(
-			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")", GetLengthField(), GetValueLength());
-			MS_DUMP("</ChunkParameter>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::ChunkParameter>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "</SCTP::ChunkParameter>");
 		}
 
 		ChunkParameter* ChunkParameter::Clone(uint8_t* buffer, size_t bufferLength) const
@@ -137,6 +130,24 @@ namespace RTC
 			CloneInto(clonedParameter);
 
 			return clonedParameter;
+		}
+
+		void ChunkParameter::DumpCommon(int indentation) const
+		{
+			MS_TRACE();
+
+			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  type: %" PRIu16 " (%s) (unknown: %s)",
+			  static_cast<uint16_t>(GetType()),
+			  ChunkParameter::ChunkParameterType2String(GetType()).c_str(),
+			  HasUnknownType() ? "yes" : "no");
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  length field: %" PRIu16 " (value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  GetValueLength());
 		}
 
 		void ChunkParameter::InitializeHeader(ChunkParameterType parameterType)

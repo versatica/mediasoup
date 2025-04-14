@@ -124,30 +124,13 @@ namespace RTC
 			}
 		}
 
-		void Chunk::Dump() const
+		void Chunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<Chunk>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP(
-			  "  type: %" PRIu8 " (%s) (unknown: %s)",
-			  static_cast<uint8_t>(GetType()),
-			  Chunk::ChunkType2String(GetType()).c_str(),
-			  HasUnknownType() ? "yes" : "no");
-			MS_DUMP("  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
-			MS_DUMP(
-			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
-			  GetLengthField(),
-			  HasValue() ? "yes" : "no",
-			  GetValueLength());
-			MS_DUMP("  has parameters: %s", HasParameters() ? "yes" : "no");
-			MS_DUMP("  parameters count: %zu", GetParametersCount());
-			for (auto* parameter : this->parameters)
-			{
-				parameter->Dump();
-			}
-			MS_DUMP("</Chunk>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::Chunk>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "</SCTP::Chunk>");
 		}
 
 		void Chunk::Serialize(uint8_t* buffer, size_t bufferLength)
@@ -282,6 +265,33 @@ namespace RTC
 			  });
 
 			return parameter;
+		}
+
+		void Chunk::DumpCommon(int indentation) const
+		{
+			MS_TRACE();
+
+			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  type: %" PRIu8 " (%s) (unknown: %s)",
+			  static_cast<uint8_t>(GetType()),
+			  Chunk::ChunkType2String(GetType()).c_str(),
+			  HasUnknownType() ? "yes" : "no");
+			MS_DUMP_CLEAN(
+			  indentation, "  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
+			  GetLengthField(),
+			  HasValue() ? "yes" : "no",
+			  GetValueLength());
+			MS_DUMP_CLEAN(indentation, "  has parameters: %s", HasParameters() ? "yes" : "no");
+			MS_DUMP_CLEAN(indentation, "  parameters count: %zu", GetParametersCount());
+			for (auto* parameter : this->parameters)
+			{
+				parameter->Dump(indentation + 1);
+			}
 		}
 
 		void Chunk::CloneInto(Serializable* serializable) const

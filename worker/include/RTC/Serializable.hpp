@@ -42,9 +42,9 @@ namespace RTC
 
 	public:
 		/**
-		 * Print Serializable state.
+		 * Print Serializable state with given indentation.
 		 */
-		virtual void Dump() const = 0;
+		virtual void Dump(int indentation = 0) const = 0;
 
 		/**
 		 * Get a buffer containing the serialized content. Combined with the

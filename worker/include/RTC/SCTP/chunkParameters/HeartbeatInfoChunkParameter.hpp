@@ -55,7 +55,7 @@ namespace RTC
 		public:
 			virtual ~HeartbeatInfoChunkParameter() override;
 
-			virtual void Dump() const override final;
+			virtual void Dump(int indentation = 0) const override final;
 
 			virtual HeartbeatInfoChunkParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;

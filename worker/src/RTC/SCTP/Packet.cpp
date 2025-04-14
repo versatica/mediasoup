@@ -204,23 +204,23 @@ namespace RTC
 			}
 		}
 
-		void Packet::Dump() const
+		void Packet::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<Packet>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP("  source port: %" PRIu16, GetSourcePort());
-			MS_DUMP("  destination port: %" PRIu16, GetDestinationPort());
-			MS_DUMP("  verification tag: %" PRIu32, GetVerificationTag());
-			MS_DUMP("  checksum: %" PRIu32, GetChecksum());
-			MS_DUMP("  has chunks: %s", HasChunks() ? "yes" : "no");
-			MS_DUMP("  chunks count: %zu", GetChunksCount());
+			MS_DUMP_CLEAN(indentation, "<SCTP::Packet>");
+			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(indentation, "  source port: %" PRIu16, GetSourcePort());
+			MS_DUMP_CLEAN(indentation, "  destination port: %" PRIu16, GetDestinationPort());
+			MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());
+			MS_DUMP_CLEAN(indentation, "  checksum: %" PRIu32, GetChecksum());
+			MS_DUMP_CLEAN(indentation, "  has chunks: %s", HasChunks() ? "yes" : "no");
+			MS_DUMP_CLEAN(indentation, "  chunks count: %zu", GetChunksCount());
 			for (auto* chunk : this->chunks)
 			{
-				chunk->Dump();
+				chunk->Dump(indentation + 1);
 			}
-			MS_DUMP("</Packet>");
+			MS_DUMP_CLEAN(indentation, "</SCTP::Packet>");
 		}
 
 		void Packet::Serialize(uint8_t* buffer, size_t bufferLength)

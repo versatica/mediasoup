@@ -64,9 +64,17 @@
  * 	 Example:
  * 	   MS_DUMP("foo");
  *
+ * MS_DUMP_CLEAN(indentation, ...)
+ *
+ *   Log always. Useful for Dump() methods in packets. It doesn't print the
+ *   class and method names.
+ *   `indentation` mandatory argument must be 0, 1, 2 or 3, and it affects the
+ *   output by adding indentation at the start of the string.
+ *
  * MS_DUMP_DATA(const uint8_t* data, size_t len)
  *
- *   Logs always. Prints the given data in hexadecimal format (Wireshark friendly).
+ *   Logs always. Prints the given data in hexadecimal format (Wireshark
+ *   friendly).
  *
  * MS_ERROR(...)
  *
@@ -350,6 +358,28 @@ public:
 	} \
 	while (false)
 
+#define MS_DUMP_CLEAN(indentation, desc, ...) \
+	do \
+	{ \
+		const char* spaces = (indentation == 1) ? "  " : \
+			((indentation == 2) ? "    " : \
+			((indentation == 3) ? "      " : "")); \
+		const int loggerWritten = std::snprintf(Logger::buffer, Logger::BufferSize, "X%s" desc, spaces, ##__VA_ARGS__); \
+		Logger::channel->SendLog(Logger::buffer, static_cast<uint32_t>(loggerWritten)); \
+	} \
+	while (false)
+
+#define MS_DUMP_CLEAN_STD(indentation, desc, ...) \
+	do \
+	{ \
+		const char* spaces = (indentation == 1) ? "  " : \
+			((indentation == 2) ? "    " : \
+			((indentation == 3) ? "      " : "")); \
+		std::fprintf(stdout, "%s" desc _MS_LOG_SEPARATOR_CHAR_STD, spaces, ##__VA_ARGS__); \
+		std::fflush(stdout); \
+	} \
+	while (false)
+
 #define MS_DUMP_DATA(data, len) \
 	do \
 	{ \
@@ -462,6 +492,8 @@ public:
 	#define MS_WARN_DEV MS_WARN_DEV_STD
 	#undef MS_DUMP
 	#define MS_DUMP MS_DUMP_STD
+	#undef MS_DUMP_CLEAN
+	#define MS_DUMP_CLEAN MS_DUMP_CLEAN_STD
 	#undef MS_DUMP_DATA
 	#define MS_DUMP_DATA MS_DUMP_DATA_STD
 	#undef MS_ERROR

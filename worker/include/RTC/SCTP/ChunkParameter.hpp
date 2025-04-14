@@ -122,7 +122,7 @@ namespace RTC
 			/**
 			 * NOTE: Should be overridden by each subclass.
 			 */
-			virtual void Dump() const override;
+			virtual void Dump(int indentation = 0) const override;
 
 			/**
 			 * Can be overridden by each subclass.
@@ -171,6 +171,11 @@ namespace RTC
 			}
 
 		protected:
+			/**
+			 * Subclasses must invoke this method within their Dump() method.
+			 */
+			virtual void DumpCommon(int indentation) const final;
+
 			virtual void InitializeHeader(ChunkParameterType parameterType) final;
 
 			/**

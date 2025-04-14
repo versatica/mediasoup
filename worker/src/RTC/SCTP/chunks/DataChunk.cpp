@@ -93,36 +93,27 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void DataChunk::Dump() const
+		void DataChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<DataChunk>");
-			MS_DUMP("  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP(
-			  "  type: %" PRIu8 " (%s) (unknown: %s)",
-			  static_cast<uint8_t>(GetType()),
-			  Chunk::ChunkType2String(GetType()).c_str(),
-			  HasUnknownType() ? "yes" : "no");
-			MS_DUMP("  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
-			MS_DUMP(
-			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
-			  GetLengthField(),
-			  HasValue() ? "yes" : "no",
-			  GetValueLength());
-			MS_DUMP("  flag I: %" PRIu8, GetI());
-			MS_DUMP("  flag U: %" PRIu8, GetU());
-			MS_DUMP("  flag B: %" PRIu8, GetB());
-			MS_DUMP("  flag E: %" PRIu8, GetE());
-			MS_DUMP("  tsn: %" PRIu32, GetTSN());
-			MS_DUMP("  stream identifier S: %" PRIu16, GetStreamIdentifierS());
-			MS_DUMP("  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
-			MS_DUMP("  payload protocol identifier: %" PRIu32, GetPayloadProtocolIdentifier());
-			MS_DUMP(
+			MS_DUMP_CLEAN(indentation, "<SCTP::DataChunk>");
+			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "  flag I: %" PRIu8, GetI());
+			MS_DUMP_CLEAN(indentation, "  flag U: %" PRIu8, GetU());
+			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
+			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
+			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTSN());
+			MS_DUMP_CLEAN(indentation, "  stream identifier S: %" PRIu16, GetStreamIdentifierS());
+			MS_DUMP_CLEAN(indentation, "  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
+			MS_DUMP_CLEAN(
+			  indentation, "  payload protocol identifier: %" PRIu32, GetPayloadProtocolIdentifier());
+			MS_DUMP_CLEAN(
+			  indentation,
 			  "  user data length: %" PRIu16 " (has user data: %s)",
 			  GetUserDataLength(),
 			  HasUserData() ? "yes" : "no");
-			MS_DUMP("</DataChunk>");
+			MS_DUMP_CLEAN(indentation, "</SCTP::DataChunk>");
 		}
 
 		DataChunk* DataChunk::Clone(uint8_t* buffer, size_t bufferLength) const
