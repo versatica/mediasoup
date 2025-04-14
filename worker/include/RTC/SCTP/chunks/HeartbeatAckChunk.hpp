@@ -1,0 +1,74 @@
+#ifndef MS_RTC_SCTP_HEARTBEAT_ACK_CHUNK_HPP
+#define MS_RTC_SCTP_HEARTBEAT_ACK_CHUNK_HPP
+
+#include "common.hpp"
+#include "RTC/SCTP/Chunk.hpp"
+
+namespace RTC
+{
+	namespace SCTP
+	{
+		/**
+		 * Heartbeat Acknowledgement (HEARTBEAT ACK) (5)
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |   Type = 5    |  Chunk Flags  |     Heartbeat Ack Length      |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * \                                                               \
+		 * /          Heartbeat Information TLV (Variable-Length)          /
+		 * \                                                               \
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 *
+		 * - Chunk Type (8 bits): 5.
+		 * - Length (16 bits).
+		 * - Heartbeat Information (variable length): Contains a variable-length
+		 *   Heartbeat Info parameter.
+		 */
+
+		// Forward declaration.
+		class Packet;
+
+		class HeartbeatAckChunk : public Chunk
+		{
+			// We need that Packet calls protected and private methods in this class.
+			friend class Packet;
+
+		public:
+			static const size_t HeartbeatAckChunkHeaderLength{ 4 };
+
+		public:
+			/**
+			 * Parse a HeartbeatAckChunk.
+			 *
+			 * @remarks
+			 * - `bufferLength` may exceed the exact length of the Chunk.
+			 */
+			static HeartbeatAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Create a HeartbeatAckChunk.
+			 *
+			 * @remarks
+			 * - `bufferLength` could be greater than the Chunk real length.
+			 */
+			static HeartbeatAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
+			 * Private constructor used by Parse() and Factory() static methods.
+			 */
+			HeartbeatAckChunk(const uint8_t* buffer, size_t bufferLength);
+
+		public:
+			virtual ~HeartbeatAckChunk() override;
+
+			virtual void Dump(int indentation = 0) const override final;
+
+			virtual HeartbeatAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+		};
+	} // namespace SCTP
+} // namespace RTC
+
+#endif

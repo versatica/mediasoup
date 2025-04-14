@@ -184,6 +184,7 @@ common_sources = [
   'src/RTC/SCTP/Chunk.cpp',
   'src/RTC/SCTP/chunks/DataChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatChunk.cpp',
+  'src/RTC/SCTP/chunks/HeartbeatAckChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownAckChunk.cpp',
   'src/RTC/SCTP/chunks/CookieAckChunk.cpp',
