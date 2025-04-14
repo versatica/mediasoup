@@ -41,7 +41,7 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		{
 			// Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
@@ -70,6 +70,12 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		REQUIRE(parameter->GetInfo()[4] == 0x55);
 		REQUIRE(parameter->GetInfo()[5] == 0x66);
 		REQUIRE(parameter->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter->GetInfo()[7] == 0x00);
+
+		/* Should throw if modifications are attempted when it's frozen. */
+
+		REQUIRE_THROWS_AS(parameter->SetInfo(ChunkParameterCustomDataBuffer, 5), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -93,6 +99,8 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		REQUIRE(parameter->GetInfo()[4] == 0x55);
 		REQUIRE(parameter->GetInfo()[5] == 0x66);
 		REQUIRE(parameter->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter->GetInfo()[7] == 0x00);
 
 		/* Clone it. */
 
@@ -119,6 +127,8 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		REQUIRE(clonedParameter->GetInfo()[4] == 0x55);
 		REQUIRE(clonedParameter->GetInfo()[5] == 0x66);
 		REQUIRE(clonedParameter->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(clonedParameter->GetInfo()[7] == 0x00);
 
 		delete clonedParameter;
 	}
@@ -131,7 +141,7 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		{
 			// Type:6 (IPV6_ADDRESS), Length: 8
 			0x00, 0x06, 0x00, 0x0B,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
@@ -146,7 +156,7 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		{
 			// Type:1 (HEARBEAT_INFO), Length: 3
 			0x00, 0x01, 0x00, 0x03,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
@@ -161,9 +171,9 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		{
 			// Type:1 (HEARBEAT_INFO), Length: 11
 			0x00, 0x01, 0x00, 0x0B,
-			// Heartbeat Information (7 bytes): 0x11223344556677, 1 byte of padding
+			// Heartbeat Information (7 bytes): 0x11223344556677
 			0x11, 0x22, 0x33, 0x44,
-			// 1 byte of padding
+			// 1 byte of padding (missing)
 			0x55, 0x66, 0x77
 		};
 		// clang-format on
@@ -211,16 +221,19 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		// These should be padding.
 		REQUIRE(parameter->GetInfo()[5] == 0x00);
 		REQUIRE(parameter->GetInfo()[6] == 0x00);
+		REQUIRE(parameter->GetInfo()[7] == 0x00);
 
 		/* Parse itself and compare. */
 
 		auto* parsedParameter =
 		  HeartbeatInfoChunkParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
+		delete parameter;
+
 		checkChunkParameter(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ ChunkParameterFactoryBuffer,
-		  /*bufferLength*/ parameter->GetLength(),
+		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
@@ -236,8 +249,8 @@ SCENARIO("HeartbeatInfo Chunk Parameter (1)", "[sctp][serializable]")
 		// These should be padding.
 		REQUIRE(parsedParameter->GetInfo()[5] == 0x00);
 		REQUIRE(parsedParameter->GetInfo()[6] == 0x00);
+		REQUIRE(parsedParameter->GetInfo()[7] == 0x00);
 
-		delete parameter;
 		delete parsedParameter;
 	}
 
@@ -308,6 +321,10 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		REQUIRE(parameter->GetIPv4Address()[1] == 0x02);
 		REQUIRE(parameter->GetIPv4Address()[2] == 0x03);
 		REQUIRE(parameter->GetIPv4Address()[3] == 0x04);
+
+		/* Should throw if modifications are attempted when it's frozen. */
+
+		REQUIRE_THROWS_AS(parameter->SetIPv4Address(ThrowBuffer), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -460,10 +477,12 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		auto* parsedParameter =
 		  IPv4AddressChunkParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
+		delete parameter;
+
 		checkChunkParameter(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ ChunkParameterFactoryBuffer,
-		  /*bufferLength*/ parameter->GetLength(),
+		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
@@ -476,7 +495,6 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		REQUIRE(parsedParameter->GetIPv4Address()[2] == 0x21);
 		REQUIRE(parsedParameter->GetIPv4Address()[3] == 0x2C);
 
-		delete parameter;
 		delete parsedParameter;
 	}
 }
@@ -520,6 +538,10 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		REQUIRE(parameter->GetIPv6Address()[2] == 0x0D);
 		REQUIRE(parameter->GetIPv6Address()[3] == 0xB8);
 		REQUIRE(parameter->GetIPv6Address()[15] == 0x34);
+
+		/* Should throw if modifications are attempted when it's frozen. */
+
+		REQUIRE_THROWS_AS(parameter->SetIPv6Address(ThrowBuffer), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -689,10 +711,12 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		auto* parsedParameter =
 		  IPv6AddressChunkParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
+		delete parameter;
+
 		checkChunkParameter(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ ChunkParameterFactoryBuffer,
-		  /*bufferLength*/ parameter->GetLength(),
+		  /*bufferLength*/ 20,
 		  /*length*/ 20,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
@@ -706,13 +730,142 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		REQUIRE(parsedParameter->GetIPv6Address()[3] == 0x25);
 		REQUIRE(parsedParameter->GetIPv6Address()[15] == 0xB5);
 
-		delete parameter;
 		delete parsedParameter;
 	}
 }
 
-// TODO:
-// SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
+SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
+{
+	resetBuffers();
+
+	SECTION("UnknownChunkParameter::Parse() succeeds")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			// Type:49159 (UNKNOWN), Length: 11
+			0xC0, 0x07, 0x00, 0x0B,
+			// Unknown data: 0x0123456789ABCD
+			0x01, 0x23, 0x45, 0x67,
+			// 1 byte of padding
+			0x89, 0xAB, 0xCD, 0x00,
+			// Extra bytes that should be ignored
+			0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
+		auto* parameter = UnknownChunkParameter::Parse(buffer, sizeof(buffer));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter,
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ 15,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter->GetUnknownValue()[0] == 0x01);
+		REQUIRE(parameter->GetUnknownValue()[1] == 0x23);
+		REQUIRE(parameter->GetUnknownValue()[2] == 0x45);
+		REQUIRE(parameter->GetUnknownValue()[3] == 0x67);
+		REQUIRE(parameter->GetUnknownValue()[4] == 0x89);
+		REQUIRE(parameter->GetUnknownValue()[5] == 0xAB);
+		REQUIRE(parameter->GetUnknownValue()[6] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter->GetUnknownValue()[7] == 0x00);
+
+		/* Serialize it. */
+
+		parameter->Serialize(ChunkParameterSerializeBuffer, sizeof(ChunkParameterSerializeBuffer));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter,
+		  /*buffer*/ ChunkParameterSerializeBuffer,
+		  /*bufferLength*/ sizeof(ChunkParameterSerializeBuffer),
+		  /*length*/ 12,
+		  /*frozen*/ false,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter->GetUnknownValue()[0] == 0x01);
+		REQUIRE(parameter->GetUnknownValue()[1] == 0x23);
+		REQUIRE(parameter->GetUnknownValue()[2] == 0x45);
+		REQUIRE(parameter->GetUnknownValue()[3] == 0x67);
+		REQUIRE(parameter->GetUnknownValue()[4] == 0x89);
+		REQUIRE(parameter->GetUnknownValue()[5] == 0xAB);
+		REQUIRE(parameter->GetUnknownValue()[6] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter->GetUnknownValue()[7] == 0x00);
+
+		/* Clone it. */
+
+		auto* clonedParameter =
+		  parameter->Clone(ChunkParameterCloneBuffer, sizeof(ChunkParameterCloneBuffer));
+
+		delete parameter;
+
+		checkChunkParameter(
+		  /*parameter*/ clonedParameter,
+		  /*buffer*/ ChunkParameterCloneBuffer,
+		  /*bufferLength*/ sizeof(ChunkParameterCloneBuffer),
+		  /*length*/ 12,
+		  /*frozen*/ false,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 7);
+
+		REQUIRE(clonedParameter->GetUnknownValue()[0] == 0x01);
+		REQUIRE(clonedParameter->GetUnknownValue()[1] == 0x23);
+		REQUIRE(clonedParameter->GetUnknownValue()[2] == 0x45);
+		REQUIRE(clonedParameter->GetUnknownValue()[3] == 0x67);
+		REQUIRE(clonedParameter->GetUnknownValue()[4] == 0x89);
+		REQUIRE(clonedParameter->GetUnknownValue()[5] == 0xAB);
+		REQUIRE(clonedParameter->GetUnknownValue()[6] == 0xCD);
+		// This should be padding.
+		REQUIRE(clonedParameter->GetUnknownValue()[7] == 0x00);
+
+		delete clonedParameter;
+	}
+
+	SECTION("UnknownChunkParameter::Parse() fails")
+	{
+		// Wrong Length field.
+		// clang-format off
+		uint8_t buffer1[] =
+		{
+			// Type:49159 (UNKNOWN), Length: 3
+			0xC0, 0x07, 0x00, 0x03,
+			// Unknown data: 0x0123456789ABCD
+			0x01, 0x23, 0x45, 0x67,
+			// 1 byte of padding
+			0x89, 0xAB, 0xCD, 0x00,
+		};
+		// clang-format on
+
+		REQUIRE(!UnknownChunkParameter::Parse(buffer1, sizeof(buffer1)));
+
+		// Wrong buffer length.
+		// clang-format off
+		uint8_t buffer2[] =
+		{
+			// Type:49159 (UNKNOWN), Length: 11
+			0xC0, 0x07, 0x00, 0x0B,
+			// Unknown data: 0x0123456789ABCD
+			0x01, 0x23, 0x45, 0x67,
+			// 1 byte of padding (missing)
+			0x89, 0xAB, 0xCD
+		};
+		// clang-format on
+
+		REQUIRE(!UnknownChunkParameter::Parse(buffer2, sizeof(buffer2)));
+	}
+}
 
 void resetBuffers()
 {
@@ -759,39 +912,7 @@ static void checkChunkParameter(
 	// Also assert that Serialize() throws if a too small buffer is given.
 	REQUIRE_THROWS_AS(
 	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, length - 1), MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(3, length - 1)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(7, length - 1)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(11, length - 2)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(15, length - 2)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(19, length - 3)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(23, length - 3)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(27, length - 4)),
-	  MediaSoupError);
-	REQUIRE_THROWS_AS(
-	  const_cast<ChunkParameter*>(parameter)->Serialize(ThrowBuffer, std::min<size_t>(31, length - 4)),
-	  MediaSoupError);
 
 	// Also assert that Clone() throws if a too small buffer is given.
 	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, length - 1), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(3, length - 1)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(7, length - 1)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(11, length - 2)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(15, length - 2)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(19, length - 3)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(23, length - 3)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(27, length - 3)), MediaSoupError);
-	REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, std::min<size_t>(31, length - 1)), MediaSoupError);
 }
