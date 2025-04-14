@@ -136,7 +136,7 @@ jobs:
         env:
           # Disable leak detection because it's detected by the tool flatc uses
           # to build.
-          ASAN_OPTIONS: 'detect_leaks=0'
+          ASAN_OPTIONS: 'detect_leaks=0 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1'
 
       - name: npm run worker:prebuild-name
         run: npm run worker:prebuild-name
