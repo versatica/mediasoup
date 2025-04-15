@@ -19,22 +19,6 @@ Same in `PipeTransport` and `PlainTransport`.
 
 - Check all pending "TODO" comments.
 
-- Maybe change this:
-
-  ```c++
-  auto* parameter = reinterpret_cast<HeartbeatInfoChunkParameter*>(
-    chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO)
-  );
-  ```
-
-  to this?:
-
-  ```c++
-  auto* parameter = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
-  ```
-
-- Same in `Packet::BuildChunkInPlace()`.
-
 - What happens if I call `chunk->BuildParameterInPlace()` in a Chunk class that is not supposed to have chunks??? It should not be allowed and should throw.
 
 - Keep `Packet::AddChunk()` and `Chunk::AddParameter()`? Do we really need them having the `BuildXxxxInPlace()` methods?

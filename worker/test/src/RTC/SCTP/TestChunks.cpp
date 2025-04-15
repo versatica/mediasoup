@@ -120,8 +120,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE_THROWS_AS(chunk->SetStreamSequenceNumberN(2211), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetPayloadProtocolIdentifier(987654321), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetUserData(ChunkCustomDataBuffer, 3), MediaSoupError);
-		REQUIRE_THROWS_AS(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::IPV4_ADDRESS), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<IPv4AddressChunkParameter>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -440,8 +439,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
-		REQUIRE_THROWS_AS(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::IPV4_ADDRESS), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<IPv4AddressChunkParameter>(), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetInitiateTag(1234), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetAdvertisedReceiverWindowCredit(1234), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetNumberOfOutboundStreams(1234), MediaSoupError);
@@ -626,8 +624,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		chunk->SetNumberOfInboundStreams(5678);
 		chunk->SetInitialTSN(3333333330);
 
-		auto* parameter1 = reinterpret_cast<IPv4AddressChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::IPV4_ADDRESS));
+		auto* parameter1 = chunk->BuildParameterInPlace<IPv4AddressChunkParameter>();
 
 		// 11.22.33.44 IPv4 in network order.
 		uint8_t ipBuffer1[] = { 0x0B, 0x16, 0x21, 0x2C };
@@ -635,8 +632,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		parameter1->SetIPv4Address(ipBuffer1);
 		parameter1->Consolidate();
 
-		auto* parameter2 = reinterpret_cast<IPv6AddressChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::IPV6_ADDRESS));
+		auto* parameter2 = chunk->BuildParameterInPlace<IPv6AddressChunkParameter>();
 
 		// 2345:0425:2CA1:0000:0000:0567:5673:23b5 IPv6 in network order.
 		uint8_t ipBuffer2[] = { 0x23, 0x45, 0x04, 0x25, 0x2C, 0xA1, 0x00, 0x00,
@@ -645,8 +641,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		parameter2->SetIPv6Address(ipBuffer2);
 		parameter2->Consolidate();
 
-		auto* parameter3 = reinterpret_cast<CookiePreservativeChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE));
+		auto* parameter3 = chunk->BuildParameterInPlace<CookiePreservativeChunkParameter>();
 
 		parameter3->SetLifeSpanIncrement(876543210);
 		parameter3->Consolidate();
@@ -902,8 +897,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		chunk->SetNumberOfInboundStreams(5678);
 		chunk->SetInitialTSN(3333333330);
 
-		auto* parameter1 = reinterpret_cast<IPv4AddressChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::IPV4_ADDRESS));
+		auto* parameter1 = chunk->BuildParameterInPlace<IPv4AddressChunkParameter>();
 
 		// 11.22.33.44 IPv4 in network order.
 		uint8_t ipBuffer1[] = { 0x0B, 0x16, 0x21, 0x2C };
@@ -1034,9 +1028,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
-		REQUIRE_THROWS_AS(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO),
-		  MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -1313,8 +1305,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 
 		/* Modify it by adding Chunk Parameters. */
 
-		auto* parameter1 = reinterpret_cast<HeartbeatInfoChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO));
+		auto* parameter1 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
 
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter1->SetInfo(ChunkCustomDataBuffer, 5);
@@ -1322,8 +1313,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 
 		// Let's add another HeartbeatInfoChunkParameter (it doesn't make sense but
 		// anyway).
-		auto* parameter2 = reinterpret_cast<HeartbeatInfoChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO));
+		auto* parameter2 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
 
 		// Info length is 2 so 2 bytes of padding will be added.
 		parameter2->SetInfo(ChunkCustomDataBuffer, 2);
@@ -1526,9 +1516,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
-		REQUIRE_THROWS_AS(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO),
-		  MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -1661,8 +1649,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		/* Modify it by adding Chunk Parameters. */
 
-		auto* parameter1 = reinterpret_cast<HeartbeatInfoChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO));
+		auto* parameter1 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
 
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter1->SetInfo(ChunkCustomDataBuffer, 5);
@@ -1670,8 +1657,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		// Let's add another HeartbeatInfoChunkParameter (it doesn't make sense but
 		// anyway).
-		auto* parameter2 = reinterpret_cast<HeartbeatInfoChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO));
+		auto* parameter2 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
 
 		// Info length is 2 so 2 bytes of padding will be added.
 		parameter2->SetInfo(ChunkCustomDataBuffer, 2);

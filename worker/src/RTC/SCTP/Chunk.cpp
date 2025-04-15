@@ -195,106 +195,6 @@ namespace RTC
 			this->parameters.push_back(clonedParameter);
 		}
 
-		ChunkParameter* Chunk::BuildParameterInPlace(ChunkParameter::ChunkParameterType parameterType)
-		{
-			MS_TRACE();
-
-			AssertNotFrozen();
-
-			ChunkParameter* parameter{ nullptr };
-
-			// The new Parameter will be added after other Parameters in the Chunk,
-			// this is, at the end of the Chunk, whose length we know it's padded to
-			// 4 bytes, and each Chunk Parameter total length is also multiple of 4
-			// bytes.
-			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
-			// The remaining length in the buffer is the potential buffer length
-			// of the Parameter.
-			size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
-
-			// TODO
-			switch (parameterType)
-			{
-				case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
-				{
-					parameter = HeartbeatInfoChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-
-				case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
-				{
-					parameter = IPv4AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-
-				case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
-				{
-					parameter = IPv6AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-
-				case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
-				{
-					parameter = CookiePreservativeChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-			}
-
-			// NOTE: Do not fix/update the Parameter buffer length since the caller
-			// probably wants to modify the Parameter.
-
-			// When the application completes the Parameter it must call
-			// `parameter->Consolidate()` and that will trigger this event.
-			parameter->SetConsolidatedListener(
-			  [this, parameter]()
-			  {
-				  // Fix buffer length assigned to the Parameter.
-				  parameter->SetBufferLength(parameter->GetLength());
-
-				  // NOTE: No need to freeze the Parameter because `Consolidate()` did
-				  // it.
-
-				  auto previousLength      = GetLength();
-				  auto previousLengthField = GetLengthField();
-
-				  try
-				  {
-					  // Update Chunk length.
-					  // NOTE: This will throw if there is no enough space in the Chunk
-					  // buffer.
-					  SetLength(previousLength + parameter->GetLength());
-
-					  // Here we have to update the Chunk Value Length and this is not easy
-					  // because we have to take into account the padding of all Parameters
-					  // but the last one. So we do this:
-					  // - We assume that Parameters are always at the end of the Chunk.
-					  // - We read the Parameter Length field of the new added Parameter.
-					  // - We add it to the previous total length of the Chunk and
-					  //   set the Chunk Length field with the resulting value.
-					  //
-					  // NOTE: This will throw if computed Length field value is too big.
-					  SetLengthField(previousLength + parameter->GetLengthField());
-				  }
-				  catch (const MediaSoupError& error)
-				  {
-					  // Rollback.
-					  SetLength(previousLength);
-					  SetLengthField(previousLengthField);
-
-					  throw;
-				  }
-
-				  // Add the Parameter to the list.
-				  this->parameters.push_back(parameter);
-			  });
-
-			return parameter;
-		}
-
 		void Chunk::DumpCommon(int indentation) const
 		{
 			MS_TRACE();
@@ -520,6 +420,106 @@ namespace RTC
 			}
 
 			return true;
+		}
+
+		ChunkParameter* Chunk::BuildParameterInPlace(ChunkParameter::ChunkParameterType parameterType)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			ChunkParameter* parameter{ nullptr };
+
+			// The new Parameter will be added after other Parameters in the Chunk,
+			// this is, at the end of the Chunk, whose length we know it's padded to
+			// 4 bytes, and each Chunk Parameter total length is also multiple of 4
+			// bytes.
+			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+			// The remaining length in the buffer is the potential buffer length
+			// of the Parameter.
+			size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+
+			// TODO
+			switch (parameterType)
+			{
+				case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
+				{
+					parameter = HeartbeatInfoChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
+
+				case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
+				{
+					parameter = IPv4AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
+
+				case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
+				{
+					parameter = IPv6AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
+
+				case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
+				{
+					parameter = CookiePreservativeChunkParameter::Factory(ptr, parameterMaxBufferLength);
+
+					break;
+				}
+			}
+
+			// NOTE: Do not fix/update the Parameter buffer length since the caller
+			// probably wants to modify the Parameter.
+
+			// When the application completes the Parameter it must call
+			// `parameter->Consolidate()` and that will trigger this event.
+			parameter->SetConsolidatedListener(
+			  [this, parameter]()
+			  {
+				  // Fix buffer length assigned to the Parameter.
+				  parameter->SetBufferLength(parameter->GetLength());
+
+				  // NOTE: No need to freeze the Parameter because `Consolidate()` did
+				  // it.
+
+				  auto previousLength      = GetLength();
+				  auto previousLengthField = GetLengthField();
+
+				  try
+				  {
+					  // Update Chunk length.
+					  // NOTE: This will throw if there is no enough space in the Chunk
+					  // buffer.
+					  SetLength(previousLength + parameter->GetLength());
+
+					  // Here we have to update the Chunk Value Length and this is not easy
+					  // because we have to take into account the padding of all Parameters
+					  // but the last one. So we do this:
+					  // - We assume that Parameters are always at the end of the Chunk.
+					  // - We read the Parameter Length field of the new added Parameter.
+					  // - We add it to the previous total length of the Chunk and
+					  //   set the Chunk Length field with the resulting value.
+					  //
+					  // NOTE: This will throw if computed Length field value is too big.
+					  SetLengthField(previousLength + parameter->GetLengthField());
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+					  // Rollback.
+					  SetLength(previousLength);
+					  SetLengthField(previousLengthField);
+
+					  throw;
+				  }
+
+				  // Add the Parameter to the list.
+				  this->parameters.push_back(parameter);
+			  });
+
+			return parameter;
 		}
 	} // namespace SCTP
 } // namespace RTC

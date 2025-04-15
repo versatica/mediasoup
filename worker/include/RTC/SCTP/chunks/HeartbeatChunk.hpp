@@ -41,6 +41,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
+			static constexpr Chunk::ChunkType type = Chunk::ChunkType::HEARTBEAT;
 			static const size_t HeartbeatChunkHeaderLength{ 4 };
 
 		public:

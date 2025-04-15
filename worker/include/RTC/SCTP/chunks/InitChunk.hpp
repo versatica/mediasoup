@@ -71,6 +71,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
+			static constexpr Chunk::ChunkType type = Chunk::ChunkType::INIT;
 			static const size_t InitChunkHeaderLength{ 20 };
 
 		public:

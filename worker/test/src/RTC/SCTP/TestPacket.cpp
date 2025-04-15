@@ -246,7 +246,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	uint8_t userData[] = { 0x01, 0x02, 0x03 };
 
 	// Chunk 1 (16 + 3 + 1 = 20 bytes).
-	auto* chunk1 = reinterpret_cast<DataChunk*>(packet->BuildChunkInPlace(Chunk::ChunkType::DATA));
+	auto* chunk1 = packet->BuildChunkInPlace<DataChunk>();
 
 	chunk1->SetI(true);
 	chunk1->SetTSN(9876);
@@ -290,8 +290,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	// NOTE: Do not delete the Chunk since it's now part of the Packet.
 
 	// Chunk 2 (8 bytes).
-	auto* chunk2 =
-	  reinterpret_cast<ShutdownChunk*>(packet->BuildChunkInPlace(Chunk::ChunkType::SHUTDOWN));
+	auto* chunk2 = packet->BuildChunkInPlace<ShutdownChunk>();
 
 	chunk2->SetCumulativeTsnAck(1234567890);
 

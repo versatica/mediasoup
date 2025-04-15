@@ -174,7 +174,8 @@ namespace RTC
 			/**
 			 * Build a Chunk within the Packet's buffer and append it to the list of
 			 * Chunks. The caller can perform modifications in that Chunk and those
-			 * will affect the Packet body where the Chunk is serialzed.
+			 * will affect the Packet body where the Chunk is serialzed. The desired
+			 * Chunk class type is given via template argument.
 			 *
 			 * @returns Pointer of the created Chunk specific class.
 			 *
@@ -184,15 +185,20 @@ namespace RTC
 			 *   in progress.
 			 * - The caller MUST NOT free the obtained Chunk pointer since it's now
 			 *   part of the Packet.
-			 * - The caller may want to cast the obtained Chunk to the specific Chunk
-			 *   subclass based on given `chunkType`:
-			 *   ```c++
-			 *   auto* chunk = reinterpret_cast<DataChunk*>(
-			 *     packet->BuildChunkInPlace(Chunk::ChunkType::DATA)
-			 *   );
-			 *   ```
+			 *
+			 * @example
+			 * ```c++
+			 * auto* initChunk =
+			 *   packet->BuildChunkInPlace<InitChunk>();
+			 * ```
 			 */
-			Chunk* BuildChunkInPlace(Chunk::ChunkType chunkType);
+			template<typename T>
+			T* BuildChunkInPlace()
+			{
+				Chunk* base = BuildChunkInPlace(T::type);
+
+				return static_cast<T*>(base);
+			}
 
 		private:
 			/**
@@ -208,6 +214,8 @@ namespace RTC
 			{
 				return const_cast<uint8_t*>(GetBuffer()) + Packet::CommonHeaderLength;
 			}
+
+			Chunk* BuildChunkInPlace(Chunk::ChunkType chunkType);
 
 		private:
 			// Chunks.

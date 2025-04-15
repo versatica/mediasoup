@@ -245,7 +245,8 @@ namespace RTC
 			 * Build a Chunk Parameter within the Chunk's buffer and append it to the
 			 * list of Chunk Parameters. The caller can perform modifications in that
 			 * Parameter and those will affect the Chunk body where the Parameter is
-			 * serialzed.
+			 * serialzed. The desired Chunk Parameter class type is given via template
+			 * argument.
 			 *
 			 * @returns Pointer of the created Chunk Parameter specific class.
 			 *
@@ -256,18 +257,20 @@ namespace RTC
 			 *   is in progress.
 			 * - The caller MUST NOT free the obtained Parameter pointer since it's
 			 *   now part of the Chunk.
-			 * - The caller may want to cast the obtained Parameter to the specific
-			 *   Chunk Parameter subclass based on given `parameterType`:
-			 *   ```c++
-			 *   auto* parameter = reinterpret_cast<HearbeatInfoChunkParameter*>(
-			 *     chunk->BuildParameterInPlace(
-			 *       ChunkParameter::ChunkParameterType::HEARTBEAT_INFO
-			 *     )
-			 *   );
-			 *   ```
+			 *
+			 * @example
+			 * ```c++
+			 * auto* ipv4Parameter =
+			 *   chunk->BuildParameterInPlace<IPv4AddressChunkParameter>();
+			 * ```
 			 */
-			virtual ChunkParameter* BuildParameterInPlace(
-			  ChunkParameter::ChunkParameterType parameterType) final;
+			template<typename T>
+			T* BuildParameterInPlace()
+			{
+				ChunkParameter* base = BuildParameterInPlace(T::type);
+
+				return static_cast<T*>(base);
+			}
 
 		protected:
 			/**
@@ -431,6 +434,9 @@ namespace RTC
 			{
 				GetHeaderPointer()->flags = flags;
 			}
+
+			virtual ChunkParameter* BuildParameterInPlace(
+			  ChunkParameter::ChunkParameterType parameterType) final;
 
 		private:
 			// Chunk Parameters.

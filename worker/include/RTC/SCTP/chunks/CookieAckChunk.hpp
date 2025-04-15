@@ -34,6 +34,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
+			static constexpr Chunk::ChunkType type = Chunk::ChunkType::COOKIE_ACK;
 			static const size_t CookieAckChunkLength{ 4 };
 
 		public:
