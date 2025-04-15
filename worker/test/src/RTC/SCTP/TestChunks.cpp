@@ -911,9 +911,6 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		parameter1->SetIPv4Address(ipBuffer1);
 		parameter1->Consolidate();
 
-		auto* parameter2 = reinterpret_cast<IPv6AddressChunkParameter*>(
-		  chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::IPV6_ADDRESS));
-
 		checkChunk(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ChunkFactoryBuffer,
