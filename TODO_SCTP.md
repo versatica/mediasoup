@@ -36,3 +36,5 @@ Same in `PipeTransport` and `PlainTransport`.
 - Same in `Packet::BuildChunkInPlace()`.
 
 - What happens if I call `chunk->BuildParameterInPlace()` in a Chunk class that is not supposed to have chunks??? It should not be allowed and should throw.
+
+- Keep `Packet::AddChunk()` and `Chunk::AddParameter()`? Do we really need them having the `BuildXxxxInPlace()` methods?
