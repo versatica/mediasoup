@@ -9,6 +9,7 @@
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
@@ -91,6 +92,13 @@ namespace RTC
 					case Chunk::ChunkType::INIT:
 					{
 						chunk = InitChunk::Parse(ptr, chunkLength + padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::INIT_ACK:
+					{
+						chunk = InitAckChunk::Parse(ptr, chunkLength + padding);
 
 						break;
 					}
@@ -294,6 +302,13 @@ namespace RTC
 						break;
 					}
 
+					case Chunk::ChunkType::INIT_ACK:
+					{
+						clonedChunk = new InitAckChunk(buffer + offset, chunk->GetLength());
+
+						break;
+					}
+
 					case Chunk::ChunkType::HEARTBEAT:
 					{
 						clonedChunk = new HeartbeatChunk(buffer + offset, chunk->GetLength());
@@ -459,6 +474,13 @@ namespace RTC
 				case Chunk::ChunkType::INIT:
 				{
 					chunk = InitChunk::Factory(ptr, chunkMaxBufferLength);
+
+					break;
+				}
+
+				case Chunk::ChunkType::INIT_ACK:
+				{
+					chunk = InitAckChunk::Factory(ptr, chunkMaxBufferLength);
 
 					break;
 				}

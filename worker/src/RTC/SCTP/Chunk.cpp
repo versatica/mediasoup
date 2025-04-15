@@ -306,12 +306,7 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
-			MS_DUMP_CLEAN(
-			  indentation,
-			  "  length field: %" PRIu16 " (has value: %s, value length: %" PRIu16 ")",
-			  GetLengthField(),
-			  HasValue() ? "yes" : "no",
-			  GetValueLength());
+			MS_DUMP_CLEAN(indentation, "  length field: %" PRIu16, GetLengthField());
 			MS_DUMP_CLEAN(indentation, "  has parameters: %s", HasParameters() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  parameters count: %zu", GetParametersCount());
 			for (auto* parameter : this->parameters)
