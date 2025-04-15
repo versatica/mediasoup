@@ -9,6 +9,7 @@
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/InitChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
@@ -83,6 +84,13 @@ namespace RTC
 					case Chunk::ChunkType::DATA:
 					{
 						chunk = DataChunk::Parse(ptr, chunkLength + padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::INIT:
+					{
+						chunk = InitChunk::Parse(ptr, chunkLength + padding);
 
 						break;
 					}
@@ -185,7 +193,11 @@ namespace RTC
 
 			auto* packet = new Packet(buffer, bufferLength);
 
-			packet->InitializeHeader();
+			// Must initialize extra fields in the header.
+			packet->SetSourcePort(0u);
+			packet->SetDestinationPort(0u);
+			packet->SetVerificationTag(0u);
+			packet->SetChecksum(0u);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum Packet length.
@@ -271,6 +283,13 @@ namespace RTC
 					case Chunk::ChunkType::DATA:
 					{
 						clonedChunk = new DataChunk(buffer + offset, chunk->GetLength());
+
+						break;
+					}
+
+					case Chunk::ChunkType::INIT:
+					{
+						clonedChunk = new InitChunk(buffer + offset, chunk->GetLength());
 
 						break;
 					}
@@ -416,6 +435,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotFrozen();
+
 			Chunk* chunk{ nullptr };
 
 			// The new Chunk will be added after other Chunks in the Packet, this is,
@@ -431,6 +452,13 @@ namespace RTC
 				case Chunk::ChunkType::DATA:
 				{
 					chunk = DataChunk::Factory(ptr, chunkMaxBufferLength);
+
+					break;
+				}
+
+				case Chunk::ChunkType::INIT:
+				{
+					chunk = InitChunk::Factory(ptr, chunkMaxBufferLength);
 
 					break;
 				}
@@ -501,16 +529,6 @@ namespace RTC
 			  });
 
 			return chunk;
-		}
-
-		void Packet::InitializeHeader()
-		{
-			MS_TRACE();
-
-			SetSourcePort(0u);
-			SetDestinationPort(0u);
-			SetVerificationTag(0u);
-			SetChecksum(0u);
 		}
 	} // namespace SCTP
 } // namespace RTC

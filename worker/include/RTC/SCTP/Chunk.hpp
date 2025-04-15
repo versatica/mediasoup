@@ -408,14 +408,16 @@ namespace RTC
 
 			/**
 			 * To be called by each subclass of Chunk if Chunk Parameters parsing is
-			 * needed.
+			 * needed. It creates ChunkParameter subclasses and adds them to the
+			 * Chunk.
 			 *
-			 * @param buffer Buffer where Parameters maybe located.
-			 * @param bufferLength Total length of the Parameters.
+			 * @remarks This method assumes that the Chunk basic parsing has been
+			 *   made already so current length of the Chunk is the fixed length of
+			 *   the specific Chunk class.
 			 *
 			 * @return True if no error happened while parsing Parameters.
 			 */
-			virtual bool ParseParameters(const uint8_t* buffer, uint16_t bufferLength) final;
+			virtual bool ParseParameters() final;
 
 		private:
 			virtual void SetType(ChunkType type) final

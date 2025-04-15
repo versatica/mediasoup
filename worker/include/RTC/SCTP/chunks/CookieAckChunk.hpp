@@ -19,6 +19,7 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
 		 * - Chunk Type (8 bits): 11.
+		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits): 4.
 		 */
 

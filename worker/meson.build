@@ -183,6 +183,7 @@ common_sources = [
   'src/RTC/SCTP/Packet.cpp',
   'src/RTC/SCTP/Chunk.cpp',
   'src/RTC/SCTP/chunks/DataChunk.cpp',
+  'src/RTC/SCTP/chunks/InitChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatAckChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownChunk.cpp',

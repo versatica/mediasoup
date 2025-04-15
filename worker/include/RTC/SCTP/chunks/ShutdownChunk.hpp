@@ -21,8 +21,9 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
 		 * - Chunk Type (8 bits): 7.
+		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits): 8.
-		 * - Cumulative TSN Ack (32 bits). The largest TSN, such that all TSNs
+		 * - Cumulative TSN Ack (32 bits): The largest TSN, such that all TSNs
 		 *   smaller than or equal to it have been received and the next one has
 		 *   not been received.
 		 */

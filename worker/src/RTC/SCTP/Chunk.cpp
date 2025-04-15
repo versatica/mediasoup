@@ -199,6 +199,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotFrozen();
+
 			ChunkParameter* parameter{ nullptr };
 
 			// The new Parameter will be added after other Parameters in the Chunk,
@@ -419,17 +421,29 @@ namespace RTC
 			GetHeaderPointer()->length = uint16_t{ htons(length) };
 		}
 
-		bool Chunk::ParseParameters(const uint8_t* buffer, uint16_t bufferLength)
+		bool Chunk::ParseParameters()
 		{
 			MS_TRACE();
 
-			auto* ptr = const_cast<uint8_t*>(buffer);
+			// Here we assume that the Chunk buffer has been validated and
+			// GetLength() returns the fixed minimum length of the specific Chunk
+			// subclass, so GetBuffer() + GetLength() points to the beginning of
+			// the potential Chunk Parameters.
+			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 
-			while (ptr < buffer + bufferLength)
+			// Here we assume that the Chunk has been validated so Length field is
+			// reliable. We want to be ready for Length field to include or not the
+			// possible padding of the last Chunk Parameter (as per RFC
+			// recommendation). In fact, we rely on parameter->GetLength() while
+			// parsing the buffer so we want to provide each ChunkParameter::Parse()
+			// with a 4-bytes padded buffer length.
+			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(GetLengthField());
+
+			while (ptr < end)
 			{
 				// The remaining length in the given length is the potential buffer
 				// length of the Chunk Parameter.
-				size_t parameterMaxBufferLength = bufferLength - (ptr - buffer);
+				size_t parameterMaxBufferLength = end - ptr;
 
 				// Here we must anticipate the type of each Parameter to use its
 				// appropriate parser.
@@ -446,9 +460,6 @@ namespace RTC
 				}
 
 				ChunkParameter* parameter{ nullptr };
-
-				MS_DEBUG_DEV(
-				  "parsing SCTP Chunk Parameter [ptr:%zu, type:%" PRIu16 "]", ptr - buffer, parameterType);
 
 				// TODO
 				switch (parameterType)
@@ -497,16 +508,16 @@ namespace RTC
 				ptr += parameter->GetLength();
 			}
 
-			const size_t computedLength = ptr - buffer;
-
-			// Ensure computed length matches the total given buffer length.
-			if (computedLength != bufferLength)
+			if (ptr != end)
 			{
+				auto expectedLength = end - GetBuffer();
+				auto computedLength = ptr - GetBuffer();
+
 				MS_WARN_TAG(
 				  sctp,
-				  "computed length (%zu bytes) != buffer length (%" PRIu16 " bytes)",
+				  "computed length (%zu bytes) doesn't match the expected length (%zu bytes)",
 				  computedLength,
-				  bufferLength);
+				  expectedLength);
 
 				return false;
 			}

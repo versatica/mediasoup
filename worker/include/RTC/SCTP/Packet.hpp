@@ -193,8 +193,6 @@ namespace RTC
 			Chunk* BuildChunkInPlace(Chunk::ChunkType chunkType);
 
 		private:
-			void InitializeHeader();
-
 			/**
 			 * NOTE: Return CommonHeader* instead of const CommonHeader* since we may
 			 * want to modify its fields.

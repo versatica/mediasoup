@@ -22,9 +22,12 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
 		 * - Chunk Type (8 bits): 4.
+		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits).
-		 * - Heartbeat Information (variable length): Contains a variable-length
-		 *   Heartbeat Info parameter.
+		 * - Heartbeat Information (variable length):
+		 *
+		 * Mandatory Variable-Length Parameters:
+		 * - Heartbeat Info.
 		 */
 
 		// Forward declaration.

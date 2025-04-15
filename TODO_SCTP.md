@@ -18,3 +18,21 @@ Same in `PipeTransport` and `PlainTransport`.
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
 - Check all pending "TODO" comments.
+
+- Maybe change this:
+
+  ```c++
+  auto* parameter = reinterpret_cast<HeartbeatInfoChunkParameter*>(
+    chunk->BuildParameterInPlace(ChunkParameter::ChunkParameterType::HEARTBEAT_INFO)
+  );
+  ```
+
+  to this?:
+
+  ```c++
+  auto* parameter = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+  ```
+
+- Same in `Packet::BuildChunkInPlace()`.
+
+- What happens if I call `chunk->BuildParameterInPlace()` in a Chunk class that is not supposed to have chunks??? It should not be allowed and should throw.

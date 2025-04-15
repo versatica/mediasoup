@@ -34,11 +34,7 @@ namespace RTC
 
 			auto* chunk = new HeartbeatChunk(buffer, bufferLength);
 
-			// NOTE: We include the computed Chunk padding into the length of the Chunk
-			// Parameters to simplify the parsing so all Parameters must have a total
-			// length multiple of 4 bytes.
-
-			if (!chunk->ParseParameters(chunk->GetValuePointer(), chunk->GetValueLength() + padding))
+			if (!chunk->ParseParameters())
 			{
 				MS_WARN_DEV("failed to parse Chunk Parameters");
 
