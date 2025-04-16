@@ -31,6 +31,40 @@ void resetBuffers()
 	DataBuffer[7] = 0x07;
 }
 
+void checkPacket(
+  const Packet* packet,
+  const uint8_t* buffer,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  uint16_t sourcePort,
+  uint16_t destinationPort,
+  uint32_t verificationTag,
+  uint32_t checksum,
+  size_t chunksCount)
+{
+	REQUIRE(packet);
+	REQUIRE(packet->GetBuffer() == buffer);
+	REQUIRE(packet->GetBufferLength() == bufferLength);
+	REQUIRE(packet->GetLength() == length);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
+	REQUIRE(packet->IsFrozen() == frozen);
+	REQUIRE(packet->GetSourcePort() == sourcePort);
+	REQUIRE(packet->GetDestinationPort() == destinationPort);
+	REQUIRE(packet->GetVerificationTag() == verificationTag);
+	REQUIRE(packet->GetChecksum() == checksum);
+	REQUIRE(packet->HasChunks() == chunksCount > 0);
+	REQUIRE(packet->GetChunksCount() == chunksCount);
+	REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);
+	REQUIRE(helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true);
+
+	// Also assert that Serialize() throws if a too small buffer is given.
+	REQUIRE_THROWS_AS(const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);
+
+	// Also assert that Clone() throws if a too small buffer is given.
+	REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);
+}
+
 void checkChunk(
   const Chunk* chunk,
   const uint8_t* buffer,
@@ -44,7 +78,12 @@ void checkChunk(
   size_t parametersCount)
 {
 	REQUIRE(chunk);
-	REQUIRE(chunk->GetBuffer() == buffer);
+
+	if (buffer)
+	{
+		REQUIRE(chunk->GetBuffer() == buffer);
+	}
+
 	REQUIRE(chunk->GetBufferLength() == bufferLength);
 	REQUIRE(chunk->GetLength() == length);
 	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);
@@ -56,13 +95,41 @@ void checkChunk(
 	REQUIRE(chunk->HasParameters() == parametersCount > 0);
 	REQUIRE(chunk->GetParametersCount() == parametersCount);
 	REQUIRE(chunk->GetParameterAt(parametersCount) == nullptr);
-	REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
+
+	if (buffer)
+	{
+		REQUIRE(helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);
+	}
 
 	// Also assert that Serialize() throws if a too small buffer is given.
 	REQUIRE_THROWS_AS(const_cast<Chunk*>(chunk)->Serialize(ThrowBuffer, length - 1), MediaSoupError);
 
 	// Also assert that Clone() throws if a too small buffer is given.
 	REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, length - 1), MediaSoupError);
+}
+
+void checkChunk(
+  const Chunk* chunk,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  Chunk::ChunkType chunkType,
+  bool unknownType,
+  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
+  uint8_t flags,
+  size_t parametersCount)
+{
+	checkChunk(
+	  /*chunk*/ chunk,
+	  /*buffer*/ nullptr,
+	  /*bufferLength*/ bufferLength,
+	  /*length*/ length,
+	  /*frozen*/ frozen,
+	  /*chunkType*/ chunkType,
+	  /*unknownType*/ unknownType,
+	  /*actionForUnknownChunkType*/ actionForUnknownChunkType,
+	  /*flags*/ flags,
+	  /*parametersCount*/ parametersCount);
 }
 
 void checkChunkParameter(

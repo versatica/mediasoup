@@ -69,6 +69,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<IPv4AddressChunkParameter>(), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetI(true), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetE(true), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetTsn(12345678), MediaSoupError);
@@ -76,7 +77,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE_THROWS_AS(chunk->SetStreamSequenceNumberN(2211), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetPayloadProtocolIdentifier(987654321), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetUserData(DataBuffer, 3), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<IPv4AddressChunkParameter>(), MediaSoupError);
 
 		/* Serialize it. */
 

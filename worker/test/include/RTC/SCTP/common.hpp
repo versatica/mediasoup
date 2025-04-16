@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/SCTP/Chunk.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
+#include "RTC/SCTP/Packet.hpp"
 
 using namespace RTC::SCTP;
 
@@ -17,9 +18,37 @@ extern thread_local uint8_t ThrowBuffer[66665];
 
 void resetBuffers();
 
+void checkPacket(
+  const Packet* packet,
+  const uint8_t* buffer,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  uint16_t sourcePort,
+  uint16_t destinationPort,
+  uint32_t verificationTag,
+  uint32_t checksum,
+  size_t chunksCount);
+
 void checkChunk(
   const Chunk* chunk,
   const uint8_t* buffer,
+  size_t bufferLength,
+  size_t length,
+  bool frozen,
+  Chunk::ChunkType chunkType,
+  bool unknownType,
+  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
+  uint8_t flags,
+  size_t parametersCount);
+
+/**
+ * This is the same as the previous function but doesn't include the buffer.
+ * Useful when obtaining the Chunks from a Packet, so their exact location in
+ * a buffer is irrelevant for testing purposes.
+ */
+void checkChunk(
+  const Chunk* chunk,
   size_t bufferLength,
   size_t length,
   bool frozen,
@@ -42,7 +71,7 @@ void checkChunkParameter(
 
 /**
  * This is the same as the previous function but doesn't include the buffer.
- * Useful when obtaining the Chunk Parameters from Chunks, so their exact
+ * Useful when obtaining the Chunk Parameters from a Chunk, so their exact
  * location in a buffer is irrelevant for testing purposes.
  */
 void checkChunkParameter(
