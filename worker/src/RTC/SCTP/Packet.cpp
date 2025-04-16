@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/chunks/CookieAckChunk.hpp"
+#include "RTC/SCTP/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
@@ -122,6 +123,13 @@ namespace RTC
 					case Chunk::ChunkType::SHUTDOWN_ACK:
 					{
 						chunk = ShutdownAckChunk::Parse(ptr, chunkLength + padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::COOKIE_ECHO:
+					{
+						chunk = CookieEchoChunk::Parse(ptr, chunkLength + padding);
 
 						break;
 					}
@@ -334,6 +342,13 @@ namespace RTC
 					case Chunk::ChunkType::SHUTDOWN_ACK:
 					{
 						clonedChunk = new ShutdownAckChunk(buffer + offset, chunk->GetLength());
+
+						break;
+					}
+
+					case Chunk::ChunkType::COOKIE_ECHO:
+					{
+						clonedChunk = new CookieEchoChunk(buffer + offset, chunk->GetLength());
 
 						break;
 					}

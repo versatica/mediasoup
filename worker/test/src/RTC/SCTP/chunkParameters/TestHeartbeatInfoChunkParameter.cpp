@@ -40,6 +40,8 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter->HasInfo() == true);
+		REQUIRE(parameter->GetInfoLength() == 7);
 		REQUIRE(parameter->GetInfo()[0] == 0x11);
 		REQUIRE(parameter->GetInfo()[1] == 0x22);
 		REQUIRE(parameter->GetInfo()[2] == 0x33);
@@ -69,6 +71,8 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter->HasInfo() == true);
+		REQUIRE(parameter->GetInfoLength() == 7);
 		REQUIRE(parameter->GetInfo()[0] == 0x11);
 		REQUIRE(parameter->GetInfo()[1] == 0x22);
 		REQUIRE(parameter->GetInfo()[2] == 0x33);
@@ -96,6 +100,8 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(clonedParameter->HasInfo() == true);
+		REQUIRE(clonedParameter->GetInfoLength() == 7);
 		REQUIRE(clonedParameter->GetInfo()[0] == 0x11);
 		REQUIRE(clonedParameter->GetInfo()[1] == 0x22);
 		REQUIRE(clonedParameter->GetInfo()[2] == 0x33);
@@ -172,7 +178,32 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 0);
 
+		REQUIRE(parameter->HasInfo() == false);
+		REQUIRE(parameter->GetInfoLength() == 0);
+
 		/* Modify it. */
+
+		// Verify that replacing the value works.
+		parameter->SetInfo(DataBuffer + 1000, 3000);
+
+		REQUIRE(parameter->GetLength() == 3004);
+		REQUIRE(parameter->GetInfoLength() == 3000);
+
+		parameter->SetInfo(nullptr, 0);
+
+		REQUIRE(parameter->GetLength() == 4);
+		REQUIRE(parameter->HasInfo() == false);
+		REQUIRE(parameter->GetInfoLength() == 0);
+
+		parameter->SetInfo(DataBuffer, 2);
+
+		REQUIRE(parameter->GetLength() == 8);
+		REQUIRE(parameter->GetInfoLength() == 2);
+
+		parameter->SetInfo(DataBuffer + 2000, 2000);
+
+		REQUIRE(parameter->GetLength() == 2004);
+		REQUIRE(parameter->GetInfoLength() == 2000);
 
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter->SetInfo(DataBuffer, 5);
@@ -188,6 +219,8 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 5);
 
+		REQUIRE(parameter->HasInfo() == true);
+		REQUIRE(parameter->GetInfoLength() == 5);
 		REQUIRE(parameter->GetInfo()[0] == 0x00);
 		REQUIRE(parameter->GetInfo()[1] == 0x01);
 		REQUIRE(parameter->GetInfo()[2] == 0x02);
@@ -216,6 +249,8 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 5);
 
+		REQUIRE(parsedParameter->HasInfo() == true);
+		REQUIRE(parsedParameter->GetInfoLength() == 5);
 		REQUIRE(parsedParameter->GetInfo()[0] == 0x00);
 		REQUIRE(parsedParameter->GetInfo()[1] == 0x01);
 		REQUIRE(parsedParameter->GetInfo()[2] == 0x02);

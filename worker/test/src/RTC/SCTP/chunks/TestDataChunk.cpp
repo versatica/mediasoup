@@ -182,6 +182,19 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		chunk->SetStreamIdentifierS(9988);
 		chunk->SetStreamSequenceNumberN(2211);
 		chunk->SetPayloadProtocolIdentifier(987654321);
+
+		// Verify that replacing the value works.
+		chunk->SetUserData(DataBuffer + 1000, 3000);
+
+		REQUIRE(chunk->GetLength() == 3016);
+		REQUIRE(chunk->GetUserDataLength() == 3000);
+
+		chunk->SetUserData(nullptr, 0);
+
+		REQUIRE(chunk->GetLength() == 16);
+		REQUIRE(chunk->HasUserData() == false);
+		REQUIRE(chunk->GetUserDataLength() == 0);
+
 		// 3 bytes + 1 byte of padding.
 		chunk->SetUserData(DataBuffer, 3);
 

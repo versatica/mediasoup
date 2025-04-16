@@ -63,6 +63,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter1->HasInfo() == true);
+		REQUIRE(parameter1->GetInfoLength() == 7);
 		REQUIRE(parameter1->GetInfo()[0] == 0x11);
 		REQUIRE(parameter1->GetInfo()[1] == 0x22);
 		REQUIRE(parameter1->GetInfo()[2] == 0x33);
@@ -70,6 +72,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parameter1->GetInfo()[4] == 0x55);
 		REQUIRE(parameter1->GetInfo()[5] == 0x66);
 		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		auto* parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
 
@@ -83,6 +87,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 2);
 
+		REQUIRE(parameter2->HasUnknownValue() == true);
+		REQUIRE(parameter2->GetUnknownValueLength() == 2);
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
 		// This should be padding.
@@ -121,6 +127,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter1->HasInfo() == true);
+		REQUIRE(parameter1->GetInfoLength() == 7);
 		REQUIRE(parameter1->GetInfo()[0] == 0x11);
 		REQUIRE(parameter1->GetInfo()[1] == 0x22);
 		REQUIRE(parameter1->GetInfo()[2] == 0x33);
@@ -128,6 +136,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parameter1->GetInfo()[4] == 0x55);
 		REQUIRE(parameter1->GetInfo()[5] == 0x66);
 		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
 
@@ -141,6 +151,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 2);
 
+		REQUIRE(parameter2->HasUnknownValue() == true);
+		REQUIRE(parameter2->GetUnknownValueLength() == 2);
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
 		// This should be padding.
@@ -177,6 +189,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter1->HasInfo() == true);
+		REQUIRE(parameter1->GetInfoLength() == 7);
 		REQUIRE(parameter1->GetInfo()[0] == 0x11);
 		REQUIRE(parameter1->GetInfo()[1] == 0x22);
 		REQUIRE(parameter1->GetInfo()[2] == 0x33);
@@ -184,6 +198,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parameter1->GetInfo()[4] == 0x55);
 		REQUIRE(parameter1->GetInfo()[5] == 0x66);
 		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(clonedChunk->GetParameterAt(1));
 
@@ -197,6 +213,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 2);
 
+		REQUIRE(parameter2->HasUnknownValue() == true);
+		REQUIRE(parameter2->GetUnknownValueLength() == 2);
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
 		// This should be padding.
@@ -265,6 +283,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter1->HasInfo() == true);
+		REQUIRE(parameter1->GetInfoLength() == 7);
 		REQUIRE(parameter1->GetInfo()[0] == 0x11);
 		REQUIRE(parameter1->GetInfo()[1] == 0x22);
 		REQUIRE(parameter1->GetInfo()[2] == 0x33);
@@ -272,6 +292,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parameter1->GetInfo()[4] == 0x55);
 		REQUIRE(parameter1->GetInfo()[5] == 0x66);
 		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		auto* parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
 
@@ -285,6 +307,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 2);
 
+		REQUIRE(parameter2->HasUnknownValue() == true);
+		REQUIRE(parameter2->GetUnknownValueLength() == 2);
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
 		// This should be padding.
@@ -321,6 +345,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter1->HasInfo() == true);
+		REQUIRE(parameter1->GetInfoLength() == 7);
 		REQUIRE(parameter1->GetInfo()[0] == 0x11);
 		REQUIRE(parameter1->GetInfo()[1] == 0x22);
 		REQUIRE(parameter1->GetInfo()[2] == 0x33);
@@ -328,6 +354,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parameter1->GetInfo()[4] == 0x55);
 		REQUIRE(parameter1->GetInfo()[5] == 0x66);
 		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+		// This should be padding.
+		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
 		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(clonedChunk->GetParameterAt(1));
 
@@ -341,6 +369,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 2);
 
+		REQUIRE(parameter2->HasUnknownValue() == true);
+		REQUIRE(parameter2->GetUnknownValueLength() == 2);
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
 		// This should be padding.
@@ -407,6 +437,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 5);
 
+		REQUIRE(addedParameter1->HasInfo() == true);
+		REQUIRE(addedParameter1->GetInfoLength() == 5);
 		REQUIRE(addedParameter1->GetInfo()[0] == 0x00);
 		REQUIRE(addedParameter1->GetInfo()[1] == 0x01);
 		REQUIRE(addedParameter1->GetInfo()[2] == 0x02);
@@ -429,6 +461,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 2);
 
+		REQUIRE(addedParameter2->HasInfo() == true);
+		REQUIRE(addedParameter2->GetInfoLength() == 2);
 		REQUIRE(addedParameter2->GetInfo()[0] == 0x00);
 		REQUIRE(addedParameter2->GetInfo()[1] == 0x01);
 		// These should be padding.
@@ -466,6 +500,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 5);
 
+		REQUIRE(parsedParameter1->HasInfo() == true);
+		REQUIRE(parsedParameter1->GetInfoLength() == 5);
 		REQUIRE(parsedParameter1->GetInfo()[0] == 0x00);
 		REQUIRE(parsedParameter1->GetInfo()[1] == 0x01);
 		REQUIRE(parsedParameter1->GetInfo()[2] == 0x02);
@@ -488,6 +524,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
 		  /*valueLength*/ 2);
 
+		REQUIRE(parsedParameter2->HasInfo() == true);
+		REQUIRE(parsedParameter2->GetInfoLength() == 2);
 		REQUIRE(parsedParameter2->GetInfo()[0] == 0x00);
 		REQUIRE(parsedParameter2->GetInfo()[1] == 0x01);
 		// These should be padding.

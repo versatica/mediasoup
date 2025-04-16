@@ -40,6 +40,9 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter->HasUnknownValue() == true);
+		REQUIRE(parameter->GetUnknownValueLength() == 7);
+		REQUIRE(parameter->GetUnknownValue()[1] == 0x23);
 		REQUIRE(parameter->GetUnknownValue()[0] == 0x01);
 		REQUIRE(parameter->GetUnknownValue()[1] == 0x23);
 		REQUIRE(parameter->GetUnknownValue()[2] == 0x45);
@@ -65,6 +68,8 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 7);
 
+		REQUIRE(parameter->HasUnknownValue() == true);
+		REQUIRE(parameter->GetUnknownValueLength() == 7);
 		REQUIRE(parameter->GetUnknownValue()[0] == 0x01);
 		REQUIRE(parameter->GetUnknownValue()[1] == 0x23);
 		REQUIRE(parameter->GetUnknownValue()[2] == 0x45);
@@ -92,6 +97,8 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
 		  /*valueLength*/ 7);
 
+		REQUIRE(clonedParameter->HasUnknownValue() == true);
+		REQUIRE(clonedParameter->GetUnknownValueLength() == 7);
 		REQUIRE(clonedParameter->GetUnknownValue()[0] == 0x01);
 		REQUIRE(clonedParameter->GetUnknownValue()[1] == 0x23);
 		REQUIRE(clonedParameter->GetUnknownValue()[2] == 0x45);

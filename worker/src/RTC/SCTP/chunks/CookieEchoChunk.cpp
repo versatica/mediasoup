@@ -114,8 +114,9 @@ namespace RTC
 			auto previousLength       = GetLength();
 			auto previousLengthField  = GetLengthField();
 			auto previousCookieLength = GetCookieLength();
-			auto newNotPaddedLength   = previousLength - previousCookieLength + cookieLength;
-			auto newPaddedLength      = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+			auto newNotPaddedLength =
+			  size_t{ previousLengthField } - size_t{ previousCookieLength } + size_t{ cookieLength };
+			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			try
 			{

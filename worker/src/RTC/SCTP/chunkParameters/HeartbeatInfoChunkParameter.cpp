@@ -117,9 +117,10 @@ namespace RTC
 
 			auto previousLength      = GetLength();
 			auto previousLengthField = GetLengthField();
-			auto previousInfoLength  = GetValueLength();
-			auto newNotPaddedLength  = previousLength - previousInfoLength + infoLength;
-			auto newPaddedLength     = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+			auto previousInfoLength  = GetInfoLength();
+			auto newNotPaddedLength =
+			  size_t{ previousLengthField } - size_t{ previousInfoLength } + size_t{ infoLength };
+			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			try
 			{
