@@ -237,7 +237,6 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  destination port: %" PRIu16, GetDestinationPort());
 			MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());
 			MS_DUMP_CLEAN(indentation, "  checksum: %" PRIu32, GetChecksum());
-			MS_DUMP_CLEAN(indentation, "  has chunks: %s", HasChunks() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  chunks count: %zu", GetChunksCount());
 			for (auto* chunk : this->chunks)
 			{
