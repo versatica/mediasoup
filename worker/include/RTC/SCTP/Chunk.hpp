@@ -417,6 +417,16 @@ namespace RTC
 				return const_cast<uint8_t*>(GetBuffer()) + Chunk::ChunkHeaderLength;
 			}
 
+			virtual const uint8_t* GetValue() const final
+			{
+				if (!HasValue())
+				{
+					return nullptr;
+				}
+
+				return GetValuePointer();
+			}
+
 			virtual uint16_t GetValueLength() const final
 			{
 				if (!HasValue())

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_HEARTBEAT_CHUNK_HPP
-#define MS_RTC_SCTP_HEARTBEAT_CHUNK_HPP
+#ifndef MS_RTC_SCTP_COOKIE_ECHO_CHUNK_HPP
+#define MS_RTC_SCTP_COOKIE_ECHO_CHUNK_HPP
 
 #include "common.hpp"
 #include "RTC/SCTP/Chunk.hpp"
@@ -9,69 +9,82 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Heartbeat Request Chunk (HEARTBEAT) (4).
+		 * Cookie Echo Chunk (COOKIE ECHO) (10).
 		 *
 		 * @see RFC 9260.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |   Type = 4    |  Chunk Flags  |       Heartbeat Length        |
+		 * |   Type = 10   |  Chunk Flags  |            Length             |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * \                                                               \
-		 * /          Heartbeat Information TLV (Variable-Length)          /
+		 * /                            Cookie                             /
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): 4.
+		 * - Chunk Type (8 bits): 10.
 		 * - Flags (8 bits): All set to 0.
 		 * - Length (16 bits).
-		 * - Heartbeat Information (variable length).
-		 *
-		 * Mandatory Variable-Length Parameters:
-		 * - Heartbeat Info (1), mandatory.
+		 * - Cookie (variable length).
 		 */
 
 		// Forward declaration.
 		class Packet;
 
-		class HeartbeatChunk : public Chunk
+		class CookieEchoChunk : public Chunk
 		{
 			// We need that Packet calls protected and private methods in this class.
 			friend class Packet;
 
 		public:
-			static const size_t HeartbeatChunkHeaderLength{ 4 };
+			static const size_t CookieEchoChunkHeaderLength{ 4 };
 
 		public:
 			/**
-			 * Parse a HeartbeatChunk.
+			 * Parse a CookieEchoChunk.
 			 *
 			 * @remarks
 			 * - `bufferLength` may exceed the exact length of the Chunk.
 			 */
-			static HeartbeatChunk* Parse(const uint8_t* buffer, size_t bufferLength);
+			static CookieEchoChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Create a HeartbeatChunk.
+			 * Create a CookieEchoChunk.
 			 *
 			 * @remarks
 			 * - `bufferLength` could be greater than the Chunk real length.
 			 */
-			static HeartbeatChunk* Factory(uint8_t* buffer, size_t bufferLength);
+			static CookieEchoChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			HeartbeatChunk(const uint8_t* buffer, size_t bufferLength);
+			CookieEchoChunk(const uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~HeartbeatChunk() override;
+			virtual ~CookieEchoChunk() override;
 
 			virtual void Dump(int indentation = 0) const override final;
 
-			virtual HeartbeatChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			virtual CookieEchoChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+
+			bool HasCookie() const
+			{
+				return HasValue();
+			}
+
+			const uint8_t* GetCookie() const
+			{
+				return GetValue();
+			}
+
+			uint16_t GetCookieLength() const
+			{
+				return GetValueLength();
+			}
+
+			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -212,6 +212,16 @@ namespace RTC
 				return const_cast<uint8_t*>(GetBuffer()) + ChunkParameter::ChunkParameterHeaderLength;
 			}
 
+			virtual const uint8_t* GetValue() const final
+			{
+				if (!HasValue())
+				{
+					return nullptr;
+				}
+
+				return GetValuePointer();
+			}
+
 		private:
 			virtual void SetType(ChunkParameterType type) final
 			{

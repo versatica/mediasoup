@@ -89,6 +89,11 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<SCTP::HeartbeatInfoChunkParameter>");
 			DumpCommon(indentation);
 			MS_DUMP_CLEAN(indentation, "  info length: %" PRIu16, GetValueLength());
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  info length: %" PRIu16 " (has info: %s)",
+			  GetInfoLength(),
+			  HasInfo() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::HeartbeatInfoChunkParameter>");
 		}
 

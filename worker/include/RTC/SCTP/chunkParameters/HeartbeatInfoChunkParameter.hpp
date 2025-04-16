@@ -62,14 +62,19 @@ namespace RTC
 			virtual HeartbeatInfoChunkParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual bool HasInfo() const final
+			{
+				return HasValue();
+			}
+
 			const uint8_t* GetInfo() const
 			{
-				if (!HasValue())
-				{
-					return nullptr;
-				}
+				return GetValue();
+			}
 
-				return GetValuePointer();
+			uint16_t GetInfoLength() const
+			{
+				return GetValueLength();
 			}
 
 			void SetInfo(const uint8_t* info, uint16_t infoLength);

@@ -57,14 +57,19 @@ namespace RTC
 				return true;
 			}
 
+			virtual bool HasUnknownValue() const final
+			{
+				return HasValue();
+			}
+
 			const uint8_t* GetUnknownValue() const
 			{
-				if (!HasValue())
-				{
-					return nullptr;
-				}
+				return GetValue();
+			}
 
-				return GetValuePointer();
+			uint16_t GetUnknownValueLength() const
+			{
+				return GetValueLength();
 			}
 		};
 	} // namespace SCTP

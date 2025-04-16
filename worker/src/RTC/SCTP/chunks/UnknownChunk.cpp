@@ -56,6 +56,11 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::UnknownChunk>");
 			DumpCommon(indentation);
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  unknown value length: %" PRIu16 " (has unknown value: %s)",
+			  GetUnknownValueLength(),
+			  HasUnknownValue() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "</SCTP::UnknownChunk>");
 		}
 

@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Heartbeat Acknowledgement (HEARTBEAT ACK) (5)
+		 * Heartbeat Acknowledgement Chunk (HEARTBEAT ACK) (5)
 		 *
 		 * @see RFC 9260.
 		 *

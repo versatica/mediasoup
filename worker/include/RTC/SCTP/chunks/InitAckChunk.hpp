@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Initiation Acknowledgement (INIT ACK) (2).
+		 * Initiation Acknowledgement Chunk (INIT ACK) (2).
 		 *
 		 * @see RFC 9260.
 		 *

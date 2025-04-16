@@ -59,27 +59,17 @@ namespace RTC
 
 			bool HasUnknownValue() const
 			{
-				return GetLengthField() > Chunk::ChunkHeaderLength;
+				return HasValue();
 			}
 
 			const uint8_t* GetUnknownValue() const
 			{
-				if (!HasUnknownValue())
-				{
-					return nullptr;
-				}
-
-				return GetValuePointer();
+				return GetValue();
 			}
 
-			size_t GetUnknownValueLength() const
+			uint16_t GetUnknownValueLength() const
 			{
-				if (!HasUnknownValue())
-				{
-					return 0u;
-				}
-
-				return GetLengthField() - Chunk::ChunkHeaderLength;
+				return GetValueLength();
 			}
 		};
 	} // namespace SCTP
