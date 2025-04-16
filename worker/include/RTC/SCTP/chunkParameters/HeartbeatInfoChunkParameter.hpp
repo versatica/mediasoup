@@ -32,10 +32,6 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static constexpr ChunkParameter::ChunkParameterType type =
-			  ChunkParameter::ChunkParameterType::HEARTBEAT_INFO;
-
-		public:
 			/**
 			 * Parse a HeartbeatInfoChunkParameter.
 			 *

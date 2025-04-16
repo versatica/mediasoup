@@ -422,57 +422,9 @@ namespace RTC
 			return true;
 		}
 
-		ChunkParameter* Chunk::BuildParameterInPlace(ChunkParameter::ChunkParameterType parameterType)
+		void Chunk::HandleInPlaceParameter(ChunkParameter* parameter)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
-
-			ChunkParameter* parameter{ nullptr };
-
-			// The new Parameter will be added after other Parameters in the Chunk,
-			// this is, at the end of the Chunk, whose length we know it's padded to
-			// 4 bytes, and each Chunk Parameter total length is also multiple of 4
-			// bytes.
-			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
-			// The remaining length in the buffer is the potential buffer length
-			// of the Parameter.
-			size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
-
-			// TODO
-			switch (parameterType)
-			{
-				case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
-				{
-					parameter = HeartbeatInfoChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-
-				case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
-				{
-					parameter = IPv4AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-
-				case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
-				{
-					parameter = IPv6AddressChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-
-				case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
-				{
-					parameter = CookiePreservativeChunkParameter::Factory(ptr, parameterMaxBufferLength);
-
-					break;
-				}
-			}
-
-			// NOTE: Do not fix/update the Parameter buffer length since the caller
-			// probably wants to modify the Parameter.
 
 			// When the application completes the Parameter it must call
 			// `parameter->Consolidate()` and that will trigger this event.
@@ -518,8 +470,6 @@ namespace RTC
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
 			  });
-
-			return parameter;
 		}
 	} // namespace SCTP
 } // namespace RTC

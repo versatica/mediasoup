@@ -32,6 +32,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		AssertNotFrozen();
+
 		// Consolidating also means freezing the Serializable.
 		Freeze();
 

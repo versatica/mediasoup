@@ -32,8 +32,6 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static constexpr ChunkParameter::ChunkParameterType type =
-			  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE;
 			static const size_t CookiePreservativeChunkParameterLength{ 8 };
 
 		public:

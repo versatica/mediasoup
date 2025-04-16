@@ -15,9 +15,9 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
-- In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
-
 - Check all pending "TODO" comments.
+-
+- In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
 - What happens if I call `chunk->BuildParameterInPlace()` in a Chunk class that is not supposed to have chunks??? It should not be allowed and should throw.
 

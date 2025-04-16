@@ -79,7 +79,7 @@ namespace RTC
 			chunk->SetAdvertisedReceiverWindowCredit(0);
 			chunk->SetNumberOfOutboundStreams(0);
 			chunk->SetNumberOfInboundStreams(0);
-			chunk->SetInitialTSN(0);
+			chunk->SetInitialTsn(0);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum InitChunk length.
@@ -115,7 +115,7 @@ namespace RTC
 			MS_DUMP_CLEAN(
 			  indentation, "  number of outbound streams: %" PRIu16, GetNumberOfOutboundStreams());
 			MS_DUMP_CLEAN(indentation, "  number of inbound streams: %" PRIu16, GetNumberOfInboundStreams());
-			MS_DUMP_CLEAN(indentation, "  initial tsn: %" PRIu32, GetInitialTSN());
+			MS_DUMP_CLEAN(indentation, "  initial tsn: %" PRIu32, GetInitialTsn());
 			MS_DUMP_CLEAN(indentation, "</SCTP::InitChunk>");
 		}
 
@@ -166,7 +166,7 @@ namespace RTC
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 14, value);
 		}
 
-		void InitChunk::SetInitialTSN(uint32_t value)
+		void InitChunk::SetInitialTsn(uint32_t value)
 		{
 			MS_TRACE();
 

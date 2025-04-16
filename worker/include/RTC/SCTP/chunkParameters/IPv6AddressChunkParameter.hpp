@@ -34,8 +34,6 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static constexpr ChunkParameter::ChunkParameterType type =
-			  ChunkParameter::ChunkParameterType::IPV6_ADDRESS;
 			static const size_t IPv6AddressChunkParameterLength{ 20 };
 
 		public:

@@ -267,9 +267,25 @@ namespace RTC
 			template<typename T>
 			T* BuildParameterInPlace()
 			{
-				ChunkParameter* base = BuildParameterInPlace(T::type);
+				AssertNotFrozen();
 
-				return static_cast<T*>(base);
+				// The new Parameter will be added after other Parameters in the Chunk,
+				// this is, at the end of the Chunk, whose length we know it's padded to
+				// 4 bytes, and each Chunk Parameter total length is also multiple of 4
+				// bytes.
+				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				// The remaining length in the buffer is the potential buffer length
+				// of the Parameter.
+				size_t parameterMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+
+				auto* parameter = T::Factory(ptr, parameterMaxBufferLength);
+
+				// NOTE: Do not fix/update the Parameter buffer length since the caller
+				// probably wants to modify the Parameter.
+
+				HandleInPlaceParameter(parameter);
+
+				return parameter;
 			}
 
 		protected:
@@ -435,8 +451,7 @@ namespace RTC
 				GetHeaderPointer()->flags = flags;
 			}
 
-			virtual ChunkParameter* BuildParameterInPlace(
-			  ChunkParameter::ChunkParameterType parameterType) final;
+			virtual void HandleInPlaceParameter(ChunkParameter* parameter) final;
 
 		private:
 			// Chunk Parameters.

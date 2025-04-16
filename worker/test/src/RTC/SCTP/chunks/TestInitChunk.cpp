@@ -66,7 +66,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 4660);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
-		REQUIRE(chunk->GetInitialTSN() == 2882339074);
+		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
 		auto* parameter1 = reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));
 
@@ -125,7 +125,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE_THROWS_AS(chunk->SetAdvertisedReceiverWindowCredit(1234), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetNumberOfOutboundStreams(1234), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetNumberOfInboundStreams(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetInitialTSN(1234), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->SetInitialTsn(1234), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -147,7 +147,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 4660);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
-		REQUIRE(chunk->GetInitialTSN() == 2882339074);
+		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
 		parameter1 = reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));
 
@@ -220,7 +220,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
 		REQUIRE(clonedChunk->GetNumberOfOutboundStreams() == 4660);
 		REQUIRE(clonedChunk->GetNumberOfInboundStreams() == 22136);
-		REQUIRE(clonedChunk->GetInitialTSN() == 2882339074);
+		REQUIRE(clonedChunk->GetInitialTsn() == 2882339074);
 
 		parameter1 = reinterpret_cast<const IPv4AddressChunkParameter*>(clonedChunk->GetParameterAt(0));
 
@@ -295,7 +295,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 0);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 0);
-		REQUIRE(chunk->GetInitialTSN() == 0);
+		REQUIRE(chunk->GetInitialTsn() == 0);
 
 		/* Modify it and add Parameters. */
 
@@ -303,7 +303,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		chunk->SetAdvertisedReceiverWindowCredit(2222222220);
 		chunk->SetNumberOfOutboundStreams(1234);
 		chunk->SetNumberOfInboundStreams(5678);
-		chunk->SetInitialTSN(3333333330);
+		chunk->SetInitialTsn(3333333330);
 
 		auto* parameter1 = chunk->BuildParameterInPlace<IPv4AddressChunkParameter>();
 
@@ -343,7 +343,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 1234);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 5678);
-		REQUIRE(chunk->GetInitialTSN() == 3333333330);
+		REQUIRE(chunk->GetInitialTsn() == 3333333330);
 
 		const auto* addedParameter1 =
 		  reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));
@@ -419,7 +419,7 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
 		REQUIRE(parsedChunk->GetNumberOfOutboundStreams() == 1234);
 		REQUIRE(parsedChunk->GetNumberOfInboundStreams() == 5678);
-		REQUIRE(parsedChunk->GetInitialTSN() == 3333333330);
+		REQUIRE(parsedChunk->GetInitialTsn() == 3333333330);
 
 		const auto* parsedParameter1 =
 		  reinterpret_cast<const IPv4AddressChunkParameter*>(parsedChunk->GetParameterAt(0));

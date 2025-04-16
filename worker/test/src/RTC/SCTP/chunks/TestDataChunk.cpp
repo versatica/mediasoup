@@ -55,7 +55,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(chunk->GetU() == false);
 		REQUIRE(chunk->GetI() == true);
 		REQUIRE(chunk->GetI() == true);
-		REQUIRE(chunk->GetTSN() == 0x11223344);
+		REQUIRE(chunk->GetTsn() == 0x11223344);
 		REQUIRE(chunk->GetStreamIdentifierS() == 0xFF00);
 		REQUIRE(chunk->GetStreamSequenceNumberN() == 0x6677);
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0x12341234);
@@ -71,7 +71,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(chunk->SetI(true), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetE(true), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetTSN(12345678), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->SetTsn(12345678), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetStreamIdentifierS(9988), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetStreamSequenceNumberN(2211), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetPayloadProtocolIdentifier(987654321), MediaSoupError);
@@ -98,7 +98,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(chunk->GetU() == false);
 		REQUIRE(chunk->GetI() == true);
 		REQUIRE(chunk->GetI() == true);
-		REQUIRE(chunk->GetTSN() == 0x11223344);
+		REQUIRE(chunk->GetTsn() == 0x11223344);
 		REQUIRE(chunk->GetStreamIdentifierS() == 0xFF00);
 		REQUIRE(chunk->GetStreamSequenceNumberN() == 0x6677);
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0x12341234);
@@ -132,7 +132,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(clonedChunk->GetU() == false);
 		REQUIRE(clonedChunk->GetI() == true);
 		REQUIRE(clonedChunk->GetI() == true);
-		REQUIRE(clonedChunk->GetTSN() == 0x11223344);
+		REQUIRE(clonedChunk->GetTsn() == 0x11223344);
 		REQUIRE(clonedChunk->GetStreamIdentifierS() == 0xFF00);
 		REQUIRE(clonedChunk->GetStreamSequenceNumberN() == 0x6677);
 		REQUIRE(clonedChunk->GetPayloadProtocolIdentifier() == 0x12341234);
@@ -167,7 +167,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(chunk->GetU() == false);
 		REQUIRE(chunk->GetI() == false);
 		REQUIRE(chunk->GetI() == false);
-		REQUIRE(chunk->GetTSN() == 0);
+		REQUIRE(chunk->GetTsn() == 0);
 		REQUIRE(chunk->GetStreamIdentifierS() == 0);
 		REQUIRE(chunk->GetStreamSequenceNumberN() == 0);
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 0);
@@ -178,7 +178,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		chunk->SetI(true);
 		chunk->SetE(true);
-		chunk->SetTSN(12345678);
+		chunk->SetTsn(12345678);
 		chunk->SetStreamIdentifierS(9988);
 		chunk->SetStreamSequenceNumberN(2211);
 		chunk->SetPayloadProtocolIdentifier(987654321);
@@ -201,7 +201,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(chunk->GetU() == false);
 		REQUIRE(chunk->GetB() == false);
 		REQUIRE(chunk->GetE() == true);
-		REQUIRE(chunk->GetTSN() == 12345678);
+		REQUIRE(chunk->GetTsn() == 12345678);
 		REQUIRE(chunk->GetStreamIdentifierS() == 9988);
 		REQUIRE(chunk->GetStreamSequenceNumberN() == 2211);
 		REQUIRE(chunk->GetPayloadProtocolIdentifier() == 987654321);
@@ -235,7 +235,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(parsedChunk->GetU() == false);
 		REQUIRE(parsedChunk->GetB() == false);
 		REQUIRE(parsedChunk->GetE() == true);
-		REQUIRE(parsedChunk->GetTSN() == 12345678);
+		REQUIRE(parsedChunk->GetTsn() == 12345678);
 		REQUIRE(parsedChunk->GetStreamIdentifierS() == 9988);
 		REQUIRE(parsedChunk->GetStreamSequenceNumberN() == 2211);
 		REQUIRE(parsedChunk->GetPayloadProtocolIdentifier() == 987654321);

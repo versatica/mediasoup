@@ -68,7 +68,7 @@ namespace RTC
 			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
 
 			// Must also initialize extra fields in the header.
-			chunk->SetTSN(0);
+			chunk->SetTsn(0);
 			chunk->SetStreamIdentifierS(0);
 			chunk->SetStreamSequenceNumberN(0);
 			chunk->SetPayloadProtocolIdentifier(0);
@@ -103,7 +103,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  flag U: %" PRIu8, GetU());
 			MS_DUMP_CLEAN(indentation, "  flag B: %" PRIu8, GetB());
 			MS_DUMP_CLEAN(indentation, "  flag E: %" PRIu8, GetE());
-			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTSN());
+			MS_DUMP_CLEAN(indentation, "  tsn: %" PRIu32, GetTsn());
 			MS_DUMP_CLEAN(indentation, "  stream identifier S: %" PRIu16, GetStreamIdentifierS());
 			MS_DUMP_CLEAN(indentation, "  stream sequence number n: %" PRIu16, GetStreamSequenceNumberN());
 			MS_DUMP_CLEAN(
@@ -163,7 +163,7 @@ namespace RTC
 			SetBit0(flag);
 		}
 
-		void DataChunk::SetTSN(uint32_t value)
+		void DataChunk::SetTsn(uint32_t value)
 		{
 			MS_TRACE();
 

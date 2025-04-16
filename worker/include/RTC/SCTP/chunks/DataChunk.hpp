@@ -75,7 +75,6 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static constexpr Chunk::ChunkType type = Chunk::ChunkType::DATA;
 			static const size_t DataChunkHeaderLength{ 16 };
 
 		public:
@@ -136,12 +135,12 @@ namespace RTC
 
 			void SetE(bool flag);
 
-			uint32_t GetTSN() const
+			uint32_t GetTsn() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
-			void SetTSN(uint32_t value);
+			void SetTsn(uint32_t value);
 
 			uint16_t GetStreamIdentifierS() const
 			{

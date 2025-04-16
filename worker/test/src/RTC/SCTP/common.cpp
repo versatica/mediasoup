@@ -1,5 +1,6 @@
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
 #include "helpers.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset
@@ -46,6 +47,7 @@ void checkChunk(
 	REQUIRE(chunk->GetBuffer() == buffer);
 	REQUIRE(chunk->GetBufferLength() == bufferLength);
 	REQUIRE(chunk->GetLength() == length);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);
 	REQUIRE(chunk->IsFrozen() == frozen);
 	REQUIRE(chunk->GetType() == chunkType);
 	REQUIRE(chunk->HasUnknownType() == unknownType);
@@ -83,6 +85,7 @@ void checkChunkParameter(
 
 	REQUIRE(parameter->GetBufferLength() == bufferLength);
 	REQUIRE(parameter->GetLength() == length);
+	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(parameter->GetLength()) == true);
 	REQUIRE(parameter->IsFrozen() == frozen);
 	REQUIRE(parameter->GetType() == parameterType);
 	REQUIRE(parameter->HasUnknownType() == unknownType);

@@ -56,7 +56,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 4660);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
-		REQUIRE(chunk->GetInitialTSN() == 2882339074);
+		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
 		auto* parameter1 = reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));
 
@@ -98,7 +98,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 0);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 0);
-		REQUIRE(chunk->GetInitialTSN() == 0);
+		REQUIRE(chunk->GetInitialTsn() == 0);
 
 		/* Modify it and add Parameters. */
 
@@ -106,7 +106,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		chunk->SetAdvertisedReceiverWindowCredit(2222222220);
 		chunk->SetNumberOfOutboundStreams(1234);
 		chunk->SetNumberOfInboundStreams(5678);
-		chunk->SetInitialTSN(3333333330);
+		chunk->SetInitialTsn(3333333330);
 
 		auto* parameter1 = chunk->BuildParameterInPlace<IPv4AddressChunkParameter>();
 
@@ -132,7 +132,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
 		REQUIRE(chunk->GetNumberOfOutboundStreams() == 1234);
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 5678);
-		REQUIRE(chunk->GetInitialTSN() == 3333333330);
+		REQUIRE(chunk->GetInitialTsn() == 3333333330);
 
 		const auto* addedParameter1 =
 		  reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));

@@ -33,7 +33,6 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static constexpr Chunk::ChunkType type = Chunk::ChunkType::SHUTDOWN_ACK;
 			static const size_t ShutdownAckChunkLength{ 4 };
 
 		public:

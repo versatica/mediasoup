@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include "helpers.hpp"
 #include "RTC/SCTP/Packet.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
@@ -37,7 +36,6 @@ SCENARIO("parse SCTP Packet without Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetBufferLength() == 12);
 	REQUIRE(packet->GetLength() == 12);
 	REQUIRE(packet->IsFrozen() == true);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 10000);
 	REQUIRE(packet->GetDestinationPort() == 15999);
 	REQUIRE(packet->GetVerificationTag() == 4294967285);
@@ -95,7 +93,6 @@ SCENARIO("parse SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetBufferLength() == 40);
 	REQUIRE(packet->GetLength() == 40);
 	REQUIRE(packet->IsFrozen() == true);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 10000);
 	REQUIRE(packet->GetDestinationPort() == 15999);
 	REQUIRE(packet->GetVerificationTag() == 4294967285);
@@ -118,7 +115,7 @@ SCENARIO("parse SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(chunk1->GetU() == false);
 	REQUIRE(chunk1->GetB() == true);
 	REQUIRE(chunk1->GetE() == true);
-	REQUIRE(chunk1->GetTSN() == 0x11223344);
+	REQUIRE(chunk1->GetTsn() == 0x11223344);
 	REQUIRE(chunk1->GetStreamIdentifierS() == 0xFF00);
 	REQUIRE(chunk1->GetStreamSequenceNumberN() == 0x6677);
 	REQUIRE(chunk1->GetPayloadProtocolIdentifier() == 0x12341234);
@@ -151,7 +148,7 @@ SCENARIO("parse SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetU(false), MediaSoupError);
 	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetB(false), MediaSoupError);
 	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetE(false), MediaSoupError);
-	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetTSN(1234), MediaSoupError);
+	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetTsn(1234), MediaSoupError);
 	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetStreamIdentifierS(1234), MediaSoupError);
 	REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetStreamSequenceNumberN(1234), MediaSoupError);
 	REQUIRE_THROWS_AS(
@@ -176,7 +173,6 @@ SCENARIO("create and modify SCTP Packet without Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetBufferLength() == 256);
 	REQUIRE(packet->GetLength() == 12);
 	REQUIRE(packet->IsFrozen() == false);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 0);
 	REQUIRE(packet->GetDestinationPort() == 0);
 	REQUIRE(packet->GetVerificationTag() == 0);
@@ -196,7 +192,6 @@ SCENARIO("create and modify SCTP Packet without Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetBufferLength() == 256);
 	REQUIRE(packet->GetLength() == 12);
 	REQUIRE(packet->IsFrozen() == false);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 10);
 	REQUIRE(packet->GetDestinationPort() == 9999);
 	REQUIRE(packet->GetVerificationTag() == 12345);
@@ -231,7 +226,6 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetBufferLength() == 1000);
 	REQUIRE(packet->GetLength() == 12);
 	REQUIRE(packet->IsFrozen() == false);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 1024);
 	REQUIRE(packet->GetDestinationPort() == 2122);
 	REQUIRE(packet->GetVerificationTag() == 12345);
@@ -249,7 +243,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	auto* chunk1 = packet->BuildChunkInPlace<DataChunk>();
 
 	chunk1->SetI(true);
-	chunk1->SetTSN(9876);
+	chunk1->SetTsn(9876);
 	chunk1->SetStreamIdentifierS(1234);
 	chunk1->SetStreamSequenceNumberN(4321);
 	chunk1->SetPayloadProtocolIdentifier(101010);
@@ -275,7 +269,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(chunk1->GetU() == false);
 	REQUIRE(chunk1->GetB() == false);
 	REQUIRE(chunk1->GetE() == false);
-	REQUIRE(chunk1->GetTSN() == 9876);
+	REQUIRE(chunk1->GetTsn() == 9876);
 	REQUIRE(chunk1->GetStreamIdentifierS() == 1234);
 	REQUIRE(chunk1->GetStreamSequenceNumberN() == 4321);
 	REQUIRE(chunk1->GetPayloadProtocolIdentifier() == 101010);
@@ -309,7 +303,6 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetBufferLength() == 1000);
 	REQUIRE(packet->GetLength() == 40);
 	REQUIRE(packet->IsFrozen() == false);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 1024);
 	REQUIRE(packet->GetDestinationPort() == 2122);
 	REQUIRE(packet->GetVerificationTag() == 12345);
@@ -331,7 +324,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk1->GetU() == false);
 	REQUIRE(addedChunk1->GetB() == false);
 	REQUIRE(addedChunk1->GetE() == false);
-	REQUIRE(addedChunk1->GetTSN() == 9876);
+	REQUIRE(addedChunk1->GetTsn() == 9876);
 	REQUIRE(addedChunk1->GetStreamIdentifierS() == 1234);
 	REQUIRE(addedChunk1->GetStreamSequenceNumberN() == 4321);
 	REQUIRE(addedChunk1->GetPayloadProtocolIdentifier() == 101010);
@@ -380,7 +373,6 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(packet->GetLength() == 40);
 	// After serializing, the packet must be unfrozen.
 	REQUIRE(packet->IsFrozen() == false);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);
 	REQUIRE(packet->GetSourcePort() == 1024);
 	REQUIRE(packet->GetDestinationPort() == 2122);
 	REQUIRE(packet->GetVerificationTag() == 12345);
@@ -402,7 +394,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk1->GetU() == false);
 	REQUIRE(addedChunk1->GetB() == false);
 	REQUIRE(addedChunk1->GetE() == false);
-	REQUIRE(addedChunk1->GetTSN() == 9876);
+	REQUIRE(addedChunk1->GetTsn() == 9876);
 	REQUIRE(addedChunk1->GetStreamIdentifierS() == 1234);
 	REQUIRE(addedChunk1->GetStreamSequenceNumberN() == 4321);
 	REQUIRE(addedChunk1->GetPayloadProtocolIdentifier() == 101010);
@@ -453,7 +445,6 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(clonedPacket->GetLength() == 40);
 	// After cloning, the packet must be unfrozen.
 	REQUIRE(clonedPacket->IsFrozen() == false);
-	REQUIRE(Utils::Byte::IsPaddedTo4Bytes(clonedPacket->GetLength()) == true);
 	REQUIRE(clonedPacket->GetSourcePort() == 1024);
 	REQUIRE(clonedPacket->GetDestinationPort() == 2122);
 	REQUIRE(clonedPacket->GetVerificationTag() == 12345);
@@ -477,7 +468,7 @@ SCENARIO("create and modify SCTP Packet with Chunks", "[sctp][serializable]")
 	REQUIRE(addedChunk1->GetU() == false);
 	REQUIRE(addedChunk1->GetB() == false);
 	REQUIRE(addedChunk1->GetE() == false);
-	REQUIRE(addedChunk1->GetTSN() == 9876);
+	REQUIRE(addedChunk1->GetTsn() == 9876);
 	REQUIRE(addedChunk1->GetStreamIdentifierS() == 1234);
 	REQUIRE(addedChunk1->GetStreamSequenceNumberN() == 4321);
 	REQUIRE(addedChunk1->GetPayloadProtocolIdentifier() == 101010);

@@ -71,7 +71,6 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static constexpr Chunk::ChunkType type = Chunk::ChunkType::INIT_ACK;
 			static const size_t InitAckChunkHeaderLength{ 20 };
 
 		public:
@@ -132,12 +131,12 @@ namespace RTC
 
 			void SetNumberOfInboundStreams(uint16_t value);
 
-			uint32_t GetInitialTSN() const
+			uint32_t GetInitialTsn() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 16);
 			}
 
-			void SetInitialTSN(uint32_t value);
+			void SetInitialTsn(uint32_t value);
 		};
 	} // namespace SCTP
 } // namespace RTC

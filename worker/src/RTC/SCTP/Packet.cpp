@@ -11,6 +11,7 @@
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
 #include "RTC/SCTP/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
+#include "RTC/SCTP/chunks/SackChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
@@ -99,6 +100,13 @@ namespace RTC
 					case Chunk::ChunkType::INIT_ACK:
 					{
 						chunk = InitAckChunk::Parse(ptr, chunkLength + padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::SACK:
+					{
+						chunk = SackChunk::Parse(ptr, chunkLength + padding);
 
 						break;
 					}
@@ -309,6 +317,13 @@ namespace RTC
 						break;
 					}
 
+					case Chunk::ChunkType::SACK:
+					{
+						clonedChunk = new SackChunk(buffer + offset, chunk->GetLength());
+
+						break;
+					}
+
 					case Chunk::ChunkType::HEARTBEAT:
 					{
 						clonedChunk = new HeartbeatChunk(buffer + offset, chunk->GetLength());
@@ -446,92 +461,9 @@ namespace RTC
 			this->chunks.push_back(clonedChunk);
 		}
 
-		Chunk* Packet::BuildChunkInPlace(Chunk::ChunkType chunkType)
+		void Packet::HandleInPlaceChunk(Chunk* chunk)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
-
-			Chunk* chunk{ nullptr };
-
-			// The new Chunk will be added after other Chunks in the Packet, this is,
-			// at the end of the Packet,  whose length we know it's padded to 4
-			// bytes, and each Chunk Parameter total length is also multiple of 4
-			// bytes.
-			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
-			// The remaining length in the buffer is the potential buffer length
-			// of the Chunk.
-			size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
-
-			// TODO
-			switch (chunkType)
-			{
-				case Chunk::ChunkType::DATA:
-				{
-					chunk = DataChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::INIT:
-				{
-					chunk = InitChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::INIT_ACK:
-				{
-					chunk = InitAckChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::HEARTBEAT:
-				{
-					chunk = HeartbeatChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::HEARTBEAT_ACK:
-				{
-					chunk = HeartbeatAckChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::SHUTDOWN:
-				{
-					chunk = ShutdownChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::SHUTDOWN_ACK:
-				{
-					chunk = ShutdownAckChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::COOKIE_ACK:
-				{
-					chunk = CookieAckChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-
-				case Chunk::ChunkType::SHUTDOWN_COMPLETE:
-				{
-					chunk = ShutdownCompleteChunk::Factory(ptr, chunkMaxBufferLength);
-
-					break;
-				}
-			}
-
-			// NOTE: Do not fix/update the Chunk buffer length since the caller
-			// probably wants to modify the Chunk.
 
 			// When the application completes the Chunk it must call
 			// `chunk->Consolidate()` and that will trigger this event.
@@ -551,8 +483,6 @@ namespace RTC
 				  // Add the Chunk to the list.
 				  this->chunks.push_back(chunk);
 			  });
-
-			return chunk;
 		}
 	} // namespace SCTP
 } // namespace RTC

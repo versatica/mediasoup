@@ -195,9 +195,25 @@ namespace RTC
 			template<typename T>
 			T* BuildChunkInPlace()
 			{
-				Chunk* base = BuildChunkInPlace(T::type);
+				AssertNotFrozen();
 
-				return static_cast<T*>(base);
+				// The new Chunk will be added after other Chunks in the Packet, this is,
+				// at the end of the Packet,  whose length we know it's padded to 4
+				// bytes, and each Chunk Parameter total length is also multiple of 4
+				// bytes.
+				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				// The remaining length in the buffer is the potential buffer length
+				// of the Chunk.
+				size_t chunkMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+
+				auto* chunk = T::Factory(ptr, chunkMaxBufferLength);
+
+				// NOTE: Do not fix/update the Chunk buffer length since the caller
+				// probably wants to modify the Chunk.
+
+				HandleInPlaceChunk(chunk);
+
+				return chunk;
 			}
 
 		private:
@@ -215,7 +231,7 @@ namespace RTC
 				return const_cast<uint8_t*>(GetBuffer()) + Packet::CommonHeaderLength;
 			}
 
-			Chunk* BuildChunkInPlace(Chunk::ChunkType chunkType);
+			virtual void HandleInPlaceChunk(Chunk* chunk) final;
 
 		private:
 			// Chunks.
