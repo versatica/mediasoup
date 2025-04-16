@@ -188,8 +188,11 @@ common_sources = [
   'src/RTC/SCTP/chunks/SackChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatAckChunk.cpp',
+  # 'src/RTC/SCTP/chunks/AbortChunk.cpp'
   'src/RTC/SCTP/chunks/ShutdownChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownAckChunk.cpp',
+  # 'src/RTC/SCTP/chunks/ErrorChunk.cpp',
+  # 'src/RTC/SCTP/chunks/CookieEchoChunk.cpp',
   'src/RTC/SCTP/chunks/CookieAckChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownCompleteChunk.cpp',
   'src/RTC/SCTP/chunks/UnknownChunk.cpp',
