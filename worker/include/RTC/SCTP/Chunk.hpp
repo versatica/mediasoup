@@ -394,6 +394,11 @@ namespace RTC
 				return Chunk::ChunkHeaderLength;
 			}
 
+			virtual uint8_t* GetValuePointer() const final
+			{
+				return const_cast<uint8_t*>(GetBuffer()) + GetHeaderLength();
+			}
+
 			virtual bool HasValue() const final
 			{
 				return GetLengthField() > GetHeaderLength();
@@ -462,11 +467,6 @@ namespace RTC
 			virtual uint16_t GetLengthField() const final
 			{
 				return uint16_t{ ntohs(GetHeaderPointer()->length) };
-			}
-
-			virtual uint8_t* GetValuePointer() const final
-			{
-				return const_cast<uint8_t*>(GetBuffer()) + GetHeaderLength();
 			}
 
 			virtual void HandleInPlaceParameter(ChunkParameter* parameter) final;

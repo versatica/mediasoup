@@ -152,6 +152,16 @@ namespace RTC
 
 			void AddDuplicateTsn(uint32_t tsn);
 
+		protected:
+			/**
+			 * We need to override this method since this Chunk has a variable-length
+			 * value and the fixed header doesn't have default value.
+			 */
+			virtual size_t GetHeaderLength() const final
+			{
+				return SackChunk::SackChunkHeaderLength;
+			}
+
 		private:
 			void SetNumberOfGapAckBlocks(uint16_t value);
 
@@ -159,12 +169,12 @@ namespace RTC
 
 			uint8_t* GetAckBlocksPointer() const
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + 16;
+				return GetValuePointer();
 			}
 
 			uint8_t* GetDuplicateTsnsPointer() const
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + 16 + (GetNumberOfGapAckBlocks() * 4);
+				return GetValuePointer() + (GetNumberOfGapAckBlocks() * 4);
 			}
 		};
 	} // namespace SCTP
