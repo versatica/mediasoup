@@ -4,6 +4,7 @@
 #include "RTC/RtpPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <fstream> // std::fstream
 #include <sstream>
 #include <string>
 #include <vector>

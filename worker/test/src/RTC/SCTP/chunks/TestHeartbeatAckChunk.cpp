@@ -1,0 +1,355 @@
+#include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/Chunk.hpp"
+#include "RTC/SCTP/ChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
+#include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
+#include "RTC/SCTP/common.hpp" // in worker/test/include/
+#include <catch2/catch_test_macros.hpp>
+
+using namespace RTC::SCTP;
+
+SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
+{
+	resetBuffers();
+
+	SECTION("HeartbeatAckChunk::Parse() succeeds")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			// Type:5 (HEARTBEAT_ACK), Flags:0b00000000, Length: 22
+			// NOTE: Length field must exclude the padding of the last Parameter.
+			0x05, 0b00000000, 0x00, 0x16,
+			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
+			0x00, 0x01, 0x00, 0x0B,
+			// Heartbeat Information (7 bytes): 0x11223344556677
+			0x11, 0x22, 0x33, 0x44,
+			// 1 byte of padding
+			0x55, 0x66, 0x77, 0x00,
+			// Parameter 2: Type:49159 (UNKNOWN), Length: 6
+			0xC0, 0x07, 0x00, 0x06,
+			// Unknown data: 0xABCD, 2 bytes of padding
+			0xAB, 0xCD, 0x00, 0x00,
+			// Extra bytes that should be ignored
+			0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
+		auto* chunk = HeartbeatAckChunk::Parse(buffer, sizeof(buffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ 24,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter1->GetInfo()[1] == 0x22);
+		REQUIRE(parameter1->GetInfo()[2] == 0x33);
+		REQUIRE(parameter1->GetInfo()[3] == 0x44);
+		REQUIRE(parameter1->GetInfo()[4] == 0x55);
+		REQUIRE(parameter1->GetInfo()[5] == 0x66);
+		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+
+		auto* parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
+		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
+		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
+
+		/* Should throw if modifications are attempted when it's frozen. */
+
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>(), MediaSoupError);
+
+		/* Serialize it. */
+
+		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ 24,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter1->GetInfo()[1] == 0x22);
+		REQUIRE(parameter1->GetInfo()[2] == 0x33);
+		REQUIRE(parameter1->GetInfo()[3] == 0x44);
+		REQUIRE(parameter1->GetInfo()[4] == 0x55);
+		REQUIRE(parameter1->GetInfo()[5] == 0x66);
+		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+
+		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
+		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
+		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
+
+		/* Clone it. */
+
+		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+
+		delete chunk;
+
+		checkChunk(
+		  /*chunk*/ clonedChunk,
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ 24,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 7);
+
+		REQUIRE(parameter1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter1->GetInfo()[1] == 0x22);
+		REQUIRE(parameter1->GetInfo()[2] == 0x33);
+		REQUIRE(parameter1->GetInfo()[3] == 0x44);
+		REQUIRE(parameter1->GetInfo()[4] == 0x55);
+		REQUIRE(parameter1->GetInfo()[5] == 0x66);
+		REQUIRE(parameter1->GetInfo()[6] == 0x77);
+
+		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(clonedChunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*unknownType*/ true,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
+		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
+		// This should be padding.
+		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
+		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
+
+		delete clonedChunk;
+	}
+
+	SECTION("HeartbeatAckChunk::Factory() succeeds")
+	{
+		auto* chunk = HeartbeatAckChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
+
+		/* Modify it by adding Chunk Parameters. */
+
+		auto* parameter1 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+
+		// Info length is 5 so 3 bytes of padding will be added.
+		parameter1->SetInfo(DataBuffer, 5);
+		parameter1->Consolidate();
+
+		// Let's add another HeartbeatInfoChunkParameter (it doesn't make sense but
+		// anyway).
+		auto* parameter2 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+
+		// Info length is 2 so 2 bytes of padding will be added.
+		parameter2->SetInfo(DataBuffer, 2);
+		parameter2->Consolidate();
+
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		const auto* addedParameter1 =
+		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ addedParameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 5);
+
+		REQUIRE(addedParameter1->GetInfo()[0] == 0x00);
+		REQUIRE(addedParameter1->GetInfo()[1] == 0x01);
+		REQUIRE(addedParameter1->GetInfo()[2] == 0x02);
+		REQUIRE(addedParameter1->GetInfo()[3] == 0x03);
+		REQUIRE(addedParameter1->GetInfo()[4] == 0x04);
+		// These should be padding.
+		REQUIRE(addedParameter1->GetInfo()[5] == 0x00);
+		REQUIRE(addedParameter1->GetInfo()[6] == 0x00);
+
+		const auto* addedParameter2 =
+		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ addedParameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 2);
+
+		REQUIRE(addedParameter2->GetInfo()[0] == 0x00);
+		REQUIRE(addedParameter2->GetInfo()[1] == 0x01);
+		// These should be padding.
+		REQUIRE(addedParameter2->GetInfo()[2] == 0x00);
+		REQUIRE(addedParameter2->GetInfo()[3] == 0x00);
+
+		/* Parse itself and compare. */
+
+		auto* parsedChunk = HeartbeatAckChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+
+		delete chunk;
+
+		checkChunk(
+		  /*chunk*/ parsedChunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
+		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
+
+		const auto* parsedParameter1 =
+		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(parsedChunk->GetParameterAt(0));
+
+		checkChunkParameter(
+		  /*parameter*/ parsedParameter1,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 5);
+
+		REQUIRE(parsedParameter1->GetInfo()[0] == 0x00);
+		REQUIRE(parsedParameter1->GetInfo()[1] == 0x01);
+		REQUIRE(parsedParameter1->GetInfo()[2] == 0x02);
+		REQUIRE(parsedParameter1->GetInfo()[3] == 0x03);
+		REQUIRE(parsedParameter1->GetInfo()[4] == 0x04);
+		// These should be padding.
+		REQUIRE(parsedParameter1->GetInfo()[5] == 0x00);
+		REQUIRE(parsedParameter1->GetInfo()[6] == 0x00);
+
+		const auto* parsedParameter2 =
+		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(parsedChunk->GetParameterAt(1));
+
+		checkChunkParameter(
+		  /*parameter*/ parsedParameter2,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parsedParameter2->GetInfo()[0] == 0x00);
+		REQUIRE(parsedParameter2->GetInfo()[1] == 0x01);
+		// These should be padding.
+		REQUIRE(parsedParameter2->GetInfo()[2] == 0x00);
+		REQUIRE(parsedParameter2->GetInfo()[3] == 0x00);
+
+		delete parsedChunk;
+	}
+}
