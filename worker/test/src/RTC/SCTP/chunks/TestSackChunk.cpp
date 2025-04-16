@@ -25,7 +25,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 			// Gap Ack Block 1: Start: 1000, End: 1999
 			0x03, 0xE8, 0x07, 0xCF,
 			// Gap Ack Block 2: Start: 2000, End: 2999
-			0x07, 0xDE, 0x0B, 0xB7,
+			0x07, 0xD0, 0x0B, 0xB7,
 			// Duplicate TSN 1: 287454020,
 			0x11, 0x22, 0x33, 0x44,
 			// Duplicate TSN 2: 4278216311
@@ -56,135 +56,173 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
 		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 2);
 		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 3);
-
-		// TODO: More checks.
+		REQUIRE(chunk->GetAckBlockStartAt(0) == 1000);
+		REQUIRE(chunk->GetAckBlockEndAt(0) == 1999);
+		REQUIRE(chunk->GetAckBlockStartAt(1) == 2000);
+		REQUIRE(chunk->GetAckBlockEndAt(1) == 2999);
+		REQUIRE(chunk->GetDuplicateTsnAt(0) == 287454020);
+		REQUIRE(chunk->GetDuplicateTsnAt(1) == 4278216311);
+		REQUIRE(chunk->GetDuplicateTsnAt(2) == 556942164);
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
 		REQUIRE_THROWS_AS(chunk->SetCumulativeTsnAck(1234), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetAdvertisedReceiverWindowCredit(1234), MediaSoupError);
 
-		// /* Serialize it. */
+		/* Serialize it. */
 
-		// chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		// checkChunk(
-		//   /*chunk*/ chunk,
-		//   /*buffer*/ SerializeBuffer,
-		//   /*bufferLength*/ sizeof(SerializeBuffer),
-		//   /*length*/ 36,
-		//   /*frozen*/ false,
-		//   /*chunkType*/ Chunk::ChunkType::SACK,
-		//   /*unknownType*/ false,
-		//   /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		//   /*flags*/ 0b00000000,
-		//   /*parametersCount*/ 0);
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ 36,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::SACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
-		// REQUIRE(chunk->GetInitiateTag() == 287454020);
-		// REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		// REQUIRE(chunk->GetNumberOfOutboundStreams() == 4660);
-		// REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
-		// REQUIRE(chunk->GetInitialTsn() == 2882339074);
+		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
+		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 2);
+		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 3);
+		REQUIRE(chunk->GetAckBlockStartAt(0) == 1000);
+		REQUIRE(chunk->GetAckBlockEndAt(0) == 1999);
+		REQUIRE(chunk->GetAckBlockStartAt(1) == 2000);
+		REQUIRE(chunk->GetAckBlockEndAt(1) == 2999);
+		REQUIRE(chunk->GetDuplicateTsnAt(0) == 287454020);
+		REQUIRE(chunk->GetDuplicateTsnAt(1) == 4278216311);
+		REQUIRE(chunk->GetDuplicateTsnAt(2) == 556942164);
 
-		// /* Clone it. */
+		/* Clone it. */
 
-		// auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
 
 		delete chunk;
 
-		// checkChunk(
-		//   /*chunk*/ clonedChunk,
-		//   /*buffer*/ CloneBuffer,
-		//   /*bufferLength*/ sizeof(CloneBuffer),
-		//   /*length*/ 36,
-		//   /*frozen*/ false,
-		//   /*chunkType*/ Chunk::ChunkType::SACK,
-		//   /*unknownType*/ false,
-		//   /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-		//   /*flags*/ 0b00000000,
-		//   /*parametersCount*/ 0);
+		checkChunk(
+		  /*chunk*/ clonedChunk,
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ 36,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::SACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
-		// REQUIRE(clonedChunk->GetInitiateTag() == 287454020);
-		// REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
-		// REQUIRE(clonedChunk->GetNumberOfOutboundStreams() == 4660);
-		// REQUIRE(clonedChunk->GetNumberOfInboundStreams() == 22136);
-		// REQUIRE(clonedChunk->GetInitialTsn() == 2882339074);
+		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 287454020);
+		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
+		REQUIRE(clonedChunk->GetNumberOfGapAckBlocks() == 2);
+		REQUIRE(clonedChunk->GetNumberOfDuplicateTsns() == 3);
+		REQUIRE(clonedChunk->GetAckBlockStartAt(0) == 1000);
+		REQUIRE(clonedChunk->GetAckBlockEndAt(0) == 1999);
+		REQUIRE(clonedChunk->GetAckBlockStartAt(1) == 2000);
+		REQUIRE(clonedChunk->GetAckBlockEndAt(1) == 2999);
+		REQUIRE(clonedChunk->GetDuplicateTsnAt(0) == 287454020);
+		REQUIRE(clonedChunk->GetDuplicateTsnAt(1) == 4278216311);
+		REQUIRE(clonedChunk->GetDuplicateTsnAt(2) == 556942164);
 
-		// delete clonedChunk;
+		delete clonedChunk;
 	}
 
-	// SECTION("SackChunk::Factory() succeeds")
-	// {
-	// 	auto* chunk = SackChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+	SECTION("SackChunk::Factory() succeeds")
+	{
+		auto* chunk = SackChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-	// 	checkChunk(
-	// 	  /*chunk*/ chunk,
-	// 	  /*buffer*/ FactoryBuffer,
-	// 	  /*bufferLength*/ sizeof(FactoryBuffer),
-	// 	  /*length*/ 20,
-	// 	  /*frozen*/ false,
-	// 	  /*chunkType*/ Chunk::ChunkType::SACK,
-	// 	  /*unknownType*/ false,
-	// 	  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-	// 	  /*flags*/ 0b00000000,
-	// 	  /*parametersCount*/ 0);
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 16,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::SACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
-	// 	REQUIRE(chunk->GetInitiateTag() == 0);
-	// 	REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
-	// 	REQUIRE(chunk->GetNumberOfOutboundStreams() == 0);
-	// 	REQUIRE(chunk->GetNumberOfInboundStreams() == 0);
-	// 	REQUIRE(chunk->GetInitialTsn() == 0);
+		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
+		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 0);
+		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 0);
 
-	// 	/* Modify it. */
+		/* Modify it. */
 
-	// 	chunk->SetInitiateTag(1111111110);
-	// 	chunk->SetAdvertisedReceiverWindowCredit(2222222220);
-	// 	chunk->SetNumberOfOutboundStreams(1234);
-	// 	chunk->SetNumberOfInboundStreams(5678);
-	// 	chunk->SetInitialTsn(3333333330);
+		chunk->SetCumulativeTsnAck(1234);
+		chunk->SetAdvertisedReceiverWindowCredit(5678);
+		chunk->AddDuplicateTsn(10000000);
+		chunk->AddAckBlock(10000, 10999);
+		chunk->AddAckBlock(20000, 20999);
+		chunk->AddDuplicateTsn(20000000);
+		chunk->AddAckBlock(60000, 60999);
+		chunk->AddDuplicateTsn(30000000);
+		chunk->AddDuplicateTsn(40000000);
 
-	// 	checkChunk(
-	// 	  /*chunk*/ chunk,
-	// 	  /*buffer*/ FactoryBuffer,
-	// 	  /*bufferLength*/ sizeof(FactoryBuffer),
-	// 	  /*length*/ 56,
-	// 	  /*frozen*/ false,
-	// 	  /*chunkType*/ Chunk::ChunkType::SACK,
-	// 	  /*unknownType*/ false,
-	// 	  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-	// 	  /*flags*/ 0b00000000,
-	// 	  /*parametersCount*/ 0);
+		checkChunk(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 44,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::SACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
-	// 	REQUIRE(chunk->GetInitiateTag() == 1111111110);
-	// 	REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
-	// 	REQUIRE(chunk->GetNumberOfOutboundStreams() == 1234);
-	// 	REQUIRE(chunk->GetNumberOfInboundStreams() == 5678);
-	// 	REQUIRE(chunk->GetInitialTsn() == 3333333330);
+		REQUIRE(chunk->GetCumulativeTsnAck() == 1234);
+		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 5678);
+		REQUIRE(chunk->GetNumberOfGapAckBlocks() == 3);
+		REQUIRE(chunk->GetNumberOfDuplicateTsns() == 4);
+		REQUIRE(chunk->GetAckBlockStartAt(0) == 10000);
+		REQUIRE(chunk->GetAckBlockEndAt(0) == 10999);
+		REQUIRE(chunk->GetAckBlockStartAt(1) == 20000);
+		REQUIRE(chunk->GetAckBlockEndAt(1) == 20999);
+		REQUIRE(chunk->GetAckBlockStartAt(2) == 60000);
+		REQUIRE(chunk->GetAckBlockEndAt(2) == 60999);
+		REQUIRE(chunk->GetDuplicateTsnAt(0) == 10000000);
+		REQUIRE(chunk->GetDuplicateTsnAt(1) == 20000000);
+		REQUIRE(chunk->GetDuplicateTsnAt(2) == 30000000);
+		REQUIRE(chunk->GetDuplicateTsnAt(3) == 40000000);
 
-	// 	/* Parse itself and compare. */
+		/* Parse itself and compare. */
 
-	// 	auto* parsedChunk = SackChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk = SackChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
-	// 	delete chunk;
+		delete chunk;
 
-	// 	checkChunk(
-	// 	  /*chunk*/ parsedChunk,
-	// 	  /*buffer*/ FactoryBuffer,
-	// 	  /*bufferLength*/ 56,
-	// 	  /*length*/ 56,
-	// 	  /*frozen*/ true,
-	// 	  /*chunkType*/ Chunk::ChunkType::SACK,
-	// 	  /*unknownType*/ false,
-	// 	  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
-	// 	  /*flags*/ 0b00000000,
-	// 	  /*parametersCount*/ 0);
+		checkChunk(
+		  /*chunk*/ parsedChunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ 44,
+		  /*length*/ 44,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::SACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 0);
 
-	// 	REQUIRE(parsedChunk->GetInitiateTag() == 1111111110);
-	// 	REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 2222222220);
-	// 	REQUIRE(parsedChunk->GetNumberOfOutboundStreams() == 1234);
-	// 	REQUIRE(parsedChunk->GetNumberOfInboundStreams() == 5678);
-	// 	REQUIRE(parsedChunk->GetInitialTsn() == 3333333330);
+		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 1234);
+		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 5678);
+		REQUIRE(parsedChunk->GetNumberOfGapAckBlocks() == 3);
+		REQUIRE(parsedChunk->GetNumberOfDuplicateTsns() == 4);
+		REQUIRE(parsedChunk->GetAckBlockStartAt(0) == 10000);
+		REQUIRE(parsedChunk->GetAckBlockEndAt(0) == 10999);
+		REQUIRE(parsedChunk->GetAckBlockStartAt(1) == 20000);
+		REQUIRE(parsedChunk->GetAckBlockEndAt(1) == 20999);
+		REQUIRE(parsedChunk->GetAckBlockStartAt(2) == 60000);
+		REQUIRE(parsedChunk->GetAckBlockEndAt(2) == 60999);
+		REQUIRE(parsedChunk->GetDuplicateTsnAt(0) == 10000000);
+		REQUIRE(parsedChunk->GetDuplicateTsnAt(1) == 20000000);
+		REQUIRE(parsedChunk->GetDuplicateTsnAt(2) == 30000000);
+		REQUIRE(parsedChunk->GetDuplicateTsnAt(3) == 40000000);
 
-	// 	delete parsedChunk;
-	// }
+		delete parsedChunk;
+	}
 }

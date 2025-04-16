@@ -133,10 +133,39 @@ namespace RTC
 				return Utils::Byte::Get2Bytes(GetBuffer(), 14);
 			}
 
+			uint16_t GetAckBlockStartAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetAckBlocksPointer(), (idx * 4));
+			}
+
+			uint16_t GetAckBlockEndAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get2Bytes(GetAckBlocksPointer(), (idx * 4) + 2);
+			}
+
+			uint32_t GetDuplicateTsnAt(uint16_t idx) const
+			{
+				return Utils::Byte::Get4Bytes(GetDuplicateTsnsPointer(), (idx * 4));
+			}
+
+			void AddAckBlock(uint16_t start, uint16_t end);
+
+			void AddDuplicateTsn(uint32_t tsn);
+
 		private:
 			void SetNumberOfGapAckBlocks(uint16_t value);
 
 			void SetNumberOfDuplicateTsns(uint16_t value);
+
+			uint8_t* GetAckBlocksPointer() const
+			{
+				return const_cast<uint8_t*>(GetBuffer()) + 16;
+			}
+
+			uint8_t* GetDuplicateTsnsPointer() const
+			{
+				return const_cast<uint8_t*>(GetBuffer()) + 16 + (GetNumberOfGapAckBlocks() * 4);
+			}
 		};
 	} // namespace SCTP
 } // namespace RTC

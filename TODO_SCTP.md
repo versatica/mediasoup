@@ -16,7 +16,9 @@ Same in `PipeTransport` and `PlainTransport`.
 ## TODO
 
 - Check all pending "TODO" comments.
--
+
+- in `Packet::Parse()` we call `Chunk::IsChunk()` for each possible Chunk in the Packet and then each `XxxxChunk::Parse()` calls it again. Improve it.
+
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
 - What happens if I call `chunk->BuildParameterInPlace()` in a Chunk class that is not supposed to have chunks??? It should not be allowed and should throw.

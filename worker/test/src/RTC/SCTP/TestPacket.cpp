@@ -26,8 +26,6 @@ SCENARIO("parse SCTP Packet without Chunks", "[sctp][serializable]")
 	};
 	// clang-format on
 
-	REQUIRE(Packet::IsPacket(buffer, sizeof(buffer)) == true);
-
 	auto* packet = Packet::Parse(buffer, sizeof(buffer));
 
 	REQUIRE(sizeof(buffer) == 12);
@@ -82,8 +80,6 @@ SCENARIO("parse SCTP Packet with Chunks", "[sctp][serializable]")
 		0xAA, 0xBB, 0xCC, 0x00,
 	};
 	// clang-format on
-
-	REQUIRE(Packet::IsPacket(buffer, sizeof(buffer)) == true);
 
 	auto* packet = Packet::Parse(buffer, sizeof(buffer));
 

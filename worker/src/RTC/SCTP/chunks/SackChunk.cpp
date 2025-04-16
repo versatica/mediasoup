@@ -4,6 +4,7 @@
 #include "RTC/SCTP/chunks/SackChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -43,9 +44,21 @@ namespace RTC
 
 			auto* chunk = new SackChunk(buffer, bufferLength);
 
+			// In this Chunk we must validate that some fields have correct values.
+			if (
+			  (chunk->GetNumberOfGapAckBlocks() * 4) + (chunk->GetNumberOfDuplicateTsns() * 4) !=
+			  chunkLength - SackChunk::SackChunkHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp, "wrong values in Number of Gap Ack Blocks and/or Number of Duplicate TSNs fields");
+
+				delete chunk;
+				return nullptr;
+			}
+
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
-			chunk->SetLength(chunkLength + padding);
+			chunk->SetLength(chunkLength);
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
@@ -103,8 +116,21 @@ namespace RTC
 			  indentation,
 			  "  advertised receiver window credit: %" PRIu32,
 			  GetAdvertisedReceiverWindowCredit());
-			MS_DUMP_CLEAN(indentation, "  number of gap blocks: %" PRIu16, GetNumberOfGapAckBlocks());
-			MS_DUMP_CLEAN(indentation, "  number of duplicate tsns: %" PRIu16, GetNumberOfDuplicateTsns());
+			MS_DUMP_CLEAN(indentation, "  gap blocks: %" PRIu16, GetNumberOfGapAckBlocks());
+			for (uint16_t idx{ 0 }; idx < GetNumberOfGapAckBlocks(); ++idx)
+			{
+				MS_DUMP_CLEAN(
+				  indentation,
+				  "  - idx: %" PRIu16 ", start: %" PRIu16 ", end:%" PRIu16,
+				  idx,
+				  GetAckBlockStartAt(idx),
+				  GetAckBlockEndAt(idx));
+			}
+			MS_DUMP_CLEAN(indentation, "  duplicate tsns: %" PRIu16, GetNumberOfDuplicateTsns());
+			for (uint16_t idx{ 0 }; idx < GetNumberOfDuplicateTsns(); ++idx)
+			{
+				MS_DUMP_CLEAN(indentation, "  - idx: %" PRIu16 ", tsn: %" PRIu32, idx, GetDuplicateTsnAt(idx));
+			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::SackChunk>");
 		}
 
@@ -135,6 +161,75 @@ namespace RTC
 			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
+		}
+
+		void SackChunk::AddAckBlock(uint16_t start, uint16_t end)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength      = GetLength();
+			auto previousLengthField = GetLengthField();
+
+			try
+			{
+				// These methods may throw if values are too high, so let's be ready.
+				SetLength(previousLength + 4);
+				SetLengthField(previousLengthField + 4);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
+
+			// Must move duplicate TSNs down.
+			std::memmove(
+			  GetDuplicateTsnsPointer() + 4, GetDuplicateTsnsPointer(), GetNumberOfDuplicateTsns() * 4);
+
+			// Add the new ack block.
+			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), +(GetNumberOfGapAckBlocks() * 4), start);
+			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), +(GetNumberOfGapAckBlocks() * 4) + 2, end);
+
+			// Update the counter field.
+			// NOTE: Do this after moving bytes.
+			SetNumberOfGapAckBlocks(GetNumberOfGapAckBlocks() + 1);
+		}
+
+		void SackChunk::AddDuplicateTsn(uint32_t tsn)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength      = GetLength();
+			auto previousLengthField = GetLengthField();
+
+			try
+			{
+				// These methods may throw if values are too high, so let's be ready.
+				SetLength(previousLength + 4);
+				SetLengthField(previousLengthField + 4);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
+
+			// Add the new ack block.
+			Utils::Byte::Set4Bytes(GetDuplicateTsnsPointer(), +(GetNumberOfDuplicateTsns() * 4), tsn);
+
+			// Update the counter field.
+			// NOTE: Do this after moving bytes.
+			SetNumberOfDuplicateTsns(GetNumberOfDuplicateTsns() + 1);
 		}
 
 		void SackChunk::SetNumberOfGapAckBlocks(uint16_t value)

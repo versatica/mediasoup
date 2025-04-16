@@ -23,24 +23,11 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		bool Packet::IsPacket(const uint8_t* buffer, size_t bufferLength)
-		{
-			auto* header = reinterpret_cast<const Packet::CommonHeader*>(buffer);
-
-			return (
-			  (bufferLength >= Packet::CommonHeaderLength) &&
-			  // Source and destination ports cannot be 0.
-			  (uint16_t{ ntohs(header->sourcePort) } != 0 &&
-			   uint16_t{ ntohs(header->destinationPort) } != 0) &&
-			  // Buffer length must be multiple of 4 bytes.
-			  Utils::Byte::IsPaddedTo4Bytes(bufferLength));
-		}
-
 		Packet* Packet::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
-			if (!Packet::IsPacket(buffer, bufferLength))
+			if ((bufferLength < Packet::CommonHeaderLength) || !Utils::Byte::IsPaddedTo4Bytes(bufferLength))
 			{
 				MS_WARN_TAG(sctp, "not an SCTP Packet");
 

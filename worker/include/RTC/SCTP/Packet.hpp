@@ -70,14 +70,6 @@ namespace RTC
 			static const size_t CommonHeaderLength{ 12 };
 
 			/**
-			 * Whether given buffer could be a valid SCTP packet.
-			 *
-			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
-			 */
-			static bool IsPacket(const uint8_t* buffer, size_t bufferLength);
-
-			/**
 			 * Parse a SCTP packet.
 			 *
 			 * @remarks

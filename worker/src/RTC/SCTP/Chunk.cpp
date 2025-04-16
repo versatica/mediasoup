@@ -11,6 +11,7 @@
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include <cstring> // std::memmove()
+#include <limits>  // std::numeric_limits()
 
 namespace RTC
 {
@@ -310,7 +311,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (length > 65535u)
+			if (length > std::numeric_limits<uint16_t>::max())
 			{
 				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
 			}
