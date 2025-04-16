@@ -169,20 +169,19 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousLength      = GetLength();
-			auto previousLengthField = GetLengthField();
+			auto previousLength = GetLength();
 
 			try
 			{
 				// These methods may throw if values are too high, so let's be ready.
 				SetLength(previousLength + 4);
-				SetLengthField(previousLengthField + 4);
+				SetLengthField(previousLength + 4);
 			}
 			catch (const MediaSoupError& error)
 			{
 				// Rollback.
 				SetLength(previousLength);
-				SetLengthField(previousLengthField);
+				SetLengthField(previousLength);
 
 				throw;
 			}
@@ -206,20 +205,21 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousLength      = GetLength();
-			auto previousLengthField = GetLengthField();
+			// NOTE: We know that SackChunk length is always the same as its Chunk
+			// Length field.
+			auto previousLength = GetLength();
 
 			try
 			{
 				// These methods may throw if values are too high, so let's be ready.
 				SetLength(previousLength + 4);
-				SetLengthField(previousLengthField + 4);
+				SetLengthField(previousLength + 4);
 			}
 			catch (const MediaSoupError& error)
 			{
 				// Rollback.
 				SetLength(previousLength);
-				SetLengthField(previousLengthField);
+				SetLengthField(previousLength);
 
 				throw;
 			}

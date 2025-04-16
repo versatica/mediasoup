@@ -298,20 +298,6 @@ namespace RTC
 
 			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;
 
-			/**
-			 * NOTE: Return ChunkHeader* instead of const ChunkHeader* since we may
-			 * want to modify its fields.
-			 */
-			virtual ChunkHeader* GetHeaderPointer() const final
-			{
-				return reinterpret_cast<ChunkHeader*>(const_cast<uint8_t*>(GetBuffer()));
-			}
-
-			virtual ChunkFlags* GetFlagsPointer() const final
-			{
-				return reinterpret_cast<ChunkFlags*>(const_cast<uint8_t*>(GetBuffer()) + 1);
-			}
-
 			virtual bool GetBit0() const final
 			{
 				return GetFlagsPointer()->bit0;
@@ -393,28 +379,24 @@ namespace RTC
 			}
 
 			/**
-			 * Private private because it returns the value of the Value Length field,
-			 * which is not useful for the application.
-			 */
-			virtual uint16_t GetLengthField() const final
-			{
-				return uint16_t{ ntohs(GetHeaderPointer()->length) };
-			}
-
-			/**
 			 * @throw MediaSoupError - If given `length` is higher than mazimmun
 			 *   allowed one (65535).
 			 */
 			virtual void SetLengthField(size_t length) final;
 
-			virtual bool HasValue() const final
+			/**
+			 * Chunk subclasses with header bigger than default one (4 bytes) must
+			 * override this method and return their header length (excluding
+			 * variable-length field considered "value").
+			 */
+			virtual size_t GetHeaderLength() const
 			{
-				return GetLengthField() > Chunk::ChunkHeaderLength;
+				return Chunk::ChunkHeaderLength;
 			}
 
-			virtual uint8_t* GetValuePointer() const final
+			virtual bool HasValue() const final
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + Chunk::ChunkHeaderLength;
+				return GetLengthField() > GetHeaderLength();
 			}
 
 			virtual const uint8_t* GetValue() const final
@@ -434,8 +416,10 @@ namespace RTC
 					return 0u;
 				}
 
-				return GetLengthField() - Chunk::ChunkHeaderLength;
+				return GetLengthField() - GetHeaderLength();
 			}
+
+			virtual void SetValue(const uint8_t* value, uint16_t valueLength) final;
 
 			/**
 			 * To be called by each subclass of Chunk if Chunk Parameters parsing is
@@ -451,6 +435,15 @@ namespace RTC
 			virtual bool ParseParameters() final;
 
 		private:
+			/**
+			 * NOTE: Return ChunkHeader* instead of const ChunkHeader* since we may
+			 * want to modify its fields.
+			 */
+			virtual ChunkHeader* GetHeaderPointer() const final
+			{
+				return reinterpret_cast<ChunkHeader*>(const_cast<uint8_t*>(GetBuffer()));
+			}
+
 			virtual void SetType(ChunkType type) final
 			{
 				GetHeaderPointer()->type = type;
@@ -459,6 +452,21 @@ namespace RTC
 			virtual void SetFlags(uint8_t flags) final
 			{
 				GetHeaderPointer()->flags = flags;
+			}
+
+			virtual ChunkFlags* GetFlagsPointer() const final
+			{
+				return reinterpret_cast<ChunkFlags*>(const_cast<uint8_t*>(GetBuffer()) + 1);
+			}
+
+			virtual uint16_t GetLengthField() const final
+			{
+				return uint16_t{ ntohs(GetHeaderPointer()->length) };
+			}
+
+			virtual uint8_t* GetValuePointer() const final
+			{
+				return const_cast<uint8_t*>(GetBuffer()) + GetHeaderLength();
 			}
 
 			virtual void HandleInPlaceParameter(ChunkParameter* parameter) final;

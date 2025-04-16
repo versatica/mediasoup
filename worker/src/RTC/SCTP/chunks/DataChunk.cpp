@@ -4,7 +4,6 @@
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -205,38 +204,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousLength         = GetLength();
-			auto previousLengthField    = GetLengthField();
-			auto previousUserDataLength = GetUserDataLength();
-			auto newNotPaddedLength =
-			  size_t{ previousLengthField } - size_t{ previousUserDataLength } + size_t{ userDataLength };
-			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
-
-			try
-			{
-				// Let's call SetLength() on parent with the new computed Chunk length.
-				// NOTE: If there is no space in the buffer for it, it will throw.
-				// NOTE: Chunks must be padded to 4 bytes.
-				SetLength(newPaddedLength);
-
-				// Update the Chunk Length field.
-				// NOTE: This will throw if computed value is too big.
-				SetLengthField(newNotPaddedLength);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLengthField);
-
-				throw;
-			}
-
-			// Copy the given user data into the buffer.
-			std::memmove(GetUserDataPointer(), userData, userDataLength);
-
-			// Fill padding bytes with zero.
-			FillPadding(newPaddedLength - newNotPaddedLength);
+			SetValue(userData, userDataLength);
 		}
 	} // namespace SCTP
 } // namespace RTC

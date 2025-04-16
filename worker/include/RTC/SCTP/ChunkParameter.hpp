@@ -156,6 +156,9 @@ namespace RTC
 
 			/**
 			 * Whether the Parameter has a value (greater than 0 bytes).
+			 *
+			 * @remarks Let's make this method public since it's convenient for
+			 *   testing.
 			 */
 			virtual bool HasValue() const final
 			{
@@ -164,6 +167,9 @@ namespace RTC
 
 			/**
 			 * Length of the Parameter value.
+			 *
+			 * @remarks Let's make this method public since it's convenient for
+			 *   testing.
 			 */
 			virtual uint16_t GetValueLength() const final
 			{
@@ -183,30 +189,6 @@ namespace RTC
 
 			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
 
-			/**
-			 * NOTE: Return ChunkParameterHeader* instead of const
-			 * ChunkParameterHeader* since we may want to modify its fields.
-			 */
-			virtual ChunkParameterHeader* GetHeaderPointer() const final
-			{
-				return reinterpret_cast<ChunkParameterHeader*>(const_cast<uint8_t*>(GetBuffer()));
-			}
-
-			/**
-			 * Private private because it returns the value of the Value Length field,
-			 * which is not useful for the application.
-			 */
-			virtual uint16_t GetLengthField() const final
-			{
-				return uint16_t{ ntohs(GetHeaderPointer()->length) };
-			}
-
-			/**
-			 * @throw MediaSoupError - If given `length` is higher than mazimmun
-			 *   allowed one (65535).
-			 */
-			virtual void SetLengthField(size_t length) final;
-
 			virtual uint8_t* GetValuePointer() const final
 			{
 				return const_cast<uint8_t*>(GetBuffer()) + ChunkParameter::ChunkParameterHeaderLength;
@@ -222,12 +204,34 @@ namespace RTC
 				return GetValuePointer();
 			}
 
+			virtual void SetValue(const uint8_t* value, uint16_t valueLength) final;
+
 		private:
+			/**
+			 * NOTE: Return ChunkParameterHeader* instead of const
+			 * ChunkParameterHeader* since we may want to modify its fields.
+			 */
+			virtual ChunkParameterHeader* GetHeaderPointer() const final
+			{
+				return reinterpret_cast<ChunkParameterHeader*>(const_cast<uint8_t*>(GetBuffer()));
+			}
+
 			virtual void SetType(ChunkParameterType type) final
 			{
 				GetHeaderPointer()->type =
 				  static_cast<ChunkParameterType>(uint16_t{ htons(static_cast<uint16_t>(type)) });
 			}
+
+			virtual uint16_t GetLengthField() const final
+			{
+				return uint16_t{ ntohs(GetHeaderPointer()->length) };
+			}
+
+			/**
+			 * @throw MediaSoupError - If given `length` is higher than mazimmun
+			 *   allowed one (65535).
+			 */
+			virtual void SetLengthField(size_t length) final;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -4,7 +4,6 @@
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memmove()
 
 namespace RTC
 {

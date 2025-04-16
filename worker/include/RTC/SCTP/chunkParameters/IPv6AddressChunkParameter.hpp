@@ -72,7 +72,7 @@ namespace RTC
 			 */
 			const uint8_t* GetIPv6Address() const
 			{
-				return GetValuePointer();
+				return GetValue();
 			}
 
 			/**

@@ -4,8 +4,6 @@
 #include "RTC/SCTP/chunks/CookieEchoChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -111,38 +109,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousLength       = GetLength();
-			auto previousLengthField  = GetLengthField();
-			auto previousCookieLength = GetCookieLength();
-			auto newNotPaddedLength =
-			  size_t{ previousLengthField } - size_t{ previousCookieLength } + size_t{ cookieLength };
-			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
-
-			try
-			{
-				// Let's call SetLength() on parent with the new computed Chunk length.
-				// NOTE: If there is no space in the buffer for it, it will throw.
-				// NOTE: Chunks must be padded to 4 bytes.
-				SetLength(newPaddedLength);
-
-				// Update the Chunk Length field.
-				// NOTE: This will throw if computed value is too big.
-				SetLengthField(newNotPaddedLength);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLengthField);
-
-				throw;
-			}
-
-			// Copy the given cookie into the buffer.
-			std::memmove(GetValuePointer(), cookie, cookieLength);
-
-			// Fill padding bytes with zero.
-			FillPadding(newPaddedLength - newNotPaddedLength);
+			SetValue(cookie, cookieLength);
 		}
 	} // namespace SCTP
 } // namespace RTC

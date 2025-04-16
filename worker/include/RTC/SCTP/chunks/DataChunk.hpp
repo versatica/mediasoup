@@ -165,35 +165,30 @@ namespace RTC
 
 			bool HasUserData() const
 			{
-				return GetLengthField() > DataChunk::DataChunkHeaderLength;
+				return HasValue();
 			}
 
 			const uint8_t* GetUserData() const
 			{
-				if (!HasUserData())
-				{
-					return nullptr;
-				}
-
-				return GetUserDataPointer();
+				return GetValue();
 			}
 
 			uint16_t GetUserDataLength() const
 			{
-				if (!HasUserData())
-				{
-					return 0u;
-				}
-
-				return GetLengthField() - DataChunk::DataChunkHeaderLength;
+				return GetValueLength();
 			}
 
 			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
 
-		private:
-			uint8_t* GetUserDataPointer() const
+		protected:
+			/**
+			 * We need to override this method since DataChunk has
+			 * a variable-length value and the fixed header doesn't have default
+			 * value.
+			 */
+			virtual size_t GetHeaderLength() const override
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + DataChunk::DataChunkHeaderLength;
+				return DataChunk::DataChunkHeaderLength;
 			}
 		};
 	} // namespace SCTP

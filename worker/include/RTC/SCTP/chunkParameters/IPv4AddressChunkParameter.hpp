@@ -69,7 +69,7 @@ namespace RTC
 			 */
 			const uint8_t* GetIPv4Address() const
 			{
-				return GetValuePointer();
+				return GetValue();
 			}
 
 			/**

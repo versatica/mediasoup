@@ -4,8 +4,6 @@
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include <cstring> // std::memmove()
 
 namespace RTC
 {
@@ -115,38 +113,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousLength      = GetLength();
-			auto previousLengthField = GetLengthField();
-			auto previousInfoLength  = GetInfoLength();
-			auto newNotPaddedLength =
-			  size_t{ previousLengthField } - size_t{ previousInfoLength } + size_t{ infoLength };
-			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
-
-			try
-			{
-				// Let's call SetLength() on parent with the new computed Parameter length.
-				// NOTE: If there is no space in the buffer for it, it will throw.
-				// NOTE: Parameters must be padded to 4 bytes.
-				SetLength(newPaddedLength);
-
-				// Update the Parameter Length field.
-				// NOTE: This will throw if computed value is too big.
-				SetLengthField(newNotPaddedLength);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLengthField);
-
-				throw;
-			}
-
-			// Copy the given info into the buffer.
-			std::memmove(GetValuePointer(), info, infoLength);
-
-			// Fill padding bytes with zero.
-			FillPadding(newPaddedLength - newNotPaddedLength);
+			SetValue(info, infoLength);
 		}
 	} // namespace SCTP
 } // namespace RTC

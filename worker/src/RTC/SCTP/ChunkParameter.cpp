@@ -168,5 +168,46 @@ namespace RTC
 
 			GetHeaderPointer()->length = uint16_t{ htons(length) };
 		}
+
+		void ChunkParameter::SetValue(const uint8_t* value, uint16_t valueLength)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength      = GetLength();
+			auto previousLengthField = GetLengthField();
+			auto previousValueLength = GetValueLength();
+			auto newNotPaddedLength =
+			  size_t{ previousLengthField } - size_t{ previousValueLength } + size_t{ valueLength };
+			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+
+			try
+			{
+				// Let's call SetLength() on parent with the new computed Parameter
+				// length.
+				// NOTE: If there is no space in the buffer for it, it will throw.
+				// NOTE: Chunk Parameters must be padded to 4 bytes.
+				SetLength(newPaddedLength);
+
+				// Update the Chunk Parameter Length field.
+				// NOTE: This will throw if computed value is too big.
+				SetLengthField(newNotPaddedLength);
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
+
+			// Copy the given value into the buffer.
+			std::memmove(GetValuePointer(), value, valueLength);
+
+			// Fill padding bytes with zero.
+			FillPadding(newPaddedLength - newNotPaddedLength);
+		}
 	} // namespace SCTP
 } // namespace RTC
