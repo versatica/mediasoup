@@ -19,7 +19,7 @@ Same in `PipeTransport` and `PlainTransport`.
 
 - Check all pending "TODO" comments.
 
-- in `Packet::Parse()` we call `Chunk::IsChunk()` for each possible Chunk in the Packet and then each `XxxxChunk::Parse()` calls it again. Improve it.
+- in `Packet::Parse()` we call `Chunk::IsChunk()` for each possible Chunk in the Packet and then each `XxxxChunk::Parse()` calls it again. Improve it. Same in `Chunk::ParseParameters()`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
