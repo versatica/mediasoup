@@ -43,6 +43,8 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 
 	auto* clonedPacket = packet->Clone(PacketCloneBuffer, len);
 
+	delete packet;
+
 	clonedPacket->GetSourcePort();
 	clonedPacket->SetSourcePort(12345);
 	clonedPacket->GetDestinationPort();
@@ -60,6 +62,5 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 
 	clonedPacket->Serialize(PacketSerializeBuffer, len);
 
-	delete packet;
 	delete clonedPacket;
 }
