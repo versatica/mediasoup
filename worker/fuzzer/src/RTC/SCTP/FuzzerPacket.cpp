@@ -6,11 +6,6 @@ thread_local static uint8_t PacketCloneBuffer[65536];
 
 void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 {
-	if (!::RTC::SCTP::Packet::IsPacket(data, len))
-	{
-		return;
-	}
-
 	::RTC::SCTP::Packet* packet = ::RTC::SCTP::Packet::Parse(data, len);
 
 	if (!packet)
