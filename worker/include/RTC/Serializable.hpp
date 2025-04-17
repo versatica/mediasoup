@@ -10,7 +10,7 @@ namespace RTC
 	 *
 	 * @remarks
 	 * - ICE, RTP, RTCP, SCTP packets and some items in those packets inherit
-	 *   from this class.
+	 *   from this class (or will inherit).
 	 * - Typically many of those packets and items may include padding bytes to
 	 *   be multiple of 4 bytes. However it's up to each packet or item to deal
 	 *   with padding. From the point of view of the Serializable class, the
@@ -49,7 +49,7 @@ namespace RTC
 		/**
 		 * Get a buffer containing the serialized content. Combined with the
 		 * `GetLength()` method, the application can obtain the full sequence of
-		 * bytes of the Serializable.
+		 * bytes of the Serializable in network byte order.
 		 */
 		virtual const uint8_t* GetBuffer() const final
 		{
@@ -57,9 +57,8 @@ namespace RTC
 		}
 
 		/**
-		 * Maximum length the Serializable can take. This is the `bufferLength`
-		 * argument given to the constructor. It's guaranteed to be equal or greater
-		 * than value returned by `GetLength()`.
+		 * Maximum length the Serializable can take. It's guaranteed to be equal or
+		 * greater than value returned by `GetLength()`.
 		 */
 		virtual const size_t GetBufferLength() const final
 		{
@@ -69,11 +68,6 @@ namespace RTC
 		/**
 		 * Current exact length of the Serializable, including padding bytes (if
 		 * any).
-		 *
-		 * @remarks
-		 * - It returns the current value of the `length` member, which can be
-		 *   updated by the child class at any time by calling `SetLength()`.
-		 * - It's guaranteed to be less or equal to `GetBufferLength()`.
 		 */
 		virtual const size_t GetLength() const final
 		{
@@ -83,6 +77,21 @@ namespace RTC
 		/**
 		 * Whether the Serializable is frozen, meaning that modifications are not
 		 * allowed.
+		 *
+		 * @remarks
+		 * - By design, all Parse() class methods return a frozen Serializable.
+		 *   This is because the buffer in which the packet exists is supposed to
+		 *   be read-only.
+		 * - By design, all Factory() class methods return a non frozen
+		 *   Serializable.
+		 * - When calling `Serialize()` on a Serializable, it becomes non frozen.
+		 * - When calling `Clone()` on a Serializable, the new created Serializable
+		 *   is not frozen.
+		 * - The internal Serializable items that the instance contains (for
+		 *   example, an SCTP Packet may contain SCTP Chunks and a SCTP Chunk may
+		 *   contain SCTP Chunk Parameters), will always be frozen. This is because
+		 *   the user is not able to modify those items because their length may
+		 *   change and corrupt other bytes of the main Serializable.
 		 */
 		virtual bool IsFrozen() const final
 		{
@@ -90,20 +99,8 @@ namespace RTC
 		}
 
 		/**
-		 * Freeze the Serializable, meaning that modifications are not allowed
-		 * on it. If a modification is attempted it will throw MediasoupError.
-		 *
-		 * @remarks
-		 * - Subclasses should invoke `Serializable::AssertNotFrozen()` in public
-		 *   methods that modify their internal state/content.
-		 * - When calling `Serialize()` the `frozen` flag will remain the same as
-		 *   it was.
-		 * - When calling `Clone()` on a Serializable, the new instance returned
-		 *   will keep same `frozen` flag value than the original Serializable.
-		 * - In both cases, `Serialize()` and `Clone`, the Serializable class may
-		 *   explicitly revert the `frozen` flag to false (by calling `Unfreeze()`
-		 *   on its own but it should only do it in the instance itself and not in
-		 *   any interal `Serializable` member.
+		 * Freeze the Serializable, meaning that modifications are not allowed on
+		 * it. If a modification is attempted it will throw MediasoupError.
 		 */
 		virtual void Freeze() final
 		{
@@ -138,28 +135,6 @@ namespace RTC
 		 * @param buffer - The buffer for the cloned Serializable.
 		 * @param bufferLength - Buffer length.
 		 *
-		 * @remarks
-		 * - The subclass must redeclare this method with a pointer to the subclass
-		 *   as return type.
-		 * - The subclass need to clone any pointer or allocated memory it holds
-		 *   internally.
-		 * - In subclasses that do not hold other Serializable instances and do not
-		 *   allocate memory by themselves, the Clone() mthod can be as follows:
-		 *   ```c++
-		 *   SerializableSubclass* SerializableSubclass::Clone(uint8_t* buffer, size_t bufferLength) const
-		 *   {
-		 *     auto* cloned = new SerializableSubclass(buffer, bufferLength);
-		 *
-		 *     Serializable::CloneInto(cloned);
-		 *
-		 *     return clonedItem;
-		 *   }
-		 *   ```
-		 * - In addition to call this method in Serializable parent class, the
-		 *  `Clone()` implementation in the subclass must also replicate any
-		 *   pointers it holds and make them point to the proper position in the
-		 *   new buffer.
-		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 *   current exact length of the Serializable.
 		 */
@@ -167,8 +142,9 @@ namespace RTC
 
 		/**
 		 * The application must call this method on a Serializable when it's been
-		 * constructed within a parent object that needs to know when this
-		 * Serializable is done to recompute its total length and internal pointers.
+		 * constructed within a parent Serializable object that needs to know when
+		 * this Serializable is done to recompute its total length and internal
+		 * pointers.
 		 *
 		 * @remarks
 		 * This method freezes the Serializable.
@@ -185,8 +161,7 @@ namespace RTC
 		 */
 	protected:
 		/**
-		 * Method to be called by the child class in case it overrides the
-		 * `Serialize()` method.
+		 * Change the buffer of the Serializable.
 		 */
 		virtual void SetBuffer(uint8_t* buffer) final
 		{
@@ -197,9 +172,9 @@ namespace RTC
 		 * Update the buffer length of the Serializable.
 		 **
 		 * @remarks
-		 * - The child class must invoke this method after parsing completes in
-		 *   case it couldn't anticipate its expected exact length. Specially
-		 *   useful when parsing variable-length items within a packet.
+		 * The child class must invoke this method after parsing completes in case
+		 * it couldn't anticipate its expected exact length. Specially useful when
+		 * parsing variable-length items within a packet.
 		 *
 		 * @throw
 		 * - MediaSoupError - If given `bufferLength` is lower than the current
@@ -225,14 +200,13 @@ namespace RTC
 		virtual void SetLength(size_t length) final;
 
 		/**
-		 * Clone Serializable into the given Serializable. Subclasses can invoke
-		 * this method within their Clone() implementation.
+		 * Clone the Serializable into the given Serializable.
 		 *
 		 * @remarks
 		 * If this method throws (due to the buffer length of the given Serializable
-		 * being too small, then it deletes the given `serializable` pointer and
-		 * then throws, meaning that the subclass must not delete it in case it does
-		 * try/catch.
+		 * being too small), then this method deletes the given `serializable`
+		 * pointer and throws, meaning that the subclass must not delete it in case
+		 * it captured the error.
 		 *
 		 * @throw MediaSoupError - If the buffer length of the given `serializable`
 		 *   is too small.
@@ -240,7 +214,7 @@ namespace RTC
 		virtual void CloneInto(Serializable* serializable) const;
 
 		/**
-		 * Fill the last `padding` bytes of the buffer with zeros.
+		 * Fill the last given `padding` number of bytes of the buffer with zeros.
 		 *
 		 * @remarks This method does NOT add bytes to the buffer.
 		 */
@@ -256,7 +230,14 @@ namespace RTC
 		 * ```c++
 		 * chunk->SetConsolidatedListener([this, chunk]()
 		 * {
+		 *   // Add the chunk to the list.
+		 *   this->chunks.push_back(chunk);
+		 *
+		 *   // Update our Serializable length.
 		 *   SetLength(GetLength() + chunk->GetLength());
+		 *
+		 *   // Update our Length field.
+		 *   SetLengthField(previousLength + chunk->GetLengthField());
 		 * });
 		 * ```
 		 */
@@ -264,7 +245,7 @@ namespace RTC
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a
-		 * MediasoupError error.
+		 * MediasoupError exception.
 		 */
 		virtual void AssertNotFrozen() const final;
 

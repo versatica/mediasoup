@@ -155,8 +155,8 @@ namespace RTC
 			/**
 			 * Whether the Parameter has a value (greater than 0 bytes).
 			 *
-			 * @remarks Let's make this method public since it's convenient for
-			 *   testing.
+			 * @remarks
+			 * Let's make this method public since it's convenient for testing.
 			 */
 			virtual bool HasValue() const final
 			{
@@ -167,7 +167,7 @@ namespace RTC
 			 * Length of the Parameter value.
 			 *
 			 * @remarks Let's make this method public since it's convenient for
-			 *   testing.
+			 * testing.
 			 */
 			virtual uint16_t GetValueLength() const final
 			{

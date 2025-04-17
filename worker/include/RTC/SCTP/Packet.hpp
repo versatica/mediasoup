@@ -73,7 +73,7 @@ namespace RTC
 			 * Parse a SCTP packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
+			 * `bufferLength` must be the exact length of the Packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 

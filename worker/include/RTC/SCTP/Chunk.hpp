@@ -435,9 +435,10 @@ namespace RTC
 			 * needed. It creates ChunkParameter subclasses and adds them to the
 			 * Chunk.
 			 *
-			 * @remarks This method assumes that the Chunk basic parsing has been
-			 *   made already so current length of the Chunk is the fixed length of
-			 *   the specific Chunk class.
+			 * @remarks
+			 * This method assumes that the Chunk basic parsing has been made already
+			 * so current length of the Chunk is the fixed length of the specific
+			 * Chunk class.
 			 *
 			 * @return True if no error happened while parsing Parameters.
 			 */

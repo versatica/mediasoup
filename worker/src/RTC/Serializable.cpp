@@ -57,7 +57,7 @@ namespace RTC
 			  this->length);
 		}
 
-		if (bufferLength == 0u)
+		if (bufferLength == 0)
 		{
 			MS_THROW_TYPE_ERROR("bufferLength cannot be 0");
 		}
@@ -77,7 +77,7 @@ namespace RTC
 			  this->bufferLength);
 		}
 
-		if (length == 0u)
+		if (length == 0)
 		{
 			MS_THROW_TYPE_ERROR("length cannot be 0");
 		}
