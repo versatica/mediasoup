@@ -79,6 +79,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* clonedPacket = packet->Clone(CloneBuffer, sizeof(CloneBuffer));
 
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
 		delete packet;
 
 		CHECK_PACKET(
@@ -349,6 +351,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* clonedPacket = packet->Clone(CloneBuffer, sizeof(CloneBuffer));
 
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
 		delete packet;
 
 		CHECK_PACKET(
@@ -557,6 +561,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		/* Clone the Packet. */
 
 		auto* clonedPacket = packet->Clone(CloneBuffer, packet->GetLength());
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
 
 		delete packet;
 

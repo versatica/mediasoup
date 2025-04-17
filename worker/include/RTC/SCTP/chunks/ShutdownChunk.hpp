@@ -46,7 +46,7 @@ namespace RTC
 			 * Parse a ShutdownChunk.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk.
+			 * `bufferLength` may exceed the exact length of the Chunk.
 			 */
 			static ShutdownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -54,7 +54,7 @@ namespace RTC
 			 * Parse a ShutdownChunk.
 			 *
 			 * @remarks
-			 * - To be used only by `Packet::Parse()`.
+			 * To be used only by `Packet::Parse()`.
 			 */
 			static ShutdownChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
@@ -63,7 +63,7 @@ namespace RTC
 			 * Create a ShutdownChunk.
 			 *
 			 * @remarks
-			 * - `bufferLength` could be greater than the Chunk real length.
+			 * `bufferLength` could be greater than the Chunk real length.
 			 */
 			static ShutdownChunk* Factory(uint8_t* buffer, size_t bufferLength);
 

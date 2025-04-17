@@ -4,6 +4,7 @@
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
 
@@ -55,6 +56,8 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
+		std::memset(buffer, 0x00, sizeof(buffer));
+
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
@@ -75,6 +78,8 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		/* Clone it. */
 
 		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
 
 		delete parameter;
 

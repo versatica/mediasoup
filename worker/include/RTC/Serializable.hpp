@@ -147,7 +147,7 @@ namespace RTC
 		 * pointers.
 		 *
 		 * @remarks
-		 * This method freezes the Serializable.
+		 * Once the serialization completes, the Serializable is frozen.
 		 *
 		 * @throw MediaSoupError - If `SetConsolidatedListener()` was not called
 		 *   first.
@@ -165,6 +165,8 @@ namespace RTC
 		 */
 		virtual void SetBuffer(uint8_t* buffer) final
 		{
+			// NOTE: We don't assert not frozen here on purpose.
+
 			this->buffer = buffer;
 		}
 
@@ -180,6 +182,7 @@ namespace RTC
 		 * - MediaSoupError - If given `bufferLength` is lower than the current
 		 *   exact length of the Serializable.
 		 * - MediaSoupError - If 0 is given.
+		 * - MediaSoupError - If the Serializable is frozen.
 		 */
 		virtual void SetBufferLength(size_t bufferLength) final;
 
@@ -196,6 +199,7 @@ namespace RTC
 		 * - MediaSoupError - If given `length` is larger than the buffer length of
 		 *   the Serializable.
 		 * - MediaSoupError - If 0 is given.
+		 * - MediaSoupError - If the Serializable is frozen.
 		 */
 		virtual void SetLength(size_t length) final;
 
@@ -225,21 +229,6 @@ namespace RTC
 		 * Serializable.
 		 *
 		 * @see Consolidate()
-		 *
-		 * @example
-		 * ```c++
-		 * chunk->SetConsolidatedListener([this, chunk]()
-		 * {
-		 *   // Add the chunk to the list.
-		 *   this->chunks.push_back(chunk);
-		 *
-		 *   // Update our Serializable length.
-		 *   SetLength(GetLength() + chunk->GetLength());
-		 *
-		 *   // Update our Length field.
-		 *   SetLengthField(previousLength + chunk->GetLengthField());
-		 * });
-		 * ```
 		 */
 		virtual void SetConsolidatedListener(const ConsolidatedListener&& listener) final;
 

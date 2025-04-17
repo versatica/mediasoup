@@ -35,7 +35,7 @@ namespace RTC
 			 * Parse a UnknownChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk Parameter.
+			 * `bufferLength` may exceed the exact length of the Chunk Parameter.
 			 */
 			static UnknownChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -43,7 +43,7 @@ namespace RTC
 			 * Parse a UnknownChunkParameter.
 			 *
 			 * @remarks
-			 * - To be used only by `Chunk::ParseParameters()`.
+			 * To be used only by `Chunk::ParseParameters()`.
 			 */
 			static UnknownChunkParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);

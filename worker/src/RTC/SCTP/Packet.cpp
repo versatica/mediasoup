@@ -68,7 +68,7 @@ namespace RTC
 
 				MS_DEBUG_DEV("parsing SCTP Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
-				// TODO
+				// TODO: Add more.
 				switch (chunkType)
 				{
 					case Chunk::ChunkType::DATA:
@@ -373,7 +373,8 @@ namespace RTC
 				  // Fix buffer length assigned to the Chunk.
 				  chunk->SetBufferLength(chunk->GetLength());
 
-				  // NOTE: No need to freeze the Chunk because `Consolidate()` did it.
+				  // Freeze the Chunk.
+				  chunk->Freeze();
 
 				  // Update Packet length.
 				  // NOTE: This will throw if there is no enough space in the Packet

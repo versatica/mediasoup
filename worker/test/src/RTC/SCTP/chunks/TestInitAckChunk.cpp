@@ -6,6 +6,7 @@
 #include "RTC/SCTP/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memset()
 
 // NOTE: Simplified since it's similar to InitChunk.
 SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")

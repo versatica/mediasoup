@@ -34,9 +34,6 @@ namespace RTC
 
 		AssertNotFrozen();
 
-		// Consolidating also means freezing the Serializable.
-		Freeze();
-
 		if (!this->consolidatedListener)
 		{
 			MS_THROW_ERROR("consolidated listener not set");
@@ -48,6 +45,8 @@ namespace RTC
 	void Serializable::SetBufferLength(size_t bufferLength)
 	{
 		MS_TRACE();
+
+		AssertNotFrozen();
 
 		if (bufferLength < this->length)
 		{
@@ -68,6 +67,8 @@ namespace RTC
 	void Serializable::SetLength(size_t length)
 	{
 		MS_TRACE();
+
+		AssertNotFrozen();
 
 		if (length > this->bufferLength)
 		{
@@ -123,6 +124,8 @@ namespace RTC
 	void Serializable::SetConsolidatedListener(const ConsolidatedListener&& listener)
 	{
 		MS_TRACE();
+
+		AssertNotFrozen();
 
 		this->consolidatedListener = std::move(listener);
 	}

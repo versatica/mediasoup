@@ -38,7 +38,7 @@ namespace RTC
 			 * Parse a IPv4AddressChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk Parameter.
+			 * `bufferLength` may exceed the exact length of the Chunk Parameter.
 			 */
 			static IPv4AddressChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -46,7 +46,7 @@ namespace RTC
 			 * Parse a IPv4AddressChunkParameter.
 			 *
 			 * @remarks
-			 * - To be used only by `Chunk::ParseParameters()`.
+			 * To be used only by `Chunk::ParseParameters()`.
 			 */
 			static IPv4AddressChunkParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -55,7 +55,7 @@ namespace RTC
 			 * Create a IPv4AddressChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the Parameter real length.
 			 */
 			static IPv4AddressChunkParameter* Factory(uint8_t* buffer, size_t bufferLength);
 

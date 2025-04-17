@@ -15,12 +15,6 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
-- `AssertNotFrozen()` in `SetLength()` and `SetBufferLength()` in Serializable?
-
-- In every test, memset(buffer) to cero after `xxx->Serialize()`.
-
-- Check all pending "TODO" comments.
-
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
 - What happens if I call `chunk->BuildParameterInPlace()` in a Chunk class that is not supposed to have chunks??? It should not be allowed and should throw.

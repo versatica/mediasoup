@@ -36,7 +36,7 @@ namespace RTC
 			 * Parse a HeartbeatInfoChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk Parameter.
+			 * `bufferLength` may exceed the exact length of the Chunk Parameter.
 			 */
 			static HeartbeatInfoChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -44,7 +44,7 @@ namespace RTC
 			 * Parse a HeartbeatInfoChunkParameter.
 			 *
 			 * @remarks
-			 * - To be used only by `Chunk::ParseParameters()`.
+			 * To be used only by `Chunk::ParseParameters()`.
 			 */
 			static HeartbeatInfoChunkParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -53,7 +53,7 @@ namespace RTC
 			 * Create a HeartbeatInfoChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the Parameter real length.
 			 */
 			static HeartbeatInfoChunkParameter* Factory(uint8_t* buffer, size_t bufferLength);
 

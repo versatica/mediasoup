@@ -4,6 +4,7 @@
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
 
@@ -57,6 +58,8 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
+		std::memset(buffer, 0x00, sizeof(buffer));
+
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
@@ -83,6 +86,8 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		/* Clone it. */
 
 		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
 
 		delete parameter;
 

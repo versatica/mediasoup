@@ -69,7 +69,8 @@ namespace RTC
 				COOKIE_ACK        = 0x0B,
 				ECNE              = 0x0C,
 				CWR               = 0x0D,
-				SHUTDOWN_COMPLETE = 0x0E
+				SHUTDOWN_COMPLETE = 0x0E,
+				// TODO: Add more.
 			};
 
 			/**

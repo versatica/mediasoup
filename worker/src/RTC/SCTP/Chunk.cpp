@@ -37,6 +37,7 @@ namespace RTC
 			{ Chunk::ChunkType::ECNE,              "ECNE"              },
 			{ Chunk::ChunkType::CWR,               "CWR"               },
 			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" }
+			// TODO: Add more.
 		};
 		// clang-format on
 
@@ -336,7 +337,7 @@ namespace RTC
 
 				ChunkParameter* parameter{ nullptr };
 
-				// TODO
+				// TODO: Add more.
 				switch (parameterType)
 				{
 					case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
@@ -417,8 +418,8 @@ namespace RTC
 				  // Fix buffer length assigned to the Parameter.
 				  parameter->SetBufferLength(parameter->GetLength());
 
-				  // NOTE: No need to freeze the Parameter because `Consolidate()` did
-				  // it.
+				  // Freeze the Parameter.
+				  parameter->Freeze();
 
 				  auto previousLength      = GetLength();
 				  auto previousLengthField = GetLengthField();

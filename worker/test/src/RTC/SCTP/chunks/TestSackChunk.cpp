@@ -4,6 +4,7 @@
 #include "RTC/SCTP/chunks/SackChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memset()
 
 SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 {
@@ -73,6 +74,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
+		std::memset(buffer, 0x00, sizeof(buffer));
+
 		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
@@ -100,6 +103,8 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		/* Clone it. */
 
 		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
 
 		delete chunk;
 

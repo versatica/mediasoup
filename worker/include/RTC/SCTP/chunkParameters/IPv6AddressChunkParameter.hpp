@@ -41,7 +41,7 @@ namespace RTC
 			 * Parse a IPv6AddressChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk Parameter.
+			 * `bufferLength` may exceed the exact length of the Chunk Parameter.
 			 */
 			static IPv6AddressChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -49,7 +49,7 @@ namespace RTC
 			 * Parse a IPv6AddressChunkParameter.
 			 *
 			 * @remarks
-			 * - To be used only by `Chunk::ParseParameters()`.
+			 * To be used only by `Chunk::ParseParameters()`.
 			 */
 			static IPv6AddressChunkParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
@@ -58,7 +58,7 @@ namespace RTC
 			 * Create a IPv6AddressChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` could be greater than the Parameter real length.
+			 * `bufferLength` could be greater than the Parameter real length.
 			 */
 			static IPv6AddressChunkParameter* Factory(uint8_t* buffer, size_t bufferLength);
 

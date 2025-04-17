@@ -180,8 +180,7 @@ namespace RTC
 			 *
 			 * @example
 			 * ```c++
-			 * auto* initChunk =
-			 *   packet->BuildChunkInPlace<InitChunk>();
+			 * auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
 			 * ```
 			 */
 			template<typename T>

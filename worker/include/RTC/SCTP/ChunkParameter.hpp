@@ -54,7 +54,7 @@ namespace RTC
 				IPV4_ADDRESS        = 0x0005,
 				IPV6_ADDRESS        = 0x0006,
 				COOKIE_PRESERVATIVE = 0x0009,
-				// TODO
+				// TODO: Add more.
 			};
 
 			/**
