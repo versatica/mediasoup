@@ -100,6 +100,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::ShutdownCompleteChunk>");
 			DumpCommon(indentation);
+			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::ShutdownCompleteChunk>");
 		}
 

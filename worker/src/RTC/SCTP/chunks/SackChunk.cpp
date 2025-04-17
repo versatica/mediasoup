@@ -139,6 +139,7 @@ namespace RTC
 			{
 				MS_DUMP_CLEAN(indentation, "  - idx: %" PRIu16 ", tsn: %" PRIu32, idx, GetDuplicateTsnAt(idx));
 			}
+			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::SackChunk>");
 		}
 

@@ -123,7 +123,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			for (auto* parameter : this->parameters)
+			for (const auto* parameter : this->parameters)
 			{
 				delete parameter;
 			}
@@ -190,9 +190,14 @@ namespace RTC
 			MS_DUMP_CLEAN(
 			  indentation, "  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
 			MS_DUMP_CLEAN(indentation, "  length field: %" PRIu16, GetLengthField());
-			MS_DUMP_CLEAN(indentation, "  has parameters: %s", HasParameters() ? "yes" : "no");
+		}
+
+		void Chunk::DumpParameters(int indentation) const
+		{
+			MS_TRACE();
+
 			MS_DUMP_CLEAN(indentation, "  parameters count: %zu", GetParametersCount());
-			for (auto* parameter : this->parameters)
+			for (const auto* parameter : this->parameters)
 			{
 				parameter->Dump(indentation + 1);
 			}

@@ -230,7 +230,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			for (auto* chunk : this->chunks)
+			for (const auto* chunk : this->chunks)
 			{
 				delete chunk;
 			}
@@ -247,7 +247,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());
 			MS_DUMP_CLEAN(indentation, "  checksum: %" PRIu32, GetChecksum());
 			MS_DUMP_CLEAN(indentation, "  chunks count: %zu", GetChunksCount());
-			for (auto* chunk : this->chunks)
+			for (const auto* chunk : this->chunks)
 			{
 				chunk->Dump(indentation + 1);
 			}

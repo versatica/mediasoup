@@ -125,6 +125,7 @@ namespace RTC
 			  indentation, "  number of outbound streams: %" PRIu16, GetNumberOfOutboundStreams());
 			MS_DUMP_CLEAN(indentation, "  number of inbound streams: %" PRIu16, GetNumberOfInboundStreams());
 			MS_DUMP_CLEAN(indentation, "  initial tsn: %" PRIu32, GetInitialTsn());
+			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::InitAckChunk>");
 		}
 

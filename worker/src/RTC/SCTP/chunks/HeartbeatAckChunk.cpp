@@ -101,6 +101,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::HeartbeatAckChunk>");
 			DumpCommon(indentation);
+			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::HeartbeatAckChunk>");
 		}
 

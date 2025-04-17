@@ -100,6 +100,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<SCTP::ShutdownChunk>");
 			DumpCommon(indentation);
 			MS_DUMP_CLEAN(indentation, "  cumulative tsn ack : %" PRIu32, GetCumulativeTsnAck());
+			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::ShutdownChunk>");
 		}
 

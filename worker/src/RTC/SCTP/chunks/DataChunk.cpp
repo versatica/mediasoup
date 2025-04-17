@@ -120,6 +120,7 @@ namespace RTC
 			  "  user data length: %" PRIu16 " (has user data: %s)",
 			  GetUserDataLength(),
 			  HasUserData() ? "yes" : "no");
+			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::DataChunk>");
 		}
 

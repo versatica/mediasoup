@@ -292,6 +292,11 @@ namespace RTC
 			 */
 			virtual void DumpCommon(int indentation) const final;
 
+			/**
+			 * Subclasses must invoke this method within their Dump() method.
+			 */
+			virtual void DumpParameters(int indentation) const final;
+
 			virtual void SoftSerialize(const uint8_t* buffer) final;
 
 			/**
