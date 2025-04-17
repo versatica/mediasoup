@@ -128,15 +128,6 @@ namespace RTC
 			}
 		}
 
-		void Chunk::Dump(int indentation) const
-		{
-			MS_TRACE();
-
-			MS_DUMP_CLEAN(indentation, "<SCTP::Chunk>");
-			DumpCommon(indentation);
-			MS_DUMP_CLEAN(indentation, "</SCTP::Chunk>");
-		}
-
 		void Chunk::Serialize(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -146,24 +137,12 @@ namespace RTC
 			// Invoke the parent method to copy the whole buffer.
 			Serializable::Serialize(buffer, bufferLength);
 
-			// Reassign pointers.
 			for (auto* parameter : this->parameters)
 			{
 				size_t offset = parameter->GetBuffer() - previousBuffer;
 
-				parameter->SetBuffer(buffer + offset);
+				parameter->SoftSerialize(buffer + offset);
 			}
-		}
-
-		Chunk* Chunk::Clone(uint8_t* buffer, size_t bufferLength) const
-		{
-			MS_TRACE();
-
-			auto* clonedChunk = new Chunk(buffer, bufferLength);
-
-			CloneInto(clonedChunk);
-
-			return clonedChunk;
 		}
 
 		void Chunk::AddParameter(const ChunkParameter* parameter)
@@ -218,84 +197,42 @@ namespace RTC
 			}
 		}
 
-		void Chunk::CloneInto(Serializable* serializable) const
+		void Chunk::SoftSerialize(const uint8_t* buffer)
 		{
 			MS_TRACE();
 
-			auto* chunk = static_cast<Chunk*>(serializable);
+			const auto* previousBuffer = GetBuffer();
 
-			Serializable::CloneInto(chunk);
+			SetBuffer(const_cast<uint8_t*>(buffer));
 
-			// Add a new parsed ChunkParameter for each ChunkParameter in this Chunk
-			// and make it point to its position in the new buffer.
-			for (const auto* parameter : this->parameters)
+			for (auto* parameter : this->parameters)
+			{
+				size_t offset = parameter->GetBuffer() - previousBuffer;
+
+				parameter->SoftSerialize(buffer + offset);
+			}
+		}
+
+		void Chunk::SoftCloneInto(Chunk* chunk) const
+		{
+			MS_TRACE();
+
+			// Soft clone Chunk Parameters into the given Chunk.
+			for (auto* parameter : this->parameters)
 			{
 				size_t offset = parameter->GetBuffer() - GetBuffer();
 
-				ChunkParameter* clonedParameter{ nullptr };
+				auto* softClonedParameter = parameter->SoftClone(chunk->GetBuffer() + offset);
 
-				// TODO
-				switch (parameter->GetType())
-				{
-					case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
-					{
-						clonedParameter =
-						  new HeartbeatInfoChunkParameter(chunk->GetBuffer() + offset, parameter->GetLength());
+				// ChunkParameter constructors don't freeze the ChunkParameter so we
+				// must do it manually.
+				softClonedParameter->Freeze();
 
-						break;
-					}
-
-					case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
-					{
-						clonedParameter =
-						  new IPv4AddressChunkParameter(chunk->GetBuffer() + offset, parameter->GetLength());
-
-						break;
-					}
-
-					case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
-					{
-						clonedParameter =
-						  new IPv6AddressChunkParameter(chunk->GetBuffer() + offset, parameter->GetLength());
-
-						break;
-					}
-
-					case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
-					{
-						clonedParameter = new CookiePreservativeChunkParameter(
-						  chunk->GetBuffer() + offset, parameter->GetLength());
-
-						break;
-					}
-
-					default:
-					{
-						clonedParameter =
-						  new UnknownChunkParameter(chunk->GetBuffer() + offset, parameter->GetLength());
-					}
-				}
-
-				// Set the proper ChunkParameter length.
-				// NOTE: This should not throw but just in case.
-				try
-				{
-					clonedParameter->SetLength(parameter->GetLength());
-				}
-				catch (const MediaSoupError& error)
-				{
-					delete chunk;
-					delete clonedParameter;
-
-					throw;
-				}
-
-				// ChunkParameter constructors don't freeze the Chunk so we must do it
-				// manually.
-				clonedParameter->Freeze();
-
-				chunk->parameters.push_back(clonedParameter);
+				chunk->parameters.push_back(softClonedParameter);
 			}
+
+			// Need to manually set Serializable length.
+			chunk->SetLength(GetLength());
 		}
 
 		void Chunk::InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue)

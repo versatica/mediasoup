@@ -72,6 +72,8 @@ namespace RTC
 			virtual void Dump(int indentation = 0) const override final;
 
 			virtual HeartbeatAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+
+			virtual HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP
 } // namespace RTC

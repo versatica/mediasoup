@@ -68,6 +68,8 @@ namespace RTC
 
 			virtual ShutdownCompleteChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual ShutdownCompleteChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			bool GetT() const
 			{
 				return GetBit0();

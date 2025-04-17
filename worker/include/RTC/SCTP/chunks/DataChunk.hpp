@@ -107,6 +107,8 @@ namespace RTC
 
 			virtual DataChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual DataChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			bool GetI() const
 			{
 				return GetBit3();

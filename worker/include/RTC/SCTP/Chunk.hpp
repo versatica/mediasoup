@@ -166,17 +166,14 @@ namespace RTC
 		public:
 			virtual ~Chunk() override;
 
-			/**
-			 * Should be overridden by each subclass.
-			 */
-			virtual void Dump(int indentation = 0) const override;
+			virtual void Dump(int indentation = 0) const override = 0;
 
 			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
 
 			/**
 			 * Can be overridden by each subclass.
 			 */
-			virtual Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override;
+			virtual Chunk* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ChunkType GetType() const final
 			{
@@ -294,7 +291,14 @@ namespace RTC
 			 */
 			virtual void DumpCommon(int indentation) const final;
 
-			virtual void CloneInto(Serializable* serializable) const override final;
+			virtual void SoftSerialize(const uint8_t* buffer) final;
+
+			/**
+			 * Can be overridden by each subclass.
+			 */
+			virtual Chunk* SoftClone(const uint8_t* buffer) const = 0;
+
+			virtual void SoftCloneInto(Chunk* chunk) const final;
 
 			virtual void InitializeHeader(ChunkType chunkType, uint8_t flags, uint16_t lengthFieldValue) final;
 

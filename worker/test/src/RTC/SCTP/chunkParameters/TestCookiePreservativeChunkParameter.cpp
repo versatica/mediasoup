@@ -27,7 +27,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 
 		auto* parameter = CookiePreservativeChunkParameter::Parse(buffer, sizeof(buffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ 11,
@@ -48,7 +48,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -67,7 +67,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -143,7 +143,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 	{
 		auto* parameter = CookiePreservativeChunkParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -160,7 +160,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 
 		parameter->SetLifeSpanIncrement(88776655);
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -180,7 +180,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

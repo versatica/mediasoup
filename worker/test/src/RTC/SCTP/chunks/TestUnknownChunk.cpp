@@ -29,7 +29,7 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		// NOTE: Chunk Type is 0xEE (0b11101110) so first 2 bits are 11, meaning
 		// that the action to take if we receive this Chunk Type is SKIP_AND_REPORT.
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -51,7 +51,7 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -75,7 +75,7 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),

@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cstring> // std::memmove()
+#include <limits>  // std::numeric_limits()
 
 namespace RTC
 {
@@ -111,24 +112,12 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void ChunkParameter::Dump(int indentation) const
+		void ChunkParameter::SoftCloneInto(ChunkParameter* parameter) const
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "<SCTP::ChunkParameter>");
-			DumpCommon(indentation);
-			MS_DUMP_CLEAN(indentation, "</SCTP::ChunkParameter>");
-		}
-
-		ChunkParameter* ChunkParameter::Clone(uint8_t* buffer, size_t bufferLength) const
-		{
-			MS_TRACE();
-
-			auto* clonedParameter = new ChunkParameter(buffer, bufferLength);
-
-			CloneInto(clonedParameter);
-
-			return clonedParameter;
+			// Need to manually set Serializable length.
+			parameter->SetLength(GetLength());
 		}
 
 		void ChunkParameter::DumpCommon(int indentation) const
@@ -149,6 +138,13 @@ namespace RTC
 			  GetValueLength());
 		}
 
+		void ChunkParameter::SoftSerialize(const uint8_t* buffer)
+		{
+			MS_TRACE();
+
+			SetBuffer(const_cast<uint8_t*>(buffer));
+		}
+
 		void ChunkParameter::InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue)
 		{
 			MS_TRACE();
@@ -161,7 +157,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (length > 65535u)
+			if (length > std::numeric_limits<uint16_t>::max())
 			{
 				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
 			}

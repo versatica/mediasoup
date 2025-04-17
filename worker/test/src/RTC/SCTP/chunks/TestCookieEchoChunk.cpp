@@ -32,7 +32,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		auto* chunk = CookieEchoChunk::Parse(buffer, sizeof(buffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -64,7 +64,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -94,7 +94,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -125,7 +125,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 	{
 		auto* chunk = CookieEchoChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -157,7 +157,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		// 3 bytes + 1 byte of padding.
 		chunk->SetCookie(DataBuffer, 3);
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -183,7 +183,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
@@ -210,7 +210,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 	{
 		auto* chunk = CookieEchoChunk::Factory(ThrowBuffer, sizeof(ThrowBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
@@ -224,7 +224,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(chunk->SetCookie(ThrowBuffer, 65535), MediaSoupError);
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),

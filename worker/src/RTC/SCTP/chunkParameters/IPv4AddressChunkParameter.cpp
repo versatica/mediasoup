@@ -112,11 +112,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new IPv4AddressChunkParameter(buffer, bufferLength);
+			auto* clonedParameter = new IPv4AddressChunkParameter(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedParameter);
 
-			return clonedItem;
+			return clonedParameter;
 		}
 
 		void IPv4AddressChunkParameter::SetIPv4Address(const uint8_t* ip)
@@ -130,6 +130,17 @@ namespace RTC
 			  ip,
 			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength -
 			    ChunkParameter::ChunkParameterHeaderLength);
+		}
+
+		IPv4AddressChunkParameter* IPv4AddressChunkParameter::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedParameter = new IPv4AddressChunkParameter(buffer, GetLength());
+
+			SoftCloneInto(softClonedParameter);
+
+			return softClonedParameter;
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -29,7 +29,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 
 		auto* parameter = HeartbeatInfoChunkParameter::Parse(buffer, sizeof(buffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ 15,
@@ -60,7 +60,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -89,7 +89,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -167,7 +167,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 	{
 		auto* parameter = HeartbeatInfoChunkParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -208,7 +208,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter->SetInfo(DataBuffer, 5);
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -238,7 +238,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
@@ -268,7 +268,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 	{
 		auto* parameter = HeartbeatInfoChunkParameter::Factory(ThrowBuffer, sizeof(ThrowBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
@@ -281,7 +281,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(parameter->SetInfo(ThrowBuffer, 65535), MediaSoupError);
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),

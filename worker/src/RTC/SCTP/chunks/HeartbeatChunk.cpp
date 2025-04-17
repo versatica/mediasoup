@@ -99,11 +99,23 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new HeartbeatChunk(buffer, bufferLength);
+			auto* clonedChunk = new HeartbeatChunk(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedChunk);
+			SoftCloneInto(clonedChunk);
 
-			return clonedItem;
+			return clonedChunk;
+		}
+
+		HeartbeatChunk* HeartbeatChunk::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedChunk = new HeartbeatChunk(buffer, GetLength());
+
+			SoftCloneInto(softClonedChunk);
+
+			return softClonedChunk;
 		}
 	} // namespace SCTP
 } // namespace RTC

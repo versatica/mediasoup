@@ -1,13 +1,19 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/Chunk.hpp"
+#include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/Packet.hpp"
+#include "RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
-#include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
-#include "RTC/SCTP/chunks/ShutdownChunk.hpp"
-#include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/InitChunk.hpp"
 #include "RTC/SCTP/chunks/UnknownChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
 
@@ -31,7 +37,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* packet = Packet::Parse(buffer, sizeof(buffer));
 
-		checkPacket(
+		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -55,7 +61,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkPacket(
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -73,7 +81,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		delete packet;
 
-		checkPacket(
+		CHECK_PACKET(
 		  /*packet*/ clonedPacket,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -113,27 +121,35 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 			0xEE, 0b00001100, 0x00, 0x07,
 			// Unknown data: 0xAABBCC, 1 byte of padding
 			0xAA, 0xBB, 0xCC, 0x00,
+			// Chunk 3: Type:5 (HEARTBEAT_ACK), Flags:0b00000000, Length: 10
+			// NOTE: Chunk Length field must exclude padding of the last Parameter.
+			0x05, 0b00000000, 0x00, 0x0A,
+			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 6
+			0x00, 0x01, 0x00, 0x06,
+			// Heartbeat Information (2 bytes): 0x1122, 2 bytes of padding
+			0x11, 0x22, 0x00, 0x00,
 		};
 		// clang-format on
 
 		auto* packet = Packet::Parse(buffer, sizeof(buffer));
 
-		checkPacket(
+		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
-		  /*length*/ 40,
+		  /*length*/ 52,
 		  /*frozen*/ true,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
-		  /*chunksCount*/ 2);
+		  /*chunksCount*/ 3);
 
 		auto* chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk1,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
 		  /*frozen*/ true,
@@ -158,8 +174,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* chunk2 = reinterpret_cast<const UnknownChunk*>(packet->GetChunkAt(1));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk2,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
@@ -174,6 +191,44 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(chunk2->GetUnknownValue()[0] == 0xAA);
 		REQUIRE(chunk2->GetUnknownValue()[1] == 0xBB);
 		REQUIRE(chunk2->GetUnknownValue()[2] == 0xCC);
+		// Padding.
+		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
+
+		auto* chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(packet->GetChunkAt(2));
+
+		CHECK_CHUNK(
+		  /*chunk*/ chunk3,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 1);
+
+		auto* parameter3_1 =
+		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ parameter3_1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter3_1->HasInfo() == true);
+		REQUIRE(parameter3_1->GetInfoLength() == 2);
+		REQUIRE(parameter3_1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter3_1->GetInfo()[1] == 0x22);
+		// These should be padding.
+		REQUIRE(parameter3_1->GetInfo()[2] == 0x00);
+		REQUIRE(parameter3_1->GetInfo()[3] == 0x00);
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
@@ -192,22 +247,25 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkPacket(
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
-		  /*length*/ 40,
+		  /*length*/ 52,
 		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
-		  /*chunksCount*/ 2);
+		  /*chunksCount*/ 3);
 
 		chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk1,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
 		  /*frozen*/ true,
@@ -232,8 +290,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		chunk2 = reinterpret_cast<const UnknownChunk*>(packet->GetChunkAt(1));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk2,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
@@ -248,6 +307,43 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(chunk2->GetUnknownValue()[0] == 0xAA);
 		REQUIRE(chunk2->GetUnknownValue()[1] == 0xBB);
 		REQUIRE(chunk2->GetUnknownValue()[2] == 0xCC);
+		// Padding.
+		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
+
+		chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(packet->GetChunkAt(2));
+
+		CHECK_CHUNK(
+		  /*chunk*/ chunk3,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 1);
+
+		parameter3_1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ parameter3_1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter3_1->HasInfo() == true);
+		REQUIRE(parameter3_1->GetInfoLength() == 2);
+		REQUIRE(parameter3_1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter3_1->GetInfo()[1] == 0x22);
+		// These should be padding.
+		REQUIRE(parameter3_1->GetInfo()[2] == 0x00);
+		REQUIRE(parameter3_1->GetInfo()[3] == 0x00);
 
 		/* Clone it. */
 
@@ -255,22 +351,23 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		delete packet;
 
-		checkPacket(
+		CHECK_PACKET(
 		  /*packet*/ clonedPacket,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
-		  /*length*/ 40,
+		  /*length*/ 52,
 		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
-		  /*chunksCount*/ 2);
+		  /*chunksCount*/ 3);
 
 		chunk1 = reinterpret_cast<const DataChunk*>(clonedPacket->GetChunkAt(0));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk1,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
 		  /*frozen*/ true,
@@ -295,8 +392,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		chunk2 = reinterpret_cast<const UnknownChunk*>(clonedPacket->GetChunkAt(1));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk2,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
@@ -306,6 +404,49 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*flags*/ 0b00001100,
 		  /*parametersCount*/ 0);
 
+		REQUIRE(chunk2->HasUnknownValue() == true);
+		REQUIRE(chunk2->GetUnknownValueLength() == 3);
+		REQUIRE(chunk2->GetUnknownValue()[0] == 0xAA);
+		REQUIRE(chunk2->GetUnknownValue()[1] == 0xBB);
+		REQUIRE(chunk2->GetUnknownValue()[2] == 0xCC);
+		// Padding.
+		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
+
+		chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(clonedPacket->GetChunkAt(2));
+
+		CHECK_CHUNK(
+		  /*chunk*/ chunk3,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 1);
+
+		parameter3_1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ parameter3_1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 2);
+
+		REQUIRE(parameter3_1->HasInfo() == true);
+		REQUIRE(parameter3_1->GetInfoLength() == 2);
+		REQUIRE(parameter3_1->GetInfo()[0] == 0x11);
+		REQUIRE(parameter3_1->GetInfo()[1] == 0x22);
+		// These should be padding.
+		REQUIRE(parameter3_1->GetInfo()[2] == 0x00);
+		REQUIRE(parameter3_1->GetInfo()[3] == 0x00);
+
 		delete clonedPacket;
 	}
 
@@ -313,7 +454,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 	{
 		auto* packet = Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkPacket(
+		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -332,341 +473,199 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		packet->SetVerificationTag(12345678);
 		packet->SetChecksum(666666);
 
-		// TODO: Add Chunks.
+		// Chunk 1: INIT, length: 20 bytes.
+		auto* chunk1 = packet->BuildChunkInPlace<InitChunk>();
 
-		checkPacket(
+		chunk1->SetInitiateTag(87654321);
+		chunk1->SetAdvertisedReceiverWindowCredit(12345678);
+		chunk1->SetNumberOfOutboundStreams(11100);
+		chunk1->SetNumberOfInboundStreams(22200);
+		chunk1->SetInitialTsn(14141414);
+
+		// Chunk Parameter 1.1: IPV4_ADDRESS, length: 8 bytes.
+		auto* parameter1_1 = chunk1->BuildParameterInPlace<IPv4AddressChunkParameter>();
+
+		// 192.168.0.3 IPv4 in network order.
+		uint8_t ipBuffer[] = { 0xC0, 0xA8, 0x00, 0x03 };
+
+		parameter1_1->SetIPv4Address(ipBuffer);
+		parameter1_1->Consolidate();
+
+		// Chunk Parameter 1.2: COOKIE_PRESERVATIVE, length: 8 bytes.
+		auto* parameter1_2 = chunk1->BuildParameterInPlace<CookiePreservativeChunkParameter>();
+
+		parameter1_2->SetLifeSpanIncrement(987654321);
+		parameter1_2->Consolidate();
+
+		// Consolidate Chunk 1 after consolidating its Parameters 1.1 and 1.2.
+		chunk1->Consolidate();
+
+		// Chunk 2: HEARTBEAT, length: 4 bytes.
+		auto* chunk2 = packet->BuildChunkInPlace<HeartbeatChunk>();
+
+		// Chunk Parameter 2.1: HEARTBEAT_INFO, length: 4 bytes.
+		auto* parameter2_1 = chunk2->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+
+		// Chunk Parameter 2.1: Add 3 bytes of info + 1 byte of padding.
+		parameter2_1->SetInfo(DataBuffer, 3);
+		parameter2_1->Consolidate();
+
+		std::memset(DataBuffer, 0xFF, 3);
+
+		// Consolidate the Chunk after consolidating its Parameters.
+		chunk2->Consolidate();
+
+		// Packet length must be:
+		// - Packet header: 12
+		// - Chunk 1: 20
+		// - Parameter 1.1: 8
+		// - Parameter 1.2: 8
+		// - Chunk 2: 4
+		// - Parameter 2.1: 4 + 3 + 1 = 8
+		// - Total: 60
+
+		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
-		  /*length*/ 12,
+		  /*length*/ 60,
 		  /*frozen*/ false,
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
 		  /*checksum*/ 666666,
-		  /*chunksCount*/ 0);
+		  /*chunksCount*/ 2);
 
-		// TODO: More.
+		/* Serialize the Packet. */
 
-		delete packet;
-	}
+		packet->Serialize(SerializeBuffer, packet->GetLength());
 
-	// TODO: REMOVE
-	SECTION("create and modify SCTP Packet without Chunks")
-	{
-		uint8_t buffer[256];
+		std::memset(FactoryBuffer, 0xAA, sizeof(FactoryBuffer));
 
-		std::memset(buffer, 0xFF, sizeof(buffer));
+		CHECK_PACKET(
+		  /*packet*/ packet,
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ 60,
+		  /*length*/ 60,
+		  /*frozen*/ false,
+		  /*sourcePort*/ 1000,
+		  /*destinationPort*/ 6000,
+		  /*verificationTag*/ 12345678,
+		  /*checksum*/ 666666,
+		  /*chunksCount*/ 2);
 
-		auto* packet = Packet::Factory(buffer, sizeof(buffer));
+		/* Clone the Packet. */
 
-		REQUIRE(sizeof(buffer) == 256);
-		REQUIRE(packet);
-		REQUIRE(packet->GetBuffer() == buffer);
-		REQUIRE(packet->GetBufferLength() == 256);
-		REQUIRE(packet->GetLength() == 12);
-		REQUIRE(packet->IsFrozen() == false);
-		REQUIRE(packet->GetSourcePort() == 0);
-		REQUIRE(packet->GetDestinationPort() == 0);
-		REQUIRE(packet->GetVerificationTag() == 0);
-		REQUIRE(packet->GetChecksum() == 0);
-		REQUIRE(packet->HasChunks() == false);
-		REQUIRE(packet->GetChunksCount() == 0);
-
-		/* Modify the packet. */
-
-		packet->SetSourcePort(10);
-		packet->SetDestinationPort(9999);
-		packet->SetVerificationTag(12345);
-		packet->SetChecksum(6666);
-
-		REQUIRE(packet->GetBuffer() == buffer);
-		REQUIRE(packet->GetBufferLength() == 256);
-		REQUIRE(packet->GetLength() == 12);
-		REQUIRE(packet->IsFrozen() == false);
-		REQUIRE(packet->GetSourcePort() == 10);
-		REQUIRE(packet->GetDestinationPort() == 9999);
-		REQUIRE(packet->GetVerificationTag() == 12345);
-		REQUIRE(packet->GetChecksum() == 6666);
-		REQUIRE(packet->HasChunks() == false);
-		REQUIRE(packet->GetChunksCount() == 0);
+		auto* clonedPacket = packet->Clone(CloneBuffer, packet->GetLength());
 
 		delete packet;
-	}
 
-	// TODO: REMOVE
-	SECTION("create and modify SCTP Packet with Chunks")
-	{
-		uint8_t buffer[1000];
-		uint8_t chunkBuffer[100];
+		auto* obtainedChunk1 = reinterpret_cast<const InitChunk*>(clonedPacket->GetChunkAt(0));
 
-		std::memset(buffer, 0xFF, sizeof(buffer));
-		std::memset(chunkBuffer, 0xFF, sizeof(chunkBuffer));
+		auto* obtainedParameter1_1 =
+		  reinterpret_cast<const IPv4AddressChunkParameter*>(obtainedChunk1->GetParameterAt(0));
 
-		auto* packet = Packet::Factory(buffer, sizeof(buffer));
+		auto* obtainedParameter1_2 =
+		  reinterpret_cast<const CookiePreservativeChunkParameter*>(obtainedChunk1->GetParameterAt(1));
 
-		REQUIRE(packet);
+		auto* obtainedChunk2 = reinterpret_cast<const HeartbeatChunk*>(clonedPacket->GetChunkAt(1));
 
-		/* Modify the packet. */
+		auto* obtainedParameter2_1 =
+		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(obtainedChunk2->GetParameterAt(0));
 
-		packet->SetSourcePort(1024);
-		packet->SetDestinationPort(2122);
-		packet->SetVerificationTag(12345);
-		packet->SetChecksum(99999);
+		CHECK_PACKET(
+		  /*packet*/ clonedPacket,
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ 60,
+		  /*length*/ 60,
+		  /*frozen*/ false,
+		  /*sourcePort*/ 1000,
+		  /*destinationPort*/ 6000,
+		  /*verificationTag*/ 12345678,
+		  /*checksum*/ 666666,
+		  /*chunksCount*/ 2);
 
-		REQUIRE(packet->GetBuffer() == buffer);
-		REQUIRE(packet->GetBufferLength() == 1000);
-		REQUIRE(packet->GetLength() == 12);
-		REQUIRE(packet->IsFrozen() == false);
-		REQUIRE(packet->GetSourcePort() == 1024);
-		REQUIRE(packet->GetDestinationPort() == 2122);
-		REQUIRE(packet->GetVerificationTag() == 12345);
-		REQUIRE(packet->GetChecksum() == 99999);
-		REQUIRE(packet->HasChunks() == false);
-		REQUIRE(packet->GetChunksCount() == 0);
+		REQUIRE(clonedPacket->GetSourcePort() == 1000);
+		REQUIRE(clonedPacket->GetDestinationPort() == 6000);
+		REQUIRE(clonedPacket->GetVerificationTag() == 12345678);
+		REQUIRE(clonedPacket->GetChecksum() == 666666);
 
-		/* Add a DataChunk. */
+		CHECK_CHUNK(
+		  /*chunk*/ obtainedChunk1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 20 + 8 + 8,
+		  /*length*/ 20 + 8 + 8,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::INIT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 2);
 
-		// UserData (3 bytes) so 1 byte of padding will be generted.
-		uint8_t userData[] = { 0x01, 0x02, 0x03 };
+		REQUIRE(obtainedChunk1->GetInitiateTag() == 87654321);
+		REQUIRE(obtainedChunk1->GetAdvertisedReceiverWindowCredit() == 12345678);
+		REQUIRE(obtainedChunk1->GetNumberOfOutboundStreams() == 11100);
+		REQUIRE(obtainedChunk1->GetNumberOfInboundStreams() == 22200);
+		REQUIRE(obtainedChunk1->GetInitialTsn() == 14141414);
 
-		// Chunk 1 (16 + 3 + 1 = 20 bytes).
-		auto* chunk1 = packet->BuildChunkInPlace<DataChunk>();
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter1_1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 4);
 
-		chunk1->SetI(true);
-		chunk1->SetTsn(9876);
-		chunk1->SetStreamIdentifierS(1234);
-		chunk1->SetStreamSequenceNumberN(4321);
-		chunk1->SetPayloadProtocolIdentifier(101010);
-		chunk1->SetUserData(userData, sizeof(userData));
+		REQUIRE(obtainedParameter1_1->GetIPv4Address()[0] == 0xC0);
+		REQUIRE(obtainedParameter1_1->GetIPv4Address()[1] == 0xA8);
+		REQUIRE(obtainedParameter1_1->GetIPv4Address()[2] == 0x00);
+		REQUIRE(obtainedParameter1_1->GetIPv4Address()[3] == 0x03);
 
-		REQUIRE(chunk1->IsFrozen() == false);
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter1_2,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 4);
 
-		// Before consolidating the Chunk, it must not be present in the Packet.
-		REQUIRE(packet->HasChunks() == false);
-		REQUIRE(packet->GetChunksCount() == 0);
+		REQUIRE(obtainedParameter1_2->GetLifeSpanIncrement() == 987654321);
 
-		// Consolidate the Chunk.
-		chunk1->Consolidate();
+		CHECK_CHUNK(
+		  /*chunk*/ obtainedChunk2,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 4 + 8,
+		  /*length*/ 4 + 8,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*parametersCount*/ 1);
 
-		REQUIRE(chunk1->GetBufferLength() == 20);
-		REQUIRE(chunk1->GetLength() == 20);
-		// It must be frozen after consolidating it.
-		REQUIRE(chunk1->IsFrozen() == true);
-		REQUIRE(chunk1->GetType() == Chunk::ChunkType::DATA);
-		REQUIRE(chunk1->HasUnknownType() == false);
-		REQUIRE(chunk1->GetFlags() == 0b00001000);
-		REQUIRE(chunk1->GetI() == true);
-		REQUIRE(chunk1->GetU() == false);
-		REQUIRE(chunk1->GetB() == false);
-		REQUIRE(chunk1->GetE() == false);
-		REQUIRE(chunk1->GetTsn() == 9876);
-		REQUIRE(chunk1->GetStreamIdentifierS() == 1234);
-		REQUIRE(chunk1->GetStreamSequenceNumberN() == 4321);
-		REQUIRE(chunk1->GetPayloadProtocolIdentifier() == 101010);
-		REQUIRE(chunk1->HasUserData() == true);
-		REQUIRE(chunk1->GetUserDataLength() == 3);
-		REQUIRE(chunk1->GetUserData()[0] == 0x01);
-		REQUIRE(chunk1->GetUserData()[1] == 0x02);
-		REQUIRE(chunk1->GetUserData()[2] == 0x03);
-		// Must be a padding byte.
-		REQUIRE(chunk1->GetUserData()[3] == 0x00);
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter2_1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
+		  /*valueLength*/ 3);
 
-		// NOTE: Do not delete the Chunk since it's now part of the Packet.
+		REQUIRE(obtainedParameter2_1->HasInfo() == true);
+		REQUIRE(obtainedParameter2_1->GetInfoLength() == 3);
+		REQUIRE(obtainedParameter2_1->GetInfo()[0] == 0x00);
+		REQUIRE(obtainedParameter2_1->GetInfo()[1] == 0x01);
+		REQUIRE(obtainedParameter2_1->GetInfo()[2] == 0x02);
 
-		// Chunk 2 (8 bytes).
-		auto* chunk2 = packet->BuildChunkInPlace<ShutdownChunk>();
-
-		chunk2->SetCumulativeTsnAck(1234567890);
-
-		// Consolidate the Chunk.
-		chunk2->Consolidate();
-
-		REQUIRE(chunk2->GetBufferLength() == 8);
-		REQUIRE(chunk2->GetLength() == 8);
-		REQUIRE(chunk2->IsFrozen() == true);
-		REQUIRE(chunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
-		REQUIRE(chunk2->HasUnknownType() == false);
-		REQUIRE(chunk2->GetFlags() == 0b00000000);
-		REQUIRE(chunk2->GetCumulativeTsnAck() == 1234567890);
-
-		REQUIRE(packet->GetBuffer() == buffer);
-		REQUIRE(packet->GetBufferLength() == 1000);
-		REQUIRE(packet->GetLength() == 40);
-		REQUIRE(packet->IsFrozen() == false);
-		REQUIRE(packet->GetSourcePort() == 1024);
-		REQUIRE(packet->GetDestinationPort() == 2122);
-		REQUIRE(packet->GetVerificationTag() == 12345);
-		REQUIRE(packet->GetChecksum() == 99999);
-		REQUIRE(packet->HasChunks() == true);
-		REQUIRE(packet->GetChunksCount() == 2);
-
-		const auto* addedChunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
-
-		REQUIRE(addedChunk1->GetBufferLength() == 20);
-		REQUIRE(addedChunk1->GetLength() == 20);
-		// Internal chunks must always be frozen.
-		REQUIRE(addedChunk1->IsFrozen() == true);
-		REQUIRE(addedChunk1->GetType() == Chunk::ChunkType::DATA);
-		REQUIRE(addedChunk1->HasUnknownType() == false);
-		REQUIRE(addedChunk1->GetFlags() == 0b00001000);
-		REQUIRE(addedChunk1->GetI() == true);
-		REQUIRE(addedChunk1->GetU() == false);
-		REQUIRE(addedChunk1->GetB() == false);
-		REQUIRE(addedChunk1->GetE() == false);
-		REQUIRE(addedChunk1->GetTsn() == 9876);
-		REQUIRE(addedChunk1->GetStreamIdentifierS() == 1234);
-		REQUIRE(addedChunk1->GetStreamSequenceNumberN() == 4321);
-		REQUIRE(addedChunk1->GetPayloadProtocolIdentifier() == 101010);
-		REQUIRE(addedChunk1->HasUserData() == true);
-		REQUIRE(addedChunk1->GetUserDataLength() == 3);
-		REQUIRE(addedChunk1->GetUserData()[0] == 0x01);
-		REQUIRE(addedChunk1->GetUserData()[1] == 0x02);
-		REQUIRE(addedChunk1->GetUserData()[2] == 0x03);
-
-		const auto* addedChunk2 = reinterpret_cast<const ShutdownChunk*>(packet->GetChunkAt(1));
-
-		REQUIRE(addedChunk2->GetBufferLength() == 8);
-		REQUIRE(addedChunk2->GetLength() == 8);
-		REQUIRE(addedChunk2->IsFrozen() == true);
-		REQUIRE(addedChunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
-		REQUIRE(addedChunk2->HasUnknownType() == false);
-		REQUIRE(addedChunk2->GetFlags() == 0b00000000);
-		REQUIRE(addedChunk2->GetCumulativeTsnAck() == 1234567890);
-
-		/* Freeze Packet. */
-
-		packet->Freeze();
-
-		REQUIRE(packet->IsFrozen() == true);
-
-		/* Serialize Packet into another buffer. */
-
-		uint8_t newBuffer1[256];
-
-		std::memset(newBuffer1, 0xFF, sizeof(newBuffer1));
-
-		// Must throw if buffer is too small.
-		REQUIRE_THROWS_AS(packet->Serialize(newBuffer1, packet->GetLength() - 1), MediaSoupTypeError);
-
-		packet->Serialize(newBuffer1, sizeof(newBuffer1));
-
-		// Once done fill the old buffer with 1s.
-		std::memset(buffer, 0xFF, sizeof(buffer));
-
-		REQUIRE(packet->GetBuffer() == newBuffer1);
-		REQUIRE(packet->GetBufferLength() == 256);
-		REQUIRE(packet->GetLength() == 40);
-		// After serializing, the packet must be unfrozen.
-		REQUIRE(packet->IsFrozen() == false);
-		REQUIRE(packet->GetSourcePort() == 1024);
-		REQUIRE(packet->GetDestinationPort() == 2122);
-		REQUIRE(packet->GetVerificationTag() == 12345);
-		REQUIRE(packet->GetChecksum() == 99999);
-		REQUIRE(packet->HasChunks() == true);
-		REQUIRE(packet->GetChunksCount() == 2);
-
-		addedChunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
-
-		REQUIRE(addedChunk1->GetBufferLength() == 20);
-		REQUIRE(addedChunk1->GetLength() == 20);
-		// After serializing, Chunks in the Packet must remain frozen.
-		REQUIRE(addedChunk1->IsFrozen() == true);
-		REQUIRE(addedChunk1->GetType() == Chunk::ChunkType::DATA);
-		REQUIRE(addedChunk1->HasUnknownType() == false);
-		REQUIRE(addedChunk1->GetFlags() == 0b00001000);
-		REQUIRE(addedChunk1->GetI() == true);
-		REQUIRE(addedChunk1->GetU() == false);
-		REQUIRE(addedChunk1->GetB() == false);
-		REQUIRE(addedChunk1->GetE() == false);
-		REQUIRE(addedChunk1->GetTsn() == 9876);
-		REQUIRE(addedChunk1->GetStreamIdentifierS() == 1234);
-		REQUIRE(addedChunk1->GetStreamSequenceNumberN() == 4321);
-		REQUIRE(addedChunk1->GetPayloadProtocolIdentifier() == 101010);
-		REQUIRE(addedChunk1->HasUserData() == true);
-		REQUIRE(addedChunk1->GetUserDataLength() == 3);
-		REQUIRE(addedChunk1->GetUserData()[0] == 0x01);
-		REQUIRE(addedChunk1->GetUserData()[1] == 0x02);
-		REQUIRE(addedChunk1->GetUserData()[2] == 0x03);
-
-		addedChunk2 = reinterpret_cast<const ShutdownChunk*>(packet->GetChunkAt(1));
-
-		REQUIRE(addedChunk2->GetBufferLength() == 8);
-		REQUIRE(addedChunk2->GetLength() == 8);
-		// After serializing, Chunks in the Packet must remain frozen.
-		REQUIRE(addedChunk2->IsFrozen() == true);
-		REQUIRE(addedChunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
-		REQUIRE(addedChunk2->HasUnknownType() == false);
-		REQUIRE(addedChunk2->GetFlags() == 0b00000000);
-		REQUIRE(addedChunk2->GetCumulativeTsnAck() == 1234567890);
-
-		/* Clone Packet into another buffer. */
-
-		uint8_t newBuffer2[300];
-
-		std::memset(newBuffer2, 0xFF, sizeof(newBuffer2));
-
-		// Must throw if buffer is too small.
-		REQUIRE_THROWS_AS(packet->Clone(newBuffer2, packet->GetLength() - 1), MediaSoupTypeError);
-
-		auto* previousBuffer      = packet->GetBuffer();
-		auto previousBufferLength = packet->GetBufferLength();
-		auto* clonedPacket        = packet->Clone(newBuffer2, sizeof(newBuffer2));
-
-		// Once done fill the original buffer with 1s (this is, we are ruining original
-		// Packet despite it still exists since we have just cloned it).
-		std::memset(const_cast<uint8_t*>(previousBuffer), 0xFF, previousBufferLength);
-
-		// Freeze the original Packet again.
-		packet->Freeze();
-
-		REQUIRE(clonedPacket->GetBuffer() == newBuffer2);
-		REQUIRE(clonedPacket->GetBufferLength() == 300);
-		REQUIRE(clonedPacket->GetLength() == 40);
-		// After cloning, the packet must be unfrozen.
-		REQUIRE(clonedPacket->IsFrozen() == false);
-		REQUIRE(clonedPacket->GetSourcePort() == 1024);
-		REQUIRE(clonedPacket->GetDestinationPort() == 2122);
-		REQUIRE(clonedPacket->GetVerificationTag() == 12345);
-		REQUIRE(clonedPacket->GetChecksum() == 99999);
-		REQUIRE(clonedPacket->HasChunks() == true);
-		REQUIRE(clonedPacket->GetChunksCount() == 2);
-
-		addedChunk1 = reinterpret_cast<const DataChunk*>(clonedPacket->GetChunkAt(0));
-
-		REQUIRE(addedChunk1->GetBufferLength() == 20);
-		REQUIRE(addedChunk1->GetLength() == 20);
-		// After cloning, Chunks in the Packet must remain frozen.
-		REQUIRE(addedChunk1->IsFrozen() == true);
-		REQUIRE(addedChunk1->GetType() == Chunk::ChunkType::DATA);
-		REQUIRE(addedChunk1->HasUnknownType() == false);
-		REQUIRE(addedChunk1->GetFlags() == 0b00001000);
-		REQUIRE(addedChunk1->GetI() == true);
-		REQUIRE(addedChunk1->GetU() == false);
-		REQUIRE(addedChunk1->GetB() == false);
-		REQUIRE(addedChunk1->GetE() == false);
-		REQUIRE(addedChunk1->GetTsn() == 9876);
-		REQUIRE(addedChunk1->GetStreamIdentifierS() == 1234);
-		REQUIRE(addedChunk1->GetStreamSequenceNumberN() == 4321);
-		REQUIRE(addedChunk1->GetPayloadProtocolIdentifier() == 101010);
-		REQUIRE(addedChunk1->HasUserData() == true);
-		REQUIRE(addedChunk1->GetUserDataLength() == 3);
-		REQUIRE(addedChunk1->GetUserData()[0] == 0x01);
-		REQUIRE(addedChunk1->GetUserData()[1] == 0x02);
-		REQUIRE(addedChunk1->GetUserData()[2] == 0x03);
-
-		addedChunk2 = reinterpret_cast<const ShutdownChunk*>(clonedPacket->GetChunkAt(1));
-
-		REQUIRE(addedChunk2->GetBufferLength() == 8);
-		REQUIRE(addedChunk2->GetLength() == 8);
-		// After cloning, Chunks in the Packet must remain frozen.
-		REQUIRE(addedChunk2->IsFrozen() == true);
-		REQUIRE(addedChunk2->GetType() == Chunk::ChunkType::SHUTDOWN);
-		REQUIRE(addedChunk2->HasUnknownType() == false);
-		REQUIRE(addedChunk2->GetFlags() == 0b00000000);
-		REQUIRE(addedChunk2->GetCumulativeTsnAck() == 1234567890);
-
-		delete packet;
 		delete clonedPacket;
 	}
 }

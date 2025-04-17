@@ -52,6 +52,8 @@ namespace RTC
 
 			virtual UnknownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual UnknownChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			virtual bool HasUnknownType() const override
 			{
 				return true;

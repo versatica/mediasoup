@@ -33,7 +33,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 
 		auto* chunk = ShutdownChunk::Parse(buffer, sizeof(buffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -55,7 +55,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -75,7 +75,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -96,7 +96,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 	{
 		auto* chunk = ShutdownChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -114,7 +114,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 
 		chunk->SetCumulativeTsnAck(99887766);
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -134,7 +134,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

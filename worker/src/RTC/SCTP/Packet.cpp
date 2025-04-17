@@ -262,12 +262,11 @@ namespace RTC
 			// Invoke the parent method to copy the whole buffer.
 			Serializable::Serialize(buffer, bufferLength);
 
-			// Reassign pointers.
 			for (auto* chunk : this->chunks)
 			{
 				size_t offset = chunk->GetBuffer() - previousBuffer;
 
-				chunk->SetBuffer(buffer + offset);
+				chunk->SoftSerialize(buffer + offset);
 			}
 		}
 
@@ -277,120 +276,19 @@ namespace RTC
 
 			auto* clonedPacket = new Packet(buffer, bufferLength);
 
-			CloneInto(clonedPacket);
+			Serializable::CloneInto(clonedPacket);
 
-			// Add a new parsed Chunk for each Chunk in this Packet and make it point
-			// to its position in the new buffer.
-			for (const auto* chunk : this->chunks)
+			// Soft clone Packet Chunks into the given cloned Packet.
+			for (auto* chunk : this->chunks)
 			{
 				size_t offset = chunk->GetBuffer() - GetBuffer();
 
-				Chunk* clonedChunk{ nullptr };
-
-				// TODO
-				switch (chunk->GetType())
-				{
-					case Chunk::ChunkType::DATA:
-					{
-						clonedChunk = new DataChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::INIT:
-					{
-						clonedChunk = new InitChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::INIT_ACK:
-					{
-						clonedChunk = new InitAckChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::SACK:
-					{
-						clonedChunk = new SackChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::HEARTBEAT:
-					{
-						clonedChunk = new HeartbeatChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::HEARTBEAT_ACK:
-					{
-						clonedChunk = new HeartbeatAckChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::SHUTDOWN:
-					{
-						clonedChunk = new ShutdownChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::SHUTDOWN_ACK:
-					{
-						clonedChunk = new ShutdownAckChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::COOKIE_ECHO:
-					{
-						clonedChunk = new CookieEchoChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::COOKIE_ACK:
-					{
-						clonedChunk = new CookieAckChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					case Chunk::ChunkType::SHUTDOWN_COMPLETE:
-					{
-						clonedChunk = new ShutdownCompleteChunk(buffer + offset, chunk->GetLength());
-
-						break;
-					}
-
-					default:
-					{
-						clonedChunk = new UnknownChunk(buffer + offset, chunk->GetLength());
-					}
-				}
-
-				// Set the proper Chunk length.
-				// NOTE: This should not throw but just in case.
-				try
-				{
-					clonedChunk->SetLength(chunk->GetLength());
-				}
-				catch (const MediaSoupError& error)
-				{
-					delete clonedPacket;
-					delete clonedChunk;
-
-					throw;
-				}
+				auto* softClonedChunk = chunk->SoftClone(buffer + offset);
 
 				// Chunk constructors don't freeze the Chunk so we must do it manually.
-				clonedChunk->Freeze();
+				softClonedChunk->Freeze();
 
-				clonedPacket->chunks.push_back(clonedChunk);
+				clonedPacket->chunks.push_back(softClonedChunk);
 			}
 
 			return clonedPacket;

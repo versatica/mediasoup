@@ -40,7 +40,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 
 		auto* chunk = SackChunk::Parse(buffer, sizeof(buffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -73,7 +73,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -103,7 +103,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -134,7 +134,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 	{
 		auto* chunk = SackChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -163,7 +163,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		chunk->AddDuplicateTsn(30000000);
 		chunk->AddDuplicateTsn(40000000);
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -196,7 +196,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 
 		delete chunk;
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 44,

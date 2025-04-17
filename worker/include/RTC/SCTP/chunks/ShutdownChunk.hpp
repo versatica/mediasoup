@@ -71,6 +71,8 @@ namespace RTC
 
 			virtual ShutdownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual ShutdownChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			uint32_t GetCumulativeTsnAck() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);

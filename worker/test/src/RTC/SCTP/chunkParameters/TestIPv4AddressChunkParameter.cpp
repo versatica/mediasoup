@@ -27,7 +27,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 
 		auto* parameter = IPv4AddressChunkParameter::Parse(buffer, sizeof(buffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ 11,
@@ -51,7 +51,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -73,7 +73,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -152,7 +152,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 	{
 		auto* parameter = IPv4AddressChunkParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -175,7 +175,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 
 		parameter->SetIPv4Address(ipBuffer);
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -198,7 +198,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

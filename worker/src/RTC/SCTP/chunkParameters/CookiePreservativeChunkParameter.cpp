@@ -107,11 +107,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new CookiePreservativeChunkParameter(buffer, bufferLength);
+			auto* clonedParameter = new CookiePreservativeChunkParameter(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedParameter);
 
-			return clonedItem;
+			return clonedParameter;
 		}
 
 		void CookiePreservativeChunkParameter::SetLifeSpanIncrement(const uint32_t increment)
@@ -121,6 +121,18 @@ namespace RTC
 			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(GetValuePointer(), 0, increment);
+		}
+
+		CookiePreservativeChunkParameter* CookiePreservativeChunkParameter::SoftClone(
+		  const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedParameter = new CookiePreservativeChunkParameter(buffer, GetLength());
+
+			SoftCloneInto(softClonedParameter);
+
+			return softClonedParameter;
 		}
 	} // namespace SCTP
 } // namespace RTC

@@ -103,6 +103,8 @@ namespace RTC
 
 			virtual InitChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual InitChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			uint32_t GetInitiateTag() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);

@@ -63,6 +63,8 @@ namespace RTC
 
 			virtual IPv4AddressChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual IPv4AddressChunkParameter* SoftClone(const uint8_t* buffer) const final override;
+
 			/**
 			 * @return A pointer to a 4 bytes unsigned integer in network order
 			 * representing the binary encoded IPv4 value.

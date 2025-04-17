@@ -40,7 +40,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 
 		auto* chunk = InitAckChunk::Parse(buffer, sizeof(buffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -60,8 +60,9 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 
 		auto* parameter1 = reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
@@ -82,7 +83,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 	{
 		auto* chunk = InitAckChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -116,7 +117,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		parameter1->SetIPv4Address(ipBuffer1);
 		parameter1->Consolidate();
 
-		checkChunk(
+		CHECK_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -137,8 +138,9 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		const auto* addedParameter1 =
 		  reinterpret_cast<const IPv4AddressChunkParameter*>(chunk->GetParameterAt(0));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ addedParameter1,
+		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,

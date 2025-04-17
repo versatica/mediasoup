@@ -100,11 +100,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new HeartbeatInfoChunkParameter(buffer, bufferLength);
+			auto* clonedParameter = new HeartbeatInfoChunkParameter(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedParameter);
 
-			return clonedItem;
+			return clonedParameter;
 		}
 
 		void HeartbeatInfoChunkParameter::SetInfo(const uint8_t* info, uint16_t infoLength)
@@ -114,6 +114,17 @@ namespace RTC
 			AssertNotFrozen();
 
 			SetValue(info, infoLength);
+		}
+
+		HeartbeatInfoChunkParameter* HeartbeatInfoChunkParameter::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedParameter = new HeartbeatInfoChunkParameter(buffer, GetLength());
+
+			SoftCloneInto(softClonedParameter);
+
+			return softClonedParameter;
 		}
 	} // namespace SCTP
 } // namespace RTC

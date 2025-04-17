@@ -68,11 +68,23 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new UnknownChunk(buffer, bufferLength);
+			auto* clonedChunk = new UnknownChunk(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedChunk);
+			SoftCloneInto(clonedChunk);
 
-			return clonedItem;
+			return clonedChunk;
+		}
+
+		UnknownChunk* UnknownChunk::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedChunk = new UnknownChunk(buffer, GetLength());
+
+			SoftCloneInto(softClonedChunk);
+
+			return softClonedChunk;
 		}
 	} // namespace SCTP
 } // namespace RTC

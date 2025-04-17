@@ -1,10 +1,14 @@
-#ifndef MS_TEST_RTC_SCTP_CHUNKS_HELPERS_HPP
-#define MS_TEST_RTC_SCTP_CHUNKS_HELPERS_HPP
+#ifndef MS_TEST_RTC_SCTP_CHUNKS_COMMON_HPP
+#define MS_TEST_RTC_SCTP_CHUNKS_COMMON_HPP
 
 #include "common.hpp"
+#include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
+#include "helpers.hpp" // in worker/test/include/
 #include "RTC/SCTP/Chunk.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/Packet.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 using namespace RTC::SCTP;
 
@@ -18,70 +22,125 @@ extern thread_local uint8_t ThrowBuffer[66665];
 
 void resetBuffers();
 
-void checkPacket(
-  const Packet* packet,
-  const uint8_t* buffer,
-  size_t bufferLength,
-  size_t length,
-  bool frozen,
-  uint16_t sourcePort,
-  uint16_t destinationPort,
-  uint32_t verificationTag,
-  uint32_t checksum,
-  size_t chunksCount);
+#define CHECK_PACKET(                                                                              \
+  /*const Packet**/ packet,                                                                        \
+  /*const uint8_t**/ buffer,                                                                       \
+  /*size_t*/ bufferLength,                                                                         \
+  /*size_t*/ length,                                                                               \
+  /*bool*/ frozen,                                                                                 \
+  /*uint16_t*/ sourcePort,                                                                         \
+  /*uint16_t*/ destinationPort,                                                                    \
+  /*uint32_t*/ verificationTag,                                                                    \
+  /*uint32_t*/ checksum,                                                                           \
+  /*size_t*/ chunksCount)                                                                          \
+	do                                                                                               \
+	{                                                                                                \
+		REQUIRE(packet);                                                                               \
+		REQUIRE(packet->GetBuffer() != nullptr);                                                       \
+		REQUIRE(packet->GetBuffer() == buffer);                                                        \
+		REQUIRE(packet->GetBufferLength() != 0);                                                       \
+		REQUIRE(packet->GetBufferLength() == bufferLength);                                            \
+		REQUIRE(packet->GetLength() != 0);                                                             \
+		REQUIRE(packet->GetLength() == length);                                                        \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                           \
+		REQUIRE(packet->IsFrozen() == frozen);                                                         \
+		REQUIRE(packet->GetSourcePort() == sourcePort);                                                \
+		REQUIRE(packet->GetDestinationPort() == destinationPort);                                      \
+		REQUIRE(packet->GetVerificationTag() == verificationTag);                                      \
+		REQUIRE(packet->GetChecksum() == checksum);                                                    \
+		REQUIRE(packet->GetChunksCount() == chunksCount);                                              \
+		REQUIRE(packet->HasChunks() == chunksCount > 0);                                               \
+		REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);                                           \
+		REQUIRE(                                                                                       \
+		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
+		REQUIRE_THROWS_AS(                                                                             \
+		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
+		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
+	} while (false)
 
-void checkChunk(
-  const Chunk* chunk,
-  const uint8_t* buffer,
-  size_t bufferLength,
-  size_t length,
-  bool frozen,
-  Chunk::ChunkType chunkType,
-  bool unknownType,
-  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
-  uint8_t flags,
-  size_t parametersCount);
+#define CHECK_CHUNK(                                                                                 \
+  /*const Chunk**/ chunk,                                                                            \
+  /*uint8_t**/ buffer,                                                                               \
+  /*size_t*/ bufferLength,                                                                           \
+  /*size_t*/ length,                                                                                 \
+  /*bool*/ frozen,                                                                                   \
+  /*Chunk::ChunkType*/ chunkType,                                                                    \
+  /*bool*/ unknownType,                                                                              \
+  /*Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType,                                    \
+  /*uint8_t*/ flags,                                                                                 \
+  /*size_t*/ parametersCount)                                                                        \
+	do                                                                                                 \
+	{                                                                                                  \
+		REQUIRE(chunk);                                                                                  \
+		REQUIRE(chunk->GetBuffer() != nullptr);                                                          \
+		if (buffer)                                                                                      \
+		{                                                                                                \
+			REQUIRE(chunk->GetBuffer() == buffer);                                                         \
+		}                                                                                                \
+		REQUIRE((chunk)->GetBufferLength() != 0);                                                        \
+		REQUIRE((chunk)->GetBufferLength() == bufferLength);                                             \
+		REQUIRE((chunk)->GetLength() != 0);                                                              \
+		REQUIRE((chunk)->GetLength() == length);                                                         \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes((chunk)->GetLength()) == true);                            \
+		REQUIRE((chunk)->IsFrozen() == frozen);                                                          \
+		REQUIRE((chunk)->GetType() == chunkType);                                                        \
+		REQUIRE((chunk)->HasUnknownType() == unknownType);                                               \
+		REQUIRE((chunk)->GetActionForUnknownChunkType() == actionForUnknownChunkType);                   \
+		REQUIRE((chunk)->GetFlags() == flags);                                                           \
+		REQUIRE((chunk)->GetParametersCount() == parametersCount);                                       \
+		REQUIRE((chunk)->HasParameters() == parametersCount > 0);                                        \
+		REQUIRE((chunk)->GetParameterAt(parametersCount) == nullptr);                                    \
+		if (buffer)                                                                                      \
+		{                                                                                                \
+			REQUIRE(                                                                                       \
+			  helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);   \
+		}                                                                                                \
+		REQUIRE_THROWS_AS(                                                                               \
+		  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))->Serialize(ThrowBuffer, length - 1), \
+		  MediaSoupError);                                                                               \
+		REQUIRE_THROWS_AS((chunk)->Clone(ThrowBuffer, length - 1), MediaSoupError);                      \
+	} while (false)
 
-/**
- * This is the same as the previous function but doesn't include the buffer.
- * Useful when obtaining the Chunks from a Packet, so their exact location in
- * a buffer is irrelevant for testing purposes.
- */
-void checkChunk(
-  const Chunk* chunk,
-  size_t bufferLength,
-  size_t length,
-  bool frozen,
-  Chunk::ChunkType chunkType,
-  bool unknownType,
-  Chunk::ActionForUnknownChunkType actionForUnknownChunkType,
-  uint8_t flags,
-  size_t parametersCount);
-
-void checkChunkParameter(
-  const ChunkParameter* parameter,
-  const uint8_t* buffer,
-  size_t bufferLength,
-  size_t length,
-  bool frozen,
-  ChunkParameter::ChunkParameterType parameterType,
-  bool unknownType,
-  ChunkParameter::ActionForUnknownChunkParameterType actionForUnknownParameterType,
-  uint16_t valueLength);
-
-/**
- * This is the same as the previous function but doesn't include the buffer.
- * Useful when obtaining the Chunk Parameters from a Chunk, so their exact
- * location in a buffer is irrelevant for testing purposes.
- */
-void checkChunkParameter(
-  const ChunkParameter* parameter,
-  size_t bufferLength,
-  size_t length,
-  bool frozen,
-  ChunkParameter::ChunkParameterType parameterType,
-  bool unknownType,
-  ChunkParameter::ActionForUnknownChunkParameterType actionForUnknownParameterType,
-  uint16_t valueLength);
+#define CHECK_PARAMETER(                                                                            \
+  /*const ChunkParameter**/ parameter,                                                              \
+  /*const uint8_t**/ buffer,                                                                        \
+  /*size_t*/ bufferLength,                                                                          \
+  /*size_t*/ length,                                                                                \
+  /*bool*/ frozen,                                                                                  \
+  /*ChunkParameter::ChunkParameterType*/ parameterType,                                             \
+  /*bool*/ unknownType,                                                                             \
+  /*ChunkParameter::ActionForUnknownChunkParameterType*/ actionForUnknownParameterType,             \
+  /*uint16_t*/ valueLength)                                                                         \
+	{                                                                                                 \
+		REQUIRE(parameter);                                                                             \
+		REQUIRE(parameter->GetBuffer() != nullptr);                                                     \
+		if (buffer)                                                                                     \
+		{                                                                                               \
+			REQUIRE(parameter->GetBuffer() == buffer);                                                    \
+		}                                                                                               \
+		REQUIRE((parameter)->GetBufferLength() != 0);                                                   \
+		REQUIRE(parameter->GetBufferLength() == bufferLength);                                          \
+		REQUIRE(parameter->GetLength() != 0);                                                           \
+		REQUIRE(parameter->GetLength() == length);                                                      \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(parameter->GetLength()) == true);                         \
+		REQUIRE(parameter->IsFrozen() == frozen);                                                       \
+		REQUIRE(parameter->GetType() == parameterType);                                                 \
+		REQUIRE(parameter->HasUnknownType() == unknownType);                                            \
+		REQUIRE(parameter->GetActionForUnknownChunkParameterType() == actionForUnknownParameterType);   \
+		REQUIRE(parameter->HasValue() == valueLength > 0);                                              \
+		REQUIRE(parameter->GetValueLength() == valueLength);                                            \
+		if (buffer)                                                                                     \
+		{                                                                                               \
+			REQUIRE(                                                                                      \
+			  helpers::areBuffersEqual(parameter->GetBuffer(), parameter->GetLength(), buffer, length) == \
+			  true);                                                                                      \
+		}                                                                                               \
+		REQUIRE_THROWS_AS(                                                                              \
+		  const_cast<ChunkParameter*>(reinterpret_cast<const ChunkParameter*>(parameter))               \
+		    ->Serialize(ThrowBuffer, length - 1),                                                       \
+		  MediaSoupError);                                                                              \
+		REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, length - 1), MediaSoupError);                   \
+	}                                                                                                 \
+	while (false)
 
 #endif

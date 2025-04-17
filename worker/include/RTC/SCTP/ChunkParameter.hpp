@@ -124,15 +124,13 @@ namespace RTC
 		public:
 			virtual ~ChunkParameter() override;
 
-			/**
-			 * NOTE: Should be overridden by each subclass.
-			 */
-			virtual void Dump(int indentation = 0) const override;
+			virtual void Dump(int indentation = 0) const override = 0;
 
-			/**
-			 * Can be overridden by each subclass.
-			 */
-			virtual ChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override;
+			virtual ChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
+
+			virtual ChunkParameter* SoftClone(const uint8_t* buffer) const = 0;
+
+			virtual void SoftCloneInto(ChunkParameter* parameter) const final;
 
 			virtual ChunkParameterType GetType() const final
 			{
@@ -186,6 +184,8 @@ namespace RTC
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
 			virtual void DumpCommon(int indentation) const final;
+
+			virtual void SoftSerialize(const uint8_t* buffer) final;
 
 			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
 

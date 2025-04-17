@@ -29,7 +29,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 
 		auto* parameter = UnknownChunkParameter::Parse(buffer, sizeof(buffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ 15,
@@ -57,7 +57,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -86,7 +86,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 
 		delete parameter;
 
-		checkChunkParameter(
+		CHECK_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),

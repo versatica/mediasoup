@@ -138,11 +138,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new SackChunk(buffer, bufferLength);
+			auto* clonedChunk = new SackChunk(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedChunk);
+			SoftCloneInto(clonedChunk);
 
-			return clonedItem;
+			return clonedChunk;
 		}
 
 		void SackChunk::SetCumulativeTsnAck(uint32_t value)
@@ -248,6 +249,17 @@ namespace RTC
 			AssertNotFrozen();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 14, value);
+		}
+
+		SackChunk* SackChunk::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedChunk = new SackChunk(buffer, GetLength());
+
+			SoftCloneInto(softClonedChunk);
+
+			return softClonedChunk;
 		}
 	} // namespace SCTP
 } // namespace RTC

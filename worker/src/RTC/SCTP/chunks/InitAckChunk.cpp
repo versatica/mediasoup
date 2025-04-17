@@ -124,11 +124,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* clonedItem = new InitAckChunk(buffer, bufferLength);
+			auto* clonedChunk = new InitAckChunk(buffer, bufferLength);
 
-			CloneInto(clonedItem);
+			CloneInto(clonedChunk);
+			SoftCloneInto(clonedChunk);
 
-			return clonedItem;
+			return clonedChunk;
 		}
 
 		void InitAckChunk::SetInitiateTag(uint32_t value)
@@ -174,6 +175,17 @@ namespace RTC
 			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
+		}
+
+		InitAckChunk* InitAckChunk::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedChunk = new InitAckChunk(buffer, GetLength());
+
+			SoftCloneInto(softClonedChunk);
+
+			return softClonedChunk;
 		}
 	} // namespace SCTP
 } // namespace RTC
