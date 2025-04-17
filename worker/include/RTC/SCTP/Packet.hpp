@@ -84,7 +84,7 @@ namespace RTC
 			 * Constructor is private because we only want to create Packet instances
 			 * via Parse() and Factory().
 			 */
-			Packet(const uint8_t* buffer, size_t bufferLength);
+			Packet(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			~Packet() override;

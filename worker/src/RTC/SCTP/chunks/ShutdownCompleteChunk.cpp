@@ -31,6 +31,14 @@ namespace RTC
 				return nullptr;
 			}
 
+			return ShutdownCompleteChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+		}
+
+		ShutdownCompleteChunk* ShutdownCompleteChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
 			if (chunkLength != ShutdownCompleteChunk::ShutdownCompleteChunkLength)
 			{
 				MS_WARN_TAG(
@@ -41,7 +49,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new ShutdownCompleteChunk(buffer, bufferLength);
+			auto* chunk = new ShutdownCompleteChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
@@ -71,7 +79,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		ShutdownCompleteChunk::ShutdownCompleteChunk(const uint8_t* buffer, size_t bufferLength)
+		ShutdownCompleteChunk::ShutdownCompleteChunk(uint8_t* buffer, size_t bufferLength)
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -120,7 +128,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new ShutdownCompleteChunk(buffer, GetLength());
+			auto* softClonedChunk = new ShutdownCompleteChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

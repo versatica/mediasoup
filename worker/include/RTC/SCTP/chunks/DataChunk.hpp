@@ -87,6 +87,15 @@ namespace RTC
 			static DataChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a DataChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static DataChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
+			/**
 			 * Create a DataChunk.
 			 *
 			 * @remarks
@@ -98,7 +107,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			DataChunk(const uint8_t* buffer, size_t bufferLength);
+			DataChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~DataChunk() override;

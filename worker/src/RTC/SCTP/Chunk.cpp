@@ -113,7 +113,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Chunk::Chunk(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
+		Chunk::Chunk(uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
 		}
@@ -341,35 +341,40 @@ namespace RTC
 				{
 					case ChunkParameter::ChunkParameterType::HEARTBEAT_INFO:
 					{
-						parameter = HeartbeatInfoChunkParameter::Parse(ptr, parameterLength + padding);
+						parameter = HeartbeatInfoChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
 					}
 
 					case ChunkParameter::ChunkParameterType::IPV4_ADDRESS:
 					{
-						parameter = IPv4AddressChunkParameter::Parse(ptr, parameterLength + padding);
+						parameter = IPv4AddressChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
 					}
 
 					case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
 					{
-						parameter = IPv6AddressChunkParameter::Parse(ptr, parameterLength + padding);
+						parameter = IPv6AddressChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
 					}
 
 					case ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE:
 					{
-						parameter = CookiePreservativeChunkParameter::Parse(ptr, parameterLength + padding);
+						parameter = CookiePreservativeChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
 					}
 
 					default:
 					{
-						parameter = UnknownChunkParameter::Parse(ptr, parameterLength + padding);
+						parameter = UnknownChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
 					}
 				}
 

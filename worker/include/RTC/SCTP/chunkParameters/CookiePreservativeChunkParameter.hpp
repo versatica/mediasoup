@@ -39,9 +39,18 @@ namespace RTC
 			 * Parse a CookiePreservativeChunkParameter.
 			 *
 			 * @remarks
-			 * - `bufferLength` may exceed the exact length of the Chunk.
+			 * - `bufferLength` may exceed the exact length of the Chunk Parameter.
 			 */
 			static CookiePreservativeChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Parse a CookiePreservativeChunkParameter.
+			 *
+			 * @remarks
+			 * - To be used only by `Chunk::ParseParameters()`.
+			 */
+			static CookiePreservativeChunkParameter* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
 
 			/**
 			 * Create a CookiePreservativeChunkParameter.
@@ -55,7 +64,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			CookiePreservativeChunkParameter(const uint8_t* buffer, size_t bufferLength);
+			CookiePreservativeChunkParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~CookiePreservativeChunkParameter() override;

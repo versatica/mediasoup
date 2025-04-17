@@ -15,11 +15,11 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
+- `AssertNotFrozen()` in `SetLength()` and `SetBufferLength()` in Serializable?
+
 - In every test, memset(buffer) to cero after `xxx->Serialize()`.
 
 - Check all pending "TODO" comments.
-
-- in `Packet::Parse()` we call `Chunk::IsChunk()` for each possible Chunk in the Packet and then each `XxxxChunk::Parse()` calls it again. Improve it. Same in `Chunk::ParseParameters()`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 

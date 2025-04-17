@@ -35,7 +35,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* packet = new Packet(buffer, bufferLength);
+			auto* packet = new Packet(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Pointer that initially points to the given data buffer and is later
 			// incremented to point to other parts of the Packet.
@@ -73,84 +73,85 @@ namespace RTC
 				{
 					case Chunk::ChunkType::DATA:
 					{
-						chunk = DataChunk::Parse(ptr, chunkLength + padding);
+						chunk = DataChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::INIT:
 					{
-						chunk = InitChunk::Parse(ptr, chunkLength + padding);
+						chunk = InitChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::INIT_ACK:
 					{
-						chunk = InitAckChunk::Parse(ptr, chunkLength + padding);
+						chunk = InitAckChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::SACK:
 					{
-						chunk = SackChunk::Parse(ptr, chunkLength + padding);
+						chunk = SackChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::HEARTBEAT:
 					{
-						chunk = HeartbeatChunk::Parse(ptr, chunkLength + padding);
+						chunk = HeartbeatChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::HEARTBEAT_ACK:
 					{
-						chunk = HeartbeatAckChunk::Parse(ptr, chunkLength + padding);
+						chunk = HeartbeatAckChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::SHUTDOWN:
 					{
-						chunk = ShutdownChunk::Parse(ptr, chunkLength + padding);
+						chunk = ShutdownChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::SHUTDOWN_ACK:
 					{
-						chunk = ShutdownAckChunk::Parse(ptr, chunkLength + padding);
+						chunk = ShutdownAckChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::COOKIE_ECHO:
 					{
-						chunk = CookieEchoChunk::Parse(ptr, chunkLength + padding);
+						chunk = CookieEchoChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::COOKIE_ACK:
 					{
-						chunk = CookieAckChunk::Parse(ptr, chunkLength + padding);
+						chunk = CookieAckChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					case Chunk::ChunkType::SHUTDOWN_COMPLETE:
 					{
-						chunk = ShutdownCompleteChunk::Parse(ptr, chunkLength + padding);
+						chunk =
+						  ShutdownCompleteChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}
 
 					default:
 					{
-						chunk = UnknownChunk::Parse(ptr, chunkLength + padding);
+						chunk = UnknownChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 					}
 				}
 
@@ -218,7 +219,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Packet::Packet(const uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
+		Packet::Packet(uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
 

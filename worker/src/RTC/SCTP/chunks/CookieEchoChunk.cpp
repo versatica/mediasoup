@@ -31,7 +31,15 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new CookieEchoChunk(buffer, bufferLength);
+			return CookieEchoChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+		}
+
+		CookieEchoChunk* CookieEchoChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			auto* chunk = new CookieEchoChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -65,7 +73,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		CookieEchoChunk::CookieEchoChunk(const uint8_t* buffer, size_t bufferLength)
+		CookieEchoChunk::CookieEchoChunk(uint8_t* buffer, size_t bufferLength)
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -117,7 +125,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new CookieEchoChunk(buffer, GetLength());
+			auto* softClonedChunk = new CookieEchoChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

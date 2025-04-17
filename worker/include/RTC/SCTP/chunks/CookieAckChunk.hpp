@@ -2,7 +2,6 @@
 #define MS_RTC_SCTP_COOKIE_ACK_CHUNK_HPP
 
 #include "common.hpp"
-#include "Utils.hpp"
 #include "RTC/SCTP/Chunk.hpp"
 
 namespace RTC
@@ -46,6 +45,15 @@ namespace RTC
 			static CookieAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a CookieAckChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static CookieAckChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
+			/**
 			 * Create a CookieAckChunk.
 			 *
 			 * @remarks
@@ -57,7 +65,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			CookieAckChunk(const uint8_t* buffer, size_t bufferLength);
+			CookieAckChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~CookieAckChunk() override;

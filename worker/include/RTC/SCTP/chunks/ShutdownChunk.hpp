@@ -51,6 +51,15 @@ namespace RTC
 			static ShutdownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a ShutdownChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static ShutdownChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
+			/**
 			 * Create a ShutdownChunk.
 			 *
 			 * @remarks
@@ -62,7 +71,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			ShutdownChunk(const uint8_t* buffer, size_t bufferLength);
+			ShutdownChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~ShutdownChunk() override;

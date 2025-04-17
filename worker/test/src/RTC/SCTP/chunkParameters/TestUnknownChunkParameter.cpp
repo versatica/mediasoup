@@ -32,7 +32,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
-		  /*bufferLength*/ 15,
+		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),

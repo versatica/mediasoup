@@ -34,6 +34,14 @@ namespace RTC
 				return nullptr;
 			}
 
+			return IPv6AddressChunkParameter::ParseStrict(buffer, bufferLength, parameterLength, padding);
+		}
+
+		IPv6AddressChunkParameter* IPv6AddressChunkParameter::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		{
+			MS_TRACE();
+
 			if (parameterLength != IPv6AddressChunkParameter::IPv6AddressChunkParameterLength)
 			{
 				MS_WARN_TAG(
@@ -44,7 +52,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* parameter = new IPv6AddressChunkParameter(buffer, bufferLength);
+			auto* parameter = new IPv6AddressChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Mark the Parameter as frozen since we are parsing.
 			parameter->Freeze();
@@ -81,7 +89,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		IPv6AddressChunkParameter::IPv6AddressChunkParameter(const uint8_t* buffer, size_t bufferLength)
+		IPv6AddressChunkParameter::IPv6AddressChunkParameter(uint8_t* buffer, size_t bufferLength)
 		  : ChunkParameter(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -136,7 +144,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedParameter = new IPv6AddressChunkParameter(buffer, GetLength());
+			auto* softClonedParameter =
+			  new IPv6AddressChunkParameter(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedParameter);
 

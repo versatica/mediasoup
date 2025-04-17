@@ -53,6 +53,15 @@ namespace RTC
 			static HeartbeatAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a HeartbeatAckChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static HeartbeatAckChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
+			/**
 			 * Create a HeartbeatAckChunk.
 			 *
 			 * @remarks
@@ -64,7 +73,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			HeartbeatAckChunk(const uint8_t* buffer, size_t bufferLength);
+			HeartbeatAckChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~HeartbeatAckChunk() override;

@@ -23,7 +23,15 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new UnknownChunk(buffer, bufferLength);
+			return UnknownChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+		}
+
+		UnknownChunk* UnknownChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			auto* chunk = new UnknownChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -37,8 +45,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		UnknownChunk::UnknownChunk(const uint8_t* buffer, size_t bufferLength)
-		  : Chunk(buffer, bufferLength)
+		UnknownChunk::UnknownChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
 
@@ -80,7 +87,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new UnknownChunk(buffer, GetLength());
+			auto* softClonedChunk = new UnknownChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

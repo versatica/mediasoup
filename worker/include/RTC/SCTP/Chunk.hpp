@@ -142,7 +142,8 @@ namespace RTC
 			 * @param chunkLength - If given buffer is a valid Chunk then
 			 *   `chunkLength` is rewritten to the value of the Chunk Length field.
 			 * @param padding - If given buffer is a valid Chunk then `padding` is
-			 *   rewritten to the number of padding bytes in the Chunk.
+			 *   rewritten to the number of padding bytes in the Chunk (only the
+			 *   necessary ones to make total length multiple of 4).
 			 */
 			static bool IsChunk(
 			  const uint8_t* buffer,
@@ -161,7 +162,7 @@ namespace RTC
 			 * Constructor is protected because we only want to create Chunk
 			 * instances via Parse() and Factory() in subclasses.
 			 */
-			Chunk(const uint8_t* buffer, size_t bufferLength);
+			Chunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~Chunk() override;

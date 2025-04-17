@@ -23,7 +23,10 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 			// 1 byte of padding
 			0x55, 0x66, 0x77, 0x00,
 			// Extra bytes that should be ignored
-			0xAA, 0xBB, 0xCC
+			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA,
 		};
 		// clang-format on
 
@@ -32,7 +35,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
-		  /*bufferLength*/ 15,
+		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,

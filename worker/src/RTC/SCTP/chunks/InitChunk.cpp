@@ -31,6 +31,14 @@ namespace RTC
 				return nullptr;
 			}
 
+			return InitChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+		}
+
+		InitChunk* InitChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
 			if (chunkLength < InitChunk::InitChunkHeaderLength)
 			{
 				MS_WARN_TAG(
@@ -41,8 +49,9 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new InitChunk(buffer, bufferLength);
+			auto* chunk = new InitChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
+			// Parse Chunk Parameters.
 			if (!chunk->ParseParameters())
 			{
 				MS_WARN_DEV("failed to parse Chunk Parameters");
@@ -89,7 +98,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		InitChunk::InitChunk(const uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
+		InitChunk::InitChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
 
@@ -180,7 +189,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new InitChunk(buffer, GetLength());
+			auto* softClonedChunk = new InitChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

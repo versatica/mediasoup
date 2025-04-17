@@ -101,7 +101,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		ChunkParameter::ChunkParameter(const uint8_t* buffer, size_t bufferLength)
+		ChunkParameter::ChunkParameter(uint8_t* buffer, size_t bufferLength)
 		  : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();

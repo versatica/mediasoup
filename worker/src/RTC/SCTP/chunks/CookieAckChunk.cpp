@@ -31,6 +31,14 @@ namespace RTC
 				return nullptr;
 			}
 
+			return CookieAckChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+		}
+
+		CookieAckChunk* CookieAckChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
 			if (chunkLength != CookieAckChunk::CookieAckChunkLength)
 			{
 				MS_WARN_TAG(
@@ -39,7 +47,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new CookieAckChunk(buffer, bufferLength);
+			auto* chunk = new CookieAckChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
@@ -68,7 +76,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		CookieAckChunk::CookieAckChunk(const uint8_t* buffer, size_t bufferLength)
+		CookieAckChunk::CookieAckChunk(uint8_t* buffer, size_t bufferLength)
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -108,7 +116,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new CookieAckChunk(buffer, GetLength());
+			auto* softClonedChunk = new CookieAckChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

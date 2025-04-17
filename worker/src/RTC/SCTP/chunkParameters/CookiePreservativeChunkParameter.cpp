@@ -33,6 +33,15 @@ namespace RTC
 				return nullptr;
 			}
 
+			return CookiePreservativeChunkParameter::ParseStrict(
+			  buffer, bufferLength, parameterLength, padding);
+		}
+
+		CookiePreservativeChunkParameter* CookiePreservativeChunkParameter::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		{
+			MS_TRACE();
+
 			if (parameterLength != CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength)
 			{
 				MS_WARN_TAG(
@@ -43,7 +52,8 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* parameter = new CookiePreservativeChunkParameter(buffer, bufferLength);
+			auto* parameter =
+			  new CookiePreservativeChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Mark the Parameter as frozen since we are parsing.
 			parameter->Freeze();
@@ -77,8 +87,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		CookiePreservativeChunkParameter::CookiePreservativeChunkParameter(
-		  const uint8_t* buffer, size_t bufferLength)
+		CookiePreservativeChunkParameter::CookiePreservativeChunkParameter(uint8_t* buffer, size_t bufferLength)
 		  : ChunkParameter(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -128,7 +137,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedParameter = new CookiePreservativeChunkParameter(buffer, GetLength());
+			auto* softClonedParameter =
+			  new CookiePreservativeChunkParameter(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedParameter);
 

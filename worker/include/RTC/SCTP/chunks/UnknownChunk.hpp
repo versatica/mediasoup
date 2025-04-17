@@ -39,11 +39,20 @@ namespace RTC
 			 */
 			static UnknownChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Parse a UnknownChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static UnknownChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
 		private:
 			/**
 			 * Private constructor used by Parse() static method.
 			 */
-			UnknownChunk(const uint8_t* buffer, size_t bufferLength);
+			UnknownChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~UnknownChunk() override;

@@ -33,7 +33,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
-		  /*bufferLength*/ 23,
+		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,

@@ -49,6 +49,15 @@ namespace RTC
 			static CookieEchoChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a CookieEchoChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static CookieEchoChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
+			/**
 			 * Create a CookieEchoChunk.
 			 *
 			 * @remarks
@@ -60,7 +69,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			CookieEchoChunk(const uint8_t* buffer, size_t bufferLength);
+			CookieEchoChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~CookieEchoChunk() override;

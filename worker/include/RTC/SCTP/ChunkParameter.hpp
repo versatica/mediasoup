@@ -100,7 +100,8 @@ namespace RTC
 			 *   `parameterLength` is rewritten to the value of the Parameter Length
 			 *    field.
 			 * @param padding - If given buffer is a valid Parameter then `padding`
-			 *   is rewritten to the number of padding bytes in the Parameter.
+			 *   is rewritten to the number of padding bytes in the Parameter (only
+			 *   the necessary ones to make total length multiple of 4).
 			 */
 			static bool IsChunkParameter(
 			  const uint8_t* buffer,
@@ -119,7 +120,7 @@ namespace RTC
 			 * Constructor is protected because we only want to create ChunkParameter
 			 * instances via Parse() and Factory() in subclasses.
 			 */
-			ChunkParameter(const uint8_t* buffer, size_t bufferLength);
+			ChunkParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~ChunkParameter() override;

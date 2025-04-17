@@ -31,8 +31,17 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new HeartbeatChunk(buffer, bufferLength);
+			return HeartbeatChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+		}
 
+		HeartbeatChunk* HeartbeatChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			auto* chunk = new HeartbeatChunk(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Parse Chunk Parameters.
 			if (!chunk->ParseParameters())
 			{
 				MS_WARN_DEV("failed to parse Chunk Parameters");
@@ -73,7 +82,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		HeartbeatChunk::HeartbeatChunk(const uint8_t* buffer, size_t bufferLength)
+		HeartbeatChunk::HeartbeatChunk(uint8_t* buffer, size_t bufferLength)
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -111,7 +120,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new HeartbeatChunk(buffer, GetLength());
+			auto* softClonedChunk = new HeartbeatChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

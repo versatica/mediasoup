@@ -21,6 +21,8 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 			// IPv4 Address: "1.2.3.4"
 			0x01, 0x02, 0x03, 0x04,
 			// Extra bytes that should be ignored
+			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC, 0xDD,
 			0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
@@ -30,7 +32,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
-		  /*bufferLength*/ 11,
+		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,

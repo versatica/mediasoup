@@ -33,7 +33,15 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* parameter = new HeartbeatInfoChunkParameter(buffer, bufferLength);
+			return HeartbeatInfoChunkParameter::ParseStrict(buffer, bufferLength, parameterLength, padding);
+		}
+
+		HeartbeatInfoChunkParameter* HeartbeatInfoChunkParameter::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			auto* parameter = new HeartbeatInfoChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.
@@ -67,7 +75,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		HeartbeatInfoChunkParameter::HeartbeatInfoChunkParameter(const uint8_t* buffer, size_t bufferLength)
+		HeartbeatInfoChunkParameter::HeartbeatInfoChunkParameter(uint8_t* buffer, size_t bufferLength)
 		  : ChunkParameter(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -120,7 +128,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto* softClonedParameter = new HeartbeatInfoChunkParameter(buffer, GetLength());
+			auto* softClonedParameter =
+			  new HeartbeatInfoChunkParameter(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedParameter);
 

@@ -30,7 +30,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
-		  /*bufferLength*/ 11,
+		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,

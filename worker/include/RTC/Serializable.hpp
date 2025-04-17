@@ -60,7 +60,7 @@ namespace RTC
 		 * Maximum length the Serializable can take. It's guaranteed to be equal or
 		 * greater than value returned by `GetLength()`.
 		 */
-		virtual const size_t GetBufferLength() const final
+		virtual size_t GetBufferLength() const final
 		{
 			return this->bufferLength;
 		}
@@ -241,7 +241,7 @@ namespace RTC
 		 * });
 		 * ```
 		 */
-		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
+		virtual void SetConsolidatedListener(const ConsolidatedListener&& listener) final;
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a

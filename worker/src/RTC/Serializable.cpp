@@ -120,7 +120,7 @@ namespace RTC
 		std::memset(this->buffer + this->length - padding, 0x00, padding);
 	}
 
-	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
+	void Serializable::SetConsolidatedListener(const ConsolidatedListener&& listener)
 	{
 		MS_TRACE();
 

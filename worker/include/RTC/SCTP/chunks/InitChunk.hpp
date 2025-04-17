@@ -83,6 +83,15 @@ namespace RTC
 			static InitChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a InitChunk.
+			 *
+			 * @remarks
+			 * - To be used only by `Packet::Parse()`.
+			 */
+			static InitChunk* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
+
+			/**
 			 * Create a InitChunk.
 			 *
 			 * @remarks
@@ -94,7 +103,7 @@ namespace RTC
 			/**
 			 * Private constructor used by Parse() and Factory() static methods.
 			 */
-			InitChunk(const uint8_t* buffer, size_t bufferLength);
+			InitChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
 			virtual ~InitChunk() override;
