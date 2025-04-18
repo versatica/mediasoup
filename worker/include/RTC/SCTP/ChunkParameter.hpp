@@ -79,7 +79,7 @@ namespace RTC
 				 * length of the Parameter in bytes, including the Parameter Type,
 				 * Parameter Length and Parameter Value fields. So if the Parameter
 				 * Value field is zero-length, the Length field must be 4. The
-				 * Parameter Length field does not count any chunk padding.
+				 * Parameter Length field does not count any padding.
 				 */
 				uint16_t length;
 			};
@@ -93,7 +93,7 @@ namespace RTC
 			 *
 			 * @param buffer
 			 * @param bufferLength - Can be greater than real Parameter length.
-			 * @param parameterType - If given buffer is a valid FooItem then
+			 * @param parameterType - If given buffer is a valid Parameter then
 			 *   `parameterType` is rewritten to parsed ChunkParameterType.
 			 * @param parameterLength - If given buffer is a valid Parameter then
 			 *   `parameterLength` is rewritten to the value of the Parameter Length
@@ -216,10 +216,10 @@ namespace RTC
 				return reinterpret_cast<ChunkParameterHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
 
-			virtual void SetType(ChunkParameterType type) final
+			virtual void SetType(ChunkParameterType parameterType) final
 			{
 				GetHeaderPointer()->type =
-				  static_cast<ChunkParameterType>(uint16_t{ htons(static_cast<uint16_t>(type)) });
+				  static_cast<ChunkParameterType>(uint16_t{ htons(static_cast<uint16_t>(parameterType)) });
 			}
 
 			virtual uint16_t GetLengthField() const final
@@ -228,7 +228,7 @@ namespace RTC
 			}
 
 			/**
-			 * @throw MediaSoupError - If given `length` is higher than mazimmun
+			 * @throw MediaSoupError - If given `length` is higher than maximmun
 			 *   allowed one (65535).
 			 */
 			virtual void SetLengthField(size_t length) final;

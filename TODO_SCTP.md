@@ -17,4 +17,4 @@ Same in `PipeTransport` and `PlainTransport`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
-- Keep `Packet::AddChunk()` and `Chunk::AddParameter()`? Do we really need them having the `BuildXxxxInPlace()` methods?
+- `Packet::AddChunk()` and `Chunk::AddParameter()` are buggy. They must increase Length field same as `BuildXxxxxInPlace()` methods do.

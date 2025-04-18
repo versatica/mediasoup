@@ -130,6 +130,14 @@ namespace RTC
 					delete parameter;
 				}
 			}
+
+			if (CanHaveErrorCauses())
+			{
+				for (const auto* errorCause : this->errorCauses)
+				{
+					delete errorCause;
+				}
+			}
 		}
 
 		void Chunk::Serialize(uint8_t* buffer, size_t bufferLength)
@@ -148,6 +156,16 @@ namespace RTC
 					size_t offset = parameter->GetBuffer() - previousBuffer;
 
 					parameter->SoftSerialize(buffer + offset);
+				}
+			}
+
+			if (CanHaveErrorCauses())
+			{
+				for (auto* errorCause : this->errorCauses)
+				{
+					size_t offset = errorCause->GetBuffer() - previousBuffer;
+
+					errorCause->SoftSerialize(buffer + offset);
 				}
 			}
 		}
@@ -183,6 +201,37 @@ namespace RTC
 			this->parameters.push_back(clonedParameter);
 		}
 
+		void Chunk::AddErrorCause(const ErrorCause* errorCause)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+			AssertCanHaveErrorCauses();
+
+			size_t length = GetLength() + errorCause->GetLength();
+
+			// Let's append the Error Cause at the end of existing Error Causes.
+			auto* clonedErrorCause =
+			  errorCause->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), errorCause->GetLength());
+
+			// Update Serializable length.
+			try
+			{
+				SetLength(length);
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete clonedErrorCause;
+
+				throw;
+			}
+
+			// Freeze the cloned Error Cause.
+			clonedErrorCause->Freeze();
+
+			this->errorCauses.push_back(clonedErrorCause);
+		}
+
 		void Chunk::DumpCommon(int indentation) const
 		{
 			MS_TRACE();
@@ -214,6 +263,20 @@ namespace RTC
 			}
 		}
 
+		void Chunk::DumpErrorCauses(int indentation) const
+		{
+			MS_TRACE();
+
+			if (CanHaveErrorCauses())
+			{
+				MS_DUMP_CLEAN(indentation, "  error causes count: %zu", GetErrorCausesCount());
+				for (const auto* errorCause : this->errorCauses)
+				{
+					errorCause->Dump(indentation + 1);
+				}
+			}
+		}
+
 		void Chunk::SoftSerialize(const uint8_t* buffer)
 		{
 			MS_TRACE();
@@ -229,6 +292,16 @@ namespace RTC
 					size_t offset = parameter->GetBuffer() - previousBuffer;
 
 					parameter->SoftSerialize(buffer + offset);
+				}
+			}
+
+			if (CanHaveErrorCauses())
+			{
+				for (auto* errorCause : this->errorCauses)
+				{
+					size_t offset = errorCause->GetBuffer() - previousBuffer;
+
+					errorCause->SoftSerialize(buffer + offset);
 				}
 			}
 		}
@@ -251,6 +324,23 @@ namespace RTC
 					softClonedParameter->Freeze();
 
 					chunk->parameters.push_back(softClonedParameter);
+				}
+			}
+
+			// Soft clone Error Causes into the given Chunk.
+			if (CanHaveErrorCauses())
+			{
+				for (auto* errorCause : this->errorCauses)
+				{
+					size_t offset = errorCause->GetBuffer() - GetBuffer();
+
+					auto* softClonedErrorCause = errorCause->SoftClone(chunk->GetBuffer() + offset);
+
+					// ErrorCause constructors don't freeze the ErrorCause so we must do
+					// it manually.
+					softClonedErrorCause->Freeze();
+
+					chunk->errorCauses.push_back(softClonedErrorCause);
 				}
 			}
 
@@ -329,14 +419,16 @@ namespace RTC
 			// GetLength() returns the fixed minimum length of the specific Chunk
 			// subclass, so GetBuffer() + GetLength() points to the beginning of
 			// the potential Chunk Parameters.
+			// And of course we assume that a Chunk cannot have both Chunk Parameters
+			// and Error Causes.
 			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 
 			// Here we assume that the Chunk has been validated so Length field is
 			// reliable. We want to be ready for Length field to include or not the
 			// possible padding of the last Chunk Parameter (as per RFC
 			// recommendation). In fact, we rely on parameter->GetLength() while
-			// parsing the buffer so we want to provide each ChunkParameter::Parse()
-			// with a 4-bytes padded buffer length.
+			// parsing the buffer so we want to provide each
+			// ChunkParameter::StrictParse() call with a 4-bytes padded buffer length.
 			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(GetLengthField());
 
 			while (ptr < end)
@@ -430,6 +522,94 @@ namespace RTC
 			return true;
 		}
 
+		bool Chunk::ParseErrorCauses()
+		{
+			MS_TRACE();
+
+			AssertCanHaveErrorCauses();
+
+			// Here we assume that the Chunk buffer has been validated and
+			// GetLength() returns the fixed minimum length of the specific Chunk
+			// subclass, so GetBuffer() + GetLength() points to the beginning of
+			// the potential Error Causes.
+			// And of course we assume that a Chunk cannot have both Chunk Parameters
+			// and Error Causes.
+			auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+
+			// Here we assume that the Chunk has been validated so Length field is
+			// reliable. We want to be ready for Length field to include or not the
+			// possible padding of the last Error Cause (as per RFCrecommendation).
+			// In fact, we rely on errorCause->GetLength() while parsing the buffer
+			// so we want to provide each ErrorCause::StrictParse() call with a
+			// 4-bytes padded buffer length.
+			const auto* end = GetBuffer() + Utils::Byte::PadTo4Bytes(GetLengthField());
+
+			while (ptr < end)
+			{
+				// The remaining length in the given length is the potential buffer
+				// length of the Error Cause.
+				size_t errorCauseMaxBufferLength = end - ptr;
+
+				// Here we must anticipate the type of each Error Cause to use its
+				// appropriate parser.
+				ErrorCause::ErrorCauseCode causeCode;
+				uint16_t causeLength;
+				uint8_t padding;
+
+				if (!ErrorCause::IsErrorCause(ptr, errorCauseMaxBufferLength, causeCode, causeLength, padding))
+				{
+					MS_WARN_TAG(sctp, "not a SCTP Error Cause");
+
+					return false;
+				}
+
+				ErrorCause* errorCause{ nullptr };
+
+				// TODO: Add more.
+				switch (causeCode)
+				{
+					// case ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER:
+					// {
+					// 	errorCause = InvalidStreamIdentifierErrorCause::ParseStrict(
+					// 	  ptr, causeLength + padding, causeLength, padding);
+
+					// 	break;
+					// }
+
+					// default:
+					// {
+					// 	errorCause = UnknownErrorCause::ParseStrict(
+					// 	  ptr, causeLength + padding, causeLength, padding);
+					// }
+				}
+
+				if (!errorCause)
+				{
+					return false;
+				}
+
+				this->errorCauses.push_back(errorCause);
+
+				ptr += errorCause->GetLength();
+			}
+
+			if (ptr != end)
+			{
+				auto expectedLength = end - GetBuffer();
+				auto computedLength = ptr - GetBuffer();
+
+				MS_WARN_TAG(
+				  sctp,
+				  "computed length (%zu bytes) doesn't match the expected length (%zu bytes)",
+				  computedLength,
+				  expectedLength);
+
+				return false;
+			}
+
+			return true;
+		}
+
 		void Chunk::HandleInPlaceParameter(ChunkParameter* parameter)
 		{
 			MS_TRACE();
@@ -455,13 +635,13 @@ namespace RTC
 					  // buffer.
 					  SetLength(previousLength + parameter->GetLength());
 
-					  // Here we have to update the Chunk Value Length and this is not easy
-					  // because we have to take into account the padding of all Parameters
-					  // but the last one. So we do this:
+					  // Here we have to update the Chunk Value Length and this is not
+					  // easy because we have to take into account the padding of all
+					  // Parameters but the last one. So we do this:
 					  // - We assume that Parameters are always at the end of the Chunk.
 					  // - We read the Parameter Length field of the new added Parameter.
-					  // - We add it to the previous total length of the Chunk and
-					  //   set the Chunk Length field with the resulting value.
+					  // - We add it to the previous total length of the Chunk and set
+					  //   the Chunk Length field with the resulting value.
 					  //
 					  // NOTE: This will throw if computed Length field value is too big.
 					  SetLengthField(previousLength + parameter->GetLengthField());
@@ -480,6 +660,58 @@ namespace RTC
 			  });
 		}
 
+		void Chunk::HandleInPlaceErrorCause(ErrorCause* errorCause)
+		{
+			MS_TRACE();
+
+			// When the application completes the Error Cause it must call
+			// `errorCause->Consolidate()` and that will trigger this event.
+			errorCause->SetConsolidatedListener(
+			  [this, errorCause]()
+			  {
+				  // Fix buffer length assigned to the Error Cause.
+				  errorCause->SetBufferLength(errorCause->GetLength());
+
+				  // Freeze the Error Cause.
+				  errorCause->Freeze();
+
+				  auto previousLength      = GetLength();
+				  auto previousLengthField = GetLengthField();
+
+				  try
+				  {
+					  // Update Chunk length.
+					  // NOTE: This will throw if there is no enough space in the Chunk
+					  // buffer.
+					  SetLength(previousLength + errorCause->GetLength());
+
+					  // Here we have to update the Chunk Value Length and this is not
+					  // easy because we have to take into account the padding of all
+					  // Error Causes but the last one. So we do this:
+					  // - We assume that Error Causes are always at the end of the
+					  //   Chunk.
+					  // - We read the Error Cause Length field of the new added Error
+					  //   Cause.
+					  // - We add it to the previous total length of the Chunk and set
+					  //   the Chunk Length field with the resulting value.
+					  //
+					  // NOTE: This will throw if computed Length field value is too big.
+					  SetLengthField(previousLength + errorCause->GetLengthField());
+				  }
+				  catch (const MediaSoupError& error)
+				  {
+					  // Rollback.
+					  SetLength(previousLength);
+					  SetLengthField(previousLengthField);
+
+					  throw;
+				  }
+
+				  // Add the Error Cause to the list.
+				  this->errorCauses.push_back(errorCause);
+			  });
+		}
+
 		void Chunk::AssertCanHaveParameters() const
 		{
 			MS_TRACE();
@@ -487,6 +719,16 @@ namespace RTC
 			if (!CanHaveParameters())
 			{
 				MS_THROW_ERROR("this Chunk class cannot have Chunk Parameters");
+			}
+		}
+
+		void Chunk::AssertCanHaveErrorCauses() const
+		{
+			MS_TRACE();
+
+			if (!CanHaveErrorCauses())
+			{
+				MS_THROW_ERROR("this Chunk class cannot have Error Causes");
 			}
 		}
 	} // namespace SCTP

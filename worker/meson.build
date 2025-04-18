@@ -202,6 +202,7 @@ common_sources = [
   'src/RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
+  'src/RTC/SCTP/ErrorCause.cpp',
 ]
 
 openssl_proj = subproject(

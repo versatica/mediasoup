@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
+#include "RTC/SCTP/ErrorCause.hpp"
 #include "RTC/Serializable.hpp"
 #include <string>
 #include <unordered_map>
@@ -47,6 +48,7 @@ namespace RTC
 
 		public:
 			using ChunkParametersIterator = typename std::vector<ChunkParameter*>::const_iterator;
+			using ErrorCausesIterator     = typename std::vector<ErrorCause*>::const_iterator;
 
 		public:
 			/**
@@ -96,7 +98,7 @@ namespace RTC
 				 * length of the Chunk in bytes, including the Chunk Type, Chunk Flags,
 				 * Chunk Length and Chunk Value fields. So if the Chunk Value field is
 				 * zero-length, the Length field must be 4. The Chunk Length field does
-				 * not count any chunk padding.
+				 * not count any padding.
 				 */
 				uint16_t length;
 			};
@@ -137,7 +139,7 @@ namespace RTC
 			 *
 			 * @param buffer
 			 * @param bufferLength - Can be greater than real Chunk length.
-			 * @param chunkType - If given buffer is a valid FooItem then `chunkType`
+			 * @param chunkType - If given buffer is a valid Chunk then `chunkType`
 			 *   is rewritten to parsed ChunkType.
 			 * @param chunkLength - If given buffer is a valid Chunk then
 			 *   `chunkLength` is rewritten to the value of the Chunk Length field.
@@ -303,6 +305,107 @@ namespace RTC
 				return parameter;
 			}
 
+			/**
+			 * Whether this type of Chunk can have Error Causes. Subclasses must
+			 * override this method if they can have Error Causes.
+			 */
+			virtual bool CanHaveErrorCauses() const
+			{
+				return false;
+			}
+
+			virtual bool HasErrorCauses() const final
+			{
+				return this->errorCauses.size() > 0;
+			}
+
+			virtual size_t GetErrorCausesCount() const final
+			{
+				return this->errorCauses.size();
+			}
+
+			virtual ErrorCausesIterator ErrorCausesBegin() const final
+			{
+				return this->errorCauses.begin();
+			}
+
+			virtual ErrorCausesIterator ErrorCausesEnd() const final
+			{
+				return this->errorCauses.end();
+			}
+
+			virtual const ErrorCause* GetErrorCauseAt(size_t idx) const final
+			{
+				if (idx >= this->errorCauses.size())
+				{
+					return nullptr;
+				}
+
+				return this->errorCauses[idx];
+			}
+
+			/**
+			 * Clone given Error Cause into Chunk's buffer.
+			 *
+			 * @remarks
+			 * Once this method is called, the caller may want to free the original
+			 * given Error Cause.
+			 *
+			 * @throw MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 */
+			virtual void AddErrorCause(const ErrorCause* errorCause) final;
+
+			/**
+			 * Build a Error Cause within the Chunk's buffer and append it to the
+			 * list of Error Causes. The caller can perform modifications in that
+			 * Error Cause and those will affect the Chunk body where the Error Cause
+			 * is serialzed. The desired Error Cause class type is given via template
+			 * argument.
+			 *
+			 * @returns Pointer of the created Error Cause specific class.
+			 *
+			 * @throw MediaSoupError - If the Chunk subclass cannot have Error Causes.
+			 *
+			 * @remarks
+			 * - The caller MUST invoke `Consolidate()` once the Error Cause is
+			 *   completed.
+			 * - The caller MUST NOT call `BuildChunkInPlace()` while other Error
+			 *   Cause is in progress.
+			 * - The caller MUST NOT free the obtained Error Cause pointer since it's
+			 *   now part of the Chunk.
+			 * - Method implemented in header file due to C++ template usage.
+			 *
+			 * @example
+			 * ```c++
+			 * auto* noUserDataErrorCause =
+			 *   chunk->BuildErrorCauseInPlace<NoUserDataErrorCause>();
+			 * ```
+			 */
+			template<typename T>
+			T* BuildErrorCauseInPlace()
+			{
+				AssertNotFrozen();
+				AssertCanHaveErrorCauses();
+
+				// The new Error Cause will be added after other Error Causes in the
+				// Chunk, this is, at the end of the Chunk, whose length we know it's
+				// padded to 4 bytes, and each Error Cause total length is also
+				// multiple of 4 bytes.
+				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
+				// The remaining length in the buffer is the potential buffer length
+				// of the Error Cause.
+				size_t errorCauseMaxBufferLength = GetBufferLength() - (ptr - GetBuffer());
+
+				auto* errorCause = T::Factory(ptr, errorCauseMaxBufferLength);
+
+				// NOTE: Do not fix/update the Error Cause buffer length since the
+				// caller probably wants to modify the Error Cause.
+
+				HandleInPlaceErrorCause(errorCause);
+
+				return errorCause;
+			}
+
 		protected:
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
@@ -313,6 +416,11 @@ namespace RTC
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
 			virtual void DumpParameters(int indentation) const final;
+
+			/**
+			 * Subclasses must invoke this method within their Dump() method.
+			 */
+			virtual void DumpErrorCauses(int indentation) const final;
 
 			virtual void SoftSerialize(const uint8_t* buffer) final;
 
@@ -406,7 +514,7 @@ namespace RTC
 			}
 
 			/**
-			 * @throw MediaSoupError - If given `length` is higher than mazimmun
+			 * @throw MediaSoupError - If given `length` is higher than maximmun
 			 *   allowed one (65535).
 			 */
 			virtual void SetLengthField(size_t length) final;
@@ -470,6 +578,22 @@ namespace RTC
 			 */
 			virtual bool ParseParameters() final;
 
+			/**
+			 * To be called by each subclass of Chunk if Error Causes parsing is
+			 * needed. It creates ErrorCause subclasses and adds them to the Chunk.
+			 *
+			 * @remarks
+			 * This method assumes that the Chunk basic parsing has been made already
+			 * so current length of the Chunk is the fixed length of the specific
+			 * Chunk class.
+			 *
+			 * @return True if no error happened while parsing Error Causes.
+			 *
+			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
+			 *   Parameters.
+			 */
+			virtual bool ParseErrorCauses() final;
+
 		private:
 			/**
 			 * NOTE: Return ChunkHeader* instead of const ChunkHeader* since we may
@@ -480,9 +604,9 @@ namespace RTC
 				return reinterpret_cast<ChunkHeader*>(const_cast<uint8_t*>(GetBuffer()));
 			}
 
-			virtual void SetType(ChunkType type) final
+			virtual void SetType(ChunkType chunkType) final
 			{
-				GetHeaderPointer()->type = type;
+				GetHeaderPointer()->type = chunkType;
 			}
 
 			virtual void SetFlags(uint8_t flags) final
@@ -502,11 +626,17 @@ namespace RTC
 
 			virtual void HandleInPlaceParameter(ChunkParameter* parameter) final;
 
+			virtual void HandleInPlaceErrorCause(ErrorCause* errorCause) final;
+
 			virtual void AssertCanHaveParameters() const final;
+
+			virtual void AssertCanHaveErrorCauses() const final;
 
 		private:
 			// Chunk Parameters.
 			std::vector<ChunkParameter*> parameters;
+			// Error Causes.
+			std::vector<ErrorCause*> errorCauses;
 		};
 	} // namespace SCTP
 } // namespace RTC
