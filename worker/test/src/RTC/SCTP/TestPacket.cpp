@@ -160,7 +160,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk1->GetI() == true);
 		REQUIRE(chunk1->GetU() == false);
@@ -188,7 +190,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b00001100,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk2->HasUnknownValue() == true);
 		REQUIRE(chunk2->GetUnknownValueLength() == 3);
@@ -211,7 +215,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 1);
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		auto* parameter3_1 =
 		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
@@ -279,7 +285,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk1->GetI() == true);
 		REQUIRE(chunk1->GetU() == false);
@@ -307,7 +315,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b00001100,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk2->HasUnknownValue() == true);
 		REQUIRE(chunk2->GetUnknownValueLength() == 3);
@@ -330,7 +340,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 1);
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		parameter3_1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
 
@@ -386,7 +398,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk1->GetI() == true);
 		REQUIRE(chunk1->GetU() == false);
@@ -414,7 +428,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b00001100,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk2->HasUnknownValue() == true);
 		REQUIRE(chunk2->GetUnknownValueLength() == 3);
@@ -437,7 +453,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 1);
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		parameter3_1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
 
@@ -616,7 +634,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 2);
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(obtainedChunk1->GetInitiateTag() == 87654321);
 		REQUIRE(obtainedChunk1->GetAdvertisedReceiverWindowCredit() == 12345678);
@@ -664,7 +684,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 1);
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		CHECK_PARAMETER(
 		  /*parameter*/ obtainedParameter2_1,

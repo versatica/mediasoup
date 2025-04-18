@@ -18,7 +18,7 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		{
 			// Type:0xEE (UNKNOWN), Flags: 0b1100, Length: 7
 			0xEE, 0b10001100, 0x00, 0x07,
-			// Unknown data: 0xAABBCC, 1 byte of padding
+			// Unknown value: 0xAABBCC, 1 byte of padding
 			0xAA, 0xBB, 0xCC, 0x00,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC
@@ -41,7 +41,9 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->HasUnknownValue() == true);
 		REQUIRE(chunk->GetUnknownValueLength() == 3);
@@ -66,7 +68,9 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->HasUnknownValue() == true);
 		REQUIRE(chunk->GetUnknownValueLength() == 3);
@@ -93,7 +97,9 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(clonedChunk->HasUnknownValue() == true);
 		REQUIRE(clonedChunk->GetUnknownValueLength() == 3);

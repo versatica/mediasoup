@@ -7,8 +7,10 @@
 #include "helpers.hpp" // in worker/test/include/
 #include "RTC/SCTP/Chunk.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
+#include "RTC/SCTP/ErrorCause.hpp"
 #include "RTC/SCTP/Packet.hpp"
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
+#include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 using namespace RTC::SCTP;
@@ -70,7 +72,9 @@ void resetBuffers();
   /*Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType,                                    \
   /*uint8_t*/ flags,                                                                                 \
   /*bool*/ canHaveParameters,                                                                        \
-  /*size_t*/ parametersCount)                                                                        \
+  /*size_t*/ parametersCount,                                                                        \
+  /*bool*/ canHaveErrorCauses,                                                                       \
+  /*size_t*/ errorCausesCount)                                                                       \
 	do                                                                                                 \
 	{                                                                                                  \
 		REQUIRE(chunk);                                                                                  \
@@ -100,6 +104,17 @@ void resetBuffers();
 		REQUIRE((chunk)->GetParametersCount() == parametersCount);                                       \
 		REQUIRE((chunk)->HasParameters() == parametersCount > 0);                                        \
 		REQUIRE((chunk)->GetParameterAt(parametersCount) == nullptr);                                    \
+		REQUIRE((chunk)->CanHaveErrorCauses() == canHaveErrorCauses);                                    \
+		if (!canHaveErrorCauses && !frozen)                                                              \
+		{                                                                                                \
+			REQUIRE_THROWS_AS(                                                                             \
+			  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))                                    \
+			    ->BuildErrorCauseInPlace<InvalidStreamIdentifierErrorCause>(),                             \
+			  MediaSoupError);                                                                             \
+		}                                                                                                \
+		REQUIRE((chunk)->GetErrorCausesCount() == errorCausesCount);                                     \
+		REQUIRE((chunk)->HasErrorCauses() == errorCausesCount > 0);                                      \
+		REQUIRE((chunk)->GetErrorCauseAt(errorCausesCount) == nullptr);                                  \
 		if (buffer)                                                                                      \
 		{                                                                                                \
 			REQUIRE(                                                                                       \
@@ -151,6 +166,46 @@ void resetBuffers();
 		  MediaSoupError);                                                                              \
 		REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, length - 1), MediaSoupError);                   \
 	}                                                                                                 \
+	while (false)
+
+#define CHECK_ERROR_CAUSE(                                                                         \
+  /*const ErrorCause**/ errorCause,                                                                \
+  /*const uint8_t**/ buffer,                                                                       \
+  /*size_t*/ bufferLength,                                                                         \
+  /*size_t*/ length,                                                                               \
+  /*bool*/ frozen,                                                                                 \
+  /*ErrorCause::ErrorCauseCode*/ causeCode,                                                        \
+  /*bool*/ unknownCode,                                                                            \
+  /*uint16_t*/ valueLength)                                                                        \
+	{                                                                                                \
+		REQUIRE(errorCause);                                                                           \
+		REQUIRE(errorCause->GetBuffer() != nullptr);                                                   \
+		if (buffer)                                                                                    \
+		{                                                                                              \
+			REQUIRE(errorCause->GetBuffer() == buffer);                                                  \
+		}                                                                                              \
+		REQUIRE((errorCause)->GetBufferLength() != 0);                                                 \
+		REQUIRE(errorCause->GetBufferLength() == bufferLength);                                        \
+		REQUIRE(errorCause->GetLength() != 0);                                                         \
+		REQUIRE(errorCause->GetLength() == length);                                                    \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(errorCause->GetLength()) == true);                       \
+		REQUIRE(errorCause->IsFrozen() == frozen);                                                     \
+		REQUIRE(errorCause->GetCode() == causeCode);                                                   \
+		REQUIRE(errorCause->HasUnknownCode() == unknownCode);                                          \
+		REQUIRE(errorCause->HasValue() == valueLength > 0);                                            \
+		REQUIRE(errorCause->GetValueLength() == valueLength);                                          \
+		if (buffer)                                                                                    \
+		{                                                                                              \
+			REQUIRE(                                                                                     \
+			  helpers::areBuffersEqual(                                                                  \
+			    errorCause->GetBuffer(), errorCause->GetLength(), buffer, length) == true);              \
+		}                                                                                              \
+		REQUIRE_THROWS_AS(                                                                             \
+		  const_cast<ErrorCause*>(reinterpret_cast<const ErrorCause*>(errorCause))                     \
+		    ->Serialize(ThrowBuffer, length - 1),                                                      \
+		  MediaSoupError);                                                                             \
+		REQUIRE_THROWS_AS(errorCause->Clone(ThrowBuffer, length - 1), MediaSoupError);                 \
+	}                                                                                                \
 	while (false)
 
 #endif

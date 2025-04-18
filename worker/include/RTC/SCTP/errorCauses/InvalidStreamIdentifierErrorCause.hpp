@@ -1,0 +1,93 @@
+#ifndef MS_RTC_SCTP_INVALID_STREAM_IDENTIFIER_ERROR_CAUSE_HPP
+#define MS_RTC_SCTP_INVALID_STREAM_IDENTIFIER_ERROR_CAUSE_HPP
+
+#include "common.hpp"
+#include "Utils.hpp"
+#include "RTC/SCTP/ErrorCause.hpp"
+
+namespace RTC
+{
+	namespace SCTP
+	{
+		/**
+		 * Invalid Stream Identifier Error Cause (INVALID_STREAM_IDENTIFIER) (1)
+		 *
+		 * @see RFC 9260.
+		 *
+		 *  0                   1                   2                   3
+		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |        Cause Code = 1         |       Cause Length = 8        |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 * |       Stream Identifier       |          (Reserved)           |
+		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+		 */
+
+		// Forward declaration.
+		class Chunk;
+
+		class InvalidStreamIdentifierErrorCause : public ErrorCause
+		{
+			// We need that Chunk calls protected and private methods in this class.
+			friend class Chunk;
+
+		public:
+			static const size_t InvalidStreamIdentifierErrorCauseLength{ 8 };
+
+		public:
+			/**
+			 * Parse a InvalidStreamIdentifierErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` may exceed the exact length of the Error Cause.
+			 */
+			static InvalidStreamIdentifierErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Parse a InvalidStreamIdentifierErrorCause.
+			 *
+			 * @remarks
+			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 */
+			static InvalidStreamIdentifierErrorCause* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
+
+			/**
+			 * Create a InvalidStreamIdentifierErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static InvalidStreamIdentifierErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
+			 * Only used by Parse(), ParseStrict() and Factory() static methods.
+			 */
+			InvalidStreamIdentifierErrorCause(uint8_t* buffer, size_t bufferLength);
+
+		public:
+			virtual ~InvalidStreamIdentifierErrorCause() override;
+
+			virtual void Dump(int indentation = 0) const override final;
+
+			virtual InvalidStreamIdentifierErrorCause* Clone(
+			  uint8_t* buffer, size_t bufferLength) const override final;
+
+			const uint16_t GetStreamIdentifier() const
+			{
+				return Utils::Byte::Get2Bytes(GetValuePointer(), 0);
+			}
+
+			void SetStreamIdentifier(uint16_t value);
+
+		protected:
+			virtual InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final override;
+
+		private:
+			void SetReserved();
+		};
+	} // namespace SCTP
+} // namespace RTC
+
+#endif

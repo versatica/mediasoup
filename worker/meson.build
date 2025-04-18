@@ -203,6 +203,8 @@ common_sources = [
   'src/RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
   'src/RTC/SCTP/ErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/UnknownErrorCause.cpp',
 ]
 
 openssl_proj = subproject(
@@ -414,6 +416,8 @@ test_sources = [
   'test/src/RTC/SCTP/chunkParameters/TestIPv6AddressChunkParameter.cpp',
   'test/src/RTC/SCTP/chunkParameters/TestCookiePreservativeChunkParameter.cpp',
   'test/src/RTC/SCTP/chunkParameters/TestUnknownChunkParameter.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestInvalidStreamIdentifierErrorCause.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestUnknownErrorCause.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',
   'test/src/Utils/TestIP.cpp',

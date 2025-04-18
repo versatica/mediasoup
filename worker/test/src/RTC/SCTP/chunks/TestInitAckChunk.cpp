@@ -52,7 +52,9 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 1);
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetInitiateTag() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
@@ -96,7 +98,9 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetInitiateTag() == 0);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
@@ -131,7 +135,9 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 1);
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetInitiateTag() == 1111111110);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 2222222220);

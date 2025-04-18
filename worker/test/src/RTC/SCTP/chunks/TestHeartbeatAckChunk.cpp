@@ -52,7 +52,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 2);
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
 
@@ -119,7 +121,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 2);
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
 
@@ -184,7 +188,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 2);
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
 
@@ -248,7 +254,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		/* Modify it by adding Chunk Parameters. */
 
@@ -277,7 +285,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 2);
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		const auto* addedParameter1 =
 		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
@@ -343,7 +353,9 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
-		  /*parametersCount*/ 2);
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		const auto* parsedParameter1 =
 		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(parsedChunk->GetParameterAt(0));

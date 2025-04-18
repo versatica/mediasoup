@@ -44,7 +44,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->HasCookie() == true);
 		REQUIRE(chunk->GetCookieLength() == 5);
@@ -79,7 +81,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->HasCookie() == true);
 		REQUIRE(chunk->GetCookieLength() == 5);
@@ -112,7 +116,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(clonedChunk->HasCookie() == true);
 		REQUIRE(clonedChunk->GetCookieLength() == 5);
@@ -144,7 +150,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->HasCookie() == false);
 		REQUIRE(chunk->GetCookieLength() == 0);
@@ -177,7 +185,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->HasCookie() == true);
 		REQUIRE(chunk->GetCookieLength() == 3);
@@ -204,7 +214,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(parsedChunk->HasCookie() == true);
 		REQUIRE(parsedChunk->GetCookieLength() == 3);
@@ -232,7 +244,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE_THROWS_AS(chunk->SetCookie(ThrowBuffer, 65535), MediaSoupError);
 
@@ -247,7 +261,9 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		delete chunk;
 	}

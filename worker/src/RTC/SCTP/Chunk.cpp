@@ -10,6 +10,8 @@
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
+#include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include <cstring> // std::memmove()
 #include <limits>  // std::numeric_limits()
 
@@ -568,19 +570,19 @@ namespace RTC
 				// TODO: Add more.
 				switch (causeCode)
 				{
-					// case ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER:
-					// {
-					// 	errorCause = InvalidStreamIdentifierErrorCause::ParseStrict(
-					// 	  ptr, causeLength + padding, causeLength, padding);
+					case ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER:
+					{
+						errorCause = InvalidStreamIdentifierErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
 
-					// 	break;
-					// }
+						break;
+					}
 
-					// default:
-					// {
-					// 	errorCause = UnknownErrorCause::ParseStrict(
-					// 	  ptr, causeLength + padding, causeLength, padding);
-					// }
+					default:
+					{
+						errorCause =
+						  UnknownErrorCause::ParseStrict(ptr, causeLength + padding, causeLength, padding);
+					}
 				}
 
 				if (!errorCause)

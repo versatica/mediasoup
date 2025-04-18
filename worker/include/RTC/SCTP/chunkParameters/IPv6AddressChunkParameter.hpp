@@ -64,7 +64,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Private constructor used by Parse() and Factory() static methods.
+			 * Only used by Parse(), ParseStrict() and Factory() static methods.
 			 */
 			IPv6AddressChunkParameter(uint8_t* buffer, size_t bufferLength);
 

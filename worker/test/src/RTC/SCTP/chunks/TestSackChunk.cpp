@@ -52,7 +52,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
@@ -88,7 +90,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
@@ -121,7 +125,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 287454020);
 		REQUIRE(clonedChunk->GetAdvertisedReceiverWindowCredit() == 4278216311);
@@ -232,7 +238,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 0);
@@ -262,7 +270,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 1234);
 		REQUIRE(chunk->GetAdvertisedReceiverWindowCredit() == 5678);
@@ -296,7 +306,9 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
-		  /*parametersCount*/ 0);
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 1234);
 		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 5678);

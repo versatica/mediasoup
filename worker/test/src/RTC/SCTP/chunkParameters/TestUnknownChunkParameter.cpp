@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
@@ -19,7 +18,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		{
 			// Type:49159 (UNKNOWN), Length: 11
 			0xC0, 0x07, 0x00, 0x0B,
-			// Unknown data: 0x0123456789ABCD
+			// Unknown value: 0x0123456789ABCD
 			0x01, 0x23, 0x45, 0x67,
 			// 1 byte of padding
 			0x89, 0xAB, 0xCD, 0x00,
@@ -125,7 +124,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		{
 			// Type:49159 (UNKNOWN), Length: 3
 			0xC0, 0x07, 0x00, 0x03,
-			// Unknown data: 0x0123456789ABCD
+			// Unknown value: 0x0123456789ABCD
 			0x01, 0x23, 0x45, 0x67,
 			// 1 byte of padding
 			0x89, 0xAB, 0xCD, 0x00,
@@ -140,7 +139,7 @@ SCENARIO("Unknown Chunk Parameter", "[sctp][serializable]")
 		{
 			// Type:49159 (UNKNOWN), Length: 11
 			0xC0, 0x07, 0x00, 0x0B,
-			// Unknown data: 0x0123456789ABCD
+			// Unknown value: 0x0123456789ABCD
 			0x01, 0x23, 0x45, 0x67,
 			// 1 byte of padding (missing)
 			0x89, 0xAB, 0xCD

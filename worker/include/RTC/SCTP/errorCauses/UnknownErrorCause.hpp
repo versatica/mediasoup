@@ -1,22 +1,21 @@
-#ifndef MS_RTC_SCTP_UNKNOWN_CHUNK_PARAMETER_HPP
-#define MS_RTC_SCTP_UNKNOWN_CHUNK_PARAMETER_HPP
+#ifndef MS_RTC_SCTP_UNKNOWN_ERROR_CAUSE_HPP
+#define MS_RTC_SCTP_UNKNOWN_ERROR_CAUSE_HPP
 
 #include "common.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
+#include "RTC/SCTP/ErrorCause.hpp"
 
 namespace RTC
 {
 	namespace SCTP
 	{
 		/**
-		 * SCTP Unknown Chunk Parameter.
+		 * Invalid Stream Identifier Error Cause (INVALID_STREAM_IDENTIFIER) (1)
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |        Parameter Type         |       Parameter Length        |
+		 * |          Cause Code           |         Cause Length          |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * \                                                               \
 		 * /                         Unknown Value                         /
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -25,43 +24,43 @@ namespace RTC
 		// Forward declaration.
 		class Chunk;
 
-		class UnknownChunkParameter : public ChunkParameter
+		class UnknownErrorCause : public ErrorCause
 		{
 			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
 			/**
-			 * Parse a UnknownChunkParameter.
+			 * Parse a UnknownErrorCause.
 			 *
 			 * @remarks
-			 * `bufferLength` may exceed the exact length of the Chunk Parameter.
+			 * `bufferLength` may exceed the exact length of the Error Cause.
 			 */
-			static UnknownChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
+			static UnknownErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Parse a UnknownChunkParameter.
+			 * Parse a UnknownErrorCause.
 			 *
 			 * @remarks
-			 * To be used only by `Chunk::ParseParameters()`.
+			 * To be used only by `Chunk::ParseErrorCauses()`.
 			 */
-			static UnknownChunkParameter* ParseStrict(
-			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
+			static UnknownErrorCause* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
 
 		private:
 			/**
 			 * Only used by Parse() and ParseStrict() static methods.
 			 */
-			UnknownChunkParameter(uint8_t* buffer, size_t bufferLength);
+			UnknownErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnknownChunkParameter() override;
+			virtual ~UnknownErrorCause() override;
 
 			virtual void Dump(int indentation = 0) const override final;
 
-			virtual UnknownChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			virtual UnknownErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual bool HasUnknownType() const override
+			virtual bool HasUnknownCode() const override
 			{
 				return true;
 			}
@@ -82,7 +81,10 @@ namespace RTC
 			}
 
 		protected:
-			virtual UnknownChunkParameter* SoftClone(const uint8_t* buffer) const final override;
+			virtual UnknownErrorCause* SoftClone(const uint8_t* buffer) const final override;
+
+		private:
+			void SetReserved();
 		};
 	} // namespace SCTP
 } // namespace RTC

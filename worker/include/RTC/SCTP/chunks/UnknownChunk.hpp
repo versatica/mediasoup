@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Unknown Chunk.
+		 * SCTP Unknown Chunk.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -50,7 +50,7 @@ namespace RTC
 
 		private:
 			/**
-			 * Private constructor used by Parse() static method.
+			 * Only used by Parse() and ParseStrict() static methods.
 			 */
 			UnknownChunk(uint8_t* buffer, size_t bufferLength);
 
