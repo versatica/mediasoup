@@ -74,6 +74,7 @@ namespace RTC
 
 			virtual CookieAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+		protected:
 			virtual CookieAckChunk* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP

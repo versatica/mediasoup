@@ -129,10 +129,6 @@ namespace RTC
 
 			virtual ChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
-			virtual ChunkParameter* SoftClone(const uint8_t* buffer) const = 0;
-
-			virtual void SoftCloneInto(ChunkParameter* parameter) const final;
-
 			virtual ChunkParameterType GetType() const final
 			{
 				return static_cast<ChunkParameterType>(
@@ -187,6 +183,10 @@ namespace RTC
 			virtual void DumpCommon(int indentation) const final;
 
 			virtual void SoftSerialize(const uint8_t* buffer) final;
+
+			virtual ChunkParameter* SoftClone(const uint8_t* buffer) const = 0;
+
+			virtual void SoftCloneInto(ChunkParameter* parameter) const final;
 
 			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
 

@@ -75,8 +75,6 @@ namespace RTC
 
 			virtual IPv6AddressChunkParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual IPv6AddressChunkParameter* SoftClone(const uint8_t* buffer) const final override;
-
 			/**
 			 * @return A pointer to a 16 bytes unsigned integer in network order
 			 * representing the binary encoded IPv6 value.
@@ -91,6 +89,9 @@ namespace RTC
 			 * representing the binary encoded IPv6 value.
 			 */
 			void SetIPv6Address(const uint8_t* ip);
+
+		protected:
+			virtual IPv6AddressChunkParameter* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP
 } // namespace RTC

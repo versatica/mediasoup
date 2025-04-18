@@ -44,6 +44,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
@@ -68,6 +69,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0x11223344);
@@ -90,6 +92,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 0x11223344);
@@ -111,6 +114,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
@@ -129,6 +133,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 99887766);
@@ -149,6 +154,7 @@ SCENARIO("SCTP Shutdown Association Chunk (7)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 99887766);

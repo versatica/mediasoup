@@ -74,14 +74,15 @@ namespace RTC
 			virtual CookiePreservativeChunkParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual CookiePreservativeChunkParameter* SoftClone(const uint8_t* buffer) const final override;
-
 			uint32_t GetLifeSpanIncrement() const
 			{
 				return Utils::Byte::Get4Bytes(GetValuePointer(), 0);
 			}
 
 			void SetLifeSpanIncrement(const uint32_t increment);
+
+		protected:
+			virtual CookiePreservativeChunkParameter* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP
 } // namespace RTC

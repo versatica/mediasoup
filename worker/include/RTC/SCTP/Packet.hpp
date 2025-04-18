@@ -177,6 +177,7 @@ namespace RTC
 			 *   in progress.
 			 * - The caller MUST NOT free the obtained Chunk pointer since it's now
 			 *   part of the Packet.
+			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
 			 * ```c++

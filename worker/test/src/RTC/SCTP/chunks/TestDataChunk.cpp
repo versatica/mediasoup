@@ -50,6 +50,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == true);
@@ -70,7 +71,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
-		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<IPv4AddressChunkParameter>(), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetI(true), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetE(true), MediaSoupError);
 		REQUIRE_THROWS_AS(chunk->SetTsn(12345678), MediaSoupError);
@@ -95,6 +95,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == true);
@@ -131,6 +132,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetI() == true);
@@ -166,6 +168,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == false);
@@ -213,6 +216,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetI() == true);
@@ -247,6 +251,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetI() == true);
@@ -282,6 +287,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE_THROWS_AS(chunk->SetUserData(ThrowBuffer, 65535), MediaSoupError);
@@ -296,6 +302,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		delete chunk;

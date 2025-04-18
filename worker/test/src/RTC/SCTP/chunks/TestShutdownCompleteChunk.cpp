@@ -36,6 +36,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
@@ -60,6 +61,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
@@ -82,6 +84,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetT() == true);
@@ -103,6 +106,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == false);
@@ -121,6 +125,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
@@ -141,6 +146,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetT() == true);

@@ -112,7 +112,10 @@ namespace RTC
 
 			virtual InitChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual InitChunk* SoftClone(const uint8_t* buffer) const final override;
+			virtual bool CanHaveParameters() const final
+			{
+				return true;
+			}
 
 			uint32_t GetInitiateTag() const
 			{
@@ -148,6 +151,9 @@ namespace RTC
 			}
 
 			void SetInitialTsn(uint32_t value);
+
+		protected:
+			virtual InitChunk* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -50,6 +50,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
@@ -118,6 +119,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
@@ -184,6 +186,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
@@ -280,6 +283,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
@@ -346,6 +350,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
@@ -411,6 +416,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 0);
 
 		/* Modify it by adding Chunk Parameters. */
@@ -439,6 +445,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		const auto* addedParameter1 =
@@ -504,6 +511,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 2);
 
 		const auto* parsedParameter1 =

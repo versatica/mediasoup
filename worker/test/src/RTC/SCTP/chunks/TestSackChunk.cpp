@@ -51,6 +51,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
@@ -86,6 +87,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 287454020);
@@ -118,6 +120,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(clonedChunk->GetCumulativeTsnAck() == 287454020);
@@ -228,6 +231,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 0);
@@ -257,6 +261,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetCumulativeTsnAck() == 1234);
@@ -290,6 +295,7 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(parsedChunk->GetCumulativeTsnAck() == 1234);

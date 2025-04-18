@@ -200,6 +200,15 @@ namespace RTC
 				return GetHeaderPointer()->flags;
 			}
 
+			/**
+			 * Whether this type of Chunk can have Chunk Parameters. Subclasses must
+			 * override this method if they can have Chunk Parameters.
+			 */
+			virtual bool CanHaveParameters() const
+			{
+				return false;
+			}
+
 			virtual bool HasParameters() const final
 			{
 				return this->parameters.size() > 0;
@@ -236,6 +245,9 @@ namespace RTC
 			 * @remarks
 			 * Once this method is called, the caller may want to free the original
 			 * given Chunk Parameter.
+			 *
+			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
+			 *   Parameters.
 			 */
 			virtual void AddParameter(const ChunkParameter* parameter) final;
 
@@ -248,6 +260,9 @@ namespace RTC
 			 *
 			 * @returns Pointer of the created Chunk Parameter specific class.
 			 *
+			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
+			 *   Parameters.
+			 *
 			 * @remarks
 			 * - The caller MUST invoke `Consolidate()` once the Parameter is
 			 *   completed.
@@ -255,6 +270,7 @@ namespace RTC
 			 *   is in progress.
 			 * - The caller MUST NOT free the obtained Parameter pointer since it's
 			 *   now part of the Chunk.
+			 * - Method implemented in header file due to C++ template usage.
 			 *
 			 * @example
 			 * ```c++
@@ -266,6 +282,7 @@ namespace RTC
 			T* BuildParameterInPlace()
 			{
 				AssertNotFrozen();
+				AssertCanHaveParameters();
 
 				// The new Parameter will be added after other Parameters in the Chunk,
 				// this is, at the end of the Chunk, whose length we know it's padded to
@@ -447,6 +464,9 @@ namespace RTC
 			 * Chunk class.
 			 *
 			 * @return True if no error happened while parsing Parameters.
+			 *
+			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
+			 *   Parameters.
 			 */
 			virtual bool ParseParameters() final;
 
@@ -481,6 +501,8 @@ namespace RTC
 			}
 
 			virtual void HandleInPlaceParameter(ChunkParameter* parameter) final;
+
+			virtual void AssertCanHaveParameters() const final;
 
 		private:
 			// Chunk Parameters.

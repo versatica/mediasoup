@@ -38,6 +38,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		/* Serialize it. */
@@ -56,6 +57,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		/* Clone it. */
@@ -76,6 +78,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b01000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		delete clonedChunk;
@@ -95,6 +98,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		/* Parse itself and compare. */
@@ -113,6 +117,7 @@ SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0);
 
 		delete parsedChunk;

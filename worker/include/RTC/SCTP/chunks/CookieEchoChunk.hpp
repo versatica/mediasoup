@@ -78,8 +78,6 @@ namespace RTC
 
 			virtual CookieEchoChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual CookieEchoChunk* SoftClone(const uint8_t* buffer) const final override;
-
 			bool HasCookie() const
 			{
 				return HasValue();
@@ -96,6 +94,9 @@ namespace RTC
 			}
 
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
+
+		protected:
+			virtual CookieEchoChunk* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP
 } // namespace RTC

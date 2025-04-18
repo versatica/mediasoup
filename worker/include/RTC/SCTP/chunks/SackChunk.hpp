@@ -118,8 +118,6 @@ namespace RTC
 
 			virtual SackChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual SackChunk* SoftClone(const uint8_t* buffer) const final override;
-
 			uint32_t GetCumulativeTsnAck() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
@@ -164,6 +162,8 @@ namespace RTC
 			void AddDuplicateTsn(uint32_t tsn);
 
 		protected:
+			virtual SackChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			/**
 			 * We need to override this method since this Chunk has a variable-length
 			 * value and the fixed header doesn't have default value.

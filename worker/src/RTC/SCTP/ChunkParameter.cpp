@@ -124,7 +124,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(
+			  indentation, "  length + padding: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  type: %" PRIu16 " (%s) (unknown: %s)",

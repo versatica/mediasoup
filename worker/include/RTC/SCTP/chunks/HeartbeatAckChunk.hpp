@@ -82,6 +82,12 @@ namespace RTC
 
 			virtual HeartbeatAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
+			virtual bool CanHaveParameters() const final
+			{
+				return true;
+			}
+
+		protected:
 			virtual HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP

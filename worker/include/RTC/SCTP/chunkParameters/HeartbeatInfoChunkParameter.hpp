@@ -71,8 +71,6 @@ namespace RTC
 			virtual HeartbeatInfoChunkParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual HeartbeatInfoChunkParameter* SoftClone(const uint8_t* buffer) const final override;
-
 			virtual bool HasInfo() const final
 			{
 				return HasValue();
@@ -89,6 +87,9 @@ namespace RTC
 			}
 
 			void SetInfo(const uint8_t* info, uint16_t infoLength);
+
+		protected:
+			virtual HeartbeatInfoChunkParameter* SoftClone(const uint8_t* buffer) const final override;
 		};
 	} // namespace SCTP
 } // namespace RTC

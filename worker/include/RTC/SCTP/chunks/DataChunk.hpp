@@ -116,8 +116,6 @@ namespace RTC
 
 			virtual DataChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			virtual DataChunk* SoftClone(const uint8_t* buffer) const final override;
-
 			bool GetI() const
 			{
 				return GetBit3();
@@ -192,6 +190,8 @@ namespace RTC
 			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
 
 		protected:
+			virtual DataChunk* SoftClone(const uint8_t* buffer) const final override;
+
 			/**
 			 * We need to override this method since this Chunk has a variable-length
 			 * value and the fixed header doesn't have default value.

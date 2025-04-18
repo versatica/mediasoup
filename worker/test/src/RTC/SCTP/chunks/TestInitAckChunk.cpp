@@ -51,6 +51,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 1);
 
 		REQUIRE(chunk->GetInitiateTag() == 287454020);
@@ -94,6 +95,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 0);
 
 		REQUIRE(chunk->GetInitiateTag() == 0);
@@ -128,6 +130,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 1);
 
 		REQUIRE(chunk->GetInitiateTag() == 1111111110);

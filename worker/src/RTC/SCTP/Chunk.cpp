@@ -123,9 +123,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			for (const auto* parameter : this->parameters)
+			if (CanHaveParameters())
 			{
-				delete parameter;
+				for (const auto* parameter : this->parameters)
+				{
+					delete parameter;
+				}
 			}
 		}
 
@@ -138,11 +141,14 @@ namespace RTC
 			// Invoke the parent method to copy the whole buffer.
 			Serializable::Serialize(buffer, bufferLength);
 
-			for (auto* parameter : this->parameters)
+			if (CanHaveParameters())
 			{
-				size_t offset = parameter->GetBuffer() - previousBuffer;
+				for (auto* parameter : this->parameters)
+				{
+					size_t offset = parameter->GetBuffer() - previousBuffer;
 
-				parameter->SoftSerialize(buffer + offset);
+					parameter->SoftSerialize(buffer + offset);
+				}
 			}
 		}
 
@@ -151,6 +157,7 @@ namespace RTC
 			MS_TRACE();
 
 			AssertNotFrozen();
+			AssertCanHaveParameters();
 
 			size_t length = GetLength() + parameter->GetLength();
 
@@ -180,7 +187,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(
+			  indentation, "  length + padding: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(
 			  indentation,
 			  "  type: %" PRIu8 " (%s) (unknown: %s)",
@@ -196,10 +204,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "  parameters count: %zu", GetParametersCount());
-			for (const auto* parameter : this->parameters)
+			if (CanHaveParameters())
 			{
-				parameter->Dump(indentation + 1);
+				MS_DUMP_CLEAN(indentation, "  parameters count: %zu", GetParametersCount());
+				for (const auto* parameter : this->parameters)
+				{
+					parameter->Dump(indentation + 1);
+				}
 			}
 		}
 
@@ -211,11 +222,14 @@ namespace RTC
 
 			SetBuffer(const_cast<uint8_t*>(buffer));
 
-			for (auto* parameter : this->parameters)
+			if (CanHaveParameters())
 			{
-				size_t offset = parameter->GetBuffer() - previousBuffer;
+				for (auto* parameter : this->parameters)
+				{
+					size_t offset = parameter->GetBuffer() - previousBuffer;
 
-				parameter->SoftSerialize(buffer + offset);
+					parameter->SoftSerialize(buffer + offset);
+				}
 			}
 		}
 
@@ -224,17 +238,20 @@ namespace RTC
 			MS_TRACE();
 
 			// Soft clone Chunk Parameters into the given Chunk.
-			for (auto* parameter : this->parameters)
+			if (CanHaveParameters())
 			{
-				size_t offset = parameter->GetBuffer() - GetBuffer();
+				for (auto* parameter : this->parameters)
+				{
+					size_t offset = parameter->GetBuffer() - GetBuffer();
 
-				auto* softClonedParameter = parameter->SoftClone(chunk->GetBuffer() + offset);
+					auto* softClonedParameter = parameter->SoftClone(chunk->GetBuffer() + offset);
 
-				// ChunkParameter constructors don't freeze the ChunkParameter so we
-				// must do it manually.
-				softClonedParameter->Freeze();
+					// ChunkParameter constructors don't freeze the ChunkParameter so we
+					// must do it manually.
+					softClonedParameter->Freeze();
 
-				chunk->parameters.push_back(softClonedParameter);
+					chunk->parameters.push_back(softClonedParameter);
+				}
 			}
 
 			// Need to manually set Serializable length.
@@ -305,6 +322,8 @@ namespace RTC
 		bool Chunk::ParseParameters()
 		{
 			MS_TRACE();
+
+			AssertCanHaveParameters();
 
 			// Here we assume that the Chunk buffer has been validated and
 			// GetLength() returns the fixed minimum length of the specific Chunk
@@ -459,6 +478,16 @@ namespace RTC
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
 			  });
+		}
+
+		void Chunk::AssertCanHaveParameters() const
+		{
+			MS_TRACE();
+
+			if (!CanHaveParameters())
+			{
+				MS_THROW_ERROR("this Chunk class cannot have Chunk Parameters");
+			}
 		}
 	} // namespace SCTP
 } // namespace RTC
