@@ -234,7 +234,7 @@ namespace RTC
 				throw;
 			}
 
-			// Add the new ack block.
+			// Add the new duplicate TSN.
 			Utils::Byte::Set4Bytes(GetDuplicateTsnsPointer(), +(GetNumberOfDuplicateTsns() * 4), tsn);
 
 			// Update the counter field.

@@ -135,6 +135,85 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
+	SECTION("SackChunk::Parse() fails")
+	{
+		// Length field doesn't match Number of Gap Ack Blocks + Number of
+		// Duplicate TSNs.
+		// clang-format off
+		uint8_t buffer1[] =
+		{
+			// Type:3 (SACK), Flags: 0b00000000, Length: 24 (should be 28)
+			0x03, 0b00000000, 0x00, 0x18,
+			// Cumulative TSN Ack: 287454020,
+			0x11, 0x22, 0x33, 0x44,
+			// Advertised Receiver Window Credit: 4278216311
+			0xFF, 0x00, 0x66, 0x77,
+			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 2
+			0x00, 0x01, 0x00, 0x02,
+			// Gap Ack Block 1: Start: 1000, End: 1999
+			0x03, 0xE8, 0x07, 0xCF,
+			// Duplicate TSN 1: 287454020,
+			0x11, 0x22, 0x33, 0x44,
+			// Duplicate TSN 2: 4278216311
+			0xFF, 0x00, 0x66, 0x77,
+			// Extra bytes that should be ignored
+			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
+		REQUIRE(!SackChunk::Parse(buffer1, sizeof(buffer1)));
+
+		// Length field doesn't match Number of Gap Ack Blocks + Number of
+		// Duplicate TSNs.
+		// clang-format off
+		uint8_t buffer2[] =
+		{
+			// Type:3 (SACK), Flags: 0b00000000, Length: 32 (should be 28)
+			0x03, 0b00000000, 0x00, 0x20,
+			// Cumulative TSN Ack: 287454020,
+			0x11, 0x22, 0x33, 0x44,
+			// Advertised Receiver Window Credit: 4278216311
+			0xFF, 0x00, 0x66, 0x77,
+			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 2
+			0x00, 0x01, 0x00, 0x02,
+			// Gap Ack Block 1: Start: 1000, End: 1999
+			0x03, 0xE8, 0x07, 0xCF,
+			// Duplicate TSN 1: 287454020,
+			0x11, 0x22, 0x33, 0x44,
+			// Duplicate TSN 2: 4278216311
+			0xFF, 0x00, 0x66, 0x77,
+			// Duplicate TSN 3: 4278216312 (exceeds Number of Duplicate TSNs)
+			0xFF, 0x00, 0x66, 0x78,
+			// Extra bytes that should be ignored
+			0xAA, 0xBB, 0xCC, 0xDD,
+			0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
+		REQUIRE(!SackChunk::Parse(buffer2, sizeof(buffer2)));
+
+		// Wrong Length field (smaller than buffer).
+		// clang-format off
+		uint8_t buffer3[] =
+		{
+			// Type:3 (SACK), Flags: 0b00000000, Length: 24 (buffer is 20)
+			0x03, 0b00000000, 0x00, 0x18,
+			// Cumulative TSN Ack: 287454020,
+			0x11, 0x22, 0x33, 0x44,
+			// Advertised Receiver Window Credit: 4278216311
+			0xFF, 0x00, 0x66, 0x77,
+			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 1
+			0x00, 0x01, 0x00, 0x01,
+			// Gap Ack Block 1: Start: 1000, End: 1999
+			0x03, 0xE8, 0x07, 0xCF,
+			// Duplicate TSN 1 (missing)
+		};
+		// clang-format on
+
+		REQUIRE(!SackChunk::Parse(buffer3, sizeof(buffer3)));
+	}
+
 	SECTION("SackChunk::Factory() succeeds")
 	{
 		auto* chunk = SackChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
