@@ -25,15 +25,14 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Parameter Type (16 bits): Unsigned integer.
-		 * - Parameter Length (16 bits): Unsigned integer. Cnotains the size of the
-		 *   parameter in bytes, including the Parameter Type, Parameter Length and
-		 *   Parameter Value fields. Thus, a parameter with a zero-length Parameter
-		 *   Value field would have a Parameter Length field of 4. The Parameter
-		 *   Length does not include any padding bytes.
+		 * - Parameter Type (16 bits).
+		 * - Parameter Length (16 bits): Total length of the Parameter, including
+		 *   the Parameter Type, Parameter Length and Parameter Value fields
+		 *   (padding is excluded). Thus, a Parameter with a zero-length Parameter
+		 *   Value field would have a Parameter Length field of 4.
 		 * - Parameter Value (variable length).
-		 * - Padding: Bytes of padding to make the Parameter length be multiple of
-		 *   4 bytes.
+		 * - Padding: Bytes of padding to make the Parameter total length be
+		 *   multiple of 4 bytes.
 		 */
 
 		// Forward declaration.

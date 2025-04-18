@@ -43,10 +43,10 @@ namespace RTC
 		 * |                           Checksum                            |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Source port (16 bits): Unsigned integer.
-		 * - Destination port (16 bits): Unsigned integer.
-		 * - Verification Tag (32 bits): Unsigned integer.
-		 * - Checksum (32 bits): Unsigned integer.
+		 * - Source port (16 bits).
+		 * - Destination port (16 bits).
+		 * - Verification Tag (32 bits).
+		 * - Checksum (32 bits).
 		 */
 
 		class Packet : public Serializable

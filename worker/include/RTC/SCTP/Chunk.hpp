@@ -27,14 +27,14 @@ namespace RTC
 		 * \                                                               \
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 *
-		 * - Chunk Type (8 bits): Unsigned integer.
+		 * - Chunk Type (8 bits).
 		 * - Chunk Flags (8 bits).
-		 * - Chunk Length (16 bits): Unsigned integer. Total length of the Chunk
+		 * - Chunk Length (16 bits): Total length of the Chunk
 		 *   excluding padding bytes. Minimum value is 4 (if Chunk Value is 0
 		 *   bytes). Maximum value is 65535, which means 1 byte of padding.
 		 * - Chunk Value (variable length).
-		 * - Padding: Bytes of padding to make the Chunk length be multiple of 4
-		 *   bytes.
+		 * - Padding: Bytes of padding to make the Chunk total length be
+		 *   multiple of 4 bytes.
 		 */
 
 		// Forward declaration.
