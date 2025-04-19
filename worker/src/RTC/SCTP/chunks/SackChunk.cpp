@@ -44,7 +44,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "SackChunk Length field must have value greater than %zu",
+				  "SackChunk Length field must be equal or greater than %zu",
 				  SackChunk::SackChunkHeaderLength);
 
 				return nullptr;

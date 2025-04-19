@@ -43,7 +43,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "InitChunk Length field must have value greater than %zu",
+				  "InitChunk Length field must be equal or greater than %zu",
 				  InitChunk::InitChunkHeaderLength);
 
 				return nullptr;

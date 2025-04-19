@@ -50,6 +50,7 @@ namespace RTC
 			{
 				INVALID_STREAM_IDENTIFIER   = 0x0001,
 				MISSING_MANDATORY_PARAMETER = 0x0002,
+				STALE_COOKIE                = 0x0003,
 				// TODO: Add more.
 			};
 

@@ -12,6 +12,7 @@
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include <cstring> // std::memmove()
 #include <limits>  // std::numeric_limits()
@@ -581,6 +582,14 @@ namespace RTC
 					{
 						errorCause = MissingMandatoryParameterErrorCause::ParseStrict(
 						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::STALE_COOKIE:
+					{
+						errorCause =
+						  StaleCookieErrorCause::ParseStrict(ptr, causeLength + padding, causeLength, padding);
 
 						break;
 					}

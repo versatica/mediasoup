@@ -45,7 +45,7 @@ namespace RTC
 			{
 				MS_WARN_TAG(
 				  sctp,
-				  "MissingMandatoryParameterErrorCause Length field must be %zu",
+				  "MissingMandatoryParameterErrorCause Length field must be equal or greater than %zu",
 				  MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength);
 
 				return nullptr;

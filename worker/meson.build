@@ -205,6 +205,7 @@ common_sources = [
   'src/RTC/SCTP/ErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/StaleCookieErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/UnknownErrorCause.cpp',
 ]
 
@@ -419,6 +420,7 @@ test_sources = [
   'test/src/RTC/SCTP/chunkParameters/TestUnknownChunkParameter.cpp',
   'test/src/RTC/SCTP/errorCauses/TestInvalidStreamIdentifierErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestMissingMandatoryParameterErrorCause.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestStaleCookieErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestUnknownErrorCause.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',

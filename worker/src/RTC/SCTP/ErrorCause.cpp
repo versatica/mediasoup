@@ -19,6 +19,7 @@ namespace RTC
 		{
 			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,   "INVALID_STREAM_IDENTIFIER"   },
 			{ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER, "MISSING_MANDATORY_PARAMETER" },
+			{ ErrorCause::ErrorCauseCode::STALE_COOKIE,                "STALE_COOKIE"                },
 			// TODO: Add more.
 		};
 		// clang-format on
