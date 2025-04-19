@@ -154,6 +154,17 @@ namespace RTC
 
 		protected:
 			virtual InitChunk* SoftClone(const uint8_t* buffer) const final override;
+
+			/**
+			 * We don't really need to override this method since this Chunk doesn't
+			 * have variable-length value (despite the fixed header doesn't have
+			 * default length). Optional/Variable-Length Parameters and/or Error
+			 * Causes don't account here.
+			 */
+			virtual size_t GetHeaderLength() const override final
+			{
+				return InitChunk::InitChunkHeaderLength;
+			}
 		};
 	} // namespace SCTP
 } // namespace RTC

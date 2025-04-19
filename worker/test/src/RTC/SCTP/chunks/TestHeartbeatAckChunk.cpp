@@ -66,8 +66,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 7);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -91,8 +90,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
@@ -135,8 +133,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 7);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -160,8 +157,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
@@ -202,8 +198,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 7);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -227,8 +222,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
@@ -300,8 +294,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 5);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(addedParameter1->HasInfo() == true);
 		REQUIRE(addedParameter1->GetInfoLength() == 5);
@@ -325,8 +318,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(addedParameter2->HasInfo() == true);
 		REQUIRE(addedParameter2->GetInfoLength() == 2);
@@ -368,8 +360,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 5);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter1->HasInfo() == true);
 		REQUIRE(parsedParameter1->GetInfoLength() == 5);
@@ -393,8 +384,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter2->HasInfo() == true);
 		REQUIRE(parsedParameter2->GetInfoLength() == 2);

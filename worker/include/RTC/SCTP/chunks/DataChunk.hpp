@@ -194,9 +194,9 @@ namespace RTC
 
 			/**
 			 * We need to override this method since this Chunk has a variable-length
-			 * value and the fixed header doesn't have default value.
+			 * value and the fixed header doesn't have default length.
 			 */
-			virtual size_t GetHeaderLength() const override
+			virtual size_t GetHeaderLength() const override final
 			{
 				return DataChunk::DataChunkHeaderLength;
 			}

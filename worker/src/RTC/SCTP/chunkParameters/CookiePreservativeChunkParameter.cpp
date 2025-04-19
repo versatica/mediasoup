@@ -129,7 +129,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			Utils::Byte::Set4Bytes(GetValuePointer(), 0, increment);
+			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, increment);
 		}
 
 		CookiePreservativeChunkParameter* CookiePreservativeChunkParameter::SoftClone(

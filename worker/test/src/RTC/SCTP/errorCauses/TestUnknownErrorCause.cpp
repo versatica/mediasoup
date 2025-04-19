@@ -36,8 +36,7 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 		  /*length*/ 12,
 		  /*frozen*/ true,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(999),
-		  /*unknownCode*/ true,
-		  /*valueLength*/ 7);
+		  /*unknownCode*/ true);
 
 		REQUIRE(errorCause->HasUnknownValue() == true);
 		REQUIRE(errorCause->GetUnknownValueLength() == 7);
@@ -65,8 +64,7 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 		  /*length*/ 12,
 		  /*frozen*/ false,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(999),
-		  /*unknownCode*/ true,
-		  /*valueLength*/ 7);
+		  /*unknownCode*/ true);
 
 		REQUIRE(errorCause->HasUnknownValue() == true);
 		REQUIRE(errorCause->GetUnknownValueLength() == 7);
@@ -96,8 +94,7 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 		  /*length*/ 12,
 		  /*frozen*/ false,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(999),
-		  /*unknownCode*/ true,
-		  /*valueLength*/ 7);
+		  /*unknownCode*/ true);
 
 		REQUIRE(clonedErrorCause->HasUnknownValue() == true);
 		REQUIRE(clonedErrorCause->GetUnknownValueLength() == 7);

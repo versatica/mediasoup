@@ -72,8 +72,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter1->GetIPv4Address()[0] == 0x02);
 		REQUIRE(parameter1->GetIPv4Address()[1] == 0x03);
@@ -156,8 +155,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(addedParameter1->GetIPv4Address()[0] == 0x0B);
 		REQUIRE(addedParameter1->GetIPv4Address()[1] == 0x16);

@@ -39,12 +39,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (chunkLength != ShutdownCompleteChunk::ShutdownCompleteChunkLength)
+			if (chunkLength != Chunk::ChunkHeaderLength)
 			{
-				MS_WARN_TAG(
-				  sctp,
-				  "ShutdownCompleteChunk Length field must be %zu",
-				  ShutdownCompleteChunk::ShutdownCompleteChunkLength);
+				MS_WARN_TAG(sctp, "ShutdownCompleteChunk Length field must be %zu", Chunk::ChunkHeaderLength);
 
 				return nullptr;
 			}
@@ -61,15 +58,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < ShutdownCompleteChunk::ShutdownCompleteChunkLength)
+			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
 
 			auto* chunk = new ShutdownCompleteChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(
-			  Chunk::ChunkType::SHUTDOWN_COMPLETE, 0, ShutdownCompleteChunk::ShutdownCompleteChunkLength);
+			chunk->InitializeHeader(Chunk::ChunkType::SHUTDOWN_COMPLETE, 0, Chunk::ChunkHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// ShutdownCompleteChunk fixed length.
@@ -86,7 +82,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetLength(ShutdownCompleteChunk::ShutdownCompleteChunkLength);
+			SetLength(Chunk::ChunkHeaderLength);
 		}
 
 		ShutdownCompleteChunk::~ShutdownCompleteChunk()

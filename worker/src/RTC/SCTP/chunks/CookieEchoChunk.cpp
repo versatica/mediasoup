@@ -55,15 +55,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < CookieEchoChunk::CookieEchoChunkHeaderLength)
+			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
 
 			auto* chunk = new CookieEchoChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(
-			  Chunk::ChunkType::COOKIE_ECHO, 0, CookieEchoChunk::CookieEchoChunkHeaderLength);
+			chunk->InitializeHeader(Chunk::ChunkType::COOKIE_ECHO, 0, Chunk::ChunkHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum CookieEchoChunk length.
@@ -78,7 +77,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(CookieEchoChunk::CookieEchoChunkHeaderLength);
+			SetLength(Chunk::ChunkHeaderLength);
 		}
 
 		CookieEchoChunk::~CookieEchoChunk()

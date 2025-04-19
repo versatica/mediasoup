@@ -230,8 +230,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter3_1->HasInfo() == true);
 		REQUIRE(parameter3_1->GetInfoLength() == 2);
@@ -354,8 +353,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter3_1->HasInfo() == true);
 		REQUIRE(parameter3_1->GetInfoLength() == 2);
@@ -467,8 +465,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 2);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter3_1->HasInfo() == true);
 		REQUIRE(parameter3_1->GetInfoLength() == 2);
@@ -652,8 +649,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(obtainedParameter1_1->GetIPv4Address()[0] == 0xC0);
 		REQUIRE(obtainedParameter1_1->GetIPv4Address()[1] == 0xA8);
@@ -668,8 +664,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(obtainedParameter1_2->GetLifeSpanIncrement() == 987654321);
 
@@ -696,8 +691,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 3);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(obtainedParameter2_1->HasInfo() == true);
 		REQUIRE(obtainedParameter2_1->GetInfoLength() == 3);

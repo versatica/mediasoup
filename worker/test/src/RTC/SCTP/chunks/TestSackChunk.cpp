@@ -212,11 +212,10 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 			0x11, 0x22, 0x33, 0x44,
 			// Advertised Receiver Window Credit: 4278216311
 			0xFF, 0x00, 0x66, 0x77,
-			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 1
-			0x00, 0x01, 0x00, 0x01,
+			// Number of Gap Ack Blocks: 1, Number of Duplicate TSNs: 0
+			0x00, 0x01, 0x00, 0x00,
 			// Gap Ack Block 1: Start: 1000, End: 1999
 			0x03, 0xE8, 0x07, 0xCF,
-			// Duplicate TSN 1 (missing)
 		};
 		// clang-format on
 

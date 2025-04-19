@@ -166,7 +166,20 @@ namespace RTC
 			GetHeaderPointer()->length = uint16_t{ htons(length) };
 		}
 
-		void ChunkParameter::SetValue(const uint8_t* value, uint16_t valueLength)
+		void ChunkParameter::SetValue(const uint8_t* value, size_t valueLength)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			// NOTE: This can throw.
+			SetValueLength(valueLength);
+
+			// Copy the given value into the buffer.
+			std::memmove(GetValuePointer(), value, valueLength);
+		}
+
+		void ChunkParameter::SetValueLength(size_t valueLength)
 		{
 			MS_TRACE();
 
@@ -176,7 +189,7 @@ namespace RTC
 			auto previousLengthField = GetLengthField();
 			auto previousValueLength = GetValueLength();
 			auto newNotPaddedLength =
-			  size_t{ previousLengthField } - size_t{ previousValueLength } + size_t{ valueLength };
+			  size_t{ previousLengthField } - size_t{ previousValueLength } + valueLength;
 			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			try
@@ -199,9 +212,6 @@ namespace RTC
 
 				throw;
 			}
-
-			// Copy the given value into the buffer.
-			std::memmove(GetValuePointer(), value, valueLength);
 
 			// Fill padding bytes with zero.
 			FillPadding(newPaddedLength - newNotPaddedLength);

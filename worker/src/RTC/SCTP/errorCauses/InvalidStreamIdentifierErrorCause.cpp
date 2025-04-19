@@ -41,12 +41,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (causeLength != InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseLength)
+			if (causeLength != InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength)
 			{
 				MS_WARN_TAG(
 				  sctp,
 				  "InvalidStreamIdentifierErrorCause Length field must be %zu",
-				  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseLength);
+				  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
 
 				return nullptr;
 			}
@@ -65,7 +65,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseLength)
+			if (bufferLength < InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
@@ -74,7 +74,7 @@ namespace RTC
 
 			errorCause->InitializeHeader(
 			  ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-			  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseLength);
+			  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
 
 			// Initialize value.
 			errorCause->SetStreamIdentifier(0);
@@ -93,7 +93,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseLength);
+			SetLength(InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
 		}
 
 		InvalidStreamIdentifierErrorCause::~InvalidStreamIdentifierErrorCause()
@@ -129,7 +129,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			Utils::Byte::Set2Bytes(GetValuePointer(), 0, value);
+			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
 		InvalidStreamIdentifierErrorCause* InvalidStreamIdentifierErrorCause::SoftClone(
@@ -149,7 +149,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set2Bytes(GetValuePointer(), 2, 0);
+			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 6, 0);
 		}
 	} // namespace SCTP
 } // namespace RTC

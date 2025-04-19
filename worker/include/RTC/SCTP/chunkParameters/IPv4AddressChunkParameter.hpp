@@ -31,7 +31,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t IPv4AddressChunkParameterLength{ 8 };
+			static const size_t IPv4AddressChunkParameterHeaderLength{ 8 };
 
 		public:
 			/**
@@ -78,7 +78,7 @@ namespace RTC
 			 */
 			const uint8_t* GetIPv4Address() const
 			{
-				return GetValue();
+				return GetBuffer() + 4;
 			}
 
 			/**
@@ -89,6 +89,19 @@ namespace RTC
 
 		protected:
 			virtual IPv4AddressChunkParameter* SoftClone(const uint8_t* buffer) const final override;
+
+			/**
+			 * We don't really need to override this method since this Chunk Parameter
+			 * doesn't have variable-length value (despite the fixed header doesn't
+			 * have default length).
+			 */
+			virtual size_t GetHeaderLength() const override final
+			{
+				return IPv4AddressChunkParameter::IPv4AddressChunkParameterHeaderLength;
+			}
+
+		private:
+			void ResetIPv4Address();
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -35,8 +35,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*length*/ 8,
 		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-		  /*unknownCode*/ false,
-		  /*valueLength*/ 4);
+		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 12345);
 		// Reserved bytes must be 0.
@@ -60,8 +59,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*length*/ 8,
 		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-		  /*unknownCode*/ false,
-		  /*valueLength*/ 4);
+		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 12345);
 		// Reserved bytes must be 0.
@@ -83,8 +81,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*length*/ 8,
 		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-		  /*unknownCode*/ false,
-		  /*valueLength*/ 4);
+		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->GetStreamIdentifier() == 12345);
 		// Reserved bytes must be 0.
@@ -162,8 +159,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*length*/ 8,
 		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-		  /*unknownCode*/ false,
-		  /*valueLength*/ 4);
+		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 0);
 		// Reserved bytes must be 0.
@@ -181,8 +177,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*length*/ 8,
 		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-		  /*unknownCode*/ false,
-		  /*valueLength*/ 4);
+		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetStreamIdentifier() == 6666);
 		// Reserved bytes must be 0.
@@ -203,8 +198,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*length*/ 8,
 		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
-		  /*unknownCode*/ false,
-		  /*valueLength*/ 4);
+		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->GetStreamIdentifier() == 6666);
 		// Reserved bytes must be 0.

@@ -42,12 +42,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (parameterLength != IPv6AddressChunkParameter::IPv6AddressChunkParameterLength)
+			if (parameterLength != IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength)
 			{
 				MS_WARN_TAG(
 				  sctp,
 				  "IPv6AddressChunkParameter Length field must be %zu",
-				  IPv6AddressChunkParameter::IPv6AddressChunkParameterLength);
+				  IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength);
 
 				return nullptr;
 			}
@@ -64,7 +64,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < IPv6AddressChunkParameter::IPv6AddressChunkParameterLength)
+			if (bufferLength < IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
@@ -73,14 +73,10 @@ namespace RTC
 
 			parameter->InitializeHeader(
 			  ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
-			  IPv6AddressChunkParameter::IPv6AddressChunkParameterLength);
+			  IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength);
 
 			// Must also initialize the IPv6 field to zero.
-			std::memset(
-			  parameter->GetValuePointer(),
-			  0x00,
-			  IPv6AddressChunkParameter::IPv6AddressChunkParameterLength -
-			    ChunkParameter::ChunkParameterHeaderLength);
+			parameter->ResetIPv6Address();
 
 			// No need to invoke SetLength() since parent constructor invoked it.
 
@@ -94,7 +90,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(IPv6AddressChunkParameter::IPv6AddressChunkParameterLength);
+			SetLength(IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength);
 		}
 
 		IPv6AddressChunkParameter::~IPv6AddressChunkParameter()
@@ -133,11 +129,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			std::memmove(
-			  GetValuePointer(),
-			  ip,
-			  IPv6AddressChunkParameter::IPv6AddressChunkParameterLength -
-			    ChunkParameter::ChunkParameterHeaderLength);
+			std::memmove(const_cast<uint8_t*>(GetBuffer()) + 4, ip, 16);
 		}
 
 		IPv6AddressChunkParameter* IPv6AddressChunkParameter::SoftClone(const uint8_t* buffer) const
@@ -150,6 +142,15 @@ namespace RTC
 			SoftCloneInto(softClonedParameter);
 
 			return softClonedParameter;
+		}
+
+		void IPv6AddressChunkParameter::ResetIPv6Address()
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			std::memset(const_cast<uint8_t*>(GetBuffer()) + 4, 0x00, 16);
 		}
 	} // namespace SCTP
 } // namespace RTC

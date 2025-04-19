@@ -42,12 +42,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (parameterLength != IPv4AddressChunkParameter::IPv4AddressChunkParameterLength)
+			if (parameterLength != IPv4AddressChunkParameter::IPv4AddressChunkParameterHeaderLength)
 			{
 				MS_WARN_TAG(
 				  sctp,
 				  "IPv4AddressChunkParameter Length field must be %zu",
-				  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength);
+				  IPv4AddressChunkParameter::IPv4AddressChunkParameterHeaderLength);
 
 				return nullptr;
 			}
@@ -64,7 +64,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < IPv4AddressChunkParameter::IPv4AddressChunkParameterLength)
+			if (bufferLength < IPv4AddressChunkParameter::IPv4AddressChunkParameterHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
@@ -73,14 +73,10 @@ namespace RTC
 
 			parameter->InitializeHeader(
 			  ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
-			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength);
+			  IPv4AddressChunkParameter::IPv4AddressChunkParameterHeaderLength);
 
 			// Must also initialize the IPv4 field to zero.
-			std::memset(
-			  parameter->GetValuePointer(),
-			  0x00,
-			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength -
-			    ChunkParameter::ChunkParameterHeaderLength);
+			parameter->ResetIPv4Address();
 
 			// No need to invoke SetLength() since parent constructor invoked it.
 
@@ -94,7 +90,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(IPv4AddressChunkParameter::IPv4AddressChunkParameterLength);
+			SetLength(IPv4AddressChunkParameter::IPv4AddressChunkParameterHeaderLength);
 		}
 
 		IPv4AddressChunkParameter::~IPv4AddressChunkParameter()
@@ -133,11 +129,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			std::memmove(
-			  GetValuePointer(),
-			  ip,
-			  IPv4AddressChunkParameter::IPv4AddressChunkParameterLength -
-			    ChunkParameter::ChunkParameterHeaderLength);
+			std::memmove(const_cast<uint8_t*>(GetBuffer()) + 4, ip, 4);
 		}
 
 		IPv4AddressChunkParameter* IPv4AddressChunkParameter::SoftClone(const uint8_t* buffer) const
@@ -150,6 +142,15 @@ namespace RTC
 			SoftCloneInto(softClonedParameter);
 
 			return softClonedParameter;
+		}
+
+		void IPv4AddressChunkParameter::ResetIPv4Address()
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			std::memset(const_cast<uint8_t*>(GetBuffer()) + 4, 0x00, 4);
 		}
 	} // namespace SCTP
 } // namespace RTC

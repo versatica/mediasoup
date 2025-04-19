@@ -41,8 +41,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 7);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 7);
@@ -74,8 +73,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 7);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 7);
@@ -105,8 +103,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 7);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(clonedParameter->HasInfo() == true);
 		REQUIRE(clonedParameter->GetInfoLength() == 7);
@@ -183,8 +180,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 0);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == false);
 		REQUIRE(parameter->GetInfoLength() == 0);
@@ -224,8 +220,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 5);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 5);
@@ -254,8 +249,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 5);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter->HasInfo() == true);
 		REQUIRE(parsedParameter->GetInfoLength() == 5);
@@ -284,8 +278,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 0);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE_THROWS_AS(parameter->SetInfo(ThrowBuffer, 65535), MediaSoupError);
 
@@ -297,8 +290,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 0);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		delete parameter;
 	}

@@ -39,8 +39,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 16);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv6Address()[0] == 0x20);
 		REQUIRE(parameter->GetIPv6Address()[1] == 0x01);
@@ -66,8 +65,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 16);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv6Address()[0] == 0x20);
 		REQUIRE(parameter->GetIPv6Address()[1] == 0x01);
@@ -91,8 +89,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 16);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(clonedParameter->GetIPv6Address()[0] == 0x20);
 		REQUIRE(clonedParameter->GetIPv6Address()[1] == 0x01);
@@ -183,8 +180,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 16);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv6Address()[0] == 0x00);
 		REQUIRE(parameter->GetIPv6Address()[1] == 0x00);
@@ -208,8 +204,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 16);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv6Address()[0] == 0x23);
 		REQUIRE(parameter->GetIPv6Address()[1] == 0x45);
@@ -232,8 +227,7 @@ SCENARIO("IPv6 Adress Chunk Parameter (6)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 16);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetIPv6Address()[0] == 0x23);
 		REQUIRE(parsedParameter->GetIPv6Address()[1] == 0x45);

@@ -39,7 +39,7 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t ShutdownChunkLength{ 8 };
+			static const size_t ShutdownChunkHeaderLength{ 8 };
 
 		public:
 			/**
@@ -89,6 +89,16 @@ namespace RTC
 
 		protected:
 			virtual ShutdownChunk* SoftClone(const uint8_t* buffer) const final override;
+
+			/**
+			 * We don't really need to override this method since this Chunk doesn't
+			 * have variable-length value (despite the fixed header doesn't have
+			 * default length).
+			 */
+			virtual size_t GetHeaderLength() const override final
+			{
+				return ShutdownChunk::ShutdownChunkHeaderLength;
+			}
 		};
 	} // namespace SCTP
 } // namespace RTC

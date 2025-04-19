@@ -32,7 +32,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t InvalidStreamIdentifierErrorCauseLength{ 8 };
+			static const size_t InvalidStreamIdentifierErrorCauseHeaderLength{ 8 };
 
 		public:
 			/**
@@ -76,13 +76,23 @@ namespace RTC
 
 			const uint16_t GetStreamIdentifier() const
 			{
-				return Utils::Byte::Get2Bytes(GetValuePointer(), 0);
+				return Utils::Byte::Get2Bytes(GetBuffer(), 4);
 			}
 
 			void SetStreamIdentifier(uint16_t value);
 
 		protected:
 			virtual InvalidStreamIdentifierErrorCause* SoftClone(const uint8_t* buffer) const final override;
+
+			/**
+			 * We don't really need to override this method since this Error Cause
+			 * doesn't have variable-length value (despite the fixed header doesn't
+			 * have default length).
+			 */
+			virtual size_t GetHeaderLength() const override final
+			{
+				return InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength;
+			}
 
 		private:
 			void SetReserved();

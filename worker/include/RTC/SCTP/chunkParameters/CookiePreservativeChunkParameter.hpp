@@ -76,13 +76,23 @@ namespace RTC
 
 			uint32_t GetLifeSpanIncrement() const
 			{
-				return Utils::Byte::Get4Bytes(GetValuePointer(), 0);
+				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
 			void SetLifeSpanIncrement(const uint32_t increment);
 
 		protected:
 			virtual CookiePreservativeChunkParameter* SoftClone(const uint8_t* buffer) const final override;
+
+			/**
+			 * We don't really need to override this method since this Chunk Parameter
+			 * doesn't have variable-length value (despite the fixed header doesn't
+			 * have default length).
+			 */
+			virtual size_t GetHeaderLength() const override final
+			{
+				return CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength;
+			}
 		};
 	} // namespace SCTP
 } // namespace RTC

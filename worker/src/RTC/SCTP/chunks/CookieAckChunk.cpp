@@ -39,10 +39,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (chunkLength != CookieAckChunk::CookieAckChunkLength)
+			if (chunkLength != Chunk::ChunkHeaderLength)
 			{
-				MS_WARN_TAG(
-				  sctp, "CookieAckChunk Length field must be %zu", CookieAckChunk::CookieAckChunkLength);
+				MS_WARN_TAG(sctp, "CookieAckChunk Length field must be %zu", Chunk::ChunkHeaderLength);
 
 				return nullptr;
 			}
@@ -59,14 +58,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < CookieAckChunk::CookieAckChunkLength)
+			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
 
 			auto* chunk = new CookieAckChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(Chunk::ChunkType::COOKIE_ACK, 0, CookieAckChunk::CookieAckChunkLength);
+			chunk->InitializeHeader(Chunk::ChunkType::COOKIE_ACK, 0, Chunk::ChunkHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// CookieAckChunk fixed length.
@@ -83,7 +82,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetLength(CookieAckChunk::CookieAckChunkLength);
+			SetLength(Chunk::ChunkHeaderLength);
 		}
 
 		CookieAckChunk::~CookieAckChunk()

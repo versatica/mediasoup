@@ -134,8 +134,7 @@ void resetBuffers();
   /*bool*/ frozen,                                                                                  \
   /*ChunkParameter::ChunkParameterType*/ parameterType,                                             \
   /*bool*/ unknownType,                                                                             \
-  /*ChunkParameter::ActionForUnknownChunkParameterType*/ actionForUnknownParameterType,             \
-  /*uint16_t*/ valueLength)                                                                         \
+  /*ChunkParameter::ActionForUnknownChunkParameterType*/ actionForUnknownParameterType)             \
 	{                                                                                                 \
 		REQUIRE(parameter);                                                                             \
 		REQUIRE(parameter->GetBuffer() != nullptr);                                                     \
@@ -152,8 +151,6 @@ void resetBuffers();
 		REQUIRE(parameter->GetType() == parameterType);                                                 \
 		REQUIRE(parameter->HasUnknownType() == unknownType);                                            \
 		REQUIRE(parameter->GetActionForUnknownChunkParameterType() == actionForUnknownParameterType);   \
-		REQUIRE(parameter->HasValue() == valueLength > 0);                                              \
-		REQUIRE(parameter->GetValueLength() == valueLength);                                            \
 		if (buffer)                                                                                     \
 		{                                                                                               \
 			REQUIRE(                                                                                      \
@@ -175,8 +172,7 @@ void resetBuffers();
   /*size_t*/ length,                                                                               \
   /*bool*/ frozen,                                                                                 \
   /*ErrorCause::ErrorCauseCode*/ causeCode,                                                        \
-  /*bool*/ unknownCode,                                                                            \
-  /*uint16_t*/ valueLength)                                                                        \
+  /*bool*/ unknownCode)                                                                            \
 	{                                                                                                \
 		REQUIRE(errorCause);                                                                           \
 		REQUIRE(errorCause->GetBuffer() != nullptr);                                                   \
@@ -192,8 +188,6 @@ void resetBuffers();
 		REQUIRE(errorCause->IsFrozen() == frozen);                                                     \
 		REQUIRE(errorCause->GetCode() == causeCode);                                                   \
 		REQUIRE(errorCause->HasUnknownCode() == unknownCode);                                          \
-		REQUIRE(errorCause->HasValue() == valueLength > 0);                                            \
-		REQUIRE(errorCause->GetValueLength() == valueLength);                                          \
 		if (buffer)                                                                                    \
 		{                                                                                              \
 			REQUIRE(                                                                                     \

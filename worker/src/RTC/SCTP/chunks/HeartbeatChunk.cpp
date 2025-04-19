@@ -64,15 +64,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < HeartbeatChunk::HeartbeatChunkHeaderLength)
+			if (bufferLength < Chunk::ChunkHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("too small buffer");
 			}
 
 			auto* chunk = new HeartbeatChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(
-			  Chunk::ChunkType::HEARTBEAT, 0, HeartbeatChunk::HeartbeatChunkHeaderLength);
+			chunk->InitializeHeader(Chunk::ChunkType::HEARTBEAT, 0, Chunk::ChunkHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum HeartbeatChunk length.
@@ -87,7 +86,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(HeartbeatChunk::HeartbeatChunkHeaderLength);
+			SetLength(Chunk::ChunkHeaderLength);
 		}
 
 		HeartbeatChunk::~HeartbeatChunk()

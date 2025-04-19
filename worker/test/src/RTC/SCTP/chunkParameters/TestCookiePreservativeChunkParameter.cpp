@@ -36,8 +36,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetLifeSpanIncrement() == 4278194466);
 
@@ -59,8 +58,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetLifeSpanIncrement() == 4278194466);
 
@@ -80,8 +78,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(clonedParameter->GetLifeSpanIncrement() == 4278194466);
 
@@ -156,8 +153,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetLifeSpanIncrement() == 0);
 
@@ -173,8 +169,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetLifeSpanIncrement() == 88776655);
 
@@ -193,8 +188,7 @@ SCENARIO("Cookie Preservative Chunk Parameter (9)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetLifeSpanIncrement() == 88776655);
 

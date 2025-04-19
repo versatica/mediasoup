@@ -36,9 +36,6 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t ShutdownCompleteChunkLength{ 4 };
-
-		public:
 			/**
 			 * Parse a ShutdownCompleteChunk.
 			 *

@@ -148,33 +148,6 @@ namespace RTC
 				return static_cast<ActionForUnknownChunkParameterType>(GetBuffer()[0] >> 6);
 			}
 
-			/**
-			 * Whether the Parameter has a value (greater than 0 bytes).
-			 *
-			 * @remarks
-			 * Let's make this method public since it's convenient for testing.
-			 */
-			virtual bool HasValue() const final
-			{
-				return GetLengthField() > ChunkParameter::ChunkParameterHeaderLength;
-			}
-
-			/**
-			 * Length of the Parameter value.
-			 *
-			 * @remarks Let's make this method public since it's convenient for
-			 * testing.
-			 */
-			virtual uint16_t GetValueLength() const final
-			{
-				if (!HasValue())
-				{
-					return 0u;
-				}
-
-				return GetLengthField() - ChunkParameter::ChunkParameterHeaderLength;
-			}
-
 		protected:
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
@@ -189,9 +162,24 @@ namespace RTC
 
 			virtual void InitializeHeader(ChunkParameterType parameterType, uint16_t lengthFieldValue) final;
 
+			/**
+			 * Chunk Parameter subclasses with header bigger than default one (4
+			 * bytes) must override this method and return their header length
+			 * (excluding variable-length field considered "value").
+			 */
+			virtual size_t GetHeaderLength() const
+			{
+				return ChunkParameter::ChunkParameterHeaderLength;
+			}
+
 			virtual uint8_t* GetValuePointer() const final
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + ChunkParameter::ChunkParameterHeaderLength;
+				return const_cast<uint8_t*>(GetBuffer()) + GetHeaderLength();
+			}
+
+			virtual bool HasValue() const final
+			{
+				return GetLengthField() > GetHeaderLength();
 			}
 
 			virtual const uint8_t* GetValue() const final
@@ -204,7 +192,19 @@ namespace RTC
 				return GetValuePointer();
 			}
 
-			virtual void SetValue(const uint8_t* value, uint16_t valueLength) final;
+			virtual void SetValue(const uint8_t* value, size_t valueLength) final;
+
+			virtual uint16_t GetValueLength() const final
+			{
+				if (!HasValue())
+				{
+					return 0u;
+				}
+
+				return GetLengthField() - GetHeaderLength();
+			}
+
+			virtual void SetValueLength(size_t valueLength) final;
 
 		private:
 			/**

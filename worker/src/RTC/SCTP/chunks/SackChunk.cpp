@@ -179,30 +179,16 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			auto previousLength = GetLength();
-
-			try
-			{
-				// These methods may throw if values are too high, so let's be ready.
-				SetLength(previousLength + 4);
-				SetLengthField(previousLength + 4);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLength);
-
-				throw;
-			}
+			// NOTE: This may throw.
+			SetValueLength(GetValueLength() + 4);
 
 			// Must move duplicate TSNs down.
 			std::memmove(
 			  GetDuplicateTsnsPointer() + 4, GetDuplicateTsnsPointer(), GetNumberOfDuplicateTsns() * 4);
 
 			// Add the new ack block.
-			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), +(GetNumberOfGapAckBlocks() * 4), start);
-			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), +(GetNumberOfGapAckBlocks() * 4) + 2, end);
+			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), GetNumberOfGapAckBlocks() * 4, start);
+			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), GetNumberOfGapAckBlocks() * 4 + 2, end);
 
 			// Update the counter field.
 			// NOTE: Do this after moving bytes.
@@ -215,31 +201,26 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			// NOTE: We know that SackChunk length is always the same as its Chunk
-			// Length field.
-			auto previousLength = GetLength();
-
-			try
-			{
-				// These methods may throw if values are too high, so let's be ready.
-				SetLength(previousLength + 4);
-				SetLengthField(previousLength + 4);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLength);
-
-				throw;
-			}
+			// NOTE: This may throw.
+			SetValueLength(GetValueLength() + 4);
 
 			// Add the new duplicate TSN.
-			Utils::Byte::Set4Bytes(GetDuplicateTsnsPointer(), +(GetNumberOfDuplicateTsns() * 4), tsn);
+			Utils::Byte::Set4Bytes(GetDuplicateTsnsPointer(), GetNumberOfDuplicateTsns() * 4, tsn);
 
 			// Update the counter field.
 			// NOTE: Do this after moving bytes.
 			SetNumberOfDuplicateTsns(GetNumberOfDuplicateTsns() + 1);
+		}
+
+		SackChunk* SackChunk::SoftClone(const uint8_t* buffer) const
+		{
+			MS_TRACE();
+
+			auto* softClonedChunk = new SackChunk(const_cast<uint8_t*>(buffer), GetLength());
+
+			SoftCloneInto(softClonedChunk);
+
+			return softClonedChunk;
 		}
 
 		void SackChunk::SetNumberOfGapAckBlocks(uint16_t value)
@@ -258,17 +239,6 @@ namespace RTC
 			AssertNotFrozen();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 14, value);
-		}
-
-		SackChunk* SackChunk::SoftClone(const uint8_t* buffer) const
-		{
-			MS_TRACE();
-
-			auto* softClonedChunk = new SackChunk(const_cast<uint8_t*>(buffer), GetLength());
-
-			SoftCloneInto(softClonedChunk);
-
-			return softClonedChunk;
 		}
 	} // namespace SCTP
 } // namespace RTC

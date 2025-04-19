@@ -11,6 +11,7 @@
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include <cstring> // std::memmove()
 #include <limits>  // std::numeric_limits()
@@ -359,19 +360,20 @@ namespace RTC
 			SetLengthField(lengthFieldValue);
 		}
 
-		void Chunk::SetLengthField(size_t length)
+		void Chunk::SetValue(const uint8_t* value, size_t valueLength)
 		{
 			MS_TRACE();
 
-			if (length > std::numeric_limits<uint16_t>::max())
-			{
-				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
-			}
+			AssertNotFrozen();
 
-			GetHeaderPointer()->length = uint16_t{ htons(length) };
+			// NOTE: This can throw.
+			SetValueLength(valueLength);
+
+			// Copy the given value into the buffer.
+			std::memmove(GetValuePointer(), value, valueLength);
 		}
 
-		void Chunk::SetValue(const uint8_t* value, uint16_t valueLength)
+		void Chunk::SetValueLength(size_t valueLength)
 		{
 			MS_TRACE();
 
@@ -381,7 +383,7 @@ namespace RTC
 			auto previousLengthField = GetLengthField();
 			auto previousValueLength = GetValueLength();
 			auto newNotPaddedLength =
-			  size_t{ previousLengthField } - size_t{ previousValueLength } + size_t{ valueLength };
+			  size_t{ previousLengthField } - size_t{ previousValueLength } + valueLength;
 			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
 
 			try
@@ -403,9 +405,6 @@ namespace RTC
 
 				throw;
 			}
-
-			// Copy the given value into the buffer.
-			std::memmove(GetValuePointer(), value, valueLength);
 
 			// Fill padding bytes with zero.
 			FillPadding(newPaddedLength - newNotPaddedLength);
@@ -578,6 +577,14 @@ namespace RTC
 						break;
 					}
 
+					case ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER:
+					{
+						errorCause = MissingMandatoryParameterErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
 					default:
 					{
 						errorCause =
@@ -610,6 +617,18 @@ namespace RTC
 			}
 
 			return true;
+		}
+
+		void Chunk::SetLengthField(size_t length)
+		{
+			MS_TRACE();
+
+			if (length > std::numeric_limits<uint16_t>::max())
+			{
+				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
+			}
+
+			GetHeaderPointer()->length = uint16_t{ htons(length) };
 		}
 
 		void Chunk::HandleInPlaceParameter(ChunkParameter* parameter)

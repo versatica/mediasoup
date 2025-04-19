@@ -38,8 +38,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv4Address()[0] == 0x01);
 		REQUIRE(parameter->GetIPv4Address()[1] == 0x02);
@@ -64,8 +63,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv4Address()[0] == 0x01);
 		REQUIRE(parameter->GetIPv4Address()[1] == 0x02);
@@ -88,8 +86,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(clonedParameter->GetIPv4Address()[0] == 0x01);
 		REQUIRE(clonedParameter->GetIPv4Address()[1] == 0x02);
@@ -167,8 +164,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv4Address()[0] == 0x00);
 		REQUIRE(parameter->GetIPv4Address()[1] == 0x00);
@@ -190,8 +186,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		  /*frozen*/ false,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parameter->GetIPv4Address()[0] == 0x0B);
 		REQUIRE(parameter->GetIPv4Address()[1] == 0x16);
@@ -213,8 +208,7 @@ SCENARIO("IPv4 Adress Chunk Parameter (5)", "[sctp][serializable]")
 		  /*frozen*/ true,
 		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP,
-		  /*valueLength*/ 4);
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetIPv4Address()[0] == 0x0B);
 		REQUIRE(parsedParameter->GetIPv4Address()[1] == 0x16);

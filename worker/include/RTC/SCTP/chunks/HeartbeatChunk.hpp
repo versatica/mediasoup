@@ -41,9 +41,6 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t HeartbeatChunkHeaderLength{ 4 };
-
-		public:
 			/**
 			 * Parse a HeartbeatChunk.
 			 *

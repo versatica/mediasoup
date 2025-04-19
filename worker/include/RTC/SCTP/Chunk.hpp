@@ -514,15 +514,10 @@ namespace RTC
 			}
 
 			/**
-			 * @throw MediaSoupError - If given `length` is higher than maximmun
-			 *   allowed one (65535).
-			 */
-			virtual void SetLengthField(size_t length) final;
-
-			/**
 			 * Chunk subclasses with header bigger than default one (4 bytes) must
 			 * override this method and return their header length (excluding
-			 * variable-length field considered "value").
+			 * variable-length field considered "value", Optional/Variable-Length
+			 * Parameters and Error Causes).
 			 */
 			virtual size_t GetHeaderLength() const
 			{
@@ -549,6 +544,8 @@ namespace RTC
 				return GetValuePointer();
 			}
 
+			virtual void SetValue(const uint8_t* value, size_t valueLength) final;
+
 			virtual uint16_t GetValueLength() const final
 			{
 				if (!HasValue())
@@ -559,7 +556,7 @@ namespace RTC
 				return GetLengthField() - GetHeaderLength();
 			}
 
-			virtual void SetValue(const uint8_t* value, uint16_t valueLength) final;
+			virtual void SetValueLength(size_t valueLength) final;
 
 			/**
 			 * To be called by each subclass of Chunk if Chunk Parameters parsing is
@@ -623,6 +620,12 @@ namespace RTC
 			{
 				return uint16_t{ ntohs(GetHeaderPointer()->length) };
 			}
+
+			/**
+			 * @throw MediaSoupError - If given `length` is higher than maximmun
+			 *   allowed one (65535).
+			 */
+			virtual void SetLengthField(size_t length) final;
 
 			virtual void HandleInPlaceParameter(ChunkParameter* parameter) final;
 

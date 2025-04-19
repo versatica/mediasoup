@@ -37,9 +37,6 @@ namespace RTC
 			friend class Packet;
 
 		public:
-			static const size_t CookieEchoChunkHeaderLength{ 4 };
-
-		public:
 			/**
 			 * Parse a CookieEchoChunk.
 			 *
