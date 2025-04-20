@@ -15,7 +15,7 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
-- In `PacketItemBase.hpp` remove `friend class Chunk;`. It shouldn't be that hard to manage without it.
+- Try to remove all `friend class`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 

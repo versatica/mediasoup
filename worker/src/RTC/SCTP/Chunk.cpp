@@ -579,38 +579,12 @@ namespace RTC
 				  // Fix buffer length assigned to the Parameter.
 				  parameter->SetBufferLength(parameter->GetLength());
 
+				  // This will update the total length and Length field of the Chunk.
+				  // NOTE: It may throw.
+				  AddItem(parameter);
+
 				  // Freeze the Parameter.
 				  parameter->Freeze();
-
-				  auto previousLength      = GetLength();
-				  auto previousLengthField = GetLengthField();
-
-				  try
-				  {
-					  // Update Chunk length.
-					  // NOTE: This will throw if there is no enough space in the Chunk
-					  // buffer.
-					  SetLength(previousLength + parameter->GetLength());
-
-					  // Here we have to update the Chunk Value Length and this is not
-					  // easy because we have to take into account the padding of all
-					  // Parameters but the last one. So we do this:
-					  // - We assume that Parameters are always at the end of the Chunk.
-					  // - We read the Parameter Length field of the new added Parameter.
-					  // - We add it to the previous total length of the Chunk and set
-					  //   the Chunk Length field with the resulting value.
-					  //
-					  // NOTE: This will throw if computed Length field value is too big.
-					  SetLengthField(previousLength + parameter->GetLengthField());
-				  }
-				  catch (const MediaSoupError& error)
-				  {
-					  // Rollback.
-					  SetLength(previousLength);
-					  SetLengthField(previousLengthField);
-
-					  throw;
-				  }
 
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
@@ -629,40 +603,12 @@ namespace RTC
 				  // Fix buffer length assigned to the Error Cause.
 				  errorCause->SetBufferLength(errorCause->GetLength());
 
+				  // This will update the total length and Length field of the Chunk.
+				  // NOTE: It may throw.
+				  AddItem(errorCause);
+
 				  // Freeze the Error Cause.
 				  errorCause->Freeze();
-
-				  auto previousLength      = GetLength();
-				  auto previousLengthField = GetLengthField();
-
-				  try
-				  {
-					  // Update Chunk length.
-					  // NOTE: This will throw if there is no enough space in the Chunk
-					  // buffer.
-					  SetLength(previousLength + errorCause->GetLength());
-
-					  // Here we have to update the Chunk Value Length and this is not
-					  // easy because we have to take into account the padding of all
-					  // Error Causes but the last one. So we do this:
-					  // - We assume that Error Causes are always at the end of the
-					  //   Chunk.
-					  // - We read the Error Cause Length field of the new added Error
-					  //   Cause.
-					  // - We add it to the previous total length of the Chunk and set
-					  //   the Chunk Length field with the resulting value.
-					  //
-					  // NOTE: This will throw if computed Length field value is too big.
-					  SetLengthField(previousLength + errorCause->GetLengthField());
-				  }
-				  catch (const MediaSoupError& error)
-				  {
-					  // Rollback.
-					  SetLength(previousLength);
-					  SetLengthField(previousLengthField);
-
-					  throw;
-				  }
 
 				  // Add the Error Cause to the list.
 				  this->errorCauses.push_back(errorCause);

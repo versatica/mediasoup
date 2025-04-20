@@ -90,16 +90,16 @@ namespace RTC
 			SetLengthField(lengthFieldValue);
 		}
 
-		void PacketItemBase::SetLengthField(size_t length)
+		void PacketItemBase::SetLengthField(size_t lengthField)
 		{
 			MS_TRACE();
 
-			if (length > std::numeric_limits<uint16_t>::max())
+			if (lengthField > std::numeric_limits<uint16_t>::max())
 			{
-				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
+				MS_THROW_TYPE_ERROR("lengthField (%zu bytes) cannot be greater than 65535", lengthField);
 			}
 
-			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, length);
+			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, lengthField);
 		}
 
 		void PacketItemBase::SetValue(const uint8_t* value, size_t valueLength)
@@ -149,6 +149,35 @@ namespace RTC
 
 			// Fill padding bytes with zero.
 			FillPadding(newPaddedLength - newNotPaddedLength);
+		}
+
+		void PacketItemBase::AddItem(const PacketItemBase* item)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength      = GetLength();
+			auto previousLengthField = GetLengthField();
+
+			try
+			{
+				// Update length.
+				// NOTE: This will throw if there is no enough space in the buffer.
+				SetLength(previousLength + item->GetLength());
+
+				// Update Length field.
+				// NOTE: This will throw if computed Length field value is too big.
+				SetLengthField(previousLength + item->GetLengthField());
+			}
+			catch (const MediaSoupError& error)
+			{
+				// Rollback.
+				SetLength(previousLength);
+				SetLengthField(previousLengthField);
+
+				throw;
+			}
 		}
 	} // namespace SCTP
 } // namespace RTC

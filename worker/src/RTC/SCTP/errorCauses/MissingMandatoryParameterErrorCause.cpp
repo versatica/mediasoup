@@ -130,7 +130,7 @@ namespace RTC
 				  indentation,
 				  "  - idx: %" PRIu32 ", parameter type: %" PRIu16,
 				  idx,
-				  GetMissingParameterTypeAt(idx));
+				  static_cast<uint16_t>(GetMissingParameterTypeAt(idx)));
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::MissingMandatoryParameterErrorCause>");
 		}

@@ -30,14 +30,8 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
-		// Forward declaration.
-		class Chunk;
-
 		class PacketItemBase : public Serializable
 		{
-			// We need that Chunk calls protected and private methods in this class.
-			friend class Chunk;
-
 		public:
 			static const size_t PacketItemBaseHeaderLength{ 4 };
 
@@ -71,6 +65,11 @@ namespace RTC
 			virtual size_t GetHeaderLength() const
 			{
 				return PacketItemBase::PacketItemBaseHeaderLength;
+			}
+
+			virtual uint16_t GetLengthField() const final
+			{
+				return Utils::Byte::Get2Bytes(GetBuffer(), 2);
 			}
 
 			virtual uint8_t* GetValuePointer() const final
@@ -107,17 +106,14 @@ namespace RTC
 
 			virtual void SetValueLength(size_t valueLength) final;
 
-		private:
-			virtual uint16_t GetLengthField() const final
-			{
-				return Utils::Byte::Get2Bytes(GetBuffer(), 2);
-			}
+			virtual void AddItem(const PacketItemBase* item) final;
 
+		private:
 			/**
 			 * @throw MediaSoupError - If given `length` is higher than maximmun
 			 *   allowed one (65535).
 			 */
-			virtual void SetLengthField(size_t length) final;
+			virtual void SetLengthField(size_t lengthField) final;
 		};
 	} // namespace SCTP
 } // namespace RTC
