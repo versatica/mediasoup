@@ -20,6 +20,9 @@ namespace RTC
 			{ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,   "INVALID_STREAM_IDENTIFIER"   },
 			{ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER, "MISSING_MANDATORY_PARAMETER" },
 			{ ErrorCause::ErrorCauseCode::STALE_COOKIE,                "STALE_COOKIE"                },
+			{ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,             "OUT_OF_RESOURCE"             },
+			{ ErrorCause::ErrorCauseCode::UNRESOLVABLE_ADDRESS,        "UNRESOLVABLE_ADDRESS"        },
+			{ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,     "UNRECOGNIZED_CHUNK_TYPE"     },
 			// TODO: Add more.
 		};
 		// clang-format on

@@ -163,6 +163,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		chunk->SetCookie(DataBuffer + 1000, 2999);
 
 		REQUIRE(chunk->GetLength() == 3004);
+		REQUIRE(chunk->HasCookie() == true);
 		REQUIRE(chunk->GetCookieLength() == 2999);
 
 		chunk->SetCookie(nullptr, 0);

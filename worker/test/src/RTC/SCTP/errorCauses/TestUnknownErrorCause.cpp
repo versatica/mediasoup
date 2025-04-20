@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/ErrorCause.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"

@@ -203,6 +203,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		chunk->SetUserData(DataBuffer + 1000, 3000);
 
 		REQUIRE(chunk->GetLength() == 3016);
+		REQUIRE(chunk->HasUserData() == true);
 		REQUIRE(chunk->GetUserDataLength() == 3000);
 
 		chunk->SetUserData(nullptr, 0);

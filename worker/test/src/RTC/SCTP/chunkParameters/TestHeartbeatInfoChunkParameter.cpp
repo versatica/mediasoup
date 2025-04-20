@@ -191,6 +191,7 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		parameter->SetInfo(DataBuffer + 1000, 3000);
 
 		REQUIRE(parameter->GetLength() == 3004);
+		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 3000);
 
 		parameter->SetInfo(nullptr, 0);
@@ -202,11 +203,13 @@ SCENARIO("Heartbeat Info Chunk Parameter (1)", "[sctp][serializable]")
 		parameter->SetInfo(DataBuffer, 2);
 
 		REQUIRE(parameter->GetLength() == 8);
+		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 2);
 
 		parameter->SetInfo(DataBuffer + 2000, 2000);
 
 		REQUIRE(parameter->GetLength() == 2004);
+		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 2000);
 
 		// Info length is 5 so 3 bytes of padding will be added.

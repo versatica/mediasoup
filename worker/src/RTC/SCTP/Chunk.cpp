@@ -12,8 +12,11 @@
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/OutOfResourceErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/UnresolvableAddressErrorCause.hpp"
 #include <cstring> // std::memmove()
 #include <limits>  // std::numeric_limits()
 
@@ -590,6 +593,30 @@ namespace RTC
 					{
 						errorCause =
 						  StaleCookieErrorCause::ParseStrict(ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE:
+					{
+						errorCause =
+						  OutOfResourceErrorCause::ParseStrict(ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::UNRESOLVABLE_ADDRESS:
+					{
+						errorCause = UnresolvableAddressErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE:
+					{
+						errorCause = UnrecognizedChunkTypeErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
 
 						break;
 					}

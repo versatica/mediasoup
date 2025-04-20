@@ -51,6 +51,9 @@ namespace RTC
 				INVALID_STREAM_IDENTIFIER   = 0x0001,
 				MISSING_MANDATORY_PARAMETER = 0x0002,
 				STALE_COOKIE                = 0x0003,
+				OUT_OF_RESOURCE             = 0x0004,
+				UNRESOLVABLE_ADDRESS        = 0x0005,
+				UNRECOGNIZED_CHUNK_TYPE     = 0x0006,
 				// TODO: Add more.
 			};
 
