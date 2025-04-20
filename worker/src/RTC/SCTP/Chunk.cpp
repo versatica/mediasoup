@@ -94,20 +94,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (CanHaveParameters())
+			// NOTE: Here we cannot check CanHaveParameters() or CanHaveErrorCauses()
+			// because this is the destructor of Chunk so the subclass has been
+			// already destroyed (its destructor runs first).
+
+			for (const auto* parameter : this->parameters)
 			{
-				for (const auto* parameter : this->parameters)
-				{
-					delete parameter;
-				}
+				delete parameter;
 			}
 
-			if (CanHaveErrorCauses())
+			for (const auto* errorCause : this->errorCauses)
 			{
-				for (const auto* errorCause : this->errorCauses)
-				{
-					delete errorCause;
-				}
+				delete errorCause;
 			}
 		}
 
