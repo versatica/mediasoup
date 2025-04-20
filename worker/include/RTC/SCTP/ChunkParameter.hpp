@@ -2,7 +2,7 @@
 #define MS_RTC_SCTP_CHUNK_PARAMETER_HPP
 
 #include "common.hpp"
-#include "RTC/Serializable.hpp"
+#include "RTC/SCTP/PacketItemBase.hpp"
 #include <string>
 #include <unordered_map>
 
@@ -38,7 +38,7 @@ namespace RTC
 		// Forward declaration.
 		class Chunk;
 
-		class ChunkParameter : public Serializable
+		class ChunkParameter : public PacketItemBase
 		{
 			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
@@ -152,7 +152,7 @@ namespace RTC
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
-			virtual void DumpCommon(int indentation) const final;
+			virtual void DumpCommon(int indentation) const override final;
 
 			virtual void SoftSerialize(const uint8_t* buffer) final;
 
@@ -167,44 +167,10 @@ namespace RTC
 			 * bytes) must override this method and return their header length
 			 * (excluding variable-length field considered "value").
 			 */
-			virtual size_t GetHeaderLength() const
+			virtual size_t GetHeaderLength() const override
 			{
 				return ChunkParameter::ChunkParameterHeaderLength;
 			}
-
-			virtual uint8_t* GetValuePointer() const final
-			{
-				return const_cast<uint8_t*>(GetBuffer()) + GetHeaderLength();
-			}
-
-			virtual bool HasValue() const final
-			{
-				return GetLengthField() > GetHeaderLength();
-			}
-
-			virtual const uint8_t* GetValue() const final
-			{
-				if (!HasValue())
-				{
-					return nullptr;
-				}
-
-				return GetValuePointer();
-			}
-
-			virtual void SetValue(const uint8_t* value, size_t valueLength) final;
-
-			virtual uint16_t GetValueLength() const final
-			{
-				if (!HasValue())
-				{
-					return 0u;
-				}
-
-				return GetLengthField() - GetHeaderLength();
-			}
-
-			virtual void SetValueLength(size_t valueLength) final;
 
 		private:
 			/**
@@ -221,17 +187,6 @@ namespace RTC
 				GetHeaderPointer()->type =
 				  static_cast<ChunkParameterType>(uint16_t{ htons(static_cast<uint16_t>(parameterType)) });
 			}
-
-			virtual uint16_t GetLengthField() const final
-			{
-				return uint16_t{ ntohs(GetHeaderPointer()->length) };
-			}
-
-			/**
-			 * @throw MediaSoupError - If given `length` is higher than maximmun
-			 *   allowed one (65535).
-			 */
-			virtual void SetLengthField(size_t length) final;
 		};
 	} // namespace SCTP
 } // namespace RTC

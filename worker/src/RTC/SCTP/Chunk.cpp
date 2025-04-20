@@ -17,8 +17,6 @@
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnresolvableAddressErrorCause.hpp"
-#include <cstring> // std::memmove()
-#include <limits>  // std::numeric_limits()
 
 namespace RTC
 {
@@ -53,52 +51,18 @@ namespace RTC
 		bool Chunk::IsChunk(
 		  const uint8_t* buffer,
 		  size_t bufferLength,
-		  ChunkType& chunkType,
+		  Chunk::ChunkType& chunkType,
 		  uint16_t& chunkLength,
 		  uint8_t& padding)
 		{
 			MS_TRACE();
 
-			if (bufferLength < Chunk::ChunkHeaderLength)
+			if (!PacketItemBase::IsPacketItemBase(buffer, bufferLength, chunkLength, padding))
 			{
-				MS_WARN_TAG(sctp, "no space for SCTP Chunk Header [bufferLength:%zu]", bufferLength);
-
 				return false;
 			}
 
-			const auto* chunkHeader = reinterpret_cast<const Chunk::ChunkHeader*>(buffer);
-
-			chunkType   = chunkHeader->type;
-			chunkLength = uint16_t{ ntohs(chunkHeader->length) };
-
-			if (chunkLength < Chunk::ChunkHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "Chunk Length field must have value greater or equal than %zu",
-				  Chunk::ChunkHeaderLength);
-
-				return false;
-			}
-
-			// Chunk total length must be multiple of 4 bytes and must include
-			// padding bytes despite Chunk Length field doesn't not include padding.
-			// NOTE: We must cast to size_t, otherwise a maximum Chunk Length value
-			// of 65535 would generate a padded length of 0 bytes!
-			size_t paddedChunkLength = Utils::Byte::PadTo4Bytes(size_t{ chunkLength });
-
-			if (bufferLength < paddedChunkLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "no space for 4-byte padded announced Chunk Length [paddedChunkLength:%zu, bufferLength:%zu]",
-				  paddedChunkLength,
-				  bufferLength);
-
-				return false;
-			}
-
-			padding = paddedChunkLength - chunkLength;
+			chunkType = static_cast<Chunk::ChunkType>(buffer[0]);
 
 			return true;
 		}
@@ -121,7 +85,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Chunk::Chunk(uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
+		Chunk::Chunk(uint8_t* buffer, size_t bufferLength) : PacketItemBase(buffer, bufferLength)
 		{
 			MS_TRACE();
 		}
@@ -244,8 +208,6 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(
-			  indentation, "  length + padding: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP_CLEAN(
 			  indentation,
 			  "  type: %" PRIu8 " (%s) (unknown: %s)",
 			  static_cast<uint8_t>(GetType()),
@@ -253,7 +215,7 @@ namespace RTC
 			  HasUnknownType() ? "yes" : "no");
 			MS_DUMP_CLEAN(
 			  indentation, "  flags: " MS_UINT8_TO_BINARY_PATTERN, MS_UINT8_TO_BINARY(GetFlags()));
-			MS_DUMP_CLEAN(indentation, "  length field: %" PRIu16, GetLengthField());
+			PacketItemBase::DumpCommon(indentation);
 		}
 
 		void Chunk::DumpParameters(int indentation) const
@@ -361,57 +323,7 @@ namespace RTC
 
 			SetType(chunkType);
 			SetFlags(flags);
-			SetLengthField(lengthFieldValue);
-		}
-
-		void Chunk::SetValue(const uint8_t* value, size_t valueLength)
-		{
-			MS_TRACE();
-
-			AssertNotFrozen();
-
-			// NOTE: This can throw.
-			SetValueLength(valueLength);
-
-			// Copy the given value into the buffer.
-			std::memmove(GetValuePointer(), value, valueLength);
-		}
-
-		void Chunk::SetValueLength(size_t valueLength)
-		{
-			MS_TRACE();
-
-			AssertNotFrozen();
-
-			auto previousLength      = GetLength();
-			auto previousLengthField = GetLengthField();
-			auto previousValueLength = GetValueLength();
-			auto newNotPaddedLength =
-			  size_t{ previousLengthField } - size_t{ previousValueLength } + valueLength;
-			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
-
-			try
-			{
-				// Let's call SetLength() on parent with the new computed Chunk length.
-				// NOTE: If there is no space in the buffer for it, it will throw.
-				// NOTE: Chunks must be padded to 4 bytes.
-				SetLength(newPaddedLength);
-
-				// Update the Chunk Length field.
-				// NOTE: This will throw if computed value is too big.
-				SetLengthField(newNotPaddedLength);
-			}
-			catch (const MediaSoupError& error)
-			{
-				// Rollback.
-				SetLength(previousLength);
-				SetLengthField(previousLengthField);
-
-				throw;
-			}
-
-			// Fill padding bytes with zero.
-			FillPadding(newPaddedLength - newNotPaddedLength);
+			InitializePacketBaseItemHeader(lengthFieldValue);
 		}
 
 		bool Chunk::ParseParameters()
@@ -653,18 +565,6 @@ namespace RTC
 			}
 
 			return true;
-		}
-
-		void Chunk::SetLengthField(size_t length)
-		{
-			MS_TRACE();
-
-			if (length > std::numeric_limits<uint16_t>::max())
-			{
-				MS_THROW_TYPE_ERROR("length (%zu bytes) cannot be greater than 65535", length);
-			}
-
-			GetHeaderPointer()->length = uint16_t{ htons(length) };
 		}
 
 		void Chunk::HandleInPlaceParameter(ChunkParameter* parameter)

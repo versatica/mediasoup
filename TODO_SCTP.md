@@ -15,6 +15,8 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
+- In `PacketItemBase.hpp` remove `friend class Chunk;`. It shouldn't be that hard to manage without it.
+
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
 - `Packet::AddChunk()` and `Chunk::AddParameter()` are buggy. They must increase Length field same as `BuildXxxxxInPlace()` methods do.

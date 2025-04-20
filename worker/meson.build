@@ -181,6 +181,7 @@ common_sources = [
   'src/RTC/RTCP/XrDelaySinceLastRr.cpp',
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
   'src/RTC/SCTP/Packet.cpp',
+  'src/RTC/SCTP/PacketItemBase.cpp',
   'src/RTC/SCTP/Chunk.cpp',
   'src/RTC/SCTP/chunks/DataChunk.cpp',
   'src/RTC/SCTP/chunks/InitChunk.cpp',
