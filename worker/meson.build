@@ -210,6 +210,7 @@ common_sources = [
   'src/RTC/SCTP/errorCauses/OutOfResourceErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/UnresolvableAddressErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/UnrecognizedChunkTypeErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/UnrecognizedParametersErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/UnknownErrorCause.cpp',
 ]
 
@@ -428,6 +429,7 @@ test_sources = [
   'test/src/RTC/SCTP/errorCauses/TestOutOfResourceErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestUnresolvableAddressErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestUnrecognizedChunkTypeErrorCause.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestUnrecognizedParametersErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestUnknownErrorCause.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',

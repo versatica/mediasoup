@@ -16,6 +16,7 @@
 #include "RTC/SCTP/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/UnrecognizedParametersErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnresolvableAddressErrorCause.hpp"
 
 namespace RTC
@@ -526,6 +527,14 @@ namespace RTC
 					case ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE:
 					{
 						errorCause = UnrecognizedChunkTypeErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS:
+					{
+						errorCause = UnrecognizedParametersErrorCause::ParseStrict(
 						  ptr, causeLength + padding, causeLength, padding);
 
 						break;
