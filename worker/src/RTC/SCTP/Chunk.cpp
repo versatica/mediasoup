@@ -10,6 +10,7 @@
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
+#include "RTC/SCTP/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/InvalidMandatoryParameterErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
@@ -554,6 +555,14 @@ namespace RTC
 					{
 						errorCause =
 						  NoUserDataErrorCause::ParseStrict(ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN:
+					{
+						errorCause = CookieReceivedWhileShuttingDownErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
 
 						break;
 					}

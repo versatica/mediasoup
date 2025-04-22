@@ -48,15 +48,17 @@ namespace RTC
 			 */
 			enum class ErrorCauseCode : uint16_t
 			{
-				INVALID_STREAM_IDENTIFIER   = 0x0001,
-				MISSING_MANDATORY_PARAMETER = 0x0002,
-				STALE_COOKIE                = 0x0003,
-				OUT_OF_RESOURCE             = 0x0004,
-				UNRESOLVABLE_ADDRESS        = 0x0005,
-				UNRECOGNIZED_CHUNK_TYPE     = 0x0006,
-				INVALID_MANDATORY_PARAMETER = 0x0007,
-				UNRECOGNIZED_PARAMETERS     = 0x0008,
-				NO_USER_DATA                = 0x0009,
+				INVALID_STREAM_IDENTIFIER           = 0x0001,
+				MISSING_MANDATORY_PARAMETER         = 0x0002,
+				STALE_COOKIE                        = 0x0003,
+				OUT_OF_RESOURCE                     = 0x0004,
+				UNRESOLVABLE_ADDRESS                = 0x0005,
+				UNRECOGNIZED_CHUNK_TYPE             = 0x0006,
+				INVALID_MANDATORY_PARAMETER         = 0x0007,
+				UNRECOGNIZED_PARAMETERS             = 0x0008,
+				NO_USER_DATA                        = 0x0009,
+				COOKIE_RECEIVED_WHILE_SHUTTING_DOWN = 0x000A,
+				// USER_INITIATED_ABORT                = 0x000C,
 				// TODO: Add more.
 			};
 
