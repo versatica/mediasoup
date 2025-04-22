@@ -12,6 +12,7 @@
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
 #include "RTC/SCTP/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
+#include "RTC/SCTP/chunks/OperationErrorChunk.hpp"
 #include "RTC/SCTP/chunks/SackChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
@@ -123,6 +124,14 @@ namespace RTC
 					case Chunk::ChunkType::SHUTDOWN_ACK:
 					{
 						chunk = ShutdownAckChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::OPERATION_ERROR:
+					{
+						chunk =
+						  OperationErrorChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}

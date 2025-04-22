@@ -94,7 +94,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
-		// This should be padding.
+		// These should be padding.
 		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
 		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
 
@@ -161,7 +161,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
-		// This should be padding.
+		// These should be padding.
 		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
 		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
 
@@ -226,7 +226,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		REQUIRE(parameter2->GetUnknownValue()[0] == 0xAB);
 		REQUIRE(parameter2->GetUnknownValue()[1] == 0xCD);
-		// This should be padding.
+		// These should be padding.
 		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
 		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
 

@@ -96,7 +96,6 @@ namespace RTC
 			  "  cookie length: %" PRIu16 " (has cookie: %s)",
 			  GetCookieLength(),
 			  HasCookie() ? "yes" : "no");
-			DumpParameters(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::CookieEchoChunk>");
 		}
 
