@@ -202,6 +202,7 @@ common_sources = [
   'src/RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.cpp',
+  'src/RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.cpp',
   'src/RTC/SCTP/chunkParameters/UnknownChunkParameter.cpp',
   'src/RTC/SCTP/ErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.cpp',
@@ -215,6 +216,8 @@ common_sources = [
   'src/RTC/SCTP/errorCauses/NoUserDataErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/CookieReceivedWhileShuttingDownErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/RestartOfAnAssociationWithNewAddressesErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/UserInitiatedAbortErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/ProtocolViolationErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/UnknownErrorCause.cpp',
 ]
 
@@ -426,6 +429,7 @@ test_sources = [
   'test/src/RTC/SCTP/chunkParameters/TestIPv4AddressChunkParameter.cpp',
   'test/src/RTC/SCTP/chunkParameters/TestIPv6AddressChunkParameter.cpp',
   'test/src/RTC/SCTP/chunkParameters/TestCookiePreservativeChunkParameter.cpp',
+  'test/src/RTC/SCTP/chunkParameters/TestSupportedAddressTypesChunkParameter.cpp',
   'test/src/RTC/SCTP/chunkParameters/TestUnknownChunkParameter.cpp',
   'test/src/RTC/SCTP/errorCauses/TestInvalidStreamIdentifierErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestMissingMandatoryParameterErrorCause.cpp',
@@ -438,6 +442,8 @@ test_sources = [
   'test/src/RTC/SCTP/errorCauses/TestNoUserDataErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestCookieReceivedWhileShuttingDownErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestRestartOfAnAssociationWithNewAddressesErrorCause.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestUserInitiatedAbortErrorCause.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestProtocolViolationErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestUnknownErrorCause.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',

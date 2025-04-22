@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Cookie Preservative Chunk Parameter (9).
+		 * SCTP Cookie Preservative Chunk Parameter (COOKIE_PRESERVATIVE) (9).
 		 *
 		 * @see RFC 9260.
 		 *

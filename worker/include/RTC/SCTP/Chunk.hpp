@@ -68,8 +68,8 @@ namespace RTC
 				OPERATION_ERROR   = 0x09, // NOTE: Cannot use ERROR (MSVC complains).
 				COOKIE_ECHO       = 0x0A,
 				COOKIE_ACK        = 0x0B,
-				ECNE              = 0x0C,
-				CWR               = 0x0D,
+				ECNE              = 0x0C, // NOTE: Not implemented.
+				CWR               = 0x0D, // NOTE: Not implemented.
 				SHUTDOWN_COMPLETE = 0x0E,
 				// TODO: Add more.
 			};

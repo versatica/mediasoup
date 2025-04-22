@@ -85,7 +85,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 		// clang-format off
 		uint8_t buffer2[] =
 		{
-			// Code:3 (OUT_OF_RESOURCE), Length: 5
+			// Code:4 (OUT_OF_RESOURCE), Length: 5
 			0x00, 0x04, 0x00, 0x07,
 			0x3A,
 		};
@@ -97,7 +97,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 		// clang-format off
 		uint8_t buffer3[] =
 		{
-			// Code:3 (OUT_OF_RESOURCE), Length (broken)
+			// Code:4 (OUT_OF_RESOURCE), Length (broken)
 			0x00, 0x04, 0x00,
 		};
 		// clang-format on

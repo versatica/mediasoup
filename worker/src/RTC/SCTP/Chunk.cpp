@@ -9,6 +9,7 @@
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/InvalidMandatoryParameterErrorCause.hpp"
@@ -16,12 +17,14 @@
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/OutOfResourceErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/RestartOfAnAssociationWithNewAddressesErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnrecognizedParametersErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnresolvableAddressErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/UserInitiatedAbortErrorCause.hpp"
 
 namespace RTC
 {
@@ -408,6 +411,14 @@ namespace RTC
 						break;
 					}
 
+					case ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES:
+					{
+						parameter = SupportedAddressTypesChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
 					default:
 					{
 						parameter = UnknownChunkParameter::ParseStrict(
@@ -571,6 +582,22 @@ namespace RTC
 					case ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES:
 					{
 						errorCause = RestartOfAnAssociationWithNewAddressesErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT:
+					{
+						errorCause = UserInitiatedAbortErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION:
+					{
+						errorCause = ProtocolViolationErrorCause::ParseStrict(
 						  ptr, causeLength + padding, causeLength, padding);
 
 						break;

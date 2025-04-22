@@ -133,8 +133,8 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		// clang-format off
 		uint8_t buffer2[] =
 		{
-			// Code:6 (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES), Length: 7
-			0x00, 0x06, 0x00, 0x07,
+			// Code:11 (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES), Length: 7
+			0x00, 0x0B, 0x00, 0x07,
 			//  NewAddressTlvs: 0x123456 (missing padding byte)
 			0x12, 0x34, 0x56,
 		};
