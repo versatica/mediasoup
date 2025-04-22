@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/SCTP/chunks/AbortAssociationChunk.hpp"
 #include "RTC/SCTP/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
@@ -110,6 +111,14 @@ namespace RTC
 					case Chunk::ChunkType::HEARTBEAT_ACK:
 					{
 						chunk = HeartbeatAckChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::ABORT:
+					{
+						chunk =
+						  AbortAssociationChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}

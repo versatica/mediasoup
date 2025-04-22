@@ -189,7 +189,7 @@ common_sources = [
   'src/RTC/SCTP/chunks/SackChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatChunk.cpp',
   'src/RTC/SCTP/chunks/HeartbeatAckChunk.cpp',
-  # 'src/RTC/SCTP/chunks/AbortChunk.cpp'
+  'src/RTC/SCTP/chunks/AbortAssociationChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownChunk.cpp',
   'src/RTC/SCTP/chunks/ShutdownAckChunk.cpp',
   'src/RTC/SCTP/chunks/OperationErrorChunk.cpp',
@@ -409,7 +409,7 @@ test_sources = [
   'test/src/RTC/SCTP/chunks/TestSackChunk.cpp',
   'test/src/RTC/SCTP/chunks/TestHeartbeatChunk.cpp',
   'test/src/RTC/SCTP/chunks/TestHeartbeatAckChunk.cpp',
-  ## 'test/src/RTC/SCTP/chunks/TestAbortChunk.cpp',
+  'test/src/RTC/SCTP/chunks/TestAbortAssociationChunk.cpp',
   'test/src/RTC/SCTP/chunks/TestShutdownChunk.cpp',
   'test/src/RTC/SCTP/chunks/TestShutdownAckChunk.cpp',
   'test/src/RTC/SCTP/chunks/TestOperationErrorChunk.cpp',
