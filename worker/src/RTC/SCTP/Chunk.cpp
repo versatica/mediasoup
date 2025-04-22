@@ -16,6 +16,7 @@
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/OutOfResourceErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/RestartOfAnAssociationWithNewAddressesErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
@@ -562,6 +563,14 @@ namespace RTC
 					case ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN:
 					{
 						errorCause = CookieReceivedWhileShuttingDownErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES:
+					{
+						errorCause = RestartOfAnAssociationWithNewAddressesErrorCause::ParseStrict(
 						  ptr, causeLength + padding, causeLength, padding);
 
 						break;

@@ -214,6 +214,7 @@ common_sources = [
   'src/RTC/SCTP/errorCauses/UnrecognizedParametersErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/NoUserDataErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/CookieReceivedWhileShuttingDownErrorCause.cpp',
+  'src/RTC/SCTP/errorCauses/RestartOfAnAssociationWithNewAddressesErrorCause.cpp',
   'src/RTC/SCTP/errorCauses/UnknownErrorCause.cpp',
 ]
 
@@ -436,6 +437,7 @@ test_sources = [
   'test/src/RTC/SCTP/errorCauses/TestUnrecognizedParametersErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestNoUserDataErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestCookieReceivedWhileShuttingDownErrorCause.cpp',
+  'test/src/RTC/SCTP/errorCauses/TestRestartOfAnAssociationWithNewAddressesErrorCause.cpp',
   'test/src/RTC/SCTP/errorCauses/TestUnknownErrorCause.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',
