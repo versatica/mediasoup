@@ -59,7 +59,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause1,
+		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -72,7 +72,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		auto* errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(chunk->GetErrorCauseAt(1));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause2,
+		  /*errorCause*/ errorCause2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
@@ -83,7 +83,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		auto* errorCause3 = reinterpret_cast<const UnknownErrorCause*>(chunk->GetErrorCauseAt(2));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause3,
+		  /*errorCause*/ errorCause3,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -128,7 +128,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause1,
+		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -141,7 +141,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(chunk->GetErrorCauseAt(1));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause2,
+		  /*errorCause*/ errorCause2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
@@ -152,7 +152,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause3 = reinterpret_cast<const UnknownErrorCause*>(chunk->GetErrorCauseAt(2));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause3,
+		  /*errorCause*/ errorCause3,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -195,7 +195,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(clonedChunk->GetErrorCauseAt(0));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause1,
+		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -208,7 +208,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(clonedChunk->GetErrorCauseAt(1));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause2,
+		  /*errorCause*/ errorCause2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
@@ -219,7 +219,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause3 = reinterpret_cast<const UnknownErrorCause*>(clonedChunk->GetErrorCauseAt(2));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ errorCause3,
+		  /*errorCause*/ errorCause3,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -257,7 +257,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ true,
 		  /*errorCausesCount*/ 0);
 
-		/* Modify it by adding Chunk Parameters. */
+		/* Modify it by adding Error Causes. */
 
 		auto* errorCause1 = chunk->BuildErrorCauseInPlace<UnrecognizedChunkTypeErrorCause>();
 
@@ -291,7 +291,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const UnrecognizedChunkTypeErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ addedErrorCause1,
+		  /*errorCause*/ addedErrorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
@@ -314,7 +314,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const UnrecognizedChunkTypeErrorCause*>(chunk->GetErrorCauseAt(1));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ addedErrorCause2,
+		  /*errorCause*/ addedErrorCause2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
@@ -355,7 +355,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const UnrecognizedChunkTypeErrorCause*>(parsedChunk->GetErrorCauseAt(0));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ parsedErrorCause1,
+		  /*errorCause*/ parsedErrorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
@@ -378,7 +378,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  reinterpret_cast<const UnrecognizedChunkTypeErrorCause*>(parsedChunk->GetErrorCauseAt(1));
 
 		CHECK_ERROR_CAUSE(
-		  /*parameter*/ parsedErrorCause2,
+		  /*errorCause*/ parsedErrorCause2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
