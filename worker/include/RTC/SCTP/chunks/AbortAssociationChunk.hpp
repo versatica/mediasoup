@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Abort Association Chunk (ABORT) (6).
+		 * SCTP Abort Association Chunk (ABORT) (6).
 		 *
 		 * @see RFC 9260.
 		 *

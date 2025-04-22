@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Payload Data Chunk (DATA) (0).
+		 * SCTP Payload Data Chunk (DATA) (0).
 		 *
 		 * @see RFC 9260.
 		 *

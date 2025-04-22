@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Unrecognized Chunk Type Error Cause (UNRECOGNIZED_CHUNK_TYPE) (6)
+		 * SCTP Unrecognized Chunk Type Error Cause (UNRECOGNIZED_CHUNK_TYPE) (6)
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1

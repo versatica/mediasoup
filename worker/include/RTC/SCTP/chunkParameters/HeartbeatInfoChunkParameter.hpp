@@ -9,14 +9,14 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * HeartberatInfo Chunk Parameter (HEARBEAT INFO) (1).
+		 * SCTP HeartberatInfo Chunk Parameter (HEARBEAT INFO) (1).
 		 *
 		 * @see RFC 9260.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |    Heartbeat Info Type = 1    |        HB Info Length         |
+		 * |           Type = 1            |        HB Info Length         |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * /                Sender-Specific Heartbeat Info                 /
 		 * \                                                               \

@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_STALE_COOKIE_ERROR_CAUSE_HPP
-#define MS_RTC_SCTP_STALE_COOKIE_ERROR_CAUSE_HPP
+#ifndef MS_RTC_SCTP_NO_USER_DATA_ERROR_CAUSE_HPP
+#define MS_RTC_SCTP_NO_USER_DATA_ERROR_CAUSE_HPP
 
 #include "common.hpp"
 #include "Utils.hpp"
@@ -10,78 +10,78 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Stale Cookie Error Cause (STALE_COOKIE) (3)
+		 * SCTP No User Data Error Cause (NO_USER_DATA) (9)
 		 *
 		 * @see RFC 9260.
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |        Cause Code = 3         |       Cause Length = 8        |
+		 * |        Cause Code = 9         |       Cause Length = 8        |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |                 Measure of Staleness (usec.)                  |
+		 * |                              TSN                              |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 */
 
 		// Forward declaration.
 		class Chunk;
 
-		class StaleCookieErrorCause : public ErrorCause
+		class NoUserDataErrorCause : public ErrorCause
 		{
 			// We need that Chunk calls protected and private methods in this class.
 			friend class Chunk;
 
 		public:
-			static const size_t StaleCookieErrorCauseHeaderLength{ 8 };
+			static const size_t NoUserDataErrorCauseHeaderLength{ 8 };
 
 		public:
 			/**
-			 * Parse a StaleCookieErrorCause.
+			 * Parse a NoUserDataErrorCause.
 			 *
 			 * @remarks
 			 * `bufferLength` may exceed the exact length of the Error Cause.
 			 */
-			static StaleCookieErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
+			static NoUserDataErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Parse a StaleCookieErrorCause.
+			 * Parse a NoUserDataErrorCause.
 			 *
 			 * @remarks
 			 * To be used only by `Chunk::ParseErrorCauses()`.
 			 */
-			static StaleCookieErrorCause* ParseStrict(
+			static NoUserDataErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
 
 			/**
-			 * Create a StaleCookieErrorCause.
+			 * Create a NoUserDataErrorCause.
 			 *
 			 * @remarks
 			 * `bufferLength` could be greater than the Error Cause real length.
 			 */
-			static StaleCookieErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+			static NoUserDataErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**
 			 * Only used by Parse(), ParseStrict() and Factory() static methods.
 			 */
-			StaleCookieErrorCause(uint8_t* buffer, size_t bufferLength);
+			NoUserDataErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~StaleCookieErrorCause() override;
+			virtual ~NoUserDataErrorCause() override;
 
 			virtual void Dump(int indentation = 0) const override final;
 
-			virtual StaleCookieErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			virtual NoUserDataErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint32_t GetMeasureOfStaleness() const
+			const uint32_t GetTsn() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
-			void SetMeasureOfStaleness(uint32_t value);
+			void SetTsn(uint32_t value);
 
 		protected:
-			virtual StaleCookieErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			virtual NoUserDataErrorCause* SoftClone(const uint8_t* buffer) const final override;
 
 			/**
 			 * We don't really need to override this method since this Error Cause
@@ -90,7 +90,7 @@ namespace RTC
 			 */
 			virtual size_t GetHeaderLength() const override final
 			{
-				return StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength;
+				return NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength;
 			}
 		};
 	} // namespace SCTP

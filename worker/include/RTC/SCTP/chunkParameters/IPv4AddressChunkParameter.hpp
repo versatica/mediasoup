@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * IPv4 Adress Chunk Parameter (IPV4 ADDRESS) (5).
+		 * SCTP IPv4 Adress Chunk Parameter (IPV4 ADDRESS) (5).
 		 *
 		 * @see RFC 9260.
 		 *

@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Invalid Stream Identifier Error Cause (INVALID_STREAM_IDENTIFIER) (1)
+		 * SCTP Unknown Error Cause (UNKNOWN)
 		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -82,9 +82,6 @@ namespace RTC
 
 		protected:
 			virtual UnknownErrorCause* SoftClone(const uint8_t* buffer) const final override;
-
-		private:
-			void SetReserved();
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -10,8 +10,10 @@
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
+#include "RTC/SCTP/errorCauses/InvalidMandatoryParameterErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
+#include "RTC/SCTP/errorCauses/NoUserDataErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/OutOfResourceErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/StaleCookieErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnknownErrorCause.hpp"
@@ -532,10 +534,26 @@ namespace RTC
 						break;
 					}
 
+					case ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER:
+					{
+						errorCause = InvalidMandatoryParameterErrorCause::ParseStrict(
+						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
 					case ErrorCause::ErrorCauseCode::UNRECOGNIZED_PARAMETERS:
 					{
 						errorCause = UnrecognizedParametersErrorCause::ParseStrict(
 						  ptr, causeLength + padding, causeLength, padding);
+
+						break;
+					}
+
+					case ErrorCause::ErrorCauseCode::NO_USER_DATA:
+					{
+						errorCause =
+						  NoUserDataErrorCause::ParseStrict(ptr, causeLength + padding, causeLength, padding);
 
 						break;
 					}

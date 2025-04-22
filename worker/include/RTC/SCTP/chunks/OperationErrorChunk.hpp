@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Operation Error Chunk (OPERATION_ERROR) (9).
+		 * SCTP Operation Error Chunk (OPERATION_ERROR) (9).
 		 *
 		 * @see RFC 9260.
 		 *

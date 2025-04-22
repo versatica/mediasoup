@@ -54,8 +54,9 @@ namespace RTC
 				OUT_OF_RESOURCE             = 0x0004,
 				UNRESOLVABLE_ADDRESS        = 0x0005,
 				UNRECOGNIZED_CHUNK_TYPE     = 0x0006,
-				// TODO
-				UNRECOGNIZED_PARAMETERS = 0x0008,
+				INVALID_MANDATORY_PARAMETER = 0x0007,
+				UNRECOGNIZED_PARAMETERS     = 0x0008,
+				NO_USER_DATA                = 0x0009,
 				// TODO: Add more.
 			};
 

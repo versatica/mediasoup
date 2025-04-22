@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Shutdown Association Chunk (SHUTDOWN) (7).
+		 * SCTP Shutdown Association Chunk (SHUTDOWN) (7).
 		 *
 		 * @see RFC 9260.
 		 *

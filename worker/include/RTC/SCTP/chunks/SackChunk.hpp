@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Selective Acknowledgement Chunk (SACK) (3)
+		 * SCTP Selective Acknowledgement Chunk (SACK) (3)
 		 *
 		 * @see RFC 9260.
 		 *

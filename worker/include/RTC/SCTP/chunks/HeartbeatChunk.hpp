@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * Heartbeat Request Chunk (HEARTBEAT) (4).
+		 * SCTP Heartbeat Request Chunk (HEARTBEAT) (4).
 		 *
 		 * @see RFC 9260.
 		 *
