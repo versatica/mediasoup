@@ -88,7 +88,6 @@ namespace RTC
 
 		public:
 			~Packet() override;
-			;
 
 			virtual void Dump(int indentation = 0) const override final;
 
