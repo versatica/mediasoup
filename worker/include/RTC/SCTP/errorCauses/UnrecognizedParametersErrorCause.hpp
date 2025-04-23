@@ -39,6 +39,15 @@ namespace RTC
 			static UnrecognizedParametersErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a UnrecognizedParametersErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static UnrecognizedParametersErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a UnrecognizedParametersErrorCause.
 			 *
 			 * @remarks
@@ -46,14 +55,6 @@ namespace RTC
 			 */
 			static UnrecognizedParametersErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a UnrecognizedParametersErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static UnrecognizedParametersErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

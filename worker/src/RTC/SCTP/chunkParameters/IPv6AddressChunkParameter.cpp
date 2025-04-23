@@ -37,29 +37,6 @@ namespace RTC
 			return IPv6AddressChunkParameter::ParseStrict(buffer, bufferLength, parameterLength, padding);
 		}
 
-		IPv6AddressChunkParameter* IPv6AddressChunkParameter::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			if (parameterLength != IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "IPv6AddressChunkParameter Length field must be %zu",
-				  IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength);
-
-				return nullptr;
-			}
-
-			auto* parameter = new IPv6AddressChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
-			return parameter;
-		}
-
 		IPv6AddressChunkParameter* IPv6AddressChunkParameter::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -79,6 +56,29 @@ namespace RTC
 			parameter->ResetIPv6Address();
 
 			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return parameter;
+		}
+
+		IPv6AddressChunkParameter* IPv6AddressChunkParameter::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			if (parameterLength != IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "IPv6AddressChunkParameter Length field must be %zu",
+				  IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength);
+
+				return nullptr;
+			}
+
+			auto* parameter = new IPv6AddressChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Mark the Parameter as frozen since we are parsing.
+			parameter->Freeze();
 
 			return parameter;
 		}

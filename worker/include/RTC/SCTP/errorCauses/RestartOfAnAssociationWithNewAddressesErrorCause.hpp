@@ -41,15 +41,6 @@ namespace RTC
 			  const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Parse a RestartOfAnAssociationWithNewAddressesErrorCause.
-			 *
-			 * @remarks
-			 * To be used only by `Chunk::ParseErrorCauses()`.
-			 */
-			static RestartOfAnAssociationWithNewAddressesErrorCause* ParseStrict(
-			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
 			 * Create a RestartOfAnAssociationWithNewAddressesErrorCause.
 			 *
 			 * @remarks
@@ -57,6 +48,16 @@ namespace RTC
 			 */
 			static RestartOfAnAssociationWithNewAddressesErrorCause* Factory(
 			  uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
+			 * Parse a RestartOfAnAssociationWithNewAddressesErrorCause.
+			 *
+			 * @remarks
+			 * To be used only by `Chunk::ParseErrorCauses()`.
+			 */
+			static RestartOfAnAssociationWithNewAddressesErrorCause* ParseStrict(
+			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
 
 		private:
 			/**

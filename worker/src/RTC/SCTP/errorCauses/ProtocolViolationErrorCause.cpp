@@ -35,23 +35,6 @@ namespace RTC
 			return ProtocolViolationErrorCause::ParseStrict(buffer, bufferLength, causeLength, padding);
 		}
 
-		ProtocolViolationErrorCause* ProtocolViolationErrorCause::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			auto* errorCause = new ProtocolViolationErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Must always invoke SetLength() after constructing a Serializable with
-			// not fixed length.
-			errorCause->SetLength(causeLength + padding);
-
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
-			return errorCause;
-		}
-
 		ProtocolViolationErrorCause* ProtocolViolationErrorCause::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -67,6 +50,23 @@ namespace RTC
 			  ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION, ErrorCause::ErrorCauseHeaderLength);
 
 			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
+		ProtocolViolationErrorCause* ProtocolViolationErrorCause::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			auto* errorCause = new ProtocolViolationErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Must always invoke SetLength() after constructing a Serializable with
+			// not fixed length.
+			errorCause->SetLength(causeLength + padding);
+
+			// Mark the Error Cause as frozen since we are parsing.
+			errorCause->Freeze();
 
 			return errorCause;
 		}

@@ -34,27 +34,6 @@ namespace RTC
 			return ShutdownChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
-		ShutdownChunk* ShutdownChunk::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			if (chunkLength != ShutdownChunk::ShutdownChunkHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp, "ShutdownChunk Length field must be %zu", ShutdownChunk::ShutdownChunkHeaderLength);
-
-				return nullptr;
-			}
-
-			auto* chunk = new ShutdownChunk(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
-			return chunk;
-		}
-
 		ShutdownChunk* ShutdownChunk::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -73,6 +52,27 @@ namespace RTC
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// ShutdownChunk fixed length.
+
+			return chunk;
+		}
+
+		ShutdownChunk* ShutdownChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			if (chunkLength != ShutdownChunk::ShutdownChunkHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp, "ShutdownChunk Length field must be %zu", ShutdownChunk::ShutdownChunkHeaderLength);
+
+				return nullptr;
+			}
+
+			auto* chunk = new ShutdownChunk(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Mark the Chunk as frozen since we are parsing.
+			chunk->Freeze();
 
 			return chunk;
 		}

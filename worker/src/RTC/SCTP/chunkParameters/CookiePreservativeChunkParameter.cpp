@@ -37,30 +37,6 @@ namespace RTC
 			  buffer, bufferLength, parameterLength, padding);
 		}
 
-		CookiePreservativeChunkParameter* CookiePreservativeChunkParameter::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			if (parameterLength != CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "CookiePreservativeChunkParameter Length field must be %zu",
-				  CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength);
-
-				return nullptr;
-			}
-
-			auto* parameter =
-			  new CookiePreservativeChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
-			return parameter;
-		}
-
 		CookiePreservativeChunkParameter* CookiePreservativeChunkParameter::Factory(
 		  uint8_t* buffer, size_t bufferLength)
 		{
@@ -81,6 +57,30 @@ namespace RTC
 			parameter->SetLifeSpanIncrement(0);
 
 			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return parameter;
+		}
+
+		CookiePreservativeChunkParameter* CookiePreservativeChunkParameter::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			if (parameterLength != CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "CookiePreservativeChunkParameter Length field must be %zu",
+				  CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength);
+
+				return nullptr;
+			}
+
+			auto* parameter =
+			  new CookiePreservativeChunkParameter(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Mark the Parameter as frozen since we are parsing.
+			parameter->Freeze();
 
 			return parameter;
 		}

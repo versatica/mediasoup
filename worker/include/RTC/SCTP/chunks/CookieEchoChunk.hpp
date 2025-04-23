@@ -46,6 +46,15 @@ namespace RTC
 			static CookieEchoChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a CookieEchoChunk.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Chunk real length.
+			 */
+			static CookieEchoChunk* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a CookieEchoChunk.
 			 *
 			 * @remarks
@@ -53,14 +62,6 @@ namespace RTC
 			 */
 			static CookieEchoChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
-
-			/**
-			 * Create a CookieEchoChunk.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
-			 */
-			static CookieEchoChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

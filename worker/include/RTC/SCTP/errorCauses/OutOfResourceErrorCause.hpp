@@ -38,6 +38,15 @@ namespace RTC
 			static OutOfResourceErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a OutOfResourceErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static OutOfResourceErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a OutOfResourceErrorCause.
 			 *
 			 * @remarks
@@ -45,14 +54,6 @@ namespace RTC
 			 */
 			static OutOfResourceErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a OutOfResourceErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static OutOfResourceErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

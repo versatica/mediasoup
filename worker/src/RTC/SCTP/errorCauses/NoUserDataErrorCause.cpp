@@ -34,29 +34,6 @@ namespace RTC
 			return NoUserDataErrorCause::ParseStrict(buffer, bufferLength, causeLength, padding);
 		}
 
-		NoUserDataErrorCause* NoUserDataErrorCause::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			if (causeLength != NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "NoUserDataErrorCause Length field must be %zu",
-				  NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength);
-
-				return nullptr;
-			}
-
-			auto* errorCause = new NoUserDataErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
-			return errorCause;
-		}
-
 		NoUserDataErrorCause* NoUserDataErrorCause::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -76,6 +53,29 @@ namespace RTC
 			errorCause->SetTsn(0);
 
 			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
+		NoUserDataErrorCause* NoUserDataErrorCause::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			if (causeLength != NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "NoUserDataErrorCause Length field must be %zu",
+				  NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength);
+
+				return nullptr;
+			}
+
+			auto* errorCause = new NoUserDataErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Mark the Error Cause as frozen since we are parsing.
+			errorCause->Freeze();
 
 			return errorCause;
 		}

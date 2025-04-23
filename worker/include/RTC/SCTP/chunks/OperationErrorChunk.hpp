@@ -48,6 +48,15 @@ namespace RTC
 			static OperationErrorChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a OperationErrorChunk.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Chunk real length.
+			 */
+			static OperationErrorChunk* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a OperationErrorChunk.
 			 *
 			 * @remarks
@@ -55,14 +64,6 @@ namespace RTC
 			 */
 			static OperationErrorChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
-
-			/**
-			 * Create a OperationErrorChunk.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
-			 */
-			static OperationErrorChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

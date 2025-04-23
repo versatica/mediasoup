@@ -39,6 +39,15 @@ namespace RTC
 			static ProtocolViolationErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a ProtocolViolationErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static ProtocolViolationErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a ProtocolViolationErrorCause.
 			 *
 			 * @remarks
@@ -46,14 +55,6 @@ namespace RTC
 			 */
 			static ProtocolViolationErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a ProtocolViolationErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static ProtocolViolationErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

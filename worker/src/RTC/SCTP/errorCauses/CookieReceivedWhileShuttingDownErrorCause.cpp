@@ -36,6 +36,27 @@ namespace RTC
 			  buffer, bufferLength, causeLength, padding);
 		}
 
+		CookieReceivedWhileShuttingDownErrorCause* CookieReceivedWhileShuttingDownErrorCause::Factory(
+		  uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < ErrorCause::ErrorCauseHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* errorCause = new CookieReceivedWhileShuttingDownErrorCause(buffer, bufferLength);
+
+			errorCause->InitializeHeader(
+			  ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
+			  ErrorCause::ErrorCauseHeaderLength);
+
+			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
 		CookieReceivedWhileShuttingDownErrorCause* CookieReceivedWhileShuttingDownErrorCause::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
 		{
@@ -56,27 +77,6 @@ namespace RTC
 
 			// Mark the Error Cause as frozen since we are parsing.
 			errorCause->Freeze();
-
-			return errorCause;
-		}
-
-		CookieReceivedWhileShuttingDownErrorCause* CookieReceivedWhileShuttingDownErrorCause::Factory(
-		  uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < ErrorCause::ErrorCauseHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* errorCause = new CookieReceivedWhileShuttingDownErrorCause(buffer, bufferLength);
-
-			errorCause->InitializeHeader(
-			  ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
-			  ErrorCause::ErrorCauseHeaderLength);
-
-			// No need to invoke SetLength() since parent constructor invoked it.
 
 			return errorCause;
 		}

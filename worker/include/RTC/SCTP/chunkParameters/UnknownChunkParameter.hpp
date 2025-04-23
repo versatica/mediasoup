@@ -39,6 +39,7 @@ namespace RTC
 			 */
 			static UnknownChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
+		private:
 			/**
 			 * Parse a UnknownChunkParameter.
 			 *

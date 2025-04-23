@@ -87,6 +87,15 @@ namespace RTC
 			static DataChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a DataChunk.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Chunk real length.
+			 */
+			static DataChunk* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a DataChunk.
 			 *
 			 * @remarks
@@ -94,14 +103,6 @@ namespace RTC
 			 */
 			static DataChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
-
-			/**
-			 * Create a DataChunk.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
-			 */
-			static DataChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

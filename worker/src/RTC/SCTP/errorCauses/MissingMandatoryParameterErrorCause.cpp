@@ -36,6 +36,30 @@ namespace RTC
 			  buffer, bufferLength, causeLength, padding);
 		}
 
+		MissingMandatoryParameterErrorCause* MissingMandatoryParameterErrorCause::Factory(
+		  uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* errorCause = new MissingMandatoryParameterErrorCause(buffer, bufferLength);
+
+			errorCause->InitializeHeader(
+			  ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+			  MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength);
+
+			// Initialize extra fields.
+			errorCause->SetNumberOfMissingParameters(0);
+
+			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
 		MissingMandatoryParameterErrorCause* MissingMandatoryParameterErrorCause::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
 		{
@@ -72,30 +96,6 @@ namespace RTC
 
 			// Mark the Error Cause as frozen since we are parsing.
 			errorCause->Freeze();
-
-			return errorCause;
-		}
-
-		MissingMandatoryParameterErrorCause* MissingMandatoryParameterErrorCause::Factory(
-		  uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* errorCause = new MissingMandatoryParameterErrorCause(buffer, bufferLength);
-
-			errorCause->InitializeHeader(
-			  ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
-			  MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength);
-
-			// Initialize extra fields.
-			errorCause->SetNumberOfMissingParameters(0);
-
-			// No need to invoke SetLength() since parent constructor invoked it.
 
 			return errorCause;
 		}

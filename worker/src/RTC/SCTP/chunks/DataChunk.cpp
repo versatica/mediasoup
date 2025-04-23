@@ -34,6 +34,31 @@ namespace RTC
 			return DataChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
+		DataChunk* DataChunk::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < DataChunk::DataChunkHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* chunk = new DataChunk(buffer, bufferLength);
+
+			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
+
+			// Must also initialize extra fields in the header.
+			chunk->SetTsn(0);
+			chunk->SetStreamIdentifierS(0);
+			chunk->SetStreamSequenceNumberN(0);
+			chunk->SetPayloadProtocolIdentifier(0);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum DataChunk length.
+
+			return chunk;
+		}
+
 		DataChunk* DataChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{
@@ -57,31 +82,6 @@ namespace RTC
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
-
-			return chunk;
-		}
-
-		DataChunk* DataChunk::Factory(uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < DataChunk::DataChunkHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* chunk = new DataChunk(buffer, bufferLength);
-
-			chunk->InitializeHeader(Chunk::ChunkType::DATA, 0, DataChunk::DataChunkHeaderLength);
-
-			// Must also initialize extra fields in the header.
-			chunk->SetTsn(0);
-			chunk->SetStreamIdentifierS(0);
-			chunk->SetStreamSequenceNumberN(0);
-			chunk->SetPayloadProtocolIdentifier(0);
-
-			// No need to invoke SetLength() since constructor invoked it with
-			// minimum DataChunk length.
 
 			return chunk;
 		}

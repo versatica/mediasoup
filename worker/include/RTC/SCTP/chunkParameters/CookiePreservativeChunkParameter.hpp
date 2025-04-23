@@ -44,6 +44,15 @@ namespace RTC
 			static CookiePreservativeChunkParameter* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a CookiePreservativeChunkParameter.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Parameter real length.
+			 */
+			static CookiePreservativeChunkParameter* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a CookiePreservativeChunkParameter.
 			 *
 			 * @remarks
@@ -51,14 +60,6 @@ namespace RTC
 			 */
 			static CookiePreservativeChunkParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
-
-			/**
-			 * Create a CookiePreservativeChunkParameter.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Parameter real length.
-			 */
-			static CookiePreservativeChunkParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

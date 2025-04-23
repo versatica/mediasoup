@@ -36,6 +36,26 @@ namespace RTC
 			  buffer, bufferLength, causeLength, padding);
 		}
 
+		InvalidMandatoryParameterErrorCause* InvalidMandatoryParameterErrorCause::Factory(
+		  uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < ErrorCause::ErrorCauseHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* errorCause = new InvalidMandatoryParameterErrorCause(buffer, bufferLength);
+
+			errorCause->InitializeHeader(
+			  ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER, ErrorCause::ErrorCauseHeaderLength);
+
+			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
 		InvalidMandatoryParameterErrorCause* InvalidMandatoryParameterErrorCause::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
 		{
@@ -56,26 +76,6 @@ namespace RTC
 
 			// Mark the Error Cause as frozen since we are parsing.
 			errorCause->Freeze();
-
-			return errorCause;
-		}
-
-		InvalidMandatoryParameterErrorCause* InvalidMandatoryParameterErrorCause::Factory(
-		  uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < ErrorCause::ErrorCauseHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* errorCause = new InvalidMandatoryParameterErrorCause(buffer, bufferLength);
-
-			errorCause->InitializeHeader(
-			  ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER, ErrorCause::ErrorCauseHeaderLength);
-
-			// No need to invoke SetLength() since parent constructor invoked it.
 
 			return errorCause;
 		}

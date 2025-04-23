@@ -39,6 +39,15 @@ namespace RTC
 			static UnrecognizedChunkTypeErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a UnrecognizedChunkTypeErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static UnrecognizedChunkTypeErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a UnrecognizedChunkTypeErrorCause.
 			 *
 			 * @remarks
@@ -46,14 +55,6 @@ namespace RTC
 			 */
 			static UnrecognizedChunkTypeErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a UnrecognizedChunkTypeErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static UnrecognizedChunkTypeErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

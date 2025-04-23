@@ -37,6 +37,27 @@ namespace RTC
 			  buffer, bufferLength, parameterLength, padding);
 		}
 
+		SupportedAddressTypesChunkParameter* SupportedAddressTypesChunkParameter::Factory(
+		  uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < ChunkParameter::ChunkParameterHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* parameter = new SupportedAddressTypesChunkParameter(buffer, bufferLength);
+
+			parameter->InitializeHeader(
+			  ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,
+			  ChunkParameter::ChunkParameterHeaderLength);
+
+			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return parameter;
+		}
+
 		SupportedAddressTypesChunkParameter* SupportedAddressTypesChunkParameter::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
 		{
@@ -60,27 +81,6 @@ namespace RTC
 
 			// Mark the Parameter as frozen since we are parsing.
 			parameter->Freeze();
-
-			return parameter;
-		}
-
-		SupportedAddressTypesChunkParameter* SupportedAddressTypesChunkParameter::Factory(
-		  uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < ChunkParameter::ChunkParameterHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* parameter = new SupportedAddressTypesChunkParameter(buffer, bufferLength);
-
-			parameter->InitializeHeader(
-			  ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,
-			  ChunkParameter::ChunkParameterHeaderLength);
-
-			// No need to invoke SetLength() since parent constructor invoked it.
 
 			return parameter;
 		}

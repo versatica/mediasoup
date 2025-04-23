@@ -35,6 +35,31 @@ namespace RTC
 			return SackChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
+		SackChunk* SackChunk::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < SackChunk::SackChunkHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* chunk = new SackChunk(buffer, bufferLength);
+
+			chunk->InitializeHeader(Chunk::ChunkType::SACK, 0, SackChunk::SackChunkHeaderLength);
+
+			// Must also initialize extra fields in the header.
+			chunk->SetCumulativeTsnAck(0);
+			chunk->SetAdvertisedReceiverWindowCredit(0);
+			chunk->SetNumberOfGapAckBlocks(0);
+			chunk->SetNumberOfDuplicateTsns(0);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum SackChunk length.
+
+			return chunk;
+		}
+
 		SackChunk* SackChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{
@@ -70,31 +95,6 @@ namespace RTC
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
-
-			return chunk;
-		}
-
-		SackChunk* SackChunk::Factory(uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < SackChunk::SackChunkHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* chunk = new SackChunk(buffer, bufferLength);
-
-			chunk->InitializeHeader(Chunk::ChunkType::SACK, 0, SackChunk::SackChunkHeaderLength);
-
-			// Must also initialize extra fields in the header.
-			chunk->SetCumulativeTsnAck(0);
-			chunk->SetAdvertisedReceiverWindowCredit(0);
-			chunk->SetNumberOfGapAckBlocks(0);
-			chunk->SetNumberOfDuplicateTsns(0);
-
-			// No need to invoke SetLength() since constructor invoked it with
-			// minimum SackChunk length.
 
 			return chunk;
 		}

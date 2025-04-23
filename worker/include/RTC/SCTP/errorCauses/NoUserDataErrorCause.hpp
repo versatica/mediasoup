@@ -44,6 +44,15 @@ namespace RTC
 			static NoUserDataErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a NoUserDataErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static NoUserDataErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a NoUserDataErrorCause.
 			 *
 			 * @remarks
@@ -51,14 +60,6 @@ namespace RTC
 			 */
 			static NoUserDataErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a NoUserDataErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static NoUserDataErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

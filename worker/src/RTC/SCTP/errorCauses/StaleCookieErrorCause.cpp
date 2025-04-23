@@ -34,29 +34,6 @@ namespace RTC
 			return StaleCookieErrorCause::ParseStrict(buffer, bufferLength, causeLength, padding);
 		}
 
-		StaleCookieErrorCause* StaleCookieErrorCause::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			if (causeLength != StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "StaleCookieErrorCause Length field must be %zu",
-				  StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength);
-
-				return nullptr;
-			}
-
-			auto* errorCause = new StaleCookieErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
-			return errorCause;
-		}
-
 		StaleCookieErrorCause* StaleCookieErrorCause::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -76,6 +53,29 @@ namespace RTC
 			errorCause->SetMeasureOfStaleness(0);
 
 			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
+		StaleCookieErrorCause* StaleCookieErrorCause::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			if (causeLength != StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "StaleCookieErrorCause Length field must be %zu",
+				  StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength);
+
+				return nullptr;
+			}
+
+			auto* errorCause = new StaleCookieErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Mark the Error Cause as frozen since we are parsing.
+			errorCause->Freeze();
 
 			return errorCause;
 		}

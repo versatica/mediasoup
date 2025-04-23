@@ -49,6 +49,15 @@ namespace RTC
 			static MissingMandatoryParameterErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a MissingMandatoryParameterErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static MissingMandatoryParameterErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a MissingMandatoryParameterErrorCause.
 			 *
 			 * @remarks
@@ -56,14 +65,6 @@ namespace RTC
 			 */
 			static MissingMandatoryParameterErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a MissingMandatoryParameterErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static MissingMandatoryParameterErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

@@ -38,6 +38,7 @@ namespace RTC
 			 */
 			static UnknownErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
+		private:
 			/**
 			 * Parse a UnknownErrorCause.
 			 *

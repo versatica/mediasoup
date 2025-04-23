@@ -34,6 +34,25 @@ namespace RTC
 			return OperationErrorChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
+		OperationErrorChunk* OperationErrorChunk::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < Chunk::ChunkHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* chunk = new OperationErrorChunk(buffer, bufferLength);
+
+			chunk->InitializeHeader(Chunk::ChunkType::OPERATION_ERROR, 0, Chunk::ChunkHeaderLength);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum OperationErrorChunk length.
+
+			return chunk;
+		}
+
 		OperationErrorChunk* OperationErrorChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{
@@ -56,25 +75,6 @@ namespace RTC
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
-
-			return chunk;
-		}
-
-		OperationErrorChunk* OperationErrorChunk::Factory(uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < Chunk::ChunkHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* chunk = new OperationErrorChunk(buffer, bufferLength);
-
-			chunk->InitializeHeader(Chunk::ChunkType::OPERATION_ERROR, 0, Chunk::ChunkHeaderLength);
-
-			// No need to invoke SetLength() since constructor invoked it with
-			// minimum OperationErrorChunk length.
 
 			return chunk;
 		}

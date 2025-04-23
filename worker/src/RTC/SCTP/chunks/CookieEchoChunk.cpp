@@ -34,23 +34,6 @@ namespace RTC
 			return CookieEchoChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
-		CookieEchoChunk* CookieEchoChunk::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			auto* chunk = new CookieEchoChunk(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Must always invoke SetLength() after constructing a Serializable with
-			// not fixed length.
-			chunk->SetLength(chunkLength + padding);
-
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
-			return chunk;
-		}
-
 		CookieEchoChunk* CookieEchoChunk::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -66,6 +49,23 @@ namespace RTC
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum CookieEchoChunk length.
+
+			return chunk;
+		}
+
+		CookieEchoChunk* CookieEchoChunk::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			auto* chunk = new CookieEchoChunk(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Must always invoke SetLength() after constructing a Serializable with
+			// not fixed length.
+			chunk->SetLength(chunkLength + padding);
+
+			// Mark the Chunk as frozen since we are parsing.
+			chunk->Freeze();
 
 			return chunk;
 		}

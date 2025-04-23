@@ -44,6 +44,15 @@ namespace RTC
 			static InvalidStreamIdentifierErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a InvalidStreamIdentifierErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static InvalidStreamIdentifierErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a InvalidStreamIdentifierErrorCause.
 			 *
 			 * @remarks
@@ -51,14 +60,6 @@ namespace RTC
 			 */
 			static InvalidStreamIdentifierErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a InvalidStreamIdentifierErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static InvalidStreamIdentifierErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

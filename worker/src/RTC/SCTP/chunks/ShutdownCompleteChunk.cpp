@@ -34,6 +34,25 @@ namespace RTC
 			return ShutdownCompleteChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
+		ShutdownCompleteChunk* ShutdownCompleteChunk::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < Chunk::ChunkHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("buffer too small");
+			}
+
+			auto* chunk = new ShutdownCompleteChunk(buffer, bufferLength);
+
+			chunk->InitializeHeader(Chunk::ChunkType::SHUTDOWN_COMPLETE, 0, Chunk::ChunkHeaderLength);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// ShutdownCompleteChunk fixed length.
+
+			return chunk;
+		}
+
 		ShutdownCompleteChunk* ShutdownCompleteChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{
@@ -50,25 +69,6 @@ namespace RTC
 
 			// Mark the Chunk as frozen since we are parsing.
 			chunk->Freeze();
-
-			return chunk;
-		}
-
-		ShutdownCompleteChunk* ShutdownCompleteChunk::Factory(uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < Chunk::ChunkHeaderLength)
-			{
-				MS_THROW_TYPE_ERROR("buffer too small");
-			}
-
-			auto* chunk = new ShutdownCompleteChunk(buffer, bufferLength);
-
-			chunk->InitializeHeader(Chunk::ChunkType::SHUTDOWN_COMPLETE, 0, Chunk::ChunkHeaderLength);
-
-			// No need to invoke SetLength() since constructor invoked it with
-			// ShutdownCompleteChunk fixed length.
 
 			return chunk;
 		}

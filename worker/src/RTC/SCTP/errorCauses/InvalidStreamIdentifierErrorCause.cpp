@@ -36,30 +36,6 @@ namespace RTC
 			  buffer, bufferLength, causeLength, padding);
 		}
 
-		InvalidStreamIdentifierErrorCause* InvalidStreamIdentifierErrorCause::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
-		{
-			MS_TRACE();
-
-			if (causeLength != InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength)
-			{
-				MS_WARN_TAG(
-				  sctp,
-				  "InvalidStreamIdentifierErrorCause Length field must be %zu",
-				  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
-
-				return nullptr;
-			}
-
-			auto* errorCause =
-			  new InvalidStreamIdentifierErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
-			return errorCause;
-		}
-
 		InvalidStreamIdentifierErrorCause* InvalidStreamIdentifierErrorCause::Factory(
 		  uint8_t* buffer, size_t bufferLength)
 		{
@@ -81,6 +57,30 @@ namespace RTC
 			errorCause->SetReserved();
 
 			// No need to invoke SetLength() since parent constructor invoked it.
+
+			return errorCause;
+		}
+
+		InvalidStreamIdentifierErrorCause* InvalidStreamIdentifierErrorCause::ParseStrict(
+		  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding)
+		{
+			MS_TRACE();
+
+			if (causeLength != InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "InvalidStreamIdentifierErrorCause Length field must be %zu",
+				  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
+
+				return nullptr;
+			}
+
+			auto* errorCause =
+			  new InvalidStreamIdentifierErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
+
+			// Mark the Error Cause as frozen since we are parsing.
+			errorCause->Freeze();
 
 			return errorCause;
 		}

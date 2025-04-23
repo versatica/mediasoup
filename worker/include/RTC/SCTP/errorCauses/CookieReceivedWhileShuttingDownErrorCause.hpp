@@ -39,6 +39,15 @@ namespace RTC
 			static CookieReceivedWhileShuttingDownErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a CookieReceivedWhileShuttingDownErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static CookieReceivedWhileShuttingDownErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a CookieReceivedWhileShuttingDownErrorCause.
 			 *
 			 * @remarks
@@ -46,14 +55,6 @@ namespace RTC
 			 */
 			static CookieReceivedWhileShuttingDownErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a CookieReceivedWhileShuttingDownErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static CookieReceivedWhileShuttingDownErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

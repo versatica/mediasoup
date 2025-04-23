@@ -39,6 +39,15 @@ namespace RTC
 			static UserInitiatedAbortErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a UserInitiatedAbortErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static UserInitiatedAbortErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a UserInitiatedAbortErrorCause.
 			 *
 			 * @remarks
@@ -46,14 +55,6 @@ namespace RTC
 			 */
 			static UserInitiatedAbortErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a UserInitiatedAbortErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static UserInitiatedAbortErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

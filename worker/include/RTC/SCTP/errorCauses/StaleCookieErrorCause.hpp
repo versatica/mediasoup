@@ -44,6 +44,15 @@ namespace RTC
 			static StaleCookieErrorCause* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a StaleCookieErrorCause.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Error Cause real length.
+			 */
+			static StaleCookieErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a StaleCookieErrorCause.
 			 *
 			 * @remarks
@@ -51,14 +60,6 @@ namespace RTC
 			 */
 			static StaleCookieErrorCause* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t causeLength, uint8_t padding);
-
-			/**
-			 * Create a StaleCookieErrorCause.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Error Cause real length.
-			 */
-			static StaleCookieErrorCause* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**

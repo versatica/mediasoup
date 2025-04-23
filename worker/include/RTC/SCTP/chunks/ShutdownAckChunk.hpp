@@ -42,6 +42,15 @@ namespace RTC
 			static ShutdownAckChunk* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Create a ShutdownAckChunk.
+			 *
+			 * @remarks
+			 * `bufferLength` could be greater than the Chunk real length.
+			 */
+			static ShutdownAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
+
+		private:
+			/**
 			 * Parse a ShutdownAckChunk.
 			 *
 			 * @remarks
@@ -49,14 +58,6 @@ namespace RTC
 			 */
 			static ShutdownAckChunk* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding);
-
-			/**
-			 * Create a ShutdownAckChunk.
-			 *
-			 * @remarks
-			 * `bufferLength` could be greater than the Chunk real length.
-			 */
-			static ShutdownAckChunk* Factory(uint8_t* buffer, size_t bufferLength);
 
 		private:
 			/**
