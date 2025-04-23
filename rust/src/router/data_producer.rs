@@ -428,7 +428,7 @@ impl DataProducer {
         if let response::Body::DataProducerDumpResponse(data) = response {
             Ok(DataProducerDump::from_fbs(*data).expect("Error parsing dump response"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
@@ -448,7 +448,7 @@ impl DataProducer {
         if let response::Body::DataProducerGetStatsResponse(data) = response {
             Ok(vec![DataProducerStat::from_fbs(&data)])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 

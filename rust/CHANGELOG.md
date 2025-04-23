@@ -2,7 +2,10 @@
 
 # NEXT
 
+# 0.18.0
+
 - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+- New enum variant was added in 0.17.2.
 
 # 0.17.2
 
