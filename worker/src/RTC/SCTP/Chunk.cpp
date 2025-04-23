@@ -154,27 +154,20 @@ namespace RTC
 			AssertNotFrozen();
 			AssertCanHaveParameters();
 
-			size_t length = GetLength() + parameter->GetLength();
+			size_t previousLength = GetLength();
+
+			// This will update the total length and Length field of the Chunk.
+			// NOTE: It may throw.
+			AddItem(parameter);
 
 			// Let's append the Parameter at the end of existing Parameters.
 			auto* clonedParameter =
-			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), parameter->GetLength());
-
-			// Update Serializable length.
-			try
-			{
-				SetLength(length);
-			}
-			catch (const MediaSoupError& error)
-			{
-				delete clonedParameter;
-
-				throw;
-			}
+			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
 
 			// Freeze the cloned Parameter.
 			clonedParameter->Freeze();
 
+			// Add the Parameter to the list.
 			this->parameters.push_back(clonedParameter);
 		}
 
@@ -185,23 +178,15 @@ namespace RTC
 			AssertNotFrozen();
 			AssertCanHaveErrorCauses();
 
-			size_t length = GetLength() + errorCause->GetLength();
+			size_t previousLength = GetLength();
+
+			// This will update the total length and Length field of the Chunk.
+			// NOTE: It may throw.
+			AddItem(errorCause);
 
 			// Let's append the Error Cause at the end of existing Error Causes.
-			auto* clonedErrorCause =
-			  errorCause->Clone(const_cast<uint8_t*>(GetBuffer()) + GetLength(), errorCause->GetLength());
-
-			// Update Serializable length.
-			try
-			{
-				SetLength(length);
-			}
-			catch (const MediaSoupError& error)
-			{
-				delete clonedErrorCause;
-
-				throw;
-			}
+			auto* clonedErrorCause = errorCause->Clone(
+			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
 
 			// Freeze the cloned Error Cause.
 			clonedErrorCause->Freeze();

@@ -238,4 +238,93 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 		delete parsedChunk;
 	}
+
+	SECTION("AbortAssociationChunk::Factory() with AddErrorCause() succeeds")
+	{
+		auto* chunk = AbortAssociationChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+
+		chunk->SetT(true);
+
+		// 8 bytes Error Cause.
+		auto* errorCause1 = StaleCookieErrorCause::Factory(FactoryBuffer + 1000, sizeof(FactoryBuffer));
+
+		errorCause1->SetMeasureOfStaleness(666666);
+
+		chunk->AddErrorCause(errorCause1);
+
+		// Chunk length must be:
+		// - Chunk header: 4
+		// - Error Cause 1: 8
+		// - Total: 12
+
+		CHECK_CHUNK(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 12,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ true,
+		  /*errorCausesCount*/ 1);
+
+		REQUIRE(chunk->GetT() == true);
+
+		auto* obtainedErrorCause1 =
+		  reinterpret_cast<const StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
+
+		CHECK_ERROR_CAUSE(
+		  /*errorCause*/ obtainedErrorCause1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*unknownCode*/ false);
+
+		REQUIRE(obtainedErrorCause1->GetMeasureOfStaleness() == 666666);
+
+		/* Parse itself and compare. */
+
+		auto* parsedChunk = AbortAssociationChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+
+		delete chunk;
+
+		CHECK_CHUNK(
+		  /*chunk*/ parsedChunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ true,
+		  /*errorCausesCount*/ 1);
+
+		REQUIRE(parsedChunk->GetT() == true);
+
+		obtainedErrorCause1 =
+		  reinterpret_cast<const StaleCookieErrorCause*>(parsedChunk->GetErrorCauseAt(0));
+
+		CHECK_ERROR_CAUSE(
+		  /*errorCause*/ obtainedErrorCause1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*unknownCode*/ false);
+
+		REQUIRE(obtainedErrorCause1->GetMeasureOfStaleness() == 666666);
+
+		delete parsedChunk;
+	}
 }

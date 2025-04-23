@@ -5,6 +5,7 @@
 #include "RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
@@ -495,6 +496,172 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
 
 		REQUIRE(parsedParameter3->GetLifeSpanIncrement() == 876543210);
+
+		delete parsedChunk;
+	}
+
+	SECTION("InitChunk::Factory() using AddParameter() succeeds")
+	{
+		auto* chunk = InitChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+
+		chunk->SetInitiateTag(1);
+		chunk->SetAdvertisedReceiverWindowCredit(2);
+		chunk->SetNumberOfOutboundStreams(3);
+		chunk->SetNumberOfInboundStreams(4);
+		chunk->SetInitialTsn(5);
+
+		auto* parameter1 =
+		  CookiePreservativeChunkParameter::Factory(FactoryBuffer + 1000, sizeof(FactoryBuffer));
+
+		// 8 bytes Chunk Parameter.
+		parameter1->SetLifeSpanIncrement(123456);
+
+		chunk->AddParameter(parameter1);
+
+		// Chunk length must be:
+		// - Chunk header: 20
+		// - Parameter 1: 8
+		// - Total: 28
+
+		CHECK_CHUNK(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 28,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::INIT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
+		  /*parametersCount*/ 1,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
+
+		auto* obtainedParameter1 =
+		  reinterpret_cast<const CookiePreservativeChunkParameter*>(chunk->GetParameterAt(0));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+
+		REQUIRE(obtainedParameter1->GetLifeSpanIncrement() == 123456);
+
+		// 4 bytes Chunk Parameter.
+		auto* parameter2 =
+		  SupportedAddressTypesChunkParameter::Factory(FactoryBuffer + 1000, sizeof(FactoryBuffer));
+
+		// Add 6 bytes.
+		parameter2->AddAddressType(1111);
+		parameter2->AddAddressType(2222);
+		parameter2->AddAddressType(3333);
+
+		chunk->AddParameter(parameter2);
+
+		// Chunk length must be:
+		// - Chunk header: 20
+		// - Parameter 1: 8
+		// - Parameter 2: 12
+		// - Total: 40
+
+		CHECK_CHUNK(
+		  /*chunk*/ chunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 40,
+		  /*frozen*/ false,
+		  /*chunkType*/ Chunk::ChunkType::INIT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
+
+		auto* obtainedParameter2 =
+		  reinterpret_cast<const SupportedAddressTypesChunkParameter*>(chunk->GetParameterAt(1));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter2,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+
+		REQUIRE(obtainedParameter2->GetNumberOfAddressTypes() == 3);
+		REQUIRE(obtainedParameter2->GetAddressTypeAt(0) == 1111);
+		REQUIRE(obtainedParameter2->GetAddressTypeAt(1) == 2222);
+		REQUIRE(obtainedParameter2->GetAddressTypeAt(2) == 3333);
+
+		/* Parse itself and compare. */
+
+		auto* parsedChunk = InitChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+
+		delete chunk;
+
+		CHECK_CHUNK(
+		  /*chunk*/ parsedChunk,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ 40,
+		  /*length*/ 40,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::INIT,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000000,
+		  /*canHaveParameters*/ true,
+		  /*parametersCount*/ 2,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
+
+		REQUIRE(parsedChunk->GetInitiateTag() == 1);
+		REQUIRE(parsedChunk->GetAdvertisedReceiverWindowCredit() == 2);
+		REQUIRE(parsedChunk->GetNumberOfOutboundStreams() == 3);
+		REQUIRE(parsedChunk->GetNumberOfInboundStreams() == 4);
+		REQUIRE(parsedChunk->GetInitialTsn() == 5);
+
+		obtainedParameter1 =
+		  reinterpret_cast<const CookiePreservativeChunkParameter*>(parsedChunk->GetParameterAt(0));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 8,
+		  /*length*/ 8,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+
+		REQUIRE(obtainedParameter1->GetLifeSpanIncrement() == 123456);
+
+		obtainedParameter2 =
+		  reinterpret_cast<const SupportedAddressTypesChunkParameter*>(parsedChunk->GetParameterAt(1));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ obtainedParameter2,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 12,
+		  /*length*/ 12,
+		  /*frozen*/ true,
+		  /*parameterType*/ ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+
+		REQUIRE(obtainedParameter2->GetNumberOfAddressTypes() == 3);
+		REQUIRE(obtainedParameter2->GetAddressTypeAt(0) == 1111);
+		REQUIRE(obtainedParameter2->GetAddressTypeAt(1) == 2222);
+		REQUIRE(obtainedParameter2->GetAddressTypeAt(2) == 3333);
 
 		delete parsedChunk;
 	}

@@ -10,6 +10,7 @@
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
+#include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/chunks/UnknownChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
@@ -700,5 +701,60 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(obtainedParameter2_1->GetInfo()[2] == 0x02);
 
 		delete clonedPacket;
+	}
+
+	SECTION("Packet::Factory() using AddChunk() succeeds")
+	{
+		auto* packet = Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+
+		packet->SetSourcePort(1);
+		packet->SetDestinationPort(2);
+		packet->SetVerificationTag(3);
+		packet->SetChecksum(4);
+
+		// 4 bytes Chunk.
+		auto* chunk1 = ShutdownCompleteChunk::Factory(FactoryBuffer + 1000, sizeof(FactoryBuffer));
+
+		chunk1->SetT(true);
+
+		packet->AddChunk(chunk1);
+
+		// Packet length must be:
+		// - Packet header: 12
+		// - Chunk 1: 4
+		// - Total: 16
+
+		CHECK_PACKET(
+		  /*packet*/ packet,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 16,
+		  /*frozen*/ false,
+		  /*sourcePort*/ 1,
+		  /*destinationPort*/ 2,
+		  /*verificationTag*/ 3,
+		  /*checksum*/ 4,
+		  /*chunksCount*/ 1);
+
+		auto* obtainedChunk1 = reinterpret_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));
+
+		CHECK_CHUNK(
+		  /*chunk*/ obtainedChunk1,
+		  /*buffer*/ nullptr,
+		  /*bufferLength*/ 4,
+		  /*length*/ 4,
+		  /*frozen*/ true,
+		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*flags*/ 0b00000001,
+		  /*canHaveParameters*/ false,
+		  /*parametersCount*/ 0,
+		  /*canHaveErrorCauses*/ false,
+		  /*errorCausesCount*/ 0);
+
+		REQUIRE(chunk1->GetT() == true);
+
+		delete packet;
 	}
 }

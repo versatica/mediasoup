@@ -96,6 +96,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::ShutdownCompleteChunk>");
 			DumpCommon(indentation);
+			MS_DUMP_CLEAN(indentation, "  flag T: %" PRIu8, GetT());
 			MS_DUMP_CLEAN(indentation, "</SCTP::ShutdownCompleteChunk>");
 		}
 

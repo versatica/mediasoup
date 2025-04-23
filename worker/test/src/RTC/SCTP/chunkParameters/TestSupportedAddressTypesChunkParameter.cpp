@@ -49,7 +49,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(parameter->AddAddressType(1234), MediaSoupError);
 
-		// /* Serialize it. */
+		/* Serialize it. */
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
