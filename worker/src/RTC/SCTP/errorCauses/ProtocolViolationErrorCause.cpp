@@ -118,7 +118,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(info, infoLength);
+			SetVariableLengthValue(info, infoLength);
 		}
 
 		ProtocolViolationErrorCause* ProtocolViolationErrorCause::SoftClone(const uint8_t* buffer) const

@@ -120,7 +120,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(info, infoLength);
+			SetVariableLengthValue(info, infoLength);
 		}
 
 		HeartbeatInfoChunkParameter* HeartbeatInfoChunkParameter::SoftClone(const uint8_t* buffer) const

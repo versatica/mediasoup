@@ -71,17 +71,17 @@ namespace RTC
 
 			virtual bool HasUnrecognizedChunk() const final
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetUnrecognizedChunk() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetUnrecognizedChunkLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetUnrecognizedChunk(const uint8_t* chunk, uint16_t chunkLength);

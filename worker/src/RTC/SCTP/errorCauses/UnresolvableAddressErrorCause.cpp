@@ -121,7 +121,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(address, addressLength);
+			SetVariableLengthValue(address, addressLength);
 		}
 
 		UnresolvableAddressErrorCause* UnresolvableAddressErrorCause::SoftClone(const uint8_t* buffer) const

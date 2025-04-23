@@ -120,7 +120,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(chunk, chunkLength);
+			SetVariableLengthValue(chunk, chunkLength);
 		}
 
 		UnrecognizedChunkTypeErrorCause* UnrecognizedChunkTypeErrorCause::SoftClone(const uint8_t* buffer) const

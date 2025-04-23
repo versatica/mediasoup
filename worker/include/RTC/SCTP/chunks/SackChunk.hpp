@@ -180,12 +180,12 @@ namespace RTC
 
 			uint8_t* GetAckBlocksPointer() const
 			{
-				return GetValuePointer();
+				return GetVariableLengthValuePointer();
 			}
 
 			uint8_t* GetDuplicateTsnsPointer() const
 			{
-				return GetValuePointer() + (GetNumberOfGapAckBlocks() * 4);
+				return GetVariableLengthValuePointer() + (GetNumberOfGapAckBlocks() * 4);
 			}
 		};
 	} // namespace SCTP

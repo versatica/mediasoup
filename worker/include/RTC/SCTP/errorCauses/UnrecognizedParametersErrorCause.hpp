@@ -71,17 +71,17 @@ namespace RTC
 
 			virtual bool HasUnrecognizedParameters() const final
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetUnrecognizedParameters() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetUnrecognizedParametersLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetUnrecognizedParameters(const uint8_t* parameters, uint16_t parametersLength);

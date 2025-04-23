@@ -155,11 +155,13 @@ namespace RTC
 			AssertNotFrozen();
 
 			// NOTE: This may throw.
-			SetValueLength(GetValueLength() + 2);
+			SetVariableLengthValueLength(GetVariableLengthValueLength() + 2);
 
 			// Add the new missing mandatory parameter type.
 			Utils::Byte::Set2Bytes(
-			  GetValuePointer(), GetNumberOfMissingParameters() * 2, static_cast<uint16_t>(parameterType));
+			  GetVariableLengthValuePointer(),
+			  GetNumberOfMissingParameters() * 2,
+			  static_cast<uint16_t>(parameterType));
 
 			// Update the counter field.
 			SetNumberOfMissingParameters(GetNumberOfMissingParameters() + 1);

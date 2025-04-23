@@ -68,17 +68,17 @@ namespace RTC
 
 			bool HasUnknownValue() const
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetUnknownValue() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetUnknownValueLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 		protected:

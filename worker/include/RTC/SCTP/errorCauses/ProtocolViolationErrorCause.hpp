@@ -71,17 +71,17 @@ namespace RTC
 
 			virtual bool HasAdditionalInformation() const final
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetAdditionalInformation() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetAdditionalInformationLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetAdditionalInformation(const uint8_t* info, uint16_t infoLength);

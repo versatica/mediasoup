@@ -67,36 +67,69 @@ namespace RTC
 				return PacketItemBase::PacketItemBaseHeaderLength;
 			}
 
+			/**
+			 * The value of the Length field, which includes the length of the header
+			 * and content (padding excluded).
+			 */
 			virtual uint16_t GetLengthField() const final
 			{
 				return Utils::Byte::Get2Bytes(GetBuffer(), 2);
 			}
 
-			virtual uint8_t* GetValuePointer() const final
+			/**
+			 * A pointer to the position in the buffer where the variable-length value
+			 * (if any) starts or should start.
+			 */
+			virtual uint8_t* GetVariableLengthValuePointer() const final
 			{
 				return const_cast<uint8_t*>(GetBuffer()) + GetHeaderLength();
 			}
 
-			virtual bool HasValue() const final
+			/**
+			 * Whether this item contains a variable-length value.
+			 *
+			 * @see GetVariableLengthValue()
+			 */
+			virtual bool HasVariableLengthValue() const final
 			{
 				return GetLengthField() > GetHeaderLength();
 			}
 
-			virtual const uint8_t* GetValue() const final
+			/**
+			 * Variable-length value of this item.
+			 *
+			 * @remarks
+			 * - The variable-length value starts after the fixed header, which can be
+			 *   different and have different length in each item definition.
+			 * - In the case of SCTP Chunk class and subclasses (which implements this
+			 *   class) we assume that a Chunk having variable-length value does not
+			 *   have Chunk Parameters or Error Causes.
+			 */
+			virtual const uint8_t* GetVariableLengthValue() const final
 			{
-				if (!HasValue())
+				if (!HasVariableLengthValue())
 				{
 					return nullptr;
 				}
 
-				return GetValuePointer();
+				return GetVariableLengthValuePointer();
 			}
 
-			virtual void SetValue(const uint8_t* value, size_t valueLength) final;
+			/**
+			 * Set the variable-length value. It copies the given value into the
+			 * the variable-length value of the item and updates both the length of
+			 * the Serializable and the Length field.
+			 *
+			 * @see GetVariableLengthValue()
+			 */
+			virtual void SetVariableLengthValue(const uint8_t* value, size_t valueLength) final;
 
-			virtual uint16_t GetValueLength() const final
+			/**
+			 * The length of the variable-length value.
+			 */
+			virtual uint16_t GetVariableLengthValueLength() const final
 			{
-				if (!HasValue())
+				if (!HasVariableLengthValue())
 				{
 					return 0u;
 				}
@@ -104,8 +137,22 @@ namespace RTC
 				return GetLengthField() - GetHeaderLength();
 			}
 
-			virtual void SetValueLength(size_t valueLength) final;
+			/**
+			 * Set the length of the variable-length value. It doesn't copy any value
+			 * into the variable-length value. This method is used in items that have
+			 * variable-length value but it doesn't consist on a buffer + length, but
+			 * instead is an structure with fields (with variable length).
+			 *
+			 * @see GetVariableLengthValue()
+			 */
+			virtual void SetVariableLengthValueLength(size_t valueLength) final;
 
+			/**
+			 * This method doesn't really add an item into the item (that must be done
+			 * by each subcass) but updates the length of the Serializable and the
+			 * value of the Length field by incrementing it with the length of the
+			 * given item.
+			 */
 			virtual void AddItem(const PacketItemBase* item) final;
 
 		private:

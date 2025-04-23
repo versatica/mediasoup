@@ -134,15 +134,16 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			// We must save previous count since SetValueLength() will make
-			// GetNumberOfAddressTypes() return a different value.
+			// We must save previous count since SetVariableLengthValueLength() will
+			// make GetNumberOfAddressTypes() return a different value.
 			auto previousNumberOfAddressTypes = GetNumberOfAddressTypes();
 
 			// NOTE: This may throw.
-			SetValueLength(GetValueLength() + 2);
+			SetVariableLengthValueLength(GetVariableLengthValueLength() + 2);
 
 			// Add the new missing mandatory parameter type.
-			Utils::Byte::Set2Bytes(GetValuePointer(), previousNumberOfAddressTypes * 2, addressType);
+			Utils::Byte::Set2Bytes(
+			  GetVariableLengthValuePointer(), previousNumberOfAddressTypes * 2, addressType);
 		}
 
 		SupportedAddressTypesChunkParameter* SupportedAddressTypesChunkParameter::SoftClone(

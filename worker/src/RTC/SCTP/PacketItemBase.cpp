@@ -102,20 +102,20 @@ namespace RTC
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 2, lengthField);
 		}
 
-		void PacketItemBase::SetValue(const uint8_t* value, size_t valueLength)
+		void PacketItemBase::SetVariableLengthValue(const uint8_t* value, size_t valueLength)
 		{
 			MS_TRACE();
 
 			AssertNotFrozen();
 
 			// NOTE: This can throw.
-			SetValueLength(valueLength);
+			SetVariableLengthValueLength(valueLength);
 
 			// Copy the given value into the buffer.
-			std::memmove(GetValuePointer(), value, valueLength);
+			std::memmove(GetVariableLengthValuePointer(), value, valueLength);
 		}
 
-		void PacketItemBase::SetValueLength(size_t valueLength)
+		void PacketItemBase::SetVariableLengthValueLength(size_t valueLength)
 		{
 			MS_TRACE();
 
@@ -123,7 +123,7 @@ namespace RTC
 
 			auto previousLength      = GetLength();
 			auto previousLengthField = GetLengthField();
-			auto previousValueLength = GetValueLength();
+			auto previousValueLength = GetVariableLengthValueLength();
 			auto newNotPaddedLength =
 			  size_t{ previousLengthField } - size_t{ previousValueLength } + valueLength;
 			auto newPaddedLength = Utils::Byte::PadTo4Bytes(newNotPaddedLength);

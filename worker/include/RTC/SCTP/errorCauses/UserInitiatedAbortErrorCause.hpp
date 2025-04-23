@@ -71,17 +71,17 @@ namespace RTC
 
 			virtual bool HasUpperLayerAbortReason() const final
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetUpperLayerAbortReason() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetUpperLayerAbortReasonLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetUpperLayerAbortReason(const uint8_t* reason, uint16_t reasonLength);

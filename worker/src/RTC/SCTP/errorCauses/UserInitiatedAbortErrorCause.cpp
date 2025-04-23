@@ -120,7 +120,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(reason, reasonLength);
+			SetVariableLengthValue(reason, reasonLength);
 		}
 
 		UserInitiatedAbortErrorCause* UserInitiatedAbortErrorCause::SoftClone(const uint8_t* buffer) const

@@ -77,17 +77,17 @@ namespace RTC
 
 			bool HasCookie() const
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetCookie() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetCookieLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);

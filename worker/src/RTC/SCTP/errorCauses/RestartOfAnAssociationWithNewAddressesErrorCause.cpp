@@ -125,7 +125,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(tlvs, tlvsLength);
+			SetVariableLengthValue(tlvs, tlvsLength);
 		}
 
 		RestartOfAnAssociationWithNewAddressesErrorCause* RestartOfAnAssociationWithNewAddressesErrorCause::SoftClone(

@@ -117,7 +117,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(cookie, cookieLength);
+			SetVariableLengthValue(cookie, cookieLength);
 		}
 
 		CookieEchoChunk* CookieEchoChunk::SoftClone(const uint8_t* buffer) const

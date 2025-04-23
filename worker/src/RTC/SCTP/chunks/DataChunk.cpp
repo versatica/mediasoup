@@ -213,7 +213,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(userData, userDataLength);
+			SetVariableLengthValue(userData, userDataLength);
 		}
 
 		DataChunk* DataChunk::SoftClone(const uint8_t* buffer) const

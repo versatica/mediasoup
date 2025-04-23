@@ -76,12 +76,12 @@ namespace RTC
 
 			const uint16_t GetNumberOfAddressTypes() const
 			{
-				return GetValueLength() / 2;
+				return GetVariableLengthValueLength() / 2;
 			}
 
 			uint16_t GetAddressTypeAt(uint16_t idx) const
 			{
-				return Utils::Byte::Get2Bytes(GetValuePointer(), (idx * 2));
+				return Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 2));
 			}
 
 			void AddAddressType(uint16_t addressType);

@@ -179,7 +179,7 @@ namespace RTC
 			AssertNotFrozen();
 
 			// NOTE: This may throw.
-			SetValueLength(GetValueLength() + 4);
+			SetVariableLengthValueLength(GetVariableLengthValueLength() + 4);
 
 			// Must move duplicate TSNs down.
 			std::memmove(
@@ -201,7 +201,7 @@ namespace RTC
 			AssertNotFrozen();
 
 			// NOTE: This may throw.
-			SetValueLength(GetValueLength() + 4);
+			SetVariableLengthValueLength(GetVariableLengthValueLength() + 4);
 
 			// Add the new duplicate TSN.
 			Utils::Byte::Set4Bytes(GetDuplicateTsnsPointer(), GetNumberOfDuplicateTsns() * 4, tsn);

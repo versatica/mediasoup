@@ -71,17 +71,17 @@ namespace RTC
 
 			virtual bool HasUnresolvableAddress() const final
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetUnresolvableAddress() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetUnresolvableAddressLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetUnresolvableAddress(const uint8_t* address, uint16_t addressLength);

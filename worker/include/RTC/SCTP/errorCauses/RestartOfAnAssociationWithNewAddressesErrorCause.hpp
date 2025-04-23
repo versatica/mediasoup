@@ -74,17 +74,17 @@ namespace RTC
 
 			virtual bool HasNewAddressTlvs() const final
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetNewAddressTlvs() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetNewAddressTlvsLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetNewAddressTlvs(const uint8_t* tlvs, uint16_t tlvsLength);

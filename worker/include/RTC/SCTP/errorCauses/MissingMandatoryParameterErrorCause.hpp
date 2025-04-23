@@ -87,7 +87,7 @@ namespace RTC
 			ChunkParameter::ChunkParameterType GetMissingParameterTypeAt(uint32_t idx) const
 			{
 				return static_cast<ChunkParameter::ChunkParameterType>(
-				  Utils::Byte::Get2Bytes(GetValuePointer(), (idx * 2)));
+				  Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 2)));
 			}
 
 			void AddMissingParameterType(ChunkParameter::ChunkParameterType parameterType);

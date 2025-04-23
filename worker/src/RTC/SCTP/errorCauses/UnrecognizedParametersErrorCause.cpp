@@ -121,7 +121,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			SetValue(parameters, parametersLength);
+			SetVariableLengthValue(parameters, parametersLength);
 		}
 
 		UnrecognizedParametersErrorCause* UnrecognizedParametersErrorCause::SoftClone(

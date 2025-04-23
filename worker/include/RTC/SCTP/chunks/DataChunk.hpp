@@ -174,17 +174,17 @@ namespace RTC
 
 			bool HasUserData() const
 			{
-				return HasValue();
+				return HasVariableLengthValue();
 			}
 
 			const uint8_t* GetUserData() const
 			{
-				return GetValue();
+				return GetVariableLengthValue();
 			}
 
 			uint16_t GetUserDataLength() const
 			{
-				return GetValueLength();
+				return GetVariableLengthValueLength();
 			}
 
 			void SetUserData(const uint8_t* userData, uint16_t userDataLength);
