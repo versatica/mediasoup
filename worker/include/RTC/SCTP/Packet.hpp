@@ -159,7 +159,8 @@ namespace RTC
 			 *
 			 * @remarks
 			 * Once this method is called, the caller may want to free the original
-			 * given Chunk.
+			 * given Chunk (otherwise it will leak since the Packet manages a clone
+			 * of it).
 			 */
 			void AddChunk(const Chunk* chunk);
 

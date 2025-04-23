@@ -252,6 +252,9 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 		chunk->AddErrorCause(errorCause1);
 
+		// Once added, we can delete the Error Cause.
+		delete errorCause1;
+
 		// Chunk length must be:
 		// - Chunk header: 4
 		// - Error Cause 1: 8

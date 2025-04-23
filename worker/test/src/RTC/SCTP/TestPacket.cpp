@@ -719,6 +719,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		packet->AddChunk(chunk1);
 
+		// Once added, we can delete the Chunk.
+		delete chunk1;
+
 		// Packet length must be:
 		// - Packet header: 12
 		// - Chunk 1: 4
@@ -753,7 +756,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE(chunk1->GetT() == true);
+		REQUIRE(obtainedChunk1->GetT() == true);
 
 		delete packet;
 	}

@@ -246,7 +246,8 @@ namespace RTC
 			 *
 			 * @remarks
 			 * Once this method is called, the caller may want to free the original
-			 * given Chunk Parameter.
+			 * given Chunk Parameter (otherwise it will leak since the Chunk manages
+			 * a clone of it).
 			 *
 			 * @throw MediaSoupError - If the Chunk subclass cannot have Chunk
 			 *   Parameters.
@@ -349,7 +350,8 @@ namespace RTC
 			 *
 			 * @remarks
 			 * Once this method is called, the caller may want to free the original
-			 * given Error Cause.
+			 * given Error Cause (otherwise it will leak since the Chunk manages
+			 * a clone of it).
 			 *
 			 * @throw MediaSoupError - If the Chunk subclass cannot have Error Causes.
 			 */

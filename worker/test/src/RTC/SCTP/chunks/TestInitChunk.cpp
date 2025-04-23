@@ -518,6 +518,9 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 
 		chunk->AddParameter(parameter1);
 
+		// Once added, we can delete the Parameter.
+		delete parameter1;
+
 		// Chunk length must be:
 		// - Chunk header: 20
 		// - Parameter 1: 8
@@ -563,6 +566,9 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		parameter2->AddAddressType(3333);
 
 		chunk->AddParameter(parameter2);
+
+		// Once added, we can delete the Parameter.
+		delete parameter2;
 
 		// Chunk length must be:
 		// - Chunk header: 20
