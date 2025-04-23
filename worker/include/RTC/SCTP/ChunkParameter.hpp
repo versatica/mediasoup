@@ -56,6 +56,8 @@ namespace RTC
 				SUPPORTED_ADDRESS_TYPES = 0x000C,
 				/* RFC 9653 */
 				ZERO_CHECKSUM_ACCEPTABLE = 0x8001, // 32769
+				/* RFC 3758 */
+				FORWARD_TSN_SUPPORTED = 0xC000, // 49152
 			};
 
 			/**

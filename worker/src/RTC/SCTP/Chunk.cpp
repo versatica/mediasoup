@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/ForwardTsnSupportedChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
@@ -408,6 +409,14 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE:
 					{
 						parameter = ZeroChecksumAcceptableChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED:
+					{
+						parameter = ForwardTsnSupportedChunkParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;

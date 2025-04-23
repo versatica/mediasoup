@@ -20,6 +20,7 @@ namespace RTC
 			{ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,      "COOKIE_PRESERVATIVE"      },
 			{ ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,  "SUPPORTED_ADDRESS_TYPES"  },
 			{ ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE, "ZERO_CHECKSUM_ACCEPTABLE" },
+			{ ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED,    "FORWARD_TSN_SUPPORTED"    },
 			// TODO: Add more.
 		};
 		// clang-format on

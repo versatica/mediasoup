@@ -95,9 +95,6 @@ namespace RTC
 			{
 				return ZeroChecksumAcceptableChunkParameter::ZeroChecksumAcceptableChunkParameterHeaderLength;
 			}
-
-		private:
-			void ResetIPv4Address();
 		};
 	} // namespace SCTP
 } // namespace RTC
