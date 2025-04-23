@@ -51,7 +51,7 @@ namespace RTC
 		 * - Initial TSN (I-TSN) (32 bits): Defines the TSN that the sender of the
 		 *   INIT chunk will use initially.
 		 *
-		 * Optional Variable-Length Parameters:
+		 * Variable-Length Parameters:
 		 * - IPv4 Address (5), optional.
 		 * - IPv6 Address (6), optional.
 		 * - Cookie Preservative (9), optional.

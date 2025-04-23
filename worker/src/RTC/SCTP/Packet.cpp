@@ -14,6 +14,7 @@
 #include "RTC/SCTP/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
 #include "RTC/SCTP/chunks/OperationErrorChunk.hpp"
+#include "RTC/SCTP/chunks/ReConfigChunk.hpp"
 #include "RTC/SCTP/chunks/SackChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownChunk.hpp"
@@ -163,6 +164,13 @@ namespace RTC
 					{
 						chunk =
 						  ShutdownCompleteChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::RE_CONFIG:
+					{
+						chunk = ReConfigChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}

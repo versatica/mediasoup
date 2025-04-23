@@ -53,7 +53,8 @@ namespace RTC
 			{ Chunk::ChunkType::COOKIE_ACK,        "COOKIE_ACK"        },
 			{ Chunk::ChunkType::ECNE,              "ECNE"              },
 			{ Chunk::ChunkType::CWR,               "CWR"               },
-			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" }
+			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" },
+			{ Chunk::ChunkType::RE_CONFIG,         "RE_CONFIG"         },
 			// TODO: Add more.
 		};
 		// clang-format on
