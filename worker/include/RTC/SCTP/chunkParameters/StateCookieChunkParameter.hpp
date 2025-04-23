@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP State Cookie Chunk Parameter (STATE_COOKIE) (49152).
+		 * SCTP State Cookie Chunk Parameter (STATE_COOKIE) (7).
 		 *
 		 * @see RFC 9260.
 		 *
