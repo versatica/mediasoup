@@ -52,6 +52,7 @@ namespace RTC
 				HEARTBEAT_INFO          = 0x0001,
 				IPV4_ADDRESS            = 0x0005,
 				IPV6_ADDRESS            = 0x0006,
+				STATE_COOKIE            = 0x0007,
 				COOKIE_PRESERVATIVE     = 0x0009,
 				SUPPORTED_ADDRESS_TYPES = 0x000C,
 				/* RFC 9653 */

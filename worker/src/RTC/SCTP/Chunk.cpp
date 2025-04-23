@@ -10,6 +10,7 @@
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/StateCookieChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/ZeroChecksumAcceptableChunkParameter.hpp"
@@ -385,6 +386,14 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::IPV6_ADDRESS:
 					{
 						parameter = IPv6AddressChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::STATE_COOKIE:
+					{
+						parameter = StateCookieChunkParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;

@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/ForwardTsnSupportedChunkParameter.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
