@@ -53,6 +53,7 @@ namespace RTC
 				IPV4_ADDRESS            = 0x0005,
 				IPV6_ADDRESS            = 0x0006,
 				STATE_COOKIE            = 0x0007,
+				UNRECOGNIZED_PARAMETER  = 0x0008,
 				COOKIE_PRESERVATIVE     = 0x0009,
 				SUPPORTED_ADDRESS_TYPES = 0x000C,
 				/* RFC 9653 */

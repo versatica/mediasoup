@@ -8,7 +8,7 @@
 
 using namespace RTC::SCTP;
 
-SCENARIO("State Cookie Chunk Parameter Chunk Parameter (7)", "[sctp][serializable]")
+SCENARIO("State Cookie Chunk Parameter (7)", "[sctp][serializable]")
 {
 	resetBuffers();
 

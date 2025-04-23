@@ -18,6 +18,7 @@ namespace RTC
 			{ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,             "IPV4_ADDRESS"             },
 			{ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,             "IPV6_ADDRESS"             },
 			{ ChunkParameter::ChunkParameterType::STATE_COOKIE,             "STATE_COOKIE"             },
+			{ ChunkParameter::ChunkParameterType::UNRECOGNIZED_PARAMETER,   "UNRECOGNIZED_PARAMETER"   },
 			{ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,      "COOKIE_PRESERVATIVE"      },
 			{ ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,  "SUPPORTED_ADDRESS_TYPES"  },
 			{ ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE, "ZERO_CHECKSUM_ACCEPTABLE" },

@@ -13,6 +13,7 @@
 #include "RTC/SCTP/chunkParameters/StateCookieChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/UnrecognizedParameterChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/ZeroChecksumAcceptableChunkParameter.hpp"
 #include "RTC/SCTP/errorCauses/CookieReceivedWhileShuttingDownErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/InvalidMandatoryParameterErrorCause.hpp"
@@ -394,6 +395,14 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::STATE_COOKIE:
 					{
 						parameter = StateCookieChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::UNRECOGNIZED_PARAMETER:
+					{
+						parameter = UnrecognizedParameterChunkParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
