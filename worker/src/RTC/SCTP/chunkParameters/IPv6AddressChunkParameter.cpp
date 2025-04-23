@@ -66,7 +66,7 @@ namespace RTC
 
 			if (bufferLength < IPv6AddressChunkParameter::IPv6AddressChunkParameterHeaderLength)
 			{
-				MS_THROW_TYPE_ERROR("too small buffer");
+				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
 			auto* parameter = new IPv6AddressChunkParameter(buffer, bufferLength);

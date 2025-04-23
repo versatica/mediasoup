@@ -67,7 +67,7 @@ namespace RTC
 
 			if (bufferLength < DataChunk::DataChunkHeaderLength)
 			{
-				MS_THROW_TYPE_ERROR("too small buffer");
+				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
 			auto* chunk = new DataChunk(buffer, bufferLength);

@@ -68,7 +68,7 @@ namespace RTC
 
 			if (bufferLength < CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength)
 			{
-				MS_THROW_TYPE_ERROR("too small buffer");
+				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
 			auto* parameter = new CookiePreservativeChunkParameter(buffer, bufferLength);

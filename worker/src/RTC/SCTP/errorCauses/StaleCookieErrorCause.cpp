@@ -63,7 +63,7 @@ namespace RTC
 
 			if (bufferLength < StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength)
 			{
-				MS_THROW_TYPE_ERROR("too small buffer");
+				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
 			auto* errorCause = new StaleCookieErrorCause(buffer, bufferLength);

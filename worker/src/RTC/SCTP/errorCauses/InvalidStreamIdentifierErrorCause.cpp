@@ -67,7 +67,7 @@ namespace RTC
 
 			if (bufferLength < InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength)
 			{
-				MS_THROW_TYPE_ERROR("too small buffer");
+				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
 			auto* errorCause = new InvalidStreamIdentifierErrorCause(buffer, bufferLength);

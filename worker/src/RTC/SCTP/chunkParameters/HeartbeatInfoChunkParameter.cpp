@@ -59,7 +59,7 @@ namespace RTC
 
 			if (bufferLength < ChunkParameter::ChunkParameterHeaderLength)
 			{
-				MS_THROW_TYPE_ERROR("too small buffer");
+				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
 			auto* parameter = new HeartbeatInfoChunkParameter(buffer, bufferLength);
