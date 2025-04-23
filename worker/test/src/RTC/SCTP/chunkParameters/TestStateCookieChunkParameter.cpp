@@ -29,8 +29,6 @@ SCENARIO("State Cookie Chunk Parameter (7)", "[sctp][serializable]")
 
 		auto* parameter = StateCookieChunkParameter::Parse(buffer, sizeof(buffer));
 
-		parameter->Dump();
-
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,

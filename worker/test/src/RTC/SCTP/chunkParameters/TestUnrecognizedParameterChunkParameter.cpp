@@ -29,8 +29,6 @@ SCENARIO("Unrecognized Parameter Chunk Parameter (7)", "[sctp][serializable]")
 
 		auto* parameter = UnrecognizedParameterChunkParameter::Parse(buffer, sizeof(buffer));
 
-		parameter->Dump();
-
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,

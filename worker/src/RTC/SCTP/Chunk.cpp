@@ -12,6 +12,7 @@
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/StateCookieChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/SupportedExtensionsChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/UnrecognizedParameterChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/ZeroChecksumAcceptableChunkParameter.hpp"
@@ -436,6 +437,14 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED:
 					{
 						parameter = ForwardTsnSupportedChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::SUPPORTED_EXTENSIONS:
+					{
+						parameter = SupportedExtensionsChunkParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;

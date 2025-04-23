@@ -78,10 +78,10 @@ namespace RTC
 
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  length field: %" PRIu16 " (buffer length: %zu, padding: %zu)",
+			  "  length field: %" PRIu16 " (padding: %zu, buffer length: %zu)",
 			  GetLengthField(),
-			  GetBufferLength(),
-			  GetLength() - GetLengthField());
+			  GetLength() - GetLengthField(),
+			  GetBufferLength());
 		}
 
 		void PacketItemBase::InitializePacketBaseItemHeader(uint16_t lengthFieldValue)
