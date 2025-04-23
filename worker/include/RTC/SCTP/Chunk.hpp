@@ -71,8 +71,7 @@ namespace RTC
 				ECNE              = 0x0C, // NOTE: Not implemented.
 				CWR               = 0x0D, // NOTE: Not implemented.
 				SHUTDOWN_COMPLETE = 0x0E,
-				/* RFC 6525 */
-				RE_CONFIG = 0x82, // 130
+				RE_CONFIG         = 0x82, // Type 130, RFC 6525
 			};
 
 			/**

@@ -49,17 +49,15 @@ namespace RTC
 			 */
 			enum class ChunkParameterType : uint16_t
 			{
-				HEARTBEAT_INFO          = 0x0001,
-				IPV4_ADDRESS            = 0x0005,
-				IPV6_ADDRESS            = 0x0006,
-				STATE_COOKIE            = 0x0007,
-				UNRECOGNIZED_PARAMETER  = 0x0008,
-				COOKIE_PRESERVATIVE     = 0x0009,
-				SUPPORTED_ADDRESS_TYPES = 0x000C,
-				/* RFC 9653 */
-				ZERO_CHECKSUM_ACCEPTABLE = 0x8001, // 32769
-				/* RFC 3758 */
-				FORWARD_TSN_SUPPORTED = 0xC000, // 49152
+				HEARTBEAT_INFO           = 0x0001,
+				IPV4_ADDRESS             = 0x0005,
+				IPV6_ADDRESS             = 0x0006,
+				STATE_COOKIE             = 0x0007,
+				UNRECOGNIZED_PARAMETER   = 0x0008,
+				COOKIE_PRESERVATIVE      = 0x0009,
+				SUPPORTED_ADDRESS_TYPES  = 0x000C,
+				ZERO_CHECKSUM_ACCEPTABLE = 0x8001, // Type 32769, RFC 9653
+				FORWARD_TSN_SUPPORTED    = 0xC000, // Type 49152, RFC 3758
 			};
 
 			/**
