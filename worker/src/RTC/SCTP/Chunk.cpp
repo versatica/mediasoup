@@ -10,6 +10,7 @@
 #include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/IPv6AddressChunkParameter.hpp"
+#include "RTC/SCTP/chunkParameters/IncomingSsnResetRequestChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/OutgoingSsnResetRequestChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/StateCookieChunkParameter.hpp"
 #include "RTC/SCTP/chunkParameters/SupportedAddressTypesChunkParameter.hpp"
@@ -455,6 +456,14 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::OUTGOING_SSN_RESET_REQUEST:
 					{
 						parameter = OutgoingSsnResetRequestChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::INCOMING_SSN_RESET_REQUEST:
+					{
+						parameter = IncomingSsnResetRequestChunkParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;

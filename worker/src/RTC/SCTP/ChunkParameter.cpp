@@ -24,6 +24,7 @@ namespace RTC
 			{ ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED,      "FORWARD_TSN_SUPPORTED"      },
 			{ ChunkParameter::ChunkParameterType::SUPPORTED_EXTENSIONS,       "SUPPORTED_EXTENSIONS"       },
 			{ ChunkParameter::ChunkParameterType::OUTGOING_SSN_RESET_REQUEST, "OUTGOING_SSN_RESET_REQUEST" },
+			{ ChunkParameter::ChunkParameterType::INCOMING_SSN_RESET_REQUEST, "INCOMING_SSN_RESET_REQUEST" },
 			{ ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE,   "ZERO_CHECKSUM_ACCEPTABLE"   },
 			// TODO: Add more.
 		};
