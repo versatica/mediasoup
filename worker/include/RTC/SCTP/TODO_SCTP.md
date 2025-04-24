@@ -17,16 +17,6 @@ Same in `PipeTransport` and `PlainTransport`.
 
 - Write `TestReConfigChunk.cpp` using related Chunk Parameters.
 
-- Instead of `chunk->GetXxxxxAt(idx)` we could return a vector using `std::move()`:
-
-  ```c++
-  std::vector<Chunk::ChunkType> chunkTypes;
-
-  // Fill it.
-
-  return std::move(chunk_types);
-  ```
-
 - Try to remove all `friend class`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?

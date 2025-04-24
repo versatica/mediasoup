@@ -80,7 +80,7 @@ namespace RTC
 			virtual MissingMandatoryParameterErrorCause* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint32_t GetNumberOfMissingParameters() const
+			uint32_t GetNumberOfMissingParameters() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}

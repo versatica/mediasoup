@@ -74,7 +74,7 @@ namespace RTC
 
 			virtual NoUserDataErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint32_t GetTsn() const
+			uint32_t GetTsn() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}

@@ -77,7 +77,7 @@ namespace RTC
 			virtual SupportedExtensionsChunkParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint16_t GetNumberOfChunkTypes() const
+			uint16_t GetNumberOfChunkTypes() const
 			{
 				return GetVariableLengthValueLength();
 			}

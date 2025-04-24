@@ -74,7 +74,7 @@ namespace RTC
 
 			virtual StaleCookieErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint32_t GetMeasureOfStaleness() const
+			uint32_t GetMeasureOfStaleness() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}

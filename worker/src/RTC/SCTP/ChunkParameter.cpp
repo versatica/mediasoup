@@ -14,16 +14,17 @@ namespace RTC
 		// clang-format off
 		std::unordered_map<ChunkParameter::ChunkParameterType, std::string> ChunkParameter::chunkParameterType2String =
 		{
-			{ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,           "HEARTBEAT_INFO"           },
-			{ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,             "IPV4_ADDRESS"             },
-			{ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,             "IPV6_ADDRESS"             },
-			{ ChunkParameter::ChunkParameterType::STATE_COOKIE,             "STATE_COOKIE"             },
-			{ ChunkParameter::ChunkParameterType::UNRECOGNIZED_PARAMETER,   "UNRECOGNIZED_PARAMETER"   },
-			{ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,      "COOKIE_PRESERVATIVE"      },
-			{ ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,  "SUPPORTED_ADDRESS_TYPES"  },
-			{ ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED,    "FORWARD_TSN_SUPPORTED"    },
-			{ ChunkParameter::ChunkParameterType::SUPPORTED_EXTENSIONS,     "SUPPORTED_EXTENSIONS"     },
-			{ ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE, "ZERO_CHECKSUM_ACCEPTABLE" },
+			{ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,             "HEARTBEAT_INFO"             },
+			{ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,               "IPV4_ADDRESS"               },
+			{ ChunkParameter::ChunkParameterType::IPV6_ADDRESS,               "IPV6_ADDRESS"               },
+			{ ChunkParameter::ChunkParameterType::STATE_COOKIE,               "STATE_COOKIE"               },
+			{ ChunkParameter::ChunkParameterType::UNRECOGNIZED_PARAMETER,     "UNRECOGNIZED_PARAMETER"     },
+			{ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,        "COOKIE_PRESERVATIVE"        },
+			{ ChunkParameter::ChunkParameterType::SUPPORTED_ADDRESS_TYPES,    "SUPPORTED_ADDRESS_TYPES"    },
+			{ ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED,      "FORWARD_TSN_SUPPORTED"      },
+			{ ChunkParameter::ChunkParameterType::SUPPORTED_EXTENSIONS,       "SUPPORTED_EXTENSIONS"       },
+			{ ChunkParameter::ChunkParameterType::OUTGOING_SSN_RESET_REQUEST, "OUTGOING_SSN_RESET_REQUEST" },
+			{ ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE,   "ZERO_CHECKSUM_ACCEPTABLE"   },
 			// TODO: Add more.
 		};
 		// clang-format on

@@ -42,7 +42,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength)
+			if (bufferLength < CookiePreservativeChunkParameter::CookiePreservativeChunkParameterHeaderLength)
 			{
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
@@ -51,7 +51,7 @@ namespace RTC
 
 			parameter->InitializeHeader(
 			  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
-			  CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength);
+			  CookiePreservativeChunkParameter::CookiePreservativeChunkParameterHeaderLength);
 
 			// Must also initialize the value.
 			parameter->SetLifeSpanIncrement(0);
@@ -66,12 +66,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (parameterLength != CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength)
+			if (parameterLength != CookiePreservativeChunkParameter::CookiePreservativeChunkParameterHeaderLength)
 			{
 				MS_WARN_TAG(
 				  sctp,
 				  "CookiePreservativeChunkParameter Length field must be %zu",
-				  CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength);
+				  CookiePreservativeChunkParameter::CookiePreservativeChunkParameterHeaderLength);
 
 				return nullptr;
 			}
@@ -92,7 +92,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength);
+			SetLength(CookiePreservativeChunkParameter::CookiePreservativeChunkParameterHeaderLength);
 		}
 
 		CookiePreservativeChunkParameter::~CookiePreservativeChunkParameter()
@@ -123,7 +123,7 @@ namespace RTC
 			return clonedParameter;
 		}
 
-		void CookiePreservativeChunkParameter::SetLifeSpanIncrement(const uint32_t increment)
+		void CookiePreservativeChunkParameter::SetLifeSpanIncrement(uint32_t increment)
 		{
 			MS_TRACE();
 

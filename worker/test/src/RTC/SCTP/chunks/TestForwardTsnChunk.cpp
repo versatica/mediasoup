@@ -131,7 +131,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 			0x11, 0x22, 0x33, 0x44,
 			// Stream 1: 0x1234, Stream Sequence 1: 0x4321
 			0x12, 0x34, 0x43, 0x21,
-			// Stream 2: 0x5678, Stream Sequence 2 (missing in Length fuield)
+			// Stream 2: 0x5678, Stream Sequence 2 (missing in Length field)
 			0x56, 0x78, 0x87, 0x65,
 		};
 		// clang-format on

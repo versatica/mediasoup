@@ -9,7 +9,7 @@
 
 using namespace RTC::SCTP;
 
-SCENARIO("Supported Extensions (32776)", "[sctp][serializable]")
+SCENARIO("Supported Extensions Chunk Parameter (32776)", "[sctp][serializable]")
 {
 	resetBuffers();
 

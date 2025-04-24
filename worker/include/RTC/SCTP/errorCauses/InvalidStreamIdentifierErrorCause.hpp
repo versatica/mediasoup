@@ -75,7 +75,7 @@ namespace RTC
 			virtual InvalidStreamIdentifierErrorCause* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint16_t GetStreamIdentifier() const
+			uint16_t GetStreamIdentifier() const
 			{
 				return Utils::Byte::Get2Bytes(GetBuffer(), 4);
 			}

@@ -32,7 +32,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			static const size_t CookiePreservativeChunkParameterLength{ 8 };
+			static const size_t CookiePreservativeChunkParameterHeaderLength{ 8 };
 
 		public:
 			/**
@@ -80,7 +80,7 @@ namespace RTC
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
-			void SetLifeSpanIncrement(const uint32_t increment);
+			void SetLifeSpanIncrement(uint32_t increment);
 
 		protected:
 			virtual CookiePreservativeChunkParameter* SoftClone(const uint8_t* buffer) const final override;
@@ -92,7 +92,7 @@ namespace RTC
 			 */
 			virtual size_t GetHeaderLength() const override final
 			{
-				return CookiePreservativeChunkParameter::CookiePreservativeChunkParameterLength;
+				return CookiePreservativeChunkParameter::CookiePreservativeChunkParameterHeaderLength;
 			}
 		};
 	} // namespace SCTP

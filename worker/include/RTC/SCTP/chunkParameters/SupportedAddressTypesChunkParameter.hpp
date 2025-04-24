@@ -75,7 +75,7 @@ namespace RTC
 			virtual SupportedAddressTypesChunkParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			const uint16_t GetNumberOfAddressTypes() const
+			uint16_t GetNumberOfAddressTypes() const
 			{
 				return GetVariableLengthValueLength() / 2;
 			}
