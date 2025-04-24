@@ -55,6 +55,7 @@ namespace RTC
 			{ Chunk::ChunkType::ECNE,              "ECNE"              },
 			{ Chunk::ChunkType::CWR,               "CWR"               },
 			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" },
+			{ Chunk::ChunkType::FORWARD_TSN,       "FORWARD_TSN"       },
 			{ Chunk::ChunkType::RE_CONFIG,         "RE_CONFIG"         },
 			// TODO: Add more.
 		};
@@ -426,14 +427,6 @@ namespace RTC
 						break;
 					}
 
-					case ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE:
-					{
-						parameter = ZeroChecksumAcceptableChunkParameter::ParseStrict(
-						  ptr, parameterLength + padding, parameterLength, padding);
-
-						break;
-					}
-
 					case ChunkParameter::ChunkParameterType::FORWARD_TSN_SUPPORTED:
 					{
 						parameter = ForwardTsnSupportedChunkParameter::ParseStrict(
@@ -445,6 +438,14 @@ namespace RTC
 					case ChunkParameter::ChunkParameterType::SUPPORTED_EXTENSIONS:
 					{
 						parameter = SupportedExtensionsChunkParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case ChunkParameter::ChunkParameterType::ZERO_CHECKSUM_ACCEPTABLE:
+					{
+						parameter = ZeroChecksumAcceptableChunkParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;

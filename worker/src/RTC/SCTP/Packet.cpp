@@ -9,6 +9,7 @@
 #include "RTC/SCTP/chunks/CookieAckChunk.hpp"
 #include "RTC/SCTP/chunks/CookieEchoChunk.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
+#include "RTC/SCTP/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
 #include "RTC/SCTP/chunks/InitAckChunk.hpp"
@@ -164,6 +165,13 @@ namespace RTC
 					{
 						chunk =
 						  ShutdownCompleteChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
+
+						break;
+					}
+
+					case Chunk::ChunkType::FORWARD_TSN:
+					{
+						chunk = ForwardTsnChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}

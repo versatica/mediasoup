@@ -82,6 +82,7 @@ namespace RTC
 			  GetLengthField(),
 			  GetLength() - GetLengthField(),
 			  GetBufferLength());
+			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 		}
 
 		void PacketItemBase::InitializePacketBaseItemHeader(uint16_t lengthFieldValue)
