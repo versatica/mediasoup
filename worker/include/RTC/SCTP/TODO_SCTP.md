@@ -15,8 +15,8 @@ Same in `PipeTransport` and `PlainTransport`.
 
 ## TODO
 
-- Write `TestReConfigChunk.cpp` using related Chunk Parameters.
+- Write `TestReConfigChunk.cpp` using related Parameters.
 
 - Try to remove all `friend class`.
 
-- In `HeartbeatChunk` the `HeartbeatInfoChunkParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
+- In `HeartbeatChunk` the `HeartbeatInfoParameter` should be mandatory when parsing. Or should we add some `Validate()` method?

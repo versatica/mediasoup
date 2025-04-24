@@ -77,10 +77,10 @@ namespace RTC
 
 			auto* chunk = new InitChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Parse Chunk Parameters.
+			// Parse Parameters.
 			if (!chunk->ParseParameters())
 			{
-				MS_WARN_DEV("failed to parse Chunk Parameters");
+				MS_WARN_DEV("failed to parse Parameters");
 
 				delete chunk;
 				return nullptr;

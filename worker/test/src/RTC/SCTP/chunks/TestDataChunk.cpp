@@ -1,10 +1,10 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/Chunk.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
-#include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
+#include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
+#include "RTC/SCTP/parameters/IPv4AddressParameter.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 

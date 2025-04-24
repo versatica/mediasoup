@@ -89,9 +89,9 @@ namespace RTC
 		 *   is not frozen.
 		 * - The internal Serializable items that the instance contains (for
 		 *   example, an SCTP Packet may contain SCTP Chunks and a SCTP Chunk may
-		 *   contain SCTP Chunk Parameters), will always be frozen. This is because
-		 *   the user is not able to modify those items because their length may
-		 *   change and corrupt other bytes of the main Serializable.
+		 *   contain SCTP Parameters), will always be frozen. This is because the
+		 *   user is not able to modify those items because their length may change
+		 *   and corrupt other bytes of the main Serializable.
 		 */
 		virtual bool IsFrozen() const final
 		{

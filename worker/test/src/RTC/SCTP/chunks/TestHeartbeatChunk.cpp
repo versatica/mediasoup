@@ -1,11 +1,11 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/Chunk.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
-#include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
-#include "RTC/SCTP/chunkParameters/UnknownChunkParameter.hpp"
+#include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
+#include "RTC/SCTP/parameters/HeartbeatInfoParameter.hpp"
+#include "RTC/SCTP/parameters/UnknownParameter.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -55,7 +55,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+		auto* parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -63,9 +63,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -79,7 +79,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		auto* parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+		auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -87,9 +87,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->HasUnknownValue() == true);
 		REQUIRE(parameter2->GetUnknownValueLength() == 2);
@@ -101,7 +101,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
-		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>(), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<HeartbeatInfoParameter>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -124,7 +124,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+		parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -132,9 +132,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -148,7 +148,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+		parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -156,9 +156,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->HasUnknownValue() == true);
 		REQUIRE(parameter2->GetUnknownValueLength() == 2);
@@ -191,7 +191,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
+		parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(clonedChunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -199,9 +199,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -215,7 +215,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(clonedChunk->GetParameterAt(1));
+		parameter2 = reinterpret_cast<const UnknownParameter*>(clonedChunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -223,9 +223,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->HasUnknownValue() == true);
 		REQUIRE(parameter2->GetUnknownValueLength() == 2);
@@ -288,7 +288,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+		auto* parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -296,9 +296,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -312,7 +312,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		auto* parameter2 = reinterpret_cast<const UnknownChunkParameter*>(chunk->GetParameterAt(1));
+		auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -320,9 +320,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->HasUnknownValue() == true);
 		REQUIRE(parameter2->GetUnknownValueLength() == 2);
@@ -355,7 +355,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(clonedChunk->GetParameterAt(0));
+		parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(clonedChunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -363,9 +363,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter1->HasInfo() == true);
 		REQUIRE(parameter1->GetInfoLength() == 7);
@@ -379,7 +379,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		parameter2 = reinterpret_cast<const UnknownChunkParameter*>(clonedChunk->GetParameterAt(1));
+		parameter2 = reinterpret_cast<const UnknownParameter*>(clonedChunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -387,9 +387,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ static_cast<ChunkParameter::ChunkParameterType>(49159),
+		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter2->HasUnknownValue() == true);
 		REQUIRE(parameter2->GetUnknownValueLength() == 2);
@@ -421,17 +421,17 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		/* Modify it by adding Chunk Parameters. */
+		/* Modify it by adding Parameters. */
 
-		auto* parameter1 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+		auto* parameter1 = chunk->BuildParameterInPlace<HeartbeatInfoParameter>();
 
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter1->SetInfo(DataBuffer, 5);
 		parameter1->Consolidate();
 
-		// Let's add another HeartbeatInfoChunkParameter (it doesn't make sense but
+		// Let's add another HeartbeatInfoParameter (it doesn't make sense but
 		// anyway).
-		auto* parameter2 = chunk->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+		auto* parameter2 = chunk->BuildParameterInPlace<HeartbeatInfoParameter>();
 
 		// Info length is 2 so 2 bytes of padding will be added.
 		parameter2->SetInfo(DataBuffer, 2);
@@ -453,7 +453,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* addedParameter1 =
-		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(0));
+		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ addedParameter1,
@@ -461,9 +461,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(addedParameter1->HasInfo() == true);
 		REQUIRE(addedParameter1->GetInfoLength() == 5);
@@ -477,7 +477,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(addedParameter1->GetInfo()[6] == 0x00);
 
 		const auto* addedParameter2 =
-		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk->GetParameterAt(1));
+		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ addedParameter2,
@@ -485,9 +485,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(addedParameter2->HasInfo() == true);
 		REQUIRE(addedParameter2->GetInfoLength() == 2);
@@ -519,7 +519,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*errorCausesCount*/ 0);
 
 		const auto* parsedParameter1 =
-		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(parsedChunk->GetParameterAt(0));
+		  reinterpret_cast<const HeartbeatInfoParameter*>(parsedChunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parsedParameter1,
@@ -527,9 +527,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter1->HasInfo() == true);
 		REQUIRE(parsedParameter1->GetInfoLength() == 5);
@@ -543,7 +543,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parsedParameter1->GetInfo()[6] == 0x00);
 
 		const auto* parsedParameter2 =
-		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(parsedChunk->GetParameterAt(1));
+		  reinterpret_cast<const HeartbeatInfoParameter*>(parsedChunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parsedParameter2,
@@ -551,9 +551,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter2->HasInfo() == true);
 		REQUIRE(parsedParameter2->GetInfoLength() == 2);

@@ -14,7 +14,7 @@ namespace RTC
 		 *
 		 * This is the base class of all items in a SCTP Packet, this is:
 		 * - SCTP Chunk,
-		 * - SCTP Chunk Parameter, and
+		 * - SCTP Parameter, and
 		 * - SCTP Error Cause.
 		 *
 		 * All those items have the same Length field with same meaning.
@@ -103,7 +103,7 @@ namespace RTC
 			 *   different and have different length in each item definition.
 			 * - In the case of SCTP Chunk class and subclasses (which implements this
 			 *   class) we assume that a Chunk having variable-length value does not
-			 *   have Chunk Parameters or Error Causes.
+			 *   have Parameters or Error Causes.
 			 */
 			virtual const uint8_t* GetVariableLengthValue() const final
 			{

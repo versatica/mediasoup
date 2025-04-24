@@ -1,11 +1,8 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/Chunk.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/Packet.hpp"
-#include "RTC/SCTP/chunkParameters/CookiePreservativeChunkParameter.hpp"
-#include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
-#include "RTC/SCTP/chunkParameters/IPv4AddressChunkParameter.hpp"
+#include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
@@ -13,6 +10,9 @@
 #include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/chunks/UnknownChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
+#include "RTC/SCTP/parameters/CookiePreservativeParameter.hpp"
+#include "RTC/SCTP/parameters/HeartbeatInfoParameter.hpp"
+#include "RTC/SCTP/parameters/IPv4AddressParameter.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -220,8 +220,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter3_1 =
-		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
+		auto* parameter3_1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -229,9 +228,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter3_1->HasInfo() == true);
 		REQUIRE(parameter3_1->GetInfoLength() == 2);
@@ -344,7 +343,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter3_1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
+		parameter3_1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -352,9 +351,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter3_1->HasInfo() == true);
 		REQUIRE(parameter3_1->GetInfoLength() == 2);
@@ -456,7 +455,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		parameter3_1 = reinterpret_cast<const HeartbeatInfoChunkParameter*>(chunk3->GetParameterAt(0));
+		parameter3_1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -464,9 +463,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter3_1->HasInfo() == true);
 		REQUIRE(parameter3_1->GetInfoLength() == 2);
@@ -511,8 +510,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		chunk1->SetNumberOfInboundStreams(22200);
 		chunk1->SetInitialTsn(14141414);
 
-		// Chunk Parameter 1.1: IPV4_ADDRESS, length: 8 bytes.
-		auto* parameter1_1 = chunk1->BuildParameterInPlace<IPv4AddressChunkParameter>();
+		// Parameter 1.1: IPV4_ADDRESS, length: 8 bytes.
+		auto* parameter1_1 = chunk1->BuildParameterInPlace<IPv4AddressParameter>();
 
 		// 192.168.0.3 IPv4 in network order.
 		uint8_t ipBuffer[] = { 0xC0, 0xA8, 0x00, 0x03 };
@@ -520,8 +519,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		parameter1_1->SetIPv4Address(ipBuffer);
 		parameter1_1->Consolidate();
 
-		// Chunk Parameter 1.2: COOKIE_PRESERVATIVE, length: 8 bytes.
-		auto* parameter1_2 = chunk1->BuildParameterInPlace<CookiePreservativeChunkParameter>();
+		// Parameter 1.2: COOKIE_PRESERVATIVE, length: 8 bytes.
+		auto* parameter1_2 = chunk1->BuildParameterInPlace<CookiePreservativeParameter>();
 
 		parameter1_2->SetLifeSpanIncrement(987654321);
 		parameter1_2->Consolidate();
@@ -532,10 +531,10 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// Chunk 2: HEARTBEAT, length: 4 bytes.
 		auto* chunk2 = packet->BuildChunkInPlace<HeartbeatChunk>();
 
-		// Chunk Parameter 2.1: HEARTBEAT_INFO, length: 4 bytes.
-		auto* parameter2_1 = chunk2->BuildParameterInPlace<HeartbeatInfoChunkParameter>();
+		// Parameter 2.1: HEARTBEAT_INFO, length: 4 bytes.
+		auto* parameter2_1 = chunk2->BuildParameterInPlace<HeartbeatInfoParameter>();
 
-		// Chunk Parameter 2.1: Add 3 bytes of info + 1 byte of padding.
+		// Parameter 2.1: Add 3 bytes of info + 1 byte of padding.
 		parameter2_1->SetInfo(DataBuffer, 3);
 		parameter2_1->Consolidate();
 
@@ -594,15 +593,15 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		auto* obtainedChunk1 = reinterpret_cast<const InitChunk*>(clonedPacket->GetChunkAt(0));
 
 		auto* obtainedParameter1_1 =
-		  reinterpret_cast<const IPv4AddressChunkParameter*>(obtainedChunk1->GetParameterAt(0));
+		  reinterpret_cast<const IPv4AddressParameter*>(obtainedChunk1->GetParameterAt(0));
 
 		auto* obtainedParameter1_2 =
-		  reinterpret_cast<const CookiePreservativeChunkParameter*>(obtainedChunk1->GetParameterAt(1));
+		  reinterpret_cast<const CookiePreservativeParameter*>(obtainedChunk1->GetParameterAt(1));
 
 		auto* obtainedChunk2 = reinterpret_cast<const HeartbeatChunk*>(clonedPacket->GetChunkAt(1));
 
 		auto* obtainedParameter2_1 =
-		  reinterpret_cast<const HeartbeatInfoChunkParameter*>(obtainedChunk2->GetParameterAt(0));
+		  reinterpret_cast<const HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
 
 		CHECK_PACKET(
 		  /*packet*/ clonedPacket,
@@ -648,9 +647,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::IPV4_ADDRESS,
+		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(obtainedParameter1_1->GetIPv4Address()[0] == 0xC0);
 		REQUIRE(obtainedParameter1_1->GetIPv4Address()[1] == 0xA8);
@@ -663,9 +662,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE,
+		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(obtainedParameter1_2->GetLifeSpanIncrement() == 987654321);
 
@@ -690,9 +689,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
 		  /*frozen*/ true,
-		  /*parameterType*/ ChunkParameter::ChunkParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ ChunkParameter::ActionForUnknownChunkParameterType::STOP);
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(obtainedParameter2_1->HasInfo() == true);
 		REQUIRE(obtainedParameter2_1->GetInfoLength() == 3);

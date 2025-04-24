@@ -3,8 +3,8 @@
 
 #include "common.hpp"
 #include "Utils.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/ErrorCause.hpp"
+#include "RTC/SCTP/Parameter.hpp"
 
 namespace RTC
 {
@@ -85,13 +85,13 @@ namespace RTC
 				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
 			}
 
-			ChunkParameter::ChunkParameterType GetMissingParameterTypeAt(uint32_t idx) const
+			Parameter::ParameterType GetMissingParameterTypeAt(uint32_t idx) const
 			{
-				return static_cast<ChunkParameter::ChunkParameterType>(
+				return static_cast<Parameter::ParameterType>(
 				  Utils::Byte::Get2Bytes(GetVariableLengthValuePointer(), (idx * 2)));
 			}
 
-			void AddMissingParameterType(ChunkParameter::ChunkParameterType parameterType);
+			void AddMissingParameterType(Parameter::ParameterType parameterType);
 
 		protected:
 			virtual MissingMandatoryParameterErrorCause* SoftClone(const uint8_t* buffer) const final override;

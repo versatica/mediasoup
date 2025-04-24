@@ -148,7 +148,7 @@ namespace RTC
 		}
 
 		void MissingMandatoryParameterErrorCause::AddMissingParameterType(
-		  ChunkParameter::ChunkParameterType parameterType)
+		  Parameter::ParameterType parameterType)
 		{
 			MS_TRACE();
 

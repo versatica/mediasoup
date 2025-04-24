@@ -191,8 +191,7 @@ namespace RTC
 
 				// The new Chunk will be added after other Chunks in the Packet, this is,
 				// at the end of the Packet,  whose length we know it's padded to 4
-				// bytes, and each Chunk Parameter total length is also multiple of 4
-				// bytes.
+				// bytes, and each Parameter total length is also multiple of 4 bytes.
 				auto* ptr = const_cast<uint8_t*>(GetBuffer()) + GetLength();
 				// The remaining length in the buffer is the potential buffer length
 				// of the Chunk.

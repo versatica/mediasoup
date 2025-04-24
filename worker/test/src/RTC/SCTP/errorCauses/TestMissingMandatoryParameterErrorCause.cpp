@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/ErrorCause.hpp"
+#include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/errorCauses/MissingMandatoryParameterErrorCause.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -43,13 +43,9 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(0) == ChunkParameter::ChunkParameterType::IPV4_ADDRESS);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(1) == ChunkParameter::ChunkParameterType::IPV6_ADDRESS);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(2) ==
-		  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
@@ -57,7 +53,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		/* Should throw if modifications are attempted when it's frozen. */
 
 		REQUIRE_THROWS_AS(
-		  errorCause->AddMissingParameterType(ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE),
+		  errorCause->AddMissingParameterType(Parameter::ParameterType::COOKIE_PRESERVATIVE),
 		  MediaSoupError);
 
 		/* Serialize it. */
@@ -76,13 +72,9 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(0) == ChunkParameter::ChunkParameterType::IPV4_ADDRESS);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(1) == ChunkParameter::ChunkParameterType::IPV6_ADDRESS);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(2) ==
-		  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
@@ -105,15 +97,10 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->GetNumberOfMissingParameters() == 3);
+		REQUIRE(clonedErrorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(clonedErrorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
 		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(0) ==
-		  ChunkParameter::ChunkParameterType::IPV4_ADDRESS);
-		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(1) ==
-		  ChunkParameter::ChunkParameterType::IPV6_ADDRESS);
-		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(2) ==
-		  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE);
+		  clonedErrorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(clonedErrorCause->GetBuffer()[14] == 0);
 		REQUIRE(clonedErrorCause->GetBuffer()[15] == 0);
@@ -192,9 +179,9 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 
 		/* Modify it. */
 
-		errorCause->AddMissingParameterType(ChunkParameter::ChunkParameterType::IPV4_ADDRESS);
-		errorCause->AddMissingParameterType(ChunkParameter::ChunkParameterType::IPV6_ADDRESS);
-		errorCause->AddMissingParameterType(ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE);
+		errorCause->AddMissingParameterType(Parameter::ParameterType::IPV4_ADDRESS);
+		errorCause->AddMissingParameterType(Parameter::ParameterType::IPV6_ADDRESS);
+		errorCause->AddMissingParameterType(Parameter::ParameterType::COOKIE_PRESERVATIVE);
 
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
@@ -206,13 +193,9 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(0) == ChunkParameter::ChunkParameterType::IPV4_ADDRESS);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(1) == ChunkParameter::ChunkParameterType::IPV6_ADDRESS);
-		REQUIRE(
-		  errorCause->GetMissingParameterTypeAt(2) ==
-		  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(errorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
@@ -234,15 +217,10 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->GetNumberOfMissingParameters() == 3);
+		REQUIRE(parsedErrorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(parsedErrorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
 		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(0) ==
-		  ChunkParameter::ChunkParameterType::IPV4_ADDRESS);
-		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(1) ==
-		  ChunkParameter::ChunkParameterType::IPV6_ADDRESS);
-		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(2) ==
-		  ChunkParameter::ChunkParameterType::COOKIE_PRESERVATIVE);
+		  parsedErrorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(parsedErrorCause->GetBuffer()[14] == 0);
 		REQUIRE(parsedErrorCause->GetBuffer()[15] == 0);

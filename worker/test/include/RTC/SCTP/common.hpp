@@ -6,11 +6,11 @@
 #include "Utils.hpp"
 #include "helpers.hpp" // in worker/test/include/
 #include "RTC/SCTP/Chunk.hpp"
-#include "RTC/SCTP/ChunkParameter.hpp"
 #include "RTC/SCTP/ErrorCause.hpp"
 #include "RTC/SCTP/Packet.hpp"
-#include "RTC/SCTP/chunkParameters/HeartbeatInfoChunkParameter.hpp"
+#include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
+#include "RTC/SCTP/parameters/HeartbeatInfoParameter.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 using namespace RTC::SCTP;
@@ -98,7 +98,7 @@ void resetBuffers();
 		{                                                                                                \
 			REQUIRE_THROWS_AS(                                                                             \
 			  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))                                    \
-			    ->BuildParameterInPlace<HeartbeatInfoChunkParameter>(),                                    \
+			    ->BuildParameterInPlace<HeartbeatInfoParameter>(),                                         \
 			  MediaSoupError);                                                                             \
 		}                                                                                                \
 		REQUIRE((chunk)->GetParametersCount() == parametersCount);                                       \
@@ -127,14 +127,14 @@ void resetBuffers();
 	} while (false)
 
 #define CHECK_PARAMETER(                                                                            \
-  /*const ChunkParameter**/ parameter,                                                              \
+  /*const Parameter**/ parameter,                                                                   \
   /*const uint8_t**/ buffer,                                                                        \
   /*size_t*/ bufferLength,                                                                          \
   /*size_t*/ length,                                                                                \
   /*bool*/ frozen,                                                                                  \
-  /*ChunkParameter::ChunkParameterType*/ parameterType,                                             \
+  /*Parameter::ParameterType*/ parameterType,                                                       \
   /*bool*/ unknownType,                                                                             \
-  /*ChunkParameter::ActionForUnknownChunkParameterType*/ actionForUnknownParameterType)             \
+  /*Parameter::ActionForUnknownParameterType*/ actionForUnknownParameterType)                       \
 	{                                                                                                 \
 		REQUIRE(parameter);                                                                             \
 		REQUIRE(parameter->GetBuffer() != nullptr);                                                     \
@@ -150,7 +150,7 @@ void resetBuffers();
 		REQUIRE(parameter->IsFrozen() == frozen);                                                       \
 		REQUIRE(parameter->GetType() == parameterType);                                                 \
 		REQUIRE(parameter->HasUnknownType() == unknownType);                                            \
-		REQUIRE(parameter->GetActionForUnknownChunkParameterType() == actionForUnknownParameterType);   \
+		REQUIRE(parameter->GetActionForUnknownParameterType() == actionForUnknownParameterType);        \
 		if (buffer)                                                                                     \
 		{                                                                                               \
 			REQUIRE(                                                                                      \
@@ -158,7 +158,7 @@ void resetBuffers();
 			  true);                                                                                      \
 		}                                                                                               \
 		REQUIRE_THROWS_AS(                                                                              \
-		  const_cast<ChunkParameter*>(reinterpret_cast<const ChunkParameter*>(parameter))               \
+		  const_cast<Parameter*>(reinterpret_cast<const Parameter*>(parameter))                         \
 		    ->Serialize(ThrowBuffer, length - 1),                                                       \
 		  MediaSoupError);                                                                              \
 		REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, length - 1), MediaSoupError);                   \
