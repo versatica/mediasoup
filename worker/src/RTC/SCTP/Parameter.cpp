@@ -25,6 +25,7 @@ namespace RTC
 			{ Parameter::ParameterType::SUPPORTED_EXTENSIONS,       "SUPPORTED_EXTENSIONS"       },
 			{ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST, "OUTGOING_SSN_RESET_REQUEST" },
 			{ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST, "INCOMING_SSN_RESET_REQUEST" },
+			{ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,      "SSN_TSN_RESET_REQUEST"      },
 			{ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,   "ZERO_CHECKSUM_ACCEPTABLE"   },
 			// TODO: Add more.
 		};

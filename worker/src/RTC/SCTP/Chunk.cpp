@@ -26,6 +26,7 @@
 #include "RTC/SCTP/parameters/IPv6AddressParameter.hpp"
 #include "RTC/SCTP/parameters/IncomingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/parameters/OutgoingSsnResetRequestParameter.hpp"
+#include "RTC/SCTP/parameters/SsnTsnResetRequestParameter.hpp"
 #include "RTC/SCTP/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/parameters/SupportedAddressTypesParameter.hpp"
 #include "RTC/SCTP/parameters/SupportedExtensionsParameter.hpp"
@@ -463,6 +464,14 @@ namespace RTC
 					case Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST:
 					{
 						parameter = IncomingSsnResetRequestParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case Parameter::ParameterType::SSN_TSN_RESET_REQUEST:
+					{
+						parameter = SsnTsnResetRequestParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
