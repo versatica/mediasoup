@@ -67,6 +67,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (parameterLength < OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "OutgoingSsnResetRequestParameter Length field must be equal or greater than %zu",
+				  OutgoingSsnResetRequestParameter::OutgoingSsnResetRequestParameterHeaderLength);
+
+				return nullptr;
+			}
+
 			auto* parameter =
 			  new OutgoingSsnResetRequestParameter(const_cast<uint8_t*>(buffer), bufferLength);
 

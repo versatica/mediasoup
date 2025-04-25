@@ -9,7 +9,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP State Cookie Parameter (UNRECOGNIZED_PARAMETER) (7).
+		 * SCTP Unrecognized Parameter Parameter (UNRECOGNIZED_PARAMETER) (7).
 		 *
 		 * @see RFC 9260.
 		 *
