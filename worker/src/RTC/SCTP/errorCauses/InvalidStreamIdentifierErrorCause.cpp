@@ -52,7 +52,7 @@ namespace RTC
 			  ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 			  InvalidStreamIdentifierErrorCause::InvalidStreamIdentifierErrorCauseHeaderLength);
 
-			// Initialize value.
+			// Initialize header extra fields.
 			errorCause->SetStreamIdentifier(0);
 			errorCause->SetReserved();
 

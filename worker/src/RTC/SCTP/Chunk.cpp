@@ -19,6 +19,7 @@
 #include "RTC/SCTP/errorCauses/UnrecognizedParametersErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UnresolvableAddressErrorCause.hpp"
 #include "RTC/SCTP/errorCauses/UserInitiatedAbortErrorCause.hpp"
+#include "RTC/SCTP/parameters/AddOutgoingStreamsRequestParameter.hpp"
 #include "RTC/SCTP/parameters/CookiePreservativeParameter.hpp"
 #include "RTC/SCTP/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/parameters/HeartbeatInfoParameter.hpp"
@@ -481,6 +482,14 @@ namespace RTC
 					case Parameter::ParameterType::RECONFIGURATION_RESPONSE:
 					{
 						parameter = ReconfigurationResponseParameter::ParseStrict(
+						  ptr, parameterLength + padding, parameterLength, padding);
+
+						break;
+					}
+
+					case Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST:
+					{
+						parameter = AddOutgoingStreamsRequestParameter::ParseStrict(
 						  ptr, parameterLength + padding, parameterLength, padding);
 
 						break;
