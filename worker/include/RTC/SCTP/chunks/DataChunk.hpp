@@ -49,9 +49,9 @@ namespace RTC
 		 *   chunk with a User Data field of length L will have the Length field
 		 *   set to (16 + L) (indicating 16 + L bytes) where L MUST be greater than
 		 *   0.
-		 * - TSN (32 bits): This value represents the TSN for
-		 *   this DATA chunk. The valid range of TSN is from 0 to 4294967295
-		 *   (232 - 1). TSN wraps back to 0 after reaching 4294967295.
+		 * - TSN (32 bits): This value represents the TSN for this DATA chunk. The
+		 *   valid range of TSN is from 0 to 4294967295 (232 - 1). TSN wraps back
+		 *   to 0 after reaching 4294967295.
 		 * - Stream Identifier S (16 bits): Identifies the stream to which the
 		 *   following user data belongs.
 		 * - Stream Sequence Number n (16 bits): This value represents the Stream

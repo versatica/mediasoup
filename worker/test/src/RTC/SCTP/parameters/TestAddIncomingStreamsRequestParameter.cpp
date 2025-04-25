@@ -2,23 +2,23 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
-#include "RTC/SCTP/parameters/AddOutgoingStreamsRequestParameter.hpp"
+#include "RTC/SCTP/parameters/AddIncomingStreamsRequestParameter.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
 
-SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
+SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("AddOutgoingStreamsRequestParameter::Parse() succeeds")
+	SECTION("AddIncomingStreamsRequestParameter::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
 		{
-			// Type:17 (ADD_OUTGOING_STREAMS_REQUEST), Length: 12
-			0x00, 0x11, 0x00, 0x0C,
+			// Type:18 (ADD_INCOMING_STREAMS_REQUEST), Length: 12
+			0x00, 0x12, 0x00, 0x0C,
 			// Re-configuration Request Sequence Number: 666777888
 			0x27, 0xBE, 0x39, 0x20,
 			// Number of new streams: 1024
@@ -29,7 +29,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = AddOutgoingStreamsRequestParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = AddIncomingStreamsRequestParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
@@ -37,7 +37,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
@@ -60,7 +60,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
 		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
@@ -81,7 +81,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
 		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
@@ -91,10 +91,10 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		delete clonedParameter;
 	}
 
-	SECTION("AddOutgoingStreamsRequestParameter::Factory() succeeds")
+	SECTION("AddIncomingStreamsRequestParameter::Factory() succeeds")
 	{
 		auto* parameter =
-		  AddOutgoingStreamsRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		  AddIncomingStreamsRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
@@ -102,7 +102,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
 		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
@@ -120,7 +120,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
 		  /*frozen*/ false,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
@@ -130,7 +130,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		/* Parse itself and compare. */
 
 		auto* parsedParameter =
-		  AddOutgoingStreamsRequestParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		  AddIncomingStreamsRequestParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
@@ -140,13 +140,11 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
 		  /*frozen*/ true,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetReconfigurationRequestSequenceNumber() == 12345678);
 		REQUIRE(parsedParameter->GetNumberOfNewStreams() == 2048);
-
-		delete parsedParameter;
 	}
 }

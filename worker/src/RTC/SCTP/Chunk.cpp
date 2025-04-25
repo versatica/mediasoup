@@ -63,6 +63,7 @@ namespace RTC
 			{ Chunk::ChunkType::SHUTDOWN_COMPLETE, "SHUTDOWN_COMPLETE" },
 			{ Chunk::ChunkType::FORWARD_TSN,       "FORWARD_TSN"       },
 			{ Chunk::ChunkType::RE_CONFIG,         "RE_CONFIG"         },
+			{ Chunk::ChunkType::IDATA,             "IDATA"             },
 			// TODO: Add more.
 		};
 		// clang-format on
