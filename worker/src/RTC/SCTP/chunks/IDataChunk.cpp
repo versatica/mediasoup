@@ -24,7 +24,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (chunkType != Chunk::ChunkType::IDATA)
+			if (chunkType != Chunk::ChunkType::I_DATA)
 			{
 				MS_WARN_DEV("invalid Chunk type");
 
@@ -45,7 +45,7 @@ namespace RTC
 
 			auto* chunk = new IDataChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(Chunk::ChunkType::IDATA, 0, IDataChunk::IDataChunkHeaderLength);
+			chunk->InitializeHeader(Chunk::ChunkType::I_DATA, 0, IDataChunk::IDataChunkHeaderLength);
 
 			// Must also initialize extra fields in the header.
 			chunk->SetTsn(0);

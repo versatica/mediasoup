@@ -184,7 +184,7 @@ namespace RTC
 						break;
 					}
 
-					case Chunk::ChunkType::IDATA:
+					case Chunk::ChunkType::I_DATA:
 					{
 						chunk = IDataChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 

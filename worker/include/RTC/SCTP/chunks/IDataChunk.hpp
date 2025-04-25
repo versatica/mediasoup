@@ -10,7 +10,7 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP I-Data Chunk (IDATA) (64).
+		 * SCTP I-Data Chunk (I_DATA) (64).
 		 *
 		 * @see RFC 8260.
 		 *
@@ -42,7 +42,7 @@ namespace RTC
 		 *   first fragment of a user message.
 		 * - E bit (1 bit): The (E)nding fragment bit, if set, indicates the last
 		 *   fragment of a user message.
-		 * - Length (16 bits): This field indicates the length of the IDATA chunk in
+		 * - Length (16 bits): This field indicates the length of the I-DATA chunk in
 		 *   bytes from the beginning of the type field to the end of the User Data
 		 *   field excluding any padding.
 		 * - TSN (32 bits): This value represents the TSN for this I-DATA chunk.
