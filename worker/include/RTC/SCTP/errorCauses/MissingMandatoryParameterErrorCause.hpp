@@ -11,7 +11,8 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Missing Mandatory Parameter (MISSING_MANDATORY_PARAMETER) (2)
+		 * SCTP Missing Mandatory Parameter Error Cause
+		 * (MISSING_MANDATORY_PARAMETER) (2)
 		 *
 		 * @see RFC 9260.
 		 *

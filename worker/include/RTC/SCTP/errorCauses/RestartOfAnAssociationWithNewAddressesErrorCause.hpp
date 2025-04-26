@@ -12,6 +12,8 @@ namespace RTC
 		 * SCTP Restart of an Association with New Addresses Error Cause
 		 * (RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES) (11)
 		 *
+		 * @see RFC 9260.
+		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
