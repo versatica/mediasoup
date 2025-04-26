@@ -9,7 +9,8 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Invalid Mandatory Parameter Error Cause (INVALID_MANDATORY_PARAMETER) (7)
+		 * SCTP Invalid Mandatory Parameter Error Cause
+		 * (INVALID_MANDATORY_PARAMETER) (7)
 		 *
 		 * @see RFC 9260.
 		 *
