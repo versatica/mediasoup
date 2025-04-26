@@ -10,7 +10,8 @@ namespace RTC
 	namespace SCTP
 	{
 		/**
-		 * SCTP Invalid Stream Identifier Error Cause (INVALID_STREAM_IDENTIFIER) (1)
+		 * SCTP Invalid Stream Identifier Error Cause (INVALID_STREAM_IDENTIFIER)
+		 * (1)
 		 *
 		 * @see RFC 9260.
 		 *
