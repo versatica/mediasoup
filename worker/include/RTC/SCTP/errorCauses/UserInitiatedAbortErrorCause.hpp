@@ -11,6 +11,8 @@ namespace RTC
 		/**
 		 * SCTP User-Initiated Abort Error Cause (USER_INITIATED_ABORT) (12)
 		 *
+		 * @see RFC 9260.
+		 *
 		 *  0                   1                   2                   3
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
