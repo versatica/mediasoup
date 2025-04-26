@@ -19,9 +19,9 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 			0xC0, 0b00000000, 0x00, 0x10,
 			// New Cumulative TSN: 287454020,
 			0x11, 0x22, 0x33, 0x44,
-			// Stream 1: 0x1234, Stream Sequence 1: 0x4321
+			// Stream 1: 4660, Stream Sequence 1: 17185
 			0x12, 0x34, 0x43, 0x21,
-			// Stream 2: 0x5678, Stream Sequence 2: 0x8765
+			// Stream 2: 22136, Stream Sequence 2: 34661
 			0x56, 0x78, 0x87, 0x65,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
@@ -48,10 +48,10 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		REQUIRE(chunk->GetNewCumulativeTsn() == 287454020);
 		REQUIRE(chunk->GetNumberOfStreams() == 2);
-		REQUIRE(chunk->GetStreamAt(0) == 0x1234);
-		REQUIRE(chunk->GetStreamSequenceAt(0) == 0x4321);
-		REQUIRE(chunk->GetStreamAt(1) == 0x5678);
-		REQUIRE(chunk->GetStreamSequenceAt(1) == 0x8765);
+		REQUIRE(chunk->GetStreamAt(0) == 4660);
+		REQUIRE(chunk->GetStreamSequenceAt(0) == 17185);
+		REQUIRE(chunk->GetStreamAt(1) == 22136);
+		REQUIRE(chunk->GetStreamSequenceAt(1) == 34661);
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
@@ -81,10 +81,10 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		REQUIRE(chunk->GetNewCumulativeTsn() == 287454020);
 		REQUIRE(chunk->GetNumberOfStreams() == 2);
-		REQUIRE(chunk->GetStreamAt(0) == 0x1234);
-		REQUIRE(chunk->GetStreamSequenceAt(0) == 0x4321);
-		REQUIRE(chunk->GetStreamAt(1) == 0x5678);
-		REQUIRE(chunk->GetStreamSequenceAt(1) == 0x8765);
+		REQUIRE(chunk->GetStreamAt(0) == 4660);
+		REQUIRE(chunk->GetStreamSequenceAt(0) == 17185);
+		REQUIRE(chunk->GetStreamAt(1) == 22136);
+		REQUIRE(chunk->GetStreamSequenceAt(1) == 34661);
 
 		/* Clone it. */
 
@@ -111,10 +111,10 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		REQUIRE(clonedChunk->GetNewCumulativeTsn() == 287454020);
 		REQUIRE(clonedChunk->GetNumberOfStreams() == 2);
-		REQUIRE(clonedChunk->GetStreamAt(0) == 0x1234);
-		REQUIRE(clonedChunk->GetStreamSequenceAt(0) == 0x4321);
-		REQUIRE(clonedChunk->GetStreamAt(1) == 0x5678);
-		REQUIRE(clonedChunk->GetStreamSequenceAt(1) == 0x8765);
+		REQUIRE(clonedChunk->GetStreamAt(0) == 4660);
+		REQUIRE(clonedChunk->GetStreamSequenceAt(0) == 17185);
+		REQUIRE(clonedChunk->GetStreamAt(1) == 22136);
+		REQUIRE(clonedChunk->GetStreamSequenceAt(1) == 34661);
 
 		delete clonedChunk;
 	}
@@ -129,9 +129,9 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 			0xC0, 0b00000000, 0x00, 0x0E,
 			// New Cumulative TSN: 287454020,
 			0x11, 0x22, 0x33, 0x44,
-			// Stream 1: 0x1234, Stream Sequence 1: 0x4321
+			// Stream 1: 4660, Stream Sequence 1: 17185
 			0x12, 0x34, 0x43, 0x21,
-			// Stream 2: 0x5678, Stream Sequence 2 (missing in Length field)
+			// Stream 2: 22136, Stream Sequence 2 (missing in Length field)
 			0x56, 0x78, 0x87, 0x65,
 		};
 		// clang-format on
@@ -160,6 +160,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		REQUIRE(chunk->GetNewCumulativeTsn() == 0);
 		REQUIRE(chunk->GetNumberOfStreams() == 0);
+
 		/* Modify it. */
 
 		chunk->SetNewCumulativeTsn(1234);

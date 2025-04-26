@@ -1,5 +1,5 @@
-#ifndef MS_RTC_SCTP_IDATA_CHUNK_HPP
-#define MS_RTC_SCTP_IDATA_CHUNK_HPP
+#ifndef MS_RTC_SCTP_I_DATA_CHUNK_HPP
+#define MS_RTC_SCTP_I_DATA_CHUNK_HPP
 
 #include "common.hpp"
 #include "Utils.hpp"

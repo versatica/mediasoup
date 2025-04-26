@@ -72,16 +72,15 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* chunk = new ForwardTsnChunk(const_cast<uint8_t*>(buffer), bufferLength);
-
-			// Here we must validate that Length field is multiple of 4.
-			if (chunk->GetLengthField() % 4 != 0)
+			// Here we must validate that length is multiple of 4.
+			if (chunkLength % 4 != 0)
 			{
-				MS_WARN_TAG(sctp, "wrong Length value (not multiple of 4)");
+				MS_WARN_TAG(sctp, "wrong length (not multiple of 4)");
 
-				delete chunk;
 				return nullptr;
 			}
+
+			auto* chunk = new ForwardTsnChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Must always invoke SetLength() after constructing a Serializable with
 			// not fixed length.

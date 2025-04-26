@@ -74,6 +74,7 @@ namespace RTC
 				FORWARD_TSN       = 0xC0, // Type: 192, RFC 3758
 				RE_CONFIG         = 0x82, // Type 130, RFC 6525
 				I_DATA            = 0x40, // Type: 64, RFC 8260
+				I_FORWARD_TSN     = 0xC2, // Type: 194, RFC 8260
 			};
 
 			/**
