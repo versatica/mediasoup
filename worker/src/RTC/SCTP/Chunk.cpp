@@ -50,7 +50,7 @@ namespace RTC
 			{ Chunk::ChunkType::INIT,              "INIT"              },
 			{ Chunk::ChunkType::INIT_ACK,          "INIT_ACK"          },
 			{ Chunk::ChunkType::SACK,              "SACK"              },
-			{ Chunk::ChunkType::HEARTBEAT,         "HEARTBEAT"         },
+			{ Chunk::ChunkType::HEARTBEAT_REQUEST, "HEARTBEAT_REQUEST" },
 			{ Chunk::ChunkType::HEARTBEAT_ACK,     "HEARTBEAT_ACK"     },
 			{ Chunk::ChunkType::ABORT,             "ABORT"             },
 			{ Chunk::ChunkType::SHUTDOWN,          "SHUTDOWN"          },

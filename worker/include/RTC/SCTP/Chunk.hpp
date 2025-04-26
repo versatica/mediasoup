@@ -60,7 +60,7 @@ namespace RTC
 				INIT              = 0x01,
 				INIT_ACK          = 0x02,
 				SACK              = 0x03,
-				HEARTBEAT         = 0x04,
+				HEARTBEAT_REQUEST = 0x04,
 				HEARTBEAT_ACK     = 0x05,
 				ABORT             = 0x06,
 				SHUTDOWN          = 0x07,

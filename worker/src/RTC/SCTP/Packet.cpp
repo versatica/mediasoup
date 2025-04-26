@@ -11,7 +11,7 @@
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/ForwardTsnChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
-#include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/chunks/IDataChunk.hpp"
 #include "RTC/SCTP/chunks/IForwardTsnChunk.hpp"
 #include "RTC/SCTP/chunks/InitAckChunk.hpp"
@@ -105,9 +105,10 @@ namespace RTC
 						break;
 					}
 
-					case Chunk::ChunkType::HEARTBEAT:
+					case Chunk::ChunkType::HEARTBEAT_REQUEST:
 					{
-						chunk = HeartbeatChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
+						chunk =
+						  HeartbeatRequestChunk::ParseStrict(ptr, chunkLength + padding, chunkLength, padding);
 
 						break;
 					}

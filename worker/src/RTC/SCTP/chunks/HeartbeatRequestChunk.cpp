@@ -1,7 +1,7 @@
-#define MS_CLASS "RTC::SCTP::HeartbeatChunk"
+#define MS_CLASS "RTC::SCTP::HeartbeatRequestChunk"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatRequestChunk.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 
@@ -11,7 +11,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		HeartbeatChunk* HeartbeatChunk::Parse(const uint8_t* buffer, size_t bufferLength)
+		HeartbeatRequestChunk* HeartbeatRequestChunk::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
@@ -24,17 +24,17 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (chunkType != Chunk::ChunkType::HEARTBEAT)
+			if (chunkType != Chunk::ChunkType::HEARTBEAT_REQUEST)
 			{
 				MS_WARN_DEV("invalid Chunk type");
 
 				return nullptr;
 			}
 
-			return HeartbeatChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
+			return HeartbeatRequestChunk::ParseStrict(buffer, bufferLength, chunkLength, padding);
 		}
 
-		HeartbeatChunk* HeartbeatChunk::Factory(uint8_t* buffer, size_t bufferLength)
+		HeartbeatRequestChunk* HeartbeatRequestChunk::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
 
@@ -43,22 +43,22 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			auto* chunk = new HeartbeatChunk(buffer, bufferLength);
+			auto* chunk = new HeartbeatRequestChunk(buffer, bufferLength);
 
-			chunk->InitializeHeader(Chunk::ChunkType::HEARTBEAT, 0, Chunk::ChunkHeaderLength);
+			chunk->InitializeHeader(Chunk::ChunkType::HEARTBEAT_REQUEST, 0, Chunk::ChunkHeaderLength);
 
 			// No need to invoke SetLength() since constructor invoked it with
-			// minimum HeartbeatChunk length.
+			// minimum HeartbeatRequestChunk length.
 
 			return chunk;
 		}
 
-		HeartbeatChunk* HeartbeatChunk::ParseStrict(
+		HeartbeatRequestChunk* HeartbeatRequestChunk::ParseStrict(
 		  const uint8_t* buffer, size_t bufferLength, uint16_t chunkLength, uint8_t padding)
 		{
 			MS_TRACE();
 
-			auto* chunk = new HeartbeatChunk(const_cast<uint8_t*>(buffer), bufferLength);
+			auto* chunk = new HeartbeatRequestChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// Parse Parameters.
 			if (!chunk->ParseParameters())
@@ -81,7 +81,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		HeartbeatChunk::HeartbeatChunk(uint8_t* buffer, size_t bufferLength)
+		HeartbeatRequestChunk::HeartbeatRequestChunk(uint8_t* buffer, size_t bufferLength)
 		  : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
@@ -89,26 +89,26 @@ namespace RTC
 			SetLength(Chunk::ChunkHeaderLength);
 		}
 
-		HeartbeatChunk::~HeartbeatChunk()
+		HeartbeatRequestChunk::~HeartbeatRequestChunk()
 		{
 			MS_TRACE();
 		}
 
-		void HeartbeatChunk::Dump(int indentation) const
+		void HeartbeatRequestChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "<SCTP::HeartbeatChunk>");
+			MS_DUMP_CLEAN(indentation, "<SCTP::HeartbeatRequestChunk>");
 			DumpCommon(indentation);
 			DumpParameters(indentation);
-			MS_DUMP_CLEAN(indentation, "</SCTP::HeartbeatChunk>");
+			MS_DUMP_CLEAN(indentation, "</SCTP::HeartbeatRequestChunk>");
 		}
 
-		HeartbeatChunk* HeartbeatChunk::Clone(uint8_t* buffer, size_t bufferLength) const
+		HeartbeatRequestChunk* HeartbeatRequestChunk::Clone(uint8_t* buffer, size_t bufferLength) const
 		{
 			MS_TRACE();
 
-			auto* clonedChunk = new HeartbeatChunk(buffer, bufferLength);
+			auto* clonedChunk = new HeartbeatRequestChunk(buffer, bufferLength);
 
 			CloneInto(clonedChunk);
 			SoftCloneInto(clonedChunk);
@@ -116,11 +116,11 @@ namespace RTC
 			return clonedChunk;
 		}
 
-		HeartbeatChunk* HeartbeatChunk::SoftClone(const uint8_t* buffer) const
+		HeartbeatRequestChunk* HeartbeatRequestChunk::SoftClone(const uint8_t* buffer) const
 		{
 			MS_TRACE();
 
-			auto* softClonedChunk = new HeartbeatChunk(const_cast<uint8_t*>(buffer), GetLength());
+			auto* softClonedChunk = new HeartbeatRequestChunk(const_cast<uint8_t*>(buffer), GetLength());
 
 			SoftCloneInto(softClonedChunk);
 

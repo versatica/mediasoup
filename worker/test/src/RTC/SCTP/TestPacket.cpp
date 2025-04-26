@@ -5,7 +5,7 @@
 #include "RTC/SCTP/Parameter.hpp"
 #include "RTC/SCTP/chunks/DataChunk.hpp"
 #include "RTC/SCTP/chunks/HeartbeatAckChunk.hpp"
-#include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/chunks/InitChunk.hpp"
 #include "RTC/SCTP/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/chunks/UnknownChunk.hpp"
@@ -528,8 +528,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// Consolidate Chunk 1 after consolidating its Parameters 1.1 and 1.2.
 		chunk1->Consolidate();
 
-		// Chunk 2: HEARTBEAT, length: 4 bytes.
-		auto* chunk2 = packet->BuildChunkInPlace<HeartbeatChunk>();
+		// Chunk 2: HEARTBEAT_REQUEST, length: 4 bytes.
+		auto* chunk2 = packet->BuildChunkInPlace<HeartbeatRequestChunk>();
 
 		// Parameter 2.1: HEARTBEAT_INFO, length: 4 bytes.
 		auto* parameter2_1 = chunk2->BuildParameterInPlace<HeartbeatInfoParameter>();
@@ -598,7 +598,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		auto* obtainedParameter1_2 =
 		  reinterpret_cast<const CookiePreservativeParameter*>(obtainedChunk1->GetParameterAt(1));
 
-		auto* obtainedChunk2 = reinterpret_cast<const HeartbeatChunk*>(clonedPacket->GetChunkAt(1));
+		auto* obtainedChunk2 =
+		  reinterpret_cast<const HeartbeatRequestChunk*>(clonedPacket->GetChunkAt(1));
 
 		auto* obtainedParameter2_1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
@@ -674,7 +675,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*bufferLength*/ 4 + 8,
 		  /*length*/ 4 + 8,
 		  /*frozen*/ true,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,

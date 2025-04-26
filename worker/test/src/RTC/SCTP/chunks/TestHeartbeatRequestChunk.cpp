@@ -2,7 +2,7 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/Chunk.hpp"
 #include "RTC/SCTP/Parameter.hpp"
-#include "RTC/SCTP/chunks/HeartbeatChunk.hpp"
+#include "RTC/SCTP/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/parameters/UnknownParameter.hpp"
@@ -13,12 +13,12 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 {
 	resetBuffers();
 
-	SECTION("HeartbeatChunk::Parse() succeeds")
+	SECTION("HeartbeatRequestChunk::Parse() succeeds")
 	{
 		// clang-format off
 		uint8_t buffer[] =
 		{
-			// Type:4 (HEARTBEAT), Flags:0b00000000, Length: 22
+			// Type:4 (HEARTBEAT_REQUEST), Flags:0b00000000, Length: 22
 			// NOTE: Length field must exclude the padding of the last Parameter.
 			0x04, 0b00000000, 0x00, 0x16,
 			// Parameter 1: Type:1 (HEARBEAT_INFO), Length: 11
@@ -38,7 +38,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = HeartbeatChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = HeartbeatRequestChunk::Parse(buffer, sizeof(buffer));
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk,
@@ -46,7 +46,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
 		  /*frozen*/ true,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -115,7 +115,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 24,
 		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -182,7 +182,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 24,
 		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -238,7 +238,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("HeartbeatChunk::Parse() with incorrect but valid Chunk Length field succeeds")
+	SECTION("HeartbeatRequestChunk::Parse() with incorrect but valid Chunk Length field succeeds")
 	{
 		// Here the chunk has incorrect Chunk Length field with value 24 instead of
 		// 22. It's incorrect because, as per RFC 9260:
@@ -252,7 +252,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// clang-format off
 		uint8_t buffer[] =
 		{
-			// Type:4 (HEARTBEAT), Flags:0b00000000, Length: 24
+			// Type:4 (HEARTBEAT_REQUEST), Flags:0b00000000, Length: 24
 			// NOTE: Length field must exclude the padding of the last Parameter so
 			// Length field should be 22 rather than 24. But anyway it's ok.
 			0x04, 0b00000000, 0x00, 0x18,
@@ -271,7 +271,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = HeartbeatChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = HeartbeatRequestChunk::Parse(buffer, sizeof(buffer));
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk,
@@ -279,7 +279,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
 		  /*frozen*/ true,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -346,7 +346,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 24,
 		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -402,9 +402,9 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		delete clonedChunk;
 	}
 
-	SECTION("HeartbeatChunk::Factory() succeeds")
+	SECTION("HeartbeatRequestChunk::Factory() succeeds")
 	{
-		auto* chunk = HeartbeatChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk = HeartbeatRequestChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk,
@@ -412,7 +412,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
 		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -443,7 +443,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
 		  /*frozen*/ false,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
@@ -499,7 +499,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = HeartbeatChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk = HeartbeatRequestChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 
@@ -509,7 +509,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*bufferLength*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
 		  /*frozen*/ true,
-		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT,
+		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
