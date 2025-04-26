@@ -146,5 +146,7 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 
 		REQUIRE(parsedParameter->GetReconfigurationRequestSequenceNumber() == 12345678);
 		REQUIRE(parsedParameter->GetNumberOfNewStreams() == 2048);
+
+		delete parsedParameter;
 	}
 }
