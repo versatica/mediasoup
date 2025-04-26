@@ -98,9 +98,10 @@ namespace RTC
 			{
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - idx: %" PRIu16 ", chunk type: %" PRIu8,
+				  "  - idx: %" PRIu16 ", chunk type: %" PRIu8 " (%s)",
 				  idx,
-				  static_cast<uint8_t>(GetChunkTypeAt(idx)));
+				  static_cast<uint8_t>(GetChunkTypeAt(idx)),
+				  Chunk::ChunkType2String(GetChunkTypeAt(idx)).c_str());
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::SupportedExtensionsParameter>");
 		}
