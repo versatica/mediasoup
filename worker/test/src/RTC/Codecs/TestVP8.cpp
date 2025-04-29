@@ -479,11 +479,9 @@ SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 
 	SECTION("encode based on specific encoder")
 	{
-		std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
-			buffer, sizeof(buffer)) };
+		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
-		REQUIRE(payloadDescriptor.get());
 
 		RTC::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 0;
@@ -495,8 +493,7 @@ SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 
 		REQUIRE(payloadDescriptor->pictureId == 1);
 
-		auto* payloadDescriptorHandler =
-		  new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor.get());
+		auto* payloadDescriptorHandler = new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor);
 
 		auto forwarded = payloadDescriptorHandler->Process(&context, buffer, marker);
 		REQUIRE(forwarded);
@@ -530,5 +527,9 @@ SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 		auto* payloadDescriptor3 = Codecs::VP8::Parse(buffer, sizeof(buffer));
 		REQUIRE(payloadDescriptor3);
 		REQUIRE(payloadDescriptor3->pictureId == 2);
+
+		delete payloadDescriptor3;
+		delete payloadDescriptor2;
+		delete payloadDescriptorHandler;
 	}
 }
