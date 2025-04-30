@@ -35,6 +35,7 @@ void resetBuffers();
   /*uint16_t*/ destinationPort,                                                                    \
   /*uint32_t*/ verificationTag,                                                                    \
   /*uint32_t*/ checksum,                                                                           \
+  /*hasValidCrc32cChecksum*/ hasValidCrc32cChecksum,                                               \
   /*size_t*/ chunksCount)                                                                          \
 	do                                                                                               \
 	{                                                                                                \
@@ -51,6 +52,7 @@ void resetBuffers();
 		REQUIRE(packet->GetDestinationPort() == destinationPort);                                      \
 		REQUIRE(packet->GetVerificationTag() == verificationTag);                                      \
 		REQUIRE(packet->GetChecksum() == checksum);                                                    \
+		REQUIRE(packet->ValidateCRC32cChecksum() == hasValidCrc32cChecksum);                           \
 		REQUIRE(packet->GetChunksCount() == chunksCount);                                              \
 		REQUIRE(packet->HasChunks() == chunksCount > 0);                                               \
 		REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);                                           \

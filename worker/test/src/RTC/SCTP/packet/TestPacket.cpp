@@ -38,6 +38,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* packet = Packet::Parse(buffer, sizeof(buffer));
 
+		// NOTE: Obviously the Checksum CRC32C validation fails since Checksum is
+		// totally random.
 		CHECK_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ buffer,
@@ -48,6 +50,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
 
 		/* Should throw if modifications are attempted when it's frozen. */
@@ -57,6 +60,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE_THROWS_AS(packet->SetDestinationPort(9999), MediaSoupError);
 		REQUIRE_THROWS_AS(packet->SetVerificationTag(12345), MediaSoupError);
 		REQUIRE_THROWS_AS(packet->SetChecksum(6666), MediaSoupError);
+		REQUIRE_THROWS_AS(packet->SetCRC32cChecksum(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -74,6 +78,22 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
+		  /*chunksCount*/ 0);
+
+		/* Insert CRC32C checksum. */
+
+		CHECK_PACKET(
+		  /*packet*/ packet,
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ 12,
+		  /*frozen*/ false,
+		  /*sourcePort*/ 10000,
+		  /*destinationPort*/ 15999,
+		  /*verificationTag*/ 4294967285,
+		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
 
 		/* Clone it. */
@@ -94,6 +114,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
 
 		delete clonedPacket;
@@ -146,6 +167,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 3);
 
 		auto* chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
@@ -269,6 +291,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 3);
 
 		chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
@@ -381,6 +404,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
 		  /*checksum*/ 5,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 3);
 
 		chunk1 = reinterpret_cast<const DataChunk*>(clonedPacket->GetChunkAt(0));
@@ -492,6 +516,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 0,
 		  /*verificationTag*/ 0,
 		  /*checksum*/ 0,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
 
 		/* Modify the Packet and add Chunks. */
@@ -499,7 +524,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		packet->SetSourcePort(1000);
 		packet->SetDestinationPort(6000);
 		packet->SetVerificationTag(12345678);
-		packet->SetChecksum(666666);
+		packet->SetChecksum(0);
 
 		// Chunk 1: INIT, length: 20 bytes.
 		auto* chunk1 = packet->BuildChunkInPlace<InitChunk>();
@@ -543,6 +568,11 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// Consolidate the Chunk after consolidating its Parameters.
 		chunk2->Consolidate();
 
+		// Insert CRC32C checksum.
+		packet->SetCRC32cChecksum();
+
+		auto crc32cChecksum = packet->GetChecksum();
+
 		// Packet length must be:
 		// - Packet header: 12
 		// - Chunk 1: 20
@@ -561,7 +591,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
-		  /*checksum*/ 666666,
+		  /*checksum*/ crc32cChecksum,
+		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 2);
 
 		/* Serialize the Packet. */
@@ -579,7 +610,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
-		  /*checksum*/ 666666,
+		  /*checksum*/ crc32cChecksum,
+		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 2);
 
 		/* Clone the Packet. */
@@ -613,13 +645,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
-		  /*checksum*/ 666666,
+		  /*checksum*/ crc32cChecksum,
+		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 2);
-
-		REQUIRE(clonedPacket->GetSourcePort() == 1000);
-		REQUIRE(clonedPacket->GetDestinationPort() == 6000);
-		REQUIRE(clonedPacket->GetVerificationTag() == 12345678);
-		REQUIRE(clonedPacket->GetChecksum() == 666666);
 
 		CHECK_CHUNK(
 		  /*chunk*/ obtainedChunk1,
@@ -737,6 +765,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*destinationPort*/ 2,
 		  /*verificationTag*/ 3,
 		  /*checksum*/ 4,
+		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 1);
 
 		auto* obtainedChunk1 = reinterpret_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));

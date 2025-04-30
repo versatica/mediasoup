@@ -413,6 +413,35 @@ namespace RTC
 			this->chunks.push_back(clonedChunk);
 		}
 
+		void Packet::SetCRC32cChecksum()
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			SetChecksum(0u);
+
+			auto crc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
+
+			SetChecksum(crc32c);
+		}
+
+		bool Packet::ValidateCRC32cChecksum() const
+		{
+			MS_TRACE();
+
+			auto crc32c = GetChecksum();
+
+			// NOTE: Cannot use SetChecksum() because it throws if Packet is frozen.
+			GetHeaderPointer()->checksum = 0;
+
+			auto computedCrc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
+
+			GetHeaderPointer()->checksum = uint32_t{ htonl(crc32c) };
+
+			return computedCrc32c == crc32c;
+		}
+
 		void Packet::HandleInPlaceChunk(Chunk* chunk)
 		{
 			MS_TRACE();

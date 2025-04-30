@@ -480,6 +480,7 @@ test_sources = [
   'test/src/RTC/SCTP/packet/errorCauses/TestUnknownErrorCause.cpp',
   'test/src/Utils/TestBits.cpp',
   'test/src/Utils/TestByte.cpp',
+  'test/src/Utils/TestCrypto.cpp',
   'test/src/Utils/TestIP.cpp',
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',

@@ -262,18 +262,9 @@ namespace Utils
 			return { buffer, len };
 		}
 
-		static uint32_t GetCRC32(const uint8_t* data, size_t size)
-		{
-			uint32_t crc{ 0xFFFFFFFF };
-			const uint8_t* p = data;
+		static uint32_t GetCRC32(const uint8_t* data, size_t size);
 
-			while (size--)
-			{
-				crc = Crypto::Crc32Table[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
-			}
-
-			return crc ^ ~0U;
-		}
+		static uint32_t GetCRC32c(const uint8_t* data, size_t size);
 
 		static const uint8_t* GetHmacSha1(const std::string& key, const uint8_t* data, size_t len);
 
@@ -283,6 +274,7 @@ namespace Utils
 		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
 		thread_local static uint8_t hmacSha1Buffer[];
 		static const uint32_t Crc32Table[256];
+		static const uint32_t Crc32cTable[256];
 	};
 
 	class String

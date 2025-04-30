@@ -207,6 +207,17 @@ namespace RTC
 				return chunk;
 			}
 
+			/**
+			 * Calculate CRC32C value of the whole Packet and insert it into the
+			 * Checksum field.
+			 */
+			void SetCRC32cChecksum();
+
+			/**
+			 * Validate CRC32C value in the Checksum field.
+			 */
+			bool ValidateCRC32cChecksum() const;
+
 		private:
 			/**
 			 * NOTE: Return CommonHeader* instead of const CommonHeader* since we may
