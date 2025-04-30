@@ -293,6 +293,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Packet>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
+			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  source port: %" PRIu16, GetSourcePort());
 			MS_DUMP_CLEAN(indentation, "  destination port: %" PRIu16, GetDestinationPort());
 			MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());

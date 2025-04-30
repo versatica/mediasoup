@@ -106,6 +106,7 @@ namespace RTC
 				uint16_t length;
 			};
 
+		private:
 			/**
 			 * Access to individual bit in the Chunk Flags field. bit0 corresponds
 			 * to the least significant bit.
