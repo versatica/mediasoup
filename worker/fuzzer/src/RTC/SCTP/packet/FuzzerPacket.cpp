@@ -17,6 +17,7 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->GetDestinationPort();
 	packet->GetVerificationTag();
 	packet->GetChecksum();
+	packet->ValidateCRC32cChecksum();
 	packet->HasChunks();
 	packet->GetChunksCount();
 	packet->GetChunkAt(0);
@@ -33,7 +34,10 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->GetVerificationTag();
 	packet->SetVerificationTag(12345678);
 	packet->GetChecksum();
+	packet->ValidateCRC32cChecksum();
 	packet->SetChecksum(999999);
+	packet->SetCRC32cChecksum();
+	packet->ValidateCRC32cChecksum();
 	packet->HasChunks();
 	packet->GetChunksCount();
 	packet->GetChunkAt(0);
@@ -52,7 +56,10 @@ void Fuzzer::RTC::SCTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	clonedPacket->GetVerificationTag();
 	clonedPacket->SetVerificationTag(12345678);
 	clonedPacket->GetChecksum();
+	clonedPacket->ValidateCRC32cChecksum();
 	clonedPacket->SetChecksum(999999);
+	clonedPacket->SetCRC32cChecksum();
+	clonedPacket->ValidateCRC32cChecksum();
 	clonedPacket->HasChunks();
 	clonedPacket->GetChunksCount();
 	clonedPacket->GetChunkAt(0);
