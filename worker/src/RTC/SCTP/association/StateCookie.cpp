@@ -9,13 +9,6 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		/* Static. */
-
-		// Magic value we prefix the State Cookie with.
-		static constexpr uint32_t MagicValue1{ 0xF109ABE4 };
-		// Magic value used within the Negotiated Capabilities block.
-		static constexpr uint16_t MagicValue2{ 0xAD81 };
-
 		/* Class methods. */
 
 		StateCookie* StateCookie::Parse(const uint8_t* buffer, size_t bufferLength)
@@ -29,7 +22,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			if (Utils::Byte::Get4Bytes(buffer, 0) != MagicValue1)
+			if (Utils::Byte::Get4Bytes(buffer, 0) != StateCookie::MagicValue1)
 			{
 				MS_WARN_TAG(sctp, "incorrect Magic Value 1");
 
@@ -39,7 +32,7 @@ namespace RTC
 			auto* negotiatedCapabilitiesField =
 			  reinterpret_cast<NegotiatedCapabilitiesField*>(const_cast<uint8_t*>(buffer) + 32);
 
-			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magicValue2) } != MagicValue2)
+			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magicValue2) } != StateCookie::MagicValue2)
 			{
 				MS_WARN_TAG(sctp, "incorrect Magic Value 2");
 
@@ -72,7 +65,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			Utils::Byte::Set4Bytes(buffer, 0, MagicValue1);
+			Utils::Byte::Set4Bytes(buffer, 0, StateCookie::MagicValue1);
 			Utils::Byte::Set4Bytes(buffer, 4, myVerificationTag);
 			Utils::Byte::Set4Bytes(buffer, 8, peerVerificationTag);
 			Utils::Byte::Set4Bytes(buffer, 12, myInitialTsn);
@@ -89,7 +82,7 @@ namespace RTC
 			negotiatedCapabilitiesField->bitB        = negotiatedCapabilities.messageInterleaving;
 			negotiatedCapabilitiesField->bitC        = negotiatedCapabilities.reconfig;
 			negotiatedCapabilitiesField->bitD        = negotiatedCapabilities.zeroChecksum;
-			negotiatedCapabilitiesField->magicValue2 = uint16_t{ htons(MagicValue2) };
+			negotiatedCapabilitiesField->magicValue2 = uint16_t{ htons(StateCookie::MagicValue2) };
 			negotiatedCapabilitiesField->maxOutboundStreams =
 			  uint16_t{ htons(negotiatedCapabilities.maxOutboundStreams) };
 			negotiatedCapabilitiesField->maxInboundStreams =

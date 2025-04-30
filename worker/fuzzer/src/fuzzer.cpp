@@ -23,6 +23,7 @@
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
+#include "RTC/SCTP/association/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
 #include <iostream>
@@ -65,6 +66,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzSctp)
 	{
 		Fuzzer::RTC::SCTP::Packet::Fuzz(data, len);
+		Fuzzer::RTC::SCTP::StateCookie::Fuzz(data, len);
 	}
 
 	if (fuzzRtp)

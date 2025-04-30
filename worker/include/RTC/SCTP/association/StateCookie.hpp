@@ -60,6 +60,10 @@ namespace RTC
 		{
 		public:
 			static constexpr size_t StateCookieLength{ 40 };
+			// Magic value we prefix the State Cookie with.
+			static constexpr uint32_t MagicValue1{ 0xF109ABE4 };
+			// Magic value used within the Negotiated Capabilities block.
+			static constexpr uint16_t MagicValue2{ 0xAD81 };
 
 		public:
 			/**
