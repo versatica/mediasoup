@@ -472,9 +472,8 @@ SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 		0x80, 0xe0, 0x01, 0x01,
 		0xe8, 0x40, 0x7a, 0xd8
 	};
+	// clang-format on
 
-	// clang-format on
-	// clang-format on
 	bool marker;
 
 	SECTION("encode based on specific encoder")
