@@ -1,4 +1,4 @@
-# STCP
+# TODO STCP
 
 Here some notes about our future SCTP implementation.
 
