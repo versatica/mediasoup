@@ -18,30 +18,30 @@ namespace RTC
 			 * Partial Reliability Extension.
 			 * @see RFC 3758.
 			 */
-			bool partialReliability = false;
+			bool partialReliability{ false };
 			/**
 			 * Stream Schedulers and User Message Interleaving (I-DATA Chunks).
 			 * @see RFC 8260.
 			 */
-			bool messageInterleaving = false;
+			bool messageInterleaving{ false };
 			/**
 			 * Stream Reconfiguration.
 			 * @see RFC 6525.
 			 */
-			bool reconfig = false;
+			bool reconfig{ false };
 			/**
 			 * Zero Checksum.
 			 * @see RFC 9653.
 			 */
-			bool zeroChecksum = false;
+			bool zeroChecksum{ false };
 			/**
 			 * Negotiated maximum number of outbound streams (OS).
 			 */
-			uint16_t maxOutboundStreams = 0;
+			uint16_t maxOutboundStreams{ 0 };
 			/**
 			 * Negotiated maximum number of inbound streams (MIS).
 			 */
-			uint16_t maxInboundStreams = 0;
+			uint16_t maxInboundStreams{ 0 };
 
 			void Dump(int indentation = 0) const;
 		};

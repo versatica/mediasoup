@@ -153,6 +153,20 @@ namespace RTC
 				return this->chunks[idx];
 			}
 
+			template<typename T>
+			const T* GetFirstChunkOfType() const
+			{
+				for (const auto* chunk : this->chunks)
+				{
+					if (typeid(*chunk) == typeid(T))
+					{
+						return static_cast<const T*>(chunk);
+					}
+				}
+
+				return nullptr;
+			}
+
 			/**
 			 * Clone given Chunk into Packet's buffer.
 			 *

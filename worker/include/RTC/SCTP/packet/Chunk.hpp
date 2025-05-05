@@ -245,6 +245,20 @@ namespace RTC
 				return this->parameters[idx];
 			}
 
+			template<typename T>
+			const T* GetFirstParameterOfType() const
+			{
+				for (const auto* parameter : this->parameters)
+				{
+					if (typeid(*parameter) == typeid(T))
+					{
+						return static_cast<const T*>(parameter);
+					}
+				}
+
+				return nullptr;
+			}
+
 			/**
 			 * Clone given Parameter into Chunk's buffer.
 			 *
@@ -343,6 +357,20 @@ namespace RTC
 				}
 
 				return this->errorCauses[idx];
+			}
+
+			template<typename T>
+			const T* GetFirstErrorCauseOfCode() const
+			{
+				for (const auto* errorCause : this->errorCauses)
+				{
+					if (typeid(*errorCause) == typeid(T))
+					{
+						return static_cast<const T*>(errorCause);
+					}
+				}
+
+				return nullptr;
 			}
 
 			/**

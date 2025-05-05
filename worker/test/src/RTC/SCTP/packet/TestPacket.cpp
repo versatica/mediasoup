@@ -53,6 +53,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
 
+		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == nullptr);
+
 		/* Should throw if modifications are attempted when it's frozen. */
 
 		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<DataChunk>(), MediaSoupError);
@@ -80,6 +82,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*checksum*/ 5,
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
+
+		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == nullptr);
 
 		/* Insert CRC32C checksum. */
 
@@ -116,6 +120,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*checksum*/ 5,
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
+
+		REQUIRE(clonedPacket->GetFirstChunkOfType<DataChunk>() == nullptr);
 
 		delete clonedPacket;
 	}
@@ -170,7 +176,16 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 3);
 
+		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() != nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<UnknownChunk>() != nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatAckChunk>() != nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<InitChunk>() == nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatRequestChunk>() == nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() == nullptr);
+
 		auto* chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
+
+		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == chunk1);
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk1,
@@ -202,6 +217,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* chunk2 = reinterpret_cast<const UnknownChunk*>(packet->GetChunkAt(1));
 
+		REQUIRE(packet->GetFirstChunkOfType<UnknownChunk>() == chunk2);
+
 		CHECK_CHUNK(
 		  /*chunk*/ chunk2,
 		  /*buffer*/ nullptr,
@@ -226,6 +243,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
 
 		auto* chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(packet->GetChunkAt(2));
+
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatAckChunk>() == chunk3);
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk3,
@@ -293,6 +312,13 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*checksum*/ 5,
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 3);
+
+		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == chunk1);
+		REQUIRE(packet->GetFirstChunkOfType<UnknownChunk>() == chunk2);
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatAckChunk>() == chunk3);
+		REQUIRE(packet->GetFirstChunkOfType<InitChunk>() == nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatRequestChunk>() == nullptr);
+		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() == nullptr);
 
 		chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
 
@@ -407,7 +433,16 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 3);
 
+		REQUIRE(clonedPacket->GetFirstChunkOfType<DataChunk>() != nullptr);
+		REQUIRE(clonedPacket->GetFirstChunkOfType<UnknownChunk>() != nullptr);
+		REQUIRE(clonedPacket->GetFirstChunkOfType<HeartbeatAckChunk>() != nullptr);
+		REQUIRE(clonedPacket->GetFirstChunkOfType<InitChunk>() == nullptr);
+		REQUIRE(clonedPacket->GetFirstChunkOfType<HeartbeatRequestChunk>() == nullptr);
+		REQUIRE(clonedPacket->GetFirstChunkOfType<ShutdownCompleteChunk>() == nullptr);
+
 		chunk1 = reinterpret_cast<const DataChunk*>(clonedPacket->GetChunkAt(0));
+
+		REQUIRE(clonedPacket->GetFirstChunkOfType<DataChunk>() == chunk1);
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk1,
@@ -439,6 +474,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		chunk2 = reinterpret_cast<const UnknownChunk*>(clonedPacket->GetChunkAt(1));
 
+		REQUIRE(clonedPacket->GetFirstChunkOfType<UnknownChunk>() == chunk2);
+
 		CHECK_CHUNK(
 		  /*chunk*/ chunk2,
 		  /*buffer*/ nullptr,
@@ -463,6 +500,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
 
 		chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(clonedPacket->GetChunkAt(2));
+
+		REQUIRE(clonedPacket->GetFirstChunkOfType<HeartbeatAckChunk>() == chunk3);
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk3,
@@ -519,6 +558,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 0);
 
+		REQUIRE(packet->GetFirstChunkOfType<InitChunk>() == nullptr);
+
 		/* Modify the Packet and add Chunks. */
 
 		packet->SetSourcePort(1000);
@@ -544,14 +585,23 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		parameter1_1->SetIPv4Address(ipBuffer);
 		parameter1_1->Consolidate();
 
+		REQUIRE(chunk1->GetFirstParameterOfType<IPv4AddressParameter>() == parameter1_1);
+
 		// Parameter 1.2: COOKIE_PRESERVATIVE, length: 8 bytes.
 		auto* parameter1_2 = chunk1->BuildParameterInPlace<CookiePreservativeParameter>();
 
 		parameter1_2->SetLifeSpanIncrement(987654321);
 		parameter1_2->Consolidate();
 
+		REQUIRE(chunk1->GetFirstParameterOfType<CookiePreservativeParameter>() == parameter1_2);
+
 		// Consolidate Chunk 1 after consolidating its Parameters 1.1 and 1.2.
 		chunk1->Consolidate();
+
+		REQUIRE(chunk1->GetFirstParameterOfType<IPv4AddressParameter>() == parameter1_1);
+		REQUIRE(chunk1->GetFirstParameterOfType<CookiePreservativeParameter>() == parameter1_2);
+
+		REQUIRE(packet->GetFirstChunkOfType<InitChunk>() == chunk1);
 
 		// Chunk 2: HEARTBEAT_REQUEST, length: 4 bytes.
 		auto* chunk2 = packet->BuildChunkInPlace<HeartbeatRequestChunk>();
@@ -563,10 +613,16 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		parameter2_1->SetInfo(DataBuffer, 3);
 		parameter2_1->Consolidate();
 
+		REQUIRE(chunk2->GetFirstParameterOfType<HeartbeatInfoParameter>() == parameter2_1);
+
 		std::memset(DataBuffer, 0xFF, 3);
 
 		// Consolidate the Chunk after consolidating its Parameters.
 		chunk2->Consolidate();
+
+		REQUIRE(chunk2->GetFirstParameterOfType<HeartbeatInfoParameter>() == parameter2_1);
+
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatRequestChunk>() == chunk2);
 
 		// Insert CRC32C checksum.
 		packet->SetCRC32cChecksum();
@@ -614,6 +670,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 2);
 
+		REQUIRE(packet->GetFirstChunkOfType<InitChunk>() == chunk1);
+		REQUIRE(packet->GetFirstChunkOfType<HeartbeatRequestChunk>() == chunk2);
+
 		/* Clone the Packet. */
 
 		auto* clonedPacket = packet->Clone(CloneBuffer, packet->GetLength());
@@ -648,6 +707,9 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*checksum*/ crc32cChecksum,
 		  /*hasValidCrc32cChecksum*/ true,
 		  /*chunksCount*/ 2);
+
+		REQUIRE(clonedPacket->GetFirstChunkOfType<InitChunk>() == obtainedChunk1);
+		REQUIRE(clonedPacket->GetFirstChunkOfType<HeartbeatRequestChunk>() == obtainedChunk2);
 
 		CHECK_CHUNK(
 		  /*chunk*/ obtainedChunk1,
@@ -747,6 +809,11 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		packet->AddChunk(chunk1);
 
+		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() != nullptr);
+		// NOTE: The stored Chunk is not the same than the given one since it's
+		// internally cloned.
+		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() != chunk1);
+
 		// Once added, we can delete the Chunk.
 		delete chunk1;
 
@@ -769,6 +836,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*chunksCount*/ 1);
 
 		auto* obtainedChunk1 = reinterpret_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));
+
+		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() == obtainedChunk1);
 
 		CHECK_CHUNK(
 		  /*chunk*/ obtainedChunk1,

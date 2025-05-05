@@ -58,6 +58,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		auto* errorCause1 =
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(chunk->GetErrorCauseAt(0));
 
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<InvalidStreamIdentifierErrorCause>() == errorCause1);
+
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
@@ -71,6 +73,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 
 		auto* errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(chunk->GetErrorCauseAt(1));
 
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<OutOfResourceErrorCause>() == errorCause2);
+
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause2,
 		  /*buffer*/ nullptr,
@@ -81,6 +85,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		auto* errorCause3 = reinterpret_cast<const UnknownErrorCause*>(chunk->GetErrorCauseAt(2));
+
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnknownErrorCause>() == errorCause3);
 
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause3,
@@ -127,6 +133,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause1 =
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(chunk->GetErrorCauseAt(0));
 
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<InvalidStreamIdentifierErrorCause>() == errorCause1);
+
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
@@ -140,6 +148,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 
 		errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(chunk->GetErrorCauseAt(1));
 
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<OutOfResourceErrorCause>() == errorCause2);
+
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause2,
 		  /*buffer*/ nullptr,
@@ -150,6 +160,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		errorCause3 = reinterpret_cast<const UnknownErrorCause*>(chunk->GetErrorCauseAt(2));
+
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnknownErrorCause>() == errorCause3);
 
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause3,
@@ -194,6 +206,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause1 =
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(clonedChunk->GetErrorCauseAt(0));
 
+		REQUIRE(clonedChunk->GetFirstErrorCauseOfCode<InvalidStreamIdentifierErrorCause>() == errorCause1);
+
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
@@ -207,6 +221,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 
 		errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(clonedChunk->GetErrorCauseAt(1));
 
+		REQUIRE(clonedChunk->GetFirstErrorCauseOfCode<OutOfResourceErrorCause>() == errorCause2);
+
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause2,
 		  /*buffer*/ nullptr,
@@ -217,6 +233,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*unknownCode*/ false);
 
 		errorCause3 = reinterpret_cast<const UnknownErrorCause*>(clonedChunk->GetErrorCauseAt(2));
+
+		REQUIRE(clonedChunk->GetFirstErrorCauseOfCode<UnknownErrorCause>() == errorCause3);
 
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ errorCause3,
@@ -257,6 +275,9 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ true,
 		  /*errorCausesCount*/ 0);
 
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnrecognizedChunkTypeErrorCause>() == nullptr);
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnknownErrorCause>() == nullptr);
+
 		/* Modify it by adding Error Causes. */
 
 		auto* errorCause1 = chunk->BuildErrorCauseInPlace<UnrecognizedChunkTypeErrorCause>();
@@ -265,12 +286,17 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		errorCause1->SetUnrecognizedChunk(DataBuffer, 5);
 		errorCause1->Consolidate();
 
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnrecognizedChunkTypeErrorCause>() == errorCause1);
+
 		// // Let's add another UnrecognizedChunkTypeErrorCause.
 		auto* errorCause2 = chunk->BuildErrorCauseInPlace<UnrecognizedChunkTypeErrorCause>();
 
 		// Unrecognized Chunk is 2 so 2 bytes of padding will be added.
 		errorCause2->SetUnrecognizedChunk(DataBuffer, 2);
 		errorCause2->Consolidate();
+
+		// Still must return the first Error Cause.
+		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnrecognizedChunkTypeErrorCause>() == errorCause1);
 
 		CHECK_CHUNK(
 		  /*chunk*/ chunk,
@@ -353,6 +379,9 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 
 		const auto* parsedErrorCause1 =
 		  reinterpret_cast<const UnrecognizedChunkTypeErrorCause*>(parsedChunk->GetErrorCauseAt(0));
+
+		REQUIRE(
+		  parsedChunk->GetFirstErrorCauseOfCode<UnrecognizedChunkTypeErrorCause>() == parsedErrorCause1);
 
 		CHECK_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause1,
