@@ -2,6 +2,9 @@
 
 ### NEXT
 
+- Worker: Fix, encode retransmitted packets with the corresponding data
+  ([PR #1527](https://github.com/versatica/mediasoup/pull/1527)).
+
 ### 3.15.7
 
 - CI: Remove redundant hosts `macos-14` and `windows-2022` from `mediasoup-worker-prebuild` job ([PR #1506](https://github.com/versatica/mediasoup/pull/1506)).
