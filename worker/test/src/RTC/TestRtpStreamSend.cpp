@@ -469,6 +469,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		auto* payloadDescriptor5 = Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
 		REQUIRE(payloadDescriptor5);
 		REQUIRE(payloadDescriptor5->pictureId == 2);
+
+		delete payloadDescriptor4;
+		delete payloadDescriptor5;
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")
