@@ -230,12 +230,13 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 	SECTION("StateCookie::Factory() succeeds")
 	{
-		NegotiatedCapabilities negotiatedCapabilities = { .partialReliability  = true,
+		NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
+			                                                .maxInboundStreams   = 55555,
+			                                                .partialReliability  = true,
 			                                                .messageInterleaving = true,
 			                                                .reconfig            = true,
 			                                                .zeroChecksum        = false,
-			                                                .maxOutboundStreams  = 62000,
-			                                                .maxInboundStreams   = 55555 };
+			                                                .maxOutboundStreams  = 62000 };
 
 		auto* stateCookie = StateCookie::Factory(
 		  /*buffer*/ FactoryBuffer,
