@@ -74,7 +74,6 @@ namespace RTC
 
 				MS_DEBUG_DEV("parsing SCTP Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 
-				// TODO: Add more.
 				switch (chunkType)
 				{
 					case Chunk::ChunkType::DATA:

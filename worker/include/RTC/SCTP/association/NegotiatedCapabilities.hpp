@@ -15,6 +15,14 @@ namespace RTC
 		struct NegotiatedCapabilities
 		{
 			/**
+			 * Negotiated maximum number of outbound streams (OS).
+			 */
+			uint16_t maxOutboundStreams{ 0 };
+			/**
+			 * Negotiated maximum number of inbound streams (MIS).
+			 */
+			uint16_t maxInboundStreams{ 0 };
+			/**
 			 * Partial Reliability Extension.
 			 * @see RFC 3758.
 			 */
@@ -34,14 +42,6 @@ namespace RTC
 			 * @see RFC 9653.
 			 */
 			bool zeroChecksum{ false };
-			/**
-			 * Negotiated maximum number of outbound streams (OS).
-			 */
-			uint16_t maxOutboundStreams{ 0 };
-			/**
-			 * Negotiated maximum number of inbound streams (MIS).
-			 */
-			uint16_t maxInboundStreams{ 0 };
 
 			void Dump(int indentation = 0) const;
 		};

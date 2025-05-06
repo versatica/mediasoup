@@ -29,15 +29,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: Implement this.
-			// TODO: We may want a Dump() method in SocketOptions struct.
+			// TODO
 		}
 
 		void Socket::SendInitChunk()
 		{
 			MS_TRACE();
 
-			// TODO: Implement this.
+			// TODO
 		}
 	} // namespace SCTP
 } // namespace RTC

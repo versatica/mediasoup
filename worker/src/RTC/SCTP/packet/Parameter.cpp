@@ -30,7 +30,6 @@ namespace RTC
 			{ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST, "ADD_OUTGOING_STREAMS_REQUEST" },
 			{ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST, "ADD_INCOMING_STREAMS_REQUEST" },
 			{ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,     "ZERO_CHECKSUM_ACCEPTABLE"     },
-			// TODO: Add more.
 		};
 		// clang-format on
 

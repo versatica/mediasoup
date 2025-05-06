@@ -2,8 +2,10 @@
 #define MS_RTC_SCTP_SOCKET_HPP
 
 #include "common.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 
 namespace RTC
 {
@@ -39,11 +41,6 @@ namespace RTC
 				 */
 				uint16_t maxInboundStreams{ 65535 };
 				/**
-				 * Maximum size of a SCTP packet. It doesn't include any overhead of
-				 * DTLS, TURN, UDP or IP headers.
-				 */
-				size_t mtu{ Socket::MaxSafeMTUSize };
-				/**
 				 * Maximum received window buffer size. It must be larger than the
 				 * largest sized message we want to be able to receive.
 				 *
@@ -51,30 +48,34 @@ namespace RTC
 				 * Default value copied from dcSCTP library.
 				 */
 				uint32_t myAdvertisedReceiverWindowCredit{ 5 * 1024 * 1024 };
+				/**
+				 * Use Partial Reliability Extension.
+				 * @see RFC 3758.
+				 */
+				bool partialReliability{ false };
+				/**
+				 * Use Stream Schedulers and User Message Interleaving (I-DATA Chunks).
+				 * @see RFC 8260.
+				 */
+				bool messageInterleaving{ false };
+				/**
+				 * Alternate error detection method for Zero Checksum.
+				 *
+				 * @remarks
+				 * This feature is only enabled if both peers signal their wish to use
+				 * the same (non-zero) Zero Checksum Alternate Error Detection Method.
+				 *
+				 * @see RFC 9653.
+				 */
+				ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod zeroCheksumAlternateErrorDetectionMethod{
+					ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
+				};
+				/**
+				 * Maximum size of a SCTP packet. It doesn't include any overhead of
+				 * DTLS, TURN, UDP or IP headers.
+				 */
+				size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
 			};
-
-		public:
-			/**
-			 * Largest safe SCTP packet. Starting from the minimum guaranteed MTU value
-			 * of 1280 for IPv6 (which may not support fragmentation), take off 85
-			 * bytes for DTLS/TURN/TCP/IP and ciphertext overhead.
-			 *
-			 * Additionally, it's possible that TURN adds an additional 4 bytes of
-			 * overhead after a channel has been established, so an additional 4 bytes
-			 * is subtracted.
-			 *
-			 * 1280 IPV6 MTU
-			 *  -40 IPV6 header
-			 *   -8 UDP
-			 *  -24 GCM Cipher
-			 *  -13 DTLS record header
-			 *   -4 TURN ChannelData
-			 * = 1191 bytes.
-			 *
-			 * @remarks
-			 * Value copied from dcSCTP library.
-			 */
-			static constexpr size_t MaxSafeMTUSize{ 1191 };
 
 		public:
 			explicit Socket(SocketOptions options);

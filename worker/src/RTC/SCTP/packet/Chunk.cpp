@@ -65,7 +65,6 @@ namespace RTC
 			{ Chunk::ChunkType::RE_CONFIG,         "RE_CONFIG"         },
 			{ Chunk::ChunkType::I_DATA,            "I_DATA"            },
 			{ Chunk::ChunkType::I_FORWARD_TSN,     "I_FORWARD_TSN"     },
-			// TODO: Add more.
 		};
 		// clang-format on
 
@@ -375,7 +374,6 @@ namespace RTC
 
 				Parameter* parameter{ nullptr };
 
-				// TODO: Add more.
 				switch (parameterType)
 				{
 					case Parameter::ParameterType::HEARTBEAT_INFO:
@@ -582,7 +580,6 @@ namespace RTC
 
 				ErrorCause* errorCause{ nullptr };
 
-				// TODO: Add more.
 				switch (causeCode)
 				{
 					case ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER:

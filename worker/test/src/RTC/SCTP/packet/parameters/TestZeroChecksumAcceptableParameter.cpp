@@ -19,7 +19,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		{
 			// Type:32769 (ZERO_CHECKSUM_ACCEPTABLE), Length: 8
 			0x80, 0x01, 0x00, 0x08,
-			// EDMID: 666777888
+			// Alternate Error Detection Method (EDMID) : 666777888
 			0x27, 0xBE, 0x39, 0x20,
 			// Extra bytes that should be ignored
 			0xAA, 0xBB, 0xCC, 0xDD,
@@ -39,11 +39,16 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
 
-		REQUIRE(parameter->GetEdmid() == 666777888);
+		REQUIRE(
+		  parameter->GetAlternateErrorDetectionMethod() ==
+		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
 
 		/* Should throw if modifications are attempted when it's frozen. */
 
-		REQUIRE_THROWS_AS(parameter->SetEdmid(1234), MediaSoupError);
+		REQUIRE_THROWS_AS(
+		  parameter->SetAlternateErrorDetectionMethod(
+		    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS),
+		  MediaSoupError);
 
 		/* Serialize it. */
 
@@ -61,7 +66,9 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
 
-		REQUIRE(parameter->GetEdmid() == 666777888);
+		REQUIRE(
+		  parameter->GetAlternateErrorDetectionMethod() ==
+		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
 
 		/* Clone it. */
 
@@ -81,7 +88,9 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
 
-		REQUIRE(clonedParameter->GetEdmid() == 666777888);
+		REQUIRE(
+		  clonedParameter->GetAlternateErrorDetectionMethod() ==
+		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
 
 		delete clonedParameter;
 	}
@@ -100,11 +109,14 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
 
-		REQUIRE(parameter->GetEdmid() == 0);
+		REQUIRE(
+		  parameter->GetAlternateErrorDetectionMethod() ==
+		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE);
 
 		/* Modify it. */
 
-		parameter->SetEdmid(12345678);
+		parameter->SetAlternateErrorDetectionMethod(
+		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter,
@@ -116,7 +128,9 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
 
-		REQUIRE(parameter->GetEdmid() == 12345678);
+		REQUIRE(
+		  parameter->GetAlternateErrorDetectionMethod() ==
+		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		/* Parse itself and compare. */
 
@@ -135,7 +149,9 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
 
-		REQUIRE(parsedParameter->GetEdmid() == 12345678);
+		REQUIRE(
+		  parsedParameter->GetAlternateErrorDetectionMethod() ==
+		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
 		delete parsedParameter;
 	}

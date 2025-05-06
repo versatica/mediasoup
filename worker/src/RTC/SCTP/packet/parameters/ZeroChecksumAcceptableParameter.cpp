@@ -9,6 +9,16 @@ namespace RTC
 {
 	namespace SCTP
 	{
+		/* Class variables. */
+
+		// clang-format off
+		std::unordered_map<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod, std::string> ZeroChecksumAcceptableParameter::alternateErrorDetectionMethod2String =
+		{
+			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE,           "NONE"           },
+			{ ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS, "SCTP_OVER_DTLS" },
+		};
+		// clang-format on
+
 		/* Class methods. */
 
 		ZeroChecksumAcceptableParameter* ZeroChecksumAcceptableParameter::Parse(
@@ -52,8 +62,8 @@ namespace RTC
 			  Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 			  ZeroChecksumAcceptableParameter::ZeroChecksumAcceptableParameterHeaderLength);
 
-			// Initialize EDMID to zero.
-			parameter->SetEdmid(0);
+			// Initialize Alternate Error Detection Method (EDMID) to zero (none).
+			parameter->SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod::NONE);
 
 			// No need to invoke SetLength() since parent constructor invoked it.
 
@@ -84,6 +94,24 @@ namespace RTC
 			return parameter;
 		}
 
+		const std::string& ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String(
+		  AlternateErrorDetectionMethod alternateErrorDetectionMethod)
+		{
+			MS_TRACE();
+
+			static const std::string Unknown("UNKNOWN");
+
+			auto it = ZeroChecksumAcceptableParameter::alternateErrorDetectionMethod2String.find(
+			  alternateErrorDetectionMethod);
+
+			if (it == ZeroChecksumAcceptableParameter::alternateErrorDetectionMethod2String.end())
+			{
+				return Unknown;
+			}
+
+			return it->second;
+		}
+
 		/* Instance methods. */
 
 		ZeroChecksumAcceptableParameter::ZeroChecksumAcceptableParameter(uint8_t* buffer, size_t bufferLength)
@@ -105,7 +133,13 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::ZeroChecksumAcceptableParameter>");
 			DumpCommon(indentation);
-			MS_DUMP_CLEAN(indentation, "  edmid: %" PRIu32, GetEdmid());
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  alternate error detection method: %" PRIu32 " (%s)",
+			  static_cast<uint32_t>(GetAlternateErrorDetectionMethod()),
+			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod2String(
+			    GetAlternateErrorDetectionMethod())
+			    .c_str());
 			MS_DUMP_CLEAN(indentation, "</SCTP::ZeroChecksumAcceptableParameter>");
 		}
 
@@ -121,13 +155,15 @@ namespace RTC
 			return clonedParameter;
 		}
 
-		void ZeroChecksumAcceptableParameter::SetEdmid(uint32_t value)
+		void ZeroChecksumAcceptableParameter::SetAlternateErrorDetectionMethod(
+		  AlternateErrorDetectionMethod alternateErrorDetectionMethod)
 		{
 			MS_TRACE();
 
 			AssertNotFrozen();
 
-			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
+			Utils::Byte::Set4Bytes(
+			  const_cast<uint8_t*>(GetBuffer()), 4, static_cast<uint32_t>(alternateErrorDetectionMethod));
 		}
 
 		ZeroChecksumAcceptableParameter* ZeroChecksumAcceptableParameter::SoftClone(const uint8_t* buffer) const
