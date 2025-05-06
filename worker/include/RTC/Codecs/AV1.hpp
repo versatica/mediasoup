@@ -60,13 +60,12 @@ namespace RTC
 				// Fields in Dependency Descriptor extension.
 				bool startOfFrame{ false };
 				bool endOfFrame{ false };
+				uint16_t frameNumber{ 0 };
 				uint8_t spatialLayer{ 0 };
 				uint8_t temporalLayer{ 0 };
 
 				// Parsed values.
 				bool isKeyFrame{ false };
-
-				std::unique_ptr<DependencyDescriptor> dependencyDescriptor{};
 
 				std::optional<Encoder> encoder{ std::nullopt };
 			};
@@ -112,13 +111,14 @@ namespace RTC
 				{
 					this->payloadDescriptor->Dump();
 				}
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
+				bool Process(
+				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
 				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 				{
 					return this->payloadDescriptor->GetEncoder();
 				}
 				void Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder) override;
-				void Restore(uint8_t* data) override;
+				void Restore(RtpPacket* packet) override;
 				uint8_t GetSpatialLayer() const override
 				{
 					return this->payloadDescriptor->spatialLayer;

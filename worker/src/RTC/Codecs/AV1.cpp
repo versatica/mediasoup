@@ -1,8 +1,9 @@
+#include <cstdint>
 #define MS_CLASS "RTC::Codecs::AV1"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/Codecs/AV1.hpp"
 #include "Logger.hpp"
+#include "RTC/Codecs/AV1.hpp"
 
 namespace RTC
 {
@@ -58,11 +59,10 @@ namespace RTC
 			// Read fields.
 			this->startOfFrame  = dependencyDescriptor->startOfFrame;
 			this->endOfFrame    = dependencyDescriptor->endOfFrame;
+			this->frameNumber   = dependencyDescriptor->frameNumber;
 			this->spatialLayer  = dependencyDescriptor->spatialLayer;
 			this->temporalLayer = dependencyDescriptor->temporalLayer;
 			this->isKeyFrame    = dependencyDescriptor->isKeyFrame;
-
-			this->dependencyDescriptor = std::move(dependencyDescriptor);
 		}
 
 		void AV1::PayloadDescriptor::Dump() const
@@ -81,7 +81,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			this->dependencyDescriptor->SetFrameNumber(frameNumber);
+			// We are overriding a value, we don't need the real buffer length.
+			static const uint8_t len = 64;
+
+			Utils::BitStream bitStream{ data, len };
+
+			static unsigned maxFrameNumber = std::numeric_limits<uint16_t>::max();
+
+			bitStream.Write(8, maxFrameNumber + 1, frameNumber);
 		}
 
 		void AV1::PayloadDescriptor::Encode(uint8_t* data) const
@@ -95,7 +102,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			Encode(data, this->dependencyDescriptor->frameNumber);
+			Encode(data, this->frameNumber);
 		}
 
 		void AV1::PayloadDescriptor::Encoder::Encode(
@@ -112,7 +119,7 @@ namespace RTC
 		}
 
 		bool AV1::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/, bool& marker)
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker)
 		{
 			MS_TRACE();
 
@@ -144,8 +151,7 @@ namespace RTC
 			// Check whether frameNumber sync is required.
 			if (context->syncRequired)
 			{
-				context->frameNumberManager.Sync(
-				  this->payloadDescriptor->dependencyDescriptor->frameNumber - 1);
+				context->frameNumberManager.Sync(this->payloadDescriptor->frameNumber - 1);
 
 				context->syncRequired = false;
 			}
@@ -193,8 +199,7 @@ namespace RTC
 			// Filter spatial layers higher than current one.
 			if (packetSpatialLayer > tmpSpatialLayer)
 			{
-				context->frameNumberManager.Drop(
-				  this->payloadDescriptor->dependencyDescriptor->frameNumber - 1);
+				context->frameNumberManager.Drop(this->payloadDescriptor->frameNumber);
 
 				return false;
 			}
@@ -243,8 +248,7 @@ namespace RTC
 			// Filter temporal layers higher than current one.
 			if (packetTemporalLayer > tmpTemporalLayer)
 			{
-				context->frameNumberManager.Drop(
-				  this->payloadDescriptor->dependencyDescriptor->frameNumber - 1);
+				context->frameNumberManager.Drop(this->payloadDescriptor->frameNumber);
 
 				return false;
 			}
@@ -267,6 +271,16 @@ namespace RTC
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
 			}
 
+			uint16_t frameNumber;
+
+			context->frameNumberManager.Input(this->payloadDescriptor->frameNumber, frameNumber);
+
+			// Store the encoding data for retransmissions.
+			this->payloadDescriptor->CreateEncoder({ frameNumber });
+
+			uint8_t len;
+			this->payloadDescriptor->Encode(packet->GetDependencyDescriptionExtension(len));
+
 			return true;
 		}
 
@@ -279,9 +293,13 @@ namespace RTC
 			av1Encoder->Encode(data, this->payloadDescriptor.get());
 		}
 
-		void AV1::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)
+		void AV1::PayloadDescriptorHandler::Restore(RtpPacket* packet)
 		{
 			MS_TRACE();
+
+			uint8_t len;
+
+			this->payloadDescriptor->Encode(packet->GetDependencyDescriptionExtension(len));
 		}
 	} // namespace Codecs
 } // namespace RTC

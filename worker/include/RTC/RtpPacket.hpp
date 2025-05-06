@@ -78,7 +78,7 @@ namespace RTC
 		/* Struct for replacing and setting header extensions. */
 		struct GenericExtension
 		{
-			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value){};
+			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value) {};
 
 			uint8_t id;
 			uint8_t len;
@@ -565,7 +565,6 @@ namespace RTC
 				return false;
 			}
 		}
-
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const
 		{
 			len = 0u;
@@ -619,6 +618,11 @@ namespace RTC
 			{
 				return nullptr;
 			}
+		}
+
+		uint8_t* GetDependencyDescriptionExtension(uint8_t& len) const
+		{
+			return GetExtension(this->dependencyDescriptorExtensionId, len);
 		}
 
 		bool SetExtensionLength(uint8_t id, uint8_t len);

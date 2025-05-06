@@ -36,12 +36,12 @@ struct TestNackGeneratorInput
 class TestPayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
 {
 public:
-	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
+	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame) {};
 	~TestPayloadDescriptorHandler() override = default;
 	void Dump() const override
 	{
 	}
-	bool Process(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/, bool& /*marker*/) override
+	bool Process(Codecs::EncodingContext* /*context*/, RTC::RtpPacket* /*packet*/, bool& /*marker*/) override
 	{
 		return true;
 	}

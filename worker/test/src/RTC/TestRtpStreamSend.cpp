@@ -395,7 +395,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		bool marker = false;
 
 		// Process the first packet with context1.
-		auto forwarded = payloadDescriptorHandler1->Process(&context1, packet1->GetPayload(), marker);
+		auto forwarded = payloadDescriptorHandler1->Process(&context1, packet1.get(), marker);
 		REQUIRE(forwarded);
 
 		// Parse the second packet.
@@ -406,11 +406,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler2);
 
 		// Process the second packet with context1.
-		forwarded = payloadDescriptorHandler2->Process(&context1, packet2->GetPayload(), marker);
+		forwarded = payloadDescriptorHandler2->Process(&context1, packet2.get(), marker);
 		REQUIRE(forwarded);
 
 		// Process the second packet for context2.
-		forwarded = payloadDescriptorHandler2->Process(&context2, packet2->GetPayload(), marker);
+		forwarded = payloadDescriptorHandler2->Process(&context2, packet2.get(), marker);
 		// It must not forwared because the target temporal layer is 0.
 		REQUIRE(!forwarded);
 
@@ -422,7 +422,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
 
 		// Process the third packet for context1.
-		forwarded = payloadDescriptorHandler3->Process(&context1, packet3->GetPayload(), marker);
+		forwarded = payloadDescriptorHandler3->Process(&context1, packet3.get(), marker);
 		REQUIRE(forwarded);
 
 		// Receive the third packet in the first stream.
@@ -432,7 +432,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		context2.SetCurrentTemporalLayer(3);
 		context2.SetTargetTemporalLayer(3);
 
-		forwarded = payloadDescriptorHandler3->Process(&context2, packet3->GetPayload(), marker);
+		forwarded = payloadDescriptorHandler3->Process(&context2, packet3.get(), marker);
 		REQUIRE(forwarded);
 
 		// Receive the third packet in the second stream.

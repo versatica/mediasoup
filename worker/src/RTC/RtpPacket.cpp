@@ -868,7 +868,7 @@ namespace RTC
 			return true;
 		}
 
-		return this->payloadDescriptorHandler->Process(context, this->payload, marker);
+		return this->payloadDescriptorHandler->Process(context, this, marker);
 	}
 
 	std::unique_ptr<Codecs::PayloadDescriptor::Encoder> RtpPacket::GetPayloadEncoder()
@@ -904,7 +904,7 @@ namespace RTC
 			return;
 		}
 
-		this->payloadDescriptorHandler->Restore(this->payload);
+		this->payloadDescriptorHandler->Restore(this);
 	}
 
 	/**

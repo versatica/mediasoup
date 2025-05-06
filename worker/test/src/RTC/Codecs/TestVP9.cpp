@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "helpers.hpp"
 #include "RTC/Codecs/VP9.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
@@ -37,7 +38,8 @@ std::unique_ptr<Codecs::VP9::PayloadDescriptor> ProcessVP9Packet(
 	std::unique_ptr<Codecs::VP9::PayloadDescriptorHandler> payloadDescriptorHandler(
 	  new Codecs::VP9::PayloadDescriptorHandler(payloadDescriptor));
 
-	if (payloadDescriptorHandler->Process(&context, buffer, marker))
+	auto packet = helpers::CreateRtpPacket(buffer, sizeof(buffer));
+	if (payloadDescriptorHandler->Process(&context, packet.get(), marker))
 	{
 		return std::unique_ptr<Codecs::VP9::PayloadDescriptor>(Codecs::VP9::Parse(buffer, sizeof(buffer)));
 	}
