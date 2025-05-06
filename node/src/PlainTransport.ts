@@ -89,7 +89,7 @@ export class PlainTransportImpl<PlainTransportAppData extends AppData = AppData>
 		return 'plain';
 	}
 
-	get observer(): PlainTransportObserver {
+	override get observer(): PlainTransportObserver {
 		return super.observer;
 	}
 
@@ -113,7 +113,7 @@ export class PlainTransportImpl<PlainTransportAppData extends AppData = AppData>
 		return this.#data.srtpParameters;
 	}
 
-	close(): void {
+	override close(): void {
 		if (this.closed) {
 			return;
 		}
@@ -125,7 +125,7 @@ export class PlainTransportImpl<PlainTransportAppData extends AppData = AppData>
 		super.close();
 	}
 
-	routerClosed(): void {
+	override routerClosed(): void {
 		if (this.closed) {
 			return;
 		}

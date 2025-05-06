@@ -146,7 +146,7 @@ namespace RTC
 
 		const uint8_t* GetData() const
 		{
-			return (const uint8_t*)this->header;
+			return reinterpret_cast<const uint8_t*>(this->header);
 		}
 
 		size_t GetSize() const
@@ -683,6 +683,10 @@ namespace RTC
 
 		bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
 
+		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder();
+
+		void EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder);
+
 		void RestorePayload();
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
@@ -696,7 +700,6 @@ namespace RTC
 		void ParseExtensions();
 
 	private:
-		// Passed by argument.
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };

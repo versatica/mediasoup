@@ -48,7 +48,7 @@ export class Channel extends EnhancedEventEmitter {
 	readonly #sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
-	#recvBuffer = Buffer.alloc(0);
+	#recvBuffer: Buffer = Buffer.alloc(0);
 
 	// flatbuffers builder.
 	#bufferBuilder: flatbuffers.Builder = new flatbuffers.Builder(1024);

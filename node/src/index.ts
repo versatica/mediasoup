@@ -35,7 +35,7 @@ export { observer };
 /**
  * Full path of the mediasoup-worker binary.
  */
-export { workerBin };
+export { workerBin } from './Worker';
 
 const logger = new Logger();
 
@@ -142,7 +142,7 @@ export function getSupportedRtpCapabilities(): RtpCapabilities {
 /**
  * Expose parseScalabilityMode() function.
  */
-export { parseScalabilityMode };
+export { parseScalabilityMode } from './scalabilityModesUtils';
 
 /**
  * Expose extras module.

@@ -449,6 +449,11 @@ namespace RTC
 					packet->SetSequenceNumber(item->sequenceNumber);
 					packet->SetTimestamp(item->timestamp);
 
+					if (item->encoder != nullptr)
+					{
+						packet->EncodePayload(item->encoder.get());
+					}
+
 					// Update MID RTP extension value.
 					if (!this->mid.empty())
 					{

@@ -112,7 +112,7 @@ export class WebRtcTransportImpl<
 		return 'webrtc';
 	}
 
-	get observer(): WebRtcTransportObserver {
+	override get observer(): WebRtcTransportObserver {
 		return super.observer;
 	}
 
@@ -156,7 +156,7 @@ export class WebRtcTransportImpl<
 		return this.#data.sctpState;
 	}
 
-	close(): void {
+	override close(): void {
 		if (this.closed) {
 			return;
 		}
@@ -172,7 +172,7 @@ export class WebRtcTransportImpl<
 		super.close();
 	}
 
-	routerClosed(): void {
+	override routerClosed(): void {
 		if (this.closed) {
 			return;
 		}
@@ -188,7 +188,7 @@ export class WebRtcTransportImpl<
 		super.routerClosed();
 	}
 
-	listenServerClosed(): void {
+	override listenServerClosed(): void {
 		if (this.closed) {
 			return;
 		}

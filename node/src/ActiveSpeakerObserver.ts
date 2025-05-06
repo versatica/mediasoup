@@ -44,7 +44,7 @@ export class ActiveSpeakerObserverImpl<
 		return 'activespeaker';
 	}
 
-	get observer(): ActiveSpeakerObserverObserver {
+	override get observer(): ActiveSpeakerObserverObserver {
 		return super.observer;
 	}
 

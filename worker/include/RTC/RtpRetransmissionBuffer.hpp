@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_RETRANSMISSION_BUFFER_HPP
 
 #include "common.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <deque>
 
@@ -20,6 +21,8 @@ namespace RTC
 
 			// Original packet.
 			std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
+			// Payload descriptor encoder.
+			std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 			// Correct SSRC since original packet may not have the same.
 			uint32_t ssrc{ 0u };
 			// Correct sequence number since original packet may not have the same.

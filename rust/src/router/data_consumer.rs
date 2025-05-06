@@ -100,7 +100,7 @@ impl DataConsumerOptions {
     pub fn new_sctp_ordered(data_producer_id: DataProducerId) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(true),
             max_packet_life_time: None,
             max_retransmits: None,
             paused: false,
@@ -118,7 +118,7 @@ impl DataConsumerOptions {
     ) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(false),
             max_packet_life_time: Some(max_packet_life_time),
             max_retransmits: None,
             paused: false,
@@ -135,7 +135,7 @@ impl DataConsumerOptions {
     ) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(false),
             max_packet_life_time: None,
             max_retransmits: Some(max_retransmits),
             paused: false,
@@ -689,7 +689,7 @@ impl DataConsumer {
         if let response::Body::DataConsumerDumpResponse(data) = response {
             Ok(DataConsumerDump::from_fbs(*data).expect("Error parsing dump response"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
@@ -709,7 +709,7 @@ impl DataConsumer {
         if let response::Body::DataConsumerGetStatsResponse(data) = response {
             Ok(vec![DataConsumerStat::from_fbs(&data)])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 

@@ -461,9 +461,8 @@ namespace RTC
 			}
 		}
 
-		auto paddedExtensionsTotalSize =
-		  static_cast<size_t>(Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(extensionsTotalSize)));
-		const size_t padding = paddedExtensionsTotalSize - extensionsTotalSize;
+		auto paddedExtensionsTotalSize = Utils::Byte::PadTo4Bytes(extensionsTotalSize);
+		const size_t padding           = paddedExtensionsTotalSize - extensionsTotalSize;
 
 		extensionsTotalSize = paddedExtensionsTotalSize;
 
@@ -870,6 +869,30 @@ namespace RTC
 		}
 
 		return this->payloadDescriptorHandler->Process(context, this->payload, marker);
+	}
+
+	std::unique_ptr<Codecs::PayloadDescriptor::Encoder> RtpPacket::GetPayloadEncoder()
+	{
+		MS_TRACE();
+
+		if (!this->payloadDescriptorHandler)
+		{
+			return nullptr;
+		}
+
+		return this->payloadDescriptorHandler->GetEncoder();
+	}
+
+	void RtpPacket::EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder)
+	{
+		MS_TRACE();
+
+		if (!this->payloadDescriptorHandler)
+		{
+			return;
+		}
+
+		this->payloadDescriptorHandler->Encode(this->payload, encoder);
 	}
 
 	void RtpPacket::RestorePayload()

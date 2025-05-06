@@ -60,7 +60,7 @@ namespace RTC
 			{
 			public:
 				explicit PayloadDescriptorHandler(PayloadDescriptor* payloadDescriptor);
-				~PayloadDescriptorHandler() = default;
+				~PayloadDescriptorHandler() override = default;
 
 			public:
 				void Dump() const override
@@ -68,7 +68,16 @@ namespace RTC
 					this->payloadDescriptor->Dump();
 				}
 				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
-				void Restore(uint8_t* data) override;
+				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
+				{
+					return nullptr;
+				}
+				void Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder) override
+				{
+				}
+				void Restore(uint8_t* data) override
+				{
+				}
 				uint8_t GetSpatialLayer() const override
 				{
 					return 0u;

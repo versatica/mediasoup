@@ -31,6 +31,7 @@ namespace RTC
 
 		// Store original packet and some extra info into the item.
 		item->packet         = sharedPacket;
+		item->encoder        = packet->GetPayloadEncoder();
 		item->ssrc           = packet->GetSsrc();
 		item->sequenceNumber = packet->GetSequenceNumber();
 		item->timestamp      = packet->GetTimestamp();

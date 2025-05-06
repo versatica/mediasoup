@@ -789,8 +789,8 @@ pub(super) trait TransportImpl: TransportGeneric {
                     SctpStreamParameters {
                         stream_id,
                         ordered: true,
-                        max_packet_life_time,
-                        max_retransmits,
+                        max_packet_life_time: None,
+                        max_retransmits: None,
                     },
                     |mut sctp_parameters| {
                         sctp_parameters.stream_id = stream_id;
@@ -800,12 +800,21 @@ pub(super) trait TransportImpl: TransportGeneric {
                 );
                 if let Some(ordered) = ordered {
                     sctp_stream_parameters.ordered = ordered;
+
+                    if ordered {
+                        sctp_stream_parameters.max_packet_life_time = None;
+                        sctp_stream_parameters.max_retransmits = None;
+                    }
                 }
-                if let Some(max_packet_life_time) = max_packet_life_time {
-                    sctp_stream_parameters.max_packet_life_time = Some(max_packet_life_time);
-                }
-                if let Some(max_retransmits) = max_retransmits {
-                    sctp_stream_parameters.max_retransmits = Some(max_retransmits);
+                if ordered != Some(true) {
+                    if let Some(max_packet_life_time) = max_packet_life_time {
+                        sctp_stream_parameters.ordered = false;
+                        sctp_stream_parameters.max_packet_life_time = Some(max_packet_life_time);
+                    }
+                    if let Some(max_retransmits) = max_retransmits {
+                        sctp_stream_parameters.ordered = false;
+                        sctp_stream_parameters.max_retransmits = Some(max_retransmits);
+                    }
                 }
 
                 Some(sctp_stream_parameters)

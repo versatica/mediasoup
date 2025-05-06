@@ -6,7 +6,7 @@
 #include <cstddef>    // size_t
 #include <cstdint>    // uint8_t, etc
 #include <functional> // std::function
-#include <memory>     // std::addressof()
+#include <memory>     // std::addressof(), std::unique_ptr(), etc
 #include <optional>
 #ifdef _WIN32
 #include <winsock2.h>

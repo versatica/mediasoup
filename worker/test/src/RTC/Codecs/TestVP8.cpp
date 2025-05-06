@@ -154,6 +154,67 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		}
 	};
 
+	SECTION("parse payload descriptor, encode")
+	{
+		/** VP8 Payload Descriptor
+		 *
+		 * 1 = X bit: Extended control bits present (I L T K)
+		 * 1 = R bit: Reserved for future use (Error should be zero)
+		 * 0 = N bit: Reference frame
+		 * 1 = S bit: Start of VP8 partition
+		 * Part Id: 0
+		 * 1 = I bit: Picture ID byte present
+		 * 1 = L bit: TL0PICIDX byte present
+		 * 0 = T bit: TID (temporal layer index) byte not present
+		 * 0 = K bit: TID/KEYIDX byte not present
+		 * 0000 = Reserved A: 0
+		 * 0001 0001 = Picture Id: 17
+		 * 0000 0011 = TL0PICIDX: 3
+		 */
+
+		// clang-format off
+		uint8_t originalBuffer[] =
+		{
+			0xd0, 0xc0, 0x11, 0x03
+		};
+		// clang-format on
+
+		// Keep a copy of the original buffer for comparing.
+		uint8_t buffer[4] = { 0 };
+
+		std::memcpy(buffer, originalBuffer, sizeof(buffer));
+
+		std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+			buffer, sizeof(buffer)) };
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->pictureId == 17);
+		REQUIRE(payloadDescriptor->tl0PictureIndex == 3);
+
+		SECTION("encode payload descriptor")
+		{
+			payloadDescriptor->Encode(buffer, 20, 1);
+
+			std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+				buffer, sizeof(buffer)) };
+
+			REQUIRE(payloadDescriptor->pictureId == 20);
+			REQUIRE(payloadDescriptor->tl0PictureIndex == 1);
+		}
+
+		SECTION("restore payload descriptor")
+		{
+			payloadDescriptor->Restore(buffer);
+
+			std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+				buffer, sizeof(buffer)) };
+
+			REQUIRE(payloadDescriptor->pictureId == 17);
+			REQUIRE(payloadDescriptor->tl0PictureIndex == 3);
+		}
+	}
+
 	SECTION("parse payload descriptor. I flag set but no space for pictureId")
 	{
 		/** VP8 Payload Descriptor
@@ -205,7 +266,7 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		};
 		// clang-format on
 
-		auto payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE_FALSE(payloadDescriptor);
 	}
@@ -385,5 +446,89 @@ SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
 		forwarded = ProcessPacket(context, 3, 0, 1);
 		REQUIRE_FALSE(forwarded);
 		REQUIRE(context.GetCurrentTemporalLayer() == 0);
+	}
+}
+
+SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
+{
+	/** VP8 Payload Descriptor
+	 *
+	 * 1 = X bit: Extended control bits present (I L T K)
+	 * 0 = R bit: Reserved for future use
+	 * 0 = N bit: Reference frame
+	 * 0 = S bit: Continuation of VP8 partition
+	 * 000 = Part Id: 0
+	 * 1 = I bit: Picture byte ID
+	 * 1 = L bit: TL0PICIDX byte present
+	 * 1 = T bit: TID (temporal layer index) byte present
+	 * 0 = K bit: TID/KEYIDX byte present
+	 * 0000 = Reserved A: 14
+	 * 0000000000000001 = PictureId
+	 */
+
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		0x80, 0xe0, 0x01, 0x01,
+		0xe8, 0x40, 0x7a, 0xd8
+	};
+	// clang-format on
+
+	bool marker;
+
+	SECTION("encode based on specific encoder")
+	{
+		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		RTC::Codecs::EncodingContext::Params params;
+		params.spatialLayers  = 0;
+		params.temporalLayers = 3;
+		Codecs::VP8::EncodingContext context(params);
+
+		context.SetCurrentTemporalLayer(3);
+		context.SetTargetTemporalLayer(3);
+
+		REQUIRE(payloadDescriptor->pictureId == 1);
+
+		auto* payloadDescriptorHandler = new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor);
+
+		auto forwarded = payloadDescriptorHandler->Process(&context, buffer, marker);
+		REQUIRE(forwarded);
+
+		auto encoder1 = payloadDescriptorHandler->GetEncoder();
+		REQUIRE(encoder1);
+
+		// Update pictureId.
+		payloadDescriptor->pictureId = 2;
+
+		forwarded = payloadDescriptorHandler->Process(&context, buffer, marker);
+		REQUIRE(forwarded);
+		REQUIRE(payloadDescriptor->pictureId == 2);
+
+		// encoder2 contains the pictureId value 2.
+		auto encoder2 = payloadDescriptorHandler->GetEncoder();
+		REQUIRE(encoder2);
+
+		// Encode with encoder1.
+		payloadDescriptorHandler->Encode(buffer, encoder1.get());
+
+		// Parse the buffer.
+		auto* payloadDescriptor2 = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		REQUIRE(payloadDescriptor2);
+		REQUIRE(payloadDescriptor2->pictureId == 1);
+
+		// Encode with encoder2.
+		payloadDescriptorHandler->Encode(buffer, encoder2.get());
+
+		// Parse the buffer.
+		auto* payloadDescriptor3 = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		REQUIRE(payloadDescriptor3);
+		REQUIRE(payloadDescriptor3->pictureId == 2);
+
+		delete payloadDescriptor3;
+		delete payloadDescriptor2;
+		delete payloadDescriptorHandler;
 	}
 }

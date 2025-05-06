@@ -2,6 +2,15 @@
 
 # NEXT
 
+# 0.18.0
+
+- Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+- New enum variant was added in 0.17.2.
+
+# 0.17.2
+
+- Fix `PipeConsumer::get_stats()` (PR #1511).
+
 # 0.17.1
 
 - Update Rust toolchain channel to version 1.79.0 (PR #1409).

@@ -401,30 +401,30 @@ test('plainTransport.getStats() succeeds', async () => {
 
 	expect(Array.isArray(stats)).toBe(true);
 	expect(stats.length).toBe(1);
-	expect(stats[0].type).toBe('plain-rtp-transport');
-	expect(stats[0].transportId).toBe(plainTransport.id);
-	expect(typeof stats[0].timestamp).toBe('number');
-	expect(stats[0].bytesReceived).toBe(0);
-	expect(stats[0].recvBitrate).toBe(0);
-	expect(stats[0].bytesSent).toBe(0);
-	expect(stats[0].sendBitrate).toBe(0);
-	expect(stats[0].rtpBytesReceived).toBe(0);
-	expect(stats[0].rtpRecvBitrate).toBe(0);
-	expect(stats[0].rtpBytesSent).toBe(0);
-	expect(stats[0].rtpSendBitrate).toBe(0);
-	expect(stats[0].rtxBytesReceived).toBe(0);
-	expect(stats[0].rtxRecvBitrate).toBe(0);
-	expect(stats[0].rtxBytesSent).toBe(0);
-	expect(stats[0].rtxSendBitrate).toBe(0);
-	expect(stats[0].probationBytesSent).toBe(0);
-	expect(stats[0].probationSendBitrate).toBe(0);
-	expect(typeof stats[0].tuple).toBe('object');
+	expect(stats[0]!.type).toBe('plain-rtp-transport');
+	expect(stats[0]!.transportId).toBe(plainTransport.id);
+	expect(typeof stats[0]!.timestamp).toBe('number');
+	expect(stats[0]!.bytesReceived).toBe(0);
+	expect(stats[0]!.recvBitrate).toBe(0);
+	expect(stats[0]!.bytesSent).toBe(0);
+	expect(stats[0]!.sendBitrate).toBe(0);
+	expect(stats[0]!.rtpBytesReceived).toBe(0);
+	expect(stats[0]!.rtpRecvBitrate).toBe(0);
+	expect(stats[0]!.rtpBytesSent).toBe(0);
+	expect(stats[0]!.rtpSendBitrate).toBe(0);
+	expect(stats[0]!.rtxBytesReceived).toBe(0);
+	expect(stats[0]!.rtxRecvBitrate).toBe(0);
+	expect(stats[0]!.rtxBytesSent).toBe(0);
+	expect(stats[0]!.rtxSendBitrate).toBe(0);
+	expect(stats[0]!.probationBytesSent).toBe(0);
+	expect(stats[0]!.probationSendBitrate).toBe(0);
+	expect(typeof stats[0]!.tuple).toBe('object');
 	// @deprecated Use tuple.localAddress instead.
-	expect(stats[0].tuple.localIp).toBe('127.0.0.1');
-	expect(stats[0].tuple.localAddress).toBe('127.0.0.1');
-	expect(typeof stats[0].tuple.localPort).toBe('number');
-	expect(stats[0].tuple.protocol).toBe('udp');
-	expect(stats[0].rtcpTuple).toBeUndefined();
+	expect(stats[0]!.tuple.localIp).toBe('127.0.0.1');
+	expect(stats[0]!.tuple.localAddress).toBe('127.0.0.1');
+	expect(typeof stats[0]!.tuple.localPort).toBe('number');
+	expect(stats[0]!.tuple.protocol).toBe('udp');
+	expect(stats[0]!.rtcpTuple).toBeUndefined();
 }, 2000);
 
 test('plainTransport.connect() succeeds', async () => {

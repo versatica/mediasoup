@@ -12,7 +12,7 @@ async function run() {
 		'../src/**/*.cpp',
 		'../include/**/*.hpp',
 		'../test/src/**/*.cpp',
-		'../test/include/helpers.hpp',
+		'../test/include/**/**.hpp',
 		'../fuzzer/src/**/*.cpp',
 		'../fuzzer/include/**/*.hpp',
 	]);

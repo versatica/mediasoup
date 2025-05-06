@@ -558,22 +558,26 @@ impl TransportGeneric for PipeTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::PipeTransportDumpResponse(data) = self.dump_impl().await? {
-            Ok(PipeTransportDump::from_fbs(*data).expect("Error parsing dump response"))
+        let response = self.dump_impl().await?;
+
+        if let response::Body::PipeTransportDumpResponse(data) = response {
+            Ok(PipeTransportDump::from_fbs(*data)
+                .expect("Error parsing dump response: {response:?}"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::PipeTransportGetStatsResponse(data) = self.get_stats_impl().await? {
-            Ok(vec![
-                PipeTransportStat::from_fbs(*data).expect("Error parsing dump response")
-            ])
+        let response = self.get_stats_impl().await?;
+
+        if let response::Body::PipeTransportGetStatsResponse(data) = response {
+            Ok(vec![PipeTransportStat::from_fbs(*data)
+                .expect("Error parsing dump response: {response:?}")])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 }

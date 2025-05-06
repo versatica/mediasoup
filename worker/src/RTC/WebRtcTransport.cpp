@@ -7,6 +7,10 @@
 #include "Settings.hpp"
 #include "Utils.hpp"
 #include "FBS/webRtcTransport.h"
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+#include "RTC/SCTP/packet/Packet.hpp"
+#endif
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -865,6 +869,24 @@ namespace RTC
 			return;
 		}
 
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP(">>> sending SCTP packet...");
+
+		auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (!packet)
+		{
+			MS_WARN_TAG(sctp, "data to be sent is not a valid SCTP packet");
+
+			return;
+		}
+
+		packet->Dump();
+
+		delete packet;
+#endif
+
 		this->dtlsTransport->SendApplicationData(data, len);
 	}
 
@@ -1425,6 +1447,24 @@ namespace RTC
 	  const RTC::DtlsTransport* /*dtlsTransport*/, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
+
+// TODO: For testing purposes. Must be removed.
+#ifdef MS_SCTP_STACK
+		MS_DUMP("<<< receiving SCTP packet...");
+
+		auto* packet = RTC::SCTP::Packet::Parse(data, len);
+
+		if (!packet)
+		{
+			MS_WARN_TAG(sctp, "received data is not a valid SCTP packet");
+
+			return;
+		}
+
+		packet->Dump();
+
+		delete packet;
+#endif
 
 		// Pass it to the parent transport.
 		RTC::Transport::ReceiveSctpData(data, len);

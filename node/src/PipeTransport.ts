@@ -96,7 +96,7 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		return 'pipe';
 	}
 
-	get observer(): PipeTransportObserver {
+	override get observer(): PipeTransportObserver {
 		return super.observer;
 	}
 
@@ -116,7 +116,7 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		return this.#data.srtpParameters;
 	}
 
-	close(): void {
+	override close(): void {
 		if (this.closed) {
 			return;
 		}
@@ -128,7 +128,7 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		super.close();
 	}
 
-	routerClosed(): void {
+	override routerClosed(): void {
 		if (this.closed) {
 			return;
 		}
@@ -213,7 +213,7 @@ export class PipeTransportImpl<PipeTransportAppData extends AppData = AppData>
 		}
 	}
 
-	async consume<ConsumerAppData extends AppData = AppData>({
+	override async consume<ConsumerAppData extends AppData = AppData>({
 		producerId,
 		appData,
 	}: PipeConsumerOptions<ConsumerAppData>): Promise<Consumer<ConsumerAppData>> {

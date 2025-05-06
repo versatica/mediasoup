@@ -985,8 +985,8 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		if (pipeTransportPairPromise) {
 			pipeTransportPair = await pipeTransportPairPromise;
-			localPipeTransport = pipeTransportPair[this.id];
-			remotePipeTransport = pipeTransportPair[router.id];
+			localPipeTransport = pipeTransportPair[this.id]!;
+			remotePipeTransport = pipeTransportPair[router.id]!;
 		} else {
 			pipeTransportPairPromise = new Promise((resolve, reject) => {
 				Promise.all([
@@ -1190,7 +1190,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		pipeTransportPairPromise
 			.then(pipeTransportPair => {
-				const localPipeTransport = pipeTransportPair[this.id];
+				const localPipeTransport = pipeTransportPair[this.id]!;
 
 				// NOTE: No need to do any other cleanup here since that is done by the
 				// Router calling this method on us.

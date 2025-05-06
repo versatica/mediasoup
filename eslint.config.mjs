@@ -8,7 +8,7 @@ const config = tsEslint.config(
 	{
 		languageOptions: {
 			sourceType: 'module',
-			globals: { ...globals.nodeBuiltin },
+			globals: { ...globals.node },
 		},
 		linterOptions: {
 			noInlineConfig: false,
@@ -108,18 +108,20 @@ const config = tsEslint.config(
 			yoda: 2,
 		},
 	},
-	// NOTE: We need to apply this only to .ts files (and not to .mjs files).
+	// NOTE: We need to apply this only to .ts source files (and not to .mjs
+	// files).
 	...tsEslint.configs.recommendedTypeChecked.map(item => ({
 		...item,
 		files: ['node/src/**/*.ts'],
 	})),
-	// NOTE: We need to apply this only to .ts files (and not to .mjs files).
+	// NOTE: We need to apply this only to .ts source files (and not to .mjs
+	// files).
 	...tsEslint.configs.stylisticTypeChecked.map(item => ({
 		...item,
 		files: ['node/src/**/*.ts'],
 	})),
 	{
-		name: 'mediasoup .ts files',
+		name: '.ts source files',
 		files: ['node/src/**/*.ts'],
 		languageOptions: {
 			parserOptions: {
@@ -153,7 +155,10 @@ const config = tsEslint.config(
 			],
 			// Sorry, we need many `any` usage.
 			'@typescript-eslint/no-explicit-any': 0,
-			'@typescript-eslint/explicit-function-return-type': 2,
+			'@typescript-eslint/explicit-function-return-type': [
+				2,
+				{ allowExpressions: true },
+			],
 			'@typescript-eslint/no-unsafe-member-access': 0,
 			'@typescript-eslint/no-unsafe-assignment': 0,
 			'@typescript-eslint/no-unsafe-call': 0,
@@ -169,7 +174,7 @@ const config = tsEslint.config(
 		},
 	},
 	{
-		name: 'mediasoup .ts test files',
+		name: '.ts test files',
 		...jestEslint.configs['flat/recommended'],
 		files: ['node/src/test/**/*.ts'],
 		rules: {

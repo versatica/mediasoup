@@ -499,17 +499,17 @@ test('producer.dump() succeeds', async () => {
 	expect(typeof dump1.rtpParameters).toBe('object');
 	expect(Array.isArray(dump1.rtpParameters.codecs)).toBe(true);
 	expect(dump1.rtpParameters.codecs.length).toBe(1);
-	expect(dump1.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
-	expect(dump1.rtpParameters.codecs[0].payloadType).toBe(0);
-	expect(dump1.rtpParameters.codecs[0].clockRate).toBe(48000);
-	expect(dump1.rtpParameters.codecs[0].channels).toBe(2);
-	expect(dump1.rtpParameters.codecs[0].parameters).toEqual({
+	expect(dump1.rtpParameters.codecs[0]!.mimeType).toBe('audio/opus');
+	expect(dump1.rtpParameters.codecs[0]!.payloadType).toBe(0);
+	expect(dump1.rtpParameters.codecs[0]!.clockRate).toBe(48000);
+	expect(dump1.rtpParameters.codecs[0]!.channels).toBe(2);
+	expect(dump1.rtpParameters.codecs[0]!.parameters).toEqual({
 		useinbandfec: 1,
 		usedtx: 1,
 		foo: 222.222,
 		bar: '333',
 	});
-	expect(dump1.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
+	expect(dump1.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([]);
 	expect(Array.isArray(dump1.rtpParameters.headerExtensions)).toBe(true);
 	expect(dump1.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(dump1.rtpParameters.headerExtensions).toEqual([
@@ -546,25 +546,25 @@ test('producer.dump() succeeds', async () => {
 	expect(typeof dump2.rtpParameters).toBe('object');
 	expect(Array.isArray(dump2.rtpParameters.codecs)).toBe(true);
 	expect(dump2.rtpParameters.codecs.length).toBe(2);
-	expect(dump2.rtpParameters.codecs[0].mimeType).toBe('video/H264');
-	expect(dump2.rtpParameters.codecs[0].payloadType).toBe(112);
-	expect(dump2.rtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(dump2.rtpParameters.codecs[0].channels).toBeUndefined();
-	expect(dump2.rtpParameters.codecs[0].parameters).toEqual({
+	expect(dump2.rtpParameters.codecs[0]!.mimeType).toBe('video/H264');
+	expect(dump2.rtpParameters.codecs[0]!.payloadType).toBe(112);
+	expect(dump2.rtpParameters.codecs[0]!.clockRate).toBe(90000);
+	expect(dump2.rtpParameters.codecs[0]!.channels).toBeUndefined();
+	expect(dump2.rtpParameters.codecs[0]!.parameters).toEqual({
 		'packetization-mode': 1,
 		'profile-level-id': '4d0032',
 	});
-	expect(dump2.rtpParameters.codecs[0].rtcpFeedback).toEqual([
+	expect(dump2.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([
 		{ type: 'nack' },
 		{ type: 'nack', parameter: 'pli' },
 		{ type: 'goog-remb' },
 	]);
-	expect(dump2.rtpParameters.codecs[1].mimeType).toBe('video/rtx');
-	expect(dump2.rtpParameters.codecs[1].payloadType).toBe(113);
-	expect(dump2.rtpParameters.codecs[1].clockRate).toBe(90000);
-	expect(dump2.rtpParameters.codecs[1].channels).toBeUndefined();
-	expect(dump2.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
-	expect(dump2.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
+	expect(dump2.rtpParameters.codecs[1]!.mimeType).toBe('video/rtx');
+	expect(dump2.rtpParameters.codecs[1]!.payloadType).toBe(113);
+	expect(dump2.rtpParameters.codecs[1]!.clockRate).toBe(90000);
+	expect(dump2.rtpParameters.codecs[1]!.channels).toBeUndefined();
+	expect(dump2.rtpParameters.codecs[1]!.parameters).toEqual({ apt: 112 });
+	expect(dump2.rtpParameters.codecs[1]!.rtcpFeedback).toEqual([]);
 	expect(Array.isArray(dump2.rtpParameters.headerExtensions)).toBe(true);
 	expect(dump2.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(dump2.rtpParameters.headerExtensions).toEqual([

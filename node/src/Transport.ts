@@ -830,37 +830,8 @@ export abstract class TransportImpl<
 		let sctpStreamParameters: SctpStreamParameters | undefined;
 		let sctpStreamId: number;
 
-		// If this is not a DirectTransport, use sctpStreamParameters from the
-		// DataProducer (if type 'sctp') unless they are given in method parameters.
-		if (this.type !== 'direct') {
-			type = 'sctp';
-
-			sctpStreamParameters =
-				utils.clone<SctpStreamParameters | undefined>(
-					dataProducer.sctpStreamParameters
-				) ?? ({} as SctpStreamParameters);
-
-			// Override if given.
-			if (ordered !== undefined) {
-				sctpStreamParameters.ordered = ordered;
-			}
-
-			if (maxPacketLifeTime !== undefined) {
-				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
-			}
-
-			if (maxRetransmits !== undefined) {
-				sctpStreamParameters.maxRetransmits = maxRetransmits;
-			}
-
-			// This may throw.
-			sctpStreamId = this.getNextSctpStreamId();
-
-			this.#sctpStreamIds![sctpStreamId] = 1;
-			sctpStreamParameters.streamId = sctpStreamId;
-		}
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
-		else {
+		if (this.type === 'direct') {
 			type = 'direct';
 
 			if (
@@ -871,6 +842,47 @@ export abstract class TransportImpl<
 				logger.warn(
 					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport'
 				);
+			}
+		}
+		// If this is not a DirectTransport, use sctpStreamParameters from the
+		// DataProducer (if type 'sctp') unless they are given in method parameters.
+		// If the DataProducer is type 'sctp' and no sctpStreamParameters are given,
+		// generate proper ones.
+		else {
+			type = 'sctp';
+
+			// This may throw.
+			sctpStreamId = this.getNextSctpStreamId();
+
+			sctpStreamParameters = dataProducer.sctpStreamParameters
+				? utils.clone<SctpStreamParameters>(dataProducer.sctpStreamParameters)
+				: {
+						streamId: sctpStreamId,
+						ordered: true,
+					};
+
+			this.#sctpStreamIds![sctpStreamId] = 1;
+			sctpStreamParameters.streamId = sctpStreamId;
+
+			if (ordered !== undefined) {
+				sctpStreamParameters.ordered = ordered;
+
+				if (ordered) {
+					sctpStreamParameters.maxPacketLifeTime = undefined;
+					sctpStreamParameters.maxRetransmits = undefined;
+				}
+			}
+
+			if (!ordered) {
+				if (maxPacketLifeTime !== undefined) {
+					sctpStreamParameters.ordered = false;
+					sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
+				}
+
+				if (maxRetransmits !== undefined) {
+					sctpStreamParameters.ordered = false;
+					sctpStreamParameters.maxRetransmits = maxRetransmits;
+				}
 			}
 		}
 

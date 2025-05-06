@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "RTC/Codecs/VP8.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
@@ -309,6 +310,168 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
 		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+	}
+
+	SECTION("retransmitted packets are correctly encoded")
+	{
+		// clang-format off
+		uint8_t rtpBuffer1[] =
+		{
+			0x80, 0x7b, 0x52, 0x0e,
+			0x5b, 0x6b, 0xca, 0xb5,
+			0x00, 0x00, 0x00, 0x02,
+			0x80, 0xe0, 0x80, 0x01,
+			0xe8, 0x40, 0x7a, 0xd8
+		};
+		uint8_t rtpBuffer2[] =
+		{
+			0x80, 0x7b, 0x52, 0x0e,
+			0x5b, 0x6b, 0xca, 0xb5,
+			0x00, 0x00, 0x00, 0x02,
+			0x80, 0xe0, 0x80, 0x02,
+			0xe9, 0x40, 0x7a, 0xd8
+		};
+		uint8_t rtpBuffer3[] =
+		{
+			0x80, 0x7b, 0x52, 0x0e,
+			0x5b, 0x6b, 0xca, 0xb5,
+			0x00, 0x00, 0x00, 0x02,
+			0x80, 0xe0, 0x80, 0x03,
+			0xea, 0x40, 0x7a, 0xd8
+		};
+		// clang-format on
+
+		// packet1 [pt:123, seq:1, timestamp:1]
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 1, 1));
+		// packet2 [pt:123, seq:2, timestamp:1]
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 2, 1));
+		// packet3 [pt:123, seq:3, timestamp:1]
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 3, 1));
+
+		// Create two RtpStreamSend instances.
+		TestRtpStreamListener testRtpStreamListener1;
+		TestRtpStreamListener testRtpStreamListener2;
+
+		RtpStream::Params params1;
+
+		params1.ssrc          = 1111;
+		params1.clockRate     = 90000;
+		params1.useNack       = true;
+		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+		std::unique_ptr<RtpStreamSend> stream1(new RtpStreamSend(&testRtpStreamListener1, params1, mid));
+
+		RtpStream::Params params2;
+
+		params2.ssrc          = 2222;
+		params2.clockRate     = 90000;
+		params2.useNack       = true;
+		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::unique_ptr<RtpStreamSend> stream2(new RtpStreamSend(&testRtpStreamListener2, params2, mid));
+
+		// Create two VP8 encoding contexts.
+		RTC::Codecs::EncodingContext::Params params;
+		params.spatialLayers  = 0;
+		params.temporalLayers = 3;
+		Codecs::VP8::EncodingContext context1(params);
+
+		context1.SetCurrentTemporalLayer(3);
+		context1.SetTargetTemporalLayer(3);
+
+		Codecs::VP8::EncodingContext context2(params);
+
+		context2.SetCurrentTemporalLayer(0);
+		context2.SetTargetTemporalLayer(0);
+
+		// Parse the first packet.
+		auto* payloadDescriptor1 = Codecs::VP8::Parse(packet1->GetPayload(), packet1->GetPayloadLength());
+		REQUIRE(payloadDescriptor1->pictureId == 1);
+
+		auto* payloadDescriptorHandler1 = new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor1);
+		packet1->SetPayloadDescriptorHandler(payloadDescriptorHandler1);
+
+		bool marker = false;
+
+		// Process the first packet with context1.
+		auto forwarded = payloadDescriptorHandler1->Process(&context1, packet1->GetPayload(), marker);
+		REQUIRE(forwarded);
+
+		// Parse the second packet.
+		auto* payloadDescriptor2 = Codecs::VP8::Parse(packet2->GetPayload(), packet2->GetPayloadLength());
+		REQUIRE(payloadDescriptor2->pictureId == 2);
+
+		auto* payloadDescriptorHandler2 = new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor2);
+		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler2);
+
+		// Process the second packet with context1.
+		forwarded = payloadDescriptorHandler2->Process(&context1, packet2->GetPayload(), marker);
+		REQUIRE(forwarded);
+
+		// Process the second packet for context2.
+		forwarded = payloadDescriptorHandler2->Process(&context2, packet2->GetPayload(), marker);
+		// It must not forwared because the target temporal layer is 0.
+		REQUIRE(!forwarded);
+
+		// Parse the third packet
+		auto* payloadDescriptor3 = Codecs::VP8::Parse(packet3->GetPayload(), packet3->GetPayloadLength());
+		REQUIRE(payloadDescriptor3->pictureId == 3);
+
+		auto* payloadDescriptorHandler3 = new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor3);
+		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
+
+		// Process the third packet for context1.
+		forwarded = payloadDescriptorHandler3->Process(&context1, packet3->GetPayload(), marker);
+		REQUIRE(forwarded);
+
+		// Receive the third packet in the first stream.
+		SendRtpPacket({ { stream1.get(), params1.ssrc } }, packet3.get());
+
+		// Update current/target temporal layers for context2.
+		context2.SetCurrentTemporalLayer(3);
+		context2.SetTargetTemporalLayer(3);
+
+		forwarded = payloadDescriptorHandler3->Process(&context2, packet3->GetPayload(), marker);
+		REQUIRE(forwarded);
+
+		// Receive the third packet in the second stream.
+		SendRtpPacket({ { stream2.get(), params2.ssrc } }, packet3.get());
+
+		// Create a NACK item that requests the third packet.
+		RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(3, 0b0000000000000000);
+
+		nackPacket.AddItem(nackItem);
+
+		REQUIRE(nackItem->GetPacketId() == 3);
+		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000000000);
+
+		// Process the NACK packet on stream1.
+		stream1->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 1);
+
+		auto* packet = testRtpStreamListener1.retransmittedPackets[0];
+
+		// Parse payload and check pictureId.
+		auto* payloadDescriptor4 = Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
+		REQUIRE(payloadDescriptor4->pictureId == 3);
+
+		// Process the NACK packet on stream2.
+		stream2->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener2.retransmittedPackets.size() == 1);
+
+		packet = testRtpStreamListener2.retransmittedPackets[0];
+
+		// Parse payload and check pictureId.
+		auto* payloadDescriptor5 = Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
+		REQUIRE(payloadDescriptor5);
+		REQUIRE(payloadDescriptor5->pictureId == 2);
+
+		delete payloadDescriptor4;
+		delete payloadDescriptor5;
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")
