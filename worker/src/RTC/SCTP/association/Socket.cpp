@@ -15,7 +15,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Socket::Socket(Socket::SocketOptions options) : options(options)
+		Socket::Socket(SocketOptions options) : options(options)
 		{
 			MS_TRACE();
 		}
