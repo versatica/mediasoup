@@ -14,10 +14,48 @@ namespace RTC
 		public:
 			struct PayloadDescriptor : public RTC::Codecs::PayloadDescriptor
 			{
+				struct EncodingData
+				{
+					uint32_t frameNumber{ 0 };
+				};
+
+				struct Encoder : public RTC::Codecs::PayloadDescriptor::Encoder
+				{
+					~Encoder() override = default;
+					explicit Encoder(EncodingData encodingData) : encodingData(encodingData)
+					{
+					}
+					void Encode(uint8_t* data, const AV1::PayloadDescriptor* payloadDescriptor) const;
+
+					EncodingData encodingData;
+				};
+
+				PayloadDescriptor(std::unique_ptr<Codecs::DependencyDescriptor>);
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() override = default;
 
 				void Dump() const override;
+				// Rewrite the buffer with the given frameNumber value.
+				void Encode(uint8_t* data, uint16_t frameNumber) const;
+				void Encode(uint8_t* data) const;
+				void Restore(uint8_t* data) const;
+
+				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
+				{
+					if (this->encoder.has_value())
+					{
+						return std::make_unique<Encoder>(this->encoder.value());
+					}
+					else
+					{
+						return nullptr;
+					}
+				}
+
+				void CreateEncoder(EncodingData encodingData)
+				{
+					this->encoder = Encoder(encodingData);
+				}
 
 				// Fields in Dependency Descriptor extension.
 				bool startOfFrame{ false };
@@ -27,10 +65,15 @@ namespace RTC
 
 				// Parsed values.
 				bool isKeyFrame{ false };
+
+				std::unique_ptr<DependencyDescriptor> dependencyDescriptor{};
+
+				std::optional<Encoder> encoder{ std::nullopt };
 			};
 
 		public:
-			static AV1::PayloadDescriptor* Parse(Codecs::DependencyDescriptor* dependencyDescriptor);
+			static AV1::PayloadDescriptor* Parse(
+			  std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor);
 			static void ProcessRtpPacket(
 			  RTC::RtpPacket* packet,
 			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
@@ -50,7 +93,12 @@ namespace RTC
 			public:
 				void SyncRequired() override
 				{
+					this->syncRequired = true;
 				}
+
+			public:
+				RTC::SeqManager<uint16_t> frameNumberManager;
+				bool syncRequired{ false };
 			};
 
 			class PayloadDescriptorHandler : public RTC::Codecs::PayloadDescriptorHandler
@@ -65,6 +113,11 @@ namespace RTC
 					this->payloadDescriptor->Dump();
 				}
 				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
+				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
+				{
+					return this->payloadDescriptor->GetEncoder();
+				}
+				void Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder) override;
 				void Restore(uint8_t* data) override;
 				uint8_t GetSpatialLayer() const override
 				{

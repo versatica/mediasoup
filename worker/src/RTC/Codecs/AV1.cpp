@@ -10,7 +10,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		AV1::PayloadDescriptor* AV1::Parse(Codecs::DependencyDescriptor* dependencyDescriptor)
+		AV1::PayloadDescriptor* AV1::Parse(std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor)
 		{
 			MS_TRACE();
 
@@ -19,16 +19,9 @@ namespace RTC
 				return nullptr;
 			}
 
-			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
+			auto* payloadDescriptor = new PayloadDescriptor(std::move(dependencyDescriptor));
 
-			// Read fields.
-			payloadDescriptor->startOfFrame  = dependencyDescriptor->startOfFrame;
-			payloadDescriptor->endOfFrame    = dependencyDescriptor->endOfFrame;
-			payloadDescriptor->spatialLayer  = dependencyDescriptor->spatialLayer;
-			payloadDescriptor->temporalLayer = dependencyDescriptor->temporalLayer;
-			payloadDescriptor->isKeyFrame    = dependencyDescriptor->isKeyFrame;
-
-			return payloadDescriptor.release();
+			return payloadDescriptor;
 		}
 
 		void AV1::ProcessRtpPacket(
@@ -43,7 +36,7 @@ namespace RTC
 			// Read dependency descriptor.
 			packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
 
-			PayloadDescriptor* payloadDescriptor = AV1::Parse(dependencyDescriptor.get());
+			PayloadDescriptor* payloadDescriptor = AV1::Parse(std::move(dependencyDescriptor));
 
 			if (!payloadDescriptor)
 			{
@@ -57,6 +50,21 @@ namespace RTC
 
 		/* Instance methods. */
 
+		AV1::PayloadDescriptor::PayloadDescriptor(
+		  std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor)
+		{
+			MS_TRACE();
+
+			// Read fields.
+			this->startOfFrame  = dependencyDescriptor->startOfFrame;
+			this->endOfFrame    = dependencyDescriptor->endOfFrame;
+			this->spatialLayer  = dependencyDescriptor->spatialLayer;
+			this->temporalLayer = dependencyDescriptor->temporalLayer;
+			this->isKeyFrame    = dependencyDescriptor->isKeyFrame;
+
+			this->dependencyDescriptor = std::move(dependencyDescriptor);
+		}
+
 		void AV1::PayloadDescriptor::Dump() const
 		{
 			MS_TRACE();
@@ -67,6 +75,33 @@ namespace RTC
 			MS_DUMP("  temporalLayer: %" PRIu8, this->temporalLayer);
 			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
 			MS_DUMP("</AV1::PayloadDescriptor>");
+		}
+
+		void AV1::PayloadDescriptor::Encode(uint8_t* data, uint16_t frameNumber) const
+		{
+			MS_TRACE();
+
+			this->dependencyDescriptor->SetFrameNumber(frameNumber);
+		}
+
+		void AV1::PayloadDescriptor::Encode(uint8_t* data) const
+		{
+			MS_TRACE();
+
+			this->encoder->Encode(data, this);
+		}
+
+		void AV1::PayloadDescriptor::Restore(uint8_t* data) const
+		{
+			MS_TRACE();
+
+			Encode(data, this->dependencyDescriptor->frameNumber);
+		}
+
+		void AV1::PayloadDescriptor::Encoder::Encode(
+		  uint8_t* data, const PayloadDescriptor* payloadDescriptor) const
+		{
+			payloadDescriptor->Encode(data, this->encodingData.frameNumber);
 		}
 
 		AV1::PayloadDescriptorHandler::PayloadDescriptorHandler(AV1::PayloadDescriptor* payloadDescriptor)
@@ -104,6 +139,15 @@ namespace RTC
 				  rtp, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
 
 				return false;
+			}
+
+			// Check whether frameNumber sync is required.
+			if (context->syncRequired)
+			{
+				context->frameNumberManager.Sync(
+				  this->payloadDescriptor->dependencyDescriptor->frameNumber - 1);
+
+				context->syncRequired = false;
 			}
 
 			// Upgrade current spatial layer if needed.
@@ -144,6 +188,15 @@ namespace RTC
 					tmpSpatialLayer  = context->GetTargetSpatialLayer();
 					tmpTemporalLayer = 0; // Just in case.
 				}
+			}
+
+			// Filter spatial layers higher than current one.
+			if (packetSpatialLayer > tmpSpatialLayer)
+			{
+				context->frameNumberManager.Drop(
+				  this->payloadDescriptor->dependencyDescriptor->frameNumber - 1);
+
+				return false;
 			}
 
 			// Upgrade current temporal layer if needed.
@@ -190,6 +243,9 @@ namespace RTC
 			// Filter temporal layers higher than current one.
 			if (packetTemporalLayer > tmpTemporalLayer)
 			{
+				context->frameNumberManager.Drop(
+				  this->payloadDescriptor->dependencyDescriptor->frameNumber - 1);
+
 				return false;
 			}
 
@@ -212,6 +268,15 @@ namespace RTC
 			}
 
 			return true;
+		}
+
+		void AV1::PayloadDescriptorHandler::Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder)
+		{
+			MS_TRACE();
+
+			auto* av1Encoder = static_cast<AV1::PayloadDescriptor::Encoder*>(encoder);
+
+			av1Encoder->Encode(data, this->payloadDescriptor.get());
 		}
 
 		void AV1::PayloadDescriptorHandler::Restore(uint8_t* /*data*/)

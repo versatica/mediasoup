@@ -23,10 +23,10 @@ namespace RTC
 
 			bool startOfFrame{ false };
 			bool endOfFrame{ false };
-			uint32_t frameDependencyTemplateId{ 0 };
-			uint32_t frameNumber{ 0 };
-			uint32_t templateIdOffset{ 0 };
-			uint32_t templateId{ 0 };
+			uint8_t frameDependencyTemplateId{ 0 };
+			uint16_t frameNumber{ 0 };
+			uint8_t templateIdOffset{ 0 };
+			uint8_t templateId{ 0 };
 			// Given by argument.
 			TemplateDependencyStructure* templateDependencyStructure;
 			// Calculated.
