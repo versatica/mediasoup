@@ -235,8 +235,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 			                                                .partialReliability  = true,
 			                                                .messageInterleaving = true,
 			                                                .reconfig            = true,
-			                                                .zeroChecksum        = false,
-			                                                .maxOutboundStreams  = 62000 };
+			                                                .zeroChecksum        = false };
 
 		auto* stateCookie = StateCookie::Factory(
 		  /*buffer*/ FactoryBuffer,
