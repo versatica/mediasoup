@@ -15,9 +15,9 @@ namespace RTC
 		struct SocketOptions
 		{
 			/**
-			 * Signaled local port.
+			 * Signaled source port.
 			 */
-			uint16_t localPort{ 0 };
+			uint16_t sourcePort{ 0 };
 			/**
 			 * Signaled destination port.
 			 */

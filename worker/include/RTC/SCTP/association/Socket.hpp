@@ -5,6 +5,7 @@
 #include "RTC/SCTP/association/SocketOptions.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 
 namespace RTC
 {
@@ -53,8 +54,18 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 
+			void Associate();
+
 		private:
-			void SendInitChunk();
+			void SetState(State state);
+
+			Packet* CreatePacket() const;
+
+			Packet* CreatePacketWithPeerVerificationTag(uint32_t peerVerificationTag) const;
+
+			void AddCapabilitiesParametersToChunk(Chunk* chunk) const;
+
+			void SendInit();
 
 		private:
 			// Socket options given in th econstructor.
