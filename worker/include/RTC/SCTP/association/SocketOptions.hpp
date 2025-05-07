@@ -51,7 +51,7 @@ namespace RTC
 			 */
 			bool messageInterleaving{ false };
 			/**
-			 * Alternate error detection method for Zero Checksum.
+			 * Alternate Error Detection Method for Zero Checksum.
 			 *
 			 * @remarks
 			 * This feature is only enabled if both peers signal their wish to use

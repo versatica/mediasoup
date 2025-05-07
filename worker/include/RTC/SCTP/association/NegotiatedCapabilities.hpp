@@ -2,6 +2,8 @@
 #define MS_RTC_SCTP_NEGOTIATED_CAPABILITIES_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/association/SocketOptions.hpp"
+#include "RTC/SCTP/packet/Chunk.hpp"
 
 namespace RTC
 {
@@ -14,6 +16,16 @@ namespace RTC
 		 */
 		struct NegotiatedCapabilities
 		{
+			/**
+			 * Create a NegotiatedCapabilities struct. Intended to be used during
+			 * the SCTP association handshake flow.
+			 */
+			static NegotiatedCapabilities Factory(
+			  SocketOptions socketOptions,
+			  uint16_t peerNumberOfOutboundStreams,
+			  uint16_t peerNumberOfInboundStreams,
+			  Chunk* peerChunk);
+
 			/**
 			 * Negotiated maximum number of outbound streams (OS).
 			 */

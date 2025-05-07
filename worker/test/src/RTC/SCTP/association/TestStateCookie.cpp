@@ -6,7 +6,7 @@
 
 using namespace RTC::SCTP;
 
-SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
+SCENARIO("SCTP State Cookie", "[sctp]")
 {
 	resetBuffers();
 
