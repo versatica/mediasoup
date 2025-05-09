@@ -19,6 +19,4 @@ Same in `PipeTransport` and `PlainTransport`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
 
-- In `Socket.cpp` check the remote peer SCTP implementation using `StateCookie::IsMediasoupStateCookie()`. See `DeterminePeerImplementation()` in `dcsctp_socket.cc`.
-
 - Clarify whether we want to create the SCTP association TCB only once in COOKIE_ECHOED or ESTABLISHED states (as dcSCTP does) or also once we have sent INIT (as per RFC). Note that we doing as dcSCTP for now but let's see.

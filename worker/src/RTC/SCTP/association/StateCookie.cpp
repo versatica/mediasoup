@@ -20,7 +20,7 @@ namespace RTC
 				return false;
 			}
 
-			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::MagicValue1)
+			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::Magic1)
 			{
 				return false;
 			}
@@ -28,12 +28,42 @@ namespace RTC
 			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
 			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
 
-			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magicValue2) } != StateCookie::MagicValue2)
+			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magic2) } != StateCookie::Magic2)
 			{
 				return false;
 			}
 
 			return true;
+		}
+
+		StateCookie::SctpImplementation StateCookie::DetermineSctpImplementation(
+		  const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < StateCookie::Magic1Length)
+			{
+				return StateCookie::SctpImplementation::UNKNOWN;
+			}
+
+			std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
+
+			if (magic1 == "msworker")
+			{
+				return StateCookie::SctpImplementation::MEDIASOUP;
+			}
+			else if (magic1 == "dcSCTP00")
+			{
+				return StateCookie::SctpImplementation::DCSCTP;
+			}
+			else if (magic1 == "KAME-BSD")
+			{
+				return StateCookie::SctpImplementation::USRSCTP;
+			}
+			else
+			{
+				return StateCookie::SctpImplementation::UNKNOWN;
+			}
 		}
 
 		StateCookie* StateCookie::Parse(const uint8_t* buffer, size_t bufferLength)
@@ -73,7 +103,7 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			Utils::Byte::Set8Bytes(buffer, 0, StateCookie::MagicValue1);
+			Utils::Byte::Set8Bytes(buffer, 0, StateCookie::Magic1);
 			Utils::Byte::Set4Bytes(buffer, 8, myVerificationTag);
 			Utils::Byte::Set4Bytes(buffer, 12, peerVerificationTag);
 			Utils::Byte::Set4Bytes(buffer, 16, myInitialTsn);
@@ -85,18 +115,36 @@ namespace RTC
 
 			auto* negotiatedCapabilitiesField = stateCookie->GetNegotiatedCapabilitiesField();
 
-			negotiatedCapabilitiesField->reserved    = 0;
-			negotiatedCapabilitiesField->bitA        = negotiatedCapabilities.partialReliability;
-			negotiatedCapabilitiesField->bitB        = negotiatedCapabilities.messageInterleaving;
-			negotiatedCapabilitiesField->bitC        = negotiatedCapabilities.reconfig;
-			negotiatedCapabilitiesField->bitD        = negotiatedCapabilities.zeroChecksum;
-			negotiatedCapabilitiesField->magicValue2 = uint16_t{ htons(StateCookie::MagicValue2) };
+			negotiatedCapabilitiesField->reserved = 0;
+			negotiatedCapabilitiesField->bitA     = negotiatedCapabilities.partialReliability;
+			negotiatedCapabilitiesField->bitB     = negotiatedCapabilities.messageInterleaving;
+			negotiatedCapabilitiesField->bitC     = negotiatedCapabilities.reconfig;
+			negotiatedCapabilitiesField->bitD     = negotiatedCapabilities.zeroChecksum;
+			negotiatedCapabilitiesField->magic2   = uint16_t{ htons(StateCookie::Magic2) };
 			negotiatedCapabilitiesField->maxOutboundStreams =
 			  uint16_t{ htons(negotiatedCapabilities.maxOutboundStreams) };
 			negotiatedCapabilitiesField->maxInboundStreams =
 			  uint16_t{ htons(negotiatedCapabilities.maxInboundStreams) };
 
 			return stateCookie;
+		}
+
+		constexpr std::string_view StateCookie::SctpImplementation2String(
+		  StateCookie::SctpImplementation sctpImplementation)
+		{
+			MS_TRACE();
+
+			switch (sctpImplementation)
+			{
+				case StateCookie::SctpImplementation::UNKNOWN:
+					return "unknown";
+				case StateCookie::SctpImplementation::MEDIASOUP:
+					return "mediasoup";
+				case StateCookie::SctpImplementation::DCSCTP:
+					return "dcsctp";
+				case StateCookie::SctpImplementation::USRSCTP:
+					return "usrsctp";
+			}
 		}
 
 		/* Instance methods. */
