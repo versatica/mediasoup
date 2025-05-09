@@ -25,7 +25,6 @@ public:
 public:
 	void Start(uint64_t timeout, uint64_t repeat = 0);
 	void Stop();
-	void Reset();
 	void Restart();
 	uint64_t GetTimeout() const
 	{

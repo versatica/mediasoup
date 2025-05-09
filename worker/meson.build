@@ -78,6 +78,7 @@ common_sources = [
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
   'src/Utils/String.cpp',
+  'src/handles/BackoffTimerHandle.cpp',
   'src/handles/SignalHandle.cpp',
   'src/handles/TcpConnectionHandle.cpp',
   'src/handles/TcpServerHandle.cpp',
