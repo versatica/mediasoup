@@ -42,8 +42,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer, sizeof(buffer)) == true);
+
 		auto* stateCookie = StateCookie::Parse(buffer, sizeof(buffer));
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
@@ -71,6 +74,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == SerializeBuffer);
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
@@ -100,6 +104,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		delete stateCookie;
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(clonedStateCookie->GetBuffer(), clonedStateCookie->GetLength()) == true);
 		REQUIRE(clonedStateCookie);
 		REQUIRE(clonedStateCookie->GetBuffer() == CloneBuffer);
 		REQUIRE(clonedStateCookie->GetLength() == StateCookie::StateCookieLength);
@@ -157,6 +162,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer1, sizeof(buffer1)) == false);
 		REQUIRE(!StateCookie::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Magic Value 2.
@@ -190,6 +196,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer2, sizeof(buffer2)) == false);
 		REQUIRE(!StateCookie::Parse(buffer2, sizeof(buffer2)));
 
 		// Buffer too big.
@@ -225,6 +232,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		};
 		// clang-format on
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(buffer3, sizeof(buffer3)) == false);
 		REQUIRE(!StateCookie::Parse(buffer3, sizeof(buffer3)));
 	}
 
@@ -253,6 +261,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		negotiatedCapabilities.partialReliability = false;
 		negotiatedCapabilities.maxOutboundStreams = 1024;
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == FactoryBuffer);
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
@@ -280,6 +289,7 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 
 		delete stateCookie;
 
+		REQUIRE(StateCookie::IsMediasoupStateCookie(parsedStateCookie->GetBuffer(), parsedStateCookie->GetLength()) == true);
 		REQUIRE(parsedStateCookie);
 		REQUIRE(parsedStateCookie->GetBuffer() == FactoryBuffer);
 		REQUIRE(parsedStateCookie->GetLength() == StateCookie::StateCookieLength);

@@ -18,3 +18,5 @@ Same in `PipeTransport` and `PlainTransport`.
 - Try to remove all `friend class`.
 
 - In `HeartbeatChunk` the `HeartbeatInfoParameter` should be mandatory when parsing. Or should we add some `Validate()` method?
+
+- In `Socket.cpp` check the remote peer SCTP implementation using `StateCookie::IsMediasoupStateCookie()`. See `DeterminePeerImplementation()` in `dcsctp_socket.cc`.
