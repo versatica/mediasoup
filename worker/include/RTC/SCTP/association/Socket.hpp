@@ -52,6 +52,10 @@ namespace RTC
 			 * Struct holding local verification tag and initial TSN between having
 			 * sent the INIT Chunk until the connection is established (there is no
 			 * TCB in between).
+			 *
+			 * @remarks
+			 * This is how dcSCTP does, despite RFC 9260 states that the TCB should
+			 * also be created when an INIT Chunk is sent.
 			 */
 			struct PreTransmissionControlBlock
 			{
@@ -106,7 +110,7 @@ namespace RTC
 			// the connection.
 			PreTransmissionControlBlock preTcb;
 			// Once the SCTP association is established a Transmission Control Block
-			// is created (and also when we are the initiator of the association).
+			// is created.
 			std::unique_ptr<TransmissionControlBlock> tcb;
 		};
 	} // namespace SCTP

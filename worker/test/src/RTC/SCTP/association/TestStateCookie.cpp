@@ -15,8 +15,9 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		// clang-format off
 		uint8_t buffer[] =
 		{
-			// Magic Value 1: 0xF109ABE4
-			0xF1, 0x09, 0xAB, 0xE4,
+			// Magic Value 1: 0x6D73776F726B6572
+			0x6D, 0x73, 0x77, 0x6F,
+			0x72, 0x6B, 0x65, 0x72,
 			// My Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
 			// Peer Verification Tag: 55667788
@@ -135,8 +136,9 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		// clang-format off
 		uint8_t buffer1[] =
 		{
-			// Magic Value 1: 0xF109ABE5 (instead of 0xF109ABE4)
-			0xF1, 0x09, 0xAB, 0xE5,
+			// Magic Value 1: 0x6D73776F726B6573 (wrong)
+			0x6D, 0x73, 0x77, 0x6F,
+			0x72, 0x6B, 0x65, 0x73,
 			// My Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
 			// Peer Verification Tag: 55667788
@@ -169,8 +171,9 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		// clang-format off
 		uint8_t buffer2[] =
 		{
-			// Magic Value 1: 0xF109ABE4
-			0xF1, 0x09, 0xAB, 0xE4,
+			// Magic Value 1: 0x6D73776F726B6572
+			0x6D, 0x73, 0x77, 0x6F,
+			0x72, 0x6B, 0x65, 0x72,
 			// My Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
 			// Peer Verification Tag: 55667788
@@ -203,8 +206,9 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		// clang-format off
 		uint8_t buffer3[] =
 		{
-			// Magic Value 1: 0xF109ABE4
-			0xF1, 0x09, 0xAB, 0xE4,
+			// Magic Value 1: 0x6D73776F726B6572
+			0x6D, 0x73, 0x77, 0x6F,
+			0x72, 0x6B, 0x65, 0x72,
 			// My Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
 			// Peer Verification Tag: 55667788

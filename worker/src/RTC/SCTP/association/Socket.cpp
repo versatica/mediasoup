@@ -70,6 +70,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// TODO: Is this ok? We Associate() is public API and parent should be
+			// able to invoke it despite the connection is already established after
+			// being initiated from the rmeote peer.
+			// TODO: Are we gonna notify the parent with SCTP state changes? I assume
+			// yes. But does it mean that parent should know in which states it can
+			// invoke certain public methods?
 			AssertNotState(State::CLOSED);
 
 			this->preTcb.myVerificationTag =
@@ -182,6 +188,8 @@ namespace RTC
 		void Socket::SendInit()
 		{
 			MS_TRACE();
+
+			AssertState(State::CLOSED);
 
 			auto* packet    = CreatePacket();
 			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();

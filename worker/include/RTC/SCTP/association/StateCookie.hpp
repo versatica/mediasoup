@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/Serializable.hpp"
+#include <string>
 
 namespace RTC
 {
@@ -21,6 +22,7 @@ namespace RTC
 		 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                         Magic Value 1                         |
+		 * |                                                               |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                      My Verification Tag                      |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -59,9 +61,14 @@ namespace RTC
 		class StateCookie : public Serializable
 		{
 		public:
-			static constexpr size_t StateCookieLength{ 40 };
-			// Magic value we prefix the State Cookie with.
-			static constexpr uint32_t MagicValue1{ 0xF109ABE4 };
+			// Fixed total length of our generated State Cookies.
+			static constexpr size_t StateCookieLength{ 44 };
+			// Offset in the State Cookie where the Negotiated Capabilitied are
+			// located.
+			static constexpr size_t NegotiatedCapabilitiesOffset{ 36 };
+			// Magic values we prefix the State Cookie with. Note that it is
+			// "msworker" in ASCII bytes.
+			static constexpr uint64_t MagicValue1{ 0x6D73776F726B6572 };
 			// Magic value used within the Negotiated Capabilities block.
 			static constexpr uint16_t MagicValue2{ 0xAD81 };
 
@@ -135,7 +142,7 @@ namespace RTC
 			 */
 			uint32_t GetMyVerificationTag() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
+				return Utils::Byte::Get4Bytes(GetBuffer(), 8);
 			}
 
 			/**
@@ -145,7 +152,7 @@ namespace RTC
 			 */
 			uint32_t GetPeerVerificationTag() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 8);
+				return Utils::Byte::Get4Bytes(GetBuffer(), 12);
 			}
 
 			/**
@@ -154,7 +161,7 @@ namespace RTC
 			 */
 			uint32_t GetMyInitialTsn() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 12);
+				return Utils::Byte::Get4Bytes(GetBuffer(), 16);
 			}
 
 			/**
@@ -163,7 +170,7 @@ namespace RTC
 			 */
 			uint32_t GetPeerInitialTsn() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 16);
+				return Utils::Byte::Get4Bytes(GetBuffer(), 20);
 			}
 
 			/**
@@ -172,7 +179,7 @@ namespace RTC
 			 */
 			uint32_t GetMyAdvertisedReceiverWindowCredit() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 20);
+				return Utils::Byte::Get4Bytes(GetBuffer(), 24);
 			}
 
 			/**
@@ -180,7 +187,7 @@ namespace RTC
 			 */
 			uint64_t GetTieTag() const
 			{
-				return Utils::Byte::Get8Bytes(GetBuffer(), 24);
+				return Utils::Byte::Get8Bytes(GetBuffer(), 28);
 			}
 
 			/**
@@ -191,7 +198,8 @@ namespace RTC
 		private:
 			NegotiatedCapabilitiesField* GetNegotiatedCapabilitiesField() const
 			{
-				return reinterpret_cast<NegotiatedCapabilitiesField*>(const_cast<uint8_t*>(GetBuffer()) + 32);
+				return reinterpret_cast<NegotiatedCapabilitiesField*>(
+				  const_cast<uint8_t*>(GetBuffer()) + StateCookie::NegotiatedCapabilitiesOffset);
 			}
 		};
 	} // namespace SCTP

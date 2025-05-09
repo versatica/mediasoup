@@ -20,13 +20,13 @@ namespace RTC
 				return false;
 			}
 
-			if (Utils::Byte::Get4Bytes(buffer, 0) != StateCookie::MagicValue1)
+			if (Utils::Byte::Get8Bytes(buffer, 0) != StateCookie::MagicValue1)
 			{
 				return false;
 			}
 
-			auto* negotiatedCapabilitiesField =
-			  reinterpret_cast<NegotiatedCapabilitiesField*>(const_cast<uint8_t*>(buffer) + 32);
+			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
+			  const_cast<uint8_t*>(buffer) + StateCookie::NegotiatedCapabilitiesOffset);
 
 			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magicValue2) } != StateCookie::MagicValue2)
 			{
@@ -73,13 +73,13 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("buffer too small");
 			}
 
-			Utils::Byte::Set4Bytes(buffer, 0, StateCookie::MagicValue1);
-			Utils::Byte::Set4Bytes(buffer, 4, myVerificationTag);
-			Utils::Byte::Set4Bytes(buffer, 8, peerVerificationTag);
-			Utils::Byte::Set4Bytes(buffer, 12, myInitialTsn);
-			Utils::Byte::Set4Bytes(buffer, 16, peerInitialTsn);
-			Utils::Byte::Set4Bytes(buffer, 20, myAdvertisedReceiverWindowCredit);
-			Utils::Byte::Set8Bytes(buffer, 24, tieTag);
+			Utils::Byte::Set8Bytes(buffer, 0, StateCookie::MagicValue1);
+			Utils::Byte::Set4Bytes(buffer, 8, myVerificationTag);
+			Utils::Byte::Set4Bytes(buffer, 12, peerVerificationTag);
+			Utils::Byte::Set4Bytes(buffer, 16, myInitialTsn);
+			Utils::Byte::Set4Bytes(buffer, 20, peerInitialTsn);
+			Utils::Byte::Set4Bytes(buffer, 24, myAdvertisedReceiverWindowCredit);
+			Utils::Byte::Set8Bytes(buffer, 28, tieTag);
 
 			auto* stateCookie = new StateCookie(buffer, StateCookie::StateCookieLength);
 
