@@ -8,7 +8,9 @@
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
-#include <limits>
+#include <limits>      // std::numeric_limits()
+#include <sstream>     // std::ostringstream
+#include <type_traits> // std::is_same_v
 
 namespace RTC
 {
@@ -18,9 +20,36 @@ namespace RTC
 
 		thread_local static uint8_t FactoryBuffer[RTC::Consts::MaxSafeMtuSizeForSctp];
 
+		/* Class methods. */
+
+		constexpr std::string_view Socket::State2String(Socket::State state)
+		{
+			MS_TRACE();
+
+			switch (state)
+			{
+				case Socket::State::CLOSED:
+					return "CLOSED";
+				case Socket::State::COOKIE_WAIT:
+					return "COOKIE_WAIT";
+				case Socket::State::COOKIE_ECHOED:
+					return "COOKIE_ECHOED";
+				case Socket::State::ESTABLISHED:
+					return "ESTABLISHED";
+				case Socket::State::SHUTDOWN_PENDING:
+					return "SHUTDOWN_PENDING";
+				case Socket::State::SHUTDOWN_SENT:
+					return "SHUTDOWN_SENT";
+				case Socket::State::SHUTDOWN_RECEIVED:
+					return "SHUTDOWN_RECEIVED";
+				case Socket::State::SHUTDOWN_ACK_SENT:
+					return "SHUTDOWN_ACK_SENT";
+			}
+		}
+
 		/* Instance methods. */
 
-		Socket::Socket(SocketOptions options) : options(options)
+		Socket::Socket(SocketOptions options, Listener* listener) : options(options), listener(listener)
 		{
 			MS_TRACE();
 		}
@@ -41,13 +70,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (this->state != State::Closed)
-			{
-				// TODO: We may want to abort here since it's a bug.
-				MS_WARN_TAG(sctp, "Associate() called when state is not 'Closed'");
-
-				return;
-			}
+			AssertNotState(State::CLOSED);
 
 			this->preTcb.myVerificationTag =
 			  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
@@ -58,23 +81,40 @@ namespace RTC
 
 			// TODO
 			// t1_init_->Start();
-			// SetState(State::kCookieWait, "Connect called");
+
+			SetState(State::COOKIE_WAIT, "Associate() called");
 		}
 
-		void Socket::SetState(State state)
+		void Socket::SetState(State state, const std::string& reason)
 		{
 			MS_TRACE();
 
+			auto stateStringView = Socket::State2String(state);
+
 			if (state == this->state)
 			{
-				// TODO: Warn?
+				MS_WARN_TAG(
+				  sctp,
+				  "Socket state is already %.*s (reason:'%s')",
+				  static_cast<int>(stateStringView.size()),
+				  stateStringView.data(),
+				  reason.c_str());
 
 				return;
 			}
 
-			this->state = state;
+			auto previousStateStringView = Socket::State2String(this->state);
 
-			// TODO: Print it (we need a State2String() function).
+			MS_WARN_TAG(
+			  sctp,
+			  "Socket state changed from %.*s to %.*s (reason:'%s')",
+			  static_cast<int>(previousStateStringView.size()),
+			  previousStateStringView.data(),
+			  static_cast<int>(stateStringView.size()),
+			  stateStringView.data(),
+			  reason.c_str());
+
+			this->state = state;
 		}
 
 		Packet* Socket::CreatePacket() const
@@ -161,9 +201,71 @@ namespace RTC
 			// a correct CRC32c checksum in the packet containing the INIT chunk.
 			packet->SetCRC32cChecksum();
 
-			// TODO: Emit event to parent or send it somehow.
+			// Send the Packet.
+			this->listener->OnSocketSendSctpPacket(this, packet);
 
 			delete packet;
+		}
+
+		template<typename... States>
+		void Socket::AssertState(States... expectedStates) const
+		{
+			MS_TRACE();
+
+			static_assert((std::is_same_v<States, State> && ...), "all arguments must be of type State");
+
+			// NOTE: Using fold expression operator.
+			if ((... || (this->state == expectedStates)))
+			{
+				return;
+			}
+
+			auto currentStateStringView = Socket::State2String(this->state);
+			std::ostringstream expectedStatesOss;
+			bool firstExpectedState = true;
+
+			// NOTE: Using fold expression operator.
+			((expectedStatesOss << (firstExpectedState ? "" : ", ") << Socket::State2String(expectedStates),
+			  firstExpectedState = false),
+			 ...);
+
+			auto expectedStatesString = expectedStatesOss.str();
+
+			MS_ABORT(
+			  "current Socket state %.*s does not match any of the given expected states (%s)",
+			  static_cast<int>(currentStateStringView.size()),
+			  currentStateStringView.data(),
+			  expectedStatesString.c_str());
+		}
+
+		template<typename... States>
+		void Socket::AssertNotState(States... unexpectedStates) const
+		{
+			MS_TRACE();
+
+			static_assert((std::is_same_v<States, State> && ...), "all arguments must be of type State");
+
+			// NOTE: Using fold expression operator.
+			if ((... || (this->state == unexpectedStates)))
+			{
+				auto currentStateStringView = Socket::State2String(this->state);
+				std::ostringstream unexpectedStatesOss;
+				bool firstUnexpectedState = true;
+
+				// NOTE: Using fold expression operator.
+				((unexpectedStatesOss << (firstUnexpectedState ? "" : ", ")
+				                      << Socket::State2String(unexpectedStates),
+				  firstUnexpectedState = false),
+				 ...);
+
+				auto unexpectedStatesString = unexpectedStatesOss.str();
+
+				MS_ABORT(
+				  "current Socket state %.*s matches one of the given unexpected states (%s)",
+				  static_cast<int>(currentStateStringView.size()),
+				  currentStateStringView.data(),
+				  unexpectedStatesString.c_str());
+			}
 		}
 	} // namespace SCTP
 } // namespace RTC
