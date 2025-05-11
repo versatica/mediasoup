@@ -133,12 +133,12 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 
 	this->baseTimeout = baseTimeout;
 
-	auto nextTimeout = ComputeNextTimeout();
-
 	// The caller may have called Stop() within the callback so we must check
 	// the `active` flag.
 	if (this->active)
 	{
+		auto nextTimeout = ComputeNextTimeout();
+
 		this->timer->Start(nextTimeout);
 	}
 }
