@@ -6,6 +6,7 @@
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
+#include "handles/BackoffTimerHandle.hpp"
 #include <string>
 #include <string_view>
 
@@ -19,7 +20,7 @@ namespace RTC
 		 *
 		 * It manages all Packet and Chunk dispatching and the connection flow.
 		 */
-		class Socket
+		class Socket : public BackoffTimerHandle::Listener
 		{
 		public:
 			class Listener
@@ -93,11 +94,21 @@ namespace RTC
 
 			void SendInit();
 
+			void OnT1InitTimer(uint64_t& baseTimeout, bool& stop);
+
+			void OnT1CookieTimer(uint64_t& baseTimeout, bool& stop);
+
+			void OnT2ShutdownTimer(uint64_t& baseTimeout, bool& stop);
+
 			template<typename... States>
 			void AssertState(States... expectedStates) const;
 
 			template<typename... States>
 			void AssertNotState(States... unexpectedStates) const;
+
+			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
+		public:
+			void OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeout, bool& stop) override;
 
 		private:
 			// Socket options given in th econstructor.
@@ -112,6 +123,12 @@ namespace RTC
 			// Once the SCTP association is established a Transmission Control Block
 			// is created.
 			std::unique_ptr<TransmissionControlBlock> tcb;
+			// T1-init timer.
+			const std::unique_ptr<BackoffTimerHandle> t1InitTimer;
+			// T1-cookie timer.
+			const std::unique_ptr<BackoffTimerHandle> t1CookieTimer;
+			// T2-shutdown timer.
+			const std::unique_ptr<BackoffTimerHandle> t2ShutdownTimer;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -86,7 +86,7 @@ uint64_t BackoffTimerHandle::ComputeNextTimeout() const
 			return this->baseTimeout;
 		}
 
-		case BackoffAlgorithm::EXPONENCIAL:
+		case BackoffAlgorithm::EXPONENTIAL:
 		{
 			auto timeout = this->baseTimeout;
 

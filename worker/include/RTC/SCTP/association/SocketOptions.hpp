@@ -67,6 +67,34 @@ namespace RTC
 			 * DTLS, TURN, UDP or IP headers.
 			 */
 			size_t mtu{ RTC::Consts::MaxSafeMtuSizeForSctp };
+			/**
+			 * T1-init timeout (ms).
+			 */
+			uint64_t t1InitTimeout{ 1000 };
+			/**
+			 * T1-cookie timeout (ms).
+			 */
+			uint64_t t1CookieTimeout{ 1000 };
+			/**
+			 * T2-shutdown timeout (ms).
+			 */
+			uint64_t t2ShutdownTimeout{ 1000 };
+			/**
+			 * Maximum duration of the backoff timeout. If no value is given, no
+			 * limit is set.
+			 */
+			std::optional<uint64_t> timerMaxBackoffTimeout{ std::nullopt };
+			/**
+			 * Max.Init.Retransmits. Set to std::nullopt for no limit.
+			 *
+			 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-16
+			 */
+			std::optional<size_t> maxInitRetransmits = 8;
+			/**
+			 * Maximum data retransmit attempts (for DATA, I_DATA and other Chunks).
+			 * Set to std::nullopt for no limit.
+			 */
+			std::optional<size_t> maxRetransmits = 8;
 		};
 	} // namespace SCTP
 } // namespace RTC

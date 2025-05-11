@@ -3,6 +3,7 @@
 
 #include "RTC/SCTP/association/Socket.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
@@ -49,7 +50,26 @@ namespace RTC
 
 		/* Instance methods. */
 
-		Socket::Socket(SocketOptions options, Listener* listener) : options(options), listener(listener)
+		Socket::Socket(SocketOptions options, Listener* listener)
+		  : options(options), listener(listener),
+		    t1InitTimer(std::make_unique<BackoffTimerHandle>(
+		      /*listener*/ this,
+		      /*baseTimeout*/ options.t1InitTimeout,
+		      /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		      /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		      /*maxRestarts*/ options.maxInitRetransmits)),
+		    t1CookieTimer(std::make_unique<BackoffTimerHandle>(
+		      /*listener*/ this,
+		      /*baseTimeout*/ options.t1CookieTimeout,
+		      /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		      /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		      /*maxRestarts*/ options.maxInitRetransmits)),
+		    t2ShutdownTimer(std::make_unique<BackoffTimerHandle>(
+		      /*listener*/ this,
+		      /*baseTimeout*/ options.t2ShutdownTimeout,
+		      /*backoffAlgorithm*/ BackoffTimerHandle::BackoffAlgorithm::EXPONENTIAL,
+		      /*maxBackoffTimeout*/ options.timerMaxBackoffTimeout,
+		      /*maxRestarts*/ options.maxRetransmits))
 		{
 			MS_TRACE();
 		}
@@ -85,8 +105,7 @@ namespace RTC
 
 			SendInit();
 
-			// TODO
-			// t1_init_->Start();
+			this->t1InitTimer->Start();
 
 			SetState(State::COOKIE_WAIT, "Associate() called");
 		}
@@ -215,6 +234,56 @@ namespace RTC
 			delete packet;
 		}
 
+		void Socket::OnT1InitTimer(uint64_t& baseTimeout, bool& stop)
+		{
+			MS_TRACE();
+
+			MS_DEBUG_TAG(sctp, "T1-timer expired [timeout count:%zu]", this->t1InitTimer->GetTimeoutCount());
+
+			AssertState(State::COOKIE_WAIT);
+
+			if (this->t1InitTimer->IsActive())
+			{
+				SendInit();
+			}
+			else
+			{
+				// TODO
+				// InternalClose(ErrorKind::kTooManyRetries, "No INIT_ACK received");
+			}
+		}
+
+		void Socket::OnT1CookieTimer(uint64_t& baseTimeout, bool& stop)
+		{
+			MS_TRACE();
+
+			MS_DEBUG_TAG(
+			  sctp, "T1-coookie expired [timeout count:%zu]", this->t1CookieTimer->GetTimeoutCount());
+
+			AssertState(State::COOKIE_ECHOED);
+
+			if (this->t1CookieTimer->IsActive())
+			{
+				// TODO
+				// tcb_->SendBufferedPackets(callbacks_.Now());
+			}
+			else
+			{
+				// TODO
+				// InternalClose(ErrorKind::kTooManyRetries, "No COOKIE_ACK received");
+			}
+		}
+
+		void Socket::OnT2ShutdownTimer(uint64_t& baseTimeout, bool& stop)
+		{
+			MS_TRACE();
+
+			MS_DEBUG_TAG(
+			  sctp, "T2-shutdown expired [timeout count:%zu]", this->t2ShutdownTimer->GetTimeoutCount());
+
+			// TODO
+		}
+
 		template<typename... States>
 		void Socket::AssertState(States... expectedStates) const
 		{
@@ -239,7 +308,7 @@ namespace RTC
 
 			auto expectedStatesString = expectedStatesOss.str();
 
-			MS_ABORT(
+			MS_THROW_ERROR(
 			  "current Socket state %.*s does not match any of the given expected states (%s)",
 			  static_cast<int>(currentStateStringView.size()),
 			  currentStateStringView.data(),
@@ -268,11 +337,29 @@ namespace RTC
 
 				auto unexpectedStatesString = unexpectedStatesOss.str();
 
-				MS_ABORT(
+				MS_THROW_ERROR(
 				  "current Socket state %.*s matches one of the given unexpected states (%s)",
 				  static_cast<int>(currentStateStringView.size()),
 				  currentStateStringView.data(),
 				  unexpectedStatesString.c_str());
+			}
+		}
+
+		void Socket::OnTimer(BackoffTimerHandle* backoffTimer, uint64_t& baseTimeout, bool& stop)
+		{
+			MS_TRACE();
+
+			if (backoffTimer == this->t1InitTimer.get())
+			{
+				OnT1InitTimer(baseTimeout, stop);
+			}
+			else if (backoffTimer == this->t1CookieTimer.get())
+			{
+				OnT1CookieTimer(baseTimeout, stop);
+			}
+			else if (backoffTimer == this->t2ShutdownTimer.get())
+			{
+				OnT2ShutdownTimer(baseTimeout, stop);
 			}
 		}
 	} // namespace SCTP

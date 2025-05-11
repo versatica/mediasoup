@@ -33,7 +33,7 @@ public:
 		// An exponential backoff is used for restarts, with a 2x multiplier,
 		// meaning that every restart will use a duration that is twice as long as
 		// the previous.
-		EXPONENCIAL,
+		EXPONENTIAL,
 	};
 
 public:
@@ -103,6 +103,14 @@ public:
 	bool IsActive() const
 	{
 		return this->active;
+	}
+
+	/**
+	 * Number of times the timer has expired.
+	 */
+	size_t GetTimeoutCount() const
+	{
+		return this->timeoutCount;
 	}
 
 private:
