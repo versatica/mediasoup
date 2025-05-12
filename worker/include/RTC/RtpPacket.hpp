@@ -565,6 +565,7 @@ namespace RTC
 				return false;
 			}
 		}
+
 		uint8_t* GetExtension(uint8_t id, uint8_t& len) const
 		{
 			len = 0u;
