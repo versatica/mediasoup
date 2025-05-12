@@ -549,7 +549,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DEBUG_TAG(sctp, "T1-timer expired [timeout count:%zu]", this->t1InitTimer->GetTimeoutCount());
+			MS_DEBUG_TAG(
+			  sctp, "T1-init timer expired [timeout count:%zu]", this->t1InitTimer->GetTimeoutCount());
 
 			AssertState(State::COOKIE_WAIT);
 
@@ -569,7 +570,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_TAG(
-			  sctp, "T1-coookie expired [timeout count:%zu]", this->t1CookieTimer->GetTimeoutCount());
+			  sctp, "T1-cookie timer expired [timeout count:%zu]", this->t1CookieTimer->GetTimeoutCount());
 
 			AssertState(State::COOKIE_ECHOED);
 
@@ -590,7 +591,9 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DEBUG_TAG(
-			  sctp, "T2-shutdown expired [timeout count:%zu]", this->t2ShutdownTimer->GetTimeoutCount());
+			  sctp,
+			  "T2-shutdown timer expired [timeout count:%zu]",
+			  this->t2ShutdownTimer->GetTimeoutCount());
 
 			// TODO
 		}
