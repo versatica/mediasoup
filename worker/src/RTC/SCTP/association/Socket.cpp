@@ -6,10 +6,6 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
-#include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
-#include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
-#include "RTC/SCTP/packet/chunks/InitChunk.hpp"
-#include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
@@ -115,7 +111,7 @@ namespace RTC
 			this->preTcb.localInitialTsn =
 			  Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
 
-			SendInit();
+			SendInitChunk();
 
 			this->t1InitTimer->Start();
 
@@ -250,6 +246,60 @@ namespace RTC
 			}
 
 			supportedExtensionsParameter->Consolidate();
+		}
+
+		void Socket::CreateTransmissionControlBlock(
+		  uint32_t localVerificationTag,
+		  uint32_t remoteVerificationTag,
+		  uint32_t localInitialTsn,
+		  uint32_t remoteInitialTsn,
+		  uint32_t localAdvertisedReceiverWindowCredit,
+		  uint64_t tieTag,
+		  const NegotiatedCapabilities& negotiatedCapabilities)
+		{
+			MS_TRACE();
+
+			this->tcb = std::make_unique<TransmissionControlBlock>(
+			  localVerificationTag,
+			  remoteVerificationTag,
+			  localInitialTsn,
+			  remoteInitialTsn,
+			  localAdvertisedReceiverWindowCredit,
+			  tieTag,
+			  negotiatedCapabilities);
+
+			this->metrics.messageInterleaving = negotiatedCapabilities.messageInterleaving;
+			this->metrics.zeroChecksum        = negotiatedCapabilities.zeroChecksum;
+		}
+
+		void Socket::SendInitChunk()
+		{
+			MS_TRACE();
+
+			AssertState(State::CLOSED);
+
+			auto* packet    = CreatePacket();
+			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
+
+			initChunk->SetInitiateTag(this->preTcb.localVerificationTag);
+			initChunk->SetAdvertisedReceiverWindowCredit(this->options.localAdvertisedReceiverWindowCredit);
+			initChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
+			initChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
+			initChunk->SetInitialTsn(this->preTcb.localInitialTsn);
+
+			AddCapabilitiesParametersToChunk(initChunk);
+
+			initChunk->Consolidate();
+
+			// https://datatracker.ietf.org/doc/html/rfc9653#section-5.2
+			// When a sender sends a packet containing an INIT chunk, it MUST include
+			// a correct CRC32c checksum in the packet containing the INIT chunk.
+			packet->SetCRC32cChecksum();
+
+			// Send the Packet.
+			this->listener->OnSocketSendSctpPacket(this, packet);
+
+			delete packet;
 		}
 
 		bool Socket::ValidateReceivedPacket(const Packet* packet)
@@ -409,63 +459,90 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
+			switch (chunk->GetType())
+			{
+				case Chunk::ChunkType::DATA:
+				{
+					ProcessReceivedDataChunk(packet, static_cast<const DataChunk*>(chunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::INIT:
+				{
+					ProcessReceivedInitChunk(packet, static_cast<const InitChunk*>(chunk));
+
+					break;
+				}
+
+				case Chunk::ChunkType::INIT_ACK:
+				{
+					ProcessReceivedInitAckChunk(packet, static_cast<const InitAckChunk*>(chunk));
+
+					break;
+				}
+
+				default:
+				{
+					return ProcessReceivedUnknownChunk(packet, static_cast<const UnknownChunk*>(chunk));
+				}
+			}
 
 			return true;
 		}
 
-		void Socket::CreateTransmissionControlBlock(
-		  uint32_t localVerificationTag,
-		  uint32_t remoteVerificationTag,
-		  uint32_t localInitialTsn,
-		  uint32_t remoteInitialTsn,
-		  uint32_t localAdvertisedReceiverWindowCredit,
-		  uint64_t tieTag,
-		  const NegotiatedCapabilities& negotiatedCapabilities)
+		void Socket::ProcessReceivedDataChunk(const Packet* packet, const DataChunk* chunk)
 		{
 			MS_TRACE();
-
-			this->tcb = std::make_unique<TransmissionControlBlock>(
-			  localVerificationTag,
-			  remoteVerificationTag,
-			  localInitialTsn,
-			  remoteInitialTsn,
-			  localAdvertisedReceiverWindowCredit,
-			  tieTag,
-			  negotiatedCapabilities);
-
-			this->metrics.messageInterleaving = negotiatedCapabilities.messageInterleaving;
-			this->metrics.zeroChecksum        = negotiatedCapabilities.zeroChecksum;
 		}
 
-		void Socket::SendInit()
+		void Socket::ProcessReceivedInitChunk(const Packet* packet, const InitChunk* chunk)
+		{
+			MS_TRACE();
+		}
+
+		void Socket::ProcessReceivedInitAckChunk(const Packet* packet, const InitAckChunk* chunk)
+		{
+			MS_TRACE();
+		}
+
+		bool Socket::ProcessReceivedUnknownChunk(const Packet* /*packet*/, const UnknownChunk* chunk)
 		{
 			MS_TRACE();
 
-			AssertState(State::CLOSED);
+			auto action         = chunk->GetActionForUnknownChunkType();
+			auto skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
+			                      action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
+			auto reportError = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
+			                   action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
 
-			auto* packet    = CreatePacket();
-			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
+			if (skipProcessing)
+			{
+				MS_DEBUG_TAG(
+				  sctp,
+				  "Chunk with unknown type %" PRIu8
+				  " received, skipping further processing of Chunks in the Packet",
+				  static_cast<uint8_t>(chunk->GetType()));
+			}
+			else
+			{
+				MS_DEBUG_TAG(
+				  sctp,
+				  "ignoring received Chunk with unknown type %" PRIu8,
+				  static_cast<uint8_t>(chunk->GetType()));
+			}
 
-			initChunk->SetInitiateTag(this->preTcb.localVerificationTag);
-			initChunk->SetAdvertisedReceiverWindowCredit(this->options.localAdvertisedReceiverWindowCredit);
-			initChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
-			initChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
-			initChunk->SetInitialTsn(this->preTcb.localInitialTsn);
+			if (reportError)
+			{
+				// TODO: Notify error.
 
-			AddCapabilitiesParametersToChunk(initChunk);
+				if (this->tcb)
+				{
+					// TODO: Send an ErrorChunk with Unrecognized Chunk Type.
+				}
+			}
 
-			initChunk->Consolidate();
-
-			// https://datatracker.ietf.org/doc/html/rfc9653#section-5.2
-			// When a sender sends a packet containing an INIT chunk, it MUST include
-			// a correct CRC32c checksum in the packet containing the INIT chunk.
-			packet->SetCRC32cChecksum();
-
-			// Send the Packet.
-			this->listener->OnSocketSendSctpPacket(this, packet);
-
-			delete packet;
+			return !skipProcessing;
 		}
 
 		void Socket::OnT1InitTimer(uint64_t& baseTimeout, bool& stop)
@@ -478,7 +555,7 @@ namespace RTC
 
 			if (this->t1InitTimer->IsActive())
 			{
-				SendInit();
+				SendInitChunk();
 			}
 			else
 			{

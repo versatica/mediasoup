@@ -7,6 +7,12 @@
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
+#include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include "RTC/SCTP/packet/chunks/DataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
+#include "RTC/SCTP/packet/chunks/InitChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
+#include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <string>
 #include <string_view>
@@ -98,10 +104,6 @@ namespace RTC
 
 			void AddCapabilitiesParametersToChunk(Chunk* chunk) const;
 
-			bool ValidateReceivedPacket(const Packet* packet);
-
-			bool ProcessReceivedChunk(const Packet* packet, const Chunk* chunk);
-
 			void CreateTransmissionControlBlock(
 			  uint32_t localVerificationTag,
 			  uint32_t remoteVerificationTag,
@@ -111,7 +113,19 @@ namespace RTC
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
-			void SendInit();
+			void SendInitChunk();
+
+			bool ValidateReceivedPacket(const Packet* packet);
+
+			bool ProcessReceivedChunk(const Packet* packet, const Chunk* chunk);
+
+			void ProcessReceivedDataChunk(const Packet* packet, const DataChunk* chunk);
+
+			void ProcessReceivedInitChunk(const Packet* packet, const InitChunk* chunk);
+
+			void ProcessReceivedInitAckChunk(const Packet* packet, const InitAckChunk* chunk);
+
+			bool ProcessReceivedUnknownChunk(const Packet* packet, const UnknownChunk* chunk);
 
 			void OnT1InitTimer(uint64_t& baseTimeout, bool& stop);
 
