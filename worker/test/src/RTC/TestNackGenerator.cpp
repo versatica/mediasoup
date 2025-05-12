@@ -36,7 +36,7 @@ struct TestNackGeneratorInput
 class TestPayloadDescriptorHandler : public Codecs::PayloadDescriptorHandler
 {
 public:
-	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame){};
+	explicit TestPayloadDescriptorHandler(bool isKeyFrame) : isKeyFrame(isKeyFrame) {};
 	~TestPayloadDescriptorHandler() override = default;
 	void Dump() const override
 	{
@@ -54,7 +54,7 @@ public:
 	void Encode(uint8_t* /*data*/, RTC::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
 	{
 	}
-	void Restore(uint8_t* /*data*/) override
+	void Restore(RtpPacket* /*packet*/) override
 	{
 	}
 	uint8_t GetSpatialLayer() const override

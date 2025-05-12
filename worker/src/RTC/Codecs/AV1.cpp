@@ -11,7 +11,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		AV1::PayloadDescriptor* AV1::Parse(std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor)
+		AV1::PayloadDescriptor* AV1::Parse(Codecs::DependencyDescriptor* dependencyDescriptor)
 		{
 			MS_TRACE();
 
@@ -20,7 +20,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			auto* payloadDescriptor = new PayloadDescriptor(std::move(dependencyDescriptor));
+			auto* payloadDescriptor = new PayloadDescriptor(dependencyDescriptor);
 
 			return payloadDescriptor;
 		}
@@ -37,7 +37,7 @@ namespace RTC
 			// Read dependency descriptor.
 			packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
 
-			PayloadDescriptor* payloadDescriptor = AV1::Parse(std::move(dependencyDescriptor));
+			PayloadDescriptor* payloadDescriptor = AV1::Parse(dependencyDescriptor.get());
 
 			if (!payloadDescriptor)
 			{
@@ -51,8 +51,7 @@ namespace RTC
 
 		/* Instance methods. */
 
-		AV1::PayloadDescriptor::PayloadDescriptor(
-		  std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor)
+		AV1::PayloadDescriptor::PayloadDescriptor(Codecs::DependencyDescriptor* dependencyDescriptor)
 		{
 			MS_TRACE();
 

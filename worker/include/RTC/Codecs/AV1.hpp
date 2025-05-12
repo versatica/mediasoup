@@ -30,7 +30,7 @@ namespace RTC
 					EncodingData encodingData;
 				};
 
-				PayloadDescriptor(std::unique_ptr<Codecs::DependencyDescriptor>);
+				PayloadDescriptor(Codecs::DependencyDescriptor* dependencyDescriptor);
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() override = default;
 
@@ -71,8 +71,7 @@ namespace RTC
 			};
 
 		public:
-			static AV1::PayloadDescriptor* Parse(
-			  std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor);
+			static AV1::PayloadDescriptor* Parse(Codecs::DependencyDescriptor* dependencyDescriptor);
 			static void ProcessRtpPacket(
 			  RTC::RtpPacket* packet,
 			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
