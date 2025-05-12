@@ -139,6 +139,23 @@ namespace RTC
 			}
 
 			// TODO
+			// MaybeSendShutdownOnPacketReceived(*packet);
+
+			for (auto it = packet->ChunksBegin(); it != packet->ChunksEnd(); ++it)
+			{
+				const auto* chunk = *it;
+
+				if (!ProcessReceivedChunk(packet, chunk))
+				{
+					break;
+				}
+			}
+
+			// TODO
+			// if (tcb_ != nullptr) {
+			//   tcb_->data_tracker().ObservePacketEnd();
+			//   tcb_->MaybeSendSack();
+			// }
 		}
 
 		void Socket::SetState(State state, const std::string& reason)
@@ -386,6 +403,15 @@ namespace RTC
 			}
 
 			// TODO
+		}
+
+		bool Socket::ProcessReceivedChunk(const Packet* packet, const Chunk* chunk)
+		{
+			MS_TRACE();
+
+			// TODO
+
+			return true;
 		}
 
 		void Socket::CreateTransmissionControlBlock(
