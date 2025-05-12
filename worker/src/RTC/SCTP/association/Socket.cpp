@@ -85,7 +85,11 @@ namespace RTC
 
 			// TODO
 
+			auto stateStringView = Socket::State2String(this->state);
+
 			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
+			MS_DUMP_CLEAN(
+			  indentation, "  state: %.*s", static_cast<int>(stateStringView.size()), stateStringView.data());
 			this->metrics.Dump(indentation);
 			MS_DUMP_CLEAN(indentation, "</SCTP::Socket>");
 		}
