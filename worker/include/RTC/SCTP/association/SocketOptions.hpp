@@ -47,6 +47,7 @@ namespace RTC
 			bool partialReliability{ false };
 			/**
 			 * Use Stream Schedulers and User Message Interleaving (I-DATA Chunks).
+			 *
 			 * @see RFC 8260.
 			 */
 			bool messageInterleaving{ false };
@@ -59,7 +60,7 @@ namespace RTC
 			 *
 			 * @see RFC 9653.
 			 */
-			ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod zeroCheksumAlternateErrorDetectionMethod{
+			ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod zeroChecksumAlternateErrorDetectionMethod{
 				ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE
 			};
 			/**

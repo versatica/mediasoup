@@ -183,6 +183,7 @@ common_sources = [
   'src/RTC/RTCP/XrReceiverReferenceTime.cpp',
   'src/RTC/SCTP/association/NegotiatedCapabilities.cpp',
   'src/RTC/SCTP/association/Socket.cpp',
+  'src/RTC/SCTP/association/SocketMetrics.cpp',
   'src/RTC/SCTP/association/StateCookie.cpp',
   'src/RTC/SCTP/association/TransmissionControlBlock.cpp',
   'src/RTC/SCTP/packet/Packet.cpp',

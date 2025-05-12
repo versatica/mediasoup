@@ -36,36 +36,6 @@ namespace RTC
 			return true;
 		}
 
-		StateCookie::SctpImplementation StateCookie::DetermineSctpImplementation(
-		  const uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (bufferLength < StateCookie::Magic1Length)
-			{
-				return StateCookie::SctpImplementation::UNKNOWN;
-			}
-
-			std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
-
-			if (magic1 == "msworker")
-			{
-				return StateCookie::SctpImplementation::MEDIASOUP;
-			}
-			else if (magic1 == "dcSCTP00")
-			{
-				return StateCookie::SctpImplementation::DCSCTP;
-			}
-			else if (magic1 == "KAME-BSD")
-			{
-				return StateCookie::SctpImplementation::USRSCTP;
-			}
-			else
-			{
-				return StateCookie::SctpImplementation::UNKNOWN;
-			}
-		}
-
 		StateCookie* StateCookie::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -129,7 +99,37 @@ namespace RTC
 			return stateCookie;
 		}
 
-		constexpr std::string_view StateCookie::SctpImplementation2String(
+		StateCookie::SctpImplementation StateCookie::DetermineSctpImplementation(
+		  const uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < StateCookie::Magic1Length)
+			{
+				return StateCookie::SctpImplementation::UNKNOWN;
+			}
+
+			std::string_view magic1(reinterpret_cast<const char*>(buffer), StateCookie::Magic1Length);
+
+			if (magic1 == "msworker")
+			{
+				return StateCookie::SctpImplementation::MEDIASOUP;
+			}
+			else if (magic1 == "dcSCTP00")
+			{
+				return StateCookie::SctpImplementation::DCSCTP;
+			}
+			else if (magic1 == "KAME-BSD")
+			{
+				return StateCookie::SctpImplementation::USRSCTP;
+			}
+			else
+			{
+				return StateCookie::SctpImplementation::UNKNOWN;
+			}
+		}
+
+		const std::string_view StateCookie::SctpImplementation2String(
 		  StateCookie::SctpImplementation sctpImplementation)
 		{
 			MS_TRACE();

@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_SOCKET_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/association/SocketMetrics.hpp"
 #include "RTC/SCTP/association/SocketOptions.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
@@ -92,6 +93,17 @@ namespace RTC
 
 			void AddCapabilitiesParametersToChunk(Chunk* chunk) const;
 
+			void CreateTransmissionControlBlock(
+			  uint32_t myVerificationTag,
+			  uint32_t peerVerificationTag,
+			  uint32_t myInitialTsn,
+			  uint32_t peerInitialTsn,
+			  uint32_t myAdvertisedReceiverWindowCredit,
+			  uint64_t tieTag,
+			  const NegotiatedCapabilities& negotiatedCapabilities);
+
+			void ReceivePacket(const Packet* packet);
+
 			void SendInit();
 
 			void OnT1InitTimer(uint64_t& baseTimeout, bool& stop);
@@ -117,6 +129,8 @@ namespace RTC
 			const Listener* listener{ nullptr };
 			// SCTP association state.
 			State state{ State::CLOSED };
+			// Metrics.
+			SocketMetrics metrics{};
 			// To keep settings between sending of INIT Chunk and establishment of
 			// the connection.
 			PreTransmissionControlBlock preTcb;

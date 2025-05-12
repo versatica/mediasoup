@@ -84,6 +84,10 @@ namespace RTC
 			MS_TRACE();
 
 			// TODO
+
+			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
+			this->metrics.Dump(indentation);
+			MS_DUMP_CLEAN(indentation, "</SCTP::Socket>");
 		}
 
 		void Socket::Associate()
@@ -190,18 +194,51 @@ namespace RTC
 			}
 
 			if (
-			  this->options.zeroCheksumAlternateErrorDetectionMethod !=
+			  this->options.zeroChecksumAlternateErrorDetectionMethod !=
 			  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE)
 			{
 				auto* zeroChecksumAcceptableParameter =
 				  chunk->BuildParameterInPlace<ZeroChecksumAcceptableParameter>();
 
 				zeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
-				  this->options.zeroCheksumAlternateErrorDetectionMethod);
+				  this->options.zeroChecksumAlternateErrorDetectionMethod);
 				zeroChecksumAcceptableParameter->Consolidate();
 			}
 
 			supportedExtensionsParameter->Consolidate();
+		}
+
+		void Socket::CreateTransmissionControlBlock(
+		  uint32_t myVerificationTag,
+		  uint32_t peerVerificationTag,
+		  uint32_t myInitialTsn,
+		  uint32_t peerInitialTsn,
+		  uint32_t myAdvertisedReceiverWindowCredit,
+		  uint64_t tieTag,
+		  const NegotiatedCapabilities& negotiatedCapabilities)
+		{
+			MS_TRACE();
+
+			this->tcb = std::make_unique<TransmissionControlBlock>(
+			  myVerificationTag,
+			  peerVerificationTag,
+			  myInitialTsn,
+			  peerInitialTsn,
+			  myAdvertisedReceiverWindowCredit,
+			  tieTag,
+			  negotiatedCapabilities);
+
+			this->metrics.messageInterleaving = negotiatedCapabilities.messageInterleaving;
+			this->metrics.zeroChecksum        = negotiatedCapabilities.zeroChecksum;
+		}
+
+		void Socket::ReceivePacket(const Packet* packet)
+		{
+			MS_TRACE();
+
+			this->metrics.rxPacketsCount++;
+
+			// TODO
 		}
 
 		void Socket::SendInit()

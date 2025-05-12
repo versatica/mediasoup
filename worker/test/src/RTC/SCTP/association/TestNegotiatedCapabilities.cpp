@@ -23,7 +23,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp]")
 		socketOptions.maxInboundStreams   = 2048;
 		socketOptions.partialReliability  = true;
 		socketOptions.messageInterleaving = true;
-		socketOptions.zeroCheksumAlternateErrorDetectionMethod =
+		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
 		uint16_t peerNumberOfOutboundStreams = 4096;
@@ -68,7 +68,7 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp]")
 		socketOptions.maxInboundStreams   = 2000;
 		socketOptions.partialReliability  = true;
 		socketOptions.messageInterleaving = true;
-		socketOptions.zeroCheksumAlternateErrorDetectionMethod =
+		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
 		uint16_t peerNumberOfOutboundStreams = 4000;

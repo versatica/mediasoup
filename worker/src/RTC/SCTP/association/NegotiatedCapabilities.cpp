@@ -62,11 +62,11 @@ namespace RTC
 			// we desire it and peer announces the same non-none alternate error
 			// detection method.
 			negotiatedCapabilities.zeroChecksum =
-			  socketOptions.zeroCheksumAlternateErrorDetectionMethod !=
+			  socketOptions.zeroChecksumAlternateErrorDetectionMethod !=
 			    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE &&
 			  peerZeroChecksumAcceptableParameter &&
 			  peerZeroChecksumAcceptableParameter->GetAlternateErrorDetectionMethod() ==
-			    socketOptions.zeroCheksumAlternateErrorDetectionMethod;
+			    socketOptions.zeroChecksumAlternateErrorDetectionMethod;
 
 			return negotiatedCapabilities;
 		}
