@@ -19,13 +19,8 @@ BackoffTimerHandle::BackoffTimerHandle(
 {
 	MS_TRACE();
 
-	if (this->baseTimeout > BackoffTimerHandle::MaxTimeout)
-	{
-		MS_THROW_ERROR(
-		  "base timeout (%" PRIu64 ") cannot be greater than %" PRIu64,
-		  this->baseTimeout,
-		  BackoffTimerHandle::MaxTimeout);
-	}
+	// NOTE: This may throw.
+	SetBaseTimeout(baseTimeout);
 
 	this->timer = new TimerHandle(this);
 }
@@ -131,7 +126,8 @@ void BackoffTimerHandle::OnTimer(TimerHandle* timer)
 		return;
 	}
 
-	this->baseTimeout = baseTimeout;
+	// NOTE: This may throw.
+	SetBaseTimeout(baseTimeout);
 
 	// The caller may have called Stop() within the callback so we must check
 	// the `active` flag.
