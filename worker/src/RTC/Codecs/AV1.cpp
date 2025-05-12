@@ -71,6 +71,7 @@ namespace RTC
 			MS_DUMP("<AV1::PayloadDescriptor>");
 			MS_DUMP("  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8, this->startOfFrame, this->endOfFrame);
 			MS_DUMP("  spatialLayer: %" PRIu8, this->spatialLayer);
+			MS_DUMP("  frameNumber: %" PRIu16, this->frameNumber);
 			MS_DUMP("  temporalLayer: %" PRIu8, this->temporalLayer);
 			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
 			MS_DUMP("</AV1::PayloadDescriptor>");
