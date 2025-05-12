@@ -39,21 +39,21 @@ void Fuzzer::RTC::SCTP::StateCookie::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	stateCookie->GetMyVerificationTag();
-	stateCookie->GetPeerVerificationTag();
-	stateCookie->GetMyInitialTsn();
-	stateCookie->GetPeerInitialTsn();
-	stateCookie->GetMyAdvertisedReceiverWindowCredit();
+	stateCookie->GetLocalVerificationTag();
+	stateCookie->GetRemoteVerificationTag();
+	stateCookie->GetLocalInitialTsn();
+	stateCookie->GetRemoteInitialTsn();
+	stateCookie->GetLocalAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
 	stateCookie->GetNegotiatedCapabilities();
 
 	stateCookie->Serialize(StateCookieSerializeBuffer, len);
 
-	stateCookie->GetMyVerificationTag();
-	stateCookie->GetPeerVerificationTag();
-	stateCookie->GetMyInitialTsn();
-	stateCookie->GetPeerInitialTsn();
-	stateCookie->GetMyAdvertisedReceiverWindowCredit();
+	stateCookie->GetLocalVerificationTag();
+	stateCookie->GetRemoteVerificationTag();
+	stateCookie->GetLocalInitialTsn();
+	stateCookie->GetRemoteInitialTsn();
+	stateCookie->GetLocalAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
 	stateCookie->GetNegotiatedCapabilities();
 
@@ -61,11 +61,11 @@ void Fuzzer::RTC::SCTP::StateCookie::Fuzz(const uint8_t* data, size_t len)
 
 	delete stateCookie;
 
-	clonedStateCookie->GetMyVerificationTag();
-	clonedStateCookie->GetPeerVerificationTag();
-	clonedStateCookie->GetMyInitialTsn();
-	clonedStateCookie->GetPeerInitialTsn();
-	clonedStateCookie->GetMyAdvertisedReceiverWindowCredit();
+	clonedStateCookie->GetLocalVerificationTag();
+	clonedStateCookie->GetRemoteVerificationTag();
+	clonedStateCookie->GetLocalInitialTsn();
+	clonedStateCookie->GetRemoteInitialTsn();
+	clonedStateCookie->GetLocalAdvertisedReceiverWindowCredit();
 	clonedStateCookie->GetTieTag();
 	clonedStateCookie->GetNegotiatedCapabilities();
 
