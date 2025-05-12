@@ -95,6 +95,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (!this->encoder.has_value())
+			{
+				MS_WARN_DEV("there is no encoder present")
+			}
+
 			this->encoder->Encode(data, this);
 		}
 

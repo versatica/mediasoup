@@ -37,6 +37,7 @@ namespace RTC
 				void Dump() const override;
 				// Rewrite the buffer with the given frameNumber value.
 				void Encode(uint8_t* data, uint16_t frameNumber) const;
+				// Rewrite the buffer with the frameNumber value of the encoder.
 				void Encode(uint8_t* data) const;
 				void Restore(uint8_t* data) const;
 
