@@ -93,7 +93,7 @@ namespace RTC
 				{
 					return nullptr;
 				}
-				void Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder) override
+				void Encode(RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 				{
 				}
 				void Restore(RtpPacket* packet) override

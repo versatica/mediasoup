@@ -423,13 +423,14 @@ namespace RTC
 			return true;
 		};
 
-		void VP8::PayloadDescriptorHandler::Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder)
+		void VP8::PayloadDescriptorHandler::Encode(
+		  RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 
 			auto* vp8Encoder = static_cast<VP8::PayloadDescriptor::Encoder*>(encoder);
 
-			vp8Encoder->Encode(data, this->payloadDescriptor.get());
+			vp8Encoder->Encode(packet->GetPayload(), this->payloadDescriptor.get());
 		}
 
 		void VP8::PayloadDescriptorHandler::Restore(RtpPacket* packet)

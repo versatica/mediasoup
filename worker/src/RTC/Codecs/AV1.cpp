@@ -283,13 +283,17 @@ namespace RTC
 			return true;
 		}
 
-		void AV1::PayloadDescriptorHandler::Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder)
+		void AV1::PayloadDescriptorHandler::Encode(
+		  RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 
 			auto* av1Encoder = static_cast<AV1::PayloadDescriptor::Encoder*>(encoder);
 
-			av1Encoder->Encode(data, this->payloadDescriptor.get());
+			uint8_t len;
+
+			av1Encoder->Encode(
+			  packet->GetDependencyDescriptionExtension(len), this->payloadDescriptor.get());
 		}
 
 		void AV1::PayloadDescriptorHandler::Restore(RtpPacket* packet)

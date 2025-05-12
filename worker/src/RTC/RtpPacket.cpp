@@ -892,7 +892,7 @@ namespace RTC
 			return;
 		}
 
-		this->payloadDescriptorHandler->Encode(this->payload, encoder);
+		this->payloadDescriptorHandler->Encode(this, encoder);
 	}
 
 	void RtpPacket::RestorePayload()
