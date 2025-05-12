@@ -9,6 +9,7 @@
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
@@ -241,11 +242,13 @@ namespace RTC
 			uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
 
 			// "When an endpoint receives an SCTP packet with the Verification Tag
-			// set to 0, it should verify that the packet contains only an INIT chunk.
-			// Otherwise, the receiver MUST silently discard the packet."
+			// set to 0, it SHOULD verify that the packet contains only an INIT
+			// chunk. Otherwise, the receiver MUST silently discard the packet."
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-exceptions-in-verification-
 			if (packet->GetVerificationTag() == 0)
 			{
-				if (packet->GetChunksCount() == 1 && packet->GetFirstChunkOfType<InitChunk>())
+				if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT)
 				{
 					return true;
 				}
@@ -254,35 +257,6 @@ namespace RTC
 					MS_WARN_TAG(
 					  sctp,
 					  "Packet with Verification Tag 0 must have a single Chunk and it must be an INIT Chunk, packet discarded");
-
-					// TODO: Emit error?
-					return false;
-				}
-			}
-
-			// "The receiver of an ABORT MUST accept the packet if the Verification
-			// Tag field of the packet matches its own tag and the T bit is not set OR
-			// if it is set to its peer's tag and the T bit is set in the Chunk Flags.
-			// Otherwise, the receiver MUST silently discard the packet and take no
-			// further action."
-			if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
-			{
-				auto* chunk = static_cast<const AbortAssociationChunk*>(packet->GetChunkAt(0));
-
-				// We cannot verify the Verification Tag so assume it's okey.
-				if (chunk->GetT() && !this->tcb)
-				{
-					return true;
-				}
-				else if (
-				  (!chunk->GetT() && packet->GetVerificationTag() == localVerificationTag) ||
-				  (chunk->GetT() && packet->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
-				{
-					return true;
-				}
-				else
-				{
-					MS_WARN_TAG(sctp, "ABORT chunk Verification Tag is wrong, packet discarded");
 
 					// TODO: Emit error?
 					return false;
@@ -306,6 +280,109 @@ namespace RTC
 					// TODO: Emit error?
 					return false;
 				}
+			}
+
+			// "The receiver of an ABORT chunk MUST accept the packet if the
+			// Verification Tag field of the packet matches its own tag and the T bit
+			// is not set OR if it is set to its Peer's Tag and the T bit is set in
+			// the Chunk Flags. Otherwise, the receiver MUST silently discard the
+			// packet and take no further action."
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
+			if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
+			{
+				auto* abortChunk = static_cast<const AbortAssociationChunk*>(packet->GetChunkAt(0));
+
+				// We cannot verify the Verification Tag so assume it's okey.
+				if (abortChunk->GetT() && !this->tcb)
+				{
+					return true;
+				}
+				else if (
+				  (!abortChunk->GetT() && packet->GetVerificationTag() == localVerificationTag) ||
+				  (abortChunk->GetT() &&
+				   packet->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+				{
+					return true;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "ABORT Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
+					  packet->GetVerificationTag());
+
+					// TODO: Emit error?
+					return false;
+				}
+			}
+
+			// This is handled in Chunk handler.
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-handle-a-cookie-echo-chunk-
+			if (packet->GetChunksCount() >= 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::COOKIE_ECHO)
+			{
+				return true;
+			}
+
+			// "The receiver of a SHUTDOWN COMPLETE shall accept the packet if the
+			// Verification Tag field of the packet matches its own tag and the T bit is
+			// not set OR if it is set to its peer's tag and the T bit is set in the
+			// Chunk Flags.  Otherwise, the receiver MUST silently discard the packet
+			// and take no further action."
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
+			if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::SHUTDOWN_COMPLETE)
+			{
+				auto* shutdownCompleteChunk =
+				  static_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));
+
+				// We cannot verify the Verification Tag so assume it's okey.
+				if (shutdownCompleteChunk->GetT() && !this->tcb)
+				{
+					return true;
+				}
+				else if (
+				  (!shutdownCompleteChunk->GetT() && packet->GetVerificationTag() == localVerificationTag) ||
+				  (shutdownCompleteChunk->GetT() &&
+				   packet->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+				{
+					return true;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "SHUTDOWN_COMPLETE Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
+					  packet->GetVerificationTag());
+
+					// TODO: Emit error?
+					return false;
+				}
+			}
+
+			// "When receiving an SCTP packet, the endpoint MUST ensure that the
+			// value in the Verification Tag field of the received SCTP packet
+			// matches its own tag. If the received Verification Tag value does not
+			// match the receiver's own tag value, the receiver MUST silently discard
+			// the packet and MUST NOT process it any further, except for those cases
+			// listed in Section 8.5.1 below."
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5
+			if (packet->GetVerificationTag() == localVerificationTag)
+			{
+				return true;
+			}
+			else
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "invalid Verification Tag %" PRIu32 " (should be %" PRIu32 ")",
+				  packet->GetVerificationTag(),
+				  localVerificationTag);
+
+				// TODO: Emit error?
+				return false;
 			}
 
 			// TODO
