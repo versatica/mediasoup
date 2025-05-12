@@ -24,15 +24,15 @@ namespace RTC
 		 * |                            Magic 1                            |
 		 * |                                                               |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |                      My Verification Tag                      |
+		 * |                    Local Verification Tag                     |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |                     Peer Verification Tag                     |
+		 * |                    Remote Verification Tag                    |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |                        My Initial TSN                         |
+		 * |                      Local Initial TSN                        |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |                       Peer Initial TSN                        |
+		 * |                      Remote Initial TSN                       |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |        My Advertised Receiver Window Credit (a_rwnd)          |
+		 * |       Local Advertised Receiver Window Credit (a_rwnd)        |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                            Tie-Tag                            |
 		 * |                                                               |
@@ -132,11 +132,11 @@ namespace RTC
 			static StateCookie* Factory(
 			  uint8_t* buffer,
 			  size_t bufferLength,
-			  uint32_t myVerificationTag,
-			  uint32_t peerVerificationTag,
-			  uint32_t myInitialTsn,
-			  uint32_t peerInitialTsn,
-			  uint32_t myAdvertisedReceiverWindowCredit,
+			  uint32_t localVerificationTag,
+			  uint32_t remoteVerificationTag,
+			  uint32_t localInitialTsn,
+			  uint32_t remoteInitialTsn,
+			  uint32_t localAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
@@ -163,7 +163,7 @@ namespace RTC
 			 * Chunk. Packets sent by the remote peer must include this value in
 			 * their Verification Tag field.
 			 */
-			uint32_t GetMyVerificationTag() const
+			uint32_t GetLocalVerificationTag() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 8);
 			}
@@ -173,7 +173,7 @@ namespace RTC
 			 * INIT_ACK Chunk. Packets sent by us to the peer must include this value
 			 * in their Verification Tag field.
 			 */
-			uint32_t GetPeerVerificationTag() const
+			uint32_t GetRemoteVerificationTag() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 12);
 			}
@@ -182,7 +182,7 @@ namespace RTC
 			 * The value of the Initial TSN field we put in our INIT or INIT_ACK
 			 * Chunk.
 			 */
-			uint32_t GetMyInitialTsn() const
+			uint32_t GetLocalInitialTsn() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 16);
 			}
@@ -191,7 +191,7 @@ namespace RTC
 			 * The value of the Initial TSN field the peer put in its INIT or
 			 * INIT_ACK Chunk.
 			 */
-			uint32_t GetPeerInitialTsn() const
+			uint32_t GetRemoteInitialTsn() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 20);
 			}
@@ -200,7 +200,7 @@ namespace RTC
 			 * The value of the Advertised Receiver Window Credit field we put in our
 			 * INIT or INIT_ACK Chunk.
 			 */
-			uint32_t GetMyAdvertisedReceiverWindowCredit() const
+			uint32_t GetLocalAdvertisedReceiverWindowCredit() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 24);
 			}

@@ -22,9 +22,9 @@ namespace RTC
 			 */
 			static NegotiatedCapabilities Factory(
 			  SocketOptions socketOptions,
-			  uint16_t peerNumberOfOutboundStreams,
-			  uint16_t peerNumberOfInboundStreams,
-			  Chunk* peerChunk);
+			  uint16_t remoteNumberOfOutboundStreams,
+			  uint16_t remoteNumberOfInboundStreams,
+			  Chunk* remoteChunk);
 
 			/**
 			 * Negotiated maximum number of outbound streams (OS).

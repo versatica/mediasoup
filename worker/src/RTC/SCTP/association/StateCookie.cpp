@@ -58,11 +58,11 @@ namespace RTC
 		StateCookie* StateCookie::Factory(
 		  uint8_t* buffer,
 		  size_t bufferLength,
-		  uint32_t myVerificationTag,
-		  uint32_t peerVerificationTag,
-		  uint32_t myInitialTsn,
-		  uint32_t peerInitialTsn,
-		  uint32_t myAdvertisedReceiverWindowCredit,
+		  uint32_t localVerificationTag,
+		  uint32_t remoteVerificationTag,
+		  uint32_t localInitialTsn,
+		  uint32_t remoteInitialTsn,
+		  uint32_t localAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
 		{
@@ -74,11 +74,11 @@ namespace RTC
 			}
 
 			Utils::Byte::Set8Bytes(buffer, 0, StateCookie::Magic1);
-			Utils::Byte::Set4Bytes(buffer, 8, myVerificationTag);
-			Utils::Byte::Set4Bytes(buffer, 12, peerVerificationTag);
-			Utils::Byte::Set4Bytes(buffer, 16, myInitialTsn);
-			Utils::Byte::Set4Bytes(buffer, 20, peerInitialTsn);
-			Utils::Byte::Set4Bytes(buffer, 24, myAdvertisedReceiverWindowCredit);
+			Utils::Byte::Set4Bytes(buffer, 8, localVerificationTag);
+			Utils::Byte::Set4Bytes(buffer, 12, remoteVerificationTag);
+			Utils::Byte::Set4Bytes(buffer, 16, localInitialTsn);
+			Utils::Byte::Set4Bytes(buffer, 20, remoteInitialTsn);
+			Utils::Byte::Set4Bytes(buffer, 24, localAdvertisedReceiverWindowCredit);
 			Utils::Byte::Set8Bytes(buffer, 28, tieTag);
 
 			auto* stateCookie = new StateCookie(buffer, StateCookie::StateCookieLength);
@@ -171,14 +171,14 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<SCTP::StateCookie>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
-			MS_DUMP_CLEAN(indentation, "  my verification tag: %" PRIu32, GetMyVerificationTag());
-			MS_DUMP_CLEAN(indentation, "  peer verification tag: %" PRIu32, GetPeerVerificationTag());
-			MS_DUMP_CLEAN(indentation, "  my initial tsn: %" PRIu32, GetMyInitialTsn());
-			MS_DUMP_CLEAN(indentation, "  peer initial tsn: %" PRIu32, GetPeerInitialTsn());
+			MS_DUMP_CLEAN(indentation, "  local verification tag: %" PRIu32, GetLocalVerificationTag());
+			MS_DUMP_CLEAN(indentation, "  remote verification tag: %" PRIu32, GetRemoteVerificationTag());
+			MS_DUMP_CLEAN(indentation, "  local initial tsn: %" PRIu32, GetLocalInitialTsn());
+			MS_DUMP_CLEAN(indentation, "  remote initial tsn: %" PRIu32, GetRemoteInitialTsn());
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  my advertised receiver window credit: %" PRIu32,
-			  GetMyAdvertisedReceiverWindowCredit());
+			  "  local advertised receiver window credit: %" PRIu32,
+			  GetLocalAdvertisedReceiverWindowCredit());
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, GetTieTag());
 			negotiatedCapabilities.Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</SCTP::StateCookie>");

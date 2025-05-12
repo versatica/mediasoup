@@ -18,15 +18,15 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 			// Magic 1: 0x6D73776F726B6572
 			0x6D, 0x73, 0x77, 0x6F,
 			0x72, 0x6B, 0x65, 0x72,
-			// My Verification Tag: 11223344
+			// Local Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
-			// Peer Verification Tag: 55667788
+			// Remote Verification Tag: 55667788
 			0x03, 0x51, 0x6C, 0x4C,
-			// My Initial TSN: 12345678
+			// Local Initial TSN: 12345678
 			0x00, 0xBC, 0x61, 0x4E,
-			// Peer Initial TSN: 87654321
+			// Remote Initial TSN: 87654321
 			0x05, 0x39, 0x7F, 0xB1,
-			// My Advertised Receiver Window Credit (a_rwnd): 66666666
+			// Local Advertised Receiver Window Credit (a_rwnd): 66666666
 			0x03, 0xF9, 0x40, 0xAA,
 			// Tie-Tag: 0xABCDEF0011223344
 			0xAB, 0xCD, 0xEF, 0x00,
@@ -55,11 +55,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->IsFrozen() == true);
-		REQUIRE(stateCookie->GetMyVerificationTag() == 11223344);
-		REQUIRE(stateCookie->GetPeerVerificationTag() == 55667788);
-		REQUIRE(stateCookie->GetMyInitialTsn() == 12345678);
-		REQUIRE(stateCookie->GetPeerInitialTsn() == 87654321);
-		REQUIRE(stateCookie->GetMyAdvertisedReceiverWindowCredit() == 66666666);
+		REQUIRE(stateCookie->GetLocalVerificationTag() == 11223344);
+		REQUIRE(stateCookie->GetRemoteVerificationTag() == 55667788);
+		REQUIRE(stateCookie->GetLocalInitialTsn() == 12345678);
+		REQUIRE(stateCookie->GetRemoteInitialTsn() == 87654321);
+		REQUIRE(stateCookie->GetLocalAdvertisedReceiverWindowCredit() == 66666666);
 		REQUIRE(stateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
 		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
@@ -87,11 +87,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetBufferLength() == sizeof(SerializeBuffer));
 		REQUIRE(stateCookie->IsFrozen() == false);
-		REQUIRE(stateCookie->GetMyVerificationTag() == 11223344);
-		REQUIRE(stateCookie->GetPeerVerificationTag() == 55667788);
-		REQUIRE(stateCookie->GetMyInitialTsn() == 12345678);
-		REQUIRE(stateCookie->GetPeerInitialTsn() == 87654321);
-		REQUIRE(stateCookie->GetMyAdvertisedReceiverWindowCredit() == 66666666);
+		REQUIRE(stateCookie->GetLocalVerificationTag() == 11223344);
+		REQUIRE(stateCookie->GetRemoteVerificationTag() == 55667788);
+		REQUIRE(stateCookie->GetLocalInitialTsn() == 12345678);
+		REQUIRE(stateCookie->GetRemoteInitialTsn() == 87654321);
+		REQUIRE(stateCookie->GetLocalAdvertisedReceiverWindowCredit() == 66666666);
 		REQUIRE(stateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
 		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
@@ -121,11 +121,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(clonedStateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(CloneBuffer));
 		REQUIRE(clonedStateCookie->IsFrozen() == false);
-		REQUIRE(clonedStateCookie->GetMyVerificationTag() == 11223344);
-		REQUIRE(clonedStateCookie->GetPeerVerificationTag() == 55667788);
-		REQUIRE(clonedStateCookie->GetMyInitialTsn() == 12345678);
-		REQUIRE(clonedStateCookie->GetPeerInitialTsn() == 87654321);
-		REQUIRE(clonedStateCookie->GetMyAdvertisedReceiverWindowCredit() == 66666666);
+		REQUIRE(clonedStateCookie->GetLocalVerificationTag() == 11223344);
+		REQUIRE(clonedStateCookie->GetRemoteVerificationTag() == 55667788);
+		REQUIRE(clonedStateCookie->GetLocalInitialTsn() == 12345678);
+		REQUIRE(clonedStateCookie->GetRemoteInitialTsn() == 87654321);
+		REQUIRE(clonedStateCookie->GetLocalAdvertisedReceiverWindowCredit() == 66666666);
 		REQUIRE(clonedStateCookie->GetTieTag() == 0xABCDEF0011223344);
 		REQUIRE(
 		  StateCookie::IsMediasoupStateCookie(
@@ -156,15 +156,15 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 			// Magic 1: 0x6D73776F726B6573 (wrong)
 			0x6D, 0x73, 0x77, 0x6F,
 			0x72, 0x6B, 0x65, 0x73,
-			// My Verification Tag: 11223344
+			// Local Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
-			// Peer Verification Tag: 55667788
+			// Remote Verification Tag: 55667788
 			0x03, 0x51, 0x6C, 0x4C,
-			// My Initial TSN: 12345678
+			// Local Initial TSN: 12345678
 			0x00, 0xBC, 0x61, 0x4E,
-			// Peer Initial TSN: 87654321
+			// Remote Initial TSN: 87654321
 			0x05, 0x39, 0x7F, 0xB1,
-			// My Advertised Receiver Window Credit (a_rwnd): 66666666
+			// Local Advertised Receiver Window Credit (a_rwnd): 66666666
 			0x03, 0xF9, 0x40, 0xAA,
 			// Tie-Tag: 0xABCDEF0011223344
 			0xAB, 0xCD, 0xEF, 0x00,
@@ -194,15 +194,15 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 			// Magic 1: 0x6D73776F726B6572
 			0x6D, 0x73, 0x77, 0x6F,
 			0x72, 0x6B, 0x65, 0x72,
-			// My Verification Tag: 11223344
+			// Local Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
-			// Peer Verification Tag: 55667788
+			// Remote Verification Tag: 55667788
 			0x03, 0x51, 0x6C, 0x4C,
-			// My Initial TSN: 12345678
+			// Local Initial TSN: 12345678
 			0x00, 0xBC, 0x61, 0x4E,
-			// Peer Initial TSN: 87654321
+			// Remote Initial TSN: 87654321
 			0x05, 0x39, 0x7F, 0xB1,
-			// My Advertised Receiver Window Credit (a_rwnd): 66666666
+			// Local Advertised Receiver Window Credit (a_rwnd): 66666666
 			0x03, 0xF9, 0x40, 0xAA,
 			// Tie-Tag: 0xABCDEF0011223344
 			0xAB, 0xCD, 0xEF, 0x00,
@@ -232,15 +232,15 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 			// Magic 1: 0x6D73776F726B6572
 			0x6D, 0x73, 0x77, 0x6F,
 			0x72, 0x6B, 0x65, 0x72,
-			// My Verification Tag: 11223344
+			// Local Verification Tag: 11223344
 			0x00, 0xAB, 0x41, 0x30,
-			// Peer Verification Tag: 55667788
+			// Remote Verification Tag: 55667788
 			0x03, 0x51, 0x6C, 0x4C,
-			// My Initial TSN: 12345678
+			// Local Initial TSN: 12345678
 			0x00, 0xBC, 0x61, 0x4E,
-			// Peer Initial TSN: 87654321
+			// Remote Initial TSN: 87654321
 			0x05, 0x39, 0x7F, 0xB1,
-			// My Advertised Receiver Window Credit (a_rwnd): 66666666
+			// Local Advertised Receiver Window Credit (a_rwnd): 66666666
 			0x03, 0xF9, 0x40, 0xAA,
 			// Tie-Tag: 0xABCDEF0011223344
 			0xAB, 0xCD, 0xEF, 0x00,
@@ -278,11 +278,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		auto* stateCookie = StateCookie::Factory(
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
-		  /*myVerificationTag*/ 6660666,
-		  /*peerVerificationTag*/ 9990999,
-		  /*myInitialTsn*/ 1110111,
-		  /*peerInitialTsn*/ 2220222,
-		  /*myAdvertisedReceiverWindowCredit*/ 999909999,
+		  /*localVerificationTag*/ 6660666,
+		  /*remoteVerificationTag*/ 9990999,
+		  /*localInitialTsn*/ 1110111,
+		  /*remoteInitialTsn*/ 2220222,
+		  /*localAdvertisedReceiverWindowCredit*/ 999909999,
 		  /*tieTag*/ 1111222233334444,
 		  negotiatedCapabilities);
 
@@ -296,11 +296,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->IsFrozen() == false);
-		REQUIRE(stateCookie->GetMyVerificationTag() == 6660666);
-		REQUIRE(stateCookie->GetPeerVerificationTag() == 9990999);
-		REQUIRE(stateCookie->GetMyInitialTsn() == 1110111);
-		REQUIRE(stateCookie->GetPeerInitialTsn() == 2220222);
-		REQUIRE(stateCookie->GetMyAdvertisedReceiverWindowCredit() == 999909999);
+		REQUIRE(stateCookie->GetLocalVerificationTag() == 6660666);
+		REQUIRE(stateCookie->GetRemoteVerificationTag() == 9990999);
+		REQUIRE(stateCookie->GetLocalInitialTsn() == 1110111);
+		REQUIRE(stateCookie->GetRemoteInitialTsn() == 2220222);
+		REQUIRE(stateCookie->GetLocalAdvertisedReceiverWindowCredit() == 999909999);
 		REQUIRE(stateCookie->GetTieTag() == 1111222233334444);
 		REQUIRE(
 		  StateCookie::IsMediasoupStateCookie(stateCookie->GetBuffer(), stateCookie->GetLength()) == true);
@@ -328,11 +328,11 @@ SCENARIO("SCTP State Cookie", "[sctp]")
 		REQUIRE(parsedStateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(parsedStateCookie->GetBufferLength() == StateCookie::StateCookieLength);
 		REQUIRE(parsedStateCookie->IsFrozen() == true);
-		REQUIRE(parsedStateCookie->GetMyVerificationTag() == 6660666);
-		REQUIRE(parsedStateCookie->GetPeerVerificationTag() == 9990999);
-		REQUIRE(parsedStateCookie->GetMyInitialTsn() == 1110111);
-		REQUIRE(parsedStateCookie->GetPeerInitialTsn() == 2220222);
-		REQUIRE(parsedStateCookie->GetMyAdvertisedReceiverWindowCredit() == 999909999);
+		REQUIRE(parsedStateCookie->GetLocalVerificationTag() == 6660666);
+		REQUIRE(parsedStateCookie->GetRemoteVerificationTag() == 9990999);
+		REQUIRE(parsedStateCookie->GetLocalInitialTsn() == 1110111);
+		REQUIRE(parsedStateCookie->GetRemoteInitialTsn() == 2220222);
+		REQUIRE(parsedStateCookie->GetLocalAdvertisedReceiverWindowCredit() == 999909999);
 		REQUIRE(parsedStateCookie->GetTieTag() == 1111222233334444);
 		REQUIRE(
 		  StateCookie::IsMediasoupStateCookie(

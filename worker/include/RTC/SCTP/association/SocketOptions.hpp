@@ -39,7 +39,7 @@ namespace RTC
 			 * @remarks
 			 * Default value copied from dcSCTP library.
 			 */
-			uint32_t myAdvertisedReceiverWindowCredit{ 5 * 1024 * 1024 };
+			uint32_t localAdvertisedReceiverWindowCredit{ 5 * 1024 * 1024 };
 			/**
 			 * Use Partial Reliability Extension.
 			 * @see RFC 3758.

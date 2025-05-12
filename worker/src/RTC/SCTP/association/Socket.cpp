@@ -6,6 +6,9 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
+#include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
+#include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
@@ -106,9 +109,9 @@ namespace RTC
 			// invoke certain public methods?
 			AssertNotState(State::CLOSED);
 
-			this->preTcb.myVerificationTag =
+			this->preTcb.localVerificationTag =
 			  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
-			this->preTcb.myInitialTsn =
+			this->preTcb.localInitialTsn =
 			  Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
 
 			SendInit();
@@ -116,6 +119,25 @@ namespace RTC
 			this->t1InitTimer->Start();
 
 			SetState(State::COOKIE_WAIT, "Associate() called");
+		}
+
+		// TODO: Should the caller call free packet after calling this method? or us?
+		void Socket::ReceivePacket(const Packet* packet)
+		{
+			MS_TRACE();
+
+			this->metrics.rxPacketsCount++;
+
+			/* Verify Packet. */
+
+			if (!ValidateReceivedPacket(packet))
+			{
+				MS_WARN_TAG(sctp, "Packet verification failed, discarded");
+
+				return;
+			}
+
+			// TODO
 		}
 
 		void Socket::SetState(State state, const std::string& reason)
@@ -154,12 +176,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint32_t peerVerificationTag = this->tcb ? this->tcb->GetPeerVerificationTag() : 0;
+			uint32_t remoteVerificationTag = this->tcb ? this->tcb->GetRemoteVerificationTag() : 0;
 
-			return CreatePacketWithPeerVerificationTag(peerVerificationTag);
+			return CreatePacketWithRemoteVerificationTag(remoteVerificationTag);
 		}
 
-		Packet* Socket::CreatePacketWithPeerVerificationTag(uint32_t peerVerificationTag) const
+		Packet* Socket::CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const
 		{
 			MS_TRACE();
 
@@ -167,7 +189,7 @@ namespace RTC
 
 			packet->SetSourcePort(this->options.sourcePort);
 			packet->SetDestinationPort(this->options.destinationPort);
-			packet->SetVerificationTag(peerVerificationTag);
+			packet->SetVerificationTag(remoteVerificationTag);
 
 			return packet;
 		}
@@ -212,37 +234,105 @@ namespace RTC
 			supportedExtensionsParameter->Consolidate();
 		}
 
+		bool Socket::ValidateReceivedPacket(const Packet* packet)
+		{
+			MS_TRACE();
+
+			uint32_t localVerificationTag = this->tcb ? this->tcb->GetLocalVerificationTag() : 0;
+
+			// "When an endpoint receives an SCTP packet with the Verification Tag
+			// set to 0, it should verify that the packet contains only an INIT chunk.
+			// Otherwise, the receiver MUST silently discard the packet."
+			if (packet->GetVerificationTag() == 0)
+			{
+				if (packet->GetChunksCount() == 1 && packet->GetFirstChunkOfType<InitChunk>())
+				{
+					return true;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "Packet with Verification Tag 0 must have a single Chunk and it must be an INIT Chunk, packet discarded");
+
+					// TODO: Emit error?
+					return false;
+				}
+			}
+
+			// "The receiver of an ABORT MUST accept the packet if the Verification
+			// Tag field of the packet matches its own tag and the T bit is not set OR
+			// if it is set to its peer's tag and the T bit is set in the Chunk Flags.
+			// Otherwise, the receiver MUST silently discard the packet and take no
+			// further action."
+			if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
+			{
+				auto* chunk = static_cast<const AbortAssociationChunk*>(packet->GetChunkAt(0));
+
+				// We cannot verify the Verification Tag so assume it's okey.
+				if (chunk->GetT() && !this->tcb)
+				{
+					return true;
+				}
+				else if (
+				  (!chunk->GetT() && packet->GetVerificationTag() == localVerificationTag) ||
+				  (chunk->GetT() && packet->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+				{
+					return true;
+				}
+				else
+				{
+					MS_WARN_TAG(sctp, "ABORT chunk Verification Tag is wrong, packet discarded");
+
+					// TODO: Emit error?
+					return false;
+				}
+			}
+
+			if (packet->GetChunksCount() >= 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT_ACK)
+			{
+				if (packet->GetVerificationTag() == this->preTcb.localVerificationTag)
+				{
+					return true;
+				}
+				else
+				{
+					MS_WARN_TAG(
+					  sctp,
+					  "invalid Verification Tag %" PRIu32 " (should be %" PRIu32 ")",
+					  packet->GetVerificationTag(),
+					  this->preTcb.localVerificationTag);
+
+					// TODO: Emit error?
+					return false;
+				}
+			}
+
+			// TODO
+		}
+
 		void Socket::CreateTransmissionControlBlock(
-		  uint32_t myVerificationTag,
-		  uint32_t peerVerificationTag,
-		  uint32_t myInitialTsn,
-		  uint32_t peerInitialTsn,
-		  uint32_t myAdvertisedReceiverWindowCredit,
+		  uint32_t localVerificationTag,
+		  uint32_t remoteVerificationTag,
+		  uint32_t localInitialTsn,
+		  uint32_t remoteInitialTsn,
+		  uint32_t localAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
 		{
 			MS_TRACE();
 
 			this->tcb = std::make_unique<TransmissionControlBlock>(
-			  myVerificationTag,
-			  peerVerificationTag,
-			  myInitialTsn,
-			  peerInitialTsn,
-			  myAdvertisedReceiverWindowCredit,
+			  localVerificationTag,
+			  remoteVerificationTag,
+			  localInitialTsn,
+			  remoteInitialTsn,
+			  localAdvertisedReceiverWindowCredit,
 			  tieTag,
 			  negotiatedCapabilities);
 
 			this->metrics.messageInterleaving = negotiatedCapabilities.messageInterleaving;
 			this->metrics.zeroChecksum        = negotiatedCapabilities.zeroChecksum;
-		}
-
-		void Socket::ReceivePacket(const Packet* packet)
-		{
-			MS_TRACE();
-
-			this->metrics.rxPacketsCount++;
-
-			// TODO
 		}
 
 		void Socket::SendInit()
@@ -254,11 +344,11 @@ namespace RTC
 			auto* packet    = CreatePacket();
 			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
 
-			initChunk->SetInitiateTag(this->preTcb.myVerificationTag);
-			initChunk->SetAdvertisedReceiverWindowCredit(this->options.myAdvertisedReceiverWindowCredit);
+			initChunk->SetInitiateTag(this->preTcb.localVerificationTag);
+			initChunk->SetAdvertisedReceiverWindowCredit(this->options.localAdvertisedReceiverWindowCredit);
 			initChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
 			initChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
-			initChunk->SetInitialTsn(this->preTcb.myInitialTsn);
+			initChunk->SetInitialTsn(this->preTcb.localInitialTsn);
 
 			AddCapabilitiesParametersToChunk(initChunk);
 

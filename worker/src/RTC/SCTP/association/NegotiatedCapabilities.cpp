@@ -15,48 +15,48 @@ namespace RTC
 
 		NegotiatedCapabilities NegotiatedCapabilities::Factory(
 		  SocketOptions socketOptions,
-		  uint16_t peerNumberOfOutboundStreams,
-		  uint16_t peerNumberOfInboundStreams,
-		  Chunk* peerChunk)
+		  uint16_t remoteNumberOfOutboundStreams,
+		  uint16_t remoteNumberOfInboundStreams,
+		  Chunk* remoteChunk)
 		{
 			MS_TRACE();
 
 			NegotiatedCapabilities negotiatedCapabilities{};
 
-			auto* peerSupportedExtensionsParameter =
-			  peerChunk->GetFirstParameterOfType<SupportedExtensionsParameter>();
-			auto* peerForwardTsnSupportedParameter =
-			  peerChunk->GetFirstParameterOfType<ForwardTsnSupportedParameter>();
-			auto* peerZeroChecksumAcceptableParameter =
-			  peerChunk->GetFirstParameterOfType<ZeroChecksumAcceptableParameter>();
+			auto* remoteSupportedExtensionsParameter =
+			  remoteChunk->GetFirstParameterOfType<SupportedExtensionsParameter>();
+			auto* remoteForwardTsnSupportedParameter =
+			  remoteChunk->GetFirstParameterOfType<ForwardTsnSupportedParameter>();
+			auto* remoteZeroChecksumAcceptableParameter =
+			  remoteChunk->GetFirstParameterOfType<ZeroChecksumAcceptableParameter>();
 
 			negotiatedCapabilities.maxOutboundStreams =
-			  std::min(socketOptions.maxOutboundStreams, peerNumberOfInboundStreams);
+			  std::min(socketOptions.maxOutboundStreams, remoteNumberOfInboundStreams);
 
 			negotiatedCapabilities.maxInboundStreams =
-			  std::min(socketOptions.maxInboundStreams, peerNumberOfOutboundStreams);
+			  std::min(socketOptions.maxInboundStreams, remoteNumberOfOutboundStreams);
 
 			// Partial Reliability Extension is negotiated if we desire it and peer
 			// announces support via Forward-TSN-Supported Parameter or via Supported
 			// Extensions Parameter.
 			negotiatedCapabilities.partialReliability =
 			  socketOptions.partialReliability &&
-			  (peerForwardTsnSupportedParameter ||
-			   (peerSupportedExtensionsParameter &&
-			    peerSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN)));
+			  (remoteForwardTsnSupportedParameter ||
+			   (remoteSupportedExtensionsParameter &&
+			    remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::FORWARD_TSN)));
 
 			// Message Interleaving is negotiated if we desire it and peer announces
 			// support via Supported Extensions Parameter.
 			negotiatedCapabilities.messageInterleaving =
-			  socketOptions.messageInterleaving && peerSupportedExtensionsParameter &&
-			  peerSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_DATA) &&
-			  peerSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_FORWARD_TSN);
+			  socketOptions.messageInterleaving && remoteSupportedExtensionsParameter &&
+			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_DATA) &&
+			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::I_FORWARD_TSN);
 
 			// Stream Reconfiguration is negotiated if peer announces support via
 			// Supported Extensions Parameter.
 			negotiatedCapabilities.reconfig =
-			  peerSupportedExtensionsParameter &&
-			  peerSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::RE_CONFIG);
+			  remoteSupportedExtensionsParameter &&
+			  remoteSupportedExtensionsParameter->IncludesChunkType(Chunk::ChunkType::RE_CONFIG);
 
 			// Alternate Error Detection Method for Zero Checksum is negotiated if
 			// we desire it and peer announces the same non-none alternate error
@@ -64,8 +64,8 @@ namespace RTC
 			negotiatedCapabilities.zeroChecksum =
 			  socketOptions.zeroChecksumAlternateErrorDetectionMethod !=
 			    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::NONE &&
-			  peerZeroChecksumAcceptableParameter &&
-			  peerZeroChecksumAcceptableParameter->GetAlternateErrorDetectionMethod() ==
+			  remoteZeroChecksumAcceptableParameter &&
+			  remoteZeroChecksumAcceptableParameter->GetAlternateErrorDetectionMethod() ==
 			    socketOptions.zeroChecksumAlternateErrorDetectionMethod;
 
 			return negotiatedCapabilities;

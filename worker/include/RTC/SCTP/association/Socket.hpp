@@ -6,7 +6,6 @@
 #include "RTC/SCTP/association/SocketOptions.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
 #include "RTC/SCTP/packet/Packet.hpp"
-#include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
 #include <string>
 #include <string_view>
@@ -61,8 +60,8 @@ namespace RTC
 			 */
 			struct PreTransmissionControlBlock
 			{
-				uint32_t myVerificationTag{ 0 };
-				uint32_t myInitialTsn{ 0 };
+				uint32_t localVerificationTag{ 0 };
+				uint32_t localInitialTsn{ 0 };
 			};
 
 		public:
@@ -84,25 +83,30 @@ namespace RTC
 			 */
 			void Associate();
 
+			/**
+			 * Receive a Packet received from the peer.
+			 */
+			void ReceivePacket(const Packet* packet);
+
 		private:
 			void SetState(State state, const std::string& reason);
 
 			Packet* CreatePacket() const;
 
-			Packet* CreatePacketWithPeerVerificationTag(uint32_t peerVerificationTag) const;
+			Packet* CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const;
 
 			void AddCapabilitiesParametersToChunk(Chunk* chunk) const;
 
+			bool ValidateReceivedPacket(const Packet* packet);
+
 			void CreateTransmissionControlBlock(
-			  uint32_t myVerificationTag,
-			  uint32_t peerVerificationTag,
-			  uint32_t myInitialTsn,
-			  uint32_t peerInitialTsn,
-			  uint32_t myAdvertisedReceiverWindowCredit,
+			  uint32_t localVerificationTag,
+			  uint32_t remoteVerificationTag,
+			  uint32_t localInitialTsn,
+			  uint32_t remoteInitialTsn,
+			  uint32_t localAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
-
-			void ReceivePacket(const Packet* packet);
 
 			void SendInit();
 
