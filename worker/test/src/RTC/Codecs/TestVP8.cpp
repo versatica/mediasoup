@@ -521,7 +521,8 @@ SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(encoder2);
 
 		// Encode with encoder1.
-		payloadDescriptorHandler->Encode(buffer, encoder1.get());
+		packet = helpers::CreateRtpPacket(buffer, sizeof(buffer));
+		payloadDescriptorHandler->Encode(packet.get(), encoder1.get());
 
 		// Parse the buffer.
 		auto* payloadDescriptor2 = Codecs::VP8::Parse(buffer, sizeof(buffer));
@@ -529,10 +530,11 @@ SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(payloadDescriptor2->pictureId == 1);
 
 		// Encode with encoder2.
-		payloadDescriptorHandler->Encode(buffer, encoder2.get());
+		packet = helpers::CreateRtpPacket(buffer, sizeof(buffer));
+		payloadDescriptorHandler->Encode(packet.get(), encoder2.get());
 
 		// Parse the buffer.
-		auto* payloadDescriptor3 = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		auto* payloadDescriptor3 = Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
 		REQUIRE(payloadDescriptor3);
 		REQUIRE(payloadDescriptor3->pictureId == 2);
 
