@@ -189,7 +189,6 @@ namespace RTC
 				return reinterpret_cast<NegotiatedCapabilitiesField*>(const_cast<uint8_t*>(GetBuffer()) + 32);
 			}
 		};
-
 	} // namespace SCTP
 } // namespace RTC
 

@@ -27,7 +27,6 @@ namespace RTC
 			{ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES, "RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES" },
 			{ ErrorCause::ErrorCauseCode::USER_INITIATED_ABORT,                         "USER_INITIATED_ABORT"                         },
 			{ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,                           "PROTOCOL_VIOLATION"                           },
-			// TODO: Add more.
 		};
 		// clang-format on
 

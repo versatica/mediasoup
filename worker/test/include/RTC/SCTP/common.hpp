@@ -54,7 +54,7 @@ void resetBuffers();
 		REQUIRE(packet->GetChecksum() == checksum);                                                    \
 		REQUIRE(packet->ValidateCRC32cChecksum() == hasValidCrc32cChecksum);                           \
 		REQUIRE(packet->GetChunksCount() == chunksCount);                                              \
-		REQUIRE(packet->HasChunks() == chunksCount > 0);                                               \
+		REQUIRE(packet->HasChunks() == (chunksCount > 0));                                             \
 		REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);                                           \
 		REQUIRE(                                                                                       \
 		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
@@ -85,17 +85,17 @@ void resetBuffers();
 		{                                                                                                \
 			REQUIRE(chunk->GetBuffer() == buffer);                                                         \
 		}                                                                                                \
-		REQUIRE((chunk)->GetBufferLength() != 0);                                                        \
-		REQUIRE((chunk)->GetBufferLength() == bufferLength);                                             \
-		REQUIRE((chunk)->GetLength() != 0);                                                              \
-		REQUIRE((chunk)->GetLength() == length);                                                         \
-		REQUIRE(Utils::Byte::IsPaddedTo4Bytes((chunk)->GetLength()) == true);                            \
-		REQUIRE((chunk)->IsFrozen() == frozen);                                                          \
-		REQUIRE((chunk)->GetType() == chunkType);                                                        \
-		REQUIRE((chunk)->HasUnknownType() == unknownType);                                               \
-		REQUIRE((chunk)->GetActionForUnknownChunkType() == actionForUnknownChunkType);                   \
-		REQUIRE((chunk)->GetFlags() == flags);                                                           \
-		REQUIRE((chunk)->CanHaveParameters() == canHaveParameters);                                      \
+		REQUIRE(chunk->GetBufferLength() != 0);                                                          \
+		REQUIRE(chunk->GetBufferLength() == bufferLength);                                               \
+		REQUIRE(chunk->GetLength() != 0);                                                                \
+		REQUIRE(chunk->GetLength() == length);                                                           \
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                              \
+		REQUIRE(chunk->IsFrozen() == frozen);                                                            \
+		REQUIRE(chunk->GetType() == chunkType);                                                          \
+		REQUIRE(chunk->HasUnknownType() == unknownType);                                                 \
+		REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);                     \
+		REQUIRE(chunk->GetFlags() == flags);                                                             \
+		REQUIRE(chunk->CanHaveParameters() == canHaveParameters);                                        \
 		if (!canHaveParameters && !frozen)                                                               \
 		{                                                                                                \
 			REQUIRE_THROWS_AS(                                                                             \
@@ -103,10 +103,10 @@ void resetBuffers();
 			    ->BuildParameterInPlace<HeartbeatInfoParameter>(),                                         \
 			  MediaSoupError);                                                                             \
 		}                                                                                                \
-		REQUIRE((chunk)->GetParametersCount() == parametersCount);                                       \
-		REQUIRE((chunk)->HasParameters() == parametersCount > 0);                                        \
-		REQUIRE((chunk)->GetParameterAt(parametersCount) == nullptr);                                    \
-		REQUIRE((chunk)->CanHaveErrorCauses() == canHaveErrorCauses);                                    \
+		REQUIRE(chunk->GetParametersCount() == parametersCount);                                         \
+		REQUIRE(chunk->HasParameters() == (parametersCount > 0));                                        \
+		REQUIRE(chunk->GetParameterAt(parametersCount) == nullptr);                                      \
+		REQUIRE(chunk->CanHaveErrorCauses() == canHaveErrorCauses);                                      \
 		if (!canHaveErrorCauses && !frozen)                                                              \
 		{                                                                                                \
 			REQUIRE_THROWS_AS(                                                                             \
@@ -114,9 +114,9 @@ void resetBuffers();
 			    ->BuildErrorCauseInPlace<InvalidStreamIdentifierErrorCause>(),                             \
 			  MediaSoupError);                                                                             \
 		}                                                                                                \
-		REQUIRE((chunk)->GetErrorCausesCount() == errorCausesCount);                                     \
-		REQUIRE((chunk)->HasErrorCauses() == errorCausesCount > 0);                                      \
-		REQUIRE((chunk)->GetErrorCauseAt(errorCausesCount) == nullptr);                                  \
+		REQUIRE(chunk->GetErrorCausesCount() == errorCausesCount);                                       \
+		REQUIRE(chunk->HasErrorCauses() == (errorCausesCount > 0));                                      \
+		REQUIRE(chunk->GetErrorCauseAt(errorCausesCount) == nullptr);                                    \
 		if (buffer)                                                                                      \
 		{                                                                                                \
 			REQUIRE(                                                                                       \
@@ -144,7 +144,7 @@ void resetBuffers();
 		{                                                                                               \
 			REQUIRE(parameter->GetBuffer() == buffer);                                                    \
 		}                                                                                               \
-		REQUIRE((parameter)->GetBufferLength() != 0);                                                   \
+		REQUIRE(parameter->GetBufferLength() != 0);                                                     \
 		REQUIRE(parameter->GetBufferLength() == bufferLength);                                          \
 		REQUIRE(parameter->GetLength() != 0);                                                           \
 		REQUIRE(parameter->GetLength() == length);                                                      \
@@ -182,7 +182,7 @@ void resetBuffers();
 		{                                                                                              \
 			REQUIRE(errorCause->GetBuffer() == buffer);                                                  \
 		}                                                                                              \
-		REQUIRE((errorCause)->GetBufferLength() != 0);                                                 \
+		REQUIRE(errorCause->GetBufferLength() != 0);                                                   \
 		REQUIRE(errorCause->GetBufferLength() == bufferLength);                                        \
 		REQUIRE(errorCause->GetLength() != 0);                                                         \
 		REQUIRE(errorCause->GetLength() == length);                                                    \

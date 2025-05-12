@@ -58,12 +58,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		auto negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
+		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
+		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reconfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 
 		/* Serialize it. */
 
@@ -85,12 +85,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		negotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
+		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
+		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reconfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 
 		/* Clone it. */
 
@@ -114,12 +114,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		negotiatedCapabilities = clonedStateCookie->GetNegotiatedCapabilities();
 
+		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
+		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 		REQUIRE(negotiatedCapabilities.partialReliability == true);
 		REQUIRE(negotiatedCapabilities.messageInterleaving == false);
 		REQUIRE(negotiatedCapabilities.reconfig == true);
 		REQUIRE(negotiatedCapabilities.zeroChecksum == true);
-		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 15000);
-		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2500);
 
 		delete clonedStateCookie;
 	}
@@ -230,12 +230,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 	SECTION("StateCookie::Factory() succeeds")
 	{
-		NegotiatedCapabilities negotiatedCapabilities = { .partialReliability  = true,
+		NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
+			                                                .maxInboundStreams   = 55555,
+			                                                .partialReliability  = true,
 			                                                .messageInterleaving = true,
 			                                                .reconfig            = true,
-			                                                .zeroChecksum        = false,
-			                                                .maxOutboundStreams  = 62000,
-			                                                .maxInboundStreams   = 55555 };
+			                                                .zeroChecksum        = false };
 
 		auto* stateCookie = StateCookie::Factory(
 		  /*buffer*/ FactoryBuffer,
@@ -267,12 +267,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		const auto retrievedNegotiatedCapabilities = stateCookie->GetNegotiatedCapabilities();
 
+		REQUIRE(retrievedNegotiatedCapabilities.maxOutboundStreams == 62000);
+		REQUIRE(retrievedNegotiatedCapabilities.maxInboundStreams == 55555);
 		REQUIRE(retrievedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedNegotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(retrievedNegotiatedCapabilities.reconfig == true);
 		REQUIRE(retrievedNegotiatedCapabilities.zeroChecksum == false);
-		REQUIRE(retrievedNegotiatedCapabilities.maxOutboundStreams == 62000);
-		REQUIRE(retrievedNegotiatedCapabilities.maxInboundStreams == 55555);
 
 		/* Parse itself and compare. */
 
@@ -294,12 +294,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		const auto retrievedParsedNegotiatedCapabilities = parsedStateCookie->GetNegotiatedCapabilities();
 
+		REQUIRE(retrievedParsedNegotiatedCapabilities.maxOutboundStreams == 62000);
+		REQUIRE(retrievedParsedNegotiatedCapabilities.maxInboundStreams == 55555);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.partialReliability == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.messageInterleaving == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.reconfig == true);
 		REQUIRE(retrievedParsedNegotiatedCapabilities.zeroChecksum == false);
-		REQUIRE(retrievedParsedNegotiatedCapabilities.maxOutboundStreams == 62000);
-		REQUIRE(retrievedParsedNegotiatedCapabilities.maxInboundStreams == 55555);
 
 		delete parsedStateCookie;
 	}

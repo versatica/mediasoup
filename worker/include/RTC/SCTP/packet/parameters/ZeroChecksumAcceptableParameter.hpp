@@ -4,6 +4,8 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
+#include <string>
+#include <unordered_map>
 
 namespace RTC
 {
@@ -33,6 +35,16 @@ namespace RTC
 			friend class Chunk;
 
 		public:
+			/**
+			 * Zero Checksum Alternate Error Detection Method.
+			 */
+			enum class AlternateErrorDetectionMethod : uint32_t
+			{
+				NONE           = 0x0000,
+				SCTP_OVER_DTLS = 0x0001
+			};
+
+		public:
 			static const size_t ZeroChecksumAcceptableParameterHeaderLength{ 8 };
 
 		public:
@@ -52,6 +64,9 @@ namespace RTC
 			 */
 			static ZeroChecksumAcceptableParameter* Factory(uint8_t* buffer, size_t bufferLength);
 
+			static const std::string& AlternateErrorDetectionMethod2String(
+			  AlternateErrorDetectionMethod alternateErrorDetectionMethod);
+
 		private:
 			/**
 			 * Parse a ZeroChecksumAcceptableParameter.
@@ -61,6 +76,9 @@ namespace RTC
 			 */
 			static ZeroChecksumAcceptableParameter* ParseStrict(
 			  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding);
+
+			static std::unordered_map<AlternateErrorDetectionMethod, std::string>
+			  alternateErrorDetectionMethod2String;
 
 		private:
 			/**
@@ -76,12 +94,12 @@ namespace RTC
 			virtual ZeroChecksumAcceptableParameter* Clone(
 			  uint8_t* buffer, size_t bufferLength) const override final;
 
-			uint32_t GetEdmid() const
+			AlternateErrorDetectionMethod GetAlternateErrorDetectionMethod() const
 			{
-				return Utils::Byte::Get4Bytes(GetBuffer(), 4);
+				return static_cast<AlternateErrorDetectionMethod>(Utils::Byte::Get4Bytes(GetBuffer(), 4));
 			}
 
-			void SetEdmid(uint32_t value);
+			void SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod alternateErrorDetectionMethod);
 
 		protected:
 			virtual ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final override;
