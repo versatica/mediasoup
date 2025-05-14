@@ -62,7 +62,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE_THROWS_AS(packet->SetDestinationPort(9999), MediaSoupError);
 		REQUIRE_THROWS_AS(packet->SetVerificationTag(12345), MediaSoupError);
 		REQUIRE_THROWS_AS(packet->SetChecksum(6666), MediaSoupError);
-		REQUIRE_THROWS_AS(packet->SetCRC32cChecksum(), MediaSoupError);
+		REQUIRE_THROWS_AS(packet->WriteCRC32cChecksum(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -625,7 +625,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(packet->GetFirstChunkOfType<HeartbeatRequestChunk>() == chunk2);
 
 		// Insert CRC32C checksum.
-		packet->SetCRC32cChecksum();
+		packet->WriteCRC32cChecksum();
 
 		auto crc32cChecksum = packet->GetChecksum();
 

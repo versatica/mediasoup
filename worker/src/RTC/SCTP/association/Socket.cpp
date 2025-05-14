@@ -187,28 +187,6 @@ namespace RTC
 			this->state = state;
 		}
 
-		Packet* Socket::CreatePacket() const
-		{
-			MS_TRACE();
-
-			uint32_t remoteVerificationTag = this->tcb ? this->tcb->GetRemoteVerificationTag() : 0;
-
-			return CreatePacketWithRemoteVerificationTag(remoteVerificationTag);
-		}
-
-		Packet* Socket::CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const
-		{
-			MS_TRACE();
-
-			auto* packet = Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer));
-
-			packet->SetSourcePort(this->options.sourcePort);
-			packet->SetDestinationPort(this->options.destinationPort);
-			packet->SetVerificationTag(remoteVerificationTag);
-
-			return packet;
-		}
-
 		void Socket::AddCapabilitiesParametersToChunk(Chunk* chunk) const
 		{
 			MS_TRACE();
@@ -273,6 +251,58 @@ namespace RTC
 			this->metrics.zeroChecksum        = negotiatedCapabilities.zeroChecksum;
 		}
 
+		Packet* Socket::CreatePacket() const
+		{
+			MS_TRACE();
+
+			uint32_t remoteVerificationTag = this->tcb ? this->tcb->GetRemoteVerificationTag() : 0;
+
+			return CreatePacketWithRemoteVerificationTag(remoteVerificationTag);
+		}
+
+		Packet* Socket::CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const
+		{
+			MS_TRACE();
+
+			auto* packet = Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+
+			packet->SetSourcePort(this->options.sourcePort);
+			packet->SetDestinationPort(this->options.destinationPort);
+			packet->SetVerificationTag(remoteVerificationTag);
+
+			return packet;
+		}
+
+		void Socket::SendPacket(Packet* packet, std::optional<bool> writeChecksum)
+		{
+			MS_TRACE();
+
+			// Decide whether to write the CRC32c Checksum field in the Packet or
+			// not. Note that in same special cases the decision is made by the
+			// caller of SendPacket() which explicitly sets the value of the
+			// `writeChecksum` argument.
+
+			// If `writeChecksum` is explicitly set to true then write the checksum.
+			if (writeChecksum.has_value() && *writeChecksum)
+			{
+				packet->WriteCRC32cChecksum();
+			}
+			// If `writeChecksum` is explicitly set to false then do not write the
+			// checksum.
+			else if (writeChecksum.has_value() && !*writeChecksum)
+			{
+				// Nothing to do.
+			}
+			// If `writeChecksum` is not set, decide based on TCB.
+			else if (!this->tcb || !this->tcb->GetNegotiatedCapabilities().zeroChecksum)
+			{
+				packet->WriteCRC32cChecksum();
+			}
+
+			// Send the Packet.
+			this->listener->OnSocketSendSctpPacket(this, packet);
+		}
+
 		void Socket::SendInitChunk()
 		{
 			MS_TRACE();
@@ -295,12 +325,29 @@ namespace RTC
 			// https://datatracker.ietf.org/doc/html/rfc9653#section-5.2
 			// When a sender sends a packet containing an INIT chunk, it MUST include
 			// a correct CRC32c checksum in the packet containing the INIT chunk.
-			packet->SetCRC32cChecksum();
-
-			// Send the Packet.
-			this->listener->OnSocketSendSctpPacket(this, packet);
+			SendPacket(packet, /*writeChecksum*/ true);
 
 			delete packet;
+		}
+
+		void Socket::SendShutdownAckChunk()
+		{
+			MS_TRACE();
+
+			AssertState(State::CLOSED);
+
+			auto* packet           = CreatePacket();
+			auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
+
+			shutdownAckChunk->Consolidate();
+
+			SendPacket(packet);
+
+			delete packet;
+
+			// TODO
+			// t2_shutdown_->set_duration(tcb_->current_rto());
+			// t2_shutdown_->Start();
 		}
 
 		bool Socket::ValidateReceivedPacket(const Packet* packet)
@@ -526,10 +573,29 @@ namespace RTC
 				protocolViolationErrorCause->Consolidate();
 				abortChunk->Consolidate();
 
+				SendPacket(packet);
+
 				delete packet;
 
 				// TODO
 				// InternalClose(ErrorKind::kProtocolViolation, "Received invalid INIT");
+
+				return;
+			}
+
+			// If an endpoint is in the SHUTDOWN-ACK-SENT state and receives an INIT
+			// chunk (e.g., if the SHUTDOWN COMPLETE chunk was lost) with source and
+			// destination transport addresses (either in the IP addresses or in the
+			// INIT chunk) that belong to this association, it SHOULD discard the
+			// INIT chunk and retransmit the SHUTDOWN ACK chunk.
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
+			if (this->state == State::SHUTDOWN_ACK_SENT)
+			{
+				MS_DEBUG_TAG(
+				  sctp, "INIT Chunk received in SHUTDOWN_ACK_SENT state, retransmitting SHUTDOWN_ACK Chunk");
+
+				SendShutdownAckChunk();
 
 				return;
 			}

@@ -11,6 +11,7 @@
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
+#include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
 #include "handles/BackoffTimerHandle.hpp"
@@ -98,10 +99,6 @@ namespace RTC
 		private:
 			void SetState(State state, const std::string& reason);
 
-			Packet* CreatePacket() const;
-
-			Packet* CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const;
-
 			void AddCapabilitiesParametersToChunk(Chunk* chunk) const;
 
 			void CreateTransmissionControlBlock(
@@ -113,7 +110,15 @@ namespace RTC
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
+			Packet* CreatePacket() const;
+
+			Packet* CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const;
+
+			void SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
+
 			void SendInitChunk();
+
+			void SendShutdownAckChunk();
 
 			bool ValidateReceivedPacket(const Packet* packet);
 
