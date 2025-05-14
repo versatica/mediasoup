@@ -346,6 +346,10 @@ namespace RTC
 			delete packet;
 
 			// TODO
+			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRto());
+			this->t2ShutdownTimer->Restart();
+
+			// TODO
 			// t2_shutdown_->set_duration(tcb_->current_rto());
 			// t2_shutdown_->Start();
 		}

@@ -83,6 +83,12 @@ public:
 	void Stop();
 
 	/**
+	 * Restart the smart timer (if it's active) or start it. It will reset the
+	 * timeout count.
+	 */
+	void Restart();
+
+	/**
 	 * Get the base timeout duration.
 	 */
 	uint64_t GetBaseTimeout() const

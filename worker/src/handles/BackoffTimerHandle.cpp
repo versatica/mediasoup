@@ -43,6 +43,26 @@ void BackoffTimerHandle::Start()
 	this->timeoutCount = 0;
 }
 
+void BackoffTimerHandle::Stop()
+{
+	MS_TRACE();
+
+	this->timer->Stop();
+
+	this->active       = false;
+	this->timeoutCount = 0;
+}
+
+void BackoffTimerHandle::Restart()
+{
+	MS_TRACE();
+
+	this->timer->Restart();
+
+	this->active       = true;
+	this->timeoutCount = 0;
+}
+
 void BackoffTimerHandle::SetBaseTimeout(uint64_t baseTimeout)
 {
 	MS_TRACE();
@@ -56,16 +76,6 @@ void BackoffTimerHandle::SetBaseTimeout(uint64_t baseTimeout)
 	}
 
 	this->baseTimeout = baseTimeout;
-}
-
-void BackoffTimerHandle::Stop()
-{
-	MS_TRACE();
-
-	this->timer->Stop();
-
-	this->active       = false;
-	this->timeoutCount = 0;
 }
 
 uint64_t BackoffTimerHandle::ComputeNextTimeout() const
