@@ -121,6 +121,15 @@ namespace RTC
 			SetVariableLengthValue(info, infoLength);
 		}
 
+		void ProtocolViolationErrorCause::SetAdditionalInformation(const std::string& info)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			SetVariableLengthValue(reinterpret_cast<const uint8_t*>(info.c_str()), info.size());
+		}
+
 		ProtocolViolationErrorCause* ProtocolViolationErrorCause::SoftClone(const uint8_t* buffer) const
 		{
 			MS_TRACE();

@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
@@ -499,6 +500,41 @@ namespace RTC
 		void Socket::ProcessReceivedInitChunk(const Packet* packet, const InitChunk* chunk)
 		{
 			MS_TRACE();
+
+			// Verify some fields that cannot be 0.
+			if (
+			  chunk->GetInitiateTag() == 0 || chunk->GetNumberOfOutboundStreams() == 0 or
+			  chunk->GetNumberOfInboundStreams() == 0)
+			{
+				MS_WARN_TAG(
+				  sctp,
+				  "invalid value 0 in Initiate Tag or Number of Outbound Streams or Number of Inbound Streams in received INIT Chunk, aborting association");
+
+				auto* packet     = CreatePacketWithRemoteVerificationTag(0);
+				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+
+				// NOTE: We are not setting the Verification Tag expected by the peer
+				// so must set be T to 1.
+				abortChunk->SetT(true);
+
+				auto* protocolViolationErrorCause =
+				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+
+				protocolViolationErrorCause->SetAdditionalInformation(
+				  "invalid value 0 in Initiate Tag or Number of Outbound Streams or Number of Inbound Streams in received INIT Chunk");
+
+				protocolViolationErrorCause->Consolidate();
+				abortChunk->Consolidate();
+
+				delete packet;
+
+				// TODO
+				// InternalClose(ErrorKind::kProtocolViolation, "Received invalid INIT");
+
+				return;
+			}
+
+			// TODO: More
 		}
 
 		void Socket::ProcessReceivedInitAckChunk(const Packet* packet, const InitAckChunk* chunk)

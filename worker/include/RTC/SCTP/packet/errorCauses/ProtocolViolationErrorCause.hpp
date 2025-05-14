@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
+#include <string>
 
 namespace RTC
 {
@@ -88,6 +89,8 @@ namespace RTC
 			}
 
 			void SetAdditionalInformation(const uint8_t* info, uint16_t infoLength);
+
+			void SetAdditionalInformation(const std::string& info);
 
 		protected:
 			virtual ProtocolViolationErrorCause* SoftClone(const uint8_t* buffer) const final override;
