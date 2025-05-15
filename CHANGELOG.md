@@ -2,6 +2,8 @@
 
 ### NEXT
 
+### 3.15.8
+
 - `Worker`: Fix encode retransmitted packets with the corresponding data ([PR #1527](https://github.com/versatica/mediasoup/pull/1527)).
 
 ### 3.15.7
