@@ -26,31 +26,30 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp]")
 		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
-		uint16_t peerNumberOfOutboundStreams = 4096;
-		uint16_t peerNumberOfInboundStreams  = 1024;
+		auto* remoteChunk = InitChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		auto* peerChunk = InitChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		remoteChunk->SetNumberOfOutboundStreams(4096);
+		remoteChunk->SetNumberOfInboundStreams(1024);
 
-		auto* peerSupportedExtensionsParameter =
-		  peerChunk->BuildParameterInPlace<SupportedExtensionsParameter>();
+		auto* remoteSupportedExtensionsParameter =
+		  remoteChunk->BuildParameterInPlace<SupportedExtensionsParameter>();
 
-		peerSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
-		peerSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::RE_CONFIG);
-		peerSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
-		peerSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_FORWARD_TSN);
-		peerSupportedExtensionsParameter->Consolidate();
+		remoteSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::FORWARD_TSN);
+		remoteSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::RE_CONFIG);
+		remoteSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
+		remoteSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_FORWARD_TSN);
+		remoteSupportedExtensionsParameter->Consolidate();
 
-		auto* peerZeroChecksumAcceptableParameter =
-		  peerChunk->BuildParameterInPlace<ZeroChecksumAcceptableParameter>();
+		auto* remoteZeroChecksumAcceptableParameter =
+		  remoteChunk->BuildParameterInPlace<ZeroChecksumAcceptableParameter>();
 
-		peerZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
+		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
 		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
-		peerZeroChecksumAcceptableParameter->Consolidate();
+		remoteZeroChecksumAcceptableParameter->Consolidate();
 
-		auto negotiatedCapabilities = NegotiatedCapabilities::Factory(
-		  socketOptions, peerNumberOfOutboundStreams, peerNumberOfInboundStreams, peerChunk);
+		auto negotiatedCapabilities = NegotiatedCapabilities::Factory(socketOptions, remoteChunk);
 
-		delete peerChunk;
+		delete remoteChunk;
 
 		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1024);
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2048);
@@ -71,39 +70,37 @@ SCENARIO("SCTP Negotiated Capabilities", "[sctp]")
 		socketOptions.zeroChecksumAlternateErrorDetectionMethod =
 		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS;
 
-		uint16_t peerNumberOfOutboundStreams = 4000;
-		uint16_t peerNumberOfInboundStreams  = 3000;
+		auto* remoteChunk = InitChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		auto* peerChunk = InitChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		remoteChunk->SetNumberOfOutboundStreams(4000);
+		remoteChunk->SetNumberOfInboundStreams(3000);
 
-		auto* peerSupportedExtensionsParameter =
-		  peerChunk->BuildParameterInPlace<SupportedExtensionsParameter>();
+		auto* remoteSupportedExtensionsParameter =
+		  remoteChunk->BuildParameterInPlace<SupportedExtensionsParameter>();
 
 		// NOTE: Missing FORWARD_TSN, but peer announced support for it via
-		// Forward-TSN-Supported Parameter.
-		// negotiation).
+		// Forward-TSN-Supported Parameter negotiation).
 		// NOTE: Missing RE_CONFIG (needed for Partial Reliability Extension
 		// negotiation).
 		// NOTE: Missing I_FORWARD_TSN (needed for Message Interleaving negotiation).
-		peerSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
-		peerSupportedExtensionsParameter->Consolidate();
+		remoteSupportedExtensionsParameter->AddChunkType(Chunk::ChunkType::I_DATA);
+		remoteSupportedExtensionsParameter->Consolidate();
 
-		auto* peerForwardTsnSupportedParameter =
-		  peerChunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
+		auto* remoteForwardTsnSupportedParameter =
+		  remoteChunk->BuildParameterInPlace<ForwardTsnSupportedParameter>();
 
-		peerForwardTsnSupportedParameter->Consolidate();
+		remoteForwardTsnSupportedParameter->Consolidate();
 
-		auto* peerZeroChecksumAcceptableParameter =
-		  peerChunk->BuildParameterInPlace<ZeroChecksumAcceptableParameter>();
+		auto* remoteZeroChecksumAcceptableParameter =
+		  remoteChunk->BuildParameterInPlace<ZeroChecksumAcceptableParameter>();
 
-		peerZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
+		remoteZeroChecksumAcceptableParameter->SetAlternateErrorDetectionMethod(
 		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666));
-		peerZeroChecksumAcceptableParameter->Consolidate();
+		remoteZeroChecksumAcceptableParameter->Consolidate();
 
-		auto negotiatedCapabilities = NegotiatedCapabilities::Factory(
-		  socketOptions, peerNumberOfOutboundStreams, peerNumberOfInboundStreams, peerChunk);
+		auto negotiatedCapabilities = NegotiatedCapabilities::Factory(socketOptions, remoteChunk);
 
-		delete peerChunk;
+		delete remoteChunk;
 
 		REQUIRE(negotiatedCapabilities.maxOutboundStreams == 1000);
 		REQUIRE(negotiatedCapabilities.maxInboundStreams == 2000);

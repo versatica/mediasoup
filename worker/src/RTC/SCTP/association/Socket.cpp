@@ -348,10 +348,6 @@ namespace RTC
 			// TODO
 			// this->t2ShutdownTimer->SetBaseTimeout(this->tcb->GetCurrentRto());
 			this->t2ShutdownTimer->Restart();
-
-			// TODO
-			// t2_shutdown_->set_duration(tcb_->current_rto());
-			// t2_shutdown_->Start();
 		}
 
 		bool Socket::ValidateReceivedPacket(const Packet* packet)
@@ -587,11 +583,11 @@ namespace RTC
 				return;
 			}
 
-			// If an endpoint is in the SHUTDOWN-ACK-SENT state and receives an INIT
+			// "If an endpoint is in the SHUTDOWN-ACK-SENT state and receives an INIT
 			// chunk (e.g., if the SHUTDOWN COMPLETE chunk was lost) with source and
 			// destination transport addresses (either in the IP addresses or in the
 			// INIT chunk) that belong to this association, it SHOULD discard the
-			// INIT chunk and retransmit the SHUTDOWN ACK chunk.
+			// INIT chunk and retransmit the SHUTDOWN ACK chunk."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-9.2
 			if (this->state == State::SHUTDOWN_ACK_SENT)
@@ -603,6 +599,79 @@ namespace RTC
 
 				return;
 			}
+
+			uint64_t tieTag{ 0 };
+			uint32_t localVerificationTag;
+			uint32_t localInitialTsn;
+
+			switch (this->state)
+			{
+				case State::CLOSED:
+				{
+					MS_DEBUG_TAG(sctp, "INIT Chunk received in CLOSED state (normal scenario)");
+
+					localVerificationTag =
+					  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
+					localInitialTsn = Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
+
+					break;
+				}
+
+				/**
+				 * "This usually indicates an initialization collision, i.e., each
+				 * endpoint is attempting, at about the same time, to establish an
+				 * association with the other endpoint. Upon receipt of an INIT chunk
+				 * in the COOKIE-WAIT state, an endpoint MUST respond with an INIT ACK
+				 * chunk using the same parameters it sent in its original INIT chunk
+				 * (including its Initiate Tag, unchanged)."
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.1
+				 */
+				case State::COOKIE_WAIT:
+				case State::COOKIE_ECHOED:
+				{
+					MS_DEBUG_TAG(sctp, "INIT Chunk received after sending INIT Chunk (collision, no problem)");
+
+					localVerificationTag = this->preTcb.localVerificationTag;
+					localInitialTsn      = this->preTcb.localInitialTsn;
+
+					break;
+				}
+
+				/**
+				 * "The outbound SCTP packet containing this INIT ACK chunk MUST carry
+				 * a Verification Tag value equal to the Initiate Tag found in the
+				 * unexpected INIT chunk. And the INIT ACK chunk MUST contain a new
+				 * Initiate Tag (randomly generated; see Section 5.3.1). Other
+				 * parameters for the endpoint SHOULD be copied from the existing
+				 * parameters of the association (e.g., number of outbound streams)
+				 * into the INIT ACK chunk and cookie."
+				 *
+				 * @see https://datatracker.ietf.org/doc/html/rfc9260#section-5.2.2
+				 */
+				default:
+				{
+					AssertHasTcb();
+
+					MS_DEBUG_TAG(sctp, "INIT Chunk received (probably peer restarted)");
+
+					localVerificationTag =
+					  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
+					tieTag = this->tcb->GetTieTag();
+				}
+			}
+
+			MS_DEBUG_TAG(
+			  sctp,
+			  "initiating association [localVerificationTag:%" PRIu32 ", localInitialTsn:%" PRIu32
+			  ", remoteVerificationTag:%" PRIu32 ", remoteInitialTsn:%" PRIu32 "]",
+			  localVerificationTag,
+			  localInitialTsn,
+			  chunk->GetInitiateTag(),
+			  chunk->GetInitialTsn());
+
+			// auto negotiatedCapabilities = NegotiatedCapabilities::Factory(
+			//   this->options, chunk->GetNumberOfOutboundStreams(), chunk->GetNumberOfInboundStreams(), chunk);
 
 			// TODO: More
 		}
@@ -762,6 +831,16 @@ namespace RTC
 				  static_cast<int>(currentStateStringView.size()),
 				  currentStateStringView.data(),
 				  unexpectedStatesString.c_str());
+			}
+		}
+
+		void Socket::AssertHasTcb() const
+		{
+			MS_TRACE();
+
+			if (!this->tcb)
+			{
+				MS_THROW_ERROR("TCB doesn't exist");
 			}
 		}
 

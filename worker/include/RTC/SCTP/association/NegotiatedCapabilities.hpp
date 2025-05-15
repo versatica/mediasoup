@@ -3,7 +3,9 @@
 
 #include "common.hpp"
 #include "RTC/SCTP/association/SocketOptions.hpp"
-#include "RTC/SCTP/packet/Chunk.hpp"
+#include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
+#include "RTC/SCTP/packet/chunks/InitChunk.hpp"
+#include <variant> // std::variant, std::visit()
 
 namespace RTC
 {
@@ -16,15 +18,18 @@ namespace RTC
 		 */
 		struct NegotiatedCapabilities
 		{
+			using InitOrInitAckChunkVariant = std::variant<const InitChunk*, const InitAckChunk*>;
+
 			/**
 			 * Create a NegotiatedCapabilities struct. Intended to be used during
 			 * the SCTP association handshake flow.
+			 *
+			 * @remarks
+			 * Given `remoteChunk` must be an INIT or an INIT_ACK Chunk. Otherwise
+			 * it will fail in compilation time.
 			 */
 			static NegotiatedCapabilities Factory(
-			  SocketOptions socketOptions,
-			  uint16_t remoteNumberOfOutboundStreams,
-			  uint16_t remoteNumberOfInboundStreams,
-			  Chunk* remoteChunk);
+			  SocketOptions socketOptions, InitOrInitAckChunkVariant remoteChunk);
 
 			/**
 			 * Negotiated maximum number of outbound streams (OS).

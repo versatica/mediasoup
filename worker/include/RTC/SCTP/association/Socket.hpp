@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_SOCKET_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/SocketMetrics.hpp"
 #include "RTC/SCTP/association/SocketOptions.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
@@ -114,6 +115,18 @@ namespace RTC
 
 			Packet* CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const;
 
+			/**
+			 * Notify the parent about a Packet to be sent to the peer.
+			 *
+			 * This method also writes the Packet checksum field depending on the value
+			 * of `writeChecksum`. If it's explicitly set then it's honored. Otherwise
+			 * the checksum field is written based on whether Zero Checksum has been
+			 * negotiated or not.
+			 *
+			 * @remarks
+			 * This method does not delete the given `packet`. The caller must do it
+			 * after invoking this method.
+			 */
 			void SendPacket(Packet* packet, std::optional<bool> writeChecksum = std::nullopt);
 
 			void SendInitChunk();
@@ -143,6 +156,8 @@ namespace RTC
 
 			template<typename... States>
 			void AssertNotState(States... unexpectedStates) const;
+
+			void AssertHasTcb() const;
 
 			/* Pure virtual methods inherited from BackoffTimerHandle::Listener. */
 		public:
