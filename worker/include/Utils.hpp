@@ -243,6 +243,11 @@ namespace Utils
 
 			if (max == std::numeric_limits<uint64_t>::max())
 			{
+				if (min == 0)
+				{
+					return Crypto::seed64;
+				}
+
 				--max;
 			}
 
@@ -252,8 +257,9 @@ namespace Utils
 			}
 
 			uint64_t range = max - min + 1;
+			uint64_t value = Crypto::seed64 % range;
 
-			return seed64 % range;
+			return min + value;
 		}
 
 		static std::string GetRandomString(size_t len)
