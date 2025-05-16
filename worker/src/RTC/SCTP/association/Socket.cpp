@@ -113,9 +113,9 @@ namespace RTC
 			}
 
 			this->preTcb.localVerificationTag =
-			  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
+			  Utils::Crypto::GetRandomUInt32(1, std::numeric_limits<uint32_t>::max());
 			this->preTcb.localInitialTsn =
-			  Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
+			  Utils::Crypto::GetRandomUInt32(0, std::numeric_limits<uint32_t>::max());
 
 			SendInitChunk();
 
@@ -241,7 +241,7 @@ namespace RTC
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
 		  uint32_t remoteInitialTsn,
-		  uint32_t localAdvertisedReceiverWindowCredit,
+		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
 		{
@@ -252,7 +252,7 @@ namespace RTC
 			  remoteVerificationTag,
 			  localInitialTsn,
 			  remoteInitialTsn,
-			  localAdvertisedReceiverWindowCredit,
+			  remoteAdvertisedReceiverWindowCredit,
 			  tieTag,
 			  negotiatedCapabilities);
 
@@ -440,7 +440,7 @@ namespace RTC
 				}
 			}
 
-			// This is handled in Chunk handler.
+			// This is handled in ProcessCookieEchoChunk().
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-handle-a-cookie-echo-chunk-
 			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::COOKIE_ECHO)
@@ -537,6 +537,13 @@ namespace RTC
 					break;
 				}
 
+				case Chunk::ChunkType::SACK:
+				{
+					ProcessReceivedSackChunk(receivedPacket, static_cast<const SackChunk*>(receivedChunk));
+
+					break;
+				}
+
 				default:
 				{
 					return ProcessReceivedUnknownChunk(
@@ -550,6 +557,8 @@ namespace RTC
 		void Socket::ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk)
 		{
 			MS_TRACE();
+
+			// TODO
 		}
 
 		void Socket::ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk)
@@ -577,7 +586,7 @@ namespace RTC
 				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
 
 				protocolViolationErrorCause->SetAdditionalInformation(
-				  "invalid value 0 in Initiate Tag or Number of Outbound Streams or Number of Inbound Streams in received INIT Chunk");
+				  "invalid value 0 in Initiate Tag or Number of Outbound Streams or Number of Inbound Streams in received INIT chunk");
 
 				protocolViolationErrorCause->Consolidate();
 				abortChunk->Consolidate();
@@ -587,7 +596,7 @@ namespace RTC
 				delete packet;
 
 				// TODO
-				// InternalClose(ErrorKind::kProtocolViolation, "Received invalid INIT");
+				// InternalClose(ErrorKind::kProtocolViolation, "Received invalid INIT Chunk");
 
 				return;
 			}
@@ -620,8 +629,8 @@ namespace RTC
 					MS_DEBUG_TAG(sctp, "INIT Chunk received in CLOSED state (normal scenario)");
 
 					localVerificationTag =
-					  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
-					localInitialTsn = Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
+					  Utils::Crypto::GetRandomUInt32(1, std::numeric_limits<uint32_t>::max());
+					localInitialTsn = Utils::Crypto::GetRandomUInt32(0, std::numeric_limits<uint32_t>::max());
 
 					break;
 				}
@@ -665,7 +674,7 @@ namespace RTC
 					MS_DEBUG_TAG(sctp, "INIT Chunk received (probably peer restarted)");
 
 					localVerificationTag =
-					  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
+					  Utils::Crypto::GetRandomUInt32(1, std::numeric_limits<uint32_t>::max());
 
 					// TODO: Implement this.
 					// Make the initial TSN make a large jump, so that there is no overlap
@@ -673,7 +682,7 @@ namespace RTC
 					// my_initial_tsn = TSN(*tcb_->retransmission_queue().next_tsn() + 1000000);
 
 					// TODO: Remove this when the above TODO is done.
-					localInitialTsn = Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
+					localInitialTsn = Utils::Crypto::GetRandomUInt32(0, std::numeric_limits<uint32_t>::max());
 
 					tieTag = this->tcb->GetTieTag();
 				}
@@ -734,6 +743,94 @@ namespace RTC
 		  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk)
 		{
 			MS_TRACE();
+
+			// "If an INIT ACK chunk is received by an endpoint in any state other
+			// than the COOKIE-WAIT or CLOSED state, the endpoint SHOULD discard the
+			// INIT ACK chunk."
+			//
+			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-unexpected-init-ack-chunk
+			if (this->state != State::COOKIE_WAIT)
+			{
+				MS_DEBUG_TAG(sctp, "ignoring received INIT_ACK Chunk when not in COOKIE_WAIT state");
+
+				return;
+			}
+
+			auto* stateCookieParameter =
+			  receivedInitAckChunk->GetFirstParameterOfType<StateCookieParameter>();
+
+			if (!stateCookieParameter || !stateCookieParameter->GetCookie())
+			{
+				MS_WARN_TAG(
+				  sctp, "ignoring received INIT_ACK Chunk without StateCookieParameter or without Cookie");
+
+				auto* packet     = CreatePacketWithVerificationTag(this->preTcb.localVerificationTag);
+				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
+
+				// NOTE: We are not setting the Verification Tag expected by the peer
+				// so must set be T to 1.
+				abortChunk->SetT(true);
+
+				auto* protocolViolationErrorCause =
+				  abortChunk->BuildErrorCauseInPlace<ProtocolViolationErrorCause>();
+
+				protocolViolationErrorCause->SetAdditionalInformation(
+				  "INIT_ACK without State Cookie Parameter or without Cookie");
+
+				protocolViolationErrorCause->Consolidate();
+				abortChunk->Consolidate();
+
+				SendPacket(packet);
+
+				delete packet;
+
+				// TODO
+				// InternalClose(ErrorKind::kProtocolViolation, "received INIT_ACK Chunk doesn't contain a Cookie");
+
+				return;
+			}
+
+			this->metrics.peerImplementation = StateCookie::DetermineSctpImplementation(
+			  stateCookieParameter->GetCookie(), stateCookieParameter->GetCookieLength());
+
+			this->t1InitTimer->Stop();
+
+			const auto negotiatedCapabilities =
+			  NegotiatedCapabilities::Factory(this->options, receivedInitAckChunk);
+
+			// TODO
+			// If the connection is re-established (peer restarted, but re-used old
+			// connection), make sure that all message identifiers are reset and any
+			// partly sent message is re-sent in full. The same is true when the socket
+			// is closed and later re-opened, which never happens in WebRTC, but is a
+			// valid operation on the SCTP level. Note that in case of handover, the
+			// send queue is already re-configured, and shouldn't be reset.
+			// send_queue_.Reset();
+
+			CreateTransmissionControlBlock(
+			  this->preTcb.localVerificationTag,
+			  receivedInitAckChunk->GetInitiateTag(),
+			  this->preTcb.localInitialTsn,
+			  receivedInitAckChunk->GetInitialTsn(),
+			  receivedInitAckChunk->GetAdvertisedReceiverWindowCredit(),
+			  /*tieTag*/ Utils::Crypto::GetRandomUInt64(0, std::numeric_limits<uint64_t>::max()),
+			  negotiatedCapabilities);
+
+			SetState(State::COOKIE_ECHOED, "INIT_ACK received");
+
+			// TODO
+			// The connection isn't fully established just yet.
+			// tcb_->SetCookieEchoChunk(CookieEchoChunk(cookie->data()));
+			// tcb_->SendBufferedPackets(callbacks_.Now());
+
+			this->t1CookieTimer->Start();
+		}
+
+		void Socket::ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk)
+		{
+			MS_TRACE();
+
+			// TODO
 		}
 
 		bool Socket::ProcessReceivedUnknownChunk(
