@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Node: Make `worker.close()` close the worker process by sending a `WORKER_CLOSE` request through the channel instead of by sending a SIGINT signal ([PR #1528](https://github.com/versatica/mediasoup/pull/1528)).
+- Node: Make `worker.close()` close the worker process by sending a `WORKER_CLOSE` request through the channel instead of by sending a SIGINT signal ([PR #1534](https://github.com/versatica/mediasoup/pull/1534)).
 
 ### 3.15.8
 
