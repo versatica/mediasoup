@@ -9,7 +9,8 @@ namespace Utils
 {
 	/* Static variables. */
 
-	thread_local uint32_t Crypto::seed;
+	thread_local uint32_t Crypto::seed32;
+	thread_local uint64_t Crypto::seed64;
 	thread_local EVP_MAC* Crypto::mac{ nullptr };
 	thread_local EVP_MAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
 	thread_local uint8_t Crypto::hmacSha1Buffer[SHA_DIGEST_LENGTH];
@@ -94,9 +95,14 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// Init the crypto seed with a random number taken from the address
-		// of the seed variable itself (which is random).
-		Crypto::seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed)));
+		// Init the crypto seed32 with a random number taken from the address
+		// of the seed32 variable itself (which is random).
+		Crypto::seed32 =
+		  static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed32)));
+
+		// Same for crypto seed64.
+		Crypto::seed64 =
+		  static_cast<uint64_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed64)));
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
 		Crypto::mac         = EVP_MAC_fetch(nullptr, "HMAC", nullptr);

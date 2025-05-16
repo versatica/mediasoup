@@ -5,6 +5,7 @@
 #include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
+#include <limits>  // std::numeric_limits()
 #include <string>
 #include <type_traits> // std::enable_if()
 #include <vector>
@@ -217,19 +218,30 @@ namespace Utils
 	{
 	public:
 		static void ClassInit();
+
 		static void ClassDestroy();
 
-		static uint32_t GetRandomUInt(uint32_t min, uint32_t max)
+		static uint32_t GetRandomUInt32(
+		  uint32_t min = 0, uint32_t max = std::numeric_limits<uint32_t>::max())
 		{
-			// NOTE: This is the original, but produces very small values.
-			// Crypto::seed = (214013 * Crypto::seed) + 2531011;
-			// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
+			Crypto::seed32 = 214013 * Crypto::seed32 + 2531011;
 
-			// This seems to produce better results.
-			Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
+			if (min > max)
+			{
+				min = max;
+			}
 
-			// Special case.
-			if (max == 4294967295)
+			uint64_t range = static_cast<uint64_t>(max) - static_cast<uint64_t>(min) + 1;
+
+			return static_cast<uint32_t>((((Crypto::seed32 >> 4) & 0x7FFF7FFF) % range) + min);
+		}
+
+		static uint64_t GetRandomUInt64(
+		  uint64_t min = 0, uint64_t max = std::numeric_limits<uint64_t>::max())
+		{
+			Crypto::seed64 = 6364136223846793005ULL * Crypto::seed64 + 1442695040888963407ULL;
+
+			if (max == std::numeric_limits<uint64_t>::max())
 			{
 				--max;
 			}
@@ -239,7 +251,9 @@ namespace Utils
 				min = max;
 			}
 
-			return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
+			uint64_t range = max - min + 1;
+
+			return seed64 % range;
 		}
 
 		static std::string GetRandomString(size_t len)
@@ -256,7 +270,7 @@ namespace Utils
 
 			for (size_t i{ 0 }; i < len; ++i)
 			{
-				buffer[i] = Chars[GetRandomUInt(0, sizeof(Chars) - 1)];
+				buffer[i] = Chars[GetRandomUInt32(0, sizeof(Chars) - 1)];
 			}
 
 			return { buffer, len };
@@ -269,7 +283,8 @@ namespace Utils
 		static const uint8_t* GetHmacSha1(const std::string& key, const uint8_t* data, size_t len);
 
 	private:
-		thread_local static uint32_t seed;
+		thread_local static uint32_t seed32;
+		thread_local static uint64_t seed64;
 		thread_local static EVP_MAC* mac;
 		thread_local static EVP_MAC_CTX* hmacSha1Ctx;
 		thread_local static uint8_t hmacSha1Buffer[];

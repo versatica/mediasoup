@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <set>
 
 SCENARIO("Utils::Crypto::GetCRC32()", "[utils][crypto]")
 {
@@ -70,4 +71,32 @@ SCENARIO("Utils::Crypto::GetCRC32c()", "[utils][crypto]")
 	REQUIRE(Utils::Crypto::GetCRC32c(data32Incrementing, sizeof(data32Incrementing)) == 0x4E79DD46);
 	REQUIRE(Utils::Crypto::GetCRC32c(data32Decrementing, sizeof(data32Decrementing)) == 0x5CDB3F11);
 	REQUIRE(Utils::Crypto::GetCRC32c(dataSCSICommandPDU, sizeof(dataSCSICommandPDU)) == 0x563A96D9);
+}
+
+SCENARIO("Utils::Crypto::GetRandomUInt32()", "[utils][crypto]")
+{
+	std::set<uint32_t> randomNumbers;
+
+	for (size_t i = 0; i < 200; ++i)
+	{
+		auto randomNumber = Utils::Crypto::GetRandomUInt32();
+
+		REQUIRE(randomNumbers.find(randomNumber) == randomNumbers.end());
+
+		randomNumbers.insert(randomNumber);
+	}
+}
+
+SCENARIO("Utils::Crypto::GetRandomUInt64()", "[utils][crypto]")
+{
+	std::set<uint64_t> randomNumbers;
+
+	for (size_t i = 0; i < 200; ++i)
+	{
+		auto randomNumber = Utils::Crypto::GetRandomUInt64();
+
+		REQUIRE(randomNumbers.find(randomNumber) == randomNumbers.end());
+
+		randomNumbers.insert(randomNumber);
+	}
 }
