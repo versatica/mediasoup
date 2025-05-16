@@ -345,7 +345,7 @@ namespace RTC
 		int ret{ 0 };
 		X509_NAME* certName{ nullptr };
 		const std::string subject =
-		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
+		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt32(100000, 999999));
 
 		// Create key with curve.
 		DtlsTransport::privateKey = EVP_EC_gen(SN_X9_62_prime256v1);
@@ -373,7 +373,7 @@ namespace RTC
 		// Set serial number (avoid default 0).
 		ASN1_INTEGER_set(
 		  X509_get_serialNumber(DtlsTransport::certificate),
-		  static_cast<uint64_t>(Utils::Crypto::GetRandomUInt(1000000, 9999999)));
+		  static_cast<uint64_t>(Utils::Crypto::GetRandomUInt32(1000000, 9999999)));
 
 		// Set valid period.
 		X509_gmtime_adj(X509_get_notBefore(DtlsTransport::certificate), -315360000); // -10 years.

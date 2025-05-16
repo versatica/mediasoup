@@ -17,7 +17,7 @@ void Fuzzer::RTC::SCTP::StateCookie::Fuzz(const uint8_t* data, size_t len)
 	// data matches it.
 	if (len > ::RTC::SCTP::StateCookie::StateCookieLength)
 	{
-		len = ::Utils::Crypto::GetRandomUInt(
+		len = ::Utils::Crypto::GetRandomUInt32(
 		  ::RTC::SCTP::StateCookie::StateCookieLength, ::RTC::SCTP::StateCookie::StateCookieLength + 10);
 
 		if (len < ::RTC::SCTP::StateCookie::StateCookieLength + 5)

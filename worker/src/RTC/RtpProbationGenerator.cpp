@@ -58,8 +58,8 @@ namespace RTC
 
 		// Set random initial RTP seq number and timestamp.
 		this->probationPacket->SetSequenceNumber(
-		  static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, 65535)));
-		this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
+		  static_cast<uint16_t>(Utils::Crypto::GetRandomUInt32(0, 65535)));
+		this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt32(0, 4294967295));
 
 		// Add BWE related RTP header extensions.
 		thread_local static uint8_t buffer[4096];

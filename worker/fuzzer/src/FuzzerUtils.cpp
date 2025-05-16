@@ -57,7 +57,7 @@ void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 
 	/* Crypto class. */
 
-	::Utils::Crypto::GetRandomUInt(static_cast<uint32_t>(len), static_cast<uint32_t>(len + 1000000));
+	::Utils::Crypto::GetRandomUInt32(static_cast<uint32_t>(len), static_cast<uint32_t>(len + 1000000));
 	::Utils::Crypto::GetRandomString(len);
 	::Utils::Crypto::GetCRC32(data2, len);
 

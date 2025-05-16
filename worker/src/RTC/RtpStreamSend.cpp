@@ -94,7 +94,7 @@ namespace RTC
 
 		RTC::RtpStream::SetRtx(payloadType, ssrc);
 
-		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
+		this->rtxSeq = Utils::Crypto::GetRandomUInt32(0u, 0xFFFF);
 	}
 
 	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
