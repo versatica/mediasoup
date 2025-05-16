@@ -22,7 +22,7 @@ namespace RTC
 			  uint32_t remoteVerificationTag,
 			  uint32_t localInitialTsn,
 			  uint32_t remoteInitialTsn,
-			  uint32_t localAdvertisedReceiverWindowCredit,
+			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
@@ -72,9 +72,9 @@ namespace RTC
 			 * The value of the Advertised Receiver Window Credit field we put in our
 			 * INIT or INIT_ACK Chunk.
 			 */
-			uint32_t GetLocalAdvertisedReceiverWindowCredit() const
+			uint32_t GetRemoteAdvertisedReceiverWindowCredit() const
 			{
-				return this->localAdvertisedReceiverWindowCredit;
+				return this->remoteAdvertisedReceiverWindowCredit;
 			}
 
 			/**
@@ -98,7 +98,7 @@ namespace RTC
 			uint32_t remoteVerificationTag{ 0 };
 			uint32_t localInitialTsn{ 0 };
 			uint32_t remoteInitialTsn{ 0 };
-			uint32_t localAdvertisedReceiverWindowCredit{ 0 };
+			uint32_t remoteAdvertisedReceiverWindowCredit{ 0 };
 			uint64_t tieTag{ 0 };
 			const NegotiatedCapabilities negotiatedCapabilities;
 		};

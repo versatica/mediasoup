@@ -32,7 +32,7 @@ namespace RTC
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                      Remote Initial TSN                       |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		 * |       Local Advertised Receiver Window Credit (a_rwnd)        |
+		 * |       Remote Advertised Receiver Window Credit (a_rwnd)       |
 		 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		 * |                            Tie-Tag                            |
 		 * |                                                               |
@@ -136,7 +136,21 @@ namespace RTC
 			  uint32_t remoteVerificationTag,
 			  uint32_t localInitialTsn,
 			  uint32_t remoteInitialTsn,
-			  uint32_t localAdvertisedReceiverWindowCredit,
+			  uint32_t remoteAdvertisedReceiverWindowCredit,
+			  uint64_t tieTag,
+			  const NegotiatedCapabilities& negotiatedCapabilities);
+
+			/**
+			 * Serialize a StateCookie (based on given arguments) in the given buffer.
+			 */
+			static void Write(
+			  uint8_t* buffer,
+			  size_t bufferLength,
+			  uint32_t localVerificationTag,
+			  uint32_t remoteVerificationTag,
+			  uint32_t localInitialTsn,
+			  uint32_t remoteInitialTsn,
+			  uint32_t remoteAdvertisedReceiverWindowCredit,
 			  uint64_t tieTag,
 			  const NegotiatedCapabilities& negotiatedCapabilities);
 
@@ -200,7 +214,7 @@ namespace RTC
 			 * The value of the Advertised Receiver Window Credit field we put in our
 			 * INIT or INIT_ACK Chunk.
 			 */
-			uint32_t GetLocalAdvertisedReceiverWindowCredit() const
+			uint32_t GetRemoteAdvertisedReceiverWindowCredit() const
 			{
 				return Utils::Byte::Get4Bytes(GetBuffer(), 24);
 			}

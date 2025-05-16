@@ -12,6 +12,7 @@
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
+#include "RTC/SCTP/packet/chunks/OperationErrorChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/ShutdownCompleteChunk.hpp"
 #include "RTC/SCTP/packet/chunks/UnknownChunk.hpp"
@@ -95,12 +96,12 @@ namespace RTC
 			/**
 			 * Receive a Packet received from the peer.
 			 */
-			void ReceivePacket(const Packet* packet);
+			void ReceivePacket(const Packet* receivedPacket);
 
 		private:
 			void SetState(State state, const std::string& reason);
 
-			void AddCapabilitiesParametersToChunk(Chunk* chunk) const;
+			void AddCapabilitiesParametersToInitOrInitAckChunk(Chunk* chunk) const;
 
 			void CreateTransmissionControlBlock(
 			  uint32_t localVerificationTag,
@@ -113,7 +114,7 @@ namespace RTC
 
 			Packet* CreatePacket() const;
 
-			Packet* CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const;
+			Packet* CreatePacketWithVerificationTag(uint32_t verificationTag) const;
 
 			/**
 			 * Notify the parent about a Packet to be sent to the peer.
@@ -133,17 +134,19 @@ namespace RTC
 
 			void SendShutdownAckChunk();
 
-			bool ValidateReceivedPacket(const Packet* packet);
+			bool ValidateReceivedPacket(const Packet* receivedPacket);
 
-			bool ProcessReceivedChunk(const Packet* packet, const Chunk* chunk);
+			bool ProcessReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk);
 
-			void ProcessReceivedDataChunk(const Packet* packet, const DataChunk* chunk);
+			void ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk);
 
-			void ProcessReceivedInitChunk(const Packet* packet, const InitChunk* chunk);
+			void ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk);
 
-			void ProcessReceivedInitAckChunk(const Packet* packet, const InitAckChunk* chunk);
+			void ProcessReceivedInitAckChunk(
+			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
 
-			bool ProcessReceivedUnknownChunk(const Packet* packet, const UnknownChunk* chunk);
+			bool ProcessReceivedUnknownChunk(
+			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);
 
 			void OnT1InitTimer(uint64_t& baseTimeout, bool& stop);
 

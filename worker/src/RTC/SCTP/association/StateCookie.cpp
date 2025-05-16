@@ -62,7 +62,35 @@ namespace RTC
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
 		  uint32_t remoteInitialTsn,
-		  uint32_t localAdvertisedReceiverWindowCredit,
+		  uint32_t remoteAdvertisedReceiverWindowCredit,
+		  uint64_t tieTag,
+		  const NegotiatedCapabilities& negotiatedCapabilities)
+		{
+			MS_TRACE();
+
+			// This may throw.
+			StateCookie::Write(
+			  buffer,
+			  bufferLength,
+			  localVerificationTag,
+			  remoteVerificationTag,
+			  localInitialTsn,
+			  remoteInitialTsn,
+			  remoteAdvertisedReceiverWindowCredit,
+			  tieTag,
+			  negotiatedCapabilities);
+
+			return new StateCookie(buffer, StateCookie::StateCookieLength);
+		}
+
+		void StateCookie::Write(
+		  uint8_t* buffer,
+		  size_t bufferLength,
+		  uint32_t localVerificationTag,
+		  uint32_t remoteVerificationTag,
+		  uint32_t localInitialTsn,
+		  uint32_t remoteInitialTsn,
+		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
 		{
@@ -78,12 +106,11 @@ namespace RTC
 			Utils::Byte::Set4Bytes(buffer, 12, remoteVerificationTag);
 			Utils::Byte::Set4Bytes(buffer, 16, localInitialTsn);
 			Utils::Byte::Set4Bytes(buffer, 20, remoteInitialTsn);
-			Utils::Byte::Set4Bytes(buffer, 24, localAdvertisedReceiverWindowCredit);
+			Utils::Byte::Set4Bytes(buffer, 24, remoteAdvertisedReceiverWindowCredit);
 			Utils::Byte::Set8Bytes(buffer, 28, tieTag);
 
-			auto* stateCookie = new StateCookie(buffer, StateCookie::StateCookieLength);
-
-			auto* negotiatedCapabilitiesField = stateCookie->GetNegotiatedCapabilitiesField();
+			auto* negotiatedCapabilitiesField = reinterpret_cast<NegotiatedCapabilitiesField*>(
+			  buffer + StateCookie::NegotiatedCapabilitiesOffset);
 
 			negotiatedCapabilitiesField->reserved = 0;
 			negotiatedCapabilitiesField->bitA     = negotiatedCapabilities.partialReliability;
@@ -95,8 +122,6 @@ namespace RTC
 			  uint16_t{ htons(negotiatedCapabilities.maxOutboundStreams) };
 			negotiatedCapabilitiesField->maxInboundStreams =
 			  uint16_t{ htons(negotiatedCapabilities.maxInboundStreams) };
-
-			return stateCookie;
 		}
 
 		StateCookie::SctpImplementation StateCookie::DetermineSctpImplementation(
@@ -177,8 +202,8 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  remote initial tsn: %" PRIu32, GetRemoteInitialTsn());
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  local advertised receiver window credit: %" PRIu32,
-			  GetLocalAdvertisedReceiverWindowCredit());
+			  "  remote advertised receiver window credit: %" PRIu32,
+			  GetRemoteAdvertisedReceiverWindowCredit());
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, GetTieTag());
 			negotiatedCapabilities.Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</SCTP::StateCookie>");

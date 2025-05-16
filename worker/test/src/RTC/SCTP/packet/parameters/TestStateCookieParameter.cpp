@@ -1,5 +1,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
@@ -104,7 +106,7 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 		delete clonedParameter;
 	}
 
-	SECTION("StateCookieParameter::Factory() succeeds")
+	SECTION("StateCookieParameter::Factory() succeeds (1)")
 	{
 		auto* parameter = StateCookieParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
@@ -137,6 +139,14 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 		// DataBuffer + 1 which is initialized to 0x0A.
 		parameter->SetCookie(DataBuffer + 10, 1);
 
+		REQUIRE(parameter->HasCookie() == true);
+		REQUIRE(parameter->GetCookieLength() == 1);
+		REQUIRE(parameter->GetCookie()[0] == 0x0A);
+		// These should be padding.
+		REQUIRE(parameter->GetCookie()[1] == 0x00);
+		REQUIRE(parameter->GetCookie()[2] == 0x00);
+		REQUIRE(parameter->GetCookie()[3] == 0x00);
+
 		/* Parse itself and compare. */
 
 		auto* parsedParameter =
@@ -161,6 +171,66 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 		REQUIRE(parsedParameter->GetCookie()[1] == 0x00);
 		REQUIRE(parsedParameter->GetCookie()[2] == 0x00);
 		REQUIRE(parsedParameter->GetCookie()[3] == 0x00);
+
+		delete parsedParameter;
+	}
+
+	SECTION("StateCookieParameter::Factory() succeeds (2)")
+	{
+		auto* parameter = StateCookieParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+
+		CHECK_PARAMETER(
+		  /*parameter*/ parameter,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ 4,
+		  /*frozen*/ false,
+		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+
+		/* Modify it. */
+
+		// Create a StateCookie.
+		NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
+			                                                .maxInboundStreams   = 55555,
+			                                                .partialReliability  = true,
+			                                                .messageInterleaving = true,
+			                                                .reconfig            = true,
+			                                                .zeroChecksum        = false };
+
+		// Build the StateCookie in place within the StateCookieParameter.
+		parameter->WriteStateCookieInPlace(
+		  /*localVerificationTag*/ 6660666,
+		  /*remoteVerificationTag*/ 9990999,
+		  /*localInitialTsn*/ 1110111,
+		  /*remoteInitialTsn*/ 2220222,
+		  /*remoteAdvertisedReceiverWindowCredit*/ 999909999,
+		  /*tieTag*/ 1111222233334444,
+		  negotiatedCapabilities);
+
+		REQUIRE(parameter->HasCookie() == true);
+		REQUIRE(parameter->GetCookieLength() == StateCookie::StateCookieLength);
+
+		/* Parse itself and compare. */
+
+		auto* parsedParameter =
+		  StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+
+		delete parameter;
+
+		CHECK_PARAMETER(
+		  /*parameter*/ parsedParameter,
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ 4 + StateCookie::StateCookieLength,
+		  /*length*/ 4 + StateCookie::StateCookieLength,
+		  /*frozen*/ true,
+		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*unknownType*/ false,
+		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+
+		REQUIRE(parsedParameter->HasCookie() == true);
+		REQUIRE(parsedParameter->GetCookieLength() == StateCookie::StateCookieLength);
 
 		delete parsedParameter;
 	}

@@ -15,12 +15,12 @@ namespace RTC
 		  uint32_t remoteVerificationTag,
 		  uint32_t localInitialTsn,
 		  uint32_t remoteInitialTsn,
-		  uint32_t localAdvertisedReceiverWindowCredit,
+		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
 		  : localVerificationTag(localVerificationTag), remoteVerificationTag(remoteVerificationTag),
 		    localInitialTsn(localInitialTsn), remoteInitialTsn(remoteInitialTsn),
-		    localAdvertisedReceiverWindowCredit(localAdvertisedReceiverWindowCredit), tieTag(tieTag),
+		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit), tieTag(tieTag),
 		    negotiatedCapabilities(negotiatedCapabilities)
 		{
 			MS_TRACE();
@@ -42,8 +42,8 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  remote initial tsn: %" PRIu32, this->remoteInitialTsn);
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  local advertised receiver window credit: %" PRIu32,
-			  this->localAdvertisedReceiverWindowCredit);
+			  "  remote advertised receiver window credit: %" PRIu32,
+			  this->remoteAdvertisedReceiverWindowCredit);
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, this->tieTag);
 			this->negotiatedCapabilities.Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");

@@ -3,11 +3,13 @@
 
 #include "RTC/SCTP/association/Socket.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
+#include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
 #include "RTC/SCTP/packet/parameters/ForwardTsnSupportedParameter.hpp"
+#include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedExtensionsParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 #include <limits>      // std::numeric_limits()
@@ -84,8 +86,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO
-
 			auto stateStringView = Socket::State2String(this->state);
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Socket>");
@@ -99,13 +99,18 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: Is this ok? We Associate() is public API and parent should be
-			// able to invoke it despite the connection is already established after
-			// being initiated from the rmeote peer.
-			// TODO: Are we gonna notify the parent with SCTP state changes? I assume
-			// yes. But does it mean that parent should know in which states it can
-			// invoke certain public methods?
-			AssertNotState(State::CLOSED);
+			if (this->state != State::CLOSED)
+			{
+				auto stateStringView = Socket::State2String(this->state);
+
+				MS_DEBUG_TAG(
+				  sctp,
+				  "cannot initiate the association since state is not CLOSED but %.*s",
+				  static_cast<int>(stateStringView.size()),
+				  stateStringView.data());
+
+				return;
+			}
 
 			this->preTcb.localVerificationTag =
 			  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
@@ -120,7 +125,7 @@ namespace RTC
 		}
 
 		// TODO: Should the caller call free packet after calling this method? or us?
-		void Socket::ReceivePacket(const Packet* packet)
+		void Socket::ReceivePacket(const Packet* receivedPacket)
 		{
 			MS_TRACE();
 
@@ -128,7 +133,7 @@ namespace RTC
 
 			/* Verify Packet. */
 
-			if (!ValidateReceivedPacket(packet))
+			if (!ValidateReceivedPacket(receivedPacket))
 			{
 				MS_WARN_TAG(sctp, "Packet verification failed, discarded");
 
@@ -136,13 +141,13 @@ namespace RTC
 			}
 
 			// TODO
-			// MaybeSendShutdownOnPacketReceived(*packet);
+			// MaybeSendShutdownOnPacketReceived(receivedPacket);
 
-			for (auto it = packet->ChunksBegin(); it != packet->ChunksEnd(); ++it)
+			for (auto it = receivedPacket->ChunksBegin(); it != receivedPacket->ChunksEnd(); ++it)
 			{
-				const auto* chunk = *it;
+				const auto* receivedChunk = *it;
 
-				if (!ProcessReceivedChunk(packet, chunk))
+				if (!ProcessReceivedChunk(receivedPacket, receivedChunk))
 				{
 					break;
 				}
@@ -187,9 +192,13 @@ namespace RTC
 			this->state = state;
 		}
 
-		void Socket::AddCapabilitiesParametersToChunk(Chunk* chunk) const
+		void Socket::AddCapabilitiesParametersToInitOrInitAckChunk(Chunk* chunk) const
 		{
 			MS_TRACE();
+
+			MS_ASSERT(
+			  chunk->GetType() == Chunk::ChunkType::INIT || chunk->GetType() == Chunk::ChunkType::INIT_ACK,
+			  "chunk must be an INIT or INIT_ACK");
 
 			auto* supportedExtensionsParameter =
 			  chunk->BuildParameterInPlace<SupportedExtensionsParameter>();
@@ -255,12 +264,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint32_t remoteVerificationTag = this->tcb ? this->tcb->GetRemoteVerificationTag() : 0;
+			uint32_t verificationTag = this->tcb ? this->tcb->GetRemoteVerificationTag() : 0;
 
-			return CreatePacketWithRemoteVerificationTag(remoteVerificationTag);
+			return CreatePacketWithVerificationTag(verificationTag);
 		}
 
-		Packet* Socket::CreatePacketWithRemoteVerificationTag(uint32_t remoteVerificationTag) const
+		Packet* Socket::CreatePacketWithVerificationTag(uint32_t verificationTag) const
 		{
 			MS_TRACE();
 
@@ -268,7 +277,7 @@ namespace RTC
 
 			packet->SetSourcePort(this->options.sourcePort);
 			packet->SetDestinationPort(this->options.destinationPort);
-			packet->SetVerificationTag(remoteVerificationTag);
+			packet->SetVerificationTag(verificationTag);
 
 			return packet;
 		}
@@ -307,9 +316,9 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertState(State::CLOSED);
+			auto* packet = CreatePacket();
 
-			auto* packet    = CreatePacket();
+			// Insert an INIT Chunk in the Packet.
 			auto* initChunk = packet->BuildChunkInPlace<InitChunk>();
 
 			initChunk->SetInitiateTag(this->preTcb.localVerificationTag);
@@ -318,7 +327,8 @@ namespace RTC
 			initChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
 			initChunk->SetInitialTsn(this->preTcb.localInitialTsn);
 
-			AddCapabilitiesParametersToChunk(initChunk);
+			// Insert capabilities related Parameters in the INIT Chunk.
+			AddCapabilitiesParametersToInitOrInitAckChunk(initChunk);
 
 			initChunk->Consolidate();
 
@@ -334,8 +344,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertState(State::CLOSED);
-
 			auto* packet           = CreatePacket();
 			auto* shutdownAckChunk = packet->BuildChunkInPlace<ShutdownAckChunk>();
 
@@ -350,7 +358,7 @@ namespace RTC
 			this->t2ShutdownTimer->Restart();
 		}
 
-		bool Socket::ValidateReceivedPacket(const Packet* packet)
+		bool Socket::ValidateReceivedPacket(const Packet* receivedPacket)
 		{
 			MS_TRACE();
 
@@ -361,9 +369,9 @@ namespace RTC
 			// chunk. Otherwise, the receiver MUST silently discard the packet."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-exceptions-in-verification-
-			if (packet->GetVerificationTag() == 0)
+			if (receivedPacket->GetVerificationTag() == 0)
 			{
-				if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT)
+				if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT)
 				{
 					return true;
 				}
@@ -378,9 +386,9 @@ namespace RTC
 				}
 			}
 
-			if (packet->GetChunksCount() >= 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT_ACK)
+			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::INIT_ACK)
 			{
-				if (packet->GetVerificationTag() == this->preTcb.localVerificationTag)
+				if (receivedPacket->GetVerificationTag() == this->preTcb.localVerificationTag)
 				{
 					return true;
 				}
@@ -389,7 +397,7 @@ namespace RTC
 					MS_WARN_TAG(
 					  sctp,
 					  "invalid Verification Tag %" PRIu32 " (should be %" PRIu32 ")",
-					  packet->GetVerificationTag(),
+					  receivedPacket->GetVerificationTag(),
 					  this->preTcb.localVerificationTag);
 
 					// TODO: Emit error?
@@ -404,9 +412,9 @@ namespace RTC
 			// packet and take no further action."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
-			if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
+			if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::ABORT)
 			{
-				auto* abortChunk = static_cast<const AbortAssociationChunk*>(packet->GetChunkAt(0));
+				auto* abortChunk = static_cast<const AbortAssociationChunk*>(receivedPacket->GetChunkAt(0));
 
 				// We cannot verify the Verification Tag so assume it's okey.
 				if (abortChunk->GetT() && !this->tcb)
@@ -414,9 +422,9 @@ namespace RTC
 					return true;
 				}
 				else if (
-				  (!abortChunk->GetT() && packet->GetVerificationTag() == localVerificationTag) ||
+				  (!abortChunk->GetT() && receivedPacket->GetVerificationTag() == localVerificationTag) ||
 				  (abortChunk->GetT() &&
-				   packet->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+				   receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
 				{
 					return true;
 				}
@@ -425,7 +433,7 @@ namespace RTC
 					MS_WARN_TAG(
 					  sctp,
 					  "ABORT Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
-					  packet->GetVerificationTag());
+					  receivedPacket->GetVerificationTag());
 
 					// TODO: Emit error?
 					return false;
@@ -435,7 +443,7 @@ namespace RTC
 			// This is handled in Chunk handler.
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#name-handle-a-cookie-echo-chunk-
-			if (packet->GetChunksCount() >= 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::COOKIE_ECHO)
+			if (receivedPacket->GetChunksCount() >= 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::COOKIE_ECHO)
 			{
 				return true;
 			}
@@ -447,10 +455,10 @@ namespace RTC
 			// and take no further action."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5.1
-			if (packet->GetChunksCount() == 1 && packet->GetChunkAt(0)->GetType() == Chunk::ChunkType::SHUTDOWN_COMPLETE)
+			if (receivedPacket->GetChunksCount() == 1 && receivedPacket->GetChunkAt(0)->GetType() == Chunk::ChunkType::SHUTDOWN_COMPLETE)
 			{
 				auto* shutdownCompleteChunk =
-				  static_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));
+				  static_cast<const ShutdownCompleteChunk*>(receivedPacket->GetChunkAt(0));
 
 				// We cannot verify the Verification Tag so assume it's okey.
 				if (shutdownCompleteChunk->GetT() && !this->tcb)
@@ -458,9 +466,10 @@ namespace RTC
 					return true;
 				}
 				else if (
-				  (!shutdownCompleteChunk->GetT() && packet->GetVerificationTag() == localVerificationTag) ||
+				  (!shutdownCompleteChunk->GetT() &&
+				   receivedPacket->GetVerificationTag() == localVerificationTag) ||
 				  (shutdownCompleteChunk->GetT() &&
-				   packet->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
+				   receivedPacket->GetVerificationTag() == this->tcb->GetRemoteVerificationTag()))
 				{
 					return true;
 				}
@@ -469,7 +478,7 @@ namespace RTC
 					MS_WARN_TAG(
 					  sctp,
 					  "SHUTDOWN_COMPLETE Chunk Verification Tag %" PRIu32 " is wrong, packet discarded",
-					  packet->GetVerificationTag());
+					  receivedPacket->GetVerificationTag());
 
 					// TODO: Emit error?
 					return false;
@@ -484,7 +493,7 @@ namespace RTC
 			// listed in Section 8.5.1 below."
 			//
 			// @see https://datatracker.ietf.org/doc/html/rfc9260#section-8.5
-			if (packet->GetVerificationTag() == localVerificationTag)
+			if (receivedPacket->GetVerificationTag() == localVerificationTag)
 			{
 				return true;
 			}
@@ -493,71 +502,71 @@ namespace RTC
 				MS_WARN_TAG(
 				  sctp,
 				  "invalid Verification Tag %" PRIu32 " (should be %" PRIu32 ")",
-				  packet->GetVerificationTag(),
+				  receivedPacket->GetVerificationTag(),
 				  localVerificationTag);
 
 				// TODO: Emit error?
 				return false;
 			}
-
-			// TODO
 		}
 
-		bool Socket::ProcessReceivedChunk(const Packet* packet, const Chunk* chunk)
+		bool Socket::ProcessReceivedChunk(const Packet* receivedPacket, const Chunk* receivedChunk)
 		{
 			MS_TRACE();
 
-			switch (chunk->GetType())
+			switch (receivedChunk->GetType())
 			{
 				case Chunk::ChunkType::DATA:
 				{
-					ProcessReceivedDataChunk(packet, static_cast<const DataChunk*>(chunk));
+					ProcessReceivedDataChunk(receivedPacket, static_cast<const DataChunk*>(receivedChunk));
 
 					break;
 				}
 
 				case Chunk::ChunkType::INIT:
 				{
-					ProcessReceivedInitChunk(packet, static_cast<const InitChunk*>(chunk));
+					ProcessReceivedInitChunk(receivedPacket, static_cast<const InitChunk*>(receivedChunk));
 
 					break;
 				}
 
 				case Chunk::ChunkType::INIT_ACK:
 				{
-					ProcessReceivedInitAckChunk(packet, static_cast<const InitAckChunk*>(chunk));
+					ProcessReceivedInitAckChunk(receivedPacket, static_cast<const InitAckChunk*>(receivedChunk));
 
 					break;
 				}
 
 				default:
 				{
-					return ProcessReceivedUnknownChunk(packet, static_cast<const UnknownChunk*>(chunk));
+					return ProcessReceivedUnknownChunk(
+					  receivedPacket, static_cast<const UnknownChunk*>(receivedChunk));
 				}
 			}
 
 			return true;
 		}
 
-		void Socket::ProcessReceivedDataChunk(const Packet* packet, const DataChunk* chunk)
+		void Socket::ProcessReceivedDataChunk(const Packet* receivedPacket, const DataChunk* receivedDataChunk)
 		{
 			MS_TRACE();
 		}
 
-		void Socket::ProcessReceivedInitChunk(const Packet* packet, const InitChunk* chunk)
+		void Socket::ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk)
 		{
 			MS_TRACE();
 
 			// Verify some fields that cannot be 0.
 			if (
-			  chunk->GetInitiateTag() == 0 || chunk->GetNumberOfOutboundStreams() == 0 or
-			  chunk->GetNumberOfInboundStreams() == 0)
+			  receivedInitChunk->GetInitiateTag() == 0 ||
+			  receivedInitChunk->GetNumberOfOutboundStreams() == 0 or
+			  receivedInitChunk->GetNumberOfInboundStreams() == 0)
 			{
 				MS_WARN_TAG(
 				  sctp,
 				  "invalid value 0 in Initiate Tag or Number of Outbound Streams or Number of Inbound Streams in received INIT Chunk, aborting association");
 
-				auto* packet     = CreatePacketWithRemoteVerificationTag(0);
+				auto* packet     = CreatePacketWithVerificationTag(0);
 				auto* abortChunk = packet->BuildChunkInPlace<AbortAssociationChunk>();
 
 				// NOTE: We are not setting the Verification Tag expected by the peer
@@ -657,6 +666,15 @@ namespace RTC
 
 					localVerificationTag =
 					  Utils::Crypto::GetRandomUInt(1, std::numeric_limits<uint32_t>::max());
+
+					// TODO: Implement this.
+					// Make the initial TSN make a large jump, so that there is no overlap
+					// with the old and new association.
+					// my_initial_tsn = TSN(*tcb_->retransmission_queue().next_tsn() + 1000000);
+
+					// TODO: Remove this when the above TODO is done.
+					localInitialTsn = Utils::Crypto::GetRandomUInt(0, std::numeric_limits<uint32_t>::max());
+
 					tieTag = this->tcb->GetTieTag();
 				}
 			}
@@ -667,25 +685,63 @@ namespace RTC
 			  ", remoteVerificationTag:%" PRIu32 ", remoteInitialTsn:%" PRIu32 "]",
 			  localVerificationTag,
 			  localInitialTsn,
-			  chunk->GetInitiateTag(),
-			  chunk->GetInitialTsn());
+			  receivedInitChunk->GetInitiateTag(),
+			  receivedInitChunk->GetInitialTsn());
 
-			// auto negotiatedCapabilities = NegotiatedCapabilities::Factory(
-			//   this->options, chunk->GetNumberOfOutboundStreams(), chunk->GetNumberOfInboundStreams(), chunk);
+			/* Send a Packet with an INIT_ACK Chunk. */
 
-			// TODO: More
+			auto* packet = CreatePacketWithVerificationTag(receivedInitChunk->GetInitiateTag());
+
+			// Insert an INIT_ACK Chunk in the Packet.
+			auto* initAckChunk = packet->BuildChunkInPlace<InitAckChunk>();
+
+			initAckChunk->SetInitiateTag(localVerificationTag);
+			initAckChunk->SetAdvertisedReceiverWindowCredit(
+			  this->options.localAdvertisedReceiverWindowCredit);
+			initAckChunk->SetNumberOfOutboundStreams(this->options.maxOutboundStreams);
+			initAckChunk->SetNumberOfInboundStreams(this->options.maxInboundStreams);
+			initAckChunk->SetInitialTsn(localInitialTsn);
+
+			// Insert a StateCookie Parameter in the INIT_ACK Chunk.
+			auto* stateCookieParameter = initAckChunk->BuildParameterInPlace<StateCookieParameter>();
+
+			const auto negotiatedCapabilities =
+			  NegotiatedCapabilities::Factory(this->options, receivedInitChunk);
+
+			// Write the StateCookie in place in the Parameter.
+			stateCookieParameter->WriteStateCookieInPlace(
+			  localVerificationTag,
+			  receivedInitChunk->GetInitiateTag(),
+			  localInitialTsn,
+			  receivedInitChunk->GetInitialTsn(),
+			  receivedInitChunk->GetAdvertisedReceiverWindowCredit(),
+			  tieTag,
+			  negotiatedCapabilities);
+
+			stateCookieParameter->Consolidate();
+
+			// Insert capabilities related Parameters in the INIT_ACK Chunk.
+			AddCapabilitiesParametersToInitOrInitAckChunk(initAckChunk);
+
+			initAckChunk->Consolidate();
+
+			SendPacket(packet, /*writeChecksum*/ !negotiatedCapabilities.zeroChecksum);
+
+			delete packet;
 		}
 
-		void Socket::ProcessReceivedInitAckChunk(const Packet* packet, const InitAckChunk* chunk)
+		void Socket::ProcessReceivedInitAckChunk(
+		  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk)
 		{
 			MS_TRACE();
 		}
 
-		bool Socket::ProcessReceivedUnknownChunk(const Packet* /*packet*/, const UnknownChunk* chunk)
+		bool Socket::ProcessReceivedUnknownChunk(
+		  const Packet* /*receivedPacket*/, const UnknownChunk* receivedUnknownChunk)
 		{
 			MS_TRACE();
 
-			auto action         = chunk->GetActionForUnknownChunkType();
+			auto action         = receivedUnknownChunk->GetActionForUnknownChunkType();
 			auto skipProcessing = action == Chunk::ActionForUnknownChunkType::SKIP ||
 			                      action == Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT;
 			auto reportError = action == Chunk::ActionForUnknownChunkType::STOP_AND_REPORT ||
@@ -697,23 +753,38 @@ namespace RTC
 				  sctp,
 				  "Chunk with unknown type %" PRIu8
 				  " received, skipping further processing of Chunks in the Packet",
-				  static_cast<uint8_t>(chunk->GetType()));
+				  static_cast<uint8_t>(receivedUnknownChunk->GetType()));
 			}
 			else
 			{
 				MS_DEBUG_TAG(
 				  sctp,
 				  "ignoring received Chunk with unknown type %" PRIu8,
-				  static_cast<uint8_t>(chunk->GetType()));
+				  static_cast<uint8_t>(receivedUnknownChunk->GetType()));
 			}
 
 			if (reportError)
 			{
 				// TODO: Notify error.
 
+				// If there is TCB (we need correct remote verification tag) send an
+				// OPERATION_ERROR Chunk with a Unrecognized Chunk Type Error Cause.
 				if (this->tcb)
 				{
-					// TODO: Send an ErrorChunk with Unrecognized Chunk Type.
+					auto* packet              = CreatePacket();
+					auto* operationErrorChunk = packet->BuildChunkInPlace<OperationErrorChunk>();
+					auto* unrecognizedChunkTypeErrorCause =
+					  operationErrorChunk->BuildErrorCauseInPlace<UnrecognizedChunkTypeErrorCause>();
+
+					unrecognizedChunkTypeErrorCause->SetUnrecognizedChunk(
+					  receivedUnknownChunk->GetBuffer(), receivedUnknownChunk->GetLength());
+
+					unrecognizedChunkTypeErrorCause->Consolidate();
+					operationErrorChunk->Consolidate();
+
+					SendPacket(packet);
+
+					delete packet;
 				}
 			}
 
@@ -797,7 +868,7 @@ namespace RTC
 
 			auto expectedStatesString = expectedStatesOss.str();
 
-			MS_THROW_ERROR(
+			MS_ABORT(
 			  "current Socket state %.*s does not match any of the given expected states (%s)",
 			  static_cast<int>(currentStateStringView.size()),
 			  currentStateStringView.data(),
@@ -826,7 +897,7 @@ namespace RTC
 
 				auto unexpectedStatesString = unexpectedStatesOss.str();
 
-				MS_THROW_ERROR(
+				MS_ABORT(
 				  "current Socket state %.*s matches one of the given unexpected states (%s)",
 				  static_cast<int>(currentStateStringView.size()),
 				  currentStateStringView.data(),
@@ -840,7 +911,7 @@ namespace RTC
 
 			if (!this->tcb)
 			{
-				MS_THROW_ERROR("TCB doesn't exist");
+				MS_ABORT("TCB doesn't exist");
 			}
 		}
 
