@@ -290,7 +290,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 				return;
 			}
 
-			MS_DEBUG_DEV("Worker close request, stopping");
+			MS_DEBUG_DEV("closing Worker");
+
+			request->Accept();
 
 			Close();
 

@@ -78,7 +78,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 	// Died dlag.
 	#died = false;
 
-	// Worker subprocess closed flag.
+	// Worker process closed flag.
 	#subprocessClosed = false;
 
 	// Custom app data.
@@ -211,8 +211,8 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		});
 
 		this.#child.on('exit', (code, signal) => {
-			// If killed by ourselves, do nothing.
-			if (this.#child.killed) {
+			// If closed by ourselves, do nothing.
+			if (this.#closed) {
 				return;
 			}
 
@@ -249,8 +249,8 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		});
 
 		this.#child.on('error', error => {
-			// If killed by ourselves, do nothing.
-			if (this.#child.killed) {
+			// If closed by ourselves, do nothing.
+			if (this.#closed) {
 				return;
 			}
 
@@ -274,12 +274,16 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 
 		this.#child.on('close', (code, signal) => {
 			logger.debug(
-				`worker subprocess closed [pid:${this.#pid}, code:${code}, signal:${signal}]`
+				`worker process closed [pid:${this.#pid}, code:${code}, signal:${signal}]`
 			);
 
-			this.#subprocessClosed = true;
+			if (!this.#subprocessClosed) {
+				this.#subprocessClosed = true;
 
-			this.safeEmit('subprocessclose');
+				logger.debug(`emitting 'subprocessclose' event`);
+
+				this.safeEmit('subprocessclose');
+			}
 		});
 
 		// Be ready for 3rd party worker libraries logging to stdout.
@@ -354,12 +358,6 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 
 		this.#closed = true;
 
-		// Kill the worker process.
-		this.#child.kill('SIGTERM');
-
-		// Close the Channel instance.
-		this.#channel.close();
-
 		// Close every Router.
 		for (const router of this.#routers) {
 			router.workerClosed();
@@ -371,6 +369,23 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 			webRtcServer.workerClosed();
 		}
 		this.#webRtcServers.clear();
+
+		/* Send Request. */
+		this.#channel
+			.request(FbsRequest.Method.WORKER_CLOSE)
+			.then(() => {
+				// Close the Channel instance now.
+				this.#channel.close();
+			})
+			.catch(error => {
+				logger.error(
+					'close() | worker process failed to process the close request:',
+					error
+				);
+
+				// Close the Channel instance anyway.
+				this.#channel.close();
+			});
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
@@ -561,9 +576,10 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 			return;
 		}
 
-		logger.debug(`died() [error:${error.toString()}]`);
+		logger.debug(`workerDied() [error:${error.toString()}]`);
 
 		this.#closed = true;
+		this.#subprocessClosed = true;
 		this.#died = true;
 
 		// Close the Channel instance.
@@ -581,7 +597,10 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		}
 		this.#webRtcServers.clear();
 
+		logger.debug(`workerDied() | emitting 'died' and 'subprocessclose' events`);
+
 		this.safeEmit('died', error);
+		this.safeEmit('subprocessclose');
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
