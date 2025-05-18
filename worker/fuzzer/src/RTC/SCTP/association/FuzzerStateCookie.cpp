@@ -43,7 +43,7 @@ void Fuzzer::RTC::SCTP::StateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetRemoteVerificationTag();
 	stateCookie->GetLocalInitialTsn();
 	stateCookie->GetRemoteInitialTsn();
-	stateCookie->GetLocalAdvertisedReceiverWindowCredit();
+	stateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
 	stateCookie->GetNegotiatedCapabilities();
 
@@ -53,7 +53,7 @@ void Fuzzer::RTC::SCTP::StateCookie::Fuzz(const uint8_t* data, size_t len)
 	stateCookie->GetRemoteVerificationTag();
 	stateCookie->GetLocalInitialTsn();
 	stateCookie->GetRemoteInitialTsn();
-	stateCookie->GetLocalAdvertisedReceiverWindowCredit();
+	stateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
 	stateCookie->GetNegotiatedCapabilities();
 
@@ -65,7 +65,7 @@ void Fuzzer::RTC::SCTP::StateCookie::Fuzz(const uint8_t* data, size_t len)
 	clonedStateCookie->GetRemoteVerificationTag();
 	clonedStateCookie->GetLocalInitialTsn();
 	clonedStateCookie->GetRemoteInitialTsn();
-	clonedStateCookie->GetLocalAdvertisedReceiverWindowCredit();
+	clonedStateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	clonedStateCookie->GetTieTag();
 	clonedStateCookie->GetNegotiatedCapabilities();
 
