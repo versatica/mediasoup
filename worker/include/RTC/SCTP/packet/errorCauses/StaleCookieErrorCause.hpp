@@ -93,6 +93,8 @@ namespace RTC
 			{
 				return StaleCookieErrorCause::StaleCookieErrorCauseHeaderLength;
 			}
+
+			virtual const std::string ContentToString() const override final;
 		};
 	} // namespace SCTP
 } // namespace RTC

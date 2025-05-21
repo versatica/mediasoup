@@ -136,5 +136,12 @@ namespace RTC
 
 			return softClonedErrorCause;
 		}
+
+		const std::string NoUserDataErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			return "tsn:[" + std::to_string(GetTsn()) + "]";
+		}
 	} // namespace SCTP
 } // namespace RTC

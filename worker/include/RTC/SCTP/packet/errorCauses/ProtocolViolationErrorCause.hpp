@@ -94,6 +94,8 @@ namespace RTC
 
 		protected:
 			virtual ProtocolViolationErrorCause* SoftClone(const uint8_t* buffer) const final override;
+
+			virtual const std::string ContentToString() const override final;
 		};
 	} // namespace SCTP
 } // namespace RTC

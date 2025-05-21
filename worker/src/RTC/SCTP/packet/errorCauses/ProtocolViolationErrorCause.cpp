@@ -141,5 +141,23 @@ namespace RTC
 
 			return softClonedErrorCause;
 		}
+
+		const std::string ProtocolViolationErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			if (HasAdditionalInformation())
+			{
+				return "info:[" +
+				       std::string(
+				         reinterpret_cast<const char*>(GetAdditionalInformation()),
+				         GetAdditionalInformationLength()) +
+				       "]";
+			}
+			else
+			{
+				return "";
+			}
+		}
 	} // namespace SCTP
 } // namespace RTC

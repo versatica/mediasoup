@@ -136,5 +136,12 @@ namespace RTC
 
 			return softClonedErrorCause;
 		}
+
+		const std::string StaleCookieErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			return "staleness:" + std::to_string(GetMeasureOfStaleness());
+		}
 	} // namespace SCTP
 } // namespace RTC
