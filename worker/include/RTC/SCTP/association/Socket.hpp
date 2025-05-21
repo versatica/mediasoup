@@ -10,6 +10,7 @@
 #include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/chunks/AbortAssociationChunk.hpp"
 #include "RTC/SCTP/packet/chunks/DataChunk.hpp"
+#include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitAckChunk.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
 #include "RTC/SCTP/packet/chunks/OperationErrorChunk.hpp"
@@ -147,6 +148,9 @@ namespace RTC
 			  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk);
 
 			void ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk);
+
+			void ProcessReceivedHeartbeatRequestChunk(
+			  const Packet* receivedPacket, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk);
 
 			bool ProcessReceivedUnknownChunk(
 			  const Packet* receivedPacket, const UnknownChunk* receivedUnknownChunk);

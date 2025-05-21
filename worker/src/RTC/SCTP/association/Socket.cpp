@@ -544,6 +544,14 @@ namespace RTC
 					break;
 				}
 
+				case Chunk::ChunkType::HEARTBEAT_REQUEST:
+				{
+					ProcessReceivedHeartbeatRequestChunk(
+					  receivedPacket, static_cast<const HeartbeatRequestChunk*>(receivedChunk));
+
+					break;
+				}
+
 				default:
 				{
 					return ProcessReceivedUnknownChunk(
@@ -561,7 +569,8 @@ namespace RTC
 			// TODO
 		}
 
-		void Socket::ProcessReceivedInitChunk(const Packet* receivedPacket, const InitChunk* receivedInitChunk)
+		void Socket::ProcessReceivedInitChunk(
+		  const Packet* /*receivedPacket*/, const InitChunk* receivedInitChunk)
 		{
 			MS_TRACE();
 
@@ -740,7 +749,7 @@ namespace RTC
 		}
 
 		void Socket::ProcessReceivedInitAckChunk(
-		  const Packet* receivedPacket, const InitAckChunk* receivedInitAckChunk)
+		  const Packet* /*receivedPacket*/, const InitAckChunk* receivedInitAckChunk)
 		{
 			MS_TRACE();
 
@@ -826,7 +835,16 @@ namespace RTC
 			this->t1CookieTimer->Start();
 		}
 
-		void Socket::ProcessReceivedSackChunk(const Packet* receivedPacket, const SackChunk* receivedSackChunk)
+		void Socket::ProcessReceivedSackChunk(
+		  const Packet* /*receivedPacket*/, const SackChunk* receivedSackChunk)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void Socket::ProcessReceivedHeartbeatRequestChunk(
+		  const Packet* /*receivedPacket*/, const HeartbeatRequestChunk* receivedHeartbeatRequestChunk)
 		{
 			MS_TRACE();
 
