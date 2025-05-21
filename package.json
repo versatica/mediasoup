@@ -38,6 +38,7 @@
 		"README.md",
 		"node/lib",
 		"npm-scripts.mjs",
+		"worker/Makefile",
 		"worker/deps/libwebrtc",
 		"worker/fbs",
 		"worker/fuzzer/include",
