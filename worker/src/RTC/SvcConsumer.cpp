@@ -454,8 +454,8 @@ namespace RTC
 				)
 				// clang-format on
 				{
-					auto provisionalRequiredBitrate = this->producerRtpStream->GetBitrate(
-					  nowMs, this->provisionalTargetSpatialLayer, this->provisionalTargetTemporalLayer);
+					auto provisionalRequiredBitrate = this->producerRtpStream->GetSpatialLayerBitrate(
+					  nowMs, this->provisionalTargetSpatialLayer);
 
 					if (requiredBitrate > provisionalRequiredBitrate)
 					{
