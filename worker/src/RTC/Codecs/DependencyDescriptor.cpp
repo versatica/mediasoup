@@ -115,15 +115,6 @@ namespace RTC
 			MS_DUMP("</DependencyDescriptor>");
 		}
 
-		void DependencyDescriptor::SetFrameNumber(uint16_t frameNumber)
-		{
-			MS_TRACE();
-
-			static unsigned maxFrameNumber = std::numeric_limits<uint16_t>::max();
-
-			this->bitStream.Write(8, maxFrameNumber + 1, frameNumber);
-		}
-
 		bool DependencyDescriptor::ReadMandatoryDescriptorFields()
 		{
 			MS_TRACE();

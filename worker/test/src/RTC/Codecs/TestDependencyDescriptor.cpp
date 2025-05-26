@@ -119,14 +119,5 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 303);
-
-		const auto frameNumber = 2332;
-		dependencyDescriptor->SetFrameNumber(frameNumber);
-
-		dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
-		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure));
-
-		REQUIRE(dependencyDescriptor);
-		REQUIRE(dependencyDescriptor->frameNumber == frameNumber);
 	}
 }

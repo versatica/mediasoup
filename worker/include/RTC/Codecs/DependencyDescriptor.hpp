@@ -44,7 +44,6 @@ namespace RTC
 			  const uint8_t* data, size_t len, TemplateDependencyStructure* templateDependencyStructure);
 
 			void Dump() const;
-			void SetFrameNumber(uint16_t frameNumber);
 
 		private:
 			uint8_t GetSpatialLayer() const;
