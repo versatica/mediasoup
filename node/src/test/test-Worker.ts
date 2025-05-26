@@ -46,6 +46,7 @@ test('mediasoup.createWorker() succeeds', async () => {
 	expect(worker1.constructor.name).toBe('WorkerImpl');
 	expect(typeof worker1.pid).toBe('number');
 	expect(worker1.closed).toBe(false);
+	expect(worker1.subprocessClosed).toBe(false);
 	expect(worker1.died).toBe(false);
 
 	worker1.close();
@@ -53,6 +54,7 @@ test('mediasoup.createWorker() succeeds', async () => {
 	await enhancedOnce<WorkerEvents>(worker1, 'subprocessclose');
 
 	expect(worker1.closed).toBe(true);
+	expect(worker1.subprocessClosed).toBe(true);
 	expect(worker1.died).toBe(false);
 
 	const worker2 = await mediasoup.createWorker<{ foo: number; bar?: string }>({
@@ -70,6 +72,7 @@ test('mediasoup.createWorker() succeeds', async () => {
 	expect(worker2.constructor.name).toBe('WorkerImpl');
 	expect(typeof worker2.pid).toBe('number');
 	expect(worker2.closed).toBe(false);
+	expect(worker2.subprocessClosed).toBe(false);
 	expect(worker2.died).toBe(false);
 	expect(worker2.appData).toEqual({ foo: 456 });
 
@@ -78,6 +81,7 @@ test('mediasoup.createWorker() succeeds', async () => {
 	await enhancedOnce<WorkerEvents>(worker2, 'subprocessclose');
 
 	expect(worker2.closed).toBe(true);
+	expect(worker2.subprocessClosed).toBe(true);
 	expect(worker2.died).toBe(false);
 }, 2000);
 
@@ -194,6 +198,7 @@ test('worker.close() succeeds', async () => {
 
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker.closed).toBe(true);
+	expect(worker.subprocessClosed).toBe(true);
 	expect(worker.died).toBe(false);
 }, 2000);
 
@@ -226,13 +231,10 @@ test('Worker emits "died" if mediasoup-worker process died unexpectedly', async 
 		process.kill(worker1.pid, 'SIGINT');
 	});
 
-	if (!worker1.subprocessClosed) {
-		await enhancedOnce<WorkerEvents>(worker1, 'subprocessclose');
-	}
-
 	expect(onDied).toHaveBeenCalledTimes(1);
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker1.closed).toBe(true);
+	expect(worker1.subprocessClosed).toBe(true);
 	expect(worker1.died).toBe(true);
 
 	const worker2 = await mediasoup.createWorker({ logLevel: 'warn' });
@@ -260,13 +262,10 @@ test('Worker emits "died" if mediasoup-worker process died unexpectedly', async 
 		process.kill(worker2.pid, 'SIGTERM');
 	});
 
-	if (!worker2.subprocessClosed) {
-		await enhancedOnce<WorkerEvents>(worker2, 'subprocessclose');
-	}
-
 	expect(onDied).toHaveBeenCalledTimes(1);
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker2.closed).toBe(true);
+	expect(worker2.subprocessClosed).toBe(true);
 	expect(worker2.died).toBe(true);
 
 	const worker3 = await mediasoup.createWorker({ logLevel: 'warn' });
@@ -294,13 +293,10 @@ test('Worker emits "died" if mediasoup-worker process died unexpectedly', async 
 		process.kill(worker3.pid, 'SIGKILL');
 	});
 
-	if (!worker3.subprocessClosed) {
-		await enhancedOnce<WorkerEvents>(worker3, 'subprocessclose');
-	}
-
 	expect(onDied).toHaveBeenCalledTimes(1);
 	expect(onObserverClose).toHaveBeenCalledTimes(1);
 	expect(worker3.closed).toBe(true);
+	expect(worker3.subprocessClosed).toBe(true);
 	expect(worker3.died).toBe(true);
 }, 5000);
 
@@ -321,6 +317,8 @@ if (os.platform() !== 'win32') {
 
 			setTimeout(() => {
 				expect(worker.closed).toBe(false);
+				expect(worker.subprocessClosed).toBe(false);
+				expect(worker.died).toBe(false);
 
 				worker.on('subprocessclose', resolve);
 				worker.close();
