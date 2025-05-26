@@ -20,8 +20,6 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-22.04
-          - os: ubuntu-22.04-arm
           - os: ubuntu-24.04
           - os: ubuntu-24.04-arm
           - os: macos-13

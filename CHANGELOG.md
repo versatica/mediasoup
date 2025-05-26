@@ -3,8 +3,9 @@
 ### NEXT
 
 - Node: Make `worker.close()` close the worker process by sending a `WORKER_CLOSE` request through the channel instead of by sending a SIGINT signal ([PR #1534](https://github.com/versatica/mediasoup/pull/1534)).
-- Worker: Add initial AV1 codec support ([PR #1508](https://github.com/versatica/mediasoup/pull/1535)).
+- Worker: Add initial AV1 codec support ([PR #1508](https://github.com/versatica/mediasoup/pull/1508)).
 - `SvcConsumer`: Fix K-SVC bitrate in `IncreaseLayer()` method ([PR #1535](https://github.com/versatica/mediasoup/pull/1535) by @vpalmisano).
+- Node: Require Node >= 20 (drop support for Node 18) ([PR #1536](https://github.com/versatica/mediasoup/pull/1536)).
 
 ### 3.15.8
 

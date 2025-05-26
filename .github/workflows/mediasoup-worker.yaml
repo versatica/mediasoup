@@ -44,15 +44,6 @@ jobs:
             run-test-asan-address: true
             run-test-asan-undefined: false
             run-test-asan-thread: true
-          - os: ubuntu-22.04-arm
-            cc: clang
-            cxx: clang++
-            # No clang-format for ARM.
-            run-lint: false
-            run-test: true
-            run-test-asan-address: true
-            run-test-asan-undefined: true
-            run-test-asan-thread: true
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
