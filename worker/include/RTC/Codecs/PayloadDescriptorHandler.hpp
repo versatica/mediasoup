@@ -2,11 +2,14 @@
 #define MS_RTC_CODECS_PAYLOAD_DESCRIPTOR_HANDLER_HPP
 
 #include "common.hpp"
+#include "DependencyDescriptor.hpp"
 #include "RTC/SeqManager.hpp"
 #include <deque>
 
 namespace RTC
 {
+	class RtpPacket;
+
 	namespace Codecs
 	{
 		// Codec payload descriptor.
@@ -217,14 +220,15 @@ namespace RTC
 			virtual ~PayloadDescriptorHandler() = default;
 
 		public:
-			virtual void Dump() const                                                                = 0;
-			virtual bool Process(RTC::Codecs::EncodingContext* context, uint8_t* data, bool& marker) = 0;
-			virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const                   = 0;
-			virtual void Encode(uint8_t* data, PayloadDescriptor::Encoder* encoder)                  = 0;
-			virtual void Restore(uint8_t* data)                                                      = 0;
-			virtual uint8_t GetSpatialLayer() const                                                  = 0;
-			virtual uint8_t GetTemporalLayer() const                                                 = 0;
-			virtual bool IsKeyFrame() const                                                          = 0;
+			virtual void Dump() const = 0;
+			virtual bool Process(
+			  RTC::Codecs::EncodingContext* context, RTC::RtpPacket* packet, bool& marker) = 0;
+			virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const         = 0;
+			virtual void Encode(RtpPacket* packet, PayloadDescriptor::Encoder* encoder)    = 0;
+			virtual void Restore(RtpPacket* packet)                                        = 0;
+			virtual uint8_t GetSpatialLayer() const                                        = 0;
+			virtual uint8_t GetTemporalLayer() const                                       = 0;
+			virtual bool IsKeyFrame() const                                                = 0;
 		};
 	} // namespace Codecs
 } // namespace RTC

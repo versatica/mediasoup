@@ -149,13 +149,14 @@ namespace RTC
 				{
 					this->payloadDescriptor->Dump();
 				}
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
+				bool Process(
+				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
 				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 				{
 					return this->payloadDescriptor->GetEncoder();
 				}
-				void Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder) override;
-				void Restore(uint8_t* data) override;
+				void Encode(RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder) override;
+				void Restore(RtpPacket* packet) override;
 				uint8_t GetSpatialLayer() const override
 				{
 					return 0u;

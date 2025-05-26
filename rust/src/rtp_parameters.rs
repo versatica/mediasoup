@@ -588,6 +588,11 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/playout-delay>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay")]
     PlayoutDelay,
+    /// <https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension>
+    #[serde(
+        rename = "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
+    )]
+    DependencyDescriptor,
 
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
@@ -627,6 +632,9 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::PlayoutDelay => {
                 rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay
             }
+            RtpHeaderExtensionUri::DependencyDescriptor => {
+                rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor
+            }
             RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
         }
     }
@@ -662,6 +670,9 @@ impl RtpHeaderExtensionUri {
             }
             rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay => {
                 RtpHeaderExtensionUri::PlayoutDelay
+            }
+            rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor => {
+                RtpHeaderExtensionUri::DependencyDescriptor
             }
         }
     }
@@ -723,6 +734,9 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::PlayoutDelay => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay"
+            }
+            RtpHeaderExtensionUri::DependencyDescriptor => {
+                "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }

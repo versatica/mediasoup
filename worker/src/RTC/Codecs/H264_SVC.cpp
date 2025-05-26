@@ -296,7 +296,7 @@ namespace RTC
 		}
 
 		bool H264_SVC::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* /*data*/, bool& marker)
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* /*packet*/, bool& marker)
 		{
 			MS_TRACE();
 

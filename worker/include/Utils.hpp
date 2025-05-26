@@ -354,6 +354,29 @@ namespace Utils
 			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
 		}
 	};
+
+	class BitStream
+	{
+	public:
+		BitStream(uint8_t* data, size_t len);
+		~BitStream() = default;
+
+		uint8_t GetBit();
+		uint32_t GetBits(size_t count);
+		uint32_t GetLeftBits() const;
+		void SkipBits(size_t count);
+		void Write(uint32_t offset, uint32_t n, uint32_t v);
+
+	private:
+		void PutBit(uint32_t offset, uint8_t bit);
+		void PutBits(uint32_t offset, uint32_t count, uint32_t bits);
+
+	private:
+		uint8_t* data;
+		uint32_t len{ 0 };
+		uint32_t offset{ 0 };
+	};
+
 } // namespace Utils
 
 #endif

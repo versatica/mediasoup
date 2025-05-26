@@ -381,6 +381,13 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		// TODO: Enable when DD is sendrecv.
+		// {
+		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+		// 	id: 8,
+		// 	encrypt: false,
+		// 	parameters: {},
+		// },
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 11,
@@ -448,6 +455,14 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+
+		// TODO: Enable when DD is sendrecv.
+		// {
+		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+		// 	id: 8,
+		// 	encrypt: false,
+		// 	parameters: {},
+		// },
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 11,
@@ -569,6 +584,13 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		// TODO: Enable when DD is sendrecv.
+		// {
+		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+		// 	id: 8,
+		// 	encrypt: false,
+		// 	parameters: {},
+		// },
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 11,

@@ -284,7 +284,7 @@ namespace RTC
 		}
 
 		bool VP8::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& /*marker*/)
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& /*marker*/)
 		{
 			MS_TRACE();
 
@@ -417,22 +417,23 @@ namespace RTC
 			{
 				// Store the encoding data for retransmissions.
 				this->payloadDescriptor->CreateEncoder({ pictureId, tl0PictureIndex });
-				this->payloadDescriptor->Encode(data);
+				this->payloadDescriptor->Encode(packet->GetPayload());
 			}
 
 			return true;
 		};
 
-		void VP8::PayloadDescriptorHandler::Encode(uint8_t* data, Codecs::PayloadDescriptor::Encoder* encoder)
+		void VP8::PayloadDescriptorHandler::Encode(
+		  RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 
 			auto* vp8Encoder = static_cast<VP8::PayloadDescriptor::Encoder*>(encoder);
 
-			vp8Encoder->Encode(data, this->payloadDescriptor.get());
+			vp8Encoder->Encode(packet->GetPayload(), this->payloadDescriptor.get());
 		}
 
-		void VP8::PayloadDescriptorHandler::Restore(uint8_t* data)
+		void VP8::PayloadDescriptorHandler::Restore(RtpPacket* packet)
 		{
 			MS_TRACE();
 
@@ -443,7 +444,7 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				this->payloadDescriptor->Restore(data);
+				this->payloadDescriptor->Restore(packet->GetPayload());
 			}
 		}
 	} // namespace Codecs
