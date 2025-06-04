@@ -167,6 +167,10 @@ extern "C" int mediasoup_worker_run(
 		// 40 is a custom exit code to notify "unknown error" to the Node library.
 		return 40;
 	}
+	catch (const std::runtime_error& error)
+	{
+		return 134; // 134 is the exit code for SIGABRT.
+	}
 }
 
 void IgnoreSignals()
