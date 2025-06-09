@@ -22,7 +22,8 @@ namespace RTC
 	class Producer : public RTC::RtpStreamRecv::Listener,
 	                 public RTC::KeyFrameRequestManager::Listener,
 	                 public Channel::ChannelSocket::RequestHandler,
-	                 public Channel::ChannelSocket::NotificationHandler
+	                 public Channel::ChannelSocket::NotificationHandler,
+	                 public TimerHandle::Listener
 	{
 	public:
 		class Listener
@@ -73,6 +74,13 @@ namespace RTC
 			uint16_t rotation{ 0 };
 		};
 
+	private:
+		struct DelayedPacketInfo
+		{
+			RtpPacket* packet{ nullptr };
+			uint64_t arrivalTime{ 0 };
+		};
+
 	public:
 		enum class ReceiveRtpPacketResult
 		{
@@ -91,6 +99,10 @@ namespace RTC
 			bool fir{ false };
 			bool sr{ false };
 		};
+
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
+	public:
+		void OnTimer(TimerHandle* timer) override;
 
 	public:
 		Producer(
@@ -208,6 +220,11 @@ namespace RTC
 		struct TraceEventTypes traceEventTypes;
 		// Static buffer.
 		thread_local static uint8_t* buffer;
+		// TMP
+		std::vector<DelayedPacketInfo> delayQueue;
+		TimerHandle* delayTimer{ nullptr };
+		uint16_t delayedPackets{ 0 };
+		uint16_t packetCount{ 0 };
 	};
 } // namespace RTC
 

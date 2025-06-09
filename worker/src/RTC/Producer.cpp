@@ -13,6 +13,13 @@
 #include <absl/container/inlined_vector.h>
 #include <cstring> // std::memcpy()
 
+// Delay (in milliseconds) for each video packet.
+const uint16_t VIDEO_DELAY_MS = 2000;
+// Number of delayed packets.
+const uint16_t MAX_DELAYED_PACKETS = 10000;
+// Packets will only be delayed after this amount of packets have been received.
+const uint16_t FIRST_DELAYED_PACKET = 5000;
+
 namespace RTC
 {
 	/* Static variables. */
@@ -223,6 +230,8 @@ namespace RTC
 			auto keyFrameRequestDelay = data->keyFrameRequestDelay();
 
 			this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
+
+			this->delayTimer = new TimerHandle(this);
 		}
 
 		// NOTE: This may throw.
@@ -578,6 +587,29 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.producerId = this->id;
 #endif
+
+		if (this->kind == RTC::Media::Kind::VIDEO)
+		{
+			// This is the first packet in the delay queue, remove it from the queue.
+			if (!this->delayQueue.empty() && this->delayQueue[0].packet == packet)
+			{
+				this->delayQueue.erase(this->delayQueue.begin());
+			}
+			else if (this->packetCount++ > FIRST_DELAYED_PACKET && this->delayedPackets < MAX_DELAYED_PACKETS)
+			{
+				// Add packet to the delay queue.
+				this->delayQueue.push_back({ packet->Clone(), DepLibUV::GetTimeMs() });
+				this->delayedPackets++;
+
+				// Only arm the timer for the first packet.
+				if (this->delayQueue.size() == 1)
+				{
+					this->delayTimer->Start(VIDEO_DELAY_MS);
+				}
+
+				return Producer::ReceiveRtpPacketResult::MEDIA;
+			}
+		}
 
 		// Reset current packet.
 		this->currentRtpPacket = nullptr;
@@ -1762,5 +1794,29 @@ namespace RTC
 		auto* rtpStream = it->second;
 
 		rtpStream->RequestKeyFrame();
+	}
+
+	inline void Producer::OnTimer(TimerHandle* timer)
+	{
+		MS_TRACE();
+
+		if (this->delayQueue.empty())
+		{
+			return;
+		}
+
+		auto [packet, arrivalTime] = this->delayQueue[0];
+
+		if (this->delayQueue.size() > 1)
+		{
+			// Rearm timer.
+			const uint64_t ms = this->delayQueue[1].arrivalTime - arrivalTime;
+			this->delayTimer->Start(ms);
+		}
+
+		MS_ERROR("delayed packet: %" PRIu16, packet->GetSequenceNumber());
+		this->ReceiveRtpPacket(packet);
+
+		delete packet;
 	}
 } // namespace RTC
