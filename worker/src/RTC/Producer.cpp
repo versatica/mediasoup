@@ -14,7 +14,7 @@
 #include <cstring> // std::memcpy()
 
 // Delay (in milliseconds) for each video packet.
-const uint16_t VIDEO_DELAY_MS = 2000;
+const uint16_t VIDEO_DELAY_MS = 200;
 // Number of delayed packets.
 const uint16_t MAX_DELAYED_PACKETS = 10000;
 // Packets will only be delayed after this amount of packets have been received.
