@@ -264,6 +264,10 @@ namespace RTC
 
 		// Delete the KeyFrameRequestManager.
 		delete this->keyFrameRequestManager;
+
+		// Delete the RTCP timer.
+		delete this->delayTimer;
+		this->delayTimer = nullptr;
 	}
 
 	flatbuffers::Offset<FBS::Producer::DumpResponse> Producer::FillBuffer(
@@ -1799,6 +1803,11 @@ namespace RTC
 	inline void Producer::OnTimer(TimerHandle* timer)
 	{
 		MS_TRACE();
+
+		if (timer != this->delayTimer)
+		{
+			return;
+		}
 
 		if (this->delayQueue.empty())
 		{
