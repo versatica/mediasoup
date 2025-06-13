@@ -259,8 +259,8 @@ libuv_proj = subproject(
   ],
 )
 
-libsrtp2_proj = subproject(
-  'libsrtp2',
+libsrtp3_proj = subproject(
+  'libsrtp3',
   default_options: [
     'warning_level=0',
     'crypto-library=openssl',
@@ -310,7 +310,7 @@ dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   libuv_proj.get_variable('libuv_dep'),
-  libsrtp2_proj.get_variable('libsrtp2_dep'),
+  libsrtp3_proj.get_variable('libsrtp3_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
   flatbuffers_proj.get_variable('flatbuffers_dep'),
   flatbuffers_generator_dep,
@@ -322,7 +322,7 @@ link_whole = [
   openssl_proj.get_variable('libcrypto_lib'),
   openssl_proj.get_variable('libssl_lib'),
   libuv_proj.get_variable('libuv'),
-  libsrtp2_proj.get_variable('libsrtp2'),
+  libsrtp3_proj.get_variable('libsrtp3'),
   usrsctp_proj.get_variable('usrsctp'),
   flatbuffers_proj.get_variable('flatbuffers_lib'),
   libwebrtc,
