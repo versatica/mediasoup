@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Update worker dependency libuv to 1.51.0 ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.16.0
 
 - Node: Make `worker.close()` close the worker process by sending a `WORKER_CLOSE` request through the channel instead of by sending a SIGINT signal ([PR #1534](https://github.com/versatica/mediasoup/pull/1534)).
