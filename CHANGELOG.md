@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Update worker dependency libuv to 1.51.0 ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Update worker dependency libuv to 1.51.0 ([PR #1543](https://github.com/versatica/mediasoup/pull/1543)).
 
 ### 3.16.0
 
