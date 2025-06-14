@@ -8,7 +8,7 @@
 #endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring> // std::memset(), std::memcpy()
+#include <cstring> // std::memset()
 
 namespace RTC
 {
@@ -202,6 +202,7 @@ namespace RTC
 		}
 
 		uint8_t* encryptBuffer = EncryptBuffer;
+		size_t encryptLen      = EncryptBufferSize;
 
 #ifdef MS_LIBURING_SUPPORTED
 		if (DepLibUring::IsEnabled())
@@ -217,15 +218,20 @@ namespace RTC
 			if (sendBuffer)
 			{
 				encryptBuffer = sendBuffer;
+				encryptLen    = DepLibUring::SendBufferSize;
 			}
 		}
 
 	protect:
 #endif
 
-		std::memcpy(encryptBuffer, *data, *len);
-
-		const srtp_err_status_t err = srtp_protect(this->session, encryptBuffer, len);
+		const srtp_err_status_t err = srtp_protect(
+		  /*srtp_t ctx*/ this->session,
+		  /*const uint8_t* rtp*/ *data,
+		  /*size_t rtp_len*/ *len,
+		  /*uint8_t* srtp*/ encryptBuffer,
+		  /*size_t* srtp_len*/ std::addressof(encryptLen),
+		  /*size_t mki_index*/ 0);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -234,8 +240,9 @@ namespace RTC
 			return false;
 		}
 
-		// Update the given data pointer.
+		// Update the given data pointer and len.
 		*data = const_cast<const uint8_t*>(encryptBuffer);
+		*len  = encryptLen;
 
 		return true;
 	}
@@ -244,7 +251,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const srtp_err_status_t err = srtp_unprotect(this->session, data, len);
+		size_t decryptLen = *len;
+
+		const srtp_err_status_t err = srtp_unprotect(
+		  /*srtp_t ctx*/ this->session,
+		  /*const uint8_t* srtp*/ data,
+		  /*size_t srtp_len*/ *len,
+		  /*uint8_t* rtp*/ data,
+		  /*size_t* rtp_len*/ std::addressof(decryptLen));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -252,6 +266,9 @@ namespace RTC
 
 			return false;
 		}
+
+		// Update the given len.
+		*len = decryptLen;
 
 		return true;
 	}
@@ -268,9 +285,16 @@ namespace RTC
 			return false;
 		}
 
-		std::memcpy(EncryptBuffer, *data, *len);
+		uint8_t* encryptBuffer = EncryptBuffer;
+		size_t encryptLen      = EncryptBufferSize;
 
-		const srtp_err_status_t err = srtp_protect_rtcp(this->session, EncryptBuffer, len);
+		const srtp_err_status_t err = srtp_protect_rtcp(
+		  /*srtp_t ctx*/ this->session,
+		  /*const uint8_t* rtcp*/ *data,
+		  /*size_t rtcp_len*/ *len,
+		  /*uint8_t* srtcp*/ encryptBuffer,
+		  /*size_t* srtcp_len*/ std::addressof(encryptLen),
+		  /*size_t mki_index*/ 0);
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -279,8 +303,9 @@ namespace RTC
 			return false;
 		}
 
-		// Update the given data pointer.
+		// Update the given data pointer and len.
 		*data = (const uint8_t*)EncryptBuffer;
+		*len  = encryptLen;
 
 		return true;
 	}
@@ -289,7 +314,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		const srtp_err_status_t err = srtp_unprotect_rtcp(this->session, data, len);
+		size_t decryptLen = *len;
+
+		const srtp_err_status_t err = srtp_unprotect_rtcp(
+		  /*srtp_t ctx*/ this->session,
+		  /*const uint8_t* srtcp*/ data,
+		  /*size_t srtcp_len*/ *len,
+		  /*uint8_t* rtcp*/ data,
+		  /*size_t* rtcp_len*/ std::addressof(decryptLen));
 
 		if (DepLibSRTP::IsError(err))
 		{
@@ -297,6 +329,9 @@ namespace RTC
 
 			return false;
 		}
+
+		// Update the given len.
+		*len = decryptLen;
 
 		return true;
 	}

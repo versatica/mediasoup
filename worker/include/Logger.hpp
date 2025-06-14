@@ -460,6 +460,7 @@ public:
 	} \
 	while (false)
 
+#ifdef MS_EXECUTABLE
 #define MS_ABORT(desc, ...) \
 	do \
 	{ \
@@ -468,6 +469,18 @@ public:
 		std::abort(); \
 	} \
 	while (false)
+#else
+#define MS_ABORT(desc, ...) \
+	do \
+	{ \
+		std::fprintf(stderr, "(ABORT) " _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		std::fflush(stderr); \
+		char abortMessage[Logger::BufferSize]; \
+		std::snprintf(abortMessage, Logger::BufferSize, "(ABORT) " _MS_LOG_STR_DESC desc _MS_LOG_SEPARATOR_CHAR_STD, _MS_LOG_ARG, ##__VA_ARGS__); \
+		throw std::runtime_error(abortMessage); \
+	} \
+	while (false)
+#endif
 
 #define MS_ASSERT(condition, desc, ...) \
 	if (!(condition)) \

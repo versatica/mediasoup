@@ -1,0 +1,8 @@
+[wrap-file]
+directory = libsrtp-3.0.0-beta
+source_url = https://github.com/versatica/libsrtp/archive/v3.0.0-beta.zip
+source_filename = libsrtp-3.0.0-beta.zip
+source_hash = b0cb21aaf27120b1a242f3d9b07c145b4a6c7a02a25da0824539fd95611f690c
+
+[provide]
+libsrtp3 = libsrtp3_dep

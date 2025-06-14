@@ -18,14 +18,10 @@ jobs:
       matrix:
         build:
           - os: ubuntu-22.04
-            node: 18
+            node: 20
             cc: gcc
             cxx: g++
           - os: ubuntu-22.04-arm
-            node: 18
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04
             node: 20
             cc: gcc
             cxx: g++
@@ -48,10 +44,6 @@ jobs:
             cc: gcc
             cxx: g++
             meson_args: '-Db_sanitize=thread'
-          - os: ubuntu-24.04-arm
-            node: 20
-            cc: gcc
-            cxx: g++
           - os: ubuntu-24.04-arm
             node: 22
             cc: gcc
@@ -76,7 +68,7 @@ jobs:
             cxx: g++
             meson_args: '-Db_sanitize=thread'
           - os: macos-13
-            node: 18
+            node: 20
             cc: clang
             cxx: clang++
           - os: macos-14

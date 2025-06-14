@@ -219,6 +219,19 @@ const supportedRtpCapabilities: RtpCapabilities = {
 				{ type: 'transport-cc' },
 			],
 		},
+		{
+			kind: 'video',
+			mimeType: 'video/AV1',
+			clockRate: 90000,
+			parameters: {},
+			rtcpFeedback: [
+				{ type: 'nack' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb' },
+				{ type: 'transport-cc' },
+			],
+		},
 	],
 	headerExtensions: [
 		{
@@ -292,6 +305,13 @@ const supportedRtpCapabilities: RtpCapabilities = {
 			preferredId: 7,
 			preferredEncrypt: false,
 			direction: 'sendrecv',
+		},
+		{
+			kind: 'video',
+			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+			preferredId: 8,
+			preferredEncrypt: false,
+			direction: 'recvonly',
 		},
 		{
 			kind: 'audio',

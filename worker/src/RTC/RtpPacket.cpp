@@ -395,16 +395,17 @@ namespace RTC
 		MS_ASSERT(type == 1u || type == 2u, "type must be 1 or 2");
 
 		// Reset extension ids.
-		this->midExtensionId               = 0u;
-		this->ridExtensionId               = 0u;
-		this->rridExtensionId              = 0u;
-		this->absSendTimeExtensionId       = 0u;
-		this->transportWideCc01ExtensionId = 0u;
-		this->frameMarking07ExtensionId    = 0u;
-		this->frameMarkingExtensionId      = 0u;
-		this->ssrcAudioLevelExtensionId    = 0u;
-		this->videoOrientationExtensionId  = 0u;
-		this->playoutDelayExtensionId      = 0u;
+		this->midExtensionId                  = 0u;
+		this->ridExtensionId                  = 0u;
+		this->rridExtensionId                 = 0u;
+		this->absSendTimeExtensionId          = 0u;
+		this->transportWideCc01ExtensionId    = 0u;
+		this->frameMarking07ExtensionId       = 0u;
+		this->frameMarkingExtensionId         = 0u;
+		this->ssrcAudioLevelExtensionId       = 0u;
+		this->videoOrientationExtensionId     = 0u;
+		this->playoutDelayExtensionId         = 0u;
+		this->dependencyDescriptorExtensionId = 0u;
 
 		// Clear the One-Byte and Two-Bytes extension elements maps.
 		std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), nullptr);
@@ -756,16 +757,17 @@ namespace RTC
 		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
 
 		// Keep already set extension ids.
-		packet->midExtensionId               = this->midExtensionId;
-		packet->ridExtensionId               = this->ridExtensionId;
-		packet->rridExtensionId              = this->rridExtensionId;
-		packet->absSendTimeExtensionId       = this->absSendTimeExtensionId;
-		packet->transportWideCc01ExtensionId = this->transportWideCc01ExtensionId;
-		packet->frameMarking07ExtensionId    = this->frameMarking07ExtensionId; // Remove once RFC.
-		packet->frameMarkingExtensionId      = this->frameMarkingExtensionId;
-		packet->ssrcAudioLevelExtensionId    = this->ssrcAudioLevelExtensionId;
-		packet->videoOrientationExtensionId  = this->videoOrientationExtensionId;
-		packet->playoutDelayExtensionId      = this->playoutDelayExtensionId;
+		packet->midExtensionId                  = this->midExtensionId;
+		packet->ridExtensionId                  = this->ridExtensionId;
+		packet->rridExtensionId                 = this->rridExtensionId;
+		packet->absSendTimeExtensionId          = this->absSendTimeExtensionId;
+		packet->transportWideCc01ExtensionId    = this->transportWideCc01ExtensionId;
+		packet->frameMarking07ExtensionId       = this->frameMarking07ExtensionId; // Remove once RFC.
+		packet->frameMarkingExtensionId         = this->frameMarkingExtensionId;
+		packet->ssrcAudioLevelExtensionId       = this->ssrcAudioLevelExtensionId;
+		packet->videoOrientationExtensionId     = this->videoOrientationExtensionId;
+		packet->playoutDelayExtensionId         = this->playoutDelayExtensionId;
+		packet->dependencyDescriptorExtensionId = this->dependencyDescriptorExtensionId;
 		// Assign the payload descriptor handler.
 		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
 		// Store allocated buffer.
@@ -866,7 +868,7 @@ namespace RTC
 			return true;
 		}
 
-		return this->payloadDescriptorHandler->Process(context, this->payload, marker);
+		return this->payloadDescriptorHandler->Process(context, this, marker);
 	}
 
 	std::unique_ptr<Codecs::PayloadDescriptor::Encoder> RtpPacket::GetPayloadEncoder()
@@ -890,7 +892,7 @@ namespace RTC
 			return;
 		}
 
-		this->payloadDescriptorHandler->Encode(this->payload, encoder);
+		this->payloadDescriptorHandler->Encode(this, encoder);
 	}
 
 	void RtpPacket::RestorePayload()
@@ -902,7 +904,7 @@ namespace RTC
 			return;
 		}
 
-		this->payloadDescriptorHandler->Restore(this->payload);
+		this->payloadDescriptorHandler->Restore(this);
 	}
 
 	/**

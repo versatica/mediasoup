@@ -41,7 +41,7 @@ public:
 	void Dump() const override
 	{
 	}
-	bool Process(Codecs::EncodingContext* /*context*/, uint8_t* /*data*/, bool& /*marker*/) override
+	bool Process(Codecs::EncodingContext* /*context*/, RTC::RtpPacket* /*packet*/, bool& /*marker*/) override
 	{
 		return true;
 	}
@@ -51,10 +51,10 @@ public:
 		return nullptr;
 	}
 
-	void Encode(uint8_t* /*data*/, RTC::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
+	void Encode(RtpPacket* /*packet*/, RTC::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
 	{
 	}
-	void Restore(uint8_t* /*data*/) override
+	void Restore(RtpPacket* /*packet*/) override
 	{
 	}
 	uint8_t GetSpatialLayer() const override

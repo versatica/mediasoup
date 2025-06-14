@@ -1,5 +1,8 @@
+#define MS_CLASS "TEST::HELPERS"
+
 #include "helpers.hpp" // in worker/test/include/
-#include <cstring>     // std::memcmp(), std::memset()
+#include "Logger.hpp"
+#include <cstring> // std::memcmp(), std::memset()
 #include <fstream>
 #include <string>
 
@@ -193,4 +196,30 @@ namespace helpers
 
 		return std::memcmp(data1, data2, size1) == 0;
 	}
+
+	uint8_t buffer[65536] = { 0 };
+
+	std::unique_ptr<RTC::RtpPacket> CreateRtpPacket(uint8_t* payload, size_t len)
+	{
+		// clang-format off
+		const uint8_t headers[] =
+		{
+			0x80, 0x01, 0x00, 0x08,
+			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x05
+		};
+		// clang-format off
+
+		std::memcpy(buffer, headers, sizeof(headers));
+		std::memcpy(buffer + sizeof(headers), payload, len);
+
+		std::unique_ptr<RTC::RtpPacket> rtpPacket{ RTC::RtpPacket::Parse(buffer, sizeof(headers)+len) };
+
+		MS_ASSERT(rtpPacket != nullptr, "invalid packet");
+
+		rtpPacket.reset(rtpPacket->Clone());
+
+		return rtpPacket;
+}
+
 } // namespace helpers

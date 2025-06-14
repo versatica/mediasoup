@@ -74,6 +74,7 @@ common_sources = [
   'src/Settings.cpp',
   'src/Worker.cpp',
   'src/ChannelMessageRegistrator.cpp',
+  'src/Utils/BitStream.cpp',
   'src/Utils/Crypto.cpp',
   'src/Utils/File.cpp',
   'src/Utils/IP.cpp',
@@ -142,7 +143,9 @@ common_sources = [
   'src/RTC/Codecs/H264_SVC.cpp',
   'src/RTC/Codecs/VP8.cpp',
   'src/RTC/Codecs/VP9.cpp',
+  'src/RTC/Codecs/AV1.cpp',
   'src/RTC/Codecs/Opus.cpp',
+  'src/RTC/Codecs/DependencyDescriptor.cpp',
   'src/RTC/RtpDictionaries/Parameters.cpp',
   'src/RTC/RtpDictionaries/RtcpFeedback.cpp',
   'src/RTC/RtpDictionaries/RtcpParameters.cpp',
@@ -258,8 +261,8 @@ libuv_proj = subproject(
   ],
 )
 
-libsrtp2_proj = subproject(
-  'libsrtp2',
+libsrtp3_proj = subproject(
+  'libsrtp3',
   default_options: [
     'warning_level=0',
     'crypto-library=openssl',
@@ -309,7 +312,7 @@ dependencies = [
   abseil_cpp_proj.get_variable('absl_container_dep'),
   openssl_proj.get_variable('openssl_dep'),
   libuv_proj.get_variable('libuv_dep'),
-  libsrtp2_proj.get_variable('libsrtp2_dep'),
+  libsrtp3_proj.get_variable('libsrtp3_dep'),
   usrsctp_proj.get_variable('usrsctp_dep'),
   flatbuffers_proj.get_variable('flatbuffers_dep'),
   flatbuffers_generator_dep,
@@ -321,7 +324,7 @@ link_whole = [
   openssl_proj.get_variable('libcrypto_lib'),
   openssl_proj.get_variable('libssl_lib'),
   libuv_proj.get_variable('libuv'),
-  libsrtp2_proj.get_variable('libsrtp2'),
+  libsrtp3_proj.get_variable('libsrtp3'),
   usrsctp_proj.get_variable('usrsctp'),
   flatbuffers_proj.get_variable('flatbuffers_lib'),
   libwebrtc,
@@ -405,6 +408,7 @@ test_sources = [
   'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/TestRtpEncodingParameters.cpp',
   'test/src/RTC/TestTransportCongestionControlServer.cpp',
+  'test/src/RTC/Codecs/TestDependencyDescriptor.cpp',
   'test/src/RTC/Codecs/TestVP8.cpp',
   'test/src/RTC/Codecs/TestVP9.cpp',
   'test/src/RTC/Codecs/TestH264.cpp',
@@ -625,6 +629,8 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/Codecs/FuzzerVP9.cpp',
   'fuzzer/src/RTC/Codecs/FuzzerH264.cpp',
   'fuzzer/src/RTC/Codecs/FuzzerH264_SVC.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerDependencyDescriptor.cpp',
+  'fuzzer/src/RTC/Codecs/FuzzerAV1.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
