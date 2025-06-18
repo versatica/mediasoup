@@ -44,6 +44,12 @@ table EnableTraceEventRequest {
     events: [TraceEventType] (required);
 }
 
+table DegradeRequest {
+    delay_ms: uint16;
+    loss_percent: uint8;
+    duration_ms: uint32;
+}
+
 table DumpResponse {
     data: ConsumerDump (required);
 }

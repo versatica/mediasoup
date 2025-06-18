@@ -74,6 +74,8 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
+
+		ClearDegradation(/*sendDelayedPackets*/ false);
 	}
 
 	flatbuffers::Offset<FBS::Consumer::DumpResponse> SimpleConsumer::FillBuffer(
@@ -168,10 +170,78 @@ namespace RTC
 				break;
 			}
 
+			case Channel::ChannelRequest::Method::CONSUMER_DEGRADE:
+			{
+				const auto* body    = request->data->body_as<FBS::Consumer::DegradeRequest>();
+				uint16_t delayMs    = body->delayMs();
+				uint8_t lossPercent = body->lossPercent();
+				uint32_t durationMs = body->durationMs();
+
+				MS_DUMP(
+				  "applying consumer degradation [delayMs:%" PRIu16 ", lossPercent:%" PRIu8
+				  ", durationMs:%" PRIu32 "]",
+				  delayMs,
+				  lossPercent,
+				  durationMs);
+
+				// First clear everything and send already delayed packets.
+				ClearDegradation(/*sendDelayedPackets*/ true);
+
+				if (durationMs == 0 || (delayMs == 0 && lossPercent == 0))
+				{
+					MS_DUMP("consumer degradation disabled");
+
+					break;
+				}
+
+				this->degradationTimer = new TimerHandle(this);
+
+				this->degradationTimer->Start(durationMs);
+
+				this->delayMs = delayMs;
+
+				if (this->delayMs)
+				{
+					this->delayTimer = new TimerHandle(this);
+				}
+
+				break;
+			}
+
 			default:
 			{
 				// Pass it to the parent class.
 				RTC::Consumer::HandleRequest(request);
+			}
+		}
+	}
+
+	void SimpleConsumer::OnTimer(TimerHandle* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->degradationTimer)
+		{
+			// First clear everything and send already delayed packets.
+			ClearDegradation(/*sendDelayedPackets*/ true);
+		}
+		else if (timer == this->delayTimer && !this->delayedPacketItems.empty())
+		{
+			auto [packet, arrivalTime] = this->delayedPacketItems.front();
+
+			// Rearm the delay timer.
+			if (this->delayedPacketItems.size() > 1)
+			{
+				std::shared_ptr<RTC::RtpPacket> sharedPacket;
+				const uint64_t timeoutMs = this->delayedPacketItems[1].arrivalTime - arrivalTime;
+
+				this->delayTimer->Start(timeoutMs);
+
+				MS_DUMP("(degradation) sending delayed packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+
+				SendRtpPacket(packet, sharedPacket);
+
+				delete packet;
 			}
 		}
 	}
@@ -313,6 +383,33 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
 #endif
+
+		if (this->delayTimer)
+		{
+			// This is the first packet in the delay queue, remove it from the queue
+			// and send it normally.
+			if (!this->delayedPacketItems.empty() && this->delayedPacketItems.front().packet == packet)
+			{
+				this->delayedPacketItems.pop_front();
+			}
+			// Otherwise insert the packet in the delay queue.
+			else
+			{
+				MS_DUMP(
+				  "(degradation) adding packet to delay queue [seq:%" PRIu16 "]",
+				  packet->GetSequenceNumber());
+
+				this->delayedPacketItems.push_back({ packet->Clone(), DepLibUV::GetTimeMs() });
+
+				// Only arm the timer for the first packet.
+				if (this->delayedPacketItems.size() == 1)
+				{
+					this->delayTimer->Start(this->delayMs);
+				}
+
+				return;
+			}
+		}
 
 		if (!IsActive())
 		{
@@ -745,6 +842,31 @@ namespace RTC
 		  FBS::Notification::Event::CONSUMER_SCORE,
 		  FBS::Notification::Body::Consumer_ScoreNotification,
 		  notificationOffset);
+	}
+
+	void SimpleConsumer::ClearDegradation(bool sendDelayedPackets)
+	{
+		MS_TRACE();
+
+		delete this->degradationTimer;
+		this->degradationTimer = nullptr;
+
+		delete this->delayTimer;
+		this->delayTimer = nullptr;
+
+		for (auto& item : this->delayedPacketItems)
+		{
+			if (sendDelayedPackets)
+			{
+				std::shared_ptr<RTC::RtpPacket> sharedPacket;
+
+				SendRtpPacket(item.packet, sharedPacket);
+			}
+
+			delete item.packet;
+		}
+
+		this->delayedPacketItems.clear();
 	}
 
 	inline void SimpleConsumer::OnRtpStreamScore(

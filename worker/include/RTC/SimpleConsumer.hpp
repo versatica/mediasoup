@@ -5,11 +5,22 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
+#include "handles/TimerHandle.hpp"
+#include <deque>
 
 namespace RTC
 {
-	class SimpleConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class SimpleConsumer : public RTC::Consumer,
+	                       public RTC::RtpStreamSend::Listener,
+	                       public TimerHandle::Listener
 	{
+	private:
+		struct DelayedPacketItem
+		{
+			RtpPacket* packet{ nullptr };
+			uint64_t arrivalTime{ 0 };
+		};
+
 	public:
 		SimpleConsumer(
 		  RTC::Shared* shared,
@@ -65,6 +76,10 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
+	public:
+		void OnTimer(TimerHandle* timer) override;
+
 	private:
 		void UserOnTransportConnected() override;
 		void UserOnTransportDisconnected() override;
@@ -73,6 +88,7 @@ namespace RTC
 		void CreateRtpStream();
 		void RequestKeyFrame();
 		void EmitScore() const;
+		void ClearDegradation(bool sendDelayedPackets);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -90,6 +106,10 @@ namespace RTC
 		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
 		bool managingBitrate{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		TimerHandle* degradationTimer{ nullptr };
+		uint32_t delayMs{ 0 };
+		std::deque<DelayedPacketItem> delayedPacketItems;
+		TimerHandle* delayTimer{ nullptr };
 	};
 } // namespace RTC
 

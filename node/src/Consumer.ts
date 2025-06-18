@@ -463,6 +463,84 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 		);
 	}
 
+	/**
+	 * Degrade RTP transmission.
+	 * - delayMs: The delay (in ms) to be applied to the first packet.
+	 * - lossPercent: Generate packet loss by given percent value.
+	 * - durationMs: Duration that the degradation will take.
+	 *
+	 * @remarks
+	 * - Only implemented in `SimpleConsumer`.
+	 * - After `durationMs`, or if `consumer.degrade()` is called again with
+	 *  `durationMs: 0`, then degradation is immediately stopped and all delayed
+	 *  buffered packets are immediately sent (all together).
+	 *
+	 * @throws
+	 * - If called on a non `SimpleConsumer` (due to method not implemented).
+	 *
+	 * @todo
+	 * - `lossPercent` not implemented yet.
+	 *
+	 * @example
+	 * ```ts
+	 * consumer.degrade({
+	 *   delayMs: 3000,
+	 *   lossPercent: 0,
+	 *   durationMs: 10000
+	 * });
+	 * ```
+	 */
+	async degrade({
+		delayMs = 0,
+		lossPercent = 0,
+		durationMs = 0,
+	}: {
+		delayMs?: number;
+		lossPercent?: number;
+		durationMs?: number;
+	} = {}): Promise<void> {
+		if (delayMs > Math.pow(2, 16) - 1) {
+			delayMs = Math.pow(2, 16) - 1;
+		} else if (delayMs < 0) {
+			delayMs = 0;
+		}
+
+		if (lossPercent > 100) {
+			lossPercent = 100;
+		} else if (lossPercent < 0) {
+			lossPercent = 0;
+		}
+
+		if (durationMs > Math.pow(2, 32) - 1) {
+			durationMs = Math.pow(2, 32) - 1;
+		} else if (durationMs < 0) {
+			durationMs = 0;
+		}
+
+		if (durationMs === 0) {
+			delayMs = 0;
+			lossPercent = 0;
+		}
+
+		logger.debug(
+			`degrade() [delayMs:${delayMs}, lossPercent:${lossPercent}, durationMs:${durationMs}]`
+		);
+
+		/* Build Request. */
+		const requestOffset = new FbsConsumer.DegradeRequestT(
+			delayMs,
+			lossPercent,
+			durationMs
+		).pack(this.#channel.bufferBuilder);
+
+		await this.#channel.request(
+			FbsRequest.Method.CONSUMER_DEGRADE,
+			FbsRequest.Body.Consumer_DegradeRequest,
+			requestOffset,
+			this.#internal.consumerId
+		);
+	}
+
 	private handleWorkerNotifications(): void {
 		this.#channel.on(
 			this.#internal.consumerId,
