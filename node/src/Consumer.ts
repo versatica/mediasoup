@@ -463,33 +463,6 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 		);
 	}
 
-	/**
-	 * Degrade RTP transmission.
-	 * - delayMs: The delay (in ms) to be applied to the first packet.
-	 * - lossPercent: Generate packet loss by given percent value.
-	 * - durationMs: Duration that the degradation will take.
-	 *
-	 * @remarks
-	 * - Only implemented in `SimpleConsumer`.
-	 * - After `durationMs`, or if `consumer.degrade()` is called again with
-	 *  `durationMs: 0`, then degradation is immediately stopped and all delayed
-	 *  buffered packets are immediately sent (all together).
-	 *
-	 * @throws
-	 * - If called on a non `SimpleConsumer` (due to method not implemented).
-	 *
-	 * @todo
-	 * - `lossPercent` not implemented yet.
-	 *
-	 * @example
-	 * ```ts
-	 * consumer.degrade({
-	 *   delayMs: 3000,
-	 *   lossPercent: 0,
-	 *   durationMs: 10000
-	 * });
-	 * ```
-	 */
 	async degrade({
 		delayMs = 0,
 		lossPercent = 0,
