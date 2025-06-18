@@ -191,19 +191,22 @@ namespace RTC
 				{
 					MS_DUMP("consumer degradation disabled");
 
+					request->Accept();
+
 					break;
 				}
 
 				this->degradationTimer = new TimerHandle(this);
+				this->delayMs          = delayMs;
 
 				this->degradationTimer->Start(durationMs);
-
-				this->delayMs = delayMs;
 
 				if (this->delayMs)
 				{
 					this->delayTimer = new TimerHandle(this);
 				}
+
+				request->Accept();
 
 				break;
 			}
@@ -854,7 +857,7 @@ namespace RTC
 		delete this->delayTimer;
 		this->delayTimer = nullptr;
 
-		for (auto& item : this->delayedPacketItems)
+		for (const auto& item : this->delayedPacketItems)
 		{
 			if (sendDelayedPackets)
 			{
@@ -882,6 +885,15 @@ namespace RTC
 	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
+
+		// Ignore the transmitted packet if it was delayed on purpose.
+		for (const auto& item : this->delayedPacketItems)
+		{
+			if (item.packet == packet)
+			{
+				return;
+			}
+		}
 
 		this->listener->OnConsumerRetransmitRtpPacket(this, packet);
 
