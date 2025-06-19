@@ -8,6 +8,9 @@
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/SimpleConsumer.hpp"
+#include <random>
+
+const uint64_t DEGRADATION_DELAY_CHECK_INTERVAL_MS = 15;
 
 namespace RTC
 {
@@ -172,38 +175,46 @@ namespace RTC
 
 			case Channel::ChannelRequest::Method::CONSUMER_DEGRADE:
 			{
-				const auto* body    = request->data->body_as<FBS::Consumer::DegradeRequest>();
-				uint16_t delayMs    = body->delayMs();
-				uint8_t lossPercent = body->lossPercent();
-				uint32_t durationMs = body->durationMs();
+				const auto* body     = request->data->body_as<FBS::Consumer::DegradeRequest>();
+				uint32_t durationMs  = body->durationMs();
+				uint16_t maxDelayMs  = body->maxDelayMs();
+				uint8_t delayPercent = body->delayPercent();
+				uint8_t lossPercent  = body->lossPercent();
 
 				MS_DUMP(
-				  "applying consumer degradation [delayMs:%" PRIu16 ", lossPercent:%" PRIu8
-				  ", durationMs:%" PRIu32 "]",
-				  delayMs,
-				  lossPercent,
-				  durationMs);
+				  "[DEGRADATION] applying consumer degradation [durationMs:%" PRIu32 ", maxDelayMs:%" PRIu16
+				  ", delayPercent:%" PRIu8 ", lossPercent:%" PRIu8 "]",
+				  durationMs,
+				  maxDelayMs,
+				  delayPercent,
+				  lossPercent);
 
 				// First clear everything and send already delayed packets.
 				ClearDegradation(/*sendDelayedPackets*/ true);
 
-				if (durationMs == 0 || (delayMs == 0 && lossPercent == 0))
+				if (durationMs == 0)
 				{
-					MS_DUMP("consumer degradation disabled");
+					MS_DUMP("[DEGRADATION] consumer degradation disabled");
 
 					request->Accept();
 
 					break;
 				}
 
+				this->maxDelayMs       = maxDelayMs;
+				this->delayPercent     = delayPercent;
+				this->lossPercent      = lossPercent;
 				this->degradationTimer = new TimerHandle(this);
-				this->delayMs          = delayMs;
 
 				this->degradationTimer->Start(durationMs);
 
-				if (this->delayMs)
+				if (this->maxDelayMs > 0 && this->delayPercent > 0)
 				{
 					this->delayTimer = new TimerHandle(this);
+
+					// Check delayed packets every N ms.
+					this->delayTimer->Start(
+					  DEGRADATION_DELAY_CHECK_INTERVAL_MS, DEGRADATION_DELAY_CHECK_INTERVAL_MS);
 				}
 
 				request->Accept();
@@ -225,26 +236,39 @@ namespace RTC
 
 		if (timer == this->degradationTimer)
 		{
-			// First clear everything and send already delayed packets.
+			// Clear everything and send already delayed packets.
 			ClearDegradation(/*sendDelayedPackets*/ true);
 		}
-		else if (timer == this->delayTimer && !this->delayedPacketItems.empty())
+		else if (timer == this->delayTimer)
 		{
-			auto [packet, arrivalTime] = this->delayedPacketItems.front();
+			auto nowMs = DepLibUV::GetTimeMs();
 
-			// Rearm the delay timer.
-			if (this->delayedPacketItems.size() > 1)
+			for (auto it = this->delayedPacketItems.begin(); it != this->delayedPacketItems.end();)
 			{
-				std::shared_ptr<RTC::RtpPacket> sharedPacket;
-				const uint64_t timeoutMs = this->delayedPacketItems[1].arrivalTime - arrivalTime;
+				auto& item = *it;
 
-				this->delayTimer->Start(timeoutMs);
+				// Only send delayed packets whose arrival time + applied delay is less
+				// or equal than current time. Deleted the stored packet and remove the
+				// item from the list once the packet is sent.
+				if (item.arrivalTimeMs + item.delayMs <= nowMs)
+				{
+					std::shared_ptr<RTC::RtpPacket> sharedPacket;
 
-				MS_DUMP("(degradation) sending delayed packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
+					MS_DUMP(
+					  "[DEGRADATION] sending delayed packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
+					  item.packet->GetSequenceNumber(),
+					  item.delayMs);
 
-				SendRtpPacket(packet, sharedPacket);
+					SendRtpPacket(item.packet, sharedPacket);
 
-				delete packet;
+					delete item.packet;
+
+					it = this->delayedPacketItems.erase(it);
+				}
+				else
+				{
+					++it;
+				}
 			}
 		}
 	}
@@ -389,26 +413,17 @@ namespace RTC
 
 		if (this->delayTimer)
 		{
-			// This is the first packet in the delay queue, remove it from the queue
-			// and send it normally.
-			if (!this->delayedPacketItems.empty() && this->delayedPacketItems.front().packet == packet)
+			if (ShouldDelayPacket(packet))
 			{
-				this->delayedPacketItems.pop_front();
-			}
-			// Otherwise insert the packet in the delay queue.
-			else
-			{
+				auto nowMs   = DepLibUV::GetTimeMs();
+				auto delayMs = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, this->maxDelayMs));
+
 				MS_DUMP(
-				  "(degradation) adding packet to delay queue [seq:%" PRIu16 "]",
-				  packet->GetSequenceNumber());
+				  "[DEGRADATION] delaying packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
+				  packet->GetSequenceNumber(),
+				  delayMs);
 
-				this->delayedPacketItems.push_back({ packet->Clone(), DepLibUV::GetTimeMs() });
-
-				// Only arm the timer for the first packet.
-				if (this->delayedPacketItems.size() == 1)
-				{
-					this->delayTimer->Start(this->delayMs);
-				}
+				this->delayedPacketItems.push_back({ packet->Clone(), nowMs, delayMs });
 
 				return;
 			}
@@ -851,6 +866,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		this->maxDelayMs   = 0;
+		this->delayPercent = 0;
+		this->lossPercent  = 0;
+
 		delete this->degradationTimer;
 		this->degradationTimer = nullptr;
 
@@ -863,6 +882,11 @@ namespace RTC
 			{
 				std::shared_ptr<RTC::RtpPacket> sharedPacket;
 
+				MS_DUMP(
+				  "[DEGRADATION] terminated, sending delayed packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
+				  item.packet->GetSequenceNumber(),
+				  item.delayMs);
+
 				SendRtpPacket(item.packet, sharedPacket);
 			}
 
@@ -870,6 +894,36 @@ namespace RTC
 		}
 
 		this->delayedPacketItems.clear();
+	}
+
+	bool SimpleConsumer::ShouldDelayPacket(const RTC::RtpPacket* packet) const
+	{
+		MS_TRACE();
+
+		static std::random_device rd;
+		static std::mt19937 gen(rd());
+		static std::uniform_int_distribution<int> dist(0, 99);
+
+		if (!this->delayTimer)
+		{
+			return false;
+		}
+
+		// Check if the packet is in the list of delayed packets, meaning that it's
+		// been sent from the onTimer() callback and hence must not be delayed
+		// again.
+		auto it = std::find_if(
+		  this->delayedPacketItems.begin(),
+		  this->delayedPacketItems.end(),
+		  [&](const auto& item) { return item.packet == packet; });
+
+		if (it != this->delayedPacketItems.end())
+		{
+			return false;
+		}
+
+		// Take into account the given delay percent.
+		return dist(gen) < this->delayPercent;
 	}
 
 	inline void SimpleConsumer::OnRtpStreamScore(

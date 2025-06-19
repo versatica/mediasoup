@@ -464,18 +464,32 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 	}
 
 	async degrade({
-		delayMs = 0,
-		lossPercent = 0,
 		durationMs = 0,
+		maxDelayMs = 0,
+		delayPercent = 100,
+		lossPercent = 0,
 	}: {
-		delayMs?: number;
-		lossPercent?: number;
 		durationMs?: number;
+		maxDelayMs?: number;
+		delayPercent?: number;
+		lossPercent?: number;
 	} = {}): Promise<void> {
-		if (delayMs > Math.pow(2, 16) - 1) {
-			delayMs = Math.pow(2, 16) - 1;
-		} else if (delayMs < 0) {
-			delayMs = 0;
+		if (durationMs > Math.pow(2, 32) - 1) {
+			durationMs = Math.pow(2, 32) - 1;
+		} else if (durationMs < 0) {
+			durationMs = 0;
+		}
+
+		if (maxDelayMs > Math.pow(2, 16) - 1) {
+			maxDelayMs = Math.pow(2, 16) - 1;
+		} else if (maxDelayMs < 0) {
+			maxDelayMs = 0;
+		}
+
+		if (delayPercent > 100) {
+			delayPercent = 100;
+		} else if (delayPercent < 0) {
+			delayPercent = 0;
 		}
 
 		if (lossPercent > 100) {
@@ -484,26 +498,22 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 			lossPercent = 0;
 		}
 
-		if (durationMs > Math.pow(2, 32) - 1) {
-			durationMs = Math.pow(2, 32) - 1;
-		} else if (durationMs < 0) {
-			durationMs = 0;
-		}
-
 		if (durationMs === 0) {
-			delayMs = 0;
+			maxDelayMs = 0;
+			lossPercent = 0;
 			lossPercent = 0;
 		}
 
 		logger.debug(
-			`degrade() [delayMs:${delayMs}, lossPercent:${lossPercent}, durationMs:${durationMs}]`
+			`degrade() [durationMs:${durationMs}, maxDelayMs:${maxDelayMs}, delayPercent:${delayPercent}, lossPercent:${lossPercent}]`
 		);
 
 		/* Build Request. */
 		const requestOffset = new FbsConsumer.DegradeRequestT(
-			delayMs,
-			lossPercent,
-			durationMs
+			durationMs,
+			maxDelayMs,
+			delayPercent,
+			lossPercent
 		).pack(this.#channel.bufferBuilder);
 
 		await this.#channel.request(

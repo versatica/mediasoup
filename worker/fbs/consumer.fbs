@@ -45,9 +45,10 @@ table EnableTraceEventRequest {
 }
 
 table DegradeRequest {
-    delay_ms: uint16;
-    loss_percent: uint8;
     duration_ms: uint32;
+    max_delay_ms: uint16;
+    delay_percent: uint8;
+    loss_percent: uint8;
 }
 
 table DumpResponse {

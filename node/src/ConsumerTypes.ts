@@ -392,9 +392,10 @@ export interface Consumer<ConsumerAppData extends AppData = AppData>
 
 	/**
 	 * Degrade RTP transmission.
-	 * - delayMs: The delay (in ms) to be applied to the first packet.
-	 * - lossPercent: Generate packet loss by given percent value.
 	 * - durationMs: Duration that the degradation will take.
+	 * - maxDelayMs: Max delay (in ms) to be applied to each packet.
+	 * - delayPercent: Only apply delay to this percent of the packets.
+	 * - lossPercent: Generate packet loss by given percent value.
 	 *
 	 * @remarks
 	 * - Only implemented in `SimpleConsumer`.
@@ -411,19 +412,22 @@ export interface Consumer<ConsumerAppData extends AppData = AppData>
 	 * @example
 	 * ```ts
 	 * consumer.degrade({
-	 *   delayMs: 3000,
-	 *   lossPercent: 0,
 	 *   durationMs: 10000
+	 *   maxDelayMs: 3000,
+	 *   delayPercent: 20,
+	 *   lossPercent: 0,
 	 * });
 	 * ```
 	 */
 	degrade({
-		delayMs,
-		lossPercent,
 		durationMs,
+		maxDelayMs,
+		delayPercent,
+		lossPercent,
 	}: {
-		delayMs?: number;
-		lossPercent?: number;
 		durationMs?: number;
+		maxDelayMs?: number;
+		delayPercent?: number;
+		lossPercent?: number;
 	}): Promise<void>;
 }

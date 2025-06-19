@@ -6,7 +6,7 @@
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 #include "handles/TimerHandle.hpp"
-#include <deque>
+#include <list>
 
 namespace RTC
 {
@@ -18,7 +18,8 @@ namespace RTC
 		struct DelayedPacketItem
 		{
 			RtpPacket* packet{ nullptr };
-			uint64_t arrivalTime{ 0 };
+			uint64_t arrivalTimeMs{ 0 };
+			uint16_t delayMs{ 0 };
 		};
 
 	public:
@@ -89,6 +90,7 @@ namespace RTC
 		void RequestKeyFrame();
 		void EmitScore() const;
 		void ClearDegradation(bool sendDelayedPackets);
+		bool ShouldDelayPacket(const RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -106,10 +108,12 @@ namespace RTC
 		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
 		bool managingBitrate{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		uint32_t maxDelayMs{ 0 };
+		uint8_t delayPercent{ 0 };
+		uint8_t lossPercent{ 0 };
 		TimerHandle* degradationTimer{ nullptr };
-		uint32_t delayMs{ 0 };
-		std::deque<DelayedPacketItem> delayedPacketItems;
 		TimerHandle* delayTimer{ nullptr };
+		std::list<DelayedPacketItem> delayedPacketItems;
 	};
 } // namespace RTC
 
