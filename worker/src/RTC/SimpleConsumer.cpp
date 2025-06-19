@@ -411,22 +411,26 @@ namespace RTC
 		packet->logger.consumerId = this->id;
 #endif
 
-		if (this->delayTimer)
+		if (ShouldDropPacket(packet))
 		{
-			if (ShouldDelayPacket(packet))
-			{
-				auto nowMs   = DepLibUV::GetTimeMs();
-				auto delayMs = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, this->maxDelayMs));
+			MS_DUMP("[DEGRADATION] dropping packet [seq:%" PRIu16 "]", packet->GetSequenceNumber());
 
-				MS_DUMP(
-				  "[DEGRADATION] delaying packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
-				  packet->GetSequenceNumber(),
-				  delayMs);
+			return;
+		}
 
-				this->delayedPacketItems.push_back({ packet->Clone(), nowMs, delayMs });
+		if (ShouldDelayPacket(packet))
+		{
+			auto nowMs   = DepLibUV::GetTimeMs();
+			auto delayMs = static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, this->maxDelayMs));
 
-				return;
-			}
+			MS_DUMP(
+			  "[DEGRADATION] delaying packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
+			  packet->GetSequenceNumber(),
+			  delayMs);
+
+			this->delayedPacketItems.push_back({ packet->Clone(), nowMs, delayMs });
+
+			return;
 		}
 
 		if (!IsActive())
@@ -904,6 +908,11 @@ namespace RTC
 		static std::mt19937 gen(rd());
 		static std::uniform_int_distribution<int> dist(0, 99);
 
+		if (!this->degradationTimer)
+		{
+			return false;
+		}
+
 		if (!this->delayTimer)
 		{
 			return false;
@@ -922,8 +931,25 @@ namespace RTC
 			return false;
 		}
 
-		// Take into account the given delay percent.
+		// Take into account use given delay percent.
 		return dist(gen) < this->delayPercent;
+	}
+
+	bool SimpleConsumer::ShouldDropPacket(const RTC::RtpPacket* packet) const
+	{
+		MS_TRACE();
+
+		static std::random_device rd;
+		static std::mt19937 gen(rd());
+		static std::uniform_int_distribution<int> dist(0, 99);
+
+		if (!this->degradationTimer)
+		{
+			return false;
+		}
+
+		// Take into account user given loss percent.
+		return dist(gen) < this->lossPercent;
 	}
 
 	inline void SimpleConsumer::OnRtpStreamScore(

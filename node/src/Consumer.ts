@@ -466,7 +466,7 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 	async degrade({
 		durationMs = 0,
 		maxDelayMs = 0,
-		delayPercent = 100,
+		delayPercent = 0,
 		lossPercent = 0,
 	}: {
 		durationMs?: number;

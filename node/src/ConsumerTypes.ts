@@ -400,14 +400,11 @@ export interface Consumer<ConsumerAppData extends AppData = AppData>
 	 * @remarks
 	 * - Only implemented in `SimpleConsumer`.
 	 * - After `durationMs`, or if `consumer.degrade()` is called again with
-	 *  `durationMs: 0`, then degradation is immediately stopped and all delayed
-	 *  buffered packets are immediately sent (all together).
+	 *   `durationMs: 0`, then degradation is immediately stopped and all delayed
+	 *   buffered packets are immediately sent (all together).
 	 *
 	 * @throws
 	 * - If called on a non `SimpleConsumer` (due to method not implemented).
-	 *
-	 * @todo
-	 * - `lossPercent` not implemented yet.
 	 *
 	 * @example
 	 * ```ts

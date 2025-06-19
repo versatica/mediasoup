@@ -91,6 +91,7 @@ namespace RTC
 		void EmitScore() const;
 		void ClearDegradation(bool sendDelayedPackets);
 		bool ShouldDelayPacket(const RTC::RtpPacket* packet) const;
+		bool ShouldDropPacket(const RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
