@@ -4,6 +4,7 @@
 
 - libuv: Update to v1.51.0 ([PR #1543](https://github.com/versatica/mediasoup/pull/1543)).
 - libsrtp: Update to v3.0.0-beta version in our fork ([PR #1544](https://github.com/versatica/mediasoup/pull/1544)).
+- `Consumer`: Add target layer retransmission buffer ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
 
 ### 3.16.0
 
