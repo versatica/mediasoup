@@ -20,10 +20,8 @@ namespace RTC
 			{ RtpPacket::DropReason::NOT_A_KEYFRAME,                          "NotAKeyframe"                       },
 			{ RtpPacket::DropReason::EMPTY_PAYLOAD,                           "EmptyPayload"                       },
 			{ RtpPacket::DropReason::SPATIAL_LAYER_MISMATCH,                  "SpatialLayerMismatch"               },
-			{ RtpPacket::DropReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,         "TooHighTimestampExtraNeeded"        },
 			{ RtpPacket::DropReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH, "PacketPreviousToSpatialLayerSwitch" },
 			{ RtpPacket::DropReason::DROPPED_BY_CODEC,                        "DroppedByCodec"                     },
-			{ RtpPacket::DropReason::SEND_RTP_STREAM_DISCARDED,               "SendRtpStreamDiscarded"             },
 		};
 		// clang-format on
 

@@ -222,11 +222,29 @@ namespace RTC
 		packet->logger.consumerId = this->id;
 #endif
 
+		auto ssrc           = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
+		auto* rtpStream     = this->mapSsrcRtpStream.at(ssrc);
+		auto& syncRequired  = this->mapRtpStreamSyncRequired.at(rtpStream);
+		auto& rtpSeqManager = this->mapRtpStreamRtpSeqManager.at(rtpStream);
+
 		if (!IsActive())
 		{
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
 #endif
+
+			rtpSeqManager->Drop(packet->GetSequenceNumber());
+
+			return;
+		}
+
+		// If we need to sync, support key frames and this is not a key frame, ignore
+		// the packet.
+		if (syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		{
+			// NOTE: No need to drop the packet in the RTP sequence manager since here
+			// we are blocking all packets but the key frame that would trigger sync
+			// below.
 
 			return;
 		}
@@ -243,21 +261,7 @@ namespace RTC
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
-			return;
-		}
-
-		auto ssrc           = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
-		auto* rtpStream     = this->mapSsrcRtpStream.at(ssrc);
-		auto& syncRequired  = this->mapRtpStreamSyncRequired.at(rtpStream);
-		auto& rtpSeqManager = this->mapRtpStreamRtpSeqManager.at(rtpStream);
-
-		// If we need to sync, support key frames and this is not a key frame, ignore
-		// the packet.
-		if (syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
-		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
+			rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -265,11 +269,11 @@ namespace RTC
 		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
-			rtpSeqManager->Drop(packet->GetSequenceNumber());
-
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
 #endif
+
+			rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 			return;
 		}

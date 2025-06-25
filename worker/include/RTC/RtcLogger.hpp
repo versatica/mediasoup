@@ -23,10 +23,8 @@ namespace RTC
 				NOT_A_KEYFRAME,
 				EMPTY_PAYLOAD,
 				SPATIAL_LAYER_MISMATCH,
-				TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,
 				PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH,
 				DROPPED_BY_CODEC,
-				SEND_RTP_STREAM_DISCARDED,
 			};
 
 			static absl::flat_hash_map<DropReason, std::string> dropReason2String;

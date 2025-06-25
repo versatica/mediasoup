@@ -325,6 +325,17 @@ namespace RTC
 			return;
 		}
 
+		// If we need to sync, support key frames and this is not a key frame, ignore
+		// the packet.
+		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
+		{
+			// NOTE: No need to drop the packet in the RTP sequence manager since here
+			// we are blocking all packets but the key frame that would trigger sync
+			// below.
+
+			return;
+		}
+
 		auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
@@ -335,6 +346,18 @@ namespace RTC
 
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
+#endif
+
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
+			return;
+		}
+
+		// Packets with only padding are not forwarded.
+		if (packet->GetPayloadLength() == 0)
+		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -355,31 +378,6 @@ namespace RTC
 
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
-		// If we need to sync, support key frames and this is not a key frame, ignore
-		// the packet.
-		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
-		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
-		// Packets with only padding are not forwarded.
-		if (packet->GetPayloadLength() == 0)
-		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());

@@ -667,6 +667,16 @@ namespace RTC
 			return;
 		}
 
+		// If we need to sync and this is not a key frame, ignore the packet.
+		if (this->syncRequired && !packet->IsKeyFrame())
+		{
+			// NOTE: No need to drop the packet in the RTP sequence manager since here
+			// we are blocking all packets but the key frame that would trigger sync
+			// below.
+
+			return;
+		}
+
 		auto payloadType = packet->GetPayloadType();
 
 		// NOTE: This may happen if this Consumer supports just some codecs of those
@@ -677,18 +687,6 @@ namespace RTC
 
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
-		// If we need to sync and this is not a key frame, ignore the packet.
-		if (this->syncRequired && !packet->IsKeyFrame())
-		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
