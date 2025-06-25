@@ -54,7 +54,7 @@ void validate(SeqManager<T, N>& seqManager, std::vector<TestSeqManagerInput<T>>&
 	}
 }
 
-SCENARIO("SeqManager", "[rtc][SeqMananger]")
+SCENARIO("SeqManager", "[rtc][SeqManager]")
 {
 	SECTION("0 is greater than 65000")
 	{
