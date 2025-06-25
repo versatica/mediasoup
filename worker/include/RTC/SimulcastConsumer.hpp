@@ -6,6 +6,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
+#include <map>
 
 namespace RTC
 {

@@ -16,7 +16,7 @@ namespace RTC
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
 	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 20u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30u };
 
 	/* Instance methods. */
 
@@ -783,6 +783,12 @@ namespace RTC
 			// of the key frame.
 			if (!packet->IsKeyFrame())
 			{
+#ifdef MS_RTC_LOGGER_RTP
+				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+#endif
+
+				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 				StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 				return;
@@ -823,6 +829,12 @@ namespace RTC
 		// frame and arrived before the first packet of the key frame.
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+#endif
+
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 			return;

@@ -13,7 +13,7 @@ namespace RTC
 {
 	/* Static. */
 
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 20u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 15u };
 
 	/* Instance methods. */
 
@@ -384,6 +384,12 @@ namespace RTC
 		// of the key frame and arrived before the first packet of the key frame.
 		if (this->syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+#endif
+
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+
 			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 			return;
