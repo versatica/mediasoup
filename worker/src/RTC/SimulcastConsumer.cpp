@@ -783,11 +783,8 @@ namespace RTC
 			// of the key frame.
 			if (!packet->IsKeyFrame())
 			{
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				// We don't drop in the sequence manager because this packet doesn't
+				// to the current stream.
 
 				StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
@@ -829,11 +826,9 @@ namespace RTC
 		// frame and arrived before the first packet of the key frame.
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+			// No need to drop in the sequence manager the packet since we are blocking
+			// all packets that are not a key frame and anyway we are syncing below when
+			// the key frame arrives.
 
 			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
@@ -868,7 +863,8 @@ namespace RTC
 			{
 				tsOffset = 0u;
 			}
-			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS synchronization.
+			// If this is not the RTP stream we use as TS reference, do NTP based RTP TS
+			// synchronization.
 			else
 			{
 				auto* producerTsReferenceRtpStream = GetProducerTsReferenceRtpStream();

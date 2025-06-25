@@ -703,11 +703,9 @@ namespace RTC
 		// frame and arrived before the first packet of the key frame.
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+			// No need to drop in the sequence manager the packet since we are blocking
+			// all packets that are not a key frame and anyway we are syncing below when
+			// the key frame arrives.
 
 			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
