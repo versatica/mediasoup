@@ -480,13 +480,16 @@ namespace RTC
 				auto& bufferedSharedPacket = pair.second;
 				auto* bufferedPacket       = bufferedSharedPacket.get();
 
-				MS_DEBUG_DEV(
-				  "sending packet buffered in the target layer retransmission buffer [seq:%" PRIu16
-				  ", ts:%" PRIu32 "]",
-				  bufferedPacket->GetSequenceNumber(),
-				  bufferedPacket->GetTimestamp());
+				if (bufferedPacket->GetSequenceNumber() > origSeq)
+				{
+					MS_DEBUG_DEV(
+					  "sending packet buffered in the target layer retransmission buffer [seq:%" PRIu16
+					  ", ts:%" PRIu32 "]",
+					  bufferedPacket->GetSequenceNumber(),
+					  bufferedPacket->GetTimestamp());
 
-				SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+					SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+				}
 			}
 
 			this->targetLayerRetransmissionBuffer.clear();
