@@ -16,6 +16,7 @@ namespace RTC
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
 	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 20u };
 
 	/* Instance methods. */
 
@@ -133,6 +134,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
+		this->targetLayerRetransmissionBuffer.clear();
 	}
 
 	flatbuffers::Offset<FBS::Consumer::DumpResponse> SimulcastConsumer::FillBuffer(
@@ -776,14 +778,12 @@ namespace RTC
 		// the current spatial layer.
 		if (this->currentSpatialLayer != this->targetSpatialLayer && spatialLayer == this->targetSpatialLayer)
 		{
-			// Ignore if not a key frame.
+			// If not a key frame store the packet for the scenario in which this
+			// packet is part of the key frame and arrived before the first packet
+			// of the key frame.
 			if (!packet->IsKeyFrame())
 			{
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 				return;
 			}
@@ -805,18 +805,6 @@ namespace RTC
 			return;
 		}
 
-		// If we need to sync and this is not a key frame, ignore the packet.
-		if (this->syncRequired && !packet->IsKeyFrame())
-		{
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
 		// If the packet belongs to current spatial layer being sent and packet does
 		// not have payload other than padding, then drop it.
 		if (spatialLayer == this->currentSpatialLayer && packet->GetPayloadLength() == 0)
@@ -830,6 +818,20 @@ namespace RTC
 			return;
 		}
 
+		// If we need to sync and this is not a key frame, do not send the packet
+		// and store it for the scenario in which this packet is part of the key
+		// frame and arrived before the first packet of the key frame.
+		if (this->syncRequired && !packet->IsKeyFrame())
+		{
+			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
+
+			return;
+		}
+
+		// Whether packets stored in the target layer retransmission buffer must be
+		// sent once this packet is sent.
+		bool sendPacketsInTargetLayerRetransmissionBuffer{ false };
+
 		// Whether this is the first packet after re-sync.
 		const bool isSyncPacket = this->syncRequired;
 
@@ -838,7 +840,13 @@ namespace RTC
 		{
 			if (packet->IsKeyFrame())
 			{
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG(
+				  rtp,
+				  "sync key frame received [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				  packet->GetSequenceNumber(),
+				  packet->GetTimestamp());
+
+				sendPacketsInTargetLayerRetransmissionBuffer = true;
 			}
 
 			uint32_t tsOffset{ 0u };
@@ -1125,6 +1133,31 @@ namespace RTC
 
 		// Restore the original payload if needed.
 		packet->RestorePayload();
+
+		// If sent packet was the first packet of a key frame, we may need to send
+		// buffered packets belonging to the same key frame that arrived earlier due
+		// to packet misorder.
+		if (sendPacketsInTargetLayerRetransmissionBuffer)
+		{
+			for (auto& pair : this->targetLayerRetransmissionBuffer)
+			{
+				auto& bufferedSharedPacket = pair.second;
+				auto* bufferedPacket       = bufferedSharedPacket.get();
+
+				if (bufferedPacket->GetSequenceNumber() > origSeq)
+				{
+					MS_DEBUG_DEV(
+					  "sending packet buffered in the target layer retransmission buffer [seq:%" PRIu16
+					  ", ts:%" PRIu32 "]",
+					  bufferedPacket->GetSequenceNumber(),
+					  bufferedPacket->GetTimestamp());
+
+					SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+				}
+			}
+
+			this->targetLayerRetransmissionBuffer.clear();
+		}
 	}
 
 	bool SimulcastConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
@@ -1279,6 +1312,7 @@ namespace RTC
 		this->lastBweDowngradeAtMs = 0u;
 
 		this->rtpStream->Pause();
+		this->targetLayerRetransmissionBuffer.clear();
 
 		UpdateTargetLayers(-1, -1);
 	}
@@ -1290,6 +1324,7 @@ namespace RTC
 		this->lastBweDowngradeAtMs = 0u;
 
 		this->rtpStream->Pause();
+		this->targetLayerRetransmissionBuffer.clear();
 
 		UpdateTargetLayers(-1, -1);
 
@@ -1665,6 +1700,31 @@ namespace RTC
 			this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs()
 		);
 		// clang-format on
+	}
+
+	void SimulcastConsumer::StorePacketInTargetLayerRetransmissionBuffer(
+	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV(
+		  "storing packet in target layer retransmission buffer [seq:%" PRIu16 ", ts:%" PRIu32 "]",
+		  packet->GetSequenceNumber(),
+		  packet->GetTimestamp());
+
+		// Store original packet into the buffer. Only clone once and only if
+		// necessary.
+		if (!sharedPacket)
+		{
+			sharedPacket.reset(packet->Clone());
+		}
+
+		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;
+
+		if (this->targetLayerRetransmissionBuffer.size() > TargetLayerRetransmissionBufferSize)
+		{
+			this->targetLayerRetransmissionBuffer.erase(this->targetLayerRetransmissionBuffer.begin());
+		}
 	}
 
 	inline void SimulcastConsumer::EmitScore() const

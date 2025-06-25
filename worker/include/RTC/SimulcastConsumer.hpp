@@ -94,6 +94,8 @@ namespace RTC
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
+		void StorePacketInTargetLayerRetransmissionBuffer(
+		  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 		void EmitScore() const;
 		void EmitLayersChange() const;
 		RTC::RtpStreamRecv* GetProducerCurrentRtpStream() const;
@@ -130,6 +132,10 @@ namespace RTC
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		bool keyFrameForTsOffsetRequested{ false };
 		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
+		// Buffer to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC
 
