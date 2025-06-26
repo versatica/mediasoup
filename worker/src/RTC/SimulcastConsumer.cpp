@@ -19,7 +19,7 @@ namespace RTC
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u };
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };
 	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 5u };
 
 	/* Instance methods. */
 
@@ -1716,6 +1716,12 @@ namespace RTC
 		if (this->targetSpatialLayer == this->currentSpatialLayer)
 		{
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
+		}
+		// If the new target spatial layer doesn't match the current one, clear the
+		// target layer retransmission buffer.
+		else
+		{
+			this->targetLayerRetransmissionBuffer.clear();
 		}
 
 		MS_DEBUG_TAG(
