@@ -86,6 +86,8 @@ namespace RTC
 		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void EmitScore() const;
+		void StorePacketInTargetLayerRetransmissionBuffer(
+		  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 		void EmitLayersChange() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
@@ -106,7 +108,12 @@ namespace RTC
 		int16_t provisionalTargetSpatialLayer{ -1 };
 		int16_t provisionalTargetTemporalLayer{ -1 };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
-		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
+		// Last time we moved to lower spatial layer due to BWE.
+		uint64_t lastBweDowngradeAtMs{ 0u };
+		// Buffer to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC
 

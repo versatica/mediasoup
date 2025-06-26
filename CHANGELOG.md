@@ -4,7 +4,8 @@
 
 - libuv: Update to v1.51.0 ([PR #1543](https://github.com/versatica/mediasoup/pull/1543)).
 - libsrtp: Update to v3.0.0-beta version in our fork ([PR #1544](https://github.com/versatica/mediasoup/pull/1544)).
-- `XxxxConsumer.cpp`: Only drop packets in RTP sequence manager when they belong to current spatial layer ([PR #1549](https://github.com/versatica/mediasoup/pull/1549)).
+- `Consumer` classes: Only drop packets in RTP sequence manager when they belong to current spatial layer ([PR #1549](https://github.com/versatica/mediasoup/pull/1549)).
+- `Consumer` classes: Add target layer retransmission buffer to avoid PLIs/FIRs when RTP packets containing a key frame arrive out of order ([PR #1550](https://github.com/versatica/mediasoup/pull/1550)).
 
 ### 3.16.0
 
@@ -785,7 +786,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.6.35
 
-- `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled ([PR #534](https://github.com/versatica/mediasoup/pull/534) due to issue #532).
+- `Consumer` classes: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled ([PR #534](https://github.com/versatica/mediasoup/pull/534) due to issue #532).
 
 ### 3.6.34
 

@@ -11,6 +11,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 15u };
+
 	/* Instance methods. */
 
 	SimpleConsumer::SimpleConsumer(
@@ -74,6 +78,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
+		this->targetLayerRetransmissionBuffer.clear();
 	}
 
 	flatbuffers::Offset<FBS::Consumer::DumpResponse> SimpleConsumer::FillBuffer(
@@ -337,6 +342,10 @@ namespace RTC
 			// we are blocking all packets but the key frame that would trigger sync
 			// below.
 
+			// Store the packet for the scenario in which this packet is part of the
+			// key frame and it arrived before the first packet of the key frame.
+			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
+
 			return;
 		}
 
@@ -392,6 +401,10 @@ namespace RTC
 		// Whether this is the first packet after re-sync.
 		const bool isSyncPacket = this->syncRequired;
 
+		// Whether packets stored in the target layer retransmission buffer must be
+		// sent once this packet is sent.
+		bool sendPacketsInTargetLayerRetransmissionBuffer{ false };
+
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)
 		{
@@ -403,6 +416,8 @@ namespace RTC
 				  packet->GetSsrc(),
 				  packet->GetSequenceNumber(),
 				  packet->GetTimestamp());
+
+				sendPacketsInTargetLayerRetransmissionBuffer = true;
 			}
 
 			this->rtpSeqManager->Sync(packet->GetSequenceNumber() - 1);
@@ -440,8 +455,9 @@ namespace RTC
 			  origSeq);
 		}
 
-		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
+		const bool sent = this->rtpStream->ReceivePacket(packet, sharedPacket);
+
+		if (sent)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -468,6 +484,37 @@ namespace RTC
 		// Restore packet fields.
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
+
+		// If sent packet was the first packet of a key frame, let's send buffered
+		// packets belonging to the same key frame that arrived earlier due to
+		// packet misorder.
+		if (sendPacketsInTargetLayerRetransmissionBuffer)
+		{
+			// NOTE: Only send buffered packets if the first packet containing the key
+			// frame was sent.
+			if (sent)
+			{
+				for (auto& kv : this->targetLayerRetransmissionBuffer)
+				{
+					auto& bufferedSharedPacket = kv.second;
+					auto* bufferedPacket       = bufferedSharedPacket.get();
+
+					if (bufferedPacket->GetSequenceNumber() > origSeq)
+					{
+						MS_DEBUG_DEV(
+						  "sending packet buffered in the target layer retransmission buffer [ssrc:%" PRIu32
+						  ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+						  bufferedPacket->GetSsrc(),
+						  bufferedPacket->GetSequenceNumber(),
+						  bufferedPacket->GetTimestamp());
+
+						SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+					}
+				}
+			}
+
+			this->targetLayerRetransmissionBuffer.clear();
+		}
 	}
 
 	bool SimpleConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
@@ -618,6 +665,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->Pause();
+		this->targetLayerRetransmissionBuffer.clear();
 	}
 
 	void SimpleConsumer::UserOnPaused()
@@ -625,6 +673,7 @@ namespace RTC
 		MS_TRACE();
 
 		this->rtpStream->Pause();
+		this->targetLayerRetransmissionBuffer.clear();
 
 		if (this->externallyManagedBitrate && this->kind == RTC::Media::Kind::VIDEO)
 		{
@@ -738,6 +787,33 @@ namespace RTC
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
+	}
+
+	void SimpleConsumer::StorePacketInTargetLayerRetransmissionBuffer(
+	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV(
+		  "storing packet in target layer retransmission buffer [ssrc:%" PRIu32 ", seq:%" PRIu16
+		  ", ts:%" PRIu32 "]",
+		  packet->GetSsrc(),
+		  packet->GetSequenceNumber(),
+		  packet->GetTimestamp());
+
+		// Store original packet into the buffer. Only clone once and only if
+		// necessary.
+		if (!sharedPacket)
+		{
+			sharedPacket.reset(packet->Clone());
+		}
+
+		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;
+
+		if (this->targetLayerRetransmissionBuffer.size() > TargetLayerRetransmissionBufferSize)
+		{
+			this->targetLayerRetransmissionBuffer.erase(this->targetLayerRetransmissionBuffer.begin());
+		}
 	}
 
 	void SimpleConsumer::EmitScore() const

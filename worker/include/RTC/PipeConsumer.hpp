@@ -4,6 +4,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
+#include <map>
 
 namespace RTC
 {
@@ -59,6 +60,11 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStreams();
 		void RequestKeyFrame();
+		void StorePacketInTargetLayerRetransmissionBuffer(
+		  std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+		    targetLayerRetransmissionBuffer,
+		  RTC::RtpPacket* packet,
+		  std::shared_ptr<RTC::RtpPacket>& sharedPacket);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -75,6 +81,12 @@ namespace RTC
 		absl::flat_hash_map<RTC::RtpStreamSend*, bool> mapRtpStreamSyncRequired;
 		absl::flat_hash_map<RTC::RtpStreamSend*, std::unique_ptr<RTC::SeqManager<uint16_t>>>
 		  mapRtpStreamRtpSeqManager;
+		// Buffers to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		absl::flat_hash_map<
+		  RTC::RtpStreamSend*,
+		  std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>>
+		  mapRtpStreamTargetLayerRetransmissionBuffer;
 	};
 } // namespace RTC
 
