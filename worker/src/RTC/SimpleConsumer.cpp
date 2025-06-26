@@ -740,7 +740,7 @@ namespace RTC
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
-	inline void SimpleConsumer::EmitScore() const
+	void SimpleConsumer::EmitScore() const
 	{
 		MS_TRACE();
 
@@ -756,7 +756,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline void SimpleConsumer::OnRtpStreamScore(
+	void SimpleConsumer::OnRtpStreamScore(
 	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
@@ -765,7 +765,7 @@ namespace RTC
 		EmitScore();
 	}
 
-	inline void SimpleConsumer::OnRtpStreamRetransmitRtpPacket(
+	void SimpleConsumer::OnRtpStreamRetransmitRtpPacket(
 	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

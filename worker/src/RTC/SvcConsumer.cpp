@@ -1263,7 +1263,7 @@ namespace RTC
 		}
 	}
 
-	inline void SvcConsumer::EmitScore() const
+	void SvcConsumer::EmitScore() const
 	{
 		MS_TRACE();
 
@@ -1279,7 +1279,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline void SvcConsumer::EmitLayersChange() const
+	void SvcConsumer::EmitLayersChange() const
 	{
 		MS_TRACE();
 
@@ -1309,7 +1309,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline void SvcConsumer::OnRtpStreamScore(
+	void SvcConsumer::OnRtpStreamScore(
 	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
@@ -1329,7 +1329,7 @@ namespace RTC
 		}
 	}
 
-	inline void SvcConsumer::OnRtpStreamRetransmitRtpPacket(
+	void SvcConsumer::OnRtpStreamRetransmitRtpPacket(
 	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

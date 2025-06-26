@@ -1678,7 +1678,7 @@ namespace RTC
 		}
 	}
 
-	inline bool SimulcastConsumer::CanSwitchToSpatialLayer(int16_t spatialLayer) const
+	bool SimulcastConsumer::CanSwitchToSpatialLayer(int16_t spatialLayer) const
 	{
 		MS_TRACE();
 
@@ -1704,7 +1704,7 @@ namespace RTC
 		// clang-format on
 	}
 
-	inline void SimulcastConsumer::EmitScore() const
+	void SimulcastConsumer::EmitScore() const
 	{
 		MS_TRACE();
 
@@ -1720,7 +1720,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline void SimulcastConsumer::EmitLayersChange() const
+	void SimulcastConsumer::EmitLayersChange() const
 	{
 		MS_TRACE();
 
@@ -1750,7 +1750,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerCurrentRtpStream() const
+	RTC::RtpStreamRecv* SimulcastConsumer::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1763,7 +1763,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->currentSpatialLayer);
 	}
 
-	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTargetRtpStream() const
+	RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTargetRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1776,7 +1776,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->targetSpatialLayer);
 	}
 
-	inline RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
+	RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1789,7 +1789,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->tsReferenceSpatialLayer);
 	}
 
-	inline void SimulcastConsumer::OnRtpStreamScore(
+	void SimulcastConsumer::OnRtpStreamScore(
 	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
@@ -1809,7 +1809,7 @@ namespace RTC
 		}
 	}
 
-	inline void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
+	void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
 	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
