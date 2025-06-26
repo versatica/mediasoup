@@ -1690,6 +1690,13 @@ namespace RTC
 			this->tsReferenceSpatialLayer = newTargetSpatialLayer;
 		}
 
+		// If the new target spatial layer doesn't match the current one, clear the
+		// target layer retransmission buffer.
+		if (newTargetSpatialLayer != this->targetSpatialLayer)
+		{
+			this->targetLayerRetransmissionBuffer.clear();
+		}
+
 		if (newTargetSpatialLayer == -1)
 		{
 			// Unset current and target layers.
@@ -1716,12 +1723,6 @@ namespace RTC
 		if (this->targetSpatialLayer == this->currentSpatialLayer)
 		{
 			this->encodingContext->SetTargetTemporalLayer(this->targetTemporalLayer);
-		}
-		// If the new target spatial layer doesn't match the current one, clear the
-		// target layer retransmission buffer.
-		else
-		{
-			this->targetLayerRetransmissionBuffer.clear();
 		}
 
 		MS_DEBUG_TAG(
