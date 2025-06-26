@@ -6,6 +6,9 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 
 namespace RTC
 {

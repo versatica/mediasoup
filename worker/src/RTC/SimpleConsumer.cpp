@@ -8,6 +8,9 @@
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/SimpleConsumer.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 
 namespace RTC
 {
