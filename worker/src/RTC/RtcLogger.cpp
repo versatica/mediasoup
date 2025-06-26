@@ -52,6 +52,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// TODO: Here we are using std::cout() which means that it's directly
+			// written to stdout. When in Node, it means that Worker.ts captures it
+			// and prints it ONLY if DEBUG env contains "Worker", and it prefixes the
+			// log with "(stdout)". We should move to MS_DUMP() or MS_DUMP_CLEAN().
+
 			std::cout << "{";
 			std::cout << "\"timestamp\": " << this->timestamp;
 
