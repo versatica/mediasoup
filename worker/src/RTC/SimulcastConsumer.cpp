@@ -19,7 +19,7 @@ namespace RTC
 	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u };
 	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };
 	static constexpr uint16_t MaxSequenceNumberGap{ 100u };
-	static constexpr size_t TargetLayerRetransmissionBufferSize{ 5u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 30u };
 
 	/* Instance methods. */
 
