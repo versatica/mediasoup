@@ -741,7 +741,7 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -757,7 +757,7 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::INVALID_TARGET_LAYER);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -776,10 +776,10 @@ namespace RTC
 			// current spatial layer.
 			if (spatialLayer == this->currentSpatialLayer)
 			{
-				MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+				MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -824,14 +824,14 @@ namespace RTC
 		// layer or if transport just connected or consumer resumed.
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+#endif
+
 			// Only drop the packet in the RTP sequence manager if it belongs to the
 			// current spatial layer.
 			if (spatialLayer == this->currentSpatialLayer)
 			{
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
-#endif
-
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
 			}
 
@@ -846,7 +846,7 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -863,7 +863,12 @@ namespace RTC
 		{
 			if (packet->IsKeyFrame())
 			{
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG(
+				  rtp,
+				  "sync key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  packet->GetTimestamp());
 			}
 
 			uint32_t tsOffset{ 0u };
@@ -966,6 +971,11 @@ namespace RTC
 					this->syncRequired       = false;
 					this->spatialLayerToSync = -1;
 
+#ifdef MS_RTC_LOGGER_RTP
+					packet->logger.Discarded(
+					  RtcLogger::RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED);
+#endif
+
 					// NOTE: Don't drop the packet in the RTP sequence manager since this
 					// packet doesn't belong to the current spatial layer.
 
@@ -1013,8 +1023,8 @@ namespace RTC
 			      packet->GetSequenceNumber(), this->snReferenceSpatialLayer))
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(
-				  RtcLogger::RtpPacket::DropReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
+				packet->logger.Discarded(
+				  RtcLogger::RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -1064,7 +1074,7 @@ namespace RTC
 			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
 
 				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -1139,6 +1149,10 @@ namespace RTC
 			  origSsrc,
 			  origSeq,
 			  origTimestamp);
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
+#endif
 		}
 
 		// Restore packet fields.

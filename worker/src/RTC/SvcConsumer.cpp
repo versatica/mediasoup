@@ -643,7 +643,7 @@ namespace RTC
 		if (!IsActive())
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -659,7 +659,7 @@ namespace RTC
 		// clang-format on
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::INVALID_TARGET_LAYER);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -670,6 +670,10 @@ namespace RTC
 		// If we need to sync and this is not a key frame, ignore the packet.
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+#endif
+
 			// NOTE: No need to drop the packet in the RTP sequence manager since here
 			// we are blocking all packets but the key frame that would trigger sync
 			// below.
@@ -683,10 +687,10 @@ namespace RTC
 		// in the corresponding Producer.
 		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
-			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -698,7 +702,7 @@ namespace RTC
 		if (packet->GetPayloadLength() == 0)
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -714,7 +718,12 @@ namespace RTC
 		{
 			if (packet->IsKeyFrame())
 			{
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG(
+				  rtp,
+				  "sync key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  packet->GetTimestamp());
 			}
 
 			this->rtpSeqManager->Sync(packet->GetSequenceNumber() - 1);
@@ -732,7 +741,7 @@ namespace RTC
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -806,6 +815,10 @@ namespace RTC
 			  packet->GetTimestamp(),
 			  origSsrc,
 			  origSeq);
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
+#endif
 		}
 
 		// Restore packet fields.
