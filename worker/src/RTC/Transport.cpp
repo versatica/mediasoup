@@ -1570,7 +1570,7 @@ namespace RTC
 		if (!producer)
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::PRODUCER_NOT_FOUND);
+			packet->logger.Discarded(RtpLogger::RtpPacket::DiscardReason::PRODUCER_NOT_FOUND);
 #endif
 
 			MS_WARN_TAG(
