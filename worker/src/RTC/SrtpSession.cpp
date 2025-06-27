@@ -9,6 +9,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset()
+#include <stdexcept>
 
 namespace RTC
 {
@@ -184,7 +185,16 @@ namespace RTC
 
 			if (DepLibSRTP::IsError(err))
 			{
-				MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
+				try
+				{
+					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
+				}
+				catch (const std::exception& error)
+				{
+					// NOTE: This is to avoid a warning:
+					// '~SrtpSession' has a non-throwing exception specification but can
+					// still throw [-Wexceptions]
+				}
 			}
 		}
 	}

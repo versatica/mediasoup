@@ -10,6 +10,9 @@
 #include "RTC/Consts.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 #include <absl/container/inlined_vector.h>
 #include <cstring> // std::memcpy()
 
@@ -592,7 +595,7 @@ namespace RTC
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND);
 #endif
 
 			return ReceiveRtpPacketResult::DISCARDED;
@@ -619,7 +622,7 @@ namespace RTC
 				}
 
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_DISCARDED);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_DISCARDED);
 #endif
 
 				return result;
@@ -635,7 +638,7 @@ namespace RTC
 			if (!rtpStream->ReceiveRtxPacket(packet))
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND);
 #endif
 
 				return result;

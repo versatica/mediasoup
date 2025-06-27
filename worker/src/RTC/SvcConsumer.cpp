@@ -7,13 +7,17 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 
 namespace RTC
 {
 	/* Static. */
 
-	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u }; // In ms.
-	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };     // In ms.
+	static constexpr uint64_t BweDowngradeConservativeMs{ 10000u };
+	static constexpr uint64_t BweDowngradeMinActiveMs{ 8000u };
+	static constexpr size_t TargetLayerRetransmissionBufferSize{ 20u };
 
 	/* Instance methods. */
 
@@ -115,6 +119,7 @@ namespace RTC
 		this->shared->channelMessageRegistrator->UnregisterHandler(this->id);
 
 		delete this->rtpStream;
+		this->targetLayerRetransmissionBuffer.clear();
 	}
 
 	flatbuffers::Offset<FBS::Consumer::DumpResponse> SvcConsumer::FillBuffer(
@@ -643,7 +648,7 @@ namespace RTC
 		if (!IsActive())
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::CONSUMER_INACTIVE);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -659,24 +664,7 @@ namespace RTC
 		// clang-format on
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::INVALID_TARGET_LAYER);
-#endif
-
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
-			return;
-		}
-
-		auto payloadType = packet->GetPayloadType();
-
-		// NOTE: This may happen if this Consumer supports just some codecs of those
-		// in the corresponding Producer.
-		if (!this->supportedCodecPayloadTypes[payloadType])
-		{
-			MS_DEBUG_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
-
-#ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::UNSUPPORTED_PAYLOAD_TYPE);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -688,7 +676,30 @@ namespace RTC
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::NOT_A_KEYFRAME);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+#endif
+
+			// NOTE: No need to drop the packet in the RTP sequence manager since here
+			// we are blocking all packets but the key frame that would trigger sync
+			// below.
+
+			// Store the packet for the scenario in which this packet is part of the
+			// key frame and it arrived before the first packet of the key frame.
+			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
+
+			return;
+		}
+
+		auto payloadType = packet->GetPayloadType();
+
+		// NOTE: This may happen if this Consumer supports just some codecs of those
+		// in the corresponding Producer.
+		if (!this->supportedCodecPayloadTypes[payloadType])
+		{
+			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -700,7 +711,7 @@ namespace RTC
 		if (packet->GetPayloadLength() == 0)
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::EMPTY_PAYLOAD);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
 			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
@@ -711,12 +722,23 @@ namespace RTC
 		// Whether this is the first packet after re-sync.
 		const bool isSyncPacket = this->syncRequired;
 
+		// Whether packets stored in the target layer retransmission buffer must be
+		// sent once this packet is sent.
+		bool sendPacketsInTargetLayerRetransmissionBuffer{ false };
+
 		// Sync sequence number and timestamp if required.
 		if (isSyncPacket)
 		{
 			if (packet->IsKeyFrame())
 			{
-				MS_DEBUG_TAG(rtp, "sync key frame received");
+				MS_DEBUG_TAG(
+				  rtp,
+				  "sync key frame received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  packet->GetTimestamp());
+
+				sendPacketsInTargetLayerRetransmissionBuffer = true;
 			}
 
 			this->rtpSeqManager->Sync(packet->GetSequenceNumber() - 1);
@@ -733,11 +755,11 @@ namespace RTC
 
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
-			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
-
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::DROPPED_BY_CODEC);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
+
+			this->rtpSeqManager->Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -788,8 +810,9 @@ namespace RTC
 			  origSeq);
 		}
 
-		// Process the packet.
-		if (this->rtpStream->ReceivePacket(packet, sharedPacket))
+		const bool sent = this->rtpStream->ReceivePacket(packet, sharedPacket);
+
+		if (sent)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -808,6 +831,10 @@ namespace RTC
 			  packet->GetTimestamp(),
 			  origSsrc,
 			  origSeq);
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
+#endif
 		}
 
 		// Restore packet fields.
@@ -817,6 +844,37 @@ namespace RTC
 
 		// Restore the original payload if needed.
 		packet->RestorePayload();
+
+		// If sent packet was the first packet of a key frame, let's send buffered
+		// packets belonging to the same key frame that arrived earlier due to
+		// packet misorder.
+		if (sendPacketsInTargetLayerRetransmissionBuffer)
+		{
+			// NOTE: Only send buffered packets if the first packet containing the key
+			// frame was sent.
+			if (sent)
+			{
+				for (auto& kv : this->targetLayerRetransmissionBuffer)
+				{
+					auto& bufferedSharedPacket = kv.second;
+					auto* bufferedPacket       = bufferedSharedPacket.get();
+
+					if (bufferedPacket->GetSequenceNumber() > origSeq)
+					{
+						MS_DEBUG_DEV(
+						  "sending packet buffered in the target layer retransmission buffer [ssrc:%" PRIu32
+						  ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+						  bufferedPacket->GetSsrc(),
+						  bufferedPacket->GetSequenceNumber(),
+						  bufferedPacket->GetTimestamp());
+
+						SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+					}
+				}
+			}
+
+			this->targetLayerRetransmissionBuffer.clear();
+		}
 	}
 
 	bool SvcConsumer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
@@ -967,6 +1025,7 @@ namespace RTC
 		this->lastBweDowngradeAtMs = 0u;
 
 		this->rtpStream->Pause();
+		this->targetLayerRetransmissionBuffer.clear();
 
 		UpdateTargetLayers(-1, -1);
 	}
@@ -978,6 +1037,7 @@ namespace RTC
 		this->lastBweDowngradeAtMs = 0u;
 
 		this->rtpStream->Pause();
+		this->targetLayerRetransmissionBuffer.clear();
 
 		UpdateTargetLayers(-1, -1);
 
@@ -1252,7 +1312,34 @@ namespace RTC
 		}
 	}
 
-	inline void SvcConsumer::EmitScore() const
+	void SvcConsumer::StorePacketInTargetLayerRetransmissionBuffer(
+	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	{
+		MS_TRACE();
+
+		MS_DEBUG_DEV(
+		  "storing packet in target layer retransmission buffer [ssrc:%" PRIu32 ", seq:%" PRIu16
+		  ", ts:%" PRIu32 "]",
+		  packet->GetSsrc(),
+		  packet->GetSequenceNumber(),
+		  packet->GetTimestamp());
+
+		// Store original packet into the buffer. Only clone once and only if
+		// necessary.
+		if (!sharedPacket)
+		{
+			sharedPacket.reset(packet->Clone());
+		}
+
+		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;
+
+		if (this->targetLayerRetransmissionBuffer.size() > TargetLayerRetransmissionBufferSize)
+		{
+			this->targetLayerRetransmissionBuffer.erase(this->targetLayerRetransmissionBuffer.begin());
+		}
+	}
+
+	void SvcConsumer::EmitScore() const
 	{
 		MS_TRACE();
 
@@ -1268,7 +1355,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline void SvcConsumer::EmitLayersChange() const
+	void SvcConsumer::EmitLayersChange() const
 	{
 		MS_TRACE();
 
@@ -1298,7 +1385,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	inline void SvcConsumer::OnRtpStreamScore(
+	void SvcConsumer::OnRtpStreamScore(
 	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
@@ -1318,7 +1405,7 @@ namespace RTC
 		}
 	}
 
-	inline void SvcConsumer::OnRtpStreamRetransmitRtpPacket(
+	void SvcConsumer::OnRtpStreamRetransmitRtpPacket(
 	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();

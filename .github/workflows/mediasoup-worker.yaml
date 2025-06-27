@@ -54,6 +54,17 @@ jobs:
             run-test-asan-undefined: false
             run-test-asan-thread: true
           - os: ubuntu-24.04
+            cc: gcc
+            cxx: g++
+            pip-break-system-packages: true
+            run-lint: true
+            run-test: true
+            run-test-asan-address: true
+            run-test-asan-undefined: false
+            run-test-asan-thread: true
+            # Let's just compile with all Meson option flags enabled once with gcc.
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+          - os: ubuntu-24.04
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
@@ -62,6 +73,17 @@ jobs:
             run-test-asan-address: true
             run-test-asan-undefined: true
             run-test-asan-thread: true
+          - os: ubuntu-24.04
+            cc: clang
+            cxx: clang++
+            pip-break-system-packages: true
+            run-lint: true
+            run-test: true
+            run-test-asan-address: true
+            run-test-asan-undefined: true
+            run-test-asan-thread: true
+            # Let's just compile with all Meson option flags enabled once with clang.
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
           - os: ubuntu-24.04-arm
             cc: gcc
             cxx: g++
@@ -147,6 +169,7 @@ jobs:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'false'
       MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
+      MESON_ARGS: ${{ matrix.build.meson_args }}
 
     steps:
       - name: Checkout

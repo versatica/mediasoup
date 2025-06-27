@@ -1,9 +1,11 @@
 # Changelog
 
-### NEXT
+### 3.16.1
 
 - libuv: Update to v1.51.0 ([PR #1543](https://github.com/versatica/mediasoup/pull/1543)).
 - libsrtp: Update to v3.0.0-beta version in our fork ([PR #1544](https://github.com/versatica/mediasoup/pull/1544)).
+- `Consumer` classes: Only drop packets in RTP sequence manager when they belong to current spatial layer ([PR #1549](https://github.com/versatica/mediasoup/pull/1549)).
+- `Consumer` classes: Add target layer retransmission buffer to avoid PLIs/FIRs when RTP packets containing a key frame arrive out of order ([PR #1550](https://github.com/versatica/mediasoup/pull/1550)).
 
 ### 3.16.0
 
@@ -14,7 +16,7 @@
 
 ### 3.15.8
 
-- `Worker`: Fix encode retransmitted packets with the corresponding data ([PR #1527](https://github.com/versatica/mediasoup/pull/1527)).
+- Worker: Fix encode retransmitted packets with the corresponding data ([PR #1527](https://github.com/versatica/mediasoup/pull/1527)).
 
 ### 3.15.7
 
@@ -33,7 +35,7 @@
 
 ### 3.15.4
 
-- `Worker`: Drop VP8 packets with a higher temporal layer than the current one ([PR #1009](https://github.com/versatica/mediasoup/pull/1009)).
+- Worker: Drop VP8 packets with a higher temporal layer than the current one ([PR #1009](https://github.com/versatica/mediasoup/pull/1009)).
 - Fix the problem of the TCC package being omitted from being sent ([PR #1492](https://github.com/versatica/mediasoup/pull/1492) by @penguinol).
 
 ### 3.15.3
@@ -42,7 +44,7 @@
 
 ### 3.15.2
 
-- `Worker`: Fix crash when using colliding `portRange` values in different transports ([PR #1469](https://github.com/versatica/mediasoup/pull/1469)).
+- Worker: Fix crash when using colliding `portRange` values in different transports ([PR #1469](https://github.com/versatica/mediasoup/pull/1469)).
 
 ### 3.15.1
 
@@ -73,19 +75,19 @@
 
 ### 3.14.12
 
-- `Worker`: Fix `io_uring` support detection ([PR #1445](https://github.com/versatica/mediasoup/pull/1445)).
+- Worker: Fix `io_uring` support detection ([PR #1445](https://github.com/versatica/mediasoup/pull/1445)).
 - Mitigate libsrtp wraparound with loss decryption failure ([PR #1438](https://github.com/versatica/mediasoup/pull/1438)).
 - Node: New `setLogEventListeners()` utility to get log events ([PR #1448](https://github.com/versatica/mediasoup/pull/1448)).
 
 ### 3.14.11
 
-- `Worker`: Fix `disableLiburing` option in `WorkerSettings` ([PR #1444](https://github.com/versatica/mediasoup/pull/1444)).
+- Worker: Fix `disableLiburing` option in `WorkerSettings` ([PR #1444](https://github.com/versatica/mediasoup/pull/1444)).
 
 ### 3.14.10
 
 - CI: Support Node 22 ([PR #1434](https://github.com/versatica/mediasoup/pull/1434)).
 - Update ESLint to version 9 ([PR #1435](https://github.com/versatica/mediasoup/pull/1435)).
-- `Worker`: Add `disableLiburing` boolean option (`false` by default) to disable `io_uring` even if it's supported by the prebuilt `mediasoup-worker` and by current host ([PR #1442](https://github.com/versatica/mediasoup/pull/1442)).
+- Worker: Add `disableLiburing` boolean option (`false` by default) to disable `io_uring` even if it's supported by the prebuilt `mediasoup-worker` and by current host ([PR #1442](https://github.com/versatica/mediasoup/pull/1442)).
 
 ### 3.14.9
 
@@ -784,7 +786,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.6.35
 
-- `XxxxConsumer.hpp`: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled ([PR #534](https://github.com/versatica/mediasoup/pull/534) due to issue #532).
+- `Consumer` classes: make `IsActive()` return `true` (even if `Producer`'s score is 0) when DTX is enabled ([PR #534](https://github.com/versatica/mediasoup/pull/534) due to issue #532).
 
 ### 3.6.34
 

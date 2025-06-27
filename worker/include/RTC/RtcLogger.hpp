@@ -11,7 +11,7 @@ namespace RTC
 		class RtpPacket
 		{
 		public:
-			enum class DropReason : uint8_t
+			enum class DiscardReason : uint8_t
 			{
 				NONE = 0,
 				PRODUCER_NOT_FOUND,
@@ -23,18 +23,18 @@ namespace RTC
 				NOT_A_KEYFRAME,
 				EMPTY_PAYLOAD,
 				SPATIAL_LAYER_MISMATCH,
-				TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,
 				PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH,
 				DROPPED_BY_CODEC,
-				SEND_RTP_STREAM_DISCARDED,
+				TOO_HIGH_TIMESTAMP_EXTRA_NEEDED,
+				SEND_RTP_STREAM_DISCARDED
 			};
 
-			static absl::flat_hash_map<DropReason, std::string> dropReason2String;
+			static absl::flat_hash_map<DiscardReason, std::string> discardReason2String;
 
 			RtpPacket()  = default;
 			~RtpPacket() = default;
 			void Sent();
-			void Dropped(DropReason dropReason);
+			void Discarded(DiscardReason discardReason);
 
 		private:
 			void Log() const;
@@ -51,8 +51,8 @@ namespace RTC
 			uint32_t sendRtpTimestamp{};
 			uint16_t recvSeqNumber{};
 			uint16_t sendSeqNumber{};
-			bool dropped{};
-			DropReason dropReason{ DropReason::NONE };
+			bool discarded{};
+			DiscardReason discardReason{ DiscardReason::NONE };
 		};
 	}; // namespace RtcLogger
 } // namespace RTC
