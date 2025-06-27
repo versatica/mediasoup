@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Worker: RtcLogger: Use `MS_DUMP()` instead of `std::cout()` ([PR #1553](https://github.com/versatica/mediasoup/pull/1553)).
+- RtcLogger: Use `MS_DUMP()` instead of `std::cout()` ([PR #1553](https://github.com/versatica/mediasoup/pull/1553)).
 
 ### 3.16.1
 
