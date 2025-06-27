@@ -3,6 +3,7 @@
 
 #include "RTC/RtcLogger.hpp"
 #include "Logger.hpp"
+#include <sstream>
 
 namespace RTC
 {
