@@ -1,9 +1,5 @@
 # Changelog
 
-### NEXT
-
-- `RtcLogger`: Use `MS_DUMP()` instead of `std::cout()` ([PR #1553](https://github.com/versatica/mediasoup/pull/1553)).
-
 ### 3.16.1
 
 - libuv: Update to v1.51.0 ([PR #1543](https://github.com/versatica/mediasoup/pull/1543)).
