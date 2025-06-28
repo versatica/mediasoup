@@ -20,7 +20,7 @@ namespace RTC
 			void Reset();
 
 			// Original packet.
-			std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
+			std::shared_ptr<RTC::RtpPacket> sharedPacket{ nullptr };
 			// Payload descriptor encoder.
 			std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 			// Correct SSRC since original packet may not have the same.

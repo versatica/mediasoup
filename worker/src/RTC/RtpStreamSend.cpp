@@ -151,28 +151,76 @@ namespace RTC
 					break;
 				}
 
-				// Note that this is an already RTX encoded packet if RTX is used
-				// (FillRetransmissionContainer() did it).
-				auto packet = item->packet;
+				auto* packet = item->sharedPacket.get();
+
+				// Keep the values of the original packet received by the Consumer.
+				auto origSsrc      = packet->GetSsrc();
+				auto origSeq       = packet->GetSequenceNumber();
+				auto origTimestamp = packet->GetTimestamp();
+				std::string origMid;
+
+				// Put correct info into the packet.
+				packet->SetSsrc(item->ssrc);
+				packet->SetSequenceNumber(item->sequenceNumber);
+				packet->SetTimestamp(item->timestamp);
+
+				if (item->encoder != nullptr)
+				{
+					packet->EncodePayload(item->encoder.get());
+				}
+
+				// Update MID RTP extension value.
+				if (!this->mid.empty())
+				{
+					packet->ReadMid(origMid);
+					packet->UpdateMid(this->mid);
+				}
+
+				// If we use RTX, encode it.
+				if (HasRtx())
+				{
+					// Increment RTX seq.
+					++this->rtxSeq;
+
+					packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
+				}
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-				  ->OnRtpStreamRetransmitRtpPacket(this, packet.get());
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
 
 				// Mark the packet as retransmitted.
-				RTC::RtpStream::PacketRetransmitted(packet.get());
+				RTC::RtpStream::PacketRetransmitted(packet);
 
 				// Mark the packet as repaired (only if this is the first retransmission).
 				if (item->sentTimes == 1)
 				{
-					RTC::RtpStream::PacketRepaired(packet.get());
+					RTC::RtpStream::PacketRepaired(packet);
 				}
 
+				// If we use RTX, restore it.
 				if (HasRtx())
 				{
 					// Restore the packet.
 					packet->RtxDecode(RtpStream::GetPayloadType(), item->ssrc);
 				}
+
+				// Restore MID.
+				if (!this->mid.empty())
+				{
+					packet->UpdateMid(origMid);
+				}
+
+				// Restore payload.
+				if (item->encoder != nullptr)
+				{
+					packet->RestorePayload();
+				}
+
+				// Restore RTP header fields.
+				packet->SetSsrc(origSsrc);
+				packet->SetSequenceNumber(origSeq);
+				packet->SetTimestamp(origTimestamp);
 			}
 		}
 
@@ -437,29 +485,6 @@ namespace RTC
 			if (requested)
 			{
 				auto* item = this->retransmissionBuffer->Get(currentSeq);
-				std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
-
-				// Calculate the elapsed time between the max timestamp seen and the
-				// requested packet's timestamp (in ms).
-				if (item)
-				{
-					packet = item->packet;
-					// Put correct info into the packet.
-					packet->SetSsrc(item->ssrc);
-					packet->SetSequenceNumber(item->sequenceNumber);
-					packet->SetTimestamp(item->timestamp);
-
-					if (item->encoder != nullptr)
-					{
-						packet->EncodePayload(item->encoder.get());
-					}
-
-					// Update MID RTP extension value.
-					if (!this->mid.empty())
-					{
-						packet->UpdateMid(mid);
-					}
-				}
 
 				// Packet not found.
 				if (!item)
@@ -478,21 +503,12 @@ namespace RTC
 					  rtx,
 					  "ignoring retransmission for a packet already resent in the last RTT ms "
 					  "[seq:%" PRIu16 ", rtt:%" PRIu16 "]",
-					  packet->GetSequenceNumber(),
+					  item->sequenceNumber,
 					  rtt);
 				}
 				// Stored packet is valid for retransmission. Resend it.
 				else
 				{
-					// If we use RTX and the packet has not yet been resent, encode it now.
-					if (HasRtx())
-					{
-						// Increment RTX seq.
-						++this->rtxSeq;
-
-						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
-					}
-
 					// Save when this packet was resent.
 					item->resentAtMs = nowMs;
 

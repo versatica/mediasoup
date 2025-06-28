@@ -30,7 +30,7 @@ namespace RTC
 		}
 
 		// Store original packet and some extra info into the item.
-		item->packet         = sharedPacket;
+		item->sharedPacket   = sharedPacket;
 		item->encoder        = packet->GetPayloadEncoder();
 		item->ssrc           = packet->GetSsrc();
 		item->sequenceNumber = packet->GetSequenceNumber();
@@ -589,7 +589,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->packet.reset();
+		this->sharedPacket.reset();
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;

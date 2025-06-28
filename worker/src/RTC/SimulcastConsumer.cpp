@@ -811,9 +811,7 @@ namespace RTC
 
 				// Store the packet for the scenario in which this packet is part of the
 				// key frame and it arrived before the first packet of the key frame.
-				// TODO: Uncomment once this issue is fixed:
-				// https://github.com/versatica/mediasoup/issues/1554
-				// StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
+				StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 				return;
 			}
@@ -1205,12 +1203,27 @@ namespace RTC
 					{
 						MS_DEBUG_DEV(
 						  "sending packet buffered in the target layer retransmission buffer [ssrc:%" PRIu32
-						  ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+						  ", seq:%" PRIu16 ", ts:%" PRIu32
+						  "] after sending first packet of the key frame [ssrc:%" PRIu32 ", seq:%" PRIu16
+						  ", ts:%" PRIu32 "]",
 						  bufferedPacket->GetSsrc(),
 						  bufferedPacket->GetSequenceNumber(),
-						  bufferedPacket->GetTimestamp());
+						  bufferedPacket->GetTimestamp(),
+						  packet->GetSsrc(),
+						  packet->GetSequenceNumber(),
+						  packet->GetTimestamp());
 
 						SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+
+						// Be sure that the target layer retransmission buffer has not been
+						// emptied as a result of sending this packet. If so, exit the loop.
+						if (this->targetLayerRetransmissionBuffer.size() == 0)
+						{
+							MS_DEBUG_DEV(
+							  "target layer retransmission buffer emptied while iterating it, exiting the loop");
+
+							break;
+						}
 					}
 				}
 			}
