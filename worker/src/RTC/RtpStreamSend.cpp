@@ -180,7 +180,7 @@ namespace RTC
 				if (HasRtx())
 				{
 					// Increment RTX seq.
-					++this->rtxSeq;
+					this->rtxSeq++;
 
 					packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
 				}
@@ -529,12 +529,12 @@ namespace RTC
 
 			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
-			++currentSeq;
+			currentSeq++;
 
 			if (!isFirstPacket)
 			{
 				sentBitmask |= (sent ? 1 : 0) << bitmaskCounter;
-				++bitmaskCounter;
+				bitmaskCounter++;
 			}
 			else
 			{
