@@ -1154,6 +1154,7 @@ namespace RTC
 			  origTimestamp);
 		}
 
+		const bool sharedPacketHadValue = sharedPacket != nullptr;
 		const bool sent = this->rtpStream->ReceivePacket(packet, sharedPacket);
 
 		if (sent)
@@ -1194,6 +1195,17 @@ namespace RTC
 
 		// Restore the original payload if needed.
 		packet->RestorePayload();
+
+		// If the sharedPacket has a value now and it didn't have it before, then
+		// restore also its content because we want that sharedPacket always contains
+		// the original packet received from the Producer.
+		if (!sharedPacketHadValue && sharedPacket)
+		{
+			sharedPacket->SetSsrc(origSsrc);
+			sharedPacket->SetSequenceNumber(origSeq);
+			sharedPacket->SetTimestamp(origTimestamp);
+			sharedPacket->RestorePayload();
+		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
 		// packets belonging to the same key frame that arrived earlier due to
