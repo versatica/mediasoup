@@ -138,6 +138,8 @@ namespace RTC
 		// video key frame.
 		std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
+		// TODO: REMOVE.
+		bool bufferedPacketSent{ false };
 	};
 } // namespace RTC
 

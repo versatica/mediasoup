@@ -733,6 +733,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: REMOVE.
+		if (this->bufferedPacketSent)
+		{
+			MS_DUMP(
+			  "---- THIS IS A BUFFERED PACKET 1 [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  packet->GetSsrc(),
+			  packet->GetSequenceNumber(),
+			  packet->GetTimestamp());
+		}
+
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
 #endif
@@ -1213,7 +1223,22 @@ namespace RTC
 						  packet->GetSequenceNumber(),
 						  packet->GetTimestamp());
 
+						// TODO: REMOVE.
+						MS_DUMP(
+						  "sending packet buffered in the target layer retransmission buffer [ssrc:%" PRIu32
+						  ", seq:%" PRIu16 ", ts:%" PRIu32
+						  "] after sending first packet of the key frame [ssrc:%" PRIu32 ", seq:%" PRIu16
+						  ", ts:%" PRIu32 "]",
+						  bufferedPacket->GetSsrc(),
+						  bufferedPacket->GetSequenceNumber(),
+						  bufferedPacket->GetTimestamp(),
+						  packet->GetSsrc(),
+						  packet->GetSequenceNumber(),
+						  packet->GetTimestamp());
+
+						this->bufferedPacketSent = true;
 						SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+						this->bufferedPacketSent = false;
 
 						// Be sure that the target layer retransmission buffer has not been
 						// emptied as a result of sending this packet. If so, exit the loop.
@@ -1798,6 +1823,18 @@ namespace RTC
 		if (!sharedPacket)
 		{
 			sharedPacket.reset(packet->Clone());
+		}
+		// TODO: REMOVE.
+		else
+		{
+			auto* sharedPacketPtr = sharedPacket.get();
+
+			// TODO: REMOVE.
+			MS_DUMP(
+			  "---- sharedPacket already has a packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+			  sharedPacketPtr->GetSsrc(),
+			  sharedPacketPtr->GetSequenceNumber(),
+			  sharedPacketPtr->GetTimestamp());
 		}
 
 		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;
