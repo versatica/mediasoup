@@ -31,9 +31,14 @@ namespace RTC
 							case RTC::RtpCodecMimeType::Subtype::VP9:
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+							{
 								return true;
+							}
+
 							default:
+							{
 								return false;
+							}
 						}
 					}
 
@@ -134,9 +139,14 @@ namespace RTC
 								{
 									case RTC::RtpCodecMimeType::Subtype::VP8:
 									case RTC::RtpCodecMimeType::Subtype::H264:
+									{
 										return true;
+									}
+
 									default:
+									{
 										return false;
+									}
 								}
 							}
 
@@ -158,9 +168,14 @@ namespace RTC
 									case RTC::RtpCodecMimeType::Subtype::VP9:
 									case RTC::RtpCodecMimeType::Subtype::H264_SVC:
 									case RTC::RtpCodecMimeType::Subtype::AV1:
+									{
 										return true;
+									}
+
 									default:
+									{
 										return false;
+									}
 								}
 							}
 
@@ -175,6 +190,8 @@ namespace RTC
 					{
 						return true;
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 
@@ -188,17 +205,34 @@ namespace RTC
 						switch (mimeType.subtype)
 						{
 							case RTC::RtpCodecMimeType::Subtype::VP8:
+							{
 								return new RTC::Codecs::VP8::EncodingContext(params);
+							}
+
 							case RTC::RtpCodecMimeType::Subtype::VP9:
+							{
 								return new RTC::Codecs::VP9::EncodingContext(params);
+							}
+
 							case RTC::RtpCodecMimeType::Subtype::AV1:
+							{
 								return new RTC::Codecs::AV1::EncodingContext(params);
+							}
+
 							case RTC::RtpCodecMimeType::Subtype::H264:
+							{
 								return new RTC::Codecs::H264::EncodingContext(params);
+							}
+
 							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+							{
 								return new RTC::Codecs::H264_SVC::EncodingContext(params);
+							}
+
 							default:
+							{
 								return nullptr;
+							}
 						}
 					}
 
@@ -208,9 +242,14 @@ namespace RTC
 						{
 							case RTC::RtpCodecMimeType::Subtype::OPUS:
 							case RTC::RtpCodecMimeType::Subtype::MULTIOPUS:
+							{
 								return new RTC::Codecs::Opus::EncodingContext(params);
+							}
+
 							default:
+							{
 								return nullptr;
+							}
 						}
 					}
 

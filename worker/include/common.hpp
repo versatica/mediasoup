@@ -24,6 +24,16 @@ typedef SSIZE_T ssize_t;
 #include <sys/socket.h> // struct sockaddr, struct sockaddr_storage, AF_INET, AF_INET6
 #endif
 
+// This is a macro to silence false warnings in GCC in switch() blocks with FBS
+// types.
+#if defined(__GNUC__) && !defined(__clang__)
+#define NO_DEFAULT_GCC()                                                                           \
+	default:                                                                                         \
+		__builtin_unreachable()
+#else
+#define NO_DEFAULT_GCC()
+#endif
+
 using ChannelReadCtx    = void*;
 using ChannelReadFreeFn = void (*)(uint8_t*, uint32_t, size_t);
 // Returns `ChannelReadFree` on successful read that must be used to free

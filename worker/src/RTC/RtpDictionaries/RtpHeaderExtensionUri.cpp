@@ -77,6 +77,8 @@ namespace RTC
 			{
 				return RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -149,6 +151,8 @@ namespace RTC
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::DependencyDescriptor;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
