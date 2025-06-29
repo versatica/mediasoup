@@ -115,7 +115,7 @@ namespace RTC
 		{
 			case RTC::BweType::TRANSPORT_CC:
 			{
-				uint16_t wideSeqNumber;
+				uint16_t wideSeqNumber{ 0 };
 
 				if (!packet->ReadTransportWideCc01(wideSeqNumber))
 				{
@@ -155,7 +155,7 @@ namespace RTC
 
 			case RTC::BweType::REMB:
 			{
-				uint32_t absSendTime;
+				uint32_t absSendTime{ 0 };
 
 				if (!packet->ReadAbsSendTime(absSendTime))
 				{
