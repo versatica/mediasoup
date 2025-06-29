@@ -1824,7 +1824,6 @@ namespace RTC
 		{
 			sharedPacket.reset(packet->Clone());
 		}
-		// TODO: REMOVE.
 		else
 		{
 			auto* sharedPacketPtr = sharedPacket.get();
@@ -1835,6 +1834,24 @@ namespace RTC
 			  sharedPacketPtr->GetSsrc(),
 			  sharedPacketPtr->GetSequenceNumber(),
 			  sharedPacketPtr->GetTimestamp());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetSsrc() == packet->GetSsrc(),
+			  "SSRC %" PRIu32 " in existing sharedPacket != SSRC %" PRIu32 " in packet",
+			  sharedPacketPtr->GetSsrc(),
+			  packet->GetSsrc());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetSequenceNumber() == packet->GetSequenceNumber(),
+			  "seq %" PRIu16 " in existing sharedPacket != seq %" PRIu16 " in packet",
+			  sharedPacketPtr->GetSequenceNumber(),
+			  packet->GetSequenceNumber());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetTimestamp() == packet->GetTimestamp(),
+			  "timestamp %" PRIu16 " in existing sharedPacket != timestamp %" PRIu16 " in packet",
+			  sharedPacketPtr->GetTimestamp(),
+			  packet->GetTimestamp());
 		}
 
 		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;
