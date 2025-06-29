@@ -821,10 +821,7 @@ namespace RTC
 
 				// Store the packet for the scenario in which this packet is part of the
 				// key frame and it arrived before the first packet of the key frame.
-				//
-				// TODO: Uncomment once this issue is fixed:
-				// https://github.com/versatica/mediasoup/issues/1554
-				// StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
+				StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 				return;
 			}
