@@ -392,7 +392,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		auto chunkSize = chunk->GetSize();
 
-		for (auto i{ 1 }; i <= count; ++i)
+		for (size_t i{ 1 }; i <= count; ++i)
 		{
 			// Create chunk and add to packet.
 			SdesChunk* chunk = new SdesChunk(i /*ssrc*/);
@@ -422,7 +422,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		auto reportIt = packet2->Begin();
 
-		for (auto i{ 1 }; i <= 31; ++i, reportIt++)
+		for (size_t i{ 1 }; i <= 31; ++i, ++reportIt)
 		{
 			auto* chunk = *reportIt;
 
@@ -455,7 +455,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		auto chunkSize = chunk->GetSize();
 
-		for (auto i{ 1 }; i <= count; ++i)
+		for (size_t i{ 1 }; i <= count; ++i)
 		{
 			// Create chunk and add to packet.
 			SdesChunk* chunk = new SdesChunk(i /*ssrc*/);
@@ -484,7 +484,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		auto reportIt = packet2->Begin();
 
-		for (auto i{ 1 }; i <= 31; ++i, reportIt++)
+		for (size_t i{ 1 }; i <= 31; ++i, ++reportIt)
 		{
 			auto* chunk = *reportIt;
 
@@ -505,7 +505,7 @@ SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
 
 		reportIt = packet3->Begin();
 
-		for (auto i{ 1 }; i <= 2; ++i, reportIt++)
+		for (size_t i{ 1 }; i <= 2; ++i, ++reportIt)
 		{
 			auto* chunk = *reportIt;
 

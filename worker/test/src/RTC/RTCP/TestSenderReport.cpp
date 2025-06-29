@@ -96,7 +96,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		SenderReportPacket packet;
 
-		for (auto i = 1; i <= count; i++)
+		for (size_t i = 1; i <= count; ++i)
 		{
 			// Create report and add to packet.
 			SenderReport* report = new SenderReport();
@@ -137,7 +137,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		reports[2] = *(packet4->Begin());
 
-		for (auto i = 1; i <= count; i++)
+		for (size_t i = 1; i <= count; ++i)
 		{
 			auto* report = reports[i - 1];
 
