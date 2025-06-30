@@ -747,6 +747,36 @@ namespace RTC
 		packet->logger.consumerId = this->id;
 #endif
 
+		// Assert that, if sharedPacket has a packet inside, it's the same as the
+		// raw packet.
+		//
+		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
+		// the shared_ptr has a packet inside or not. So we need to check
+		// sharedPacket->get() rather than sharedPacket.get() (which would always
+		// return true).
+		if (sharedPacket->get())
+		{
+			auto* sharedPacketPtr = sharedPacket->get();
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetSsrc() == packet->GetSsrc(),
+			  "SSRC %" PRIu32 " in existing sharedPacket != SSRC %" PRIu32 " in packet",
+			  sharedPacketPtr->GetSsrc(),
+			  packet->GetSsrc());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetSequenceNumber() == packet->GetSequenceNumber(),
+			  "seq %" PRIu16 " in existing sharedPacket != seq %" PRIu16 " in packet",
+			  sharedPacketPtr->GetSequenceNumber(),
+			  packet->GetSequenceNumber());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetTimestamp() == packet->GetTimestamp(),
+			  "timestamp %" PRIu16 " in existing sharedPacket != timestamp %" PRIu16 " in packet",
+			  sharedPacketPtr->GetTimestamp(),
+			  packet->GetTimestamp());
+		}
+
 		auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
 
 		if (!IsActive())
@@ -1855,13 +1885,6 @@ namespace RTC
 		else
 		{
 			auto* sharedPacketPtr = sharedPacket->get();
-
-			// TODO: REMOVE.
-			MS_DUMP(
-			  "---- sharedPacket already has a packet [ssrc:%" PRIu32 ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
-			  sharedPacketPtr->GetSsrc(),
-			  sharedPacketPtr->GetSequenceNumber(),
-			  sharedPacketPtr->GetTimestamp());
 
 			MS_ASSERT(
 			  sharedPacketPtr->GetSsrc() == packet->GetSsrc(),
