@@ -158,9 +158,9 @@ namespace RTC
 					break;
 				}
 
-				auto* packet = item->sharedPacket.GetPacket();
+				MS_ASSERT(item->sharedPacket.HasPacket(), "sharedPacket doesn't contain a packet");
 
-				MS_ASSERT(packet, "sharedPacket doesn't contain a packet");
+				auto* packet = item->sharedPacket.GetPacket();
 
 				// Keep the values of the original packet received by the Consumer.
 				auto origSsrc      = packet->GetSsrc();
