@@ -12,6 +12,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -662,12 +663,7 @@ namespace RTC
 			// Cloned ref-counted packet that will be filled for as long as needed
 			// avoiding multiple allocations unless absolutely necessary.
 			// Clone only happens if needed and only once.
-			//
-			// NOTE: This needs to be a shared pointer that holds an already
-			// initialized unique pointer. Otherwise when copying/storing the shared
-			// pointer in other locations (buffers, etc), resseting its interval
-			// value wouldn't affect other copies of the shared pointer.
-			const auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
+			RTC::SharedRtpPacket sharedPacket;
 
 #ifdef MS_LIBURING_SUPPORTED
 			if (DepLibUring::IsEnabled())

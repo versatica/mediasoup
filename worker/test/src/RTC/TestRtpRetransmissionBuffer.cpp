@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -41,7 +42,7 @@ public:
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
-		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
+		RTC::SharedRtpPacket sharedPacket;
 
 		RtpRetransmissionBuffer::Insert(packet.get(), sharedPacket);
 	}

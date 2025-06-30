@@ -4,6 +4,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcpy()
 #include <vector>
@@ -25,7 +26,7 @@ static std::unique_ptr<RtpPacket> CreateRtpPacket(
 
 static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> streams, RtpPacket* packet)
 {
-	auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
+	RTC::SharedRtpPacket sharedPacket;
 
 	for (auto& stream : streams)
 	{
@@ -36,9 +37,9 @@ static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> strea
 		// NOTE: Here we must replicate the behaviour of Consumer::SendRtpPacket()
 		// in which, if the shared packet has been stored and it didn't contain the
 		// packet yet, we fill it with a cloned packet.
-		if (result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED && !sharedPacket->get())
+		if (result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED && !sharedPacket.HasPacket())
 		{
-			sharedPacket->reset(packet->Clone());
+			sharedPacket.Assign(packet);
 		}
 	}
 }

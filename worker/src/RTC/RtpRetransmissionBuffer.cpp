@@ -12,7 +12,7 @@ namespace RTC
 	RtpRetransmissionBuffer::Item* RtpRetransmissionBuffer::FillItem(
 	  RtpRetransmissionBuffer::Item* item,
 	  RTC::RtpPacket* packet,
-	  const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -80,8 +80,7 @@ namespace RTC
 	 * not properly fit (by ensuring that elements in the buffer are not only
 	 * ordered by increasing seq but also that their timestamp are incremental).
 	 */
-	bool RtpRetransmissionBuffer::Insert(
-	  RTC::RtpPacket* packet, const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	bool RtpRetransmissionBuffer::Insert(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -581,9 +580,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// NOTE: Here we want to reset the shared pointer so it doesn't contain an
-		// unique_ptr<RTC::RtpPacket> anymore.
-		this->sharedPacket.reset();
+		this->sharedPacket.Reset();
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;

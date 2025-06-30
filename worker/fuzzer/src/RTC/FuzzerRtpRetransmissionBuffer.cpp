@@ -2,6 +2,7 @@
 #include "Utils.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 
 void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {
@@ -28,7 +29,7 @@ void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 
 	while (len >= 4u)
 	{
-		auto sharedPacket = std::make_shared<std::unique_ptr<::RTC::RtpPacket>>(nullptr);
+		::RTC::SharedRtpPacket sharedPacket;
 
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));

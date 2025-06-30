@@ -637,14 +637,38 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SvcConsumer::SendRtpPacket(
-	  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
 #endif
+
+		// Assert that, if sharedPacket has a packet inside, it's the same as the
+		// raw packet.
+		if (sharedPacket.HasPacket())
+		{
+			auto* sharedPacketPtr = sharedPacket.GetPacket();
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetSsrc() == packet->GetSsrc(),
+			  "SSRC %" PRIu32 " in existing sharedPacket != SSRC %" PRIu32 " in packet",
+			  sharedPacketPtr->GetSsrc(),
+			  packet->GetSsrc());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetSequenceNumber() == packet->GetSequenceNumber(),
+			  "seq %" PRIu16 " in existing sharedPacket != seq %" PRIu16 " in packet",
+			  sharedPacketPtr->GetSequenceNumber(),
+			  packet->GetSequenceNumber());
+
+			MS_ASSERT(
+			  sharedPacketPtr->GetTimestamp() == packet->GetTimestamp(),
+			  "timestamp %" PRIu16 " in existing sharedPacket != timestamp %" PRIu16 " in packet",
+			  sharedPacketPtr->GetTimestamp(),
+			  packet->GetTimestamp());
+		}
 
 		if (!IsActive())
 		{
@@ -686,10 +710,7 @@ namespace RTC
 
 			// Store the packet for the scenario in which this packet is part of the
 			// key frame and it arrived before the first packet of the key frame.
-			//
-			// TODO: Uncomment once this issue is fixed:
-			// https://github.com/versatica/mediasoup/issues/1554
-			// StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
+			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 			return;
 		}
@@ -852,14 +873,9 @@ namespace RTC
 
 		// If sharedPacket doesn't have a packet inside and it has been stored we
 		// need to clone the packet into it.
-		//
-		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
-		// the shared_ptr has a packet inside or not. So we need to check
-		// sharedPacket->get() rather than sharedPacket.get() (which would always
-		// return true).
-		if (!sharedPacket->get() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		if (!sharedPacket.HasPacket() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
 		{
-			sharedPacket->reset(packet->Clone());
+			sharedPacket.Assign(packet);
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
@@ -874,7 +890,7 @@ namespace RTC
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket->get();
+					auto* bufferedPacket       = bufferedSharedPacket.GetPacket();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
@@ -1345,7 +1361,7 @@ namespace RTC
 	}
 
 	void SvcConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1358,14 +1374,9 @@ namespace RTC
 
 		// Store original packet into the buffer. Only clone once and only if
 		// necessary.
-		//
-		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
-		// the shared_ptr has a packet inside or not. So we need to check
-		// sharedPacket->get() rather than sharedPacket.get() (which would always
-		// return true).
-		if (!sharedPacket->get())
+		if (!sharedPacket.HasPacket())
 		{
-			sharedPacket->reset(packet->Clone());
+			sharedPacket.Assign(packet);
 		}
 
 		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;

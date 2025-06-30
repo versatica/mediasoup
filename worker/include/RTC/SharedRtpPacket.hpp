@@ -15,7 +15,8 @@ namespace RTC
 		SharedRtpPacket();
 
 		/**
-		 * Constructor with RtpPacket pointer. If given it's internally cloned.
+		 * Constructor with RtpPacket pointer. If a packet is given it's internally
+		 * cloned.
 		 */
 		explicit SharedRtpPacket(const RTC::RtpPacket* packet);
 
@@ -53,11 +54,19 @@ namespace RTC
 			return this->sharedPtr->get();
 		}
 
+		/**
+		 * Assign given packet (could be nullptr). If packet is given it's internally
+		 * cloned.
+		 */
 		void Assign(const RTC::RtpPacket* packet);
 
 		void Reset();
 
 	private:
+		// NOTE: This needs to be a shared pointer that holds an unique pointer.
+		// Otherwise, when copying/storing the shared pointer in other locations
+		// (buffers, etc), reseting its internal value wouldn't affect other copies
+		// of the shared pointer.
 		std::shared_ptr<std::unique_ptr<RTC::RtpPacket>> sharedPtr;
 	};
 } // namespace RTC

@@ -98,7 +98,7 @@ namespace RTC
 	}
 
 	RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(
-	  RTC::RtpPacket* packet, const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -158,7 +158,9 @@ namespace RTC
 					break;
 				}
 
-				auto* packet = item->sharedPacket->get();
+				auto* packet = item->sharedPacket.GetPacket();
+
+				MS_ASSERT(packet, "sharedPacket doesn't contain a packet");
 
 				// Keep the values of the original packet received by the Consumer.
 				auto origSsrc      = packet->GetSsrc();
@@ -426,8 +428,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	bool RtpStreamSend::StorePacket(
-	  RTC::RtpPacket* packet, const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	bool RtpStreamSend::StorePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 

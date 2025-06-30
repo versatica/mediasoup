@@ -4,7 +4,9 @@
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/Shared.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -173,8 +175,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
-		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
+		auto* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
@@ -200,8 +202,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
-		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
+		auto* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(64);
@@ -227,8 +229,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
-		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
+		auto* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(0);
@@ -254,26 +256,33 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
-		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
+		auto* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		uint16_t seq = 1;
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
+		sharedPacket.Assign(packet);
 
 		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
+		sharedPacket.Assign(packet);
+
 		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(0);
+		sharedPacket.Assign(packet);
+
 		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(20);
+		sharedPacket.Assign(packet);
+
 		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(3);
