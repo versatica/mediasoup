@@ -837,7 +837,6 @@ namespace RTC
 
 		auto mappedSsrc = this->consumableRtpEncodings[0].ssrc;
 
-
 		this->listener->OnConsumerKeyFrameRequested(this, mappedSsrc);
 	}
 
