@@ -40,7 +40,6 @@ SCENARIO("SharedRtpPacket", "[rtp]")
 	std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
 
 	auto* packetA = CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 11111111, 1111, 111111);
-
 	auto* packetB = CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 22222222, 2222, 222222);
 
 	SECTION("default constructor and assign later")
