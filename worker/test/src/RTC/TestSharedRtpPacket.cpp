@@ -39,11 +39,11 @@ SCENARIO("SharedRtpPacket", "[rtp][sharedrtppacket]")
 
 	std::memcpy(rtpBuffer2, rtpBuffer1, sizeof(rtpBuffer1));
 
-	auto* packetA = CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 11111111, 1111, 111111);
-	auto* packetB = CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 22222222, 2222, 222222);
-
 	SECTION("default constructor and assign later")
 	{
+		auto* packetA = CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 11111111, 1111, 111111);
+		auto* packetB = CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 22222222, 2222, 222222);
+
 		RTC::SharedRtpPacket sharedPacket;
 
 		REQUIRE(!sharedPacket.HasPacket());
@@ -63,15 +63,19 @@ SCENARIO("SharedRtpPacket", "[rtp][sharedrtppacket]")
 		delete packetB;
 	}
 
-	SECTION("copy constructor")
+	SECTION("constructor with packet and copy constructor")
 	{
+		auto* packetA = CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 11111111, 1111, 111111);
+		auto* packetB = CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 22222222, 2222, 222222);
+
+		// Create sharedPacket1 using constructor with a RtpPacket.
 		RTC::SharedRtpPacket sharedPacket1(packetA);
 
 		REQUIRE(sharedPacket1.HasPacket());
 		CompareRtpPackets(sharedPacket1.GetPacket(), packetA);
 
 		// Create sharedPacket2 using copy constructor.
-		RTC::SharedRtpPacket sharedPacket2 = sharedPacket1;
+		RTC::SharedRtpPacket sharedPacket2(sharedPacket1);
 
 		REQUIRE(sharedPacket2.HasPacket());
 		CompareRtpPackets(sharedPacket2.GetPacket(), packetA);
@@ -97,6 +101,9 @@ SCENARIO("SharedRtpPacket", "[rtp][sharedrtppacket]")
 
 	SECTION("copy assignment operator")
 	{
+		auto* packetA = CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 11111111, 1111, 111111);
+		auto* packetB = CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 22222222, 2222, 222222);
+
 		RTC::SharedRtpPacket sharedPacket1(packetA);
 
 		REQUIRE(sharedPacket1.HasPacket());
@@ -131,6 +138,9 @@ SCENARIO("SharedRtpPacket", "[rtp][sharedrtppacket]")
 
 	SECTION("assign nullptr")
 	{
+		auto* packetA = CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 11111111, 1111, 111111);
+		auto* packetB = CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 22222222, 2222, 222222);
+
 		RTC::SharedRtpPacket sharedPacket(packetA);
 
 		REQUIRE(sharedPacket.HasPacket());
