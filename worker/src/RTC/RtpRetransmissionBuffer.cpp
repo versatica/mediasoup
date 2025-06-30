@@ -588,10 +588,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// NOTE: We must call sharedPacket->reset() rather than sharedPacket.reset()
-		// since we want to reset the value of the unique_ptr<RTC::RtpPacket> that
-		// the sharedPacket contains rather than the shared_ptr itself.
-		this->sharedPacket->reset();
+		// NOTE: Here we want to reset the shared pointer so it doesn't contain an
+		// unique_ptr<RTC::RtpPacket> anymore.
+		this->sharedPacket.reset();
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;
