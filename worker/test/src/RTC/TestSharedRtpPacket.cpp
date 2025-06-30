@@ -24,7 +24,7 @@ static void CompareRtpPackets(const RTC::RtpPacket* packet1, const RTC::RtpPacke
 	REQUIRE(packet1->GetTimestamp() == packet2->GetTimestamp());
 }
 
-SCENARIO("SharedRtpPacket", "[rtp]")
+SCENARIO("SharedRtpPacket", "[rtp][sharedrtppacket]")
 {
 	// clang-format off
 	uint8_t rtpBuffer1[] =
