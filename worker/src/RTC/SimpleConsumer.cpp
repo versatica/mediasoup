@@ -314,7 +314,8 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	void SimpleConsumer::SendRtpPacket(
+	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -503,7 +504,7 @@ namespace RTC
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket.get();
+					auto* bufferedPacket       = bufferedSharedPacket->get();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
@@ -811,7 +812,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -824,9 +825,14 @@ namespace RTC
 
 		// Store original packet into the buffer. Only clone once and only if
 		// necessary.
-		if (!sharedPacket)
+		//
+		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
+		// the shared_ptr has a packet inside or not. So we need to check
+		// sharedPacket->get() rather than sharedPacket.get() (which would always
+		// return true).
+		if (!sharedPacket->get())
 		{
-			sharedPacket.reset(packet->Clone());
+			sharedPacket->reset(packet->Clone());
 		}
 
 		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;

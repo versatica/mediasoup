@@ -659,10 +659,15 @@ namespace RTC
 
 		if (!consumers.empty())
 		{
-			// Cloned ref-counted packet that RtpStreamSend will store for as long as
-			// needed avoiding multiple allocations unless absolutely necessary.
-			// Clone only happens if needed.
-			std::shared_ptr<RTC::RtpPacket> sharedPacket;
+			// Cloned ref-counted packet that will be filled for as long as needed
+			// avoiding multiple allocations unless absolutely necessary.
+			// Clone only happens if needed and only once.
+			//
+			// NOTE: This needs to be a shared pointer that holds an already
+			// initialized unique pointer. Otherwise when copying/storing the shared
+			// pointer in other locations (buffers, etc), resseting its interval
+			// value wouldn't affect other copies of the shared pointer.
+			auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
 
 #ifdef MS_LIBURING_SUPPORTED
 			if (DepLibUring::IsEnabled())

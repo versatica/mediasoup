@@ -41,7 +41,7 @@ public:
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
 
 		RtpRetransmissionBuffer::Insert(packet.get(), sharedPacket);
 	}

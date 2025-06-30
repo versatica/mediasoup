@@ -24,7 +24,7 @@ static std::unique_ptr<RtpPacket> CreateRtpPacket(
 
 static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> streams, RtpPacket* packet)
 {
-	std::shared_ptr<RtpPacket> sharedPacket;
+	auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
 
 	for (auto& stream : streams)
 	{

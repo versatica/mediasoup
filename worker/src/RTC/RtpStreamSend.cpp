@@ -97,7 +97,8 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	bool RtpStreamSend::ReceivePacket(
+	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -151,7 +152,7 @@ namespace RTC
 					break;
 				}
 
-				auto* packet = item->sharedPacket.get();
+				auto* packet = item->sharedPacket->get();
 
 				// Keep the values of the original packet received by the Consumer.
 				auto origSsrc      = packet->GetSsrc();
@@ -419,7 +420,8 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	void RtpStreamSend::StorePacket(
+	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 

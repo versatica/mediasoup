@@ -20,7 +20,7 @@ namespace RTC
 			void Reset();
 
 			// Original packet.
-			std::shared_ptr<RTC::RtpPacket> sharedPacket{ nullptr };
+			std::shared_ptr<std::unique_ptr<RTC::RtpPacket>> sharedPacket{ nullptr };
 			// Payload descriptor encoder.
 			std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 			// Correct SSRC since original packet may not have the same.
@@ -37,14 +37,16 @@ namespace RTC
 
 	private:
 		static Item* FillItem(
-		  Item* item, RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+		  Item* item,
+		  RTC::RtpPacket* packet,
+		  std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
 
 	public:
 		RtpRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
 		~RtpRetransmissionBuffer();
 
 		Item* Get(uint16_t seq) const;
-		void Insert(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+		void Insert(RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
 		void Clear();
 		void Dump() const;
 

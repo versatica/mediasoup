@@ -64,7 +64,8 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) override;
+		void SendRtpPacket(
+		  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket) override;
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
@@ -97,7 +98,7 @@ namespace RTC
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
 		void StorePacketInTargetLayerRetransmissionBuffer(
-		  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+		  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
 		void EmitLayersChange() const;
 		RTC::RtpStreamRecv* GetProducerCurrentRtpStream() const;
 		RTC::RtpStreamRecv* GetProducerTargetRtpStream() const;
@@ -136,7 +137,7 @@ namespace RTC
 		uint64_t lastBweDowngradeAtMs{ 0u };
 		// Buffer to store packets that arrive earlier than the first packet of the
 		// video key frame.
-		std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		std::map<uint16_t, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
 		// TODO: REMOVE.
 		bool bufferedPacketSent{ false };

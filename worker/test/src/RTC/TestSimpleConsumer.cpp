@@ -173,13 +173,13 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
 
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(0);
 	}
@@ -200,13 +200,13 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(0);
 	}
@@ -227,13 +227,13 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(0);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(0);
 	}
@@ -254,8 +254,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet      = RtpPacket::Parse(buffer, sizeof(buffer));
+		auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(packet);
 
 		uint16_t seq = 1;
 
@@ -263,18 +263,18 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(0);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(20);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(3);
 	}

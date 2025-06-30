@@ -12,21 +12,20 @@ namespace RTC
 	RtpRetransmissionBuffer::Item* RtpRetransmissionBuffer::FillItem(
 	  RtpRetransmissionBuffer::Item* item,
 	  RTC::RtpPacket* packet,
-	  std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
 		// Store original packet into the item. Only clone once and only if
 		// necessary.
 		//
-		// NOTE: This must be done BEFORE assigning item->packet = sharedPacket,
-		// otherwise the value being copied in item->packet will remain nullptr.
-		// This is because we are copying an **empty** shared_ptr into another
-		// shared_ptr (item->packet), so future value assigned via reset() in the
-		// former doesn't update the value in the copy.
-		if (!sharedPacket)
+		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
+		// the shared_ptr has a packet inside or not. So we need to check
+		// sharedPacket->get() rather than sharedPacket.get() (which would always
+		// return true).
+		if (!sharedPacket->get())
 		{
-			sharedPacket.reset(packet->Clone());
+			sharedPacket->reset(packet->Clone());
 		}
 
 		// Store original packet and some extra info into the item.
@@ -91,7 +90,7 @@ namespace RTC
 	 * ordered by increasing seq but also that their timestamp are incremental).
 	 */
 	void RtpRetransmissionBuffer::Insert(
-	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -589,7 +588,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->sharedPacket.reset();
+		// NOTE: We must call sharedPacket->reset() rather than sharedPacket.reset()
+		// since we want to reset the value of the unique_ptr<RTC::RtpPacket> that
+		// the sharedPacket contains rather than the shared_ptr itself.
+		this->sharedPacket->reset();
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;
