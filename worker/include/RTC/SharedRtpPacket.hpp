@@ -60,6 +60,12 @@ namespace RTC
 		 */
 		void Assign(const RTC::RtpPacket* packet);
 
+		/**
+		 * Resets the internal packet to nullptr.
+		 *
+		 * @remarks
+		 * This affects to ALL copies of this SharedRtpPacket object.
+		 */
 		void Reset();
 
 	private:
