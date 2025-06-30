@@ -5,6 +5,7 @@
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstring> // std::memcpy()
 #include <vector>
 
 // #define PERFORMANCE_TEST 1
@@ -130,13 +131,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		REQUIRE(nackItem->GetPacketId() == 21006);
 		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000001111);
 
-		std::fprintf(stdout, "----1\n");
-		std::fflush(stdout);
-
 		stream->ReceiveNack(&nackPacket);
-
-		std::fprintf(stdout, "----2\n");
-		std::fflush(stdout);
 
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 5);
 

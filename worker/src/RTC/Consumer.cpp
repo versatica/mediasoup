@@ -30,15 +30,9 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("empty rtpParameters.encodings");
 		}
 
-		// TODO: REMOVE.
-		MS_DUMP("**** <Consumer>");
-
 		// All encodings must have SSRCs.
 		for (auto& encoding : this->rtpParameters.encodings)
 		{
-			// TODO: REMOVE.
-			MS_DUMP("  rtpParameters.encoding.ssrc: %" PRIu32, encoding.ssrc);
-
 			if (encoding.ssrc == 0)
 			{
 				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing ssrc)");
@@ -48,8 +42,6 @@ namespace RTC
 				MS_THROW_TYPE_ERROR("invalid encoding in rtpParameters (missing rtx.ssrc)");
 			}
 		}
-
-		MS_DUMP("");
 
 		if (data->consumableRtpEncodings()->size() == 0)
 		{
@@ -68,17 +60,11 @@ namespace RTC
 			// Verify that it has ssrc field.
 			auto& encoding = this->consumableRtpEncodings[i];
 
-			// TODO: REMOVE.
-			MS_DUMP("  consumableRtpEncodings.ssrc: %" PRIu32, encoding.ssrc);
-
 			if (encoding.ssrc == 0u)
 			{
 				MS_THROW_TYPE_ERROR("wrong encoding in consumableRtpEncodings (missing ssrc)");
 			}
 		}
-
-		// TODO: REMOVE.
-		MS_DUMP("**** </Consumer>");
 
 		// Fill RTP header extension ids and their mapped values.
 		// This may throw.
