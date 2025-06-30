@@ -580,7 +580,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->sharedPacket.Reset();
+		// NOTE: Here we MUST NOT call this->sharedPacket.Reset() because that
+		// would affect all copies of this SharedRtpPacket by removing their stored
+		// packet. We have to replace it entirely.
+		this->sharedPacket   = RTC::SharedRtpPacket();
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;
