@@ -160,8 +160,8 @@ namespace RTC
 
 				MS_ASSERT(
 				  item->sharedPacket.HasPacket(),
-				  "item->sharedPacket doesn't contain a packet [ssrc:%" PRIu32 ", seq:%" PRIu16
-				  ", timestamp:%" PRIu32 "]",
+				  "item in retransmission container doesn't contain a packet [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
 				  item->ssrc,
 				  item->sequenceNumber,
 				  item->timestamp);
