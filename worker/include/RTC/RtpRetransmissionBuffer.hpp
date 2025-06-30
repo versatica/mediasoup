@@ -39,14 +39,16 @@ namespace RTC
 		static Item* FillItem(
 		  Item* item,
 		  RTC::RtpPacket* packet,
-		  std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
+		  const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
 
 	public:
 		RtpRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
 		~RtpRetransmissionBuffer();
 
 		Item* Get(uint16_t seq) const;
-		void Insert(RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
+		bool Insert(
+		  RTC::RtpPacket* packet,
+		  const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
 		void Clear();
 		void Dump() const;
 

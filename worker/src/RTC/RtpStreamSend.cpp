@@ -97,8 +97,8 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(
-	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(
+	  RTC::RtpPacket* packet, const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -108,19 +108,25 @@ namespace RTC
 		// Call the parent method.
 		if (!RtpStream::ReceiveStreamPacket(packet))
 		{
-			return false;
+			return ReceivePacketResult::DISCARDED;
 		}
+
+		bool stored{ false };
 
 		// If NACK is enabled, store the packet into the buffer.
 		if (this->retransmissionBuffer)
 		{
-			StorePacket(packet, sharedPacket);
+			if (StorePacket(packet, sharedPacket))
+			{
+				stored = true;
+			}
 		}
 
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
 
-		return true;
+		return stored ? ReceivePacketResult::ACCEPTED_AND_STORED
+		              : ReceivePacketResult::ACCEPTED_AND_NOT_STORED;
 	}
 
 	void RtpStreamSend::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
@@ -420,8 +426,8 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(
-	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	bool RtpStreamSend::StorePacket(
+	  RTC::RtpPacket* packet, const std::shared_ptr<const std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -434,10 +440,10 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  packet->GetSize());
 
-			return;
+			return false;
 		}
 
-		this->retransmissionBuffer->Insert(packet, sharedPacket);
+		return this->retransmissionBuffer->Insert(packet, sharedPacket);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the

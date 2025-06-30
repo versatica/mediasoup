@@ -315,7 +315,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::SendRtpPacket(
-	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -462,9 +462,10 @@ namespace RTC
 			  origSeq);
 		}
 
-		const bool sent = this->rtpStream->ReceivePacket(packet, sharedPacket);
+		const RTC::RtpStreamSend::ReceivePacketResult result =
+		  this->rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (sent)
+		if (result > RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -492,6 +493,18 @@ namespace RTC
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 
+		// If sharedPacket doesn't have a packet inside and it has been stored we
+		// need to clone the packet into it.
+		//
+		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
+		// the shared_ptr has a packet inside or not. So we need to check
+		// sharedPacket->get() rather than sharedPacket.get() (which would always
+		// return true).
+		if (!sharedPacket->get() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		{
+			sharedPacket->reset(packet->Clone());
+		}
+
 		// If sent packet was the first packet of a key frame, let's send buffered
 		// packets belonging to the same key frame that arrived earlier due to
 		// packet misorder.
@@ -499,7 +512,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the key
 			// frame was sent.
-			if (sent)
+			if (result > RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
@@ -812,7 +825,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 

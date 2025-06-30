@@ -29,7 +29,16 @@ static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> strea
 	for (auto& stream : streams)
 	{
 		packet->SetSsrc(stream.second);
-		stream.first->ReceivePacket(packet, sharedPacket);
+
+		auto result = stream.first->ReceivePacket(packet, sharedPacket);
+
+		// NOTE: Here we must replicate the behaviour of Consumer::SendRtpPacket()
+		// in which, if the shared packet has been stored and it didn't contain the
+		// packet yet, we fill it with a cloned packet.
+		if (result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED && !sharedPacket->get())
+		{
+			sharedPacket->reset(packet->Clone());
+		}
 	}
 }
 
@@ -121,7 +130,13 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		REQUIRE(nackItem->GetPacketId() == 21006);
 		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000001111);
 
+		std::fprintf(stdout, "----1\n");
+		std::fflush(stdout);
+
 		stream->ReceiveNack(&nackPacket);
+
+		std::fprintf(stdout, "----2\n");
+		std::fflush(stdout);
 
 		REQUIRE(testRtpStreamListener.retransmittedPackets.size() == 5);
 

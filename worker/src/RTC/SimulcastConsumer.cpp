@@ -729,7 +729,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::SendRtpPacket(
-	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1184,14 +1184,10 @@ namespace RTC
 			  origTimestamp);
 		}
 
-		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
-		// the shared_ptr has a packet inside or not. So we need to check
-		// sharedPacket->get() rather than sharedPacket.get() (which would always
-		// return true).
-		const bool sharedPacketHadValue = sharedPacket->get() != nullptr;
-		const bool sent                 = this->rtpStream->ReceivePacket(packet, sharedPacket);
+		const RTC::RtpStreamSend::ReceivePacketResult result =
+		  this->rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (sent)
+		if (result > RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			if (this->rtpSeqManager->GetMaxOutput() == packet->GetSequenceNumber())
 			{
@@ -1230,22 +1226,16 @@ namespace RTC
 		// Restore the original payload if needed.
 		packet->RestorePayload();
 
-		// If the sharedPacket has a value now and it didn't have it before, then
-		// restore also its content because we want that sharedPacket always contains
-		// the original packet received from the Producer.
+		// If sharedPacket doesn't have a packet inside and it has been stored we
+		// need to clone the packet into it.
 		//
 		// NOTE: Here we need to check if the unique_ptr<RTC::RtpPacket> stored in
 		// the shared_ptr has a packet inside or not. So we need to check
 		// sharedPacket->get() rather than sharedPacket.get() (which would always
 		// return true).
-		if (!sharedPacketHadValue && sharedPacket->get())
+		if (!sharedPacket->get() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
 		{
-			auto* sharedPacketPtr = sharedPacket->get();
-
-			sharedPacketPtr->SetSsrc(origSsrc);
-			sharedPacketPtr->SetSequenceNumber(origSeq);
-			sharedPacketPtr->SetTimestamp(origTimestamp);
-			sharedPacketPtr->RestorePayload();
+			sharedPacket->reset(packet->Clone());
 		}
 
 		// If sent packet was the first packet of a key frame, let's send buffered
@@ -1255,7 +1245,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the key
 			// frame was sent.
-			if (sent)
+			if (result > RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
@@ -1860,7 +1850,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
+	  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket)
 	{
 		MS_TRACE();
 

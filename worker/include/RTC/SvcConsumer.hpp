@@ -58,7 +58,8 @@ namespace RTC
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(
-		  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket) override;
+		  RTC::RtpPacket* packet,
+		  const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket) override;
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
@@ -88,7 +89,7 @@ namespace RTC
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void EmitScore() const;
 		void StorePacketInTargetLayerRetransmissionBuffer(
-		  RTC::RtpPacket* packet, std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
+		  RTC::RtpPacket* packet, const std::shared_ptr<std::unique_ptr<RTC::RtpPacket>>& sharedPacket);
 		void EmitLayersChange() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */

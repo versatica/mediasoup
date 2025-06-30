@@ -667,7 +667,7 @@ namespace RTC
 			// initialized unique pointer. Otherwise when copying/storing the shared
 			// pointer in other locations (buffers, etc), resseting its interval
 			// value wouldn't affect other copies of the shared pointer.
-			auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
+			const auto sharedPacket = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
 
 #ifdef MS_LIBURING_SUPPORTED
 			if (DepLibUring::IsEnabled())
