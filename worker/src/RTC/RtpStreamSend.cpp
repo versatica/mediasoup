@@ -158,7 +158,13 @@ namespace RTC
 					break;
 				}
 
-				MS_ASSERT(item->sharedPacket.HasPacket(), "sharedPacket doesn't contain a packet");
+				MS_ASSERT(
+				  item->sharedPacket.HasPacket(),
+				  "item->sharedPacket doesn't contain a packet [ssrc:%" PRIu32 ", seq:%" PRIu16
+				  ", timestamp:%" PRIu32 "]",
+				  item->ssrc,
+				  item->sequenceNumber,
+				  item->timestamp);
 
 				auto* packet = item->sharedPacket.GetPacket();
 
