@@ -5,6 +5,8 @@
 #include "FBS/transport.h"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
+#include "RTC/RtpStream.hpp"
+#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/SharedRtpPacket.hpp"
 #include "RTC/SimpleConsumer.hpp"
