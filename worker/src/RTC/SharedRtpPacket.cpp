@@ -52,11 +52,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (!this->sharedPtr)
-		{
-			this->sharedPtr = std::make_shared<std::unique_ptr<RTC::RtpPacket>>(nullptr);
-		}
-
 		if (packet)
 		{
 			this->sharedPtr->reset(packet->Clone());
@@ -71,9 +66,46 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->sharedPtr)
+		this->sharedPtr->reset(nullptr);
+	}
+
+	void SharedRtpPacket::AssertSamePacket(const RTC::RtpPacket* otherPacket) const
+	{
+		MS_TRACE();
+
+		const auto* packet = GetPacket();
+
+		if (!packet && !otherPacket)
 		{
-			this->sharedPtr->reset(nullptr);
+			return;
+		}
+		else if (packet && !otherPacket)
+		{
+			MS_ABORT("there is a packet in sharedPacket but given otherPacket doesn't have value");
+		}
+		else if (!packet && otherPacket)
+		{
+			MS_ABORT("there is no packet in sharedPacket but given otherPacket has value");
+		}
+		else
+		{
+			MS_ASSERT(
+			  packet->GetSsrc() == otherPacket->GetSsrc(),
+			  "SSRC %" PRIu32 " in packet in sharedPacket != SSRC %" PRIu32 " in otherPacket",
+			  packet->GetSsrc(),
+			  otherPacket->GetSsrc());
+
+			MS_ASSERT(
+			  packet->GetSequenceNumber() == otherPacket->GetSequenceNumber(),
+			  "seq %" PRIu16 " in packet in sharedPacket != seq %" PRIu16 " in otherPacket",
+			  packet->GetSequenceNumber(),
+			  otherPacket->GetSequenceNumber());
+
+			MS_ASSERT(
+			  packet->GetTimestamp() == otherPacket->GetTimestamp(),
+			  "timestamp %" PRIu16 " in packet in sharedPacket != timestamp %" PRIu16 " in otherPacket",
+			  packet->GetTimestamp(),
+			  otherPacket->GetTimestamp());
 		}
 	}
 } // namespace RTC

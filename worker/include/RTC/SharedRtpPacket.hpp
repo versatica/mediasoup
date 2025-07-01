@@ -68,6 +68,13 @@ namespace RTC
 		 */
 		void Reset();
 
+		/**
+		 * Assert that RtpPacket contained in this SharedRtpPacket is a clone of the
+		 * given other packet (or there is no packet inside and no other packet has
+		 * been given).
+		 */
+		void AssertSamePacket(const RTC::RtpPacket* otherPacket) const;
+
 	private:
 		// NOTE: This needs to be a shared pointer that holds an unique pointer.
 		// Otherwise, when copying/storing the shared pointer in other locations
