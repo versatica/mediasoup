@@ -233,31 +233,6 @@ namespace RTC
 		packet->logger.consumerId = this->id;
 #endif
 
-		// Assert that, if sharedPacket has a packet inside, it's the same as the
-		// raw packet.
-		if (sharedPacket.HasPacket())
-		{
-			auto* sharedPacketPtr = sharedPacket.GetPacket();
-
-			MS_ASSERT(
-			  sharedPacketPtr->GetSsrc() == packet->GetSsrc(),
-			  "SSRC %" PRIu32 " in existing sharedPacket != SSRC %" PRIu32 " in packet",
-			  sharedPacketPtr->GetSsrc(),
-			  packet->GetSsrc());
-
-			MS_ASSERT(
-			  sharedPacketPtr->GetSequenceNumber() == packet->GetSequenceNumber(),
-			  "seq %" PRIu16 " in existing sharedPacket != seq %" PRIu16 " in packet",
-			  sharedPacketPtr->GetSequenceNumber(),
-			  packet->GetSequenceNumber());
-
-			MS_ASSERT(
-			  sharedPacketPtr->GetTimestamp() == packet->GetTimestamp(),
-			  "timestamp %" PRIu16 " in existing sharedPacket != timestamp %" PRIu16 " in packet",
-			  sharedPacketPtr->GetTimestamp(),
-			  packet->GetTimestamp());
-		}
-
 		auto ssrc           = this->mapMappedSsrcSsrc.at(packet->GetSsrc());
 		auto* rtpStream     = this->mapSsrcRtpStream.at(ssrc);
 		auto& syncRequired  = this->mapRtpStreamSyncRequired.at(rtpStream);
@@ -386,7 +361,7 @@ namespace RTC
 		const RTC::RtpStreamSend::ReceivePacketResult result =
 		  rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (result > RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -429,7 +404,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the key
 			// frame was sent.
-			if (result > RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : targetLayerRetransmissionBuffer)
 				{
@@ -868,6 +843,8 @@ namespace RTC
 		{
 			sharedPacket.Assign(packet);
 		}
+		// Assert that, if sharedPacket was already filled, both packet and
+		// sharedPacket are the very same RTP packet.
 		else
 		{
 			auto* sharedPacketPtr = sharedPacket.GetPacket();
