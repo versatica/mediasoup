@@ -37,16 +37,26 @@ namespace RTC
 		switch (cryptoSuite)
 		{
 			case SrtpSession::CryptoSuite::AEAD_AES_256_GCM:
+			{
 				return FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM;
+			}
 
 			case SrtpSession::CryptoSuite::AEAD_AES_128_GCM:
+			{
 				return FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_128_GCM;
+			}
 
 			case SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80:
+			{
 				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_80;
+			}
 
 			case SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32:
+			{
 				return FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -55,16 +65,26 @@ namespace RTC
 		switch (cryptoSuite)
 		{
 			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_256_GCM:
+			{
 				return SrtpSession::CryptoSuite::AEAD_AES_256_GCM;
+			}
 
 			case FBS::SrtpParameters::SrtpCryptoSuite::AEAD_AES_128_GCM:
+			{
 				return SrtpSession::CryptoSuite::AEAD_AES_128_GCM;
+			}
 
 			case FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_80:
+			{
 				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80;
+			}
 
 			case FBS::SrtpParameters::SrtpCryptoSuite::AES_CM_128_HMAC_SHA1_32:
+			{
 				return SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_32;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -75,20 +95,32 @@ namespace RTC
 		switch (data->event)
 		{
 			case event_ssrc_collision:
+			{
 				MS_WARN_TAG(srtp, "SSRC collision occurred");
+
 				break;
+			}
 
 			case event_key_soft_limit:
+			{
 				MS_WARN_TAG(srtp, "stream reached the soft key usage limit and will expire soon");
+
 				break;
+			}
 
 			case event_key_hard_limit:
+			{
 				MS_WARN_TAG(srtp, "stream reached the hard key usage limit and has expired");
+
 				break;
+			}
 
 			case event_packet_index_limit:
+			{
 				MS_WARN_TAG(srtp, "stream reached the hard packet limit (2^48 packets)");
+
 				break;
+			}
 		}
 	}
 
@@ -145,18 +177,23 @@ namespace RTC
 		}
 
 		MS_ASSERT(
-		  (int)keyLen == policy.rtp.cipher_key_len,
-		  "given keyLen does not match policy.rtp.cipher_keyLen");
+		  keyLen == policy.rtp.cipher_key_len, "given keyLen does not match policy.rtp.cipher_keyLen");
 
 		switch (type)
 		{
 			case Type::INBOUND:
+			{
 				policy.ssrc.type = ssrc_any_inbound;
+
 				break;
+			}
 
 			case Type::OUTBOUND:
+			{
 				policy.ssrc.type = ssrc_any_outbound;
+
 				break;
+			}
 		}
 
 		policy.ssrc.value = 0;

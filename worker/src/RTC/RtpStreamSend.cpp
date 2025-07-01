@@ -37,7 +37,7 @@ namespace RTC
 
 		if (this->params.useNack)
 		{
-			uint32_t maxRetransmissionDelayMs;
+			uint32_t maxRetransmissionDelayMs{ 0 };
 
 			switch (params.mimeType.type)
 			{

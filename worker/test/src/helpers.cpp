@@ -34,14 +34,14 @@ namespace helpers
 
 	bool addToBuffer(uint8_t* buf, int* size, uint8_t* data, size_t len)
 	{
-		static int BUFFER_SIZE = 65536;
+		static size_t BUFFER_SIZE{ 65536 };
 
 		if (*size + len > BUFFER_SIZE)
 		{
 			return false;
 		}
 
-		int i = 0;
+		size_t i{ 0 };
 
 		if (len == 1)
 		{
@@ -49,7 +49,7 @@ namespace helpers
 		}
 		else
 		{
-			for (i = 0; i < len; i++)
+			for (i = 0; i < len; ++i)
 			{
 				buf[*size + i] = data[i];
 			}

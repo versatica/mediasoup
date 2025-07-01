@@ -329,7 +329,7 @@ namespace RTC
 		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -414,7 +414,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 
 		if (this->sctpAssociation)
 		{

@@ -105,7 +105,7 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 
 		ReceiverReportPacket packet;
 
-		for (auto i = 1; i <= count; i++)
+		for (size_t i = 1; i <= count; i++)
 		{
 			// Create report and add to packet.
 			ReceiverReport* report = new ReceiverReport();
@@ -136,13 +136,13 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 
 		auto reportIt = packet2->Begin();
 
-		for (auto i = 1; i <= 31; i++, reportIt++)
+		for (size_t i = 1; i <= 31; ++i, ++reportIt)
 		{
 			auto* report = *reportIt;
 
 			REQUIRE(report->GetSsrc() == i);
 			REQUIRE(report->GetFractionLost() == i);
-			REQUIRE(report->GetTotalLost() == i);
+			REQUIRE(report->GetTotalLost() == static_cast<int32_t>(i));
 			REQUIRE(report->GetLastSeq() == i);
 			REQUIRE(report->GetJitter() == i);
 			REQUIRE(report->GetLastSenderReport() == i);
@@ -156,13 +156,13 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 
 		reportIt = packet3->Begin();
 
-		for (auto i = 1; i <= 2; i++, reportIt++)
+		for (size_t i = 1; i <= 2; ++i, ++reportIt)
 		{
 			auto* report = *reportIt;
 
 			REQUIRE(report->GetSsrc() == 31 + i);
 			REQUIRE(report->GetFractionLost() == 31 + i);
-			REQUIRE(report->GetTotalLost() == 31 + i);
+			REQUIRE(report->GetTotalLost() == static_cast<int32_t>(31 + i));
 			REQUIRE(report->GetLastSeq() == 31 + i);
 			REQUIRE(report->GetJitter() == 31 + i);
 			REQUIRE(report->GetLastSenderReport() == 31 + i);

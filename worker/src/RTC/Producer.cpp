@@ -1456,9 +1456,9 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			bool camera;
-			bool flip;
-			uint16_t rotation;
+			bool camera{ false };
+			bool flip{ false };
+			uint16_t rotation{ 0 };
 
 			if (packet->ReadVideoOrientation(camera, flip, rotation))
 			{

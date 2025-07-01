@@ -89,8 +89,8 @@ namespace RTC
 			return;
 		}
 
-		uint8_t volume;
-		bool voice;
+		uint8_t volume{ 0 };
+		bool voice{ false };
 
 		if (!packet->ReadSsrcAudioLevel(volume, voice))
 		{
