@@ -409,7 +409,7 @@ impl Inner {
                     .spawn(async move {
                         match channel.request("", request).await {
                             Err(RequestError::ChannelClosed) => {
-                                println!("router closing failed on drop: Channel already closed");
+                                debug!("router closing failed on drop: Channel already closed");
                             }
                             Err(error) => {
                                 error!("router closing failed on drop: {}", error);

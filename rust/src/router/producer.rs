@@ -636,7 +636,7 @@ impl Inner {
                     .spawn(async move {
                         match channel.request(transport_id, request).await {
                             Err(RequestError::ChannelClosed) => {
-                                println!("producer closing failed on drop: Channel already closed");
+                                debug!("producer closing failed on drop: Channel already closed");
                             }
                             Err(error) => {
                                 error!("producer closing failed on drop: {}", error);

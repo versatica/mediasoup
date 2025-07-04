@@ -140,7 +140,7 @@ impl Inner {
                     .spawn(async move {
                         match channel.request(router_id, request).await {
                             Err(RequestError::ChannelClosed) => {
-                                println!("active speaker observer closing failed on drop: Channel already closed");
+                                debug!("active speaker observer closing failed on drop: Channel already closed");
                             }
                             Err(error) => {
                                 error!("active speaker observer closing failed on drop: {}", error);

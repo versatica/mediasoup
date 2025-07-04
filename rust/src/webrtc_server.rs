@@ -187,7 +187,7 @@ impl Inner {
                     .spawn(async move {
                         match channel.request("", request).await {
                             Err(RequestError::ChannelClosed) => {
-                                println!(
+                                debug!(
                                     "WebRTC server closing failed on drop: Channel already closed"
                                 );
                             }

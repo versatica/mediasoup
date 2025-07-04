@@ -162,7 +162,7 @@ impl Inner {
                     .spawn(async move {
                         match channel.request(router_id, request).await {
                             Err(RequestError::ChannelClosed) => {
-                                println!("audio level observer closing failed on drop: Channel already closed");
+                                debug!("audio level observer closing failed on drop: Channel already closed");
                             }
                             Err(error) => {
                                 error!("audio level observer closing failed on drop: {}", error);

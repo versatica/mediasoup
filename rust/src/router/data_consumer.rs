@@ -355,7 +355,7 @@ impl Inner {
                         if weak_data_producer.upgrade().is_some() {
                             match channel.request(transport_id, request).await {
                                 Err(RequestError::ChannelClosed) => {
-                                    println!("data consumer closing failed on drop: Channel already closed");
+                                    debug!("data consumer closing failed on drop: Channel already closed");
                                 }
                                 Err(error) => {
                                     error!("data consumer closing failed on drop: {}", error);
