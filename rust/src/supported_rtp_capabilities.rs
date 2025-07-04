@@ -277,6 +277,19 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                     RtcpFeedback::TransportCc,
                 ],
             },
+            RtpCodecCapability::Video {
+                mime_type: MimeTypeVideo::AV1,
+                preferred_payload_type: None,
+                clock_rate: NonZeroU32::new(90000).unwrap(),
+                parameters: RtpCodecParametersParameters::default(),
+                rtcp_feedback: vec![
+                    RtcpFeedback::Nack,
+                    RtcpFeedback::NackPli,
+                    RtcpFeedback::CcmFir,
+                    RtcpFeedback::GoogRemb,
+                    RtcpFeedback::TransportCc,
+                ],
+            },
         ],
         header_extensions: vec![
             RtpHeaderExtension {
@@ -350,6 +363,13 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 preferred_id: 7,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
+            },
+            RtpHeaderExtension {
+                kind: MediaKind::Video,
+                uri: RtpHeaderExtensionUri::DependencyDescriptor,
+                preferred_id: 8,
+                preferred_encrypt: false,
+                direction: RtpHeaderExtensionDirection::RecvOnly,
             },
             RtpHeaderExtension {
                 kind: MediaKind::Audio,
