@@ -1,8 +1,25 @@
 # Changelog
 
-# NEXT
+# 0.18.2
 
 - Don't log error if `close()` on an object fails because channel is closed already (PR #1560).
+- General mediasoup changes:
+  - Sign self generated DTLS certificate with SHA256 (PR #1450).
+  - `SimulcastConsumer`: Fix cannot switch layers if initial `tsReferenceSpatialLayer disappears` disappears (PR #1459).
+  - Worker: Fix crash when using colliding `portRange` values in different transports (PR #1469).
+  - Worker: Drop VP8 packets with a higher temporal layer than the current one (PR #1009).
+  - Fix the problem of the TCC package being omitted from being sent (PR #1492).
+  - `Consumer`: Fix sequence number gap (PR #1494).
+  - Fix VP9 out of order packets forwarding (PR #1486).
+  - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+  - Worker: Fix encode retransmitted packets with the corresponding data (PR #1527).
+  - `SvcConsumer`: Fix K-SVC bitrate in `IncreaseLayer()` method (PR #1535).
+  - `Consumer` classes: Only drop packets in RTP sequence manager when they belong to current spatial layer (PR #1549).
+  - `Consumer` classes: Add target layer retransmission buffer to avoid PLIs/FIRs when RTP packets containing a key frame arrive out of order (PR #1550 and PR #1558).
+
+# 0.18.1
+
+- FBS: Provide proper data upon panic (#1523).
 
 # 0.18.0
 
