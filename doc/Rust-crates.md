@@ -36,9 +36,12 @@ cargo publish
 
 - `cargo publish` will create the crate package, check if all necessary dependencies are already present on [crates.io](https://crates.io/), will then compile the package (to ensure that you don't publish a broken version) and will upload it to [crates.io](https://crates.io/).
 - Never publish from random branches or local state that is not on GitHub. If you have local files modified Cargo will refuse to publish until you commit all the changes.
-- If you want to do everything except publishing itself, `cargo package` command exists.
 
 ## Extras
+
+### Check crate without publishing
+
+If you want to do everything except publishing itself, `cargo package` command exists. You can also run `cargo package --dry-run` to avoid package generation.
 
 ### Update required Rust version
 
