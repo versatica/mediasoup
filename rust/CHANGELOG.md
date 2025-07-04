@@ -2,6 +2,8 @@
 
 # NEXT
 
+- Don't log error if `close()` is called on an already object (PR #1559).
+
 # 0.18.0
 
 - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
