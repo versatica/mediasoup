@@ -1,5 +1,9 @@
 # Changelog
 
+# NEXT
+
+- Enable AV1 codec (PR #1563).
+
 # 0.18.2
 
 - Don't log error if `close()` on an object fails because channel is closed already (PR #1560).
