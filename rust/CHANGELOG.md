@@ -2,7 +2,7 @@
 
 # NEXT
 
-- Don't log error if `close()` on an object fails because channel is closed already (PR #1559).
+- Don't log error if `close()` on an object fails because channel is closed already (PR #1560).
 
 # 0.18.0
 
