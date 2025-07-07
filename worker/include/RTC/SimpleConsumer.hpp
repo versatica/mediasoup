@@ -18,8 +18,11 @@ namespace RTC
 	private:
 		struct DelayedPacketItem
 		{
-			RtpPacket* packet{ nullptr };
+			// Original packet.
+			RTC::SharedRtpPacket sharedPacket{ nullptr };
+			// Arrival time of the original packet.
 			uint64_t arrivalTimeMs{ 0 };
+			// Delay applied to the packet.
 			uint16_t delayMs{ 0 };
 		};
 
@@ -78,10 +81,6 @@ namespace RTC
 	public:
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
-		/* Pure virtual methods inherited from TimerHandle::Listener. */
-	public:
-		void OnTimer(TimerHandle* timer) override;
-
 	private:
 		void UserOnTransportConnected() override;
 		void UserOnTransportDisconnected() override;
@@ -100,6 +99,10 @@ namespace RTC
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
+	public:
+		void OnTimer(TimerHandle* timer) override;
 
 	private:
 		// Allocated by this.

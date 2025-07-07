@@ -238,49 +238,6 @@ namespace RTC
 		}
 	}
 
-	void SimpleConsumer::OnTimer(TimerHandle* timer)
-	{
-		MS_TRACE();
-
-		if (timer == this->degradationTimer)
-		{
-			// Clear everything and send already delayed packets.
-			ClearDegradation(/*sendDelayedPackets*/ true);
-		}
-		else if (timer == this->delayTimer)
-		{
-			auto nowMs = DepLibUV::GetTimeMs();
-
-			for (auto it = this->delayedPacketItems.begin(); it != this->delayedPacketItems.end();)
-			{
-				auto& item = *it;
-
-				// Only send delayed packets whose arrival time + applied delay is less
-				// or equal than current time. Deleted the stored packet and remove the
-				// item from the list once the packet is sent.
-				if (item.arrivalTimeMs + item.delayMs <= nowMs)
-				{
-					std::shared_ptr<RTC::RtpPacket> sharedPacket;
-
-					MS_DUMP(
-					  "[DEGRADATION] sending delayed packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
-					  item.packet->GetSequenceNumber(),
-					  item.delayMs);
-
-					SendRtpPacket(item.packet, sharedPacket);
-
-					delete item.packet;
-
-					it = this->delayedPacketItems.erase(it);
-				}
-				else
-				{
-					++it;
-				}
-			}
-		}
-	}
-
 	void SimpleConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
@@ -436,7 +393,20 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  delayMs);
 
-			this->delayedPacketItems.push_back({ packet->Clone(), nowMs, delayMs });
+			// Only clone once and only if necessary.
+			if (!sharedPacket.HasPacket())
+			{
+				sharedPacket.Assign(packet);
+			}
+			// Assert that, if sharedPacket was already filled, both packet and
+			// sharedPacket are the very same RTP packet.
+			else
+			{
+				sharedPacket.AssertSamePacket(packet);
+			}
+
+			// Store original packet into the delay buffer.
+			this->delayedPacketItems.push_back({ sharedPacket, nowMs, delayMs });
 
 			return;
 		}
@@ -982,8 +952,8 @@ namespace RTC
 		  FBS::Notification::Body::Consumer_ScoreNotification,
 		  notificationOffset);
 	}
-  
-  void SimpleConsumer::ClearDegradation(bool sendDelayedPackets)
+
+	void SimpleConsumer::ClearDegradation(bool sendDelayedPackets)
 	{
 		MS_TRACE();
 
@@ -997,26 +967,25 @@ namespace RTC
 		delete this->delayTimer;
 		this->delayTimer = nullptr;
 
-		for (const auto& item : this->delayedPacketItems)
+		for (auto& item : this->delayedPacketItems)
 		{
 			if (sendDelayedPackets)
 			{
-				std::shared_ptr<RTC::RtpPacket> sharedPacket;
+				auto& sharedPacket = item.sharedPacket;
+				auto* packet       = sharedPacket.GetPacket();
 
 				MS_DUMP(
 				  "[DEGRADATION] terminated, sending delayed packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
-				  item.packet->GetSequenceNumber(),
+				  packet->GetSequenceNumber(),
 				  item.delayMs);
 
-				SendRtpPacket(item.packet, sharedPacket);
+				SendRtpPacket(packet, sharedPacket);
 			}
-
-			delete item.packet;
 		}
 
 		this->delayedPacketItems.clear();
 	}
-  
+
 	bool SimpleConsumer::ShouldDelayPacket(const RTC::RtpPacket* packet) const
 	{
 		MS_TRACE();
@@ -1041,7 +1010,7 @@ namespace RTC
 		auto it = std::find_if(
 		  this->delayedPacketItems.begin(),
 		  this->delayedPacketItems.end(),
-		  [&](const auto& item) { return item.packet == packet; });
+		  [&](const auto& item) { return item.sharedPacket.GetPacket() == packet; });
 
 		if (it != this->delayedPacketItems.end())
 		{
@@ -1086,7 +1055,7 @@ namespace RTC
 		// Ignore the transmitted packet if it was delayed on purpose.
 		for (const auto& item : this->delayedPacketItems)
 		{
-			if (item.packet == packet)
+			if (item.sharedPacket.GetPacket() == packet)
 			{
 				return;
 			}
@@ -1096,5 +1065,47 @@ namespace RTC
 
 		// May emit 'trace' event.
 		EmitTraceEventRtpAndKeyFrameTypes(packet, this->rtpStream->HasRtx());
+	}
+
+	void SimpleConsumer::OnTimer(TimerHandle* timer)
+	{
+		MS_TRACE();
+
+		if (timer == this->degradationTimer)
+		{
+			// Clear everything and send already delayed packets.
+			ClearDegradation(/*sendDelayedPackets*/ true);
+		}
+		else if (timer == this->delayTimer)
+		{
+			auto nowMs = DepLibUV::GetTimeMs();
+
+			for (auto it = this->delayedPacketItems.begin(); it != this->delayedPacketItems.end();)
+			{
+				auto& item = *it;
+
+				// Only send delayed packets whose arrival time + applied delay is less
+				// or equal than current time. Deleted the stored packet and remove the
+				// item from the list once the packet is sent.
+				if (item.arrivalTimeMs + item.delayMs <= nowMs)
+				{
+					auto& sharedPacket = item.sharedPacket;
+					auto* packet       = sharedPacket.GetPacket();
+
+					MS_DUMP(
+					  "[DEGRADATION] sending delayed packet [seq:%" PRIu16 ", delayMs:%" PRIu16 "]",
+					  packet->GetSequenceNumber(),
+					  item.delayMs);
+
+					SendRtpPacket(packet, sharedPacket);
+
+					it = this->delayedPacketItems.erase(it);
+				}
+				else
+				{
+					++it;
+				}
+			}
+		}
 	}
 } // namespace RTC
