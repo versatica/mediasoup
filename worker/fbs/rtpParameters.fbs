@@ -65,8 +65,6 @@ enum RtpHeaderExtensionUri: uint8 {
     Mid,
     RtpStreamId,
     RepairRtpStreamId,
-    FrameMarkingDraft07,
-    FrameMarking,
     AudioLevel,
     VideoOrientation,
     TimeOffset,

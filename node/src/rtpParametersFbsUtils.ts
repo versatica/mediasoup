@@ -378,14 +378,6 @@ export function rtpHeaderExtensionUriFromFbs(
 			return 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id';
 		}
 
-		case FbsRtpHeaderExtensionUri.FrameMarkingDraft07: {
-			return 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07';
-		}
-
-		case FbsRtpHeaderExtensionUri.FrameMarking: {
-			return 'urn:ietf:params:rtp-hdrext:framemarking';
-		}
-
 		case FbsRtpHeaderExtensionUri.AudioLevel: {
 			return 'urn:ietf:params:rtp-hdrext:ssrc-audio-level';
 		}
@@ -434,14 +426,6 @@ export function rtpHeaderExtensionUriToFbs(
 
 		case 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id': {
 			return FbsRtpHeaderExtensionUri.RepairRtpStreamId;
-		}
-
-		case 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07': {
-			return FbsRtpHeaderExtensionUri.FrameMarkingDraft07;
-		}
-
-		case 'urn:ietf:params:rtp-hdrext:framemarking': {
-			return FbsRtpHeaderExtensionUri.FrameMarking;
 		}
 
 		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level': {

@@ -28,16 +28,6 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID;
 			}
 
-			case FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarkingDraft07:
-			{
-				return RtpHeaderExtensionUri::Type::FRAME_MARKING_07;
-			}
-
-			case FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarking:
-			{
-				return RtpHeaderExtensionUri::Type::FRAME_MARKING;
-			}
-
 			case FBS::RtpParameters::RtpHeaderExtensionUri::AudioLevel:
 			{
 				return RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL;
@@ -110,16 +100,6 @@ namespace RTC
 			case RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::TransportWideCcDraft01;
-			}
-
-			case RtpHeaderExtensionUri::Type::FRAME_MARKING_07:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarkingDraft07;
-			}
-
-			case RtpHeaderExtensionUri::Type::FRAME_MARKING:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarking;
 			}
 
 			case RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL:

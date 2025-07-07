@@ -166,17 +166,6 @@ namespace RTC
 				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
 			}
 
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			if (this->rtpHeaderExtensionIds.frameMarking07 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07)
-			{
-				this->rtpHeaderExtensionIds.frameMarking07 = exten.id;
-			}
-
-			if (this->rtpHeaderExtensionIds.frameMarking == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING)
-			{
-				this->rtpHeaderExtensionIds.frameMarking = exten.id;
-			}
-
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
@@ -1204,9 +1193,6 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			packet->SetFrameMarking07ExtensionId(this->rtpHeaderExtensionIds.frameMarking07);
-			packet->SetFrameMarkingExtensionId(this->rtpHeaderExtensionIds.frameMarking);
 			packet->SetDependencyDescriptorExtensionId(this->rtpHeaderExtensionIds.dependencyDescriptor);
 		}
 	}
@@ -1348,35 +1334,6 @@ namespace RTC
 					bufferPtr += extenLen;
 				}
 
-				// NOTE: Remove this once framemarking draft becomes RFC.
-				// Proxy http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking07, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07),
-					  extenLen,
-					  bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING), extenLen, bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
 				// Proxy urn:3gpp:video-orientation.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
 
@@ -1432,11 +1389,6 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 			packet->SetTransportWideCc01ExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			packet->SetFrameMarking07ExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07));
-			packet->SetFrameMarkingExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING));
 			packet->SetSsrcAudioLevelExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
 			packet->SetVideoOrientationExtensionId(

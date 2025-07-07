@@ -86,29 +86,6 @@ namespace RTC
 		};
 
 	public:
-		/* Struct with frame-marking information. */
-		struct FrameMarking
-		{
-#if defined(MS_LITTLE_ENDIAN)
-			uint8_t tid : 3;
-			uint8_t base : 1;
-			uint8_t discardable : 1;
-			uint8_t independent : 1;
-			uint8_t end : 1;
-			uint8_t start : 1;
-#elif defined(MS_BIG_ENDIAN)
-			uint8_t start : 1;
-			uint8_t end : 1;
-			uint8_t independent : 1;
-			uint8_t discardable : 1;
-			uint8_t base : 1;
-			uint8_t tid : 3;
-#endif
-			uint8_t lid;
-			uint8_t tl0picidx;
-		};
-
-	public:
 		static const size_t HeaderSize{ 12 };
 		static bool IsRtp(const uint8_t* data, size_t len)
 		{
@@ -282,17 +259,6 @@ namespace RTC
 			this->transportWideCc01ExtensionId = id;
 		}
 
-		// NOTE: Remove once RFC.
-		void SetFrameMarking07ExtensionId(uint8_t id)
-		{
-			this->frameMarking07ExtensionId = id;
-		}
-
-		void SetFrameMarkingExtensionId(uint8_t id)
-		{
-			this->frameMarkingExtensionId = id;
-		}
-
 		void SetSsrcAudioLevelExtensionId(uint8_t id)
 		{
 			this->ssrcAudioLevelExtensionId = id;
@@ -413,28 +379,6 @@ namespace RTC
 			}
 
 			Utils::Byte::Set2Bytes(extenValue, 0, wideSeqNumber);
-
-			return true;
-		}
-
-		bool ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const
-		{
-			uint8_t extenLen;
-			uint8_t* extenValue = GetExtension(this->frameMarkingExtensionId, extenLen);
-
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			if (!extenValue)
-			{
-				extenValue = GetExtension(this->frameMarking07ExtensionId, extenLen);
-			}
-
-			if (!extenValue || extenLen > 3u)
-			{
-				return false;
-			}
-
-			*frameMarking = reinterpret_cast<RtpPacket::FrameMarking*>(extenValue);
-			length        = extenLen;
 
 			return true;
 		}
@@ -717,8 +661,6 @@ namespace RTC
 		uint8_t rridExtensionId{ 0u };
 		uint8_t absSendTimeExtensionId{ 0u };
 		uint8_t transportWideCc01ExtensionId{ 0u };
-		uint8_t frameMarking07ExtensionId{ 0u }; // NOTE: Remove once RFC.
-		uint8_t frameMarkingExtensionId{ 0u };
 		uint8_t ssrcAudioLevelExtensionId{ 0u };
 		uint8_t videoOrientationExtensionId{ 0u };
 		uint8_t playoutDelayExtensionId{ 0u };

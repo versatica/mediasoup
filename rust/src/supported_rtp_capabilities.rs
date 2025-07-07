@@ -262,22 +262,6 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 ],
             },
             RtpCodecCapability::Video {
-                mime_type: MimeTypeVideo::H265,
-                preferred_payload_type: None,
-                clock_rate: NonZeroU32::new(90000).unwrap(),
-                parameters: RtpCodecParametersParameters::from([(
-                    "level-asymmetry-allowed",
-                    1_u32.into(),
-                )]),
-                rtcp_feedback: vec![
-                    RtcpFeedback::Nack,
-                    RtcpFeedback::NackPli,
-                    RtcpFeedback::CcmFir,
-                    RtcpFeedback::GoogRemb,
-                    RtcpFeedback::TransportCc,
-                ],
-            },
-            RtpCodecCapability::Video {
                 mime_type: MimeTypeVideo::AV1,
                 preferred_payload_type: None,
                 clock_rate: NonZeroU32::new(90000).unwrap(),
@@ -346,21 +330,6 @@ pub fn get_supported_rtp_capabilities() -> RtpCapabilities {
                 kind: MediaKind::Video,
                 uri: RtpHeaderExtensionUri::TransportWideCcDraft01,
                 preferred_id: 5,
-                preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::SendRecv,
-            },
-            // NOTE: Remove this once framemarking draft becomes RFC.
-            RtpHeaderExtension {
-                kind: MediaKind::Video,
-                uri: RtpHeaderExtensionUri::FrameMarkingDraft07,
-                preferred_id: 6,
-                preferred_encrypt: false,
-                direction: RtpHeaderExtensionDirection::SendRecv,
-            },
-            RtpHeaderExtension {
-                kind: MediaKind::Video,
-                uri: RtpHeaderExtensionUri::FrameMarking,
-                preferred_id: 7,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::SendRecv,
             },

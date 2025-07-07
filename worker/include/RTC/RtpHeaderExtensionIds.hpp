@@ -13,8 +13,6 @@ namespace RTC
 		uint8_t rrid{ 0u };
 		uint8_t absSendTime{ 0u };
 		uint8_t transportWideCc01{ 0u };
-		uint8_t frameMarking07{ 0u }; // NOTE: Remove once RFC.
-		uint8_t frameMarking{ 0u };
 		uint8_t ssrcAudioLevel{ 0u };
 		uint8_t videoOrientation{ 0u };
 		uint8_t toffset{ 0u };

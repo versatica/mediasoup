@@ -3,6 +3,7 @@
 # NEXT
 
 - Enable AV1 codec (PR #1563).
+- Remove H265 codec and deprecated frame-marking RTP extension (PR #1564)
 
 # 0.18.2
 

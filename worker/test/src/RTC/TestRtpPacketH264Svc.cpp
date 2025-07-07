@@ -19,8 +19,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 	SECTION("parse I0-7.bin")
 	{
 		size_t len;
-		uint8_t extenLen;
-		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-7.bin", buffer, &len))
 		{
@@ -45,33 +43,24 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetFrameMarkingExtensionId(1);
-		extenValue = packet->GetExtension(1, extenLen);
-
-		REQUIRE(packet->HasExtension(1) == true);
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0xa0);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// packet->SetFrameMarkingExtensionId(1);
 
 		auto* payload = packet->GetPayload();
-		RtpPacket::FrameMarking* frameMarking{ nullptr };
-		uint8_t frameMarkingLen{ 0 };
-
-		// Read frame-marking.
-		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+			Codecs::H264_SVC::Parse(payload, sizeof(payload))
 		};
 
 		REQUIRE(payloadDescriptor);
 
-		REQUIRE(payloadDescriptor->s == 1);
-		REQUIRE(payloadDescriptor->e == 0);
-		REQUIRE(payloadDescriptor->i == 1);
-		REQUIRE(payloadDescriptor->d == 0);
-		REQUIRE(payloadDescriptor->b == 0);
-		REQUIRE(payloadDescriptor->hasTlIndex);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// REQUIRE(payloadDescriptor->s == 1);
+		// REQUIRE(payloadDescriptor->e == 0);
+		// REQUIRE(payloadDescriptor->i == 1);
+		// REQUIRE(payloadDescriptor->d == 0);
+		// REQUIRE(payloadDescriptor->b == 0);
+		// REQUIRE(payloadDescriptor->hasTlIndex);
 		REQUIRE(payloadDescriptor->tlIndex == 0);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
@@ -80,8 +69,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 	SECTION("parse I0-8.bin")
 	{
 		size_t len;
-		uint8_t extenLen;
-		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-8.bin", buffer, &len))
 		{
@@ -106,33 +93,24 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetFrameMarkingExtensionId(1);
-		extenValue = packet->GetExtension(1, extenLen);
-
-		REQUIRE(packet->HasExtension(1) == true);
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0x00);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// packet->SetFrameMarkingExtensionId(1);
 
 		auto* payload = packet->GetPayload();
-		RtpPacket::FrameMarking* frameMarking{ nullptr };
-		uint8_t frameMarkingLen{ 0 };
-
-		// Read frame-marking.
-		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+			Codecs::H264_SVC::Parse(payload, sizeof(payload))
 		};
 
 		REQUIRE(payloadDescriptor);
 
-		REQUIRE(payloadDescriptor->s == 0);
-		REQUIRE(payloadDescriptor->e == 0);
-		REQUIRE(payloadDescriptor->i == 0);
-		REQUIRE(payloadDescriptor->d == 0);
-		REQUIRE(payloadDescriptor->b == 0);
-		REQUIRE(payloadDescriptor->hasTlIndex);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// REQUIRE(payloadDescriptor->s == 0);
+		// REQUIRE(payloadDescriptor->e == 0);
+		// REQUIRE(payloadDescriptor->i == 0);
+		// REQUIRE(payloadDescriptor->d == 0);
+		// REQUIRE(payloadDescriptor->b == 0);
+		// REQUIRE(payloadDescriptor->hasTlIndex);
 		REQUIRE(payloadDescriptor->tlIndex == 0);
 		REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
@@ -141,9 +119,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 	SECTION("parse I0-5.bin")
 	{
 		size_t len;
-		uint8_t extenLen;
-		uint8_t* extenValue;
-
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-5.bin", buffer, &len))
 		{
 			FAIL("cannot open file");
@@ -167,42 +142,31 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetFrameMarkingExtensionId(1);
-		extenValue = packet->GetExtension(1, extenLen);
-
-		REQUIRE(packet->HasExtension(1) == true);
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0x60);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// packet->SetFrameMarkingExtensionId(1);
 
 		auto* payload = packet->GetPayload();
-		RtpPacket::FrameMarking* frameMarking{ nullptr };
-		uint8_t frameMarkingLen{ 0 };
-
-		// Read frame-marking.
-		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+			Codecs::H264_SVC::Parse(payload, sizeof(payload))
 		};
 
 		REQUIRE(payloadDescriptor);
 
-		REQUIRE(payloadDescriptor->s == 0);
-		REQUIRE(payloadDescriptor->e == 1);
-		REQUIRE(payloadDescriptor->i == 1);
-		REQUIRE(payloadDescriptor->d == 0);
-		REQUIRE(payloadDescriptor->b == 0);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// REQUIRE(payloadDescriptor->s == 0);
+		// REQUIRE(payloadDescriptor->e == 1);
+		// REQUIRE(payloadDescriptor->i == 1);
+		// REQUIRE(payloadDescriptor->d == 0);
+		// REQUIRE(payloadDescriptor->b == 0);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
-		REQUIRE(payloadDescriptor->hasSlIndex == false);
-		REQUIRE(payloadDescriptor->hasTlIndex == false);
+		// REQUIRE(payloadDescriptor->hasSlIndex == false);
+		// REQUIRE(payloadDescriptor->hasTlIndex == false);
 	}
 
 	SECTION("parse I1-15.bin")
 	{
 		size_t len;
-		uint8_t extenLen;
-		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I1-15.bin", buffer, &len))
 		{
@@ -227,43 +191,32 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetFrameMarkingExtensionId(1);
-		extenValue = packet->GetExtension(1, extenLen);
-
-		REQUIRE(packet->HasExtension(1) == true);
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0x80);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// packet->SetFrameMarkingExtensionId(1);
 
 		auto* payload = packet->GetPayload();
-		RtpPacket::FrameMarking* frameMarking{ nullptr };
-		uint8_t frameMarkingLen{ 0 };
-
-		// Read frame-marking.
-		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+			Codecs::H264_SVC::Parse(payload, sizeof(payload))
 		};
 
 		REQUIRE(payloadDescriptor);
 
-		REQUIRE(payloadDescriptor->s == 1);
-		REQUIRE(payloadDescriptor->e == 0);
-		REQUIRE(payloadDescriptor->i == 0);
-		REQUIRE(payloadDescriptor->d == 0);
-		REQUIRE(payloadDescriptor->b == 0);
-		REQUIRE(payloadDescriptor->hasTlIndex);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// REQUIRE(payloadDescriptor->s == 1);
+		// REQUIRE(payloadDescriptor->e == 0);
+		// REQUIRE(payloadDescriptor->i == 0);
+		// REQUIRE(payloadDescriptor->d == 0);
+		// REQUIRE(payloadDescriptor->b == 0);
+		// REQUIRE(payloadDescriptor->hasTlIndex);
 		REQUIRE(payloadDescriptor->tlIndex == 0);
-		REQUIRE(payloadDescriptor->hasSlIndex == false);
+		// REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == false);
 	}
 
 	SECTION("parse I0-14.bin")
 	{
 		size_t len;
-		uint8_t extenLen;
-		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/I0-14.bin", buffer, &len))
 		{
@@ -288,43 +241,32 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetFrameMarkingExtensionId(1);
-		extenValue = packet->GetExtension(1, extenLen);
-
-		REQUIRE(packet->HasExtension(1) == true);
-		REQUIRE(extenLen == 1);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0xa0);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// packet->SetFrameMarkingExtensionId(1);
 
 		auto* payload = packet->GetPayload();
-		RtpPacket::FrameMarking* frameMarking{ nullptr };
-		uint8_t frameMarkingLen{ 0 };
-
-		// Read frame-marking.
-		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+			Codecs::H264_SVC::Parse(payload, sizeof(payload))
 		};
 
 		REQUIRE(payloadDescriptor);
 
-		REQUIRE(payloadDescriptor->s == 1);
-		REQUIRE(payloadDescriptor->e == 0);
-		REQUIRE(payloadDescriptor->i == 1);
-		REQUIRE(payloadDescriptor->d == 0);
-		REQUIRE(payloadDescriptor->b == 0);
-		REQUIRE(payloadDescriptor->hasTlIndex);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// REQUIRE(payloadDescriptor->s == 1);
+		// REQUIRE(payloadDescriptor->e == 0);
+		// REQUIRE(payloadDescriptor->i == 1);
+		// REQUIRE(payloadDescriptor->d == 0);
+		// REQUIRE(payloadDescriptor->b == 0);
+		// REQUIRE(payloadDescriptor->hasTlIndex);
 		REQUIRE(payloadDescriptor->tlIndex == 0);
-		REQUIRE(payloadDescriptor->hasSlIndex == false);
+		// REQUIRE(payloadDescriptor->hasSlIndex == false);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 	}
 
 	SECTION("parse 2SL-I14.bin")
 	{
 		size_t len;
-		uint8_t extenLen;
-		uint8_t* extenValue;
 
 		if (!helpers::readBinaryFile("data/H264_SVC/2SL-I14.bin", buffer, &len))
 		{
@@ -349,35 +291,25 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 		REQUIRE(packet->HasOneByteExtensions());
 		REQUIRE(packet->HasTwoBytesExtensions() == false);
 
-		packet->SetFrameMarkingExtensionId(1);
-		extenValue = packet->GetExtension(1, extenLen);
-
-		REQUIRE(packet->HasExtension(1) == true);
-		REQUIRE(extenLen == 2);
-		REQUIRE(extenValue);
-		REQUIRE(extenValue[0] == 0xa0);
+		// NOTE: Frame-marking RTP extension has been removed.
 
 		auto* payload = packet->GetPayload();
-		RtpPacket::FrameMarking* frameMarking{ nullptr };
-		uint8_t frameMarkingLen{ 0 };
-
-		// Read frame-marking.
-		packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 		std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-			Codecs::H264_SVC::Parse(payload, sizeof(payload), frameMarking, frameMarkingLen)
+			Codecs::H264_SVC::Parse(payload, sizeof(payload))
 		};
 
 		REQUIRE(payloadDescriptor);
 
-		REQUIRE(payloadDescriptor->s == 1);
-		REQUIRE(payloadDescriptor->e == 0);
-		REQUIRE(payloadDescriptor->i == 1);
-		REQUIRE(payloadDescriptor->d == 0);
-		REQUIRE(payloadDescriptor->b == 0);
-		REQUIRE(payloadDescriptor->hasTlIndex);
+		// NOTE: Frame-marking RTP extension has been removed.
+		// REQUIRE(payloadDescriptor->s == 1);
+		// REQUIRE(payloadDescriptor->e == 0);
+		// REQUIRE(payloadDescriptor->i == 1);
+		// REQUIRE(payloadDescriptor->d == 0);
+		// REQUIRE(payloadDescriptor->b == 0);
+		// REQUIRE(payloadDescriptor->hasTlIndex);
 		REQUIRE(payloadDescriptor->tlIndex == 0);
-		REQUIRE(payloadDescriptor->hasSlIndex);
+		// REQUIRE(payloadDescriptor->hasSlIndex);
 		REQUIRE(payloadDescriptor->slIndex == 0);
 		REQUIRE(payloadDescriptor->isKeyFrame == true);
 	}
@@ -385,7 +317,6 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 	SECTION("create and test RTP files")
 	{
 		int32_t tmparray[7];
-
 		int32_t pos = 0, i = 0, rows = 0;
 		uint8_t type  = 0;
 		int32_t bytes = 0;
@@ -443,22 +374,16 @@ SCENARIO("parse RTP packets with H264 SVC", "[parser][rtp]")
 					FAIL("not a RTP packet");
 				}
 
-				packet->SetFrameMarkingExtensionId(1);
+				// NOTE: Frame-marking RTP extension has been removed.
+				// packet->SetFrameMarkingExtensionId(1);
 
 				auto* payload = packet->GetPayload();
-				RtpPacket::FrameMarking* frameMarking{ nullptr };
-				uint8_t frameMarkingLen{ 0 };
-
-				// Read frame-marking.
-				packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
 
 				std::unique_ptr<RTC::Codecs::H264_SVC::PayloadDescriptor> payloadDescriptor{
-					Codecs::H264_SVC::Parse(payload, packet->GetPayloadLength(), frameMarking, frameMarkingLen)
+					Codecs::H264_SVC::Parse(payload, packet->GetPayloadLength())
 				};
 
 				REQUIRE(payloadDescriptor);
-
-				// payloadDescriptor->Dump();
 
 				pos += bytes;
 				rows++;

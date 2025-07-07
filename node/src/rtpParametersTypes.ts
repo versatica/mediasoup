@@ -294,8 +294,6 @@ export type RtpHeaderExtensionUri =
 	| 'urn:ietf:params:rtp-hdrext:sdes:mid'
 	| 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id'
 	| 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id'
-	| 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07'
-	| 'urn:ietf:params:rtp-hdrext:framemarking'
 	| 'urn:ietf:params:rtp-hdrext:ssrc-audio-level'
 	| 'urn:3gpp:video-orientation'
 	| 'urn:ietf:params:rtp-hdrext:toffset'

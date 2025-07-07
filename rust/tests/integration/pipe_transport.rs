@@ -483,17 +483,6 @@ fn pipe_to_router_succeeds_with_video() {
         assert_eq!(
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
-                // NOTE: Remove this once framemarking draft becomes RFC.
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::FrameMarkingDraft07,
-                    id: 6,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::FrameMarking,
-                    id: 7,
-                    encrypt: false,
-                },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
                     id: 11,
@@ -545,17 +534,6 @@ fn pipe_to_router_succeeds_with_video() {
         assert_eq!(
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
-                // NOTE: Remove this once framemarking draft becomes RFC.
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::FrameMarkingDraft07,
-                    id: 6,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::FrameMarking,
-                    id: 7,
-                    encrypt: false,
-                },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
                     id: 11,
@@ -747,17 +725,6 @@ fn create_with_enable_rtx_succeeds() {
         assert_eq!(
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
-                // NOTE: Remove this once framemarking draft becomes RFC.
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::FrameMarkingDraft07,
-                    id: 6,
-                    encrypt: false,
-                },
-                RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::FrameMarking,
-                    id: 7,
-                    encrypt: false,
-                },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
                     id: 11,

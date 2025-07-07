@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Remove H265 codec and deprecated frame-marking RTP extension ([PR #1564](https://github.com/versatica/mediasoup/pull/1564)).
+
 ### 3.16.5
 
 - `Consumer` classes: Really fix target layer retransmission buffer ([PR #1558](https://github.com/versatica/mediasoup/pull/1558)).
@@ -1308,7 +1310,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.0.5
 
-- Add support for frame-marking RTP extensions and use it to enable temporal layers switching in H264 codec (#305).
+- Add support for frame-marking RTP extension and use it to enable temporal layers switching in H264 codec (#305).
 
 ### 3.0.4
 

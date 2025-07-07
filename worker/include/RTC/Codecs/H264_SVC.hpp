@@ -19,12 +19,6 @@ namespace RTC
 
 				void Dump() const override;
 
-				// Fields in frame-marking extension.
-				uint8_t s : 1;          // Start of Frame.
-				uint8_t e : 1;          // End of Frame.
-				uint8_t i : 1;          // Independent Frame.
-				uint8_t d : 1;          // Discardable Frame.
-				uint8_t b : 1;          // Base Layer Sync.
 				uint8_t slIndex{ 0 };   // Temporal layer id.
 				uint8_t tlIndex{ 0 };   // Spatial layer id.
 				uint8_t tl0picidx{ 0 }; // TL0PICIDX
@@ -42,11 +36,7 @@ namespace RTC
 			};
 
 		public:
-			static H264_SVC::PayloadDescriptor* Parse(
-			  const uint8_t* data,
-			  size_t len,
-			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
-			  uint8_t frameMarkingLen                    = 0);
+			static H264_SVC::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 			static std::unique_ptr<H264_SVC::PayloadDescriptor> ParseSingleNalu(
 			  const uint8_t* data,
 			  size_t len,

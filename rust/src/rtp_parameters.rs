@@ -368,9 +368,6 @@ pub enum MimeTypeVideo {
     /// H264-SVC
     #[serde(rename = "video/H264-SVC")]
     H264Svc,
-    /// H265
-    #[serde(rename = "video/H265")]
-    H265,
     /// AV1
     #[serde(rename = "video/AV1")]
     AV1,
@@ -394,7 +391,6 @@ impl FromStr for MimeTypeVideo {
             "video/VP9" => Ok(Self::Vp9),
             "video/H264" => Ok(Self::H264),
             "video/H264-SVC" => Ok(Self::H264Svc),
-            "video/H265" => Ok(Self::H265),
             "video/AV1" => Ok(Self::AV1),
             "video/rtx" => Ok(Self::Rtx),
             "video/red" => Ok(Self::Red),
@@ -416,7 +412,6 @@ impl MimeTypeVideo {
             Self::Vp9 => "video/VP9",
             Self::H264 => "video/H264",
             Self::H264Svc => "video/H264-SVC",
-            Self::H265 => "video/H265",
             Self::AV1 => "video/AV1",
             Self::Rtx => "video/rtx",
             Self::Red => "video/red",
@@ -566,12 +561,6 @@ pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id")]
     RepairRtpStreamId,
-    /// <http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07>
-    #[serde(rename = "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07")]
-    FrameMarkingDraft07,
-    /// urn:ietf:params:rtp-hdrext:framemarking
-    #[serde(rename = "urn:ietf:params:rtp-hdrext:framemarking")]
-    FrameMarking,
     /// <https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension>
     #[serde(
         rename = "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
@@ -614,12 +603,6 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 rtp_parameters::RtpHeaderExtensionUri::RepairRtpStreamId
             }
-            RtpHeaderExtensionUri::FrameMarkingDraft07 => {
-                rtp_parameters::RtpHeaderExtensionUri::FrameMarkingDraft07
-            }
-            RtpHeaderExtensionUri::FrameMarking => {
-                rtp_parameters::RtpHeaderExtensionUri::FrameMarking
-            }
             RtpHeaderExtensionUri::DependencyDescriptor => {
                 rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor
             }
@@ -653,12 +636,6 @@ impl RtpHeaderExtensionUri {
             rtp_parameters::RtpHeaderExtensionUri::RepairRtpStreamId => {
                 RtpHeaderExtensionUri::RepairRtpStreamId
             }
-            rtp_parameters::RtpHeaderExtensionUri::FrameMarkingDraft07 => {
-                RtpHeaderExtensionUri::FrameMarkingDraft07
-            }
-            rtp_parameters::RtpHeaderExtensionUri::FrameMarking => {
-                RtpHeaderExtensionUri::FrameMarking
-            }
             rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor => {
                 RtpHeaderExtensionUri::DependencyDescriptor
             }
@@ -691,10 +668,6 @@ impl FromStr for RtpHeaderExtensionUri {
             "urn:ietf:params:rtp-hdrext:sdes:mid" => Ok(Self::Mid),
             "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id" => Ok(Self::RtpStreamId),
             "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id" => Ok(Self::RepairRtpStreamId),
-            "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07" => {
-                Ok(Self::FrameMarkingDraft07)
-            }
-            "urn:ietf:params:rtp-hdrext:framemarking" => Ok(Self::FrameMarking),
             "urn:ietf:params:rtp-hdrext:ssrc-audio-level" => Ok(Self::AudioLevel),
             "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension" => Ok(Self::DependencyDescriptor),
             "urn:3gpp:video-orientation" => Ok(Self::VideoOrientation),
@@ -722,10 +695,6 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
             }
-            RtpHeaderExtensionUri::FrameMarkingDraft07 => {
-                "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07"
-            }
-            RtpHeaderExtensionUri::FrameMarking => "urn:ietf:params:rtp-hdrext:framemarking",
             RtpHeaderExtensionUri::DependencyDescriptor => "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension",
             RtpHeaderExtensionUri::AudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
             RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
