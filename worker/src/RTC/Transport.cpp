@@ -23,6 +23,9 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
@@ -326,7 +329,7 @@ namespace RTC
 		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -411,7 +414,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 
 		if (this->sctpAssociation)
 		{
@@ -1570,7 +1573,7 @@ namespace RTC
 		if (!producer)
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::PRODUCER_NOT_FOUND);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::PRODUCER_NOT_FOUND);
 #endif
 
 			MS_WARN_TAG(

@@ -6,6 +6,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
+#include <map>
 
 namespace RTC
 {
@@ -63,7 +64,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) override;
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
@@ -95,6 +96,8 @@ namespace RTC
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
+		void StorePacketInTargetLayerRetransmissionBuffer(
+		  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket);
 		void EmitLayersChange() const;
 		RTC::RtpStreamRecv* GetProducerCurrentRtpStream() const;
 		RTC::RtpStreamRecv* GetProducerTargetRtpStream() const;
@@ -129,7 +132,12 @@ namespace RTC
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		bool keyFrameForTsOffsetRequested{ false };
-		uint64_t lastBweDowngradeAtMs{ 0u }; // Last time we moved to lower spatial layer due to BWE.
+		// Last time we moved to lower spatial layer due to BWE.
+		uint64_t lastBweDowngradeAtMs{ 0u };
+		// Buffer to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC
 

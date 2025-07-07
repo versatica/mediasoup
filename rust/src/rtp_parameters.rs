@@ -371,6 +371,9 @@ pub enum MimeTypeVideo {
     /// H265
     #[serde(rename = "video/H265")]
     H265,
+    /// AV1
+    #[serde(rename = "video/AV1")]
+    AV1,
     /// RTX
     #[serde(rename = "video/rtx")]
     Rtx,
@@ -392,6 +395,7 @@ impl FromStr for MimeTypeVideo {
             "video/H264" => Ok(Self::H264),
             "video/H264-SVC" => Ok(Self::H264Svc),
             "video/H265" => Ok(Self::H265),
+            "video/AV1" => Ok(Self::AV1),
             "video/rtx" => Ok(Self::Rtx),
             "video/red" => Ok(Self::Red),
             "video/ulpfec" => Ok(Self::Ulpfec),
@@ -413,6 +417,7 @@ impl MimeTypeVideo {
             Self::H264 => "video/H264",
             Self::H264Svc => "video/H264-SVC",
             Self::H265 => "video/H265",
+            Self::AV1 => "video/AV1",
             Self::Rtx => "video/rtx",
             Self::Red => "video/red",
             Self::Ulpfec => "video/ulpfec",
@@ -567,6 +572,11 @@ pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:framemarking
     #[serde(rename = "urn:ietf:params:rtp-hdrext:framemarking")]
     FrameMarking,
+    /// <https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension>
+    #[serde(
+        rename = "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
+    )]
+    DependencyDescriptor,
     /// urn:ietf:params:rtp-hdrext:ssrc-audio-level
     #[serde(rename = "urn:ietf:params:rtp-hdrext:ssrc-audio-level")]
     AudioLevel,
@@ -588,11 +598,6 @@ pub enum RtpHeaderExtensionUri {
     /// <http://www.webrtc.org/experiments/rtp-hdrext/playout-delay>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay")]
     PlayoutDelay,
-    /// <https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension>
-    #[serde(
-        rename = "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
-    )]
-    DependencyDescriptor,
 
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
@@ -615,6 +620,9 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::FrameMarking => {
                 rtp_parameters::RtpHeaderExtensionUri::FrameMarking
             }
+            RtpHeaderExtensionUri::DependencyDescriptor => {
+                rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor
+            }
             RtpHeaderExtensionUri::AudioLevel => rtp_parameters::RtpHeaderExtensionUri::AudioLevel,
             RtpHeaderExtensionUri::VideoOrientation => {
                 rtp_parameters::RtpHeaderExtensionUri::VideoOrientation
@@ -631,9 +639,6 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::PlayoutDelay => {
                 rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay
-            }
-            RtpHeaderExtensionUri::DependencyDescriptor => {
-                rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor
             }
             RtpHeaderExtensionUri::Unsupported => panic!("Invalid RTP extension header URI"),
         }
@@ -654,6 +659,9 @@ impl RtpHeaderExtensionUri {
             rtp_parameters::RtpHeaderExtensionUri::FrameMarking => {
                 RtpHeaderExtensionUri::FrameMarking
             }
+            rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor => {
+                RtpHeaderExtensionUri::DependencyDescriptor
+            }
             rtp_parameters::RtpHeaderExtensionUri::AudioLevel => RtpHeaderExtensionUri::AudioLevel,
             rtp_parameters::RtpHeaderExtensionUri::VideoOrientation => {
                 RtpHeaderExtensionUri::VideoOrientation
@@ -670,9 +678,6 @@ impl RtpHeaderExtensionUri {
             }
             rtp_parameters::RtpHeaderExtensionUri::PlayoutDelay => {
                 RtpHeaderExtensionUri::PlayoutDelay
-            }
-            rtp_parameters::RtpHeaderExtensionUri::DependencyDescriptor => {
-                RtpHeaderExtensionUri::DependencyDescriptor
             }
         }
     }
@@ -691,6 +696,7 @@ impl FromStr for RtpHeaderExtensionUri {
             }
             "urn:ietf:params:rtp-hdrext:framemarking" => Ok(Self::FrameMarking),
             "urn:ietf:params:rtp-hdrext:ssrc-audio-level" => Ok(Self::AudioLevel),
+            "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension" => Ok(Self::DependencyDescriptor),
             "urn:3gpp:video-orientation" => Ok(Self::VideoOrientation),
             "urn:ietf:params:rtp-hdrext:toffset" => Ok(Self::TimeOffset),
             "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01" => {
@@ -720,6 +726,7 @@ impl RtpHeaderExtensionUri {
                 "http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07"
             }
             RtpHeaderExtensionUri::FrameMarking => "urn:ietf:params:rtp-hdrext:framemarking",
+            RtpHeaderExtensionUri::DependencyDescriptor => "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension",
             RtpHeaderExtensionUri::AudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
             RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
             RtpHeaderExtensionUri::TimeOffset => "urn:ietf:params:rtp-hdrext:toffset",
@@ -734,9 +741,6 @@ impl RtpHeaderExtensionUri {
             }
             RtpHeaderExtensionUri::PlayoutDelay => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay"
-            }
-            RtpHeaderExtensionUri::DependencyDescriptor => {
-                "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }

@@ -138,8 +138,14 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
-                            error!("active speaker observer closing failed on drop: {}", error);
+                        match channel.request(router_id, request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("active speaker observer closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("active speaker observer closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();

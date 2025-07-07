@@ -203,7 +203,7 @@ namespace Channel
 
 			if (message->data_type() == FBS::Message::Body::Request)
 			{
-				ChannelRequest* request;
+				ChannelRequest* request{ nullptr };
 
 				try
 				{
@@ -225,7 +225,7 @@ namespace Channel
 			}
 			else if (message->data_type() == FBS::Message::Body::Notification)
 			{
-				ChannelNotification* notification;
+				ChannelNotification* notification{ nullptr };
 
 				try
 				{
@@ -284,7 +284,7 @@ namespace Channel
 
 		if (message->data_type() == FBS::Message::Body::Request)
 		{
-			ChannelRequest* request;
+			ChannelRequest* request{ nullptr };
 
 			try
 			{
@@ -306,7 +306,7 @@ namespace Channel
 		}
 		else if (message->data_type() == FBS::Message::Body::Notification)
 		{
-			ChannelNotification* notification;
+			ChannelNotification* notification{ nullptr };
 
 			try
 			{

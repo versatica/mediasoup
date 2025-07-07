@@ -634,8 +634,14 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(transport_id, request).await {
-                            error!("producer closing failed on drop: {}", error);
+                        match channel.request(transport_id, request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("producer closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("producer closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();

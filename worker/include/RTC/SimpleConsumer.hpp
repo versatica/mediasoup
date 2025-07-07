@@ -7,6 +7,7 @@
 #include "RTC/Shared.hpp"
 #include "handles/TimerHandle.hpp"
 #include <list>
+#include <map>
 
 namespace RTC
 {
@@ -59,7 +60,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
 			return this->rtpStreams;
@@ -88,6 +89,8 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStream();
 		void RequestKeyFrame();
+		void StorePacketInTargetLayerRetransmissionBuffer(
+		  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket);
 		void EmitScore() const;
 		void ClearDegradation(bool sendDelayedPackets);
 		bool ShouldDelayPacket(const RTC::RtpPacket* packet) const;
@@ -109,6 +112,10 @@ namespace RTC
 		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
 		bool managingBitrate{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		// Buffer to store packets that arrive earlier than the first packet of the
+		// video key frame.
+		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		  targetLayerRetransmissionBuffer;
 		uint32_t maxDelayMs{ 0 };
 		uint8_t delayPercent{ 0 };
 		uint8_t lossPercent{ 0 };

@@ -404,10 +404,17 @@ impl Inner {
             {
                 let channel = self.channel.clone();
                 let request = RouterCloseRequest { router_id: self.id };
+
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request("", request).await {
-                            error!("router closing failed on drop: {}", error);
+                        match channel.request("", request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("router closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("router closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();

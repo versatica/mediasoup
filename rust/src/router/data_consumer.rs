@@ -353,8 +353,14 @@ impl Inner {
                 self.executor
                     .spawn(async move {
                         if weak_data_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request(transport_id, request).await {
-                                error!("consumer closing failed on drop: {}", error);
+                            match channel.request(transport_id, request).await {
+                                Err(RequestError::ChannelClosed) => {
+                                    debug!("data consumer closing failed on drop: Channel already closed");
+                                }
+                                Err(error) => {
+                                    error!("data consumer closing failed on drop: {}", error);
+                                }
+                                Ok(_) => {}
                             }
                         }
                     })

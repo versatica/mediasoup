@@ -85,9 +85,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		size_t len;
 		uint8_t extenLen;
 		uint8_t* extenValue;
-		bool voice;
-		uint8_t volume;
-		uint32_t absSendTime;
+		bool voice{ false };
+		uint8_t volume{ 0 };
+		uint32_t absSendTime{ 0 };
 
 		if (!helpers::readBinaryFile("data/packet3.raw", buffer, &len))
 		{
@@ -846,8 +846,8 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		packet->SetFrameMarkingExtensionId(3);
 
-		RtpPacket::FrameMarking* frameMarking;
-		uint8_t frameMarkingLen;
+		RtpPacket::FrameMarking* frameMarking{ nullptr };
+		uint8_t frameMarkingLen{ 0 };
 
 		REQUIRE(packet->ReadFrameMarking(&frameMarking, frameMarkingLen) == true);
 		REQUIRE(frameMarkingLen == 3);

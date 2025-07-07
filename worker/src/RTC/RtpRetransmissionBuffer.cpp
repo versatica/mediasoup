@@ -12,25 +12,15 @@ namespace RTC
 	RtpRetransmissionBuffer::Item* RtpRetransmissionBuffer::FillItem(
 	  RtpRetransmissionBuffer::Item* item,
 	  RTC::RtpPacket* packet,
-	  std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
-		// Store original packet into the item. Only clone once and only if
-		// necessary.
-		//
-		// NOTE: This must be done BEFORE assigning item->packet = sharedPacket,
-		// otherwise the value being copied in item->packet will remain nullptr.
-		// This is because we are copying an **empty** shared_ptr into another
-		// shared_ptr (item->packet), so future value assigned via reset() in the
-		// former doesn't update the value in the copy.
-		if (!sharedPacket)
-		{
-			sharedPacket.reset(packet->Clone());
-		}
-
 		// Store original packet and some extra info into the item.
-		item->packet         = sharedPacket;
+		//
+		// NOTE: sharedPacket could be empty at this point but it's ok since the
+		// Consumer will fill it.
+		item->sharedPacket   = sharedPacket;
 		item->encoder        = packet->GetPayloadEncoder();
 		item->ssrc           = packet->GetSsrc();
 		item->sequenceNumber = packet->GetSequenceNumber();
@@ -90,8 +80,7 @@ namespace RTC
 	 * not properly fit (by ensuring that elements in the buffer are not only
 	 * ordered by increasing seq but also that their timestamp are incremental).
 	 */
-	void RtpRetransmissionBuffer::Insert(
-	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	bool RtpRetransmissionBuffer::Insert(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -110,7 +99,7 @@ namespace RTC
 
 			this->buffer.push_back(RtpRetransmissionBuffer::FillItem(item, packet, sharedPacket));
 
-			return;
+			return true;
 		}
 
 		auto* oldestItem = GetOldest();
@@ -136,7 +125,7 @@ namespace RTC
 
 			this->buffer.push_back(RtpRetransmissionBuffer::FillItem(item, packet, sharedPacket));
 
-			return;
+			return true;
 		}
 
 		// Clear too old packets in the buffer.
@@ -166,7 +155,7 @@ namespace RTC
 
 				this->buffer.push_back(RtpRetransmissionBuffer::FillItem(item, packet, sharedPacket));
 
-				return;
+				return true;
 			}
 
 			oldestItem = GetOldest();
@@ -194,7 +183,7 @@ namespace RTC
 				  seq,
 				  timestamp);
 
-				return;
+				return false;
 			}
 
 			// Calculate how many blank slots it would be necessary to add when
@@ -266,7 +255,7 @@ namespace RTC
 				  seq,
 				  timestamp);
 
-				return;
+				return false;
 			}
 
 			// Ensure that the timestamp of the packet is equal or less than the
@@ -281,7 +270,7 @@ namespace RTC
 				  seq,
 				  timestamp);
 
-				return;
+				return false;
 			}
 
 			// Calculate how many blank slots it would be necessary to add when
@@ -300,7 +289,7 @@ namespace RTC
 				  seq,
 				  timestamp);
 
-				return;
+				return false;
 			}
 
 			// Push blank slots to the front.
@@ -335,7 +324,7 @@ namespace RTC
 				  seq,
 				  timestamp);
 
-				return;
+				return false;
 			}
 
 			// idx is the intended position of the received packet in the buffer.
@@ -368,7 +357,7 @@ namespace RTC
 					  seq,
 					  timestamp);
 
-					return;
+					return false;
 				}
 			}
 
@@ -399,7 +388,7 @@ namespace RTC
 					  seq,
 					  timestamp);
 
-					return;
+					return false;
 				}
 			}
 
@@ -414,6 +403,8 @@ namespace RTC
 		  "buffer contains %zu items (more than %" PRIu16 " max items)",
 		  this->buffer.size(),
 		  this->maxItems);
+
+		return true;
 	}
 
 	void RtpRetransmissionBuffer::Clear()
@@ -589,7 +580,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->packet.reset();
+		// NOTE: Here we MUST NOT call this->sharedPacket.Reset() because that
+		// would affect all copies of this SharedRtpPacket by removing their stored
+		// packet. We have to replace it entirely.
+		this->sharedPacket   = RTC::SharedRtpPacket();
 		this->ssrc           = 0u;
 		this->sequenceNumber = 0u;
 		this->timestamp      = 0u;

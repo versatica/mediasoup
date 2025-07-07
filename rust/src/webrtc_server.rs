@@ -182,10 +182,19 @@ impl Inner {
                 let request = WebRtcServerCloseRequest {
                     webrtc_server_id: self.id,
                 };
+
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request("", request).await {
-                            error!("WebRTC server closing failed on drop: {}", error);
+                        match channel.request("", request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!(
+                                    "WebRTC server closing failed on drop: Channel already closed"
+                                );
+                            }
+                            Err(error) => {
+                                error!("WebRTC server closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();

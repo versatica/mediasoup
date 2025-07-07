@@ -37,7 +37,7 @@ namespace RTC
 
 		if (this->params.useNack)
 		{
-			uint32_t maxRetransmissionDelayMs;
+			uint32_t maxRetransmissionDelayMs{ 0 };
 
 			switch (params.mimeType.type)
 			{
@@ -97,7 +97,8 @@ namespace RTC
 		this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
 	}
 
-	bool RtpStreamSend::ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(
+	  RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -107,19 +108,25 @@ namespace RTC
 		// Call the parent method.
 		if (!RtpStream::ReceiveStreamPacket(packet))
 		{
-			return false;
+			return ReceivePacketResult::DISCARDED;
 		}
+
+		bool stored{ false };
 
 		// If NACK is enabled, store the packet into the buffer.
 		if (this->retransmissionBuffer)
 		{
-			StorePacket(packet, sharedPacket);
+			if (StorePacket(packet, sharedPacket))
+			{
+				stored = true;
+			}
 		}
 
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
 
-		return true;
+		return stored ? ReceivePacketResult::ACCEPTED_AND_STORED
+		              : ReceivePacketResult::ACCEPTED_AND_NOT_STORED;
 	}
 
 	void RtpStreamSend::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
@@ -151,28 +158,84 @@ namespace RTC
 					break;
 				}
 
-				// Note that this is an already RTX encoded packet if RTX is used
-				// (FillRetransmissionContainer() did it).
-				auto packet = item->packet;
+				MS_ASSERT(
+				  item->sharedPacket.HasPacket(),
+				  "item in retransmission container doesn't contain a packet [ssrc:%" PRIu32
+				  ", seq:%" PRIu16 ", timestamp:%" PRIu32 "]",
+				  item->ssrc,
+				  item->sequenceNumber,
+				  item->timestamp);
+
+				auto* packet = item->sharedPacket.GetPacket();
+
+				// Keep the values of the original packet received by the Consumer.
+				auto origSsrc      = packet->GetSsrc();
+				auto origSeq       = packet->GetSequenceNumber();
+				auto origTimestamp = packet->GetTimestamp();
+				std::string origMid;
+
+				// Put correct info into the packet.
+				packet->SetSsrc(item->ssrc);
+				packet->SetSequenceNumber(item->sequenceNumber);
+				packet->SetTimestamp(item->timestamp);
+
+				if (item->encoder != nullptr)
+				{
+					packet->EncodePayload(item->encoder.get());
+				}
+
+				// Update MID RTP extension value.
+				if (!this->mid.empty())
+				{
+					packet->ReadMid(origMid);
+					packet->UpdateMid(this->mid);
+				}
+
+				// If we use RTX, encode it.
+				if (HasRtx())
+				{
+					// Increment RTX seq.
+					this->rtxSeq++;
+
+					packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
+				}
 
 				// Retransmit the packet.
 				static_cast<RTC::RtpStreamSend::Listener*>(this->listener)
-				  ->OnRtpStreamRetransmitRtpPacket(this, packet.get());
+				  ->OnRtpStreamRetransmitRtpPacket(this, packet);
 
 				// Mark the packet as retransmitted.
-				RTC::RtpStream::PacketRetransmitted(packet.get());
+				RTC::RtpStream::PacketRetransmitted(packet);
 
 				// Mark the packet as repaired (only if this is the first retransmission).
 				if (item->sentTimes == 1)
 				{
-					RTC::RtpStream::PacketRepaired(packet.get());
+					RTC::RtpStream::PacketRepaired(packet);
 				}
 
+				// If we use RTX, restore it.
 				if (HasRtx())
 				{
 					// Restore the packet.
 					packet->RtxDecode(RtpStream::GetPayloadType(), item->ssrc);
 				}
+
+				// Restore MID.
+				if (!this->mid.empty())
+				{
+					packet->UpdateMid(origMid);
+				}
+
+				// Restore payload.
+				if (item->encoder != nullptr)
+				{
+					packet->RestorePayload();
+				}
+
+				// Restore RTP header fields.
+				packet->SetSsrc(origSsrc);
+				packet->SetSequenceNumber(origSeq);
+				packet->SetTimestamp(origTimestamp);
 			}
 		}
 
@@ -371,7 +434,7 @@ namespace RTC
 		MS_ABORT("invalid method call");
 	}
 
-	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	bool RtpStreamSend::StorePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -384,10 +447,10 @@ namespace RTC
 			  packet->GetSequenceNumber(),
 			  packet->GetSize());
 
-			return;
+			return false;
 		}
 
-		this->retransmissionBuffer->Insert(packet, sharedPacket);
+		return this->retransmissionBuffer->Insert(packet, sharedPacket);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the
@@ -437,29 +500,6 @@ namespace RTC
 			if (requested)
 			{
 				auto* item = this->retransmissionBuffer->Get(currentSeq);
-				std::shared_ptr<RTC::RtpPacket> packet{ nullptr };
-
-				// Calculate the elapsed time between the max timestamp seen and the
-				// requested packet's timestamp (in ms).
-				if (item)
-				{
-					packet = item->packet;
-					// Put correct info into the packet.
-					packet->SetSsrc(item->ssrc);
-					packet->SetSequenceNumber(item->sequenceNumber);
-					packet->SetTimestamp(item->timestamp);
-
-					if (item->encoder != nullptr)
-					{
-						packet->EncodePayload(item->encoder.get());
-					}
-
-					// Update MID RTP extension value.
-					if (!this->mid.empty())
-					{
-						packet->UpdateMid(mid);
-					}
-				}
 
 				// Packet not found.
 				if (!item)
@@ -478,21 +518,12 @@ namespace RTC
 					  rtx,
 					  "ignoring retransmission for a packet already resent in the last RTT ms "
 					  "[seq:%" PRIu16 ", rtt:%" PRIu16 "]",
-					  packet->GetSequenceNumber(),
+					  item->sequenceNumber,
 					  rtt);
 				}
 				// Stored packet is valid for retransmission. Resend it.
 				else
 				{
-					// If we use RTX and the packet has not yet been resent, encode it now.
-					if (HasRtx())
-					{
-						// Increment RTX seq.
-						++this->rtxSeq;
-
-						packet->RtxEncode(this->params.rtxPayloadType, this->params.rtxSsrc, this->rtxSeq);
-					}
-
 					// Save when this packet was resent.
 					item->resentAtMs = nowMs;
 
@@ -513,12 +544,12 @@ namespace RTC
 
 			requested = (bitmask & 1) != 0;
 			bitmask >>= 1;
-			++currentSeq;
+			currentSeq++;
 
 			if (!isFirstPacket)
 			{
 				sentBitmask |= (sent ? 1 : 0) << bitmaskCounter;
-				++bitmaskCounter;
+				bitmaskCounter++;
 			}
 			else
 			{

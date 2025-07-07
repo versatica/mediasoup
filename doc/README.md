@@ -4,6 +4,7 @@
 
 - [Building](Building.md)
 - [Fuzzer](Fuzzer.md)
+- [Rust-crates](Rust-crates.md)
 - [RTCP](RTCP.md)
-- [Consumer](Consumer.md)
+- [Closures](Closures.md)
 - [Charts](Charts.md)

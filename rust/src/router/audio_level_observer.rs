@@ -160,8 +160,14 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
-                            error!("audio level observer closing failed on drop: {}", error);
+                        match channel.request(router_id, request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("audio level observer closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("audio level observer closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();
