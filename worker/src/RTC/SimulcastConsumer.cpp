@@ -464,8 +464,9 @@ namespace RTC
 		{
 			spatialLayer = static_cast<int16_t>(sIdx);
 
-			// If this is higher than current spatial layer and we moved to to current spatial
-			// layer due to BWE limitations, check how much it has elapsed since then.
+			// If this is higher than current spatial layer and we moved to to current
+			// spatial layer due to BWE limitations, check how much it has elapsed
+			// since then.
 			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
 			{
 				if (this->provisionalTargetSpatialLayer > -1 && spatialLayer > this->currentSpatialLayer)
@@ -481,6 +482,17 @@ namespace RTC
 			if (spatialLayer < this->provisionalTargetSpatialLayer)
 			{
 				continue;
+			}
+			// If this is the higher than preferred spatial layer, abort.
+			else if (spatialLayer > this->preferredSpatialLayer)
+			{
+				MS_DEBUG_DEV(
+				  "avoid upgrading to spatial layer %" PRIi16
+				  " since it's higher than preferred spatial layer %" PRIi16,
+				  spatialLayer,
+				  this->preferredSpatialLayer);
+
+				goto done;
 			}
 
 			// This can be null.
@@ -530,8 +542,8 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				// Ignore temporal layers lower than the one we already have (taking into account
-				// the spatial layer too).
+				// Ignore temporal layers lower than the one we already have (taking
+				// into account the spatial layer too).
 				// clang-format off
 				if (
 					spatialLayer == this->provisionalTargetSpatialLayer &&
@@ -544,8 +556,9 @@ namespace RTC
 
 				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
 
-				// This is simulcast so we must substract the bitrate of the current temporal
-				// spatial layer if this is the temporal layer 0 of a higher spatial layer.
+				// This is simulcast so we must substract the bitrate of the current
+				// temporal spatial layer if this is the temporal layer 0 of a higher
+				// spatial layer.
 				//
 				// clang-format off
 				if (
@@ -579,7 +592,8 @@ namespace RTC
 				  virtualBitrate,
 				  requiredBitrate);
 
-				// If active layer, end iterations here. Otherwise move to next spatial layer.
+				// If active layer, end iterations here. Otherwise move to next spatial
+				// layer.
 				if (requiredBitrate)
 				{
 					goto done;
@@ -590,7 +604,7 @@ namespace RTC
 				}
 			}
 
-			// If this is the preferred or higher spatial layer, take it and exit.
+			// If this is the preferred spatial layer or higher, take it and exit.
 			if (spatialLayer >= this->preferredSpatialLayer)
 			{
 				break;
