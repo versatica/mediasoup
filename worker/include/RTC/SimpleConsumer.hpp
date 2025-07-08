@@ -5,12 +5,27 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
+#include "handles/TimerHandle.hpp"
+#include <list>
 #include <map>
 
 namespace RTC
 {
-	class SimpleConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class SimpleConsumer : public RTC::Consumer,
+	                       public RTC::RtpStreamSend::Listener,
+	                       public TimerHandle::Listener
 	{
+	private:
+		struct DelayedPacketItem
+		{
+			// Original packet.
+			RTC::SharedRtpPacket sharedPacket{ nullptr };
+			// Arrival time of the original packet.
+			uint64_t arrivalTimeMs{ 0 };
+			// Delay applied to the packet.
+			uint16_t delayMs{ 0 };
+		};
+
 	public:
 		SimpleConsumer(
 		  RTC::Shared* shared,
@@ -76,11 +91,18 @@ namespace RTC
 		void StorePacketInTargetLayerRetransmissionBuffer(
 		  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket);
 		void EmitScore() const;
+		void ClearDegradation(bool sendDelayedPackets);
+		bool ShouldDelayPacket(const RTC::RtpPacket* packet) const;
+		bool ShouldDropPacket(const RTC::RtpPacket* packet) const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+
+		/* Pure virtual methods inherited from TimerHandle::Listener. */
+	public:
+		void OnTimer(TimerHandle* timer) override;
 
 	private:
 		// Allocated by this.
@@ -97,6 +119,12 @@ namespace RTC
 		// video key frame.
 		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
+		uint32_t maxDelayMs{ 0 };
+		uint8_t delayPercent{ 0 };
+		uint8_t lossPercent{ 0 };
+		TimerHandle* degradationTimer{ nullptr };
+		TimerHandle* delayTimer{ nullptr };
+		std::list<DelayedPacketItem> delayedPacketItems;
 	};
 } // namespace RTC
 

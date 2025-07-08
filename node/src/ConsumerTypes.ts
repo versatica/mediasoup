@@ -389,4 +389,42 @@ export interface Consumer<ConsumerAppData extends AppData = AppData>
 	 * Enable 'trace' event.
 	 */
 	enableTraceEvent(types?: ConsumerTraceEventType[]): Promise<void>;
+
+	/**
+	 * Degrade RTP transmission.
+	 * - durationMs: Duration that the degradation will take.
+	 * - maxDelayMs: Max delay (in ms) to be applied to each packet.
+	 * - delayPercent: Only apply delay to this percent of the packets.
+	 * - lossPercent: Generate packet loss by given percent value.
+	 *
+	 * @remarks
+	 * - Only implemented in `SimpleConsumer`.
+	 * - After `durationMs`, or if `consumer.degrade()` is called again with
+	 *   `durationMs: 0`, then degradation is immediately stopped and all delayed
+	 *   buffered packets are immediately sent (all together).
+	 *
+	 * @throws
+	 * - If called on a non `SimpleConsumer` (due to method not implemented).
+	 *
+	 * @example
+	 * ```ts
+	 * consumer.degrade({
+	 *   durationMs: 10000
+	 *   maxDelayMs: 3000,
+	 *   delayPercent: 20,
+	 *   lossPercent: 0,
+	 * });
+	 * ```
+	 */
+	degrade({
+		durationMs,
+		maxDelayMs,
+		delayPercent,
+		lossPercent,
+	}: {
+		durationMs?: number;
+		maxDelayMs?: number;
+		delayPercent?: number;
+		lossPercent?: number;
+	}): Promise<void>;
 }

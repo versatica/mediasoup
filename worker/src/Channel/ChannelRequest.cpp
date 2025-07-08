@@ -67,6 +67,7 @@ namespace Channel
 		{ FBS::Request::Method::CONSUMER_SET_PRIORITY,                          "consumer.setPriority"                       },
 		{ FBS::Request::Method::CONSUMER_REQUEST_KEY_FRAME,                     "consumer.requestKeyFrame"                   },
 		{ FBS::Request::Method::CONSUMER_ENABLE_TRACE_EVENT,                    "consumer.enableTraceEvent"                  },
+		{ FBS::Request::Method::CONSUMER_DEGRADE,                               "consumer.degrade"                           },
 		{ FBS::Request::Method::DATAPRODUCER_DUMP,                              "dataProducer.dump"                          },
 		{ FBS::Request::Method::DATAPRODUCER_GET_STATS,                         "dataProducer.getStats"                      },
 		{ FBS::Request::Method::DATAPRODUCER_PAUSE,                             "dataProducer.pause"                         },

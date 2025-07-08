@@ -463,6 +463,67 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 		);
 	}
 
+	async degrade({
+		durationMs = 0,
+		maxDelayMs = 0,
+		delayPercent = 0,
+		lossPercent = 0,
+	}: {
+		durationMs?: number;
+		maxDelayMs?: number;
+		delayPercent?: number;
+		lossPercent?: number;
+	} = {}): Promise<void> {
+		if (durationMs > Math.pow(2, 32) - 1) {
+			durationMs = Math.pow(2, 32) - 1;
+		} else if (durationMs < 0) {
+			durationMs = 0;
+		}
+
+		if (maxDelayMs > Math.pow(2, 16) - 1) {
+			maxDelayMs = Math.pow(2, 16) - 1;
+		} else if (maxDelayMs < 0) {
+			maxDelayMs = 0;
+		}
+
+		if (delayPercent > 100) {
+			delayPercent = 100;
+		} else if (delayPercent < 0) {
+			delayPercent = 0;
+		}
+
+		if (lossPercent > 100) {
+			lossPercent = 100;
+		} else if (lossPercent < 0) {
+			lossPercent = 0;
+		}
+
+		if (durationMs === 0) {
+			maxDelayMs = 0;
+			lossPercent = 0;
+			lossPercent = 0;
+		}
+
+		logger.debug(
+			`degrade() [durationMs:${durationMs}, maxDelayMs:${maxDelayMs}, delayPercent:${delayPercent}, lossPercent:${lossPercent}]`
+		);
+
+		/* Build Request. */
+		const requestOffset = new FbsConsumer.DegradeRequestT(
+			durationMs,
+			maxDelayMs,
+			delayPercent,
+			lossPercent
+		).pack(this.#channel.bufferBuilder);
+
+		await this.#channel.request(
+			FbsRequest.Method.CONSUMER_DEGRADE,
+			FbsRequest.Body.Consumer_DegradeRequest,
+			requestOffset,
+			this.#internal.consumerId
+		);
+	}
+
 	private handleWorkerNotifications(): void {
 		this.#channel.on(
 			this.#internal.consumerId,
