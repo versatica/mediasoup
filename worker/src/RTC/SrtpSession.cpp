@@ -28,7 +28,8 @@ namespace RTC
 
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_THROW_ERROR("srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_THROW_ERROR(
+			  "srtp_install_event_handler() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 		}
 	}
 
@@ -208,7 +209,7 @@ namespace RTC
 
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_THROW_ERROR("srtp_create() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 		}
 	}
 
@@ -224,7 +225,7 @@ namespace RTC
 			{
 				try
 				{
-					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err));
+					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 				}
 				catch (const std::exception& error)
 				{
@@ -282,7 +283,7 @@ namespace RTC
 
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_WARN_TAG(srtp, "srtp_protect() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 
 			return false;
 		}
@@ -309,7 +310,7 @@ namespace RTC
 
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_DEBUG_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_DEBUG_TAG(srtp, "srtp_unprotect() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 
 			return false;
 		}
@@ -345,7 +346,7 @@ namespace RTC
 
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_WARN_TAG(srtp, "srtp_protect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 
 			return false;
 		}
@@ -372,7 +373,7 @@ namespace RTC
 
 		if (DepLibSRTP::IsError(err))
 		{
-			MS_DEBUG_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err));
+			MS_DEBUG_TAG(srtp, "srtp_unprotect_rtcp() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 
 			return false;
 		}
