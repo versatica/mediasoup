@@ -858,8 +858,7 @@ function matchCodecs(
 			break;
 		}
 
-		case 'video/h264':
-		case 'video/h264-svc': {
+		case 'video/h264': {
 			if (strict) {
 				const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
 				const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
