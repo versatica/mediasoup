@@ -160,4 +160,24 @@ SCENARIO("Rate calculator", "[rtp][RateCalculator]")
 
 		validate(rate, nowMs, input);
 	}
+
+	// NOTE: This test reproduces a crash (now fixed):
+	//   https://github.com/versatica/mediasoup/issues/1316
+	SECTION("buffer overflow should not crash")
+	{
+		// window: 1000ms, items: 3 (granularity: 333ms)
+		RateCalculator rate(1000, 8000, 3);
+
+		// clang-format off
+		std::vector<TestRateCalculatorData> input =
+		{
+			{ 0,   1, 8  },
+			{ 333, 1, 16  },
+			{ 666, 1, 24  },
+			{ 999, 1, 32 },
+  	};
+		// clang-format on
+
+		validate(rate, nowMs, input);
+	}
 }

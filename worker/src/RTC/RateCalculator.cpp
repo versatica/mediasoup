@@ -56,6 +56,17 @@ namespace RTC
 				this->newestItemIndex = 0;
 			}
 
+			// Advance oldestItemIndex if buffer is full.
+			// NOTE: This avoids a crash:
+			//   https://github.com/versatica/mediasoup/issues/1316
+			if (this->newestItemIndex == this->oldestItemIndex && this->oldestItemIndex != -1)
+			{
+				if (++this->oldestItemIndex >= this->windowItems)
+				{
+					this->oldestItemIndex = 0;
+				}
+			}
+
 			MS_ASSERT(
 			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
 			  "newest index overlaps with the oldest one [newestItemIndex:%" PRId32
