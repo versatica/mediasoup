@@ -5,7 +5,7 @@
 - Remove H265 codec and deprecated frame-marking RTP extension ([PR #1564](https://github.com/versatica/mediasoup/pull/1564)).
 - `SimulcastConsumer`: Fix selecting spatial layer higher than preferred one ([PR #1565](https://github.com/versatica/mediasoup/pull/1565)).
 - Remove H264-SVC codec ([PR #1568](https://github.com/versatica/mediasoup/pull/1568)).
-- `Worker`: Improve `RateCalculator` to avoid time overflow ([PR #1569](https://github.com/versatica/mediasoup/pull/1569)).
+- `Worker`: Improve `RateCalculator` to avoid time overflow ([PR #1570](https://github.com/versatica/mediasoup/pull/1570)).
 
 ### 3.16.5
 
