@@ -10,15 +10,15 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqLowerThan::operator()(T lhs, T rhs) const
 	{
-		return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
-		       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+		return ((rhs > lhs) && (rhs - lhs <= SeqManager::MaxValue / 2)) ||
+		       ((lhs > rhs) && (lhs - rhs > SeqManager::MaxValue / 2));
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqHigherThan::operator()(T lhs, T rhs) const
 	{
-		return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
-		       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+		return ((lhs > rhs) && (lhs - rhs <= SeqManager::MaxValue / 2)) ||
+		       ((rhs > lhs) && (rhs - lhs > SeqManager::MaxValue / 2));
 	}
 
 	template<typename T, uint8_t N>
@@ -30,13 +30,13 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::IsSeqLowerThan(T lhs, T rhs)
 	{
-		return isSeqLowerThan(lhs, rhs);
+		return SeqManager::isSeqLowerThan(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::IsSeqHigherThan(T lhs, T rhs)
 	{
-		return isSeqHigherThan(lhs, rhs);
+		return SeqManager::isSeqHigherThan(lhs, rhs);
 	}
 
 	template<typename T, uint8_t N>
@@ -51,7 +51,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Update base.
-		this->base = (this->maxOutput - input) & MaxValue;
+		this->base = (this->maxOutput - input) & SeqManager::MaxValue;
 
 		// Update maxInput.
 		this->maxInput = input;
@@ -125,11 +125,11 @@ namespace RTC
 			auto it = this->dropped.lower_bound(input);
 
 			droppedCount -= std::distance(it, this->dropped.end());
-			base = (this->base - droppedCount) & MaxValue;
+			base = (this->base - droppedCount) & SeqManager::MaxValue;
 		}
 
 	done:
-		output = (input + base) & MaxValue;
+		output = (input + base) & SeqManager::MaxValue;
 
 		if (!this->started)
 		{
@@ -152,7 +152,7 @@ namespace RTC
 			}
 		}
 
-		output = (output + this->initialOutput) & MaxValue;
+		output = (output + this->initialOutput) & SeqManager::MaxValue;
 
 		return true;
 	}
@@ -201,7 +201,7 @@ namespace RTC
 		}
 
 		// Adapt base.
-		this->base = (this->base - (previousDroppedSize - this->dropped.size())) & MaxValue;
+		this->base = (this->base - (previousDroppedSize - this->dropped.size())) & SeqManager::MaxValue;
 	}
 
 	// Explicit instantiation to have all SeqManager definitions in this file.

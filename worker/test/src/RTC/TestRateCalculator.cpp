@@ -2,6 +2,7 @@
 #include "DepLibUV.hpp"
 #include "RTC/RateCalculator.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <limits> // std::numeric_limits()
 #include <vector>
 
 using namespace RTC;
@@ -21,9 +22,29 @@ void validate(RateCalculator& rate, uint64_t timeBase, std::vector<TestRateCalcu
 
 		REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
 	}
+
+	// Repeat forcing nowMs to be 0.
+	rate.Reset();
+
+	for (auto& item : input)
+	{
+		rate.Update(item.size, timeBase + item.offset);
+
+		REQUIRE(rate.GetRate(0 + item.offset) == item.rate);
+	}
+
+	// Repeat forcing nowMs to be std::numeric_limits<uint64_t>::max() - 100.
+	rate.Reset();
+
+	for (auto& item : input)
+	{
+		rate.Update(item.size, timeBase + item.offset);
+
+		REQUIRE(rate.GetRate(std::numeric_limits<uint64_t>::max() - 100 + item.offset) == item.rate);
+	}
 }
 
-SCENARIO("Bitrate calculator", "[rtp][bitrate]")
+SCENARIO("Rate calculator", "[rtp][RateCalculator]")
 {
 	uint64_t nowMs = DepLibUV::GetTimeMs();
 

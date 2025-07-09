@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "RTC/RtpPacket.hpp"
+#include <optional>
 #include <vector>
 
 namespace RTC
@@ -21,12 +22,7 @@ namespace RTC
 		explicit RateCalculator(
 		  size_t windowSizeMs  = DefaultWindowSize,
 		  float scale          = DefaultBpsScale,
-		  uint16_t windowItems = DefaultWindowItems)
-		  : windowSizeMs(windowSizeMs), scale(scale), windowItems(windowItems)
-		{
-			this->itemSizeMs = std::max(windowSizeMs / windowItems, size_t{ 1 });
-			this->buffer.resize(windowItems);
-		}
+		  uint16_t windowItems = DefaultWindowItems);
 
 		void Update(size_t size, uint64_t nowMs);
 
@@ -37,10 +33,10 @@ namespace RTC
 			return this->bytes;
 		}
 
+		void Reset();
+
 	private:
 		void RemoveOldData(uint64_t nowMs);
-
-		void Reset();
 
 	private:
 		struct BufferItem
@@ -61,11 +57,11 @@ namespace RTC
 		// Buffer to keep data.
 		std::vector<BufferItem> buffer;
 		// Time (in milliseconds) for last item in the time window.
-		uint64_t newestItemStartTime{ 0u };
+		std::optional<uint64_t> newestItemStartTime{ std::nullopt };
 		// Index for the last item in the time window.
 		int32_t newestItemIndex{ -1 };
 		// Time (in milliseconds) for oldest item in the time window.
-		uint64_t oldestItemStartTime{ 0u };
+		std::optional<uint64_t> oldestItemStartTime{ std::nullopt };
 		// Index for the oldest item in the time window.
 		int32_t oldestItemIndex{ -1 };
 		// Total count in the time window.
@@ -75,7 +71,7 @@ namespace RTC
 		// Last value calculated by GetRate().
 		uint32_t lastRate{ 0u };
 		// Last time GetRate() was called.
-		uint64_t lastTime{ 0u };
+		std::optional<uint64_t> lastTime{ std::nullopt };
 	};
 
 	class RtpDataCounter
