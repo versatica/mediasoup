@@ -301,8 +301,8 @@ namespace Utils
 		static constexpr uint32_t UnixNtpOffset{ 0x83AA7E80 };
 		// NTP fractional unit.
 		static constexpr uint64_t NtpFractionalUnit{ 1LL << 32 };
-
-		static constexpr uint64_t TimeMaxValue = std::numeric_limits<uint64_t>::max();
+		// Max time value (for uint64_t values obtained via DepLibUV).
+		static constexpr uint64_t TimeHighestValue = std::numeric_limits<uint64_t>::max();
 
 	public:
 		struct Ntp
@@ -360,8 +360,8 @@ namespace Utils
 		static bool IsTimeLowerThan(uint64_t msA, uint64_t msB)
 		{
 			// clang-format off
-			return ((msB > msA) && (msB - msA <= TimeMaxValue / 2)) ||
-			       ((msA > msB) && (msA - msB > TimeMaxValue / 2));
+			return ((msB > msA) && (msB - msA <= TimeHighestValue / 2)) ||
+			       ((msA > msB) && (msA - msB > TimeHighestValue / 2));
 			// clang-format on
 		}
 
@@ -369,16 +369,16 @@ namespace Utils
 		{
 			// clang-format off
 			return (msA == msB) ||
-			       ((msB > msA) && (msB - msA <= TimeMaxValue / 2)) ||
-			       ((msA > msB) && (msA - msB > TimeMaxValue / 2));
+			       ((msB > msA) && (msB - msA <= TimeHighestValue / 2)) ||
+			       ((msA > msB) && (msA - msB > TimeHighestValue / 2));
 			// clang-format on
 		}
 
 		static bool IsTimeHigherThan(uint64_t msA, uint64_t msB)
 		{
 			// clang-format off
-			return ((msA > msB) && (msA - msB <= TimeMaxValue / 2)) ||
-			       ((msB > msA) && (msB - msA > TimeMaxValue / 2));
+			return ((msA > msB) && (msA - msB <= TimeHighestValue / 2)) ||
+			       ((msB > msA) && (msB - msA > TimeHighestValue / 2));
 			// clang-format on
 		}
 
@@ -386,8 +386,8 @@ namespace Utils
 		{
 			// clang-format off
 			return (msA == msB) ||
-			       ((msA > msB) && (msA - msB <= TimeMaxValue / 2)) ||
-			       ((msB > msA) && (msB - msA > TimeMaxValue / 2));
+			       ((msA > msB) && (msA - msB <= TimeHighestValue / 2)) ||
+			       ((msB > msA) && (msB - msA > TimeHighestValue / 2));
 			// clang-format on
 		}
 	};
