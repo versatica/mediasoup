@@ -5,6 +5,7 @@
 #include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
+#include <limits>  // std::numeric_limits
 #include <string>
 #include <type_traits> // std::enable_if()
 #include <vector>
@@ -301,6 +302,8 @@ namespace Utils
 		// NTP fractional unit.
 		static constexpr uint64_t NtpFractionalUnit{ 1LL << 32 };
 
+		static constexpr uint64_t TimeMaxValue = std::numeric_limits<uint64_t>::max();
+
 	public:
 		struct Ntp
 		{
@@ -352,6 +355,40 @@ namespace Utils
 		static uint32_t TimeMsToAbsSendTime(uint64_t ms)
 		{
 			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
+		}
+
+		static bool IsTimeLowerThan(uint64_t msA, uint64_t msB)
+		{
+			// clang-format off
+			return ((msB > msA) && (msB - msA <= TimeMaxValue / 2)) ||
+			       ((msA > msB) && (msA - msB > TimeMaxValue / 2));
+			// clang-format on
+		}
+
+		static bool IsTimeLowerOrEqualThan(uint64_t msA, uint64_t msB)
+		{
+			// clang-format off
+			return (msA == msB) ||
+			       ((msB > msA) && (msB - msA <= TimeMaxValue / 2)) ||
+			       ((msA > msB) && (msA - msB > TimeMaxValue / 2));
+			// clang-format on
+		}
+
+		static bool IsTimeHigherThan(uint64_t msA, uint64_t msB)
+		{
+			// clang-format off
+			return ((msA > msB) && (msA - msB <= TimeMaxValue / 2)) ||
+			       ((msB > msA) && (msB - msA > TimeMaxValue / 2));
+			// clang-format on
+		}
+
+		static bool IsTimeHigherOrEqualThan(uint64_t msA, uint64_t msB)
+		{
+			// clang-format off
+			return (msA == msB) ||
+			       ((msA > msB) && (msA - msB <= TimeMaxValue / 2)) ||
+			       ((msB > msA) && (msB - msA > TimeMaxValue / 2));
+			// clang-format on
 		}
 	};
 
