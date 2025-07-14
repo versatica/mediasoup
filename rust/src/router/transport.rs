@@ -536,13 +536,13 @@ pub(super) trait TransportImpl: TransportGeneric {
         let router_rtp_capabilities = self.router().rtp_capabilities();
 
         let rtp_mapping =
-            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, router_rtp_capabilities)
+            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities)
                 .map_err(ProduceError::FailedRtpParametersMapping)?;
 
         let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
             kind,
             &rtp_parameters,
-            router_rtp_capabilities,
+            &router_rtp_capabilities,
             &rtp_mapping,
         );
 

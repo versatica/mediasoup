@@ -63,7 +63,7 @@ import type {
 	AudioLevelObserverOptions,
 } from './AudioLevelObserverTypes';
 import { AudioLevelObserverImpl } from './AudioLevelObserver';
-import type { RtpCapabilities } from './rtpParametersTypes';
+import type { RtpCapabilities, RtpCodecCapability } from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
 import * as utils from './utils';
@@ -1365,6 +1365,21 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 			return false;
 		}
+	}
+
+	updateMediaCodecs(mediaCodecs: RtpCodecCapability[]): void {
+		logger.debug('updateMediaCodecs()');
+
+		// Clone given media codecs to not modify input data.
+		const clonedMediaCodecs = utils.clone<RtpCodecCapability[] | undefined>(
+			mediaCodecs
+		);
+
+		// This may throw.
+		const rtpCapabilities =
+			ortc.generateRouterRtpCapabilities(clonedMediaCodecs);
+
+		this.#data.rtpCapabilities = rtpCapabilities;
 	}
 
 	private handleListenerError(): void {

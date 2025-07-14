@@ -137,6 +137,30 @@ fn create_router_succeeds() {
 }
 
 #[test]
+fn update_media_codecs_succeeds() {
+    future::block_on(async move {
+        let worker = init().await;
+
+        let mut router = worker
+            .create_router({
+                let router_options = RouterOptions::new(media_codecs());
+
+                router_options
+            })
+            .await
+            .expect("Failed to create router");
+
+        assert!(!router.closed());
+        // 3 codecs + 2 RTX codecs.
+        assert_eq!(router.rtp_capabilities().codecs.len(), 5);
+
+        router.update_media_codecs([].to_vec());
+
+        assert_eq!(router.rtp_capabilities().codecs.len(), 0);
+    });
+}
+
+#[test]
 fn close_event() {
     future::block_on(async move {
         let worker = init().await;

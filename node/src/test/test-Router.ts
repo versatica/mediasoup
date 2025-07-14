@@ -150,6 +150,25 @@ test('worker.createRouter() rejects with InvalidStateError if Worker is closed',
 	).rejects.toThrow(InvalidStateError);
 }, 2000);
 
+test('router.updateMediaCodecs() succeeds', async () => {
+	const router = await ctx.worker!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	expect(typeof router.rtpCapabilities).toBe('object');
+	expect(Array.isArray(router.rtpCapabilities.codecs)).toBe(true);
+	// 3 codecs + 2 RTX codecs.
+	expect(router.rtpCapabilities.codecs?.length).toBe(5);
+	expect(Array.isArray(router.rtpCapabilities.headerExtensions)).toBe(true);
+
+	router.updateMediaCodecs([]);
+
+	expect(typeof router.rtpCapabilities).toBe('object');
+	expect(Array.isArray(router.rtpCapabilities.codecs)).toBe(true);
+	expect(router.rtpCapabilities.codecs?.length).toBe(0);
+	expect(Array.isArray(router.rtpCapabilities.headerExtensions)).toBe(true);
+}, 2000);
+
 test('router.close() succeeds', async () => {
 	const router = await ctx.worker!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
