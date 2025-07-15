@@ -3,7 +3,7 @@
 
 #include "RTC/RtpStream.hpp"
 #include "Logger.hpp"
-#include "RTC/SeqManager.hpp"
+#include "Utils.hpp"
 
 namespace RTC
 {
@@ -146,7 +146,7 @@ namespace RTC
 		}
 
 		// Update highest seen RTP timestamp.
-		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(packet->GetTimestamp(), this->maxPacketTs))
+		if (Utils::Number<uint32_t>::IsHigherThan(packet->GetTimestamp(), this->maxPacketTs))
 		{
 			this->maxPacketTs = packet->GetTimestamp();
 			this->maxPacketMs = DepLibUV::GetTimeMs();
@@ -202,6 +202,23 @@ namespace RTC
 			}
 
 			this->maxSeq = seq;
+
+			// Timestamp moved backwards despite in-order sequence number. Likely
+			// caused by prolonged Producer inactivity (e.g., overnight pause).
+			if (Utils::Number<uint32_t>::IsLowerThan(packet->GetTimestamp(), this->maxPacketTs))
+			{
+				MS_DEBUG_TAG(
+				  rtp,
+				  "timestamp moved backwards, updating [ssrc:%" PRIu32 ", seq:%" PRIu16
+				  ", old maxPacketTs:%" PRIu32 ", new maxPacketTs:%" PRIu32 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  this->maxPacketTs,
+				  packet->GetTimestamp());
+
+				this->maxPacketTs = packet->GetTimestamp();
+				this->maxPacketMs = DepLibUV::GetTimeMs();
+			}
 		}
 		// Too old packet received (older than the allowed misorder).
 		// Or too new packet (more than acceptable dropout).
