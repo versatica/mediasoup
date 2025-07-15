@@ -67,6 +67,7 @@ use std::fmt;
 use std::net::{IpAddr, Ipv4Addr};
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex as SyncMutex;
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 
@@ -381,7 +382,7 @@ struct Handlers {
 struct Inner {
     id: RouterId,
     executor: Arc<Executor<'static>>,
-    rtp_capabilities: Arc<RwLock<RtpCapabilitiesFinalized>>,
+    rtp_capabilities: SyncMutex<RtpCapabilitiesFinalized>,
     channel: Channel,
     handlers: Arc<Handlers>,
     app_data: AppData,
@@ -492,7 +493,7 @@ impl Router {
         let inner = Arc::new(Inner {
             id,
             executor,
-            rtp_capabilities: Arc::new(RwLock::new(rtp_capabilities)),
+            rtp_capabilities: SyncMutex::new(rtp_capabilities),
             channel,
             handlers,
             producers,
@@ -541,8 +542,8 @@ impl Router {
     /// * See also how to [filter these RTP capabilities](https://mediasoup.org/documentation/v3/tricks/#rtp-capabilities-filtering)
     ///   before using them into a client.
     #[must_use]
-    pub fn rtp_capabilities(&self) -> Arc<RwLock<RtpCapabilitiesFinalized>> {
-        Arc::clone(&self.inner.rtp_capabilities)
+    pub fn rtp_capabilities(&self) -> RtpCapabilitiesFinalized {
+        self.inner.rtp_capabilities.lock().unwrap().clone()
     }
 
     /// Dump Router.
@@ -1413,8 +1414,8 @@ impl Router {
         let rtp_capabilities = ortc::generate_router_rtp_capabilities(media_codecs)
             .map_err(UpdateMediaCodecsError::FailedRtpCapabilitiesGeneration)?;
 
-        let mut locked_rtp_capabilities = self.inner.rtp_capabilities.write();
-        *locked_rtp_capabilities = rtp_capabilities;
+        let mut locked = self.inner.rtp_capabilities.lock().unwrap();
+        *locked = rtp_capabilities;
 
         Ok(())
     }

@@ -257,7 +257,7 @@ impl Actor for SvcSimulcastConnection {
                 ice_candidates: self.transports.producer.ice_candidates().clone(),
                 ice_parameters: self.transports.producer.ice_parameters().clone(),
             },
-            router_rtp_capabilities: (*self.router.rtp_capabilities().read()).clone(),
+            router_rtp_capabilities: self.router.rtp_capabilities().clone(),
         };
 
         ctx.address().do_send(server_init_message);

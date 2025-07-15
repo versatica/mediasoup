@@ -99,7 +99,7 @@ fn create_router_succeeds() {
         assert_eq!(new_router_count.load(Ordering::SeqCst), 1);
         assert!(!router.closed());
         // 3 codecs + 2 RTX codecs.
-        assert_eq!(router.rtp_capabilities().read().codecs.len(), 5);
+        assert_eq!(router.rtp_capabilities().codecs.len(), 5);
         assert_eq!(
             router.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { foo: 123 }),
@@ -148,11 +148,11 @@ fn update_media_codecs_succeeds() {
 
         assert!(!router.closed());
         // 3 codecs + 2 RTX codecs.
-        assert_eq!(router.rtp_capabilities().read().codecs.len(), 5);
+        assert_eq!(router.rtp_capabilities().codecs.len(), 5);
 
-        let _ = router.update_media_codecs([].to_vec());
+        router.update_media_codecs([].to_vec());
 
-        assert_eq!(router.rtp_capabilities().read().codecs.len(), 0);
+        assert_eq!(router.rtp_capabilities().codecs.len(), 0);
     });
 }
 

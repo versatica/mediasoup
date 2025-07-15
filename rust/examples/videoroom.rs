@@ -556,7 +556,7 @@ mod participant {
                     ice_candidates: self.transports.producer.ice_candidates().clone(),
                     ice_parameters: self.transports.producer.ice_parameters().clone(),
                 },
-                router_rtp_capabilities: (*self.room.router().rtp_capabilities().read()).clone(),
+                router_rtp_capabilities: self.room.router().rtp_capabilities().clone(),
             };
 
             let address = ctx.address();

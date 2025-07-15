@@ -535,26 +535,16 @@ pub(super) trait TransportImpl: TransportGeneric {
 
         let router_rtp_capabilities = self.router().rtp_capabilities();
 
-        let _guard_block = {
-            let router_rtp_capabilities_guard = router_rtp_capabilities.read();
+        let rtp_mapping =
+            ortc::get_producer_rtp_parameters_mapping(&rtp_parameters, &router_rtp_capabilities)
+                .map_err(ProduceError::FailedRtpParametersMapping)?;
 
-            let rtp_mapping = ortc::get_producer_rtp_parameters_mapping(
-                &rtp_parameters,
-                &router_rtp_capabilities_guard,
-            )
-            .map_err(ProduceError::FailedRtpParametersMapping)?;
-
-            let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
-                kind,
-                &rtp_parameters,
-                &router_rtp_capabilities_guard,
-                &rtp_mapping,
-            );
-
-            (rtp_mapping, consumable_rtp_parameters)
-        };
-
-        let (rtp_mapping, consumable_rtp_parameters) = _guard_block;
+        let consumable_rtp_parameters = ortc::get_consumable_rtp_parameters(
+            kind,
+            &rtp_parameters,
+            &router_rtp_capabilities,
+            &rtp_mapping,
+        );
 
         let producer_id = id.unwrap_or_else(ProducerId::new);
 
