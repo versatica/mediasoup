@@ -306,36 +306,26 @@ namespace Utils
 	public:
 		static bool IsLowerThan(T lhs, T rhs)
 		{
-			// clang-format off
-				return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
-				       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
-			// clang-format on
+			return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
 		}
 
 		static bool IsHigherThan(T lhs, T rhs)
 		{
-			// clang-format off
-			return ((lhs	 > rhs) && (lhs	 - rhs <= MaxValue / 2)) ||
-			       ((rhs > lhs	) && (rhs - lhs	 > MaxValue / 2));
-			// clang-format on
+			return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
 		}
 
 		static bool IsLowerOrEqualThan(T lhs, T rhs)
 		{
-			// clang-format off
-			return (lhs == rhs) ||
-			       ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+			return (lhs == rhs) || ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
-			// clang-format on
 		}
 
 		static bool IsHigherOrEqualThan(T lhs, T rhs)
 		{
-			// clang-format off
-			return (lhs	 == rhs) ||
-			       ((lhs	 > rhs) && (lhs	 - rhs <= MaxValue / 2)) ||
-			       ((rhs > lhs	) && (rhs - lhs	 > MaxValue / 2));
-			// clang-format on
+			return (lhs == rhs) || ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
 		}
 	};
 
