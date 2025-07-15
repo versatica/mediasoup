@@ -300,7 +300,7 @@ namespace Utils
 	template<typename T, uint8_t N = 0>
 	class Number
 	{
-	public:
+	private:
 		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
 
 	public:
@@ -312,20 +312,20 @@ namespace Utils
 			// clang-format on
 		}
 
+		static bool IsHigherThan(T lhs, T rhs)
+		{
+			// clang-format off
+			return ((lhs	 > rhs) && (lhs	 - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs	) && (rhs - lhs	 > MaxValue / 2));
+			// clang-format on
+		}
+
 		static bool IsLowerOrEqualThan(T lhs, T rhs)
 		{
 			// clang-format off
 			return (lhs == rhs) ||
 			       ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
-			// clang-format on
-		}
-
-		static bool IsHigherThan(T lhs, T rhs)
-		{
-			// clang-format off
-			return ((lhs	 > rhs) && (lhs	 - rhs <= MaxValue / 2)) ||
-			       ((rhs > lhs	) && (rhs - lhs	 > MaxValue / 2));
 			// clang-format on
 		}
 
@@ -341,12 +341,11 @@ namespace Utils
 
 	class Time
 	{
+	private:
 		// Seconds from Jan 1, 1900 to Jan 1, 1970.
 		static constexpr uint32_t UnixNtpOffset{ 0x83AA7E80 };
 		// NTP fractional unit.
 		static constexpr uint64_t NtpFractionalUnit{ 1LL << 32 };
-		// Max time value (for uint64_t values obtained via DepLibUV).
-		static constexpr uint64_t TimeHighestValue = std::numeric_limits<uint64_t>::max();
 
 	public:
 		struct Ntp
@@ -399,40 +398,6 @@ namespace Utils
 		static uint32_t TimeMsToAbsSendTime(uint64_t ms)
 		{
 			return static_cast<uint32_t>(((ms << 18) + 500) / 1000) & 0x00FFFFFF;
-		}
-
-		static bool IsTimeLowerThan(uint64_t msA, uint64_t msB)
-		{
-			// clang-format off
-			return ((msB > msA) && (msB - msA <= TimeHighestValue / 2)) ||
-			       ((msA > msB) && (msA - msB > TimeHighestValue / 2));
-			// clang-format on
-		}
-
-		static bool IsTimeLowerOrEqualThan(uint64_t msA, uint64_t msB)
-		{
-			// clang-format off
-			return (msA == msB) ||
-			       ((msB > msA) && (msB - msA <= TimeHighestValue / 2)) ||
-			       ((msA > msB) && (msA - msB > TimeHighestValue / 2));
-			// clang-format on
-		}
-
-		static bool IsTimeHigherThan(uint64_t msA, uint64_t msB)
-		{
-			// clang-format off
-			return ((msA > msB) && (msA - msB <= TimeHighestValue / 2)) ||
-			       ((msB > msA) && (msB - msA > TimeHighestValue / 2));
-			// clang-format on
-		}
-
-		static bool IsTimeHigherOrEqualThan(uint64_t msA, uint64_t msB)
-		{
-			// clang-format off
-			return (msA == msB) ||
-			       ((msA > msB) && (msA - msB <= TimeHighestValue / 2)) ||
-			       ((msB > msA) && (msB - msA > TimeHighestValue / 2));
-			// clang-format on
 		}
 	};
 

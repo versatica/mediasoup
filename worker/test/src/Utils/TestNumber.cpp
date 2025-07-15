@@ -45,15 +45,17 @@ SCENARIO("Utils::Number", "[utils][number]")
 		    std::numeric_limits<uint64_t>::max(), (std::numeric_limits<uint64_t>::max() / 2) + 1) == true);
 	}
 
-	// SECTION("Utils::Time::IsTimeHigherOrEqualThan()")
-	// {
-	// 	// 0 is greater or equal than std::numeric_limits<uint64_t>::max().
-	// 	REQUIRE(Utils::Time::IsTimeHigherOrEqualThan(0, std::numeric_limits<uint64_t>::max()) == true);
-	// }
+	SECTION("Utils::Number<uint64_t>::IsLowerOrEqualThan()")
+	{
+		// std::numeric_limits<uint64_t>::max() is lower or equal than 0.
+		REQUIRE(
+		  Utils::Number<uint64_t>::IsLowerOrEqualThan(std::numeric_limits<uint64_t>::max(), 0) == true);
+	}
 
-	// SECTION("Utils::Time::IsTimeLowerOrEqualThan()")
-	// {
-	// 	// std::numeric_limits<uint64_t>::max() is lower or equal than 0.
-	// 	REQUIRE(Utils::Time::IsTimeLowerOrEqualThan(std::numeric_limits<uint64_t>::max(), 0) == true);
-	// }
+	SECTION("Utils::Number<uint64_t>::IsHigherOrEqualThan()")
+	{
+		// 0 is greater or equal than std::numeric_limits<uint64_t>::max().
+		REQUIRE(
+		  Utils::Number<uint64_t>::IsHigherOrEqualThan(0, std::numeric_limits<uint64_t>::max()) == true);
+	}
 }
