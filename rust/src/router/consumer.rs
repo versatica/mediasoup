@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
     ConsumerGetStatsRequest, ConsumerPauseRequest, ConsumerRequestKeyFrameRequest,
@@ -162,10 +163,11 @@ pub struct RtpStreamParams {
     pub rtx_payload_type: Option<u8>,
 }
 
-impl RtpStreamParams {
-    pub(crate) fn from_fbs_ref(
-        params: rtp_stream::ParamsRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for RtpStreamParams {
+    type FbsType = rtp_stream::ParamsRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(params: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             clock_rate: params.clock_rate()?,
             cname: params.cname()?.to_string(),
@@ -198,10 +200,11 @@ pub struct RtxStreamParams {
     pub rrid: Option<String>,
 }
 
-impl RtxStreamParams {
-    pub(crate) fn from_fbs_ref(
-        params: rtx_stream::ParamsRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for RtxStreamParams {
+    type FbsType = rtx_stream::ParamsRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(params: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             clock_rate: params.clock_rate()?,
             cname: params.cname()?.to_string(),
@@ -221,12 +224,13 @@ pub struct RtpStream {
     pub score: u8,
 }
 
-impl RtpStream {
-    pub(crate) fn from_fbs_ref(
-        dump: rtp_stream::DumpRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for RtpStream {
+    type FbsType = rtp_stream::DumpRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
-            params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
+            params: RtpStreamParams::try_from_fbs(dump.params()?)?,
             score: dump.score()?,
         })
     }
@@ -270,10 +274,11 @@ pub struct ConsumerDump {
     pub current_temporal_layer: Option<i16>,
 }
 
-impl ConsumerDump {
-    pub(crate) fn from_fbs_ref(
-        dump: consumer::DumpResponseRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for ConsumerDump {
+    type FbsType = consumer::DumpResponseRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         let dump = dump.data();
 
         Ok(Self {
@@ -283,7 +288,7 @@ impl ConsumerDump {
             priority: dump?.base()?.priority()?,
             producer_id: dump?.base()?.producer_id()?.parse()?,
             producer_paused: dump?.base()?.producer_paused()?,
-            rtp_parameters: RtpParameters::from_fbs_ref(dump?.base()?.rtp_parameters()?)?,
+            rtp_parameters: RtpParameters::try_from_fbs(dump?.base()?.rtp_parameters()?)?,
             supported_codec_payload_types: Vec::from(
                 dump?.base()?.supported_codec_payload_types()?,
             ),
@@ -299,13 +304,13 @@ impl ConsumerDump {
                 .consumable_rtp_encodings()?
                 .iter()
                 .map(|encoding_parameters| {
-                    RtpEncodingParameters::from_fbs_ref(encoding_parameters?)
+                    RtpEncodingParameters::try_from_fbs(encoding_parameters?)
                 })
                 .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             rtp_streams: dump?
                 .rtp_streams()?
                 .iter()
-                .map(|stream| RtpStream::from_fbs_ref(stream?))
+                .map(|stream| RtpStream::try_from_fbs(stream?))
                 .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             preferred_spatial_layer: dump?.preferred_spatial_layer()?,
             target_spatial_layer: dump?.target_spatial_layer()?,
@@ -509,7 +514,10 @@ impl ConsumerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    RtpPacketTraceInfo::from_fbs(*info.rtp_packet, info.is_rtx)
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                    }
                 },
             },
             consumer::TraceEventType::Keyframe => ConsumerTraceEventData::KeyFrame {
@@ -520,7 +528,10 @@ impl ConsumerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    RtpPacketTraceInfo::from_fbs(*info.rtp_packet, info.is_rtx)
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                    }
                 },
             },
             consumer::TraceEventType::Nack => ConsumerTraceEventData::Nack {

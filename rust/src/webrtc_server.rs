@@ -11,6 +11,7 @@
 mod tests;
 
 use crate::data_structures::{AppData, ListenInfo};
+use crate::fbs::ToFbs;
 use crate::messages::{WebRtcServerCloseRequest, WebRtcServerDumpRequest};
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;

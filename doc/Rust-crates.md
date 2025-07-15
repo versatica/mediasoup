@@ -11,7 +11,7 @@ There are two crates: `mediasoup` and `mediasoup-sys`:
 
 ## Steps to publish new mediasoup crates
 
-1. Update versions in `worker/Cargo.toml` (for `mediasoup-sys` crate) and `rust/Cargo.toml` (for `mediasoup` crate). Note that in `rust/Cargo.toml` you may need to update the version of `[dependencies.mediasoup-sys]` if it also changed.
+1. Update versions in `worker/Cargo.toml` (for `mediasoup-sys` crate), `rust/types/Cargo.toml` (for `mediasoup-types` crate) and `rust/Cargo.toml` (for `mediasoup` crate). Note that in `rust/Cargo.toml` you may need to update the version of `[dependencies.mediasoup-sys]` and/or `[dependencies.mediasoup-types]` if it also changed.
 2. Update `rust/CHANGELOG.md`.
 3. Run `cargo build` to reflect changes in `Cargo.lock`.
 4. Create PR and have it merged in mediasoup main branch.
@@ -29,6 +29,9 @@ cd worker
 cargo publish
 
 cd ../rust
+cargo publish
+
+cd ../rust/types
 cargo publish
 ```
 

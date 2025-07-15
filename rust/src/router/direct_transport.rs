@@ -5,6 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, SctpState};
+use crate::fbs::FromFbs;
 use crate::messages::{TransportCloseRequest, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -127,10 +128,7 @@ impl DirectTransportDump {
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump
-                .base
-                .sctp_state
-                .map(|state| SctpState::from_fbs(&state)),
+            sctp_state: dump.base.sctp_state.map(SctpState::from_fbs),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
                 SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
             }),
@@ -188,7 +186,7 @@ impl DirectTransportStat {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: stats.base.sctp_state.map(SctpState::from_fbs),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,

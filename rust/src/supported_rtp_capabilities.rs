@@ -1,6 +1,6 @@
 //! RTP capabilities supported by mediasoup.
 
-use crate::rtp_parameters::{
+use mediasoup_types::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtpCapabilities, RtpCodecCapability,
     RtpCodecParametersParameters, RtpHeaderExtension, RtpHeaderExtensionDirection,
     RtpHeaderExtensionUri,

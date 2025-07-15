@@ -1,13 +1,16 @@
+use crate::fbs::TryFromFbs;
 use crate::rtp_parameters::{
     MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
-    RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
-    RtpCodecParameters, RtpCodecParametersParameters, RtpCodecParametersParametersValue,
-    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
-    RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
+    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
+    RtpCodecParametersParameters, RtpCodecParametersParametersValue, RtpEncodingParameters,
+    RtpEncodingParametersRtx, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
+    RtpHeaderExtensionUri, RtpParameters,
 };
-use crate::scalability_modes::ScalabilityMode;
 use crate::supported_rtp_capabilities;
+
 use mediasoup_sys::fbs::rtp_parameters;
+use mediasoup_types::rtp_parameters::RtpCapabilities;
+use mediasoup_types::scalability_modes::ScalabilityMode;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -54,33 +57,11 @@ pub struct RtpMapping {
     pub encodings: Vec<RtpMappingEncoding>,
 }
 
-impl RtpMapping {
-    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpMapping {
-        rtp_parameters::RtpMapping {
-            codecs: self
-                .codecs
-                .iter()
-                .map(|mapping| rtp_parameters::CodecMapping {
-                    payload_type: mapping.payload_type,
-                    mapped_payload_type: mapping.mapped_payload_type,
-                })
-                .collect(),
-            encodings: self
-                .encodings
-                .iter()
-                .map(|mapping| rtp_parameters::EncodingMapping {
-                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
-                    ssrc: mapping.ssrc,
-                    scalability_mode: Some(mapping.scalability_mode.to_string()),
-                    mapped_ssrc: mapping.mapped_ssrc,
-                })
-                .collect(),
-        }
-    }
+impl<'a> TryFromFbs<'a> for RtpMapping {
+    type FbsType = rtp_parameters::RtpMappingRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
 
-    pub(crate) fn from_fbs_ref(
-        mapping: rtp_parameters::RtpMappingRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+    fn try_from_fbs(mapping: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             codecs: mapping
                 .codecs()?
@@ -109,6 +90,31 @@ impl RtpMapping {
                 })
                 .collect::<Result<Vec<_>, Box<dyn Error + Send + Sync>>>()?,
         })
+    }
+}
+
+impl RtpMapping {
+    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpMapping {
+        rtp_parameters::RtpMapping {
+            codecs: self
+                .codecs
+                .iter()
+                .map(|mapping| rtp_parameters::CodecMapping {
+                    payload_type: mapping.payload_type,
+                    mapped_payload_type: mapping.mapped_payload_type,
+                })
+                .collect(),
+            encodings: self
+                .encodings
+                .iter()
+                .map(|mapping| rtp_parameters::EncodingMapping {
+                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
+                    ssrc: mapping.ssrc,
+                    scalability_mode: Some(mapping.scalability_mode.to_string()),
+                    mapped_ssrc: mapping.mapped_ssrc,
+                })
+                .collect(),
+        }
     }
 }
 
@@ -566,6 +572,7 @@ pub(crate) fn get_consumable_rtp_parameters(
                     rtcp_feedback: rtcp_feedback.clone(),
                 }
             }
+            _ => panic!("Unexpected codec type"),
         };
 
         let consumable_cap_rtx_codec = caps.codecs.iter().find(|cap_rtx_codec| {
@@ -615,6 +622,7 @@ pub(crate) fn get_consumable_rtp_parameters(
                     parameters: parameters.clone(),
                     rtcp_feedback: rtcp_feedback.clone(),
                 },
+                _ => panic!("Unexpected codec type"),
             };
 
             consumable_params.codecs.push(consumable_rtx_codec);
@@ -1002,6 +1010,7 @@ impl<'a> From<&'a RtpCodecCapabilityFinalized> for CodecToMatch<'a> {
                 mime_type: MimeType::Video(*mime_type),
                 parameters,
             },
+            _ => panic!("Unsupported codec type"),
         }
     }
 }

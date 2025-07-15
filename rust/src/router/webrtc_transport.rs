@@ -8,6 +8,7 @@ use crate::data_structures::{
     AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
     SctpState, TransportTuple,
 };
+use crate::fbs::FromFbs;
 use crate::messages::{
     TransportCloseRequest, TransportRestartIceRequest, WebRtcTransportConnectRequest,
     WebRtcTransportData,
@@ -271,10 +272,7 @@ impl WebRtcTransportDump {
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump
-                .base
-                .sctp_state
-                .map(|state| SctpState::from_fbs(&state)),
+            sctp_state: dump.base.sctp_state.map(SctpState::from_fbs),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
                 SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
             }),
@@ -290,14 +288,14 @@ impl WebRtcTransportDump {
             ice_candidates: dump
                 .ice_candidates
                 .iter()
-                .map(IceCandidate::from_fbs)
+                .map(|candidate| IceCandidate::from_fbs(candidate.clone()))
                 .collect(),
             ice_parameters: IceParameters::from_fbs(*dump.ice_parameters),
             ice_role: IceRole::from_fbs(dump.ice_role),
             ice_state: IceState::from_fbs(dump.ice_state),
             ice_selected_tuple: dump
                 .ice_selected_tuple
-                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                .map(|tuple| TransportTuple::from_fbs(*tuple)),
         })
     }
 }
@@ -353,7 +351,7 @@ impl WebRtcTransportStat {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: stats.base.sctp_state.map(SctpState::from_fbs),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,
@@ -380,7 +378,7 @@ impl WebRtcTransportStat {
             ice_state: IceState::from_fbs(stats.ice_state),
             ice_selected_tuple: stats
                 .ice_selected_tuple
-                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                .map(|tuple| TransportTuple::from_fbs(*tuple)),
             dtls_state: DtlsState::from_fbs(stats.dtls_state),
         })
     }
@@ -460,7 +458,7 @@ impl Notification {
 
                 let ice_selected_tuple_fbs =
                     transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-                let ice_selected_tuple = TransportTuple::from_fbs(&ice_selected_tuple_fbs);
+                let ice_selected_tuple = TransportTuple::from_fbs(ice_selected_tuple_fbs);
 
                 Ok(Notification::IceSelectedTupleChange { ice_selected_tuple })
             }
@@ -486,7 +484,7 @@ impl Notification {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+                let sctp_state = SctpState::from_fbs(body.sctp_state().unwrap());
 
                 Ok(Notification::SctpStateChange { sctp_state })
             }

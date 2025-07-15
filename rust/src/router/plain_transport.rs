@@ -5,6 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
+use crate::fbs::FromFbs;
 use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -180,10 +181,7 @@ impl PlainTransportDump {
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump
-                .base
-                .sctp_state
-                .map(|state| SctpState::from_fbs(&state)),
+            sctp_state: dump.base.sctp_state.map(SctpState::from_fbs),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
                 SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
             }),
@@ -196,10 +194,10 @@ impl PlainTransportDump {
             // PlainTransport specific.
             rtcp_mux: dump.rtcp_mux,
             comedia: dump.comedia,
-            tuple: TransportTuple::from_fbs(dump.tuple.as_ref()),
+            tuple: TransportTuple::from_fbs(*dump.tuple),
             rtcp_tuple: dump
                 .rtcp_tuple
-                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                .map(|tuple| TransportTuple::from_fbs(*tuple)),
             srtp_parameters: dump
                 .srtp_parameters
                 .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -257,7 +255,7 @@ impl PlainTransportStat {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: stats.base.sctp_state.map(SctpState::from_fbs),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,
@@ -282,10 +280,10 @@ impl PlainTransportStat {
             // PlainTransport specific.
             rtcp_mux: stats.rtcp_mux,
             comedia: stats.comedia,
-            tuple: TransportTuple::from_fbs(stats.tuple.as_ref()),
+            tuple: TransportTuple::from_fbs(*stats.tuple),
             rtcp_tuple: stats
                 .rtcp_tuple
-                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                .map(|tuple| TransportTuple::from_fbs(*tuple)),
         })
     }
 }
@@ -355,7 +353,7 @@ impl Notification {
                 };
 
                 let tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-                let tuple = TransportTuple::from_fbs(&tuple_fbs);
+                let tuple = TransportTuple::from_fbs(tuple_fbs);
 
                 Ok(Notification::Tuple { tuple })
             }
@@ -367,7 +365,7 @@ impl Notification {
                 };
 
                 let rtcp_tuple_fbs = transport::Tuple::try_from(body.tuple().unwrap()).unwrap();
-                let rtcp_tuple = TransportTuple::from_fbs(&rtcp_tuple_fbs);
+                let rtcp_tuple = TransportTuple::from_fbs(rtcp_tuple_fbs);
 
                 Ok(Notification::RtcpTuple { rtcp_tuple })
             }
@@ -378,7 +376,7 @@ impl Notification {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+                let sctp_state = SctpState::from_fbs(body.sctp_state().unwrap());
 
                 Ok(Notification::SctpStateChange { sctp_state })
             }

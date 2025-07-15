@@ -10,6 +10,7 @@ use crate::data_structures::{
     ListenInfo, SctpState, TransportTuple,
 };
 use crate::direct_transport::DirectTransportOptions;
+use crate::fbs::{FromFbs, IntoFbs, ToFbs, TryFromFbs};
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
@@ -800,12 +801,12 @@ impl Request for RouterCreateWebRtcTransportRequest {
             ice_candidates: data
                 .ice_candidates
                 .iter()
-                .map(IceCandidate::from_fbs)
+                .map(|candidate| IceCandidate::from_fbs(candidate.clone()))
                 .collect(),
             ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
-                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                    .map(|tuple| TransportTuple::from_fbs(*tuple)),
             ),
             dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
             dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
@@ -814,11 +815,7 @@ impl Request for RouterCreateWebRtcTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
         })
     }
 }
@@ -877,12 +874,12 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
             ice_candidates: data
                 .ice_candidates
                 .iter()
-                .map(IceCandidate::from_fbs)
+                .map(|candidate| IceCandidate::from_fbs(candidate.clone()))
                 .collect(),
             ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
-                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                    .map(|tuple| TransportTuple::from_fbs(*tuple)),
             ),
             dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
             dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
@@ -891,11 +888,7 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
         })
     }
 }
@@ -1005,20 +998,16 @@ impl Request for RouterCreatePlainTransportRequest {
         let data = plain_transport::DumpResponse::try_from(data)?;
 
         Ok(PlainTransportData {
-            tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
+            tuple: Mutex::new(TransportTuple::from_fbs(*data.tuple)),
             rtcp_tuple: Mutex::new(
                 data.rtcp_tuple
-                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                    .map(|tuple| TransportTuple::from_fbs(*tuple)),
             ),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
                     .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -1131,16 +1120,12 @@ impl Request for RouterCreatePipeTransportRequest {
         let data = pipe_transport::DumpResponse::try_from(data)?;
 
         Ok(PipeTransportData {
-            tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
+            tuple: Mutex::new(TransportTuple::from_fbs(*data.tuple)),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
             rtx: data.rtx,
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
@@ -1499,7 +1484,7 @@ impl Request for PipeTransportConnectRequest {
         let data = pipe_transport::ConnectResponse::try_from(data)?;
 
         Ok(PipeTransportConnectResponse {
-            tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
+            tuple: TransportTuple::from_fbs(*data.tuple),
         })
     }
 }
@@ -1558,10 +1543,10 @@ impl Request for TransportConnectPlainRequest {
         let data = plain_transport::ConnectResponse::try_from(data)?;
 
         Ok(PlainTransportConnectResponse {
-            tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
+            tuple: TransportTuple::from_fbs(*data.tuple),
             rtcp_tuple: data
                 .rtcp_tuple
-                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
+                .map(|tuple| TransportTuple::from_fbs(*tuple)),
             srtp_parameters: data
                 .srtp_parameters
                 .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -2177,7 +2162,7 @@ impl Request for ProducerDumpRequest {
             panic!("Wrong message from worker: {response:?}");
         };
 
-        ProducerDump::from_fbs_ref(data)
+        ProducerDump::try_from_fbs(data)
     }
 }
 
@@ -2423,7 +2408,7 @@ impl Request for ConsumerDumpRequest {
             panic!("Wrong message from worker: {response:?}");
         };
 
-        ConsumerDump::from_fbs_ref(data)
+        ConsumerDump::try_from_fbs(data)
     }
 }
 

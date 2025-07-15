@@ -5,6 +5,7 @@ use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
 use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
+use crate::fbs::FromFbs;
 use crate::messages::{PipeTransportConnectRequest, PipeTransportData, TransportCloseRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -159,10 +160,7 @@ impl PipeTransportDump {
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump
-                .base
-                .sctp_state
-                .map(|state| SctpState::from_fbs(&state)),
+            sctp_state: dump.base.sctp_state.map(SctpState::from_fbs),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
                 SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
             }),
@@ -173,7 +171,7 @@ impl PipeTransportDump {
                 .map(TransportTraceEventType::from_fbs)
                 .collect(),
             // PipeTransport specific.
-            tuple: TransportTuple::from_fbs(dump.tuple.as_ref()),
+            tuple: TransportTuple::from_fbs(*dump.tuple),
             rtx: dump.rtx,
             srtp_parameters: dump
                 .srtp_parameters
@@ -229,7 +227,7 @@ impl PipeTransportStat {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: stats.base.sctp_state.map(SctpState::from_fbs),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,
@@ -252,7 +250,7 @@ impl PipeTransportStat {
             rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
             rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
             // PlainTransport specific.
-            tuple: TransportTuple::from_fbs(stats.tuple.as_ref()),
+            tuple: TransportTuple::from_fbs(*stats.tuple),
         })
     }
 }
@@ -305,7 +303,7 @@ impl Notification {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                let sctp_state = SctpState::from_fbs(&body.sctp_state().unwrap());
+                let sctp_state = SctpState::from_fbs(body.sctp_state().unwrap());
 
                 Ok(Notification::SctpStateChange { sctp_state })
             }

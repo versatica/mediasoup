@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::AppData;
+use crate::fbs::TryFromFbs;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
     RtpObserverRemoveProducerRequest, RtpObserverResumeRequest,
@@ -86,10 +87,11 @@ enum Notification {
     Silence,
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::AudiolevelobserverVolumes => {
                 let Ok(Some(notification::BodyRef::AudioLevelObserverVolumesNotification(body))) =
@@ -346,7 +348,7 @@ impl AudioLevelObserver {
             let handlers = Arc::clone(&handlers);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Volumes(volumes) => {
                             let volumes = volumes

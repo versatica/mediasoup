@@ -5,6 +5,7 @@ use crate::consumer::{RtpStreamParams, RtxStreamParams};
 use crate::data_structures::{
     AppData, RtpPacketTraceInfo, SrTraceInfo, SsrcTraceInfo, TraceEventDirection,
 };
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
@@ -107,16 +108,17 @@ pub struct RtpStreamRecv {
     pub rtx_stream: Option<RtxStream>,
 }
 
-impl RtpStreamRecv {
-    pub(crate) fn from_fbs_ref(
-        dump: rtp_stream::DumpRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for RtpStreamRecv {
+    type FbsType = rtp_stream::DumpRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
-            params: RtpStreamParams::from_fbs_ref(dump.params()?)?,
+            params: RtpStreamParams::try_from_fbs(dump.params()?)?,
             score: dump.score()?,
             rtx_stream: if let Some(rtx_stream) = dump.rtx_stream()? {
                 Some(RtxStream {
-                    params: RtxStreamParams::from_fbs_ref(rtx_stream.params()?)?,
+                    params: RtxStreamParams::try_from_fbs(rtx_stream.params()?)?,
                 })
             } else {
                 None
@@ -140,20 +142,21 @@ pub struct ProducerDump {
     pub r#type: ProducerType,
 }
 
-impl ProducerDump {
-    pub(crate) fn from_fbs_ref(
-        dump: producer::DumpResponseRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for ProducerDump {
+    type FbsType = producer::DumpResponseRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             id: dump.id()?.parse()?,
             kind: MediaKind::from_fbs(dump.kind()?),
             paused: dump.paused()?,
-            rtp_mapping: RtpMapping::from_fbs_ref(dump.rtp_mapping()?)?,
-            rtp_parameters: RtpParameters::from_fbs_ref(dump.rtp_parameters()?)?,
+            rtp_mapping: RtpMapping::try_from_fbs(dump.rtp_mapping()?)?,
+            rtp_parameters: RtpParameters::try_from_fbs(dump.rtp_parameters()?)?,
             rtp_streams: dump
                 .rtp_streams()?
                 .iter()
-                .map(|rtp_stream| RtpStreamRecv::from_fbs_ref(rtp_stream?))
+                .map(|rtp_stream| RtpStreamRecv::try_from_fbs(rtp_stream?))
                 .collect::<Result<_, Box<dyn Error + Send + Sync>>>()?,
             trace_event_types: dump
                 .trace_event_types()?
@@ -420,7 +423,10 @@ impl ProducerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    RtpPacketTraceInfo::from_fbs(*info.rtp_packet, info.is_rtx)
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                    }
                 },
             },
             producer::TraceEventType::Keyframe => ProducerTraceEventData::KeyFrame {
@@ -431,7 +437,10 @@ impl ProducerTraceEventData {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    RtpPacketTraceInfo::from_fbs(*info.rtp_packet, info.is_rtx)
+                    RtpPacketTraceInfo {
+                        is_rtx: info.is_rtx,
+                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                    }
                 },
             },
             producer::TraceEventType::Nack => ProducerTraceEventData::Nack {

@@ -44,6 +44,10 @@ version = "0.8.1"
 path = "../worker"
 version = "0.9.3"
 
+[dependencies.mediasoup-types]
+path = "./types"
+version = "0.1.0"
+
 [dependencies.parking_lot]
 version = "0.12.1"
 features = ["serde"]

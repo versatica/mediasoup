@@ -10,13 +10,13 @@ use mediasoup::rtp_parameters::{
     RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
     RtpEncodingParametersRtx, RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
-use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::scalability_modes::ScalabilityMode;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
