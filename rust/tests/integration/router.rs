@@ -142,11 +142,7 @@ fn update_media_codecs_succeeds() {
         let worker = init().await;
 
         let mut router = worker
-            .create_router({
-                let router_options = RouterOptions::new(media_codecs());
-
-                router_options
-            })
+            .create_router(RouterOptions::new(media_codecs()))
             .await
             .expect("Failed to create router");
 
