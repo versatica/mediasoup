@@ -295,6 +295,50 @@ namespace Utils
 		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
 	};
 
+	// T is the base type (uint16_t, uint32_t, ...).
+	// N is the max number of bits used in T.
+	template<typename T, uint8_t N = 0>
+	class Number
+	{
+	public:
+		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+
+	public:
+		static bool IsLowerThan(T lhs, T rhs)
+		{
+			// clang-format off
+				return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+				       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+			// clang-format on
+		}
+
+		static bool IsLowerOrEqualThan(T lhs, T rhs)
+		{
+			// clang-format off
+			return (lhs == rhs) ||
+			       ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+			// clang-format on
+		}
+
+		static bool IsHigherThan(T lhs, T rhs)
+		{
+			// clang-format off
+			return ((lhs	 > rhs) && (lhs	 - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs	) && (rhs - lhs	 > MaxValue / 2));
+			// clang-format on
+		}
+
+		static bool IsHigherOrEqualThan(T lhs, T rhs)
+		{
+			// clang-format off
+			return (lhs	 == rhs) ||
+			       ((lhs	 > rhs) && (lhs	 - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs	) && (rhs - lhs	 > MaxValue / 2));
+			// clang-format on
+		}
+	};
+
 	class Time
 	{
 		// Seconds from Jan 1, 1900 to Jan 1, 1970.

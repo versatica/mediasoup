@@ -487,6 +487,7 @@ test_sources = [
   'test/src/Utils/TestByte.cpp',
   'test/src/Utils/TestCrypto.cpp',
   'test/src/Utils/TestIP.cpp',
+  'test/src/Utils/TestNumber.cpp',
   'test/src/Utils/TestString.cpp',
   'test/src/Utils/TestTime.cpp',
 ]
