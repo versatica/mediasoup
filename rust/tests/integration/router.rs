@@ -98,6 +98,8 @@ fn create_router_succeeds() {
 
         assert_eq!(new_router_count.load(Ordering::SeqCst), 1);
         assert!(!router.closed());
+        // 3 codecs + 2 RTX codecs.
+        assert_eq!(router.rtp_capabilities().read().codecs.len(), 5);
         assert_eq!(
             router.app_data().downcast_ref::<CustomAppData>(),
             Some(&CustomAppData { foo: 123 }),
@@ -131,6 +133,26 @@ fn create_router_succeeds() {
             dump.map_data_consumer_id_data_producer_id,
             HashedMap::default()
         );
+    });
+}
+
+#[test]
+fn update_media_codecs_succeeds() {
+    future::block_on(async move {
+        let worker = init().await;
+
+        let mut router = worker
+            .create_router(RouterOptions::new(media_codecs()))
+            .await
+            .expect("Failed to create router");
+
+        assert!(!router.closed());
+        // 3 codecs + 2 RTX codecs.
+        assert_eq!(router.rtp_capabilities().read().codecs.len(), 5);
+
+        let _ = router.update_media_codecs([].to_vec());
+
+        assert_eq!(router.rtp_capabilities().read().codecs.len(), 0);
     });
 }
 

@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `Router`: Add `updateMediaCodecs()` method to dynamically change Router's RTP capabilities ([PR #1571](https://github.com/versatica/mediasoup/pull/1571)).
+
 ### 3.16.6
 
 - Remove H265 codec and deprecated frame-marking RTP extension ([PR #1564](https://github.com/versatica/mediasoup/pull/1564)).

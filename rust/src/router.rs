@@ -271,6 +271,14 @@ impl From<ProduceDataError> for PipeDataProducerToRouterError {
     }
 }
 
+/// Error that caused [`Router::update_media_codecs`] to fail.
+#[derive(Debug, Error)]
+pub enum UpdateMediaCodecsError {
+    /// RTP capabilities generation error
+    #[error("RTP capabilities generation error: {0}")]
+    FailedRtpCapabilitiesGeneration(ortc::RtpCapabilitiesError),
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -373,7 +381,7 @@ struct Handlers {
 struct Inner {
     id: RouterId,
     executor: Arc<Executor<'static>>,
-    rtp_capabilities: RtpCapabilitiesFinalized,
+    rtp_capabilities: Arc<RwLock<RtpCapabilitiesFinalized>>,
     channel: Channel,
     handlers: Arc<Handlers>,
     app_data: AppData,
@@ -484,7 +492,7 @@ impl Router {
         let inner = Arc::new(Inner {
             id,
             executor,
-            rtp_capabilities,
+            rtp_capabilities: Arc::new(RwLock::new(rtp_capabilities)),
             channel,
             handlers,
             producers,
@@ -533,8 +541,8 @@ impl Router {
     /// * See also how to [filter these RTP capabilities](https://mediasoup.org/documentation/v3/tricks/#rtp-capabilities-filtering)
     ///   before using them into a client.
     #[must_use]
-    pub fn rtp_capabilities(&self) -> &RtpCapabilitiesFinalized {
-        &self.inner.rtp_capabilities
+    pub fn rtp_capabilities(&self) -> Arc<RwLock<RtpCapabilitiesFinalized>> {
+        Arc::clone(&self.inner.rtp_capabilities)
     }
 
     /// Dump Router.
@@ -1392,6 +1400,23 @@ impl Router {
             );
             false
         }
+    }
+
+    /// Update the Router media codecs. Once called, the return value of
+    /// router.rtp_capabilities() changes.
+    pub fn update_media_codecs(
+        &mut self,
+        media_codecs: Vec<RtpCodecCapability>,
+    ) -> Result<(), UpdateMediaCodecsError> {
+        debug!("update_media_codecs()");
+
+        let rtp_capabilities = ortc::generate_router_rtp_capabilities(media_codecs)
+            .map_err(UpdateMediaCodecsError::FailedRtpCapabilitiesGeneration)?;
+
+        let mut locked_rtp_capabilities = self.inner.rtp_capabilities.write();
+        *locked_rtp_capabilities = rtp_capabilities;
+
+        Ok(())
     }
 
     /// Callback is called when a new transport is created.

@@ -3,8 +3,10 @@
 # NEXT
 
 - Enable AV1 codec (PR #1563).
-- Remove H265 codec and deprecated frame-marking RTP extension (PR #1564)
-- Remove H264-SVC codec (PR #1568)
+- Remove H265 codec and deprecated frame-marking RTP extension (PR #1564).
+- Remove H264-SVC codec (PR #1568).
+- Add `Router::update_media_codecs()` to dynamically change Router's RTP capabilities (#1571).
+- Make `Router::rtp_capabilities()` return `Arc<RwLock<RtpCapabilitiesFinalized>>` (#1571).
 
 # 0.18.2
 

@@ -63,7 +63,7 @@ import type {
 	AudioLevelObserverOptions,
 } from './AudioLevelObserverTypes';
 import { AudioLevelObserverImpl } from './AudioLevelObserver';
-import type { RtpCapabilities } from './rtpParametersTypes';
+import type { RtpCapabilities, RtpCodecCapability } from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
 import * as utils from './utils';
@@ -775,7 +775,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 		response.body(data);
 
-		const plainTransportData = parsePipeTransportDumpResponse(data);
+		const pipeTransportData = parsePipeTransportDumpResponse(data);
 
 		const transport: PipeTransport<PipeTransportAppData> =
 			new PipeTransportImpl({
@@ -783,7 +783,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 					...this.#internal,
 					transportId,
 				},
-				data: plainTransportData,
+				data: pipeTransportData,
 				channel: this.#channel,
 				appData,
 				getRouterRtpCapabilities: (): RtpCapabilities =>
@@ -1365,6 +1365,21 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 
 			return false;
 		}
+	}
+
+	updateMediaCodecs(mediaCodecs: RtpCodecCapability[]): void {
+		logger.debug('updateMediaCodecs()');
+
+		// Clone given media codecs to not modify input data.
+		const clonedMediaCodecs = utils.clone<RtpCodecCapability[] | undefined>(
+			mediaCodecs
+		);
+
+		// This may throw.
+		const rtpCapabilities =
+			ortc.generateRouterRtpCapabilities(clonedMediaCodecs);
+
+		this.#data.rtpCapabilities = rtpCapabilities;
 	}
 
 	private handleListenerError(): void {

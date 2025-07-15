@@ -272,7 +272,7 @@ impl Actor for EchoConnection {
                 ice_candidates: self.consumer_transport.ice_candidates().clone(),
                 ice_parameters: self.consumer_transport.ice_parameters().clone(),
             },
-            router_rtp_capabilities: self.router.rtp_capabilities().clone(),
+            router_rtp_capabilities: (*self.router.rtp_capabilities().read()).clone(),
             rtp_producer_id: self.rtp_producer.id(),
         };
 
