@@ -408,7 +408,7 @@ impl MimeTypeVideo {
 /// - Multiple VP9 codecs, each with their own distinct `profile-id` value.
 ///
 /// [`RtpCodecCapability`] entries in the `media_codecs` vector of
-/// [`RouterOptions`](crate::router::RouterOptions) do not require `preferred_payload_type` field
+/// [`RouterOptions`](https://docs.rs/mediasoup/latest/mediasoup/router/struct.RouterOptions.html)
 /// (if unset, mediasoup will choose a random one). If given, make sure it's in the 96-127 range.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
@@ -672,7 +672,7 @@ pub struct RtpHeaderExtension {
 /// consumer.setPreferredLayers().
 ///
 /// As an exception, previous bullet is not true when consuming a stream over a
-/// [`PipeTransport`](crate::pipe_transport::PipeTransport), in which all RTP streams from the
+/// [`PipeTransport`](https://docs.rs/mediasoup/latest/mediasoup/pipe_transport/struct.PipeTransport.html)
 /// associated producer are forwarded verbatim through the consumer.
 ///
 /// The RTP receive parameters will always have their ssrc values randomly
