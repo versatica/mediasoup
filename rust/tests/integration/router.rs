@@ -150,7 +150,7 @@ fn update_media_codecs_succeeds() {
         // 3 codecs + 2 RTX codecs.
         assert_eq!(router.rtp_capabilities().codecs.len(), 5);
 
-        router.update_media_codecs([].to_vec());
+        let _ = router.update_media_codecs([].to_vec());
 
         assert_eq!(router.rtp_capabilities().codecs.len(), 0);
     });
