@@ -3,6 +3,7 @@
 
 #include "RTC/RtpRetransmissionBuffer.hpp"
 #include "Logger.hpp"
+#include "Utils.hpp"
 #include "RTC/SeqManager.hpp"
 
 namespace RTC
@@ -109,7 +110,7 @@ namespace RTC
 		// buffer, however its timestamp is higher. If so, clear the whole buffer.
 		if (
 		  RTC::SeqManager<uint16_t>::IsSeqLowerThan(seq, newestItem->sequenceNumber) &&
-		  RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, newestItem->timestamp))
+		  Utils::Number<uint32_t>::IsHigherThan(timestamp, newestItem->timestamp))
 		{
 			MS_WARN_TAG(
 			  rtp,
@@ -133,10 +134,9 @@ namespace RTC
 		// packet loss, received packet has higher timestamp but "older" seq number
 		// than the newest packet in the buffer and, if so, use it to clear too old
 		// packets rather than the newest packet in the buffer.
-		auto newestTimestamp =
-		  RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, newestItem->timestamp)
-		    ? timestamp
-		    : newestItem->timestamp;
+		auto newestTimestamp = Utils::Number<uint32_t>::IsHigherThan(timestamp, newestItem->timestamp)
+		                         ? timestamp
+		                         : newestItem->timestamp;
 
 		// ClearTooOldByTimestamp() returns true if at least one packet has been
 		// removed from the front.
@@ -173,7 +173,7 @@ namespace RTC
 
 			// Ensure that the timestamp of the packet is equal or higher than the
 			// timestamp of the newest stored packet.
-			if (RTC::SeqManager<uint32_t>::IsSeqLowerThan(timestamp, newestItem->timestamp))
+			if (Utils::Number<uint32_t>::IsLowerThan(timestamp, newestItem->timestamp))
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -260,7 +260,7 @@ namespace RTC
 
 			// Ensure that the timestamp of the packet is equal or less than the
 			// timestamp of the oldest stored packet.
-			if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, oldestItem->timestamp))
+			if (Utils::Number<uint32_t>::IsHigherThan(timestamp, oldestItem->timestamp))
 			{
 				MS_WARN_TAG(
 				  rtp,
@@ -566,7 +566,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (RTC::SeqManager<uint32_t>::IsSeqHigherThan(timestamp, newestTimestamp))
+		if (Utils::Number<uint32_t>::IsHigherThan(timestamp, newestTimestamp))
 		{
 			return false;
 		}

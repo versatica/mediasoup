@@ -14,8 +14,6 @@ namespace RTC
 	{
 	public:
 		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
-		static constexpr T Mask =
-		  (N == 0) ? std::numeric_limits<T>::max() : (static_cast<T>((T(1) << N) - 1));
 
 	public:
 		struct SeqLowerThan
@@ -29,12 +27,8 @@ namespace RTC
 		};
 
 	public:
-		static bool IsSeqLowerThan(T lhs, T rhs);
 		static bool IsSeqHigherThan(T lhs, T rhs);
-
-	private:
-		static const SeqLowerThan isSeqLowerThan;   // NOLINT(readability-identifier-naming)
-		static const SeqHigherThan isSeqHigherThan; // NOLINT(readability-identifier-naming)
+		static bool IsSeqLowerThan(T lhs, T rhs);
 
 	public:
 		SeqManager() = default;
