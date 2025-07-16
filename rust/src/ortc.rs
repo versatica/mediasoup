@@ -1,14 +1,13 @@
 use crate::fbs::TryFromFbs;
-use crate::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
-    RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized, RtpCodecParameters,
-    RtpCodecParametersParameters, RtpCodecParametersParametersValue, RtpEncodingParameters,
-    RtpEncodingParametersRtx, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
-    RtpHeaderExtensionUri, RtpParameters,
-};
 use crate::supported_rtp_capabilities;
 use mediasoup_sys::fbs::rtp_parameters;
-use mediasoup_types::rtp_parameters::RtpCapabilities;
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
+    RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
+    RtpCodecParameters, RtpCodecParametersParameters, RtpCodecParametersParametersValue,
+    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
+    RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
+};
 use mediasoup_types::scalability_modes::ScalabilityMode;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
