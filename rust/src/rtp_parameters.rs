@@ -1,9 +1,6 @@
 //! Collection of RTP-related data structures that are used to specify codec parameters and
 //! capabilities of various endpoints.
 
-#[cfg(test)]
-mod tests;
-
 use crate::fbs::{FromFbs, IntoFbs, ToFbs, TryFromFbs};
 use mediasoup_sys::fbs::rtp_parameters;
 pub use mediasoup_types::rtp_parameters::*;
