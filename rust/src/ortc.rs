@@ -1008,7 +1008,6 @@ impl<'a> From<&'a RtpCodecCapabilityFinalized> for CodecToMatch<'a> {
                 mime_type: MimeType::Video(*mime_type),
                 parameters,
             },
-            _ => panic!("Unsupported codec type"),
         }
     }
 }
