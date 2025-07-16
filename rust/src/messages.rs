@@ -815,7 +815,7 @@ impl Request for RouterCreateWebRtcTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(FromFbs::from_fbs(dump.base.sctp_state)),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
         })
     }
 }
@@ -888,7 +888,7 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
         })
     }
 }
@@ -1007,7 +1007,7 @@ impl Request for RouterCreatePlainTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
                     .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -1125,7 +1125,7 @@ impl Request for RouterCreatePipeTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
             rtx: data.rtx,
             srtp_parameters: Mutex::new(
                 data.srtp_parameters

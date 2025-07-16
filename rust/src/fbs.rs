@@ -10,7 +10,7 @@ pub(crate) trait TryFromFbs<'a>: Sized {
 pub(crate) trait FromFbs: Sized {
     type FbsType;
 
-    fn from_fbs(fbs: Self::FbsType) -> Self;
+    fn from_fbs(fbs: &Self::FbsType) -> Self;
 }
 
 pub(crate) trait ToFbs: Sized {
@@ -23,4 +23,15 @@ pub(crate) trait IntoFbs: Sized {
     type FbsType;
 
     fn into_fbs(self) -> Self::FbsType;
+}
+
+impl<T> FromFbs for Option<T>
+where
+    T: FromFbs,
+{
+    type FbsType = Option<T::FbsType>;
+
+    fn from_fbs(value: &Self::FbsType) -> Self {
+        value.as_ref().map(T::from_fbs)
+    }
 }

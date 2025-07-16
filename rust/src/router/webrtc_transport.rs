@@ -272,7 +272,7 @@ impl WebRtcTransportDump {
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: FromFbs::from_fbs(&dump.base.sctp_state),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
                 SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
             }),
@@ -351,7 +351,7 @@ impl WebRtcTransportStat {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: FromFbs::from_fbs(&stats.base.sctp_state),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,
