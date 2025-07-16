@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 ///
 /// Both OS and MIS are part of the SCTP INIT+ACK handshake. OS refers to the initial number of
 /// outgoing SCTP streams that the server side transport creates (to be used by
-/// [DataConsumer](crate::data_consumer::DataConsumer)s), while MIS refers to the maximum number of
-/// incoming SCTP streams that the server side transport can receive (to be used by
-/// [DataProducer](crate::data_producer::DataProducer)s). So, if the server side transport will just
-/// be used to create data producers (but no data consumers), OS can be low (~1). However, if data
-/// consumers are desired on the server side transport, OS must have a proper value and such a
-/// proper value depends on whether the remote endpoint supports  `SCTP_ADD_STREAMS` extension or
-/// not.
+/// [DataConsumer](https://docs.rs/mediasoup/latest/mediasoup/data_consumer/enum.DataConsumer.html)s),
+/// while MIS refers to the maximum number of incoming SCTP streams that the server side transport
+/// can receive (to be used by [DataProducer](https://docs.rs/mediasoup/latest/mediasoup/data_producer/enum.DataProducer.html)s).
+/// So, if the server side transport will just re used to create data producers (but no data consumers),
+/// OS can be low (~1). However, if data consumers are desired on the server side transport, OS must
+/// have a proper value and such a proper value depends on whether the remote endpoint supports
+/// `SCTP_ADD_STREAMS` extension or not.
 ///
 /// libwebrtc (Chrome, Safari, etc) does not enable `SCTP_ADD_STREAMS` so, if data consumers are
 /// required,  OS should be 1024 (the maximum number of DataChannels that libwebrtc enables).
