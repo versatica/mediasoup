@@ -2,7 +2,6 @@
 //! MediaSoup Rust Types
 //!
 //! This library provides Rust types for interacting with [mediasoup](https://docs.rs/mediasoup) crate.
-//!
 
 pub mod data_structures;
 pub mod rtp_parameters;
