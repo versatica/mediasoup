@@ -88,6 +88,12 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number<uint16_t, 3>::IsLowerThan(15, 2) == true);
 		REQUIRE(Utils::Number<uint32_t, 3>::IsLowerThan(15, 2) == true);
 		REQUIRE(Utils::Number<uint64_t, 3>::IsLowerThan(15, 2) == true);
+
+		// Using N=2 bits, 3 is lower than 1.
+		REQUIRE(Utils::Number<uint8_t, 2>::IsLowerThan(3, 1) == true);
+		REQUIRE(Utils::Number<uint16_t, 2>::IsLowerThan(3, 1) == true);
+		REQUIRE(Utils::Number<uint32_t, 2>::IsLowerThan(3, 1) == true);
+		REQUIRE(Utils::Number<uint64_t, 2>::IsLowerThan(3, 1) == true);
 	}
 
 	SECTION("Utils::Number::IsHigherOrEqualThan()")
@@ -110,9 +116,15 @@ SCENARIO("Utils::Number", "[utils][number]")
 		  Utils::Number<uint64_t>::IsLowerOrEqualThan(std::numeric_limits<uint64_t>::max(), 0) == true);
 
 		// Using N=2 bits, 0 is lower or equal than 4.
-		REQUIRE(Utils::Number<uint8_t, 2>::IsHigherOrEqualThan(0, 4) == true);
-		REQUIRE(Utils::Number<uint16_t, 2>::IsHigherOrEqualThan(0, 4) == true);
-		REQUIRE(Utils::Number<uint32_t, 2>::IsHigherOrEqualThan(0, 4) == true);
-		REQUIRE(Utils::Number<uint64_t, 2>::IsHigherOrEqualThan(0, 4) == true);
+		REQUIRE(Utils::Number<uint8_t, 2>::IsLowerOrEqualThan(0, 4) == true);
+		REQUIRE(Utils::Number<uint16_t, 2>::IsLowerOrEqualThan(0, 4) == true);
+		REQUIRE(Utils::Number<uint32_t, 2>::IsLowerOrEqualThan(0, 4) == true);
+		REQUIRE(Utils::Number<uint64_t, 2>::IsLowerOrEqualThan(0, 4) == true);
+
+		// Using N=2 bits, 3 is lower or equal than 1.
+		REQUIRE(Utils::Number<uint8_t, 2>::IsLowerOrEqualThan(3, 1) == true);
+		REQUIRE(Utils::Number<uint16_t, 2>::IsLowerOrEqualThan(3, 1) == true);
+		REQUIRE(Utils::Number<uint32_t, 2>::IsLowerOrEqualThan(3, 1) == true);
+		REQUIRE(Utils::Number<uint64_t, 2>::IsLowerOrEqualThan(3, 1) == true);
 	}
 }
