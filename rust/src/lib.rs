@@ -48,6 +48,7 @@
 //! Please check integration and unit tests for usage examples, they cover all major functionality
 //! and are a good place to start until we have demo apps built in Rust).
 
+pub use mediasoup_types as types;
 pub mod data_structures;
 pub(crate) mod fbs;
 mod macros;
