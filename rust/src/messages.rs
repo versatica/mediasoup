@@ -815,7 +815,7 @@ impl Request for RouterCreateWebRtcTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(FromFbs::from_fbs(dump.base.sctp_state)),
         })
     }
 }
