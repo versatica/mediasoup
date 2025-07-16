@@ -6,3 +6,4 @@
 pub mod data_structures;
 pub mod rtp_parameters;
 pub mod scalability_modes;
+pub mod sctp_parameters;

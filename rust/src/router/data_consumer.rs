@@ -3,6 +3,7 @@ mod tests;
 
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
 use crate::data_structures::{AppData, WebRtcMessage};
+use crate::fbs::FromFbs;
 use crate::messages::{
     DataConsumerAddSubchannelRequest, DataConsumerCloseRequest, DataConsumerDumpRequest,
     DataConsumerGetBufferedAmountRequest, DataConsumerGetStatsRequest, DataConsumerPauseRequest,
@@ -178,7 +179,7 @@ impl DataConsumerDump {
             protocol: dump.protocol,
             sctp_stream_parameters: dump
                 .sctp_stream_parameters
-                .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
+                .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
             buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
             paused: dump.paused,
             subchannels: dump.subchannels,

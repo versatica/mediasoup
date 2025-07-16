@@ -2,6 +2,7 @@
 mod tests;
 
 use crate::data_structures::{AppData, WebRtcMessage};
+use crate::fbs::FromFbs;
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
@@ -130,7 +131,7 @@ impl DataProducerDump {
             protocol: dump.protocol,
             sctp_stream_parameters: dump
                 .sctp_stream_parameters
-                .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
+                .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
             paused: dump.paused,
         })
     }

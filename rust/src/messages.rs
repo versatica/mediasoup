@@ -1871,7 +1871,7 @@ impl Request for TransportProduceDataRequest {
                 DataProducerType::Direct => data_producer::Type::Direct,
             },
             self.sctp_stream_parameters
-                .map(SctpStreamParameters::to_fbs),
+                .map(|parameters| parameters.to_fbs()),
             if self.label.is_empty() {
                 None
             } else {
@@ -1912,9 +1912,9 @@ impl Request for TransportProduceDataRequest {
                 data_producer::Type::Sctp => DataProducerType::Sctp,
                 data_producer::Type::Direct => DataProducerType::Direct,
             },
-            sctp_stream_parameters: data
-                .sctp_stream_parameters
-                .map(|stream_parameters| SctpStreamParameters::from_fbs(*stream_parameters)),
+            sctp_stream_parameters: data.sctp_stream_parameters.map(|stream_parameters| {
+                SctpStreamParameters::from_fbs(stream_parameters.as_ref())
+            }),
             label: data.label.to_string(),
             protocol: data.protocol.to_string(),
             paused: data.paused,
@@ -1961,7 +1961,7 @@ impl Request for TransportConsumeDataRequest {
                 DataConsumerType::Direct => data_producer::Type::Direct,
             },
             self.sctp_stream_parameters
-                .map(SctpStreamParameters::to_fbs),
+                .map(|stream_parameters| SctpStreamParameters::to_fbs(&stream_parameters)),
             if self.label.is_empty() {
                 None
             } else {
@@ -2003,9 +2003,9 @@ impl Request for TransportConsumeDataRequest {
                 data_producer::Type::Sctp => DataConsumerType::Sctp,
                 data_producer::Type::Direct => DataConsumerType::Direct,
             },
-            sctp_stream_parameters: data
-                .sctp_stream_parameters
-                .map(|stream_parameters| SctpStreamParameters::from_fbs(*stream_parameters)),
+            sctp_stream_parameters: data.sctp_stream_parameters.map(|stream_parameters| {
+                SctpStreamParameters::from_fbs(stream_parameters.as_ref())
+            }),
             label: data.label.to_string(),
             protocol: data.protocol.to_string(),
             paused: data.paused,
