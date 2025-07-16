@@ -932,7 +932,7 @@ impl WebRtcTransport {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_structures::{DtlsParameters, DtlsRole, DtlsFingerprint};
+    /// use mediasoup_types::data_structures::{DtlsParameters, DtlsRole, DtlsFingerprint};
     /// use mediasoup::webrtc_transport::WebRtcTransportRemoteParameters;
     ///
     /// # async fn f(

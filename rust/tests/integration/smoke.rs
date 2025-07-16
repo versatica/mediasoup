@@ -4,22 +4,22 @@ use mediasoup::audio_level_observer::AudioLevelObserverOptions;
 use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerTraceEventType};
 use mediasoup::data_consumer::DataConsumerOptions;
 use mediasoup::data_producer::DataProducerOptions;
-use mediasoup::data_structures::{ListenInfo, Protocol};
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
 use mediasoup::prelude::*;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType};
 use mediasoup::router::{PipeToRouterOptions, RouterOptions};
 use mediasoup::rtp_observer::RtpObserverAddProducerOptions;
-use mediasoup::rtp_parameters::{
-    MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
-    RtpParameters,
-};
-use mediasoup::sctp_parameters::SctpStreamParameters;
 use mediasoup::transport::TransportTraceEventType;
 use mediasoup::webrtc_transport::{WebRtcTransportListenInfos, WebRtcTransportOptions};
 use mediasoup::worker::{WorkerLogLevel, WorkerSettings, WorkerUpdateSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeTypeAudio, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
+    RtpParameters,
+};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
 use std::{env, thread};

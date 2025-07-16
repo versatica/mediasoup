@@ -1,9 +1,9 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::webrtc_server::{WebRtcServerIpPort, WebRtcServerListenInfos, WebRtcServerOptions};
 use mediasoup::worker::{ChannelMessageHandlers, CreateWebRtcServerError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
 use portpicker::pick_unused_port;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};

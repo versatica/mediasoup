@@ -1,18 +1,18 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
-#[cfg(not(target_os = "windows"))]
-use mediasoup::data_structures::SocketFlags;
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol, SctpState, TransportTuple};
 use mediasoup::plain_transport::{PlainTransportOptions, PlainTransportRemoteParameters};
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
-use mediasoup::rtp_parameters::{
-    MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
-};
-use mediasoup::sctp_parameters::SctpParameters;
-use mediasoup::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use mediasoup::worker::{RequestError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+#[cfg(not(target_os = "windows"))]
+use mediasoup_types::data_structures::SocketFlags;
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol, SctpState, TransportTuple};
+use mediasoup_types::rtp_parameters::{
+    MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
+};
+use mediasoup_types::sctp_parameters::SctpParameters;
+use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use portpicker::pick_unused_port;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};

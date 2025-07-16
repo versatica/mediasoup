@@ -1,12 +1,12 @@
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
-use mediasoup::data_structures::AppData;
 use mediasoup::router::RouterOptions;
-use mediasoup::rtp_parameters::{
-    MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
-};
 use mediasoup::worker::{ChannelMessageHandlers, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::AppData;
+use mediasoup_types::rtp_parameters::{
+    MimeTypeAudio, MimeTypeVideo, RtpCodecCapability, RtpCodecParametersParameters,
+};
 use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};

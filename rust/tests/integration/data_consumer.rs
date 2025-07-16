@@ -3,17 +3,17 @@ use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::data_consumer::{DataConsumerOptions, DataConsumerType};
 use mediasoup::data_producer::{DataProducer, DataProducerOptions};
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::direct_transport::DirectTransportOptions;
 use mediasoup::plain_transport::PlainTransportOptions;
 use mediasoup::prelude::*;
 use mediasoup::router::{Router, RouterOptions};
-use mediasoup::sctp_parameters::SctpStreamParameters;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};

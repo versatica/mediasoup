@@ -963,7 +963,7 @@ impl Router {
     /// # Example
     /// ```rust
     /// use mediasoup::prelude::*;
-    /// use mediasoup::rtp_parameters::RtpCodecParameters;
+    /// use mediasoup_types::rtp_parameters::RtpCodecParameters;
     /// use std::net::{IpAddr, Ipv4Addr};
     /// use std::num::{NonZeroU32, NonZeroU8};
     ///

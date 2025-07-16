@@ -819,7 +819,7 @@ impl PlainTransport {
     /// ```
     /// ```rust
     /// use mediasoup::plain_transport::PlainTransportRemoteParameters;
-    /// use mediasoup::srtp_parameters::{SrtpParameters, SrtpCryptoSuite};
+    /// use mediasoup_types::srtp_parameters::{SrtpParameters, SrtpCryptoSuite};
     ///
     /// # async fn f(
     /// #     plain_transport: mediasoup::plain_transport::PlainTransport,
@@ -842,7 +842,7 @@ impl PlainTransport {
     /// ```
     /// ```rust
     /// use mediasoup::plain_transport::PlainTransportRemoteParameters;
-    /// use mediasoup::srtp_parameters::{SrtpParameters, SrtpCryptoSuite};
+    /// use mediasoup_types::srtp_parameters::{SrtpParameters, SrtpCryptoSuite};
     ///
     /// # async fn f(
     /// #     plain_transport: mediasoup::plain_transport::PlainTransport,

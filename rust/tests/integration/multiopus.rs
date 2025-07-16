@@ -1,18 +1,18 @@
 use futures_lite::future;
-use mediasoup::data_structures::{ListenInfo, Protocol};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
-use mediasoup::rtp_parameters::{
-    MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
-    RtpHeaderExtension, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
-    RtpHeaderExtensionUri, RtpParameters,
-};
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use mediasoup::worker::WorkerSettings;
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
+    RtpHeaderExtension, RtpHeaderExtensionDirection, RtpHeaderExtensionParameters,
+    RtpHeaderExtensionUri, RtpParameters,
+};
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
