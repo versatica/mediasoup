@@ -64,6 +64,7 @@ pub mod rtp_parameters;
 pub mod scalability_modes;
 #[deprecated(note = "Deprecated in favour of types::sctp_parameters")]
 pub mod sctp_parameters;
+#[deprecated(note = "Deprecated in favour of types::srtp_parameters")]
 pub mod srtp_parameters;
 pub mod supported_rtp_capabilities;
 pub mod webrtc_server;

@@ -948,7 +948,7 @@ impl RouterCreatePlainTransportData {
             rtcp_mux: self.rtcp_mux,
             comedia: self.comedia,
             enable_srtp: self.enable_srtp,
-            srtp_crypto_suite: Some(SrtpCryptoSuite::to_fbs(self.srtp_crypto_suite)),
+            srtp_crypto_suite: Some(SrtpCryptoSuite::to_fbs(&self.srtp_crypto_suite)),
         }
     }
 }
