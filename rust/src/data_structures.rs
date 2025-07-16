@@ -62,7 +62,7 @@ impl ToFbs for DtlsRole {
 impl FromFbs for DtlsRole {
     type FbsType = web_rtc_transport::DtlsRole;
 
-    fn from_fbs(role: Self::FbsType) -> Self {
+    fn from_fbs(role: &Self::FbsType) -> Self {
         match role {
             web_rtc_transport::DtlsRole::Auto => DtlsRole::Auto,
             web_rtc_transport::DtlsRole::Client => DtlsRole::Client,
@@ -74,7 +74,7 @@ impl FromFbs for DtlsRole {
 impl FromFbs for DtlsState {
     type FbsType = web_rtc_transport::DtlsState;
 
-    fn from_fbs(state: Self::FbsType) -> Self {
+    fn from_fbs(state: &Self::FbsType) -> Self {
         match state {
             web_rtc_transport::DtlsState::New => DtlsState::New,
             web_rtc_transport::DtlsState::Connecting => DtlsState::Connecting,
@@ -103,13 +103,13 @@ impl ToFbs for DtlsParameters {
 impl FromFbs for DtlsParameters {
     type FbsType = web_rtc_transport::DtlsParameters;
 
-    fn from_fbs(parameters: Self::FbsType) -> Self {
+    fn from_fbs(parameters: &Self::FbsType) -> Self {
         DtlsParameters {
-            role: DtlsRole::from_fbs(parameters.role),
+            role: DtlsRole::from_fbs(&parameters.role),
             fingerprints: parameters
                 .fingerprints
                 .iter()
-                .map(|fingerprint| DtlsFingerprint::from_fbs(fingerprint.clone()))
+                .map(|fingerprint| DtlsFingerprint::from_fbs(&fingerprint.clone()))
                 .collect(),
         }
     }
@@ -159,7 +159,7 @@ fn hex_as_bytes<const N: usize>(input: &str) -> [u8; N] {
 impl FromFbs for DtlsFingerprint {
     type FbsType = web_rtc_transport::Fingerprint;
 
-    fn from_fbs(fingerprint: Self::FbsType) -> Self {
+    fn from_fbs(fingerprint: &Self::FbsType) -> Self {
         match fingerprint.algorithm {
             web_rtc_transport::FingerprintAlgorithm::Sha1 => {
                 let value_result = hex_as_bytes::<20>(fingerprint.value.as_str());
@@ -203,7 +203,7 @@ impl FromFbs for DtlsFingerprint {
 impl FromFbs for IceRole {
     type FbsType = web_rtc_transport::IceRole;
 
-    fn from_fbs(role: Self::FbsType) -> Self {
+    fn from_fbs(role: &Self::FbsType) -> Self {
         match role {
             web_rtc_transport::IceRole::Controlled => IceRole::Controlled,
             web_rtc_transport::IceRole::Controlling => IceRole::Controlling,
@@ -214,7 +214,7 @@ impl FromFbs for IceRole {
 impl FromFbs for IceParameters {
     type FbsType = web_rtc_transport::IceParameters;
 
-    fn from_fbs(parameters: Self::FbsType) -> Self {
+    fn from_fbs(parameters: &Self::FbsType) -> Self {
         Self {
             username_fragment: parameters.username_fragment.to_string(),
             password: parameters.password.to_string(),
@@ -226,7 +226,7 @@ impl FromFbs for IceParameters {
 impl FromFbs for SctpState {
     type FbsType = sctp_association::SctpState;
 
-    fn from_fbs(state: Self::FbsType) -> Self {
+    fn from_fbs(state: &Self::FbsType) -> Self {
         match state {
             sctp_association::SctpState::New => Self::New,
             sctp_association::SctpState::Connecting => Self::Connecting,
@@ -240,7 +240,7 @@ impl FromFbs for SctpState {
 impl FromFbs for IceCandidateType {
     type FbsType = web_rtc_transport::IceCandidateType;
 
-    fn from_fbs(candidate_type: Self::FbsType) -> Self {
+    fn from_fbs(candidate_type: &Self::FbsType) -> Self {
         match candidate_type {
             web_rtc_transport::IceCandidateType::Host => IceCandidateType::Host,
         }
@@ -250,15 +250,18 @@ impl FromFbs for IceCandidateType {
 impl FromFbs for IceCandidate {
     type FbsType = web_rtc_transport::IceCandidate;
 
-    fn from_fbs(candidate: Self::FbsType) -> Self {
+    fn from_fbs(candidate: &Self::FbsType) -> Self {
         Self {
             foundation: candidate.foundation.clone(),
             priority: candidate.priority,
             address: candidate.address.clone(),
-            protocol: Protocol::from_fbs(candidate.protocol),
+            protocol: Protocol::from_fbs(&candidate.protocol),
             port: candidate.port,
-            r#type: IceCandidateType::from_fbs(candidate.type_),
-            tcp_type: candidate.tcp_type.map(IceCandidateTcpType::from_fbs),
+            r#type: IceCandidateType::from_fbs(&candidate.type_),
+            tcp_type: candidate
+                .tcp_type
+                .as_ref()
+                .map(IceCandidateTcpType::from_fbs),
         }
     }
 }
@@ -266,7 +269,7 @@ impl FromFbs for IceCandidate {
 impl FromFbs for IceCandidateTcpType {
     type FbsType = web_rtc_transport::IceCandidateTcpType;
 
-    fn from_fbs(candidate_type: Self::FbsType) -> Self {
+    fn from_fbs(candidate_type: &Self::FbsType) -> Self {
         match candidate_type {
             web_rtc_transport::IceCandidateTcpType::Passive => IceCandidateTcpType::Passive,
         }
@@ -276,7 +279,7 @@ impl FromFbs for IceCandidateTcpType {
 impl FromFbs for IceState {
     type FbsType = web_rtc_transport::IceState;
 
-    fn from_fbs(state: Self::FbsType) -> Self {
+    fn from_fbs(state: &Self::FbsType) -> Self {
         match state {
             web_rtc_transport::IceState::New => IceState::New,
             web_rtc_transport::IceState::Connected => IceState::Connected,
@@ -289,7 +292,7 @@ impl FromFbs for IceState {
 impl FromFbs for Protocol {
     type FbsType = transport::Protocol;
 
-    fn from_fbs(protocol: Self::FbsType) -> Self {
+    fn from_fbs(protocol: &Self::FbsType) -> Self {
         match protocol {
             transport::Protocol::Tcp => Protocol::Tcp,
             transport::Protocol::Udp => Protocol::Udp,
@@ -300,7 +303,7 @@ impl FromFbs for Protocol {
 impl FromFbs for TransportTuple {
     type FbsType = transport::Tuple;
 
-    fn from_fbs(tuple: Self::FbsType) -> Self {
+    fn from_fbs(tuple: &Self::FbsType) -> Self {
         match &tuple.remote_ip {
             Some(_remote_ip) => TransportTuple::WithRemote {
                 local_address: tuple
@@ -315,7 +318,7 @@ impl FromFbs for TransportTuple {
                     .parse()
                     .expect("Error parsing remote IP address"),
                 remote_port: tuple.remote_port,
-                protocol: Protocol::from_fbs(tuple.protocol),
+                protocol: Protocol::from_fbs(&tuple.protocol),
             },
             None => TransportTuple::LocalOnly {
                 local_address: tuple
@@ -323,7 +326,7 @@ impl FromFbs for TransportTuple {
                     .parse()
                     .expect("Error parsing local address"),
                 local_port: tuple.local_port,
-                protocol: Protocol::from_fbs(tuple.protocol),
+                protocol: Protocol::from_fbs(&tuple.protocol),
             },
         }
     }
@@ -332,7 +335,7 @@ impl FromFbs for TransportTuple {
 impl FromFbs for TraceEventDirection {
     type FbsType = common::TraceDirection;
 
-    fn from_fbs(event_type: Self::FbsType) -> Self {
+    fn from_fbs(event_type: &Self::FbsType) -> Self {
         match event_type {
             common::TraceDirection::DirectionIn => TraceEventDirection::In,
             common::TraceDirection::DirectionOut => TraceEventDirection::Out,
@@ -343,7 +346,7 @@ impl FromFbs for TraceEventDirection {
 impl FromFbs for SrTraceInfo {
     type FbsType = producer::SrTraceInfo;
 
-    fn from_fbs(info: Self::FbsType) -> Self {
+    fn from_fbs(info: &Self::FbsType) -> Self {
         Self {
             ssrc: info.ssrc,
             ntp_sec: info.ntp_sec,
@@ -358,7 +361,7 @@ impl FromFbs for SrTraceInfo {
 impl FromFbs for BweType {
     type FbsType = transport::BweType;
 
-    fn from_fbs(info: Self::FbsType) -> Self {
+    fn from_fbs(info: &Self::FbsType) -> Self {
         match info {
             transport::BweType::TransportCc => BweType::TransportCc,
             transport::BweType::Remb => BweType::Remb,
@@ -369,9 +372,9 @@ impl FromFbs for BweType {
 impl FromFbs for BweTraceInfo {
     type FbsType = transport::BweTraceInfo;
 
-    fn from_fbs(info: Self::FbsType) -> Self {
+    fn from_fbs(info: &Self::FbsType) -> Self {
         Self {
-            r#type: BweType::from_fbs(info.bwe_type),
+            r#type: BweType::from_fbs(&info.bwe_type),
             desired_bitrate: info.desired_bitrate,
             effective_desired_bitrate: info.effective_desired_bitrate,
             min_bitrate: info.min_bitrate,
@@ -386,7 +389,7 @@ impl FromFbs for BweTraceInfo {
 impl FromFbs for RtpPacketTraceInfo {
     type FbsType = rtp_packet::Dump;
 
-    fn from_fbs(rtp_packet: Self::FbsType) -> Self {
+    fn from_fbs(rtp_packet: &Self::FbsType) -> Self {
         Self {
             payload_type: rtp_packet.payload_type,
             sequence_number: rtp_packet.sequence_number,
@@ -398,9 +401,9 @@ impl FromFbs for RtpPacketTraceInfo {
             payload_size: rtp_packet.payload_size,
             spatial_layer: rtp_packet.spatial_layer,
             temporal_layer: rtp_packet.temporal_layer,
-            mid: rtp_packet.mid,
-            rid: rtp_packet.rid,
-            rrid: rtp_packet.rrid,
+            mid: rtp_packet.mid.clone(),
+            rid: rtp_packet.rid.clone(),
+            rrid: rtp_packet.rrid.clone(),
             wide_sequence_number: rtp_packet.wide_sequence_number,
             is_rtx: false,
         }

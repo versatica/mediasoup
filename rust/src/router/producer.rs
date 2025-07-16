@@ -149,7 +149,7 @@ impl<'a> TryFromFbs<'a> for ProducerDump {
     fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             id: dump.id()?.parse()?,
-            kind: MediaKind::from_fbs(dump.kind()?),
+            kind: MediaKind::from_fbs(&dump.kind()?),
             paused: dump.paused()?,
             rtp_mapping: RtpMapping::try_from_fbs(dump.rtp_mapping()?)?,
             rtp_parameters: RtpParameters::try_from_fbs(dump.rtp_parameters()?)?,
@@ -324,7 +324,7 @@ impl ProducerStat {
             ssrc: base.ssrc,
             rtx_ssrc: base.rtx_ssrc,
             rid: base.rid.clone(),
-            kind: MediaKind::from_fbs(base.kind),
+            kind: MediaKind::from_fbs(&base.kind),
             mime_type: base.mime_type.to_string().parse().unwrap(),
             packets_lost: base.packets_lost,
             fraction_lost: base.fraction_lost,
@@ -417,7 +417,7 @@ impl ProducerTraceEventData {
         match data.type_ {
             producer::TraceEventType::Rtp => ProducerTraceEventData::Rtp {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(producer::TraceInfo::RtpTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -425,13 +425,13 @@ impl ProducerTraceEventData {
 
                     RtpPacketTraceInfo {
                         is_rtx: info.is_rtx,
-                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                        ..RtpPacketTraceInfo::from_fbs(info.rtp_packet.as_ref())
                     }
                 },
             },
             producer::TraceEventType::Keyframe => ProducerTraceEventData::KeyFrame {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(producer::TraceInfo::KeyFrameTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -439,17 +439,17 @@ impl ProducerTraceEventData {
 
                     RtpPacketTraceInfo {
                         is_rtx: info.is_rtx,
-                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                        ..RtpPacketTraceInfo::from_fbs(info.rtp_packet.as_ref())
                     }
                 },
             },
             producer::TraceEventType::Nack => ProducerTraceEventData::Nack {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
             },
             producer::TraceEventType::Pli => ProducerTraceEventData::Pli {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(producer::TraceInfo::PliTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -460,7 +460,7 @@ impl ProducerTraceEventData {
             },
             producer::TraceEventType::Fir => ProducerTraceEventData::Fir {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(producer::TraceInfo::FirTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -471,13 +471,13 @@ impl ProducerTraceEventData {
             },
             producer::TraceEventType::Sr => ProducerTraceEventData::Sr {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(producer::TraceInfo::SrTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    SrTraceInfo::from_fbs(*info)
+                    SrTraceInfo::from_fbs(info.as_ref())
                 },
             },
         }

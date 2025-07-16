@@ -796,26 +796,26 @@ impl Request for RouterCreateWebRtcTransportRequest {
         let data = web_rtc_transport::DumpResponse::try_from(data)?;
 
         Ok(WebRtcTransportData {
-            ice_role: IceRole::from_fbs(data.ice_role),
-            ice_parameters: IceParameters::from_fbs(*data.ice_parameters),
+            ice_role: IceRole::from_fbs(&data.ice_role),
+            ice_parameters: IceParameters::from_fbs(data.ice_parameters.as_ref()),
             ice_candidates: data
                 .ice_candidates
                 .iter()
-                .map(|candidate| IceCandidate::from_fbs(candidate.clone()))
+                .map(IceCandidate::from_fbs)
                 .collect(),
-            ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
+            ice_state: Mutex::new(IceState::from_fbs(&data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
-                    .map(|tuple| TransportTuple::from_fbs(*tuple)),
+                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             ),
-            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
-            dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
+            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(data.dtls_parameters.as_ref())),
+            dtls_state: Mutex::new(DtlsState::from_fbs(&data.dtls_state)),
             dtls_remote_cert: Mutex::new(None),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
         })
     }
 }
@@ -869,26 +869,26 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
         let data = web_rtc_transport::DumpResponse::try_from(data)?;
 
         Ok(WebRtcTransportData {
-            ice_role: IceRole::from_fbs(data.ice_role),
-            ice_parameters: IceParameters::from_fbs(*data.ice_parameters),
+            ice_role: IceRole::from_fbs(&data.ice_role),
+            ice_parameters: IceParameters::from_fbs(data.ice_parameters.as_ref()),
             ice_candidates: data
                 .ice_candidates
                 .iter()
-                .map(|candidate| IceCandidate::from_fbs(candidate.clone()))
+                .map(IceCandidate::from_fbs)
                 .collect(),
-            ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
+            ice_state: Mutex::new(IceState::from_fbs(&data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
-                    .map(|tuple| TransportTuple::from_fbs(*tuple)),
+                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             ),
-            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
-            dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
+            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(data.dtls_parameters.as_ref())),
+            dtls_state: Mutex::new(DtlsState::from_fbs(&data.dtls_state)),
             dtls_remote_cert: Mutex::new(None),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
         })
     }
 }
@@ -998,16 +998,16 @@ impl Request for RouterCreatePlainTransportRequest {
         let data = plain_transport::DumpResponse::try_from(data)?;
 
         Ok(PlainTransportData {
-            tuple: Mutex::new(TransportTuple::from_fbs(*data.tuple)),
+            tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
             rtcp_tuple: Mutex::new(
                 data.rtcp_tuple
-                    .map(|tuple| TransportTuple::from_fbs(*tuple)),
+                    .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             ),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
                     .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -1120,12 +1120,12 @@ impl Request for RouterCreatePipeTransportRequest {
         let data = pipe_transport::DumpResponse::try_from(data)?;
 
         Ok(PipeTransportData {
-            tuple: Mutex::new(TransportTuple::from_fbs(*data.tuple)),
+            tuple: Mutex::new(TransportTuple::from_fbs(data.tuple.as_ref())),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(data.base.sctp_state.map(SctpState::from_fbs)),
+            sctp_state: Mutex::new(data.base.sctp_state.as_ref().map(SctpState::from_fbs)),
             rtx: data.rtx,
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
@@ -1430,7 +1430,7 @@ impl Request for WebRtcTransportConnectRequest {
         let data = web_rtc_transport::ConnectResponse::try_from(data)?;
 
         Ok(WebRtcTransportConnectResponse {
-            dtls_local_role: DtlsRole::from_fbs(data.dtls_local_role),
+            dtls_local_role: DtlsRole::from_fbs(&data.dtls_local_role),
         })
     }
 }
@@ -1484,7 +1484,7 @@ impl Request for PipeTransportConnectRequest {
         let data = pipe_transport::ConnectResponse::try_from(data)?;
 
         Ok(PipeTransportConnectResponse {
-            tuple: TransportTuple::from_fbs(*data.tuple),
+            tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
         })
     }
 }
@@ -1543,10 +1543,10 @@ impl Request for TransportConnectPlainRequest {
         let data = plain_transport::ConnectResponse::try_from(data)?;
 
         Ok(PlainTransportConnectResponse {
-            tuple: TransportTuple::from_fbs(*data.tuple),
+            tuple: TransportTuple::from_fbs(data.tuple.as_ref()),
             rtcp_tuple: data
                 .rtcp_tuple
-                .map(|tuple| TransportTuple::from_fbs(*tuple)),
+                .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             srtp_parameters: data
                 .srtp_parameters
                 .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -1694,7 +1694,7 @@ impl Request for TransportRestartIceRequest {
 
         let data = transport::RestartIceResponse::try_from(data)?;
 
-        Ok(IceParameters::from_fbs(web_rtc_transport::IceParameters {
+        Ok(IceParameters::from_fbs(&web_rtc_transport::IceParameters {
             username_fragment: data.username_fragment,
             password: data.password,
             ice_lite: data.ice_lite,

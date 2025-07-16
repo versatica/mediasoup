@@ -283,7 +283,7 @@ impl<'a> TryFromFbs<'a> for ConsumerDump {
 
         Ok(Self {
             id: dump?.base()?.id()?.parse()?,
-            kind: MediaKind::from_fbs(dump?.base()?.kind()?),
+            kind: MediaKind::from_fbs(&dump?.base()?.kind()?),
             paused: dump?.base()?.paused()?,
             priority: dump?.base()?.priority()?,
             producer_id: dump?.base()?.producer_id()?.parse()?,
@@ -410,7 +410,7 @@ impl ConsumerStat {
             timestamp: base.timestamp,
             ssrc: base.ssrc,
             rtx_ssrc: base.rtx_ssrc,
-            kind: MediaKind::from_fbs(base.kind),
+            kind: MediaKind::from_fbs(&base.kind),
             mime_type: base.mime_type.to_string().parse().unwrap(),
             packets_lost: base.packets_lost,
             fraction_lost: base.fraction_lost,
@@ -508,7 +508,7 @@ impl ConsumerTraceEventData {
         match data.type_ {
             consumer::TraceEventType::Rtp => ConsumerTraceEventData::Rtp {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(consumer::TraceInfo::RtpTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -516,13 +516,13 @@ impl ConsumerTraceEventData {
 
                     RtpPacketTraceInfo {
                         is_rtx: info.is_rtx,
-                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                        ..RtpPacketTraceInfo::from_fbs(info.rtp_packet.as_ref())
                     }
                 },
             },
             consumer::TraceEventType::Keyframe => ConsumerTraceEventData::KeyFrame {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(consumer::TraceInfo::KeyFrameTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -530,17 +530,17 @@ impl ConsumerTraceEventData {
 
                     RtpPacketTraceInfo {
                         is_rtx: info.is_rtx,
-                        ..RtpPacketTraceInfo::from_fbs(*info.rtp_packet)
+                        ..RtpPacketTraceInfo::from_fbs(info.rtp_packet.as_ref())
                     }
                 },
             },
             consumer::TraceEventType::Nack => ConsumerTraceEventData::Nack {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
             },
             consumer::TraceEventType::Pli => ConsumerTraceEventData::Pli {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(consumer::TraceInfo::PliTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
@@ -551,7 +551,7 @@ impl ConsumerTraceEventData {
             },
             consumer::TraceEventType::Fir => ConsumerTraceEventData::Fir {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(consumer::TraceInfo::FirTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");

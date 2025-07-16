@@ -71,13 +71,13 @@ impl TransportTraceEventData {
             transport::TraceEventType::Probation => unimplemented!(),
             transport::TraceEventType::Bwe => TransportTraceEventData::Bwe {
                 timestamp: data.timestamp,
-                direction: TraceEventDirection::from_fbs(data.direction),
+                direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
                     let Some(transport::TraceInfo::BweTraceInfo(info)) = data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
-                    BweTraceInfo::from_fbs(*info)
+                    BweTraceInfo::from_fbs(info.as_ref())
                 },
             },
         }

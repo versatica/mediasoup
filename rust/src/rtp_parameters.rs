@@ -102,7 +102,7 @@ impl<'a> TryFromFbs<'a> for RtpParameters {
                 .into_iter()
                 .map(|header_extension_parameters| {
                     Ok(RtpHeaderExtensionParameters {
-                        uri: RtpHeaderExtensionUri::from_fbs(header_extension_parameters?.uri()?),
+                        uri: RtpHeaderExtensionUri::from_fbs(&header_extension_parameters?.uri()?),
                         id: u16::from(header_extension_parameters?.id()?),
                         encrypt: header_extension_parameters?.encrypt()?,
                     })
@@ -177,7 +177,7 @@ impl<'a> TryFromFbs<'a> for RtpEncodingParameters {
 impl FromFbs for MediaKind {
     type FbsType = rtp_parameters::MediaKind;
 
-    fn from_fbs(kind: Self::FbsType) -> Self {
+    fn from_fbs(kind: &Self::FbsType) -> Self {
         match kind {
             rtp_parameters::MediaKind::Audio => MediaKind::Audio,
             rtp_parameters::MediaKind::Video => MediaKind::Video,
@@ -199,7 +199,7 @@ impl ToFbs for MediaKind {
 impl FromFbs for RtpHeaderExtensionUri {
     type FbsType = rtp_parameters::RtpHeaderExtensionUri;
 
-    fn from_fbs(uri: Self::FbsType) -> Self {
+    fn from_fbs(uri: &Self::FbsType) -> Self {
         match uri {
             rtp_parameters::RtpHeaderExtensionUri::Mid => RtpHeaderExtensionUri::Mid,
             rtp_parameters::RtpHeaderExtensionUri::RtpStreamId => {
