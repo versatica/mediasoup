@@ -10,7 +10,6 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, ListenInfo};
 use crate::fbs::ToFbs;
 use crate::messages::{WebRtcServerCloseRequest, WebRtcServerDumpRequest};
 use crate::transport::TransportId;
@@ -22,6 +21,7 @@ use event_listener_primitives::{BagOnce, HandlerId};
 use hash_hasher::HashedSet;
 use log::{debug, error};
 use mediasoup_sys::fbs::transport;
+use mediasoup_types::data_structures::{AppData, ListenInfo};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::fmt;

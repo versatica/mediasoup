@@ -28,7 +28,6 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, ListenInfo, Protocol};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateActiveSpeakerObserverData,
@@ -46,8 +45,6 @@ use crate::pipe_transport::{
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{PipedProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
 use crate::rtp_observer::{RtpObserver, RtpObserverId};
-use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
-use crate::sctp_parameters::NumSctpStreams;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric,
     TransportId,
@@ -61,6 +58,11 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use log::{debug, error};
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability,
+};
+use mediasoup_types::sctp_parameters::NumSctpStreams;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::fmt;

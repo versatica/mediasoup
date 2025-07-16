@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection};
 use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     ConsumerCloseRequest, ConsumerDumpRequest, ConsumerEnableTraceEventRequest,
@@ -9,9 +8,6 @@ use crate::messages::{
     ConsumerResumeRequest, ConsumerSetPreferredLayersRequest, ConsumerSetPriorityRequest,
 };
 use crate::producer::{Producer, ProducerId, ProducerStat, ProducerType, WeakProducer};
-use crate::rtp_parameters::{
-    MediaKind, MimeType, RtpCapabilities, RtpEncodingParameters, RtpParameters,
-};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
@@ -20,6 +16,12 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{
     consumer, notification, response, rtp_parameters, rtp_stream, rtx_stream,
+};
+use mediasoup_types::data_structures::{
+    AppData, RtpPacketTraceInfo, SsrcTraceInfo, TraceEventDirection,
+};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeType, RtpCapabilities, RtpEncodingParameters, RtpParameters,
 };
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};

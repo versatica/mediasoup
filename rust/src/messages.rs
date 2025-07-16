@@ -5,10 +5,6 @@ use crate::consumer::{
 };
 use crate::data_consumer::{DataConsumerId, DataConsumerType};
 use crate::data_producer::{DataProducerId, DataProducerType};
-use crate::data_structures::{
-    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
-    ListenInfo, SctpState, TransportTuple,
-};
 use crate::direct_transport::DirectTransportOptions;
 use crate::fbs::{FromFbs, IntoFbs, ToFbs, TryFromFbs};
 use crate::ortc::RtpMapping;
@@ -19,9 +15,6 @@ use crate::router::consumer::ConsumerDump;
 use crate::router::producer::ProducerDump;
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_observer::RtpObserverId;
-use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
-use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
-use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_server::{
     WebRtcServerDump, WebRtcServerIceUsernameFragment, WebRtcServerId, WebRtcServerIpPort,
@@ -36,6 +29,13 @@ use mediasoup_sys::fbs::{
     direct_transport, message, notification, pipe_transport, plain_transport, producer, request,
     response, router, rtp_observer, transport, web_rtc_server, web_rtc_transport, worker,
 };
+use mediasoup_types::data_structures::{
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
+    ListenInfo, SctpState, TransportTuple,
+};
+use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
+use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
+use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use parking_lot::Mutex;
 use planus::Builder;
 use serde::{Deserialize, Serialize};

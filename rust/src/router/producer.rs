@@ -2,16 +2,12 @@
 mod tests;
 
 use crate::consumer::{RtpStreamParams, RtxStreamParams};
-use crate::data_structures::{
-    AppData, RtpPacketTraceInfo, SrTraceInfo, SsrcTraceInfo, TraceEventDirection,
-};
 use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
 };
 pub use crate::ortc::RtpMapping;
-use crate::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{
@@ -21,6 +17,10 @@ use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{notification, producer, response, rtp_parameters, rtp_stream};
+use mediasoup_types::data_structures::{
+    AppData, RtpPacketTraceInfo, SrTraceInfo, SsrcTraceInfo, TraceEventDirection,
+};
+use mediasoup_types::rtp_parameters::{MediaKind, MimeType, RtpParameters};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};

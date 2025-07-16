@@ -1,5 +1,5 @@
 use super::*;
-use crate::rtp_parameters::{MimeTypeAudio, RtpHeaderExtension};
+use mediasoup_types::rtp_parameters::{MimeTypeAudio, RtpHeaderExtension};
 use std::iter;
 
 #[test]

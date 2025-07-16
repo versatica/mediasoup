@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::AppData;
 use crate::fbs::TryFromFbs;
 use crate::messages::{
     RtpObserverAddProducerRequest, RtpObserverCloseRequest, RtpObserverPauseRequest,
@@ -16,6 +15,7 @@ use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{audio_level_observer, notification};
+use mediasoup_types::data_structures::AppData;
 use parking_lot::Mutex;
 use serde::Deserialize;
 use std::fmt;

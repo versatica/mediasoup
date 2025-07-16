@@ -1,8 +1,8 @@
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::webrtc_server::{WebRtcServerListenInfos, WebRtcServerOptions};
 use crate::worker::{Worker, WorkerSettings};
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
 use portpicker::pick_unused_port;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};

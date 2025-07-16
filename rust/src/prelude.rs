@@ -59,14 +59,14 @@ pub use crate::data_producer::{
 };
 pub use crate::producer::{Producer, ProducerId, ProducerOptions, WeakProducer};
 
-pub use crate::data_structures::{
+pub use mediasoup_types::data_structures::{
     AppData, DtlsParameters, IceCandidate, IceParameters, ListenInfo, Protocol, WebRtcMessage,
 };
-pub use crate::rtp_parameters::{
+pub use mediasoup_types::rtp_parameters::{
     MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCapabilities,
     RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
     RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionParameters,
     RtpHeaderExtensionUri, RtpParameters,
 };
-pub use crate::sctp_parameters::SctpStreamParameters;
-pub use crate::srtp_parameters::SrtpCryptoSuite;
+pub use mediasoup_types::sctp_parameters::SctpStreamParameters;
+pub use mediasoup_types::srtp_parameters::SrtpCryptoSuite;

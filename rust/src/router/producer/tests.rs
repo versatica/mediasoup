@@ -1,10 +1,5 @@
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::producer::ProducerOptions;
 use crate::router::{Router, RouterOptions};
-use crate::rtp_parameters::{
-    MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
-    RtpParameters,
-};
 use crate::transport::Transport;
 use crate::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
@@ -12,6 +7,11 @@ use crate::webrtc_transport::{
 use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeTypeAudio, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
+    RtpParameters,
+};
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};

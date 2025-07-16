@@ -1,14 +1,14 @@
 use crate::data_consumer::DataConsumerOptions;
 use crate::data_producer::{DataProducer, DataProducerOptions};
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::plain_transport::PlainTransportOptions;
 use crate::router::{Router, RouterOptions};
-use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::webrtc_transport::{WebRtcTransportListenInfos, WebRtcTransportOptions};
 use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 

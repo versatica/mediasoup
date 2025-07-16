@@ -1,7 +1,6 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection};
 use crate::fbs::FromFbs;
 use crate::messages::{
     TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
@@ -14,8 +13,6 @@ pub use crate::ortc::{
 };
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::Router;
-use crate::rtp_parameters::{MediaKind, RtpEncodingParameters};
-use crate::sctp_parameters::SctpStreamParameters;
 use crate::worker::{Channel, RequestError};
 use crate::{ortc, uuid_based_wrapper_type};
 use async_executor::Executor;
@@ -23,6 +20,11 @@ use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
 use log::{error, warn};
 use mediasoup_sys::fbs::{response, transport};
+use mediasoup_types::data_structures::{
+    AppData, BweTraceInfo, RtpPacketTraceInfo, TraceEventDirection,
+};
+use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};

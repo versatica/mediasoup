@@ -1,6 +1,3 @@
-use crate::data_structures::{
-    IceCandidateTcpType, IceCandidateType, IceState, ListenInfo, Protocol,
-};
 use crate::prelude::WebRtcTransport;
 use crate::router::{NewTransport, Router, RouterOptions};
 use crate::transport::Transport;
@@ -11,6 +8,9 @@ use crate::worker_manager::WorkerManager;
 use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::HashedSet;
+use mediasoup_types::data_structures::{
+    IceCandidateTcpType, IceCandidateType, IceState, ListenInfo, Protocol,
+};
 use parking_lot::Mutex;
 use portpicker::pick_unused_port;
 use std::env;

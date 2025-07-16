@@ -4,14 +4,11 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
 use crate::fbs::FromFbs;
 use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
-use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
-use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
@@ -23,6 +20,9 @@ use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{notification, plain_transport, response, transport};
+use mediasoup_types::data_structures::{AppData, ListenInfo, SctpState, TransportTuple};
+use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters};
+use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};

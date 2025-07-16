@@ -1,10 +1,10 @@
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::plain_transport::PlainTransportOptions;
 use crate::router::{Router, RouterOptions};
 use crate::transport::Transport;
 use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 

@@ -4,10 +4,6 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{
-    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
-    SctpState, TransportTuple,
-};
 use crate::fbs::FromFbs;
 use crate::messages::{
     TransportCloseRequest, TransportRestartIceRequest, WebRtcTransportConnectRequest,
@@ -16,7 +12,6 @@ use crate::messages::{
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
-use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
@@ -29,6 +24,11 @@ use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{notification, response, transport, web_rtc_transport};
+use mediasoup_types::data_structures::{
+    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
+    SctpState, TransportTuple,
+};
+use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
