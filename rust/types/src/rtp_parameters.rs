@@ -107,7 +107,6 @@ where
 /// required.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
-#[non_exhaustive]
 pub enum RtpCodecCapabilityFinalized {
     /// Audio codec
     #[serde(rename_all = "camelCase")]

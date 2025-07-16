@@ -572,7 +572,6 @@ pub(crate) fn get_consumable_rtp_parameters(
                     rtcp_feedback: rtcp_feedback.clone(),
                 }
             }
-            _ => panic!("Unexpected codec type"),
         };
 
         let consumable_cap_rtx_codec = caps.codecs.iter().find(|cap_rtx_codec| {
@@ -622,7 +621,6 @@ pub(crate) fn get_consumable_rtp_parameters(
                     parameters: parameters.clone(),
                     rtcp_feedback: rtcp_feedback.clone(),
                 },
-                _ => panic!("Unexpected codec type"),
             };
 
             consumable_params.codecs.push(consumable_rtx_codec);
