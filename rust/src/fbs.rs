@@ -35,3 +35,14 @@ where
         value.as_ref().map(T::from_fbs)
     }
 }
+
+impl<T> ToFbs for Option<T>
+where
+    T: ToFbs,
+{
+    type FbsType = Option<T::FbsType>;
+
+    fn to_fbs(&self) -> Self::FbsType {
+        self.as_ref().map(T::to_fbs)
+    }
+}

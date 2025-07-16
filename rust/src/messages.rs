@@ -643,10 +643,7 @@ impl RouterCreateWebrtcTransportListen {
             RouterCreateWebrtcTransportListen::Individual { listen_infos } => {
                 web_rtc_transport::Listen::ListenIndividual(Box::new(
                     web_rtc_transport::ListenIndividual {
-                        listen_infos: listen_infos
-                            .iter()
-                            .map(|listen_info| listen_info.to_fbs())
-                            .collect(),
+                        listen_infos: listen_infos.iter().map(ListenInfo::to_fbs).collect(),
                     },
                 ))
             }

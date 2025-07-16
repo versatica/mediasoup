@@ -94,7 +94,7 @@ impl ToFbs for DtlsParameters {
             fingerprints: self
                 .fingerprints
                 .iter()
-                .map(|fingerprint| fingerprint.to_fbs())
+                .map(DtlsFingerprint::to_fbs)
                 .collect(),
         }
     }
