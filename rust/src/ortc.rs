@@ -7,7 +7,6 @@ use crate::rtp_parameters::{
     RtpHeaderExtensionUri, RtpParameters,
 };
 use crate::supported_rtp_capabilities;
-
 use mediasoup_sys::fbs::rtp_parameters;
 use mediasoup_types::rtp_parameters::RtpCapabilities;
 use mediasoup_types::scalability_modes::ScalabilityMode;
