@@ -10,6 +10,9 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqLowerThan::operator()(T lhs, T rhs) const
 	{
+		lhs &= Mask;
+		rhs &= Mask;
+
 		return ((rhs > lhs) && (rhs - lhs <= SeqManager::MaxValue / 2)) ||
 		       ((lhs > rhs) && (lhs - rhs > SeqManager::MaxValue / 2));
 	}
@@ -17,6 +20,9 @@ namespace RTC
 	template<typename T, uint8_t N>
 	bool SeqManager<T, N>::SeqHigherThan::operator()(T lhs, T rhs) const
 	{
+		lhs &= Mask;
+		rhs &= Mask;
+
 		return ((lhs > rhs) && (lhs - rhs <= SeqManager::MaxValue / 2)) ||
 		       ((rhs > lhs) && (rhs - lhs > SeqManager::MaxValue / 2));
 	}

@@ -14,6 +14,8 @@ namespace RTC
 	{
 	public:
 		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+		static constexpr T Mask =
+		  (N == 0) ? std::numeric_limits<T>::max() : (static_cast<T>((T(1) << N) - 1));
 
 	public:
 		struct SeqLowerThan

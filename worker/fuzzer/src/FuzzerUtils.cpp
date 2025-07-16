@@ -80,9 +80,5 @@ void Fuzzer::Utils::Fuzz(const uint8_t* data, size_t len)
 	auto ntp = ::Utils::Time::TimeMs2Ntp(static_cast<uint64_t>(len));
 
 	::Utils::Time::Ntp2TimeMs(ntp);
-	::Utils::Time::IsNewerTimestamp(static_cast<uint32_t>(len), static_cast<uint32_t>(len * len));
-	::Utils::Time::IsNewerTimestamp(static_cast<uint32_t>(len * len), static_cast<uint32_t>(len));
-	::Utils::Time::LatestTimestamp(static_cast<uint32_t>(len), static_cast<uint32_t>(len * len));
-	::Utils::Time::LatestTimestamp(static_cast<uint32_t>(len * len), static_cast<uint32_t>(len));
 	::Utils::Time::TimeMsToAbsSendTime(static_cast<uint64_t>(len));
 }
