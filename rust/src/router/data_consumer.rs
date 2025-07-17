@@ -21,6 +21,7 @@ use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::error::Error;
 // TODO.
 // use std::borrow::Cow;
 use std::fmt;
@@ -162,16 +163,14 @@ pub struct DataConsumerDump {
     pub data_producer_paused: bool,
 }
 
-impl FromFbs for DataConsumerDump {
+impl<'a> TryFromFbs<'a> for DataConsumerDump {
     type FbsType = data_consumer::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
 
-    fn from_fbs(dump: &Self::FbsType) -> Self {
-        Self {
-            id: dump.id.parse().expect("Invalid DataConsumer ID"),
-            data_producer_id: dump
-                .data_producer_id
-                .parse()
-                .expect("Invalid DataProducer ID"),
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: dump.id.parse()?,
+            data_producer_id: dump.data_producer_id.parse()?,
             r#type: if dump.type_ == data_producer::Type::Sctp {
                 DataConsumerType::Sctp
             } else {
@@ -187,7 +186,7 @@ impl FromFbs for DataConsumerDump {
             paused: dump.paused,
             subchannels: dump.subchannels.clone(),
             data_producer_paused: dump.data_producer_paused,
-        }
+        })
     }
 }
 
@@ -700,7 +699,7 @@ impl DataConsumer {
             .await?;
 
         if let response::Body::DataConsumerDumpResponse(data) = response {
-            Ok(DataConsumerDump::from_fbs(data.as_ref()))
+            Ok(DataConsumerDump::try_from_fbs(*data).expect("Error parsing dump response"))
         } else {
             panic!("Wrong message from worker: {response:?}");
         }

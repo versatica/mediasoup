@@ -176,16 +176,13 @@ pub struct DirectTransportStat {
     pub rtp_packet_loss_sent: Option<f64>,
 }
 
-impl FromFbs for DirectTransportStat {
+impl<'a> TryFromFbs<'a> for DirectTransportStat {
     type FbsType = direct_transport::GetStatsResponse;
+    type Error = Box<dyn Error + Send + Sync>;
 
-    fn from_fbs(stats: &Self::FbsType) -> Self {
-        Self {
-            transport_id: stats
-                .base
-                .transport_id
-                .parse()
-                .expect("Invalid transport ID"),
+    fn try_from_fbs(stats: Self::FbsType) -> Result<Self, Self::Error> {
+        Ok(Self {
+            transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
             sctp_state: FromFbs::from_fbs(&stats.base.sctp_state),
             bytes_received: stats.base.bytes_received,
@@ -209,7 +206,7 @@ impl FromFbs for DirectTransportStat {
             min_outgoing_bitrate: stats.base.min_outgoing_bitrate,
             rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
             rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
-        }
+        })
     }
 }
 
@@ -533,7 +530,8 @@ impl TransportGeneric for DirectTransport {
         let response = self.get_stats_impl().await?;
 
         if let response::Body::DirectTransportGetStatsResponse(data) = response {
-            Ok(vec![DirectTransportStat::from_fbs(data.as_ref())])
+            Ok(vec![DirectTransportStat::try_from_fbs(*data)
+                .expect("Error parsing dump response: {response:?}")])
         } else {
             panic!("Wrong message from worker: {response:?}");
         }
