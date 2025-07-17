@@ -1466,7 +1466,7 @@ impl Request for PipeTransportConnectRequest {
             &mut builder,
             self.ip.to_string(),
             self.port,
-            self.srtp_parameters.map(|parameters| parameters.to_fbs()),
+            ToFbs::to_fbs(&self.srtp_parameters),
         );
         let request_body = request::Body::create_pipe_transport_connect_request(&mut builder, data);
         let request = request::Request::create(
@@ -1524,7 +1524,7 @@ impl Request for TransportConnectPlainRequest {
             self.ip.map(|ip| ip.to_string()),
             self.port,
             self.rtcp_port,
-            self.srtp_parameters.map(|parameters| parameters.to_fbs()),
+            ToFbs::to_fbs(&self.srtp_parameters),
         );
         let request_body =
             request::Body::create_plain_transport_connect_request(&mut builder, data);

@@ -258,10 +258,7 @@ impl FromFbs for IceCandidate {
             protocol: Protocol::from_fbs(&candidate.protocol),
             port: candidate.port,
             r#type: IceCandidateType::from_fbs(&candidate.type_),
-            tcp_type: candidate
-                .tcp_type
-                .as_ref()
-                .map(IceCandidateTcpType::from_fbs),
+            tcp_type: FromFbs::from_fbs(&candidate.tcp_type),
         }
     }
 }

@@ -152,8 +152,10 @@ pub struct DataProducerStat {
     pub bytes_received: u64,
 }
 
-impl DataProducerStat {
-    pub(crate) fn from_fbs(stats: &data_producer::GetStatsResponse) -> Self {
+impl FromFbs for DataProducerStat {
+    type FbsType = data_producer::GetStatsResponse;
+
+    fn from_fbs(stats: &Self::FbsType) -> Self {
         Self {
             timestamp: stats.timestamp,
             label: stats.label.to_string(),

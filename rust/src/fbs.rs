@@ -13,6 +13,18 @@ pub(crate) trait FromFbs: Sized {
     fn from_fbs(fbs: &Self::FbsType) -> Self;
 }
 
+impl<'a, T> TryFromFbs<'a> for Vec<T>
+where
+    T: TryFromFbs<'a>,
+{
+    type FbsType = Vec<T::FbsType>;
+    type Error = T::Error;
+
+    fn try_from_fbs(fbs: Self::FbsType) -> Result<Self, Self::Error> {
+        fbs.into_iter().map(T::try_from_fbs).collect()
+    }
+}
+
 pub(crate) trait ToFbs: Sized {
     type FbsType;
 
