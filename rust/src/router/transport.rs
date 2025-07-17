@@ -1,7 +1,7 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::fbs::FromFbs;
+use crate::fbs::{FromFbs, ToFbs};
 use crate::messages::{
     TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
     TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
@@ -96,14 +96,18 @@ pub enum TransportTraceEventType {
     Bwe,
 }
 
-impl TransportTraceEventType {
-    pub(crate) fn to_fbs(self) -> transport::TraceEventType {
+impl ToFbs for TransportTraceEventType {
+    type FbsType = transport::TraceEventType;
+
+    fn to_fbs(&self) -> Self::FbsType {
         match self {
             TransportTraceEventType::Probation => transport::TraceEventType::Probation,
             TransportTraceEventType::Bwe => transport::TraceEventType::Bwe,
         }
     }
+}
 
+impl TransportTraceEventType {
     pub(crate) fn from_fbs(event_type: &transport::TraceEventType) -> Self {
         match event_type {
             transport::TraceEventType::Probation => TransportTraceEventType::Probation,

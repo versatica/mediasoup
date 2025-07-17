@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::consumer::{RtpStreamParams, RtxStreamParams};
-use crate::fbs::{FromFbs, TryFromFbs};
+use crate::fbs::{FromFbs, ToFbs, TryFromFbs};
 use crate::messages::{
     ProducerCloseRequest, ProducerDumpRequest, ProducerEnableTraceEventRequest,
     ProducerGetStatsRequest, ProducerPauseRequest, ProducerResumeRequest, ProducerSendNotification,
@@ -502,8 +502,10 @@ pub enum ProducerTraceEventType {
     SR,
 }
 
-impl ProducerTraceEventType {
-    pub(crate) fn to_fbs(self) -> producer::TraceEventType {
+impl ToFbs for ProducerTraceEventType {
+    type FbsType = producer::TraceEventType;
+
+    fn to_fbs(&self) -> Self::FbsType {
         match self {
             ProducerTraceEventType::Rtp => producer::TraceEventType::Rtp,
             ProducerTraceEventType::KeyFrame => producer::TraceEventType::Keyframe,
@@ -513,7 +515,9 @@ impl ProducerTraceEventType {
             ProducerTraceEventType::SR => producer::TraceEventType::Sr,
         }
     }
+}
 
+impl ProducerTraceEventType {
     pub(crate) fn from_fbs(event_type: &producer::TraceEventType) -> Self {
         match event_type {
             producer::TraceEventType::Rtp => ProducerTraceEventType::Rtp,

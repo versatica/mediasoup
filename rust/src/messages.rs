@@ -43,6 +43,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::net::IpAddr;
 use std::num::NonZeroU16;
+use std::ops::Deref;
 
 pub(crate) trait Request
 where
@@ -643,7 +644,7 @@ impl RouterCreateWebrtcTransportListen {
             RouterCreateWebrtcTransportListen::Individual { listen_infos } => {
                 web_rtc_transport::Listen::ListenIndividual(Box::new(
                     web_rtc_transport::ListenIndividual {
-                        listen_infos: listen_infos.iter().map(ListenInfo::to_fbs).collect(),
+                        listen_infos: ToFbs::to_fbs(listen_infos.deref()),
                     },
                 ))
             }
@@ -795,11 +796,7 @@ impl Request for RouterCreateWebRtcTransportRequest {
         Ok(WebRtcTransportData {
             ice_role: IceRole::from_fbs(&data.ice_role),
             ice_parameters: IceParameters::from_fbs(data.ice_parameters.as_ref()),
-            ice_candidates: data
-                .ice_candidates
-                .iter()
-                .map(IceCandidate::from_fbs)
-                .collect(),
+            ice_candidates: FromFbs::from_fbs(&data.ice_candidates),
             ice_state: Mutex::new(IceState::from_fbs(&data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
@@ -868,11 +865,7 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
         Ok(WebRtcTransportData {
             ice_role: IceRole::from_fbs(&data.ice_role),
             ice_parameters: IceParameters::from_fbs(data.ice_parameters.as_ref()),
-            ice_candidates: data
-                .ice_candidates
-                .iter()
-                .map(IceCandidate::from_fbs)
-                .collect(),
+            ice_candidates: FromFbs::from_fbs(&data.ice_candidates),
             ice_state: Mutex::new(IceState::from_fbs(&data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
@@ -1794,10 +1787,7 @@ impl Request for TransportConsumeRequest {
             self.kind.to_fbs(),
             Box::new(self.rtp_parameters.into_fbs()),
             self.r#type.to_fbs(),
-            self.consumable_rtp_encodings
-                .iter()
-                .map(RtpEncodingParameters::to_fbs)
-                .collect::<Vec<_>>(),
+            ToFbs::to_fbs(&self.consumable_rtp_encodings),
             self.paused,
             self.preferred_layers.map(ConsumerLayers::to_fbs),
             self.ignore_dtx,
@@ -2029,11 +2019,7 @@ impl Request for TransportEnableTraceEventRequest {
         let mut builder = Builder::new();
 
         let data = transport::EnableTraceEventRequest {
-            events: self
-                .types
-                .into_iter()
-                .map(TransportTraceEventType::to_fbs)
-                .collect(),
+            events: ToFbs::to_fbs(&self.types),
         };
 
         let request_body = request::Body::TransportEnableTraceEventRequest(Box::new(data));
@@ -2275,11 +2261,7 @@ impl Request for ProducerEnableTraceEventRequest {
         let mut builder = Builder::new();
 
         let data = producer::EnableTraceEventRequest {
-            events: self
-                .types
-                .into_iter()
-                .map(ProducerTraceEventType::to_fbs)
-                .collect(),
+            events: ToFbs::to_fbs(&self.types),
         };
 
         let request_body = request::Body::ProducerEnableTraceEventRequest(Box::new(data));

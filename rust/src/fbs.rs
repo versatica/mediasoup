@@ -36,6 +36,39 @@ where
     }
 }
 
+impl<T> FromFbs for Vec<T>
+where
+    T: FromFbs,
+{
+    type FbsType = Vec<T::FbsType>;
+
+    fn from_fbs(fbs: &Self::FbsType) -> Self {
+        fbs.iter().map(T::from_fbs).collect()
+    }
+}
+
+impl<T> ToFbs for Vec<T>
+where
+    T: ToFbs,
+{
+    type FbsType = Vec<T::FbsType>;
+
+    fn to_fbs(&self) -> Self::FbsType {
+        self.iter().map(|item| item.to_fbs()).collect()
+    }
+}
+
+impl<T> IntoFbs for Vec<T>
+where
+    T: IntoFbs,
+{
+    type FbsType = Vec<T::FbsType>;
+
+    fn into_fbs(self) -> Self::FbsType {
+        self.into_iter().map(|item| item.into_fbs()).collect()
+    }
+}
+
 impl<T> ToFbs for Option<T>
 where
     T: ToFbs,
