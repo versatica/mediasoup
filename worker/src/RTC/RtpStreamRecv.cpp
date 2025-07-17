@@ -303,18 +303,17 @@ namespace RTC
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
 
-		// Padding only packet, do not consider it for counter increase nor
-		// stream activation.
-		if (packet->GetPayloadLength() == 0)
-		{
-			return true;
-		}
-
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
 
 		// Increase media transmission counter.
 		this->mediaTransmissionCounter.Update(packet);
+
+		// Padding only packet, do not consider it for stream activation.
+		if (packet->GetPayloadLength() == 0)
+		{
+			return true;
+		}
 
 		// Not inactive anymore.
 		if (this->inactive)
