@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::FromFbs;
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
@@ -116,10 +116,11 @@ pub struct DataProducerDump {
     pub paused: bool,
 }
 
-impl DataProducerDump {
-    pub(crate) fn from_fbs(
-        dump: data_producer::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for DataProducerDump {
+    type FbsType = data_producer::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             id: dump.id.parse()?,
             r#type: if dump.type_ == data_producer::Type::Sctp {
@@ -435,7 +436,7 @@ impl DataProducer {
             .await?;
 
         if let response::Body::DataProducerDumpResponse(data) = response {
-            Ok(DataProducerDump::from_fbs(*data).expect("Error parsing dump response"))
+            Ok(DataProducerDump::try_from_fbs(*data).expect("Error parsing dump response"))
         } else {
             panic!("Wrong message from worker: {response:?}");
         }

@@ -166,7 +166,7 @@ impl<'a> TryFromFbs<'a> for ProducerDump {
                 })
                 .collect(),
 
-            r#type: ProducerType::from_fbs(dump.type_()?),
+            r#type: ProducerType::from_fbs(&dump.type_()?),
         })
     }
 }
@@ -183,8 +183,10 @@ pub enum ProducerType {
     Svc,
 }
 
-impl ProducerType {
-    pub(crate) fn from_fbs(producer_type: rtp_parameters::Type) -> Self {
+impl FromFbs for ProducerType {
+    type FbsType = rtp_parameters::Type;
+
+    fn from_fbs(producer_type: &Self::FbsType) -> Self {
         match producer_type {
             rtp_parameters::Type::Simple => ProducerType::Simple,
             rtp_parameters::Type::Simulcast => ProducerType::Simulcast,
@@ -210,8 +212,10 @@ pub struct ProducerScore {
     pub score: u8,
 }
 
-impl ProducerScore {
-    pub(crate) fn from_fbs(producer_score: &producer::Score) -> Self {
+impl FromFbs for ProducerScore {
+    type FbsType = producer::Score;
+
+    fn from_fbs(producer_score: &producer::Score) -> Self {
         Self {
             encoding_idx: producer_score.encoding_idx,
             ssrc: producer_score.ssrc,
@@ -247,10 +251,10 @@ pub struct ProducerVideoOrientation {
     pub rotation: Rotation,
 }
 
-impl ProducerVideoOrientation {
-    pub(crate) fn from_fbs(
-        video_orientation: producer::VideoOrientationChangeNotification,
-    ) -> Self {
+impl FromFbs for ProducerVideoOrientation {
+    type FbsType = producer::VideoOrientationChangeNotification;
+
+    fn from_fbs(video_orientation: &Self::FbsType) -> Self {
         Self {
             camera: video_orientation.camera,
             flip: video_orientation.flip,
@@ -309,8 +313,10 @@ pub struct ProducerStat {
     pub bitrate_by_layer: Vec<BitrateByLayer>,
 }
 
-impl ProducerStat {
-    pub(crate) fn from_fbs(stats: &rtp_stream::Stats) -> Self {
+impl FromFbs for ProducerStat {
+    type FbsType = rtp_stream::Stats;
+
+    fn from_fbs(stats: &rtp_stream::Stats) -> Self {
         let rtp_stream::StatsData::RecvStats(ref stats) = stats.data else {
             panic!("Wrong message from worker: {stats:?}");
         };
@@ -412,14 +418,16 @@ pub enum ProducerTraceEventData {
     },
 }
 
-impl ProducerTraceEventData {
-    pub(crate) fn from_fbs(data: producer::TraceNotification) -> Self {
+impl FromFbs for ProducerTraceEventData {
+    type FbsType = producer::TraceNotification;
+
+    fn from_fbs(data: &Self::FbsType) -> Self {
         match data.type_ {
             producer::TraceEventType::Rtp => ProducerTraceEventData::Rtp {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(producer::TraceInfo::RtpTraceInfo(info)) = data.info else {
+                    let Some(producer::TraceInfo::RtpTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
@@ -433,7 +441,7 @@ impl ProducerTraceEventData {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(producer::TraceInfo::KeyFrameTraceInfo(info)) = data.info else {
+                    let Some(producer::TraceInfo::KeyFrameTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
@@ -451,7 +459,7 @@ impl ProducerTraceEventData {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(producer::TraceInfo::PliTraceInfo(info)) = data.info else {
+                    let Some(producer::TraceInfo::PliTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
@@ -462,7 +470,7 @@ impl ProducerTraceEventData {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(producer::TraceInfo::FirTraceInfo(info)) = data.info else {
+                    let Some(producer::TraceInfo::FirTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
@@ -473,7 +481,7 @@ impl ProducerTraceEventData {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(producer::TraceInfo::SrTraceInfo(info)) = data.info else {
+                    let Some(producer::TraceInfo::SrTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
@@ -517,8 +525,10 @@ impl ToFbs for ProducerTraceEventType {
     }
 }
 
-impl ProducerTraceEventType {
-    pub(crate) fn from_fbs(event_type: &producer::TraceEventType) -> Self {
+impl FromFbs for ProducerTraceEventType {
+    type FbsType = producer::TraceEventType;
+
+    fn from_fbs(event_type: &Self::FbsType) -> Self {
         match event_type {
             producer::TraceEventType::Rtp => ProducerTraceEventType::Rtp,
             producer::TraceEventType::Keyframe => ProducerTraceEventType::KeyFrame,
@@ -538,10 +548,11 @@ enum Notification {
     Trace(ProducerTraceEventData),
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::ProducerScore => {
                 let Ok(Some(notification::BodyRef::ProducerScoreNotification(body))) =
@@ -556,7 +567,7 @@ impl Notification {
                     .iter()
                     .map(|score| producer::Score::try_from(score.unwrap()).unwrap())
                     .collect();
-                let scores = scores_fbs.iter().map(ProducerScore::from_fbs).collect();
+                let scores = FromFbs::from_fbs(&scores_fbs);
 
                 Ok(Notification::Score(scores))
             }
@@ -570,7 +581,7 @@ impl Notification {
 
                 let video_orientation_fbs =
                     producer::VideoOrientationChangeNotification::try_from(body).unwrap();
-                let video_orientation = ProducerVideoOrientation::from_fbs(video_orientation_fbs);
+                let video_orientation = ProducerVideoOrientation::from_fbs(&video_orientation_fbs);
 
                 Ok(Notification::VideoOrientationChange(video_orientation))
             }
@@ -582,7 +593,7 @@ impl Notification {
                 };
 
                 let trace_notification_fbs = producer::TraceNotification::try_from(body).unwrap();
-                let trace_notification = ProducerTraceEventData::from_fbs(trace_notification_fbs);
+                let trace_notification = ProducerTraceEventData::from_fbs(&trace_notification_fbs);
 
                 Ok(Notification::Trace(trace_notification))
             }
@@ -775,7 +786,7 @@ impl Producer {
             let score = Arc::clone(&score);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Score(scores) => {
                             score.lock().clone_from(&scores);
@@ -921,7 +932,7 @@ impl Producer {
             .await?;
 
         if let response::Body::ProducerGetStatsResponse(data) = response {
-            Ok(data.stats.iter().map(ProducerStat::from_fbs).collect())
+            Ok(FromFbs::from_fbs(&data.stats))
         } else {
             panic!("Wrong message from worker: {response:?}");
         }

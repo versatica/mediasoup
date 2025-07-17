@@ -569,8 +569,12 @@ impl RouterCreateDirectTransportData {
             max_message_size: direct_transport_options.max_message_size,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> direct_transport::DirectTransportOptions {
+impl ToFbs for RouterCreateDirectTransportData {
+    type FbsType = direct_transport::DirectTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         direct_transport::DirectTransportOptions {
             base: Box::new(transport::Options {
                 direct: true,
@@ -638,8 +642,10 @@ enum RouterCreateWebrtcTransportListen {
     },
 }
 
-impl RouterCreateWebrtcTransportListen {
-    pub(crate) fn to_fbs(&self) -> web_rtc_transport::Listen {
+impl ToFbs for RouterCreateWebrtcTransportListen {
+    type FbsType = web_rtc_transport::Listen;
+
+    fn to_fbs(&self) -> Self::FbsType {
         match self {
             RouterCreateWebrtcTransportListen::Individual { listen_infos } => {
                 web_rtc_transport::Listen::ListenIndividual(Box::new(
@@ -709,8 +715,12 @@ impl RouterCreateWebrtcTransportData {
             is_data_channel: true,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> web_rtc_transport::WebRtcTransportOptions {
+impl ToFbs for RouterCreateWebrtcTransportData {
+    type FbsType = web_rtc_transport::WebRtcTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         web_rtc_transport::WebRtcTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
@@ -920,8 +930,12 @@ impl RouterCreatePlainTransportData {
             is_data_channel: false,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> plain_transport::PlainTransportOptions {
+impl ToFbs for RouterCreatePlainTransportData {
+    type FbsType = plain_transport::PlainTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         plain_transport::PlainTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
@@ -1048,8 +1062,12 @@ impl RouterCreatePipeTransportData {
             is_data_channel: false,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> pipe_transport::PipeTransportOptions {
+impl ToFbs for RouterCreatePipeTransportData {
+    type FbsType = pipe_transport::PipeTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         pipe_transport::PipeTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
@@ -1747,7 +1765,7 @@ impl Request for TransportProduceRequest {
         let data = transport::ProduceResponse::try_from(data)?;
 
         Ok(TransportProduceResponse {
-            r#type: ProducerType::from_fbs(data.type_),
+            r#type: ProducerType::from_fbs(&data.type_),
         })
     }
 }
@@ -1789,7 +1807,8 @@ impl Request for TransportConsumeRequest {
             self.r#type.to_fbs(),
             ToFbs::to_fbs(&self.consumable_rtp_encodings),
             self.paused,
-            self.preferred_layers.map(ConsumerLayers::to_fbs),
+            ToFbs::to_fbs(&self.preferred_layers),
+            // self.preferred_layers.map(ConsumerLayers::to_fbs),
             self.ignore_dtx,
         );
         let request_body = request::Body::create_transport_consume_request(&mut builder, data);
@@ -1818,10 +1837,10 @@ impl Request for TransportConsumeRequest {
         Ok(TransportConsumeResponse {
             paused: data.paused,
             producer_paused: data.producer_paused,
-            score: ConsumerScore::from_fbs(*data.score),
+            score: ConsumerScore::from_fbs(data.score.as_ref()),
             preferred_layers: data
                 .preferred_layers
-                .map(|preferred_layers| ConsumerLayers::from_fbs(*preferred_layers)),
+                .map(|preferred_layers| ConsumerLayers::from_fbs(preferred_layers.as_ref())),
         })
     }
 }
@@ -1860,8 +1879,7 @@ impl Request for TransportProduceDataRequest {
                 DataProducerType::Sctp => data_producer::Type::Sctp,
                 DataProducerType::Direct => data_producer::Type::Direct,
             },
-            self.sctp_stream_parameters
-                .map(|parameters| parameters.to_fbs()),
+            ToFbs::to_fbs(&self.sctp_stream_parameters),
             if self.label.is_empty() {
                 None
             } else {
@@ -1950,8 +1968,7 @@ impl Request for TransportConsumeDataRequest {
                 DataConsumerType::Sctp => data_producer::Type::Sctp,
                 DataConsumerType::Direct => data_producer::Type::Direct,
             },
-            self.sctp_stream_parameters
-                .map(|stream_parameters| SctpStreamParameters::to_fbs(&stream_parameters)),
+            ToFbs::to_fbs(&self.sctp_stream_parameters),
             if self.label.is_empty() {
                 None
             } else {
@@ -2504,7 +2521,7 @@ impl Request for ConsumerSetPreferredLayersRequest {
 
         let data = consumer::SetPreferredLayersRequest::create(
             &mut builder,
-            ConsumerLayers::to_fbs(self.data),
+            ConsumerLayers::to_fbs(&self.data),
         );
         let request_body =
             request::Body::create_consumer_set_preferred_layers_request(&mut builder, data);
@@ -2532,7 +2549,7 @@ impl Request for ConsumerSetPreferredLayersRequest {
         let data = consumer::SetPreferredLayersResponse::try_from(data)?;
 
         match data.preferred_layers {
-            Some(preferred_layers) => Ok(Some(ConsumerLayers::from_fbs(*preferred_layers))),
+            Some(preferred_layers) => Ok(Some(ConsumerLayers::from_fbs(preferred_layers.as_ref()))),
             None => Ok(None),
         }
     }
@@ -2631,11 +2648,7 @@ impl Request for ConsumerEnableTraceEventRequest {
         let mut builder = Builder::new();
 
         let data = consumer::EnableTraceEventRequest {
-            events: self
-                .types
-                .into_iter()
-                .map(ConsumerTraceEventType::to_fbs)
-                .collect(),
+            events: ToFbs::to_fbs(&self.types),
         };
 
         let request_body = request::Body::ConsumerEnableTraceEventRequest(Box::new(data));

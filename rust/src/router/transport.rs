@@ -1,7 +1,7 @@
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions, ConsumerType};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::fbs::{FromFbs, ToFbs};
+use crate::fbs::{FromFbs, ToFbs, TryFromFbs};
 use crate::messages::{
     TransportConsumeDataRequest, TransportConsumeRequest, TransportDumpRequest,
     TransportEnableTraceEventRequest, TransportGetStatsRequest, TransportProduceDataRequest,
@@ -67,15 +67,16 @@ pub enum TransportTraceEventData {
     },
 }
 
-impl TransportTraceEventData {
-    pub(crate) fn from_fbs(data: transport::TraceNotification) -> Self {
+impl FromFbs for TransportTraceEventData {
+    type FbsType = transport::TraceNotification;
+    fn from_fbs(data: &Self::FbsType) -> Self {
         match data.type_ {
             transport::TraceEventType::Probation => unimplemented!(),
             transport::TraceEventType::Bwe => TransportTraceEventData::Bwe {
                 timestamp: data.timestamp,
                 direction: TraceEventDirection::from_fbs(&data.direction),
                 info: {
-                    let Some(transport::TraceInfo::BweTraceInfo(info)) = data.info else {
+                    let Some(transport::TraceInfo::BweTraceInfo(info)) = &data.info else {
                         panic!("Wrong message from worker: {data:?}");
                     };
 
@@ -107,8 +108,10 @@ impl ToFbs for TransportTraceEventType {
     }
 }
 
-impl TransportTraceEventType {
-    pub(crate) fn from_fbs(event_type: &transport::TraceEventType) -> Self {
+impl FromFbs for TransportTraceEventType {
+    type FbsType = transport::TraceEventType;
+
+    fn from_fbs(event_type: &transport::TraceEventType) -> Self {
         match event_type {
             transport::TraceEventType::Probation => TransportTraceEventType::Probation,
             transport::TraceEventType::Bwe => TransportTraceEventType::Bwe,
@@ -128,10 +131,11 @@ pub struct RtpListener {
     pub ssrc_table: Vec<(u32, ProducerId)>,
 }
 
-impl RtpListener {
-    pub(crate) fn from_fbs(
-        rtp_listener: &transport::RtpListener,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for RtpListener {
+    type FbsType = transport::RtpListener;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(rtp_listener: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             mid_table: rtp_listener
                 .mid_table
@@ -163,8 +167,10 @@ pub struct RecvRtpHeaderExtensions {
     transport_wide_cc01: Option<u8>,
 }
 
-impl RecvRtpHeaderExtensions {
-    pub(crate) fn from_fbs(extensions: &transport::RecvRtpHeaderExtensions) -> Self {
+impl FromFbs for RecvRtpHeaderExtensions {
+    type FbsType = transport::RecvRtpHeaderExtensions;
+
+    fn from_fbs(extensions: &Self::FbsType) -> Self {
         Self {
             mid: extensions.mid,
             rid: extensions.rid,
@@ -183,10 +189,11 @@ pub struct SctpListener {
     stream_id_table: Vec<(u16, DataProducerId)>,
 }
 
-impl SctpListener {
-    pub(crate) fn from_fbs(
-        listener: &transport::SctpListener,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for SctpListener {
+    type FbsType = transport::SctpListener;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(listener: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             stream_id_table: listener
                 .stream_id_table

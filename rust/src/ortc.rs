@@ -1,4 +1,4 @@
-use crate::fbs::TryFromFbs;
+use crate::fbs::{ToFbs, TryFromFbs};
 use crate::supported_rtp_capabilities;
 use mediasoup_sys::fbs::rtp_parameters;
 use mediasoup_types::rtp_parameters::{
@@ -91,8 +91,10 @@ impl<'a> TryFromFbs<'a> for RtpMapping {
     }
 }
 
-impl RtpMapping {
-    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpMapping {
+impl ToFbs for RtpMapping {
+    type FbsType = rtp_parameters::RtpMapping;
+
+    fn to_fbs(&self) -> Self::FbsType {
         rtp_parameters::RtpMapping {
             codecs: self
                 .codecs

@@ -10,7 +10,6 @@
 #[cfg(test)]
 mod tests;
 
-use crate::fbs::ToFbs;
 use crate::messages::{WebRtcServerCloseRequest, WebRtcServerDumpRequest};
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;
@@ -20,7 +19,6 @@ use async_executor::Executor;
 use event_listener_primitives::{BagOnce, HandlerId};
 use hash_hasher::HashedSet;
 use log::{debug, error};
-use mediasoup_sys::fbs::transport;
 use mediasoup_types::data_structures::{AppData, ListenInfo};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -91,10 +89,6 @@ impl WebRtcServerListenInfos {
     pub fn insert(mut self, listen_info: ListenInfo) -> Self {
         self.0.push(listen_info);
         self
-    }
-
-    pub(crate) fn to_fbs(&self) -> Vec<transport::ListenInfo> {
-        self.0.iter().map(ListenInfo::to_fbs).collect()
     }
 }
 

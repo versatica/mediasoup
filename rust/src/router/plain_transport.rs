@@ -4,7 +4,7 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::fbs::FromFbs;
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{PlainTransportData, TransportCloseRequest, TransportConnectPlainRequest};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
@@ -127,10 +127,11 @@ pub struct PlainTransportDump {
     pub srtp_parameters: Option<SrtpParameters>,
 }
 
-impl PlainTransportDump {
-    pub(crate) fn from_fbs(
-        dump: plain_transport::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for PlainTransportDump {
+    type FbsType = plain_transport::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             // Common to all Transports.
             id: dump.base.id.parse()?,
@@ -174,7 +175,7 @@ impl PlainTransportDump {
             recv_rtp_header_extensions: RecvRtpHeaderExtensions::from_fbs(
                 dump.base.recv_rtp_header_extensions.as_ref(),
             ),
-            rtp_listener: RtpListener::from_fbs(dump.base.rtp_listener.as_ref())?,
+            rtp_listener: RtpListener::try_from_fbs(*dump.base.rtp_listener)?,
             max_message_size: dump.base.max_message_size,
             sctp_parameters: dump
                 .base
@@ -183,7 +184,8 @@ impl PlainTransportDump {
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
             sctp_state: FromFbs::from_fbs(&dump.base.sctp_state),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
-                SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
+                SctpListener::try_from_fbs(listener.as_ref().clone())
+                    .expect("Error parsing SctpListner")
             }),
             trace_event_types: dump
                 .base
@@ -248,10 +250,11 @@ pub struct PlainTransportStat {
     pub rtcp_tuple: Option<TransportTuple>,
 }
 
-impl PlainTransportStat {
-    pub(crate) fn from_fbs(
-        stats: plain_transport::GetStatsResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for PlainTransportStat {
+    type FbsType = plain_transport::GetStatsResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(stats: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
@@ -340,10 +343,11 @@ enum Notification {
     Trace(TransportTraceEventData),
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::PlaintransportTuple => {
                 let Ok(Some(notification::BodyRef::PlainTransportTupleNotification(body))) =
@@ -388,7 +392,7 @@ impl Notification {
                 };
 
                 let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
-                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+                let trace_notification = TransportTraceEventData::from_fbs(&trace_notification_fbs);
 
                 Ok(Notification::Trace(trace_notification))
             }
@@ -631,7 +635,7 @@ impl TransportGeneric for PlainTransport {
         let response = self.dump_impl().await?;
 
         if let response::Body::PlainTransportDumpResponse(data) = response {
-            Ok(PlainTransportDump::from_fbs(*data)
+            Ok(PlainTransportDump::try_from_fbs(*data)
                 .expect("Error parsing dump response: {response:?}"))
         } else {
             panic!("Wrong message from worker: {response:?}");
@@ -644,7 +648,7 @@ impl TransportGeneric for PlainTransport {
         let response = self.get_stats_impl().await?;
 
         if let response::Body::PlainTransportGetStatsResponse(data) = response {
-            Ok(vec![PlainTransportStat::from_fbs(*data)
+            Ok(vec![PlainTransportStat::try_from_fbs(*data)
                 .expect("Error parsing dump response: {response:?}")])
         } else {
             panic!("Wrong message from worker: {response:?}");
@@ -693,7 +697,7 @@ impl PlainTransport {
             let data = Arc::clone(&data);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Tuple { tuple } => {
                             *data.tuple.lock() = tuple.clone();

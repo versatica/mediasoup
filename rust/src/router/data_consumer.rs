@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
-use crate::fbs::FromFbs;
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     DataConsumerAddSubchannelRequest, DataConsumerCloseRequest, DataConsumerDumpRequest,
     DataConsumerGetBufferedAmountRequest, DataConsumerGetStatsRequest, DataConsumerPauseRequest,
@@ -21,7 +21,6 @@ use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use std::error::Error;
 // TODO.
 // use std::borrow::Cow;
 use std::fmt;
@@ -163,28 +162,32 @@ pub struct DataConsumerDump {
     pub data_producer_paused: bool,
 }
 
-impl DataConsumerDump {
-    pub(crate) fn from_fbs(
-        dump: data_consumer::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
-        Ok(Self {
-            id: dump.id.parse()?,
-            data_producer_id: dump.data_producer_id.parse()?,
+impl FromFbs for DataConsumerDump {
+    type FbsType = data_consumer::DumpResponse;
+
+    fn from_fbs(dump: &Self::FbsType) -> Self {
+        Self {
+            id: dump.id.parse().expect("Invalid DataConsumer ID"),
+            data_producer_id: dump
+                .data_producer_id
+                .parse()
+                .expect("Invalid DataProducer ID"),
             r#type: if dump.type_ == data_producer::Type::Sctp {
                 DataConsumerType::Sctp
             } else {
                 DataConsumerType::Direct
             },
-            label: dump.label,
-            protocol: dump.protocol,
+            label: dump.label.clone(),
+            protocol: dump.protocol.clone(),
             sctp_stream_parameters: dump
                 .sctp_stream_parameters
+                .as_ref()
                 .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
             buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
             paused: dump.paused,
-            subchannels: dump.subchannels,
+            subchannels: dump.subchannels.clone(),
             data_producer_paused: dump.data_producer_paused,
-        })
+        }
     }
 }
 
@@ -203,8 +206,10 @@ pub struct DataConsumerStat {
     pub buffered_amount: u32,
 }
 
-impl DataConsumerStat {
-    pub(crate) fn from_fbs(stats: &data_consumer::GetStatsResponse) -> Self {
+impl FromFbs for DataConsumerStat {
+    type FbsType = data_consumer::GetStatsResponse;
+
+    fn from_fbs(stats: &Self::FbsType) -> Self {
         Self {
             timestamp: stats.timestamp,
             label: stats.label.to_string(),
@@ -243,10 +248,11 @@ enum Notification {
     },
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::DataconsumerDataproducerClose => {
                 Ok(Notification::DataProducerClose)
@@ -497,7 +503,7 @@ impl DataConsumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
@@ -694,7 +700,7 @@ impl DataConsumer {
             .await?;
 
         if let response::Body::DataConsumerDumpResponse(data) = response {
-            Ok(DataConsumerDump::from_fbs(*data).expect("Error parsing dump response"))
+            Ok(DataConsumerDump::from_fbs(data.as_ref()))
         } else {
             panic!("Wrong message from worker: {response:?}");
         }
