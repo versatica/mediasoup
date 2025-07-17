@@ -1,7 +1,12 @@
 [package]
 name = "mediasoup-types"
 version = "0.1.0"
+description = "Type definitions and shared data structures for the mediasoup crate"
 edition = "2021"
+license = "ISC"
+documentation = "https://docs.rs/mediasoup-types"
+repository = "https://github.com/versatica/mediasoup"
+readme = "README.md"
 
 [dependencies]
 once_cell = "1.16.0"
