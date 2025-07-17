@@ -1,7 +1,7 @@
 //! Collection of RTP-related data structures that are used to specify codec parameters and
 //! capabilities of various endpoints.
 
-use crate::fbs::{FromFbs, IntoFbs, ToFbs, TryFromFbs};
+use crate::fbs::{FromFbs, ToFbs, TryFromFbs};
 use mediasoup_sys::fbs::rtp_parameters;
 pub use mediasoup_types::rtp_parameters::*;
 use std::borrow::Cow;
@@ -266,15 +266,15 @@ impl ToFbs for RtpHeaderExtensionUri {
     }
 }
 
-impl IntoFbs for RtpParameters {
+impl ToFbs for RtpParameters {
     type FbsType = rtp_parameters::RtpParameters;
 
-    fn into_fbs(self) -> rtp_parameters::RtpParameters {
+    fn to_fbs(&self) -> rtp_parameters::RtpParameters {
         rtp_parameters::RtpParameters {
-            mid: self.mid,
+            mid: self.mid.clone(),
             codecs: self
                 .codecs
-                .into_iter()
+                .iter()
                 .map(|codec| rtp_parameters::RtpCodecParameters {
                     mime_type: codec.mime_type().as_str().to_string(),
                     payload_type: codec.payload_type(),
@@ -323,7 +323,7 @@ impl IntoFbs for RtpParameters {
                 .collect(),
             header_extensions: self
                 .header_extensions
-                .into_iter()
+                .iter()
                 .map(
                     |header_extension_parameters| rtp_parameters::RtpHeaderExtensionParameters {
                         uri: header_extension_parameters.uri.to_fbs(),
@@ -335,10 +335,10 @@ impl IntoFbs for RtpParameters {
                 .collect(),
             encodings: self
                 .encodings
-                .into_iter()
+                .iter()
                 .map(|encoding| rtp_parameters::RtpEncodingParameters {
                     ssrc: encoding.ssrc,
-                    rid: encoding.rid,
+                    rid: encoding.rid.clone(),
                     codec_payload_type: encoding.codec_payload_type,
                     rtx: encoding
                         .rtx
@@ -353,7 +353,7 @@ impl IntoFbs for RtpParameters {
                 })
                 .collect(),
             rtcp: Box::new(rtp_parameters::RtcpParameters {
-                cname: self.rtcp.cname,
+                cname: self.rtcp.cname.clone(),
                 reduced_size: self.rtcp.reduced_size,
             }),
         }

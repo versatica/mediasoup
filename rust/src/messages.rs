@@ -6,7 +6,7 @@ use crate::consumer::{
 use crate::data_consumer::{DataConsumerId, DataConsumerType};
 use crate::data_producer::{DataProducerId, DataProducerType};
 use crate::direct_transport::DirectTransportOptions;
-use crate::fbs::{FromFbs, IntoFbs, ToFbs, TryFromFbs};
+use crate::fbs::{FromFbs, ToFbs, TryFromFbs};
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
@@ -1718,7 +1718,7 @@ impl Request for TransportProduceRequest {
             &mut builder,
             self.producer_id.to_string(),
             self.kind.to_fbs(),
-            Box::new(self.rtp_parameters.into_fbs()),
+            Box::new(self.rtp_parameters.to_fbs()),
             Box::new(self.rtp_mapping.to_fbs()),
             self.key_frame_request_delay,
             self.paused,
@@ -1785,7 +1785,7 @@ impl Request for TransportConsumeRequest {
             self.consumer_id.to_string(),
             self.producer_id.to_string(),
             self.kind.to_fbs(),
-            Box::new(self.rtp_parameters.into_fbs()),
+            Box::new(self.rtp_parameters.to_fbs()),
             self.r#type.to_fbs(),
             ToFbs::to_fbs(&self.consumable_rtp_encodings),
             self.paused,

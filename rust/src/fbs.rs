@@ -19,12 +19,6 @@ pub(crate) trait ToFbs: Sized {
     fn to_fbs(&self) -> Self::FbsType;
 }
 
-pub(crate) trait IntoFbs: Sized {
-    type FbsType;
-
-    fn into_fbs(self) -> Self::FbsType;
-}
-
 impl<T> FromFbs for Option<T>
 where
     T: FromFbs,
@@ -55,17 +49,6 @@ where
 
     fn to_fbs(&self) -> Self::FbsType {
         self.iter().map(|item| item.to_fbs()).collect()
-    }
-}
-
-impl<T> IntoFbs for Vec<T>
-where
-    T: IntoFbs,
-{
-    type FbsType = Vec<T::FbsType>;
-
-    fn into_fbs(self) -> Self::FbsType {
-        self.into_iter().map(|item| item.into_fbs()).collect()
     }
 }
 
