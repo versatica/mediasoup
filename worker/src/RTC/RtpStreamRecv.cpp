@@ -27,7 +27,7 @@ namespace RTC
 		{
 			for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
 			{
-				spatialLayerCounter.emplace_back(windowSize);
+				spatialLayerCounter.emplace_back(/*ignorePaddingOnlyPackets*/ true, windowSize);
 			}
 		}
 	}
@@ -196,7 +196,8 @@ namespace RTC
 	  : RTC::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
 	    useRtpInactivityCheck(useRtpInactivityCheck),
 	    transmissionCounter(
-	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
+	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),
+	    mediaTransmissionCounter(/*ignorePaddingOnlyPackets*/ true)
 	{
 		MS_TRACE();
 
@@ -303,18 +304,17 @@ namespace RTC
 		// Calculate Jitter.
 		CalculateJitter(packet->GetTimestamp());
 
-		// Padding only packet, do not consider it for counter increase nor
-		// stream activation.
-		if (packet->GetPayloadLength() == 0)
-		{
-			return true;
-		}
-
 		// Increase transmission counter.
 		this->transmissionCounter.Update(packet);
 
 		// Increase media transmission counter.
 		this->mediaTransmissionCounter.Update(packet);
+
+		// Padding only packet, do not consider it for stream activation.
+		if (packet->GetPayloadLength() == 0)
+		{
+			return true;
+		}
 
 		// Not inactive anymore.
 		if (this->inactive)
@@ -420,18 +420,17 @@ namespace RTC
 		// NACKed packet.
 		if (this->nackGenerator->ReceivePacket(packet, /*isRecovered*/ true))
 		{
-			// Padding only packet, do not consider it for counter increase nor
-			// stream activation.
-			if (packet->GetPayloadLength() == 0)
-			{
-				return true;
-			}
-
 			// Mark the packet as repaired.
 			RTC::RtpStream::PacketRepaired(packet);
 
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
+
+			// Padding only packet, do not consider it for stream activation.
+			if (packet->GetPayloadLength() == 0)
+			{
+				return true;
+			}
 
 			// Not inactive anymore.
 			if (this->inactive)

@@ -4,6 +4,7 @@
 
 - `Router`: Add `updateMediaCodecs()` method to dynamically change Router's RTP capabilities ([PR #1571](https://github.com/versatica/mediasoup/pull/1571)).
 - `RtpStream`: Update `maxPacketTs` if RTP timestamp moved backwards despite in-order RTP sequence number ([PR #1574](https://github.com/versatica/mediasoup/pull/1574), credits to @oppolixiang).
+- `RtpStream`: Ignore padding only RTP packets in RTP data counters ([PR #1580](https://github.com/versatica/mediasoup/pull/1580), thanks to @quanli168 for reporting the issue).
 
 ### 3.16.6
 

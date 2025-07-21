@@ -77,7 +77,8 @@ namespace RTC
 	class RtpDataCounter
 	{
 	public:
-		explicit RtpDataCounter(size_t windowSizeMs = 2500) : rate(windowSizeMs)
+		explicit RtpDataCounter(bool ignorePaddingOnlyPackets, size_t windowSizeMs = 2500)
+		  : ignorePaddingOnlyPackets(ignorePaddingOnlyPackets), rate(windowSizeMs)
 		{
 		}
 
@@ -100,6 +101,9 @@ namespace RTC
 		}
 
 	private:
+		// Whether the size of padding only RTP packets should not be taken into
+		// account
+		bool ignorePaddingOnlyPackets{ false };
 		RateCalculator rate;
 		size_t packets{ 0u };
 	};

@@ -201,6 +201,10 @@ namespace RTC
 		const uint64_t nowMs = DepLibUV::GetTimeMs();
 
 		this->packets++;
-		this->rate.Update(packet->GetSize(), nowMs);
+
+		if (!this->ignorePaddingOnlyPackets || packet->GetPayloadLength() > 0)
+		{
+			this->rate.Update(packet->GetSize(), nowMs);
+		}
 	}
 } // namespace RTC
