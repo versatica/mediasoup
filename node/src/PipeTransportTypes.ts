@@ -85,7 +85,7 @@ type PipeTransportListenIp = {
 	port?: number;
 };
 
-export type PipeConsumerOptions<ConsumerAppData> = {
+export type PipeConsumerOptions<ConsumerAppData extends AppData = AppData> = {
 	/**
 	 * The id of the Producer to consume.
 	 */
