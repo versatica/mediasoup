@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Update Meson subprojects ([PR #1582](https://github.com/versatica/mediasoup/pull/1582)).
+
 ### 3.16.8
 
 - Node: Fix `PipeConsumerOptions` TypeScript type (make `ConsumerAppData` TS argument optional) ([PR #1581](https://github.com/versatica/mediasoup/pull/1581)).
