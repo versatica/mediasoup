@@ -453,8 +453,6 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 		iceCandidates[1]!.priority
 	);
 
-	console.log(await transport.dump());
-
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();
 
