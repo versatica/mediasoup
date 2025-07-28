@@ -6,6 +6,8 @@
 - Remove H265 codec and deprecated frame-marking RTP extension (PR #1564).
 - Remove H264-SVC codec (PR #1568).
 - Add `Router::update_media_codecs()` to dynamically change Router's RTP capabilities (#1571).
+- `ListenInfo`: Add `expose_internal_ip` which, if set to `true` and `announced_address` is set, exposes an additional ICE candidate in `WebRtcTransport` whose IP is `listen_info.ip` rather than `listen_info.announced_address` (PR #XXXX).
+- Updates from mediasoup TypeScript `3.14.11.=3.16.8`.
 
 # 0.18.2
 

@@ -37,6 +37,7 @@ fn worker_close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port),
                     port_range: None,
                     flags: None,

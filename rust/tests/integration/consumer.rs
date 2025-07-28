@@ -364,6 +364,7 @@ async fn init() -> (
             protocol: Protocol::Udp,
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_address: None,
+            expose_internal_ip: false,
             port: None,
             port_range: None,
             flags: None,

@@ -481,6 +481,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 						: FbsTransportProtocol.TCP,
 					listenInfo.ip,
 					listenInfo.announcedAddress ?? listenInfo.announcedIp,
+					Boolean(listenInfo.exposeInternalIp),
 					listenInfo.port,
 					portRangeToFbs(listenInfo.portRange),
 					socketFlagsToFbs(listenInfo.flags),

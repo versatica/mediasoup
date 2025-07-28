@@ -85,6 +85,8 @@ namespace RTC
 					announcedAddress = listenInfo->announcedAddress()->str();
 				}
 
+				bool exposeInternalIp = listenInfo->exposeInternalIp();
+
 				RTC::Transport::SocketFlags flags;
 
 				flags.ipv6Only     = listenInfo->flags()->ipv6Only();
@@ -127,7 +129,8 @@ namespace RTC
 						  portRangeHash);
 					}
 
-					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedAddress);
+					this->udpSocketOrTcpServers.emplace_back(
+					  udpSocket, nullptr, announcedAddress, exposeInternalIp);
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -184,7 +187,8 @@ namespace RTC
 						  portRangeHash);
 					}
 
-					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedAddress);
+					this->udpSocketOrTcpServers.emplace_back(
+					  nullptr, tcpServer, announcedAddress, exposeInternalIp);
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -372,6 +376,11 @@ namespace RTC
 				{
 					iceCandidates.emplace_back(
 					  item.udpSocket, icePriority, const_cast<std::string&>(item.announcedAddress));
+
+					if (item.exposeInternalIp)
+					{
+						iceCandidates.emplace_back(item.udpSocket, icePriority - 1000);
+					}
 				}
 			}
 			else if (item.tcpServer && enableTcp)
@@ -393,6 +402,11 @@ namespace RTC
 				{
 					iceCandidates.emplace_back(
 					  item.tcpServer, icePriority, const_cast<std::string&>(item.announcedAddress));
+
+					if (item.exposeInternalIp)
+					{
+						iceCandidates.emplace_back(item.tcpServer, icePriority - 1000);
+					}
 				}
 			}
 

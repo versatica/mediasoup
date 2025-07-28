@@ -41,6 +41,7 @@ fn router_close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("4.4.4.4".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,

@@ -60,6 +60,10 @@ pub struct ListenInfo {
     /// NAT with private IP).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub announced_address: Option<String>,
+    /// In transports with ICE candidates, this field determines whether to also
+    /// expose an ICE candidate with the IP of the |ip| field when
+    /// |announcedAddress| is given.
+    pub expose_internal_ip: bool,
     /// Listening port.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,

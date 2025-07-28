@@ -99,6 +99,7 @@ fn create_succeeds() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: Some("9.9.9.1".to_string()),
+                        expose_internal_ip: false,
                         port: None,
                         port_range: None,
                         flags: None,
@@ -138,6 +139,7 @@ fn create_succeeds() {
                                 protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_address: Some("9.9.9.1".to_string()),
+                                expose_internal_ip: true,
                                 port: None,
                                 port_range: None,
                                 flags: None,
@@ -148,6 +150,7 @@ fn create_succeeds() {
                                 protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
                                 announced_address: Some("foo1.bar.org".to_string()),
+                                expose_internal_ip: false,
                                 port: None,
                                 port_range: None,
                                 flags: None,
@@ -158,6 +161,7 @@ fn create_succeeds() {
                                 protocol: Protocol::Udp,
                                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                                 announced_address: None,
+                                expose_internal_ip: false,
                                 port: None,
                                 port_range: None,
                                 flags: None,
@@ -203,25 +207,30 @@ fn create_succeeds() {
             );
             {
                 let ice_candidates = transport1.ice_candidates();
-                assert_eq!(ice_candidates.len(), 3);
+                assert_eq!(ice_candidates.len(), 4);
                 assert_eq!(ice_candidates[0].address, "9.9.9.1");
                 assert_eq!(ice_candidates[0].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[0].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[0].tcp_type, None);
-                assert_eq!(ice_candidates[1].address, "foo1.bar.org");
+                assert_eq!(ice_candidates[1].address, "127.0.0.1");
                 assert_eq!(ice_candidates[1].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[1].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[1].tcp_type, None);
-                assert_eq!(ice_candidates[2].address, "127.0.0.1");
+                assert_eq!(ice_candidates[2].address, "foo1.bar.org");
                 assert_eq!(ice_candidates[2].protocol, Protocol::Udp);
                 assert_eq!(ice_candidates[2].r#type, IceCandidateType::Host);
                 assert_eq!(ice_candidates[2].tcp_type, None);
-                assert_eq!(ice_candidates[2].address, "127.0.0.1");
-                assert_eq!(ice_candidates[2].protocol, Protocol::Udp);
-                assert_eq!(ice_candidates[2].r#type, IceCandidateType::Host);
-                assert_eq!(ice_candidates[2].tcp_type, None);
+                assert_eq!(ice_candidates[3].address, "127.0.0.1");
+                assert_eq!(ice_candidates[3].protocol, Protocol::Udp);
+                assert_eq!(ice_candidates[3].r#type, IceCandidateType::Host);
+                assert_eq!(ice_candidates[3].tcp_type, None);
+                assert_eq!(ice_candidates[3].address, "127.0.0.1");
+                assert_eq!(ice_candidates[3].protocol, Protocol::Udp);
+                assert_eq!(ice_candidates[3].r#type, IceCandidateType::Host);
+                assert_eq!(ice_candidates[3].tcp_type, None);
                 assert!(ice_candidates[0].priority > ice_candidates[1].priority);
                 assert!(ice_candidates[1].priority > ice_candidates[2].priority);
+                assert!(ice_candidates[2].priority > ice_candidates[3].priority);
             }
 
             assert_eq!(transport1.ice_state(), IceState::New);
@@ -270,6 +279,7 @@ fn create_with_fixed_port_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: Some(port),
                     port_range: None,
                     flags: None,
@@ -296,6 +306,7 @@ fn create_with_port_range_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: Some(port_range.clone()),
                     flags: None,
@@ -315,6 +326,7 @@ fn create_with_port_range_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: Some(port_range.clone()),
                     flags: None,
@@ -335,6 +347,7 @@ fn create_with_port_range_succeeds() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: Some("9.9.9.1".to_string()),
+                        expose_internal_ip: false,
                         port: None,
                         port_range: Some(port_range.clone()),
                         flags: None,
@@ -359,6 +372,7 @@ fn weak() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -391,6 +405,7 @@ fn create_non_bindable_ip() {
                         protocol: Protocol::Udp,
                         ip: "8.8.8.8".parse().unwrap(),
                         announced_address: None,
+                        expose_internal_ip: false,
                         port: None,
                         port_range: None,
                         flags: None,
@@ -415,6 +430,7 @@ fn get_stats_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -468,6 +484,7 @@ fn connect_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -519,6 +536,7 @@ fn set_max_incoming_bitrate_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -553,6 +571,7 @@ fn set_max_outgoing_bitrate_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -587,6 +606,7 @@ fn set_min_outgoing_bitrate_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -621,6 +641,7 @@ fn set_max_outgoing_bitrate_fails_if_value_is_lower_than_current_min_limit() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -660,6 +681,7 @@ fn set_min_outgoing_bitrate_fails_if_value_is_higher_than_current_max_limit() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -699,6 +721,7 @@ fn restart_ice_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -736,6 +759,7 @@ fn enable_trace_event_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -813,6 +837,7 @@ fn close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,

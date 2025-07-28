@@ -21,6 +21,7 @@ impl ToFbs for ListenInfo {
                 .announced_address
                 .as_ref()
                 .map(|address| address.to_string()),
+            expose_internal_ip: self.expose_internal_ip,
             port: self.port.unwrap_or(0),
             port_range: match &self.port_range {
                 Some(port_range) => Box::new(transport::PortRange {
