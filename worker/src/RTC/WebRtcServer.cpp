@@ -355,6 +355,10 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		uint16_t iceLocalPreferenceDecrement{ 0 };
 
+		// Optimistic preallocation which takes into account worst case (each
+		// listening item has |exposeInternalIp| set to true).
+		iceCandidates.reserve(this->udpSocketOrTcpServers.size() * 2);
+
 		for (const auto& item : this->udpSocketOrTcpServers)
 		{
 			if (item.udpSocket && enableUdp)
