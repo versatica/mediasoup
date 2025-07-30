@@ -39,6 +39,8 @@ namespace RTC
 			{
 				return IceServer::IceState::DISCONNECTED;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -65,6 +67,8 @@ namespace RTC
 			{
 				return FBS::WebRtcTransport::IceState::DISCONNECTED;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 

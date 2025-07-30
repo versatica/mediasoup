@@ -1,8 +1,5 @@
 //! Scalability mode.
 
-#[cfg(test)]
-mod tests;
-
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};

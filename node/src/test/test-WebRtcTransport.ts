@@ -76,6 +76,9 @@ test('router.createWebRtcTransport() succeeds', async () => {
 				protocol: 'udp',
 				ip: '127.0.0.1',
 				announcedAddress: '9.9.9.1',
+				// |exposeInternalIp| will generate an extra ICE candidate with |ip|
+				// value.
+				exposeInternalIp: true,
 				portRange: { min: 2000, max: 3000 },
 			},
 			{
@@ -139,7 +142,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 		maxMessageSize: 1000000,
 	});
 	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);
-	expect(webRtcTransport.iceCandidates.length).toBe(6);
+	expect(webRtcTransport.iceCandidates.length).toBe(7);
 
 	const iceCandidates = webRtcTransport.iceCandidates;
 
@@ -147,26 +150,31 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(iceCandidates[0]!.protocol).toBe('udp');
 	expect(iceCandidates[0]!.type).toBe('host');
 	expect(iceCandidates[0]!.tcpType).toBeUndefined();
-	expect(iceCandidates[1]!.ip).toBe('9.9.9.1');
-	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.protocol).toBe('udp');
 	expect(iceCandidates[1]!.type).toBe('host');
-	expect(iceCandidates[1]!.tcpType).toBe('passive');
-	expect(iceCandidates[2]!.ip).toBe('foo1.bar.org');
-	expect(iceCandidates[2]!.protocol).toBe('udp');
+	expect(iceCandidates[1]!.tcpType).toBeUndefined();
+	expect(iceCandidates[2]!.ip).toBe('9.9.9.1');
+	expect(iceCandidates[2]!.protocol).toBe('tcp');
 	expect(iceCandidates[2]!.type).toBe('host');
-	expect(iceCandidates[2]!.tcpType).toBeUndefined();
-	expect(iceCandidates[3]!.ip).toBe('foo2.bar.org');
-	expect(iceCandidates[3]!.protocol).toBe('tcp');
+	expect(iceCandidates[2]!.tcpType).toBe('passive');
+	expect(iceCandidates[3]!.ip).toBe('foo1.bar.org');
+	expect(iceCandidates[3]!.protocol).toBe('udp');
 	expect(iceCandidates[3]!.type).toBe('host');
-	expect(iceCandidates[3]!.tcpType).toBe('passive');
-	expect(iceCandidates[4]!.ip).toBe('127.0.0.1');
-	expect(iceCandidates[4]!.protocol).toBe('udp');
+	expect(iceCandidates[3]!.tcpType).toBeUndefined();
+	expect(iceCandidates[4]!.ip).toBe('foo2.bar.org');
+	expect(iceCandidates[4]!.protocol).toBe('tcp');
 	expect(iceCandidates[4]!.type).toBe('host');
-	expect(iceCandidates[4]!.tcpType).toBeUndefined();
+	expect(iceCandidates[4]!.tcpType).toBe('passive');
 	expect(iceCandidates[5]!.ip).toBe('127.0.0.1');
-	expect(iceCandidates[5]!.protocol).toBe('tcp');
+	expect(iceCandidates[5]!.protocol).toBe('udp');
 	expect(iceCandidates[5]!.type).toBe('host');
-	expect(iceCandidates[5]!.tcpType).toBe('passive');
+	expect(iceCandidates[5]!.tcpType).toBeUndefined();
+	expect(iceCandidates[6]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[6]!.protocol).toBe('tcp');
+	expect(iceCandidates[6]!.type).toBe('host');
+	expect(iceCandidates[6]!.tcpType).toBe('passive');
+
 	expect(iceCandidates[0]!.priority).toBeGreaterThan(
 		iceCandidates[1]!.priority
 	);
@@ -181,6 +189,9 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	);
 	expect(iceCandidates[4]!.priority).toBeGreaterThan(
 		iceCandidates[5]!.priority
+	);
+	expect(iceCandidates[5]!.priority).toBeGreaterThan(
+		iceCandidates[6]!.priority
 	);
 
 	expect(webRtcTransport.iceState).toBe('new');

@@ -4,6 +4,7 @@
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
 #include "RTC/RtpStream.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 
 namespace RTC
 {
@@ -14,6 +15,14 @@ namespace RTC
 		const static uint32_t MaxRetransmissionDelayForVideoMs;
 		// Maximum retransmission buffer size for audio (ms).
 		const static uint32_t MaxRetransmissionDelayForAudioMs;
+
+	public:
+		enum class ReceivePacketResult
+		{
+			DISCARDED               = 0,
+			ACCEPTED_AND_NOT_STORED = 1,
+			ACCEPTED_AND_STORED
+		};
 
 	public:
 		class Listener : public RTC::RtpStream::Listener
@@ -31,7 +40,7 @@ namespace RTC
 		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
-		bool ReceivePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+		ReceivePacketResult ReceivePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);
@@ -50,7 +59,7 @@ namespace RTC
 		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
-		void StorePacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+		bool StorePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 

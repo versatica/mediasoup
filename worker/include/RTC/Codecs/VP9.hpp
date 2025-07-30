@@ -88,11 +88,7 @@ namespace RTC
 			};
 
 		public:
-			static VP9::PayloadDescriptor* Parse(
-			  const uint8_t* data,
-			  size_t len,
-			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
-			  uint8_t frameMarkingLen                    = 0);
+			static VP9::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
 		public:

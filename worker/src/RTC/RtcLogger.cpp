@@ -3,6 +3,7 @@
 
 #include "RTC/RtcLogger.hpp"
 #include "Logger.hpp"
+#include <sstream>
 
 namespace RTC
 {
@@ -14,6 +15,7 @@ namespace RTC
 			{ RtpPacket::DiscardReason::PRODUCER_NOT_FOUND,                      "ProducerNotFound"                   },
 			{ RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND,               "RecvRtpStreamNotFound"              },
 			{ RtpPacket::DiscardReason::RECV_RTP_STREAM_DISCARDED,               "RecvRtpStreamDiscarded"             },
+			{ RtpPacket::DiscardReason::RECV_RTP_RTX_STREAM_DISCARDED,           "RecvRtpRtxStreamDiscarded"          },
 			{ RtpPacket::DiscardReason::CONSUMER_INACTIVE,                       "ConsumerInactive"                   },
 			{ RtpPacket::DiscardReason::INVALID_TARGET_LAYER,                    "InvalidTargetLayer"                 },
 			{ RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE,                "UnsupportedPayloadType"             },
@@ -52,42 +54,41 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: Here we are using std::cout() which means that it's directly
-			// written to stdout. When in Node, it means that Worker.ts captures it
-			// and prints it ONLY if DEBUG env contains "Worker", and it prefixes the
-			// log with "(stdout)". We should move to MS_DUMP() or MS_DUMP_CLEAN().
+			std::stringstream ss;
 
-			std::cout << "{";
-			std::cout << "\"timestamp\": " << this->timestamp;
+			ss << "{";
+			ss << "\"timestamp\": " << this->timestamp;
 
 			if (!this->recvTransportId.empty())
 			{
-				std::cout << R"(, "recvTransportId": ")" << this->recvTransportId << "\"";
+				ss << R"(, "recvTransportId": ")" << this->recvTransportId << "\"";
 			}
 			if (!this->sendTransportId.empty())
 			{
-				std::cout << R"(, "sendTransportId": ")" << this->sendTransportId << "\"";
+				ss << R"(, "sendTransportId": ")" << this->sendTransportId << "\"";
 			}
 			if (!this->routerId.empty())
 			{
-				std::cout << R"(, "routerId": ")" << this->routerId << "\"";
+				ss << R"(, "routerId": ")" << this->routerId << "\"";
 			}
 			if (!this->producerId.empty())
 			{
-				std::cout << R"(, "producerId": ")" << this->producerId << "\"";
+				ss << R"(, "producerId": ")" << this->producerId << "\"";
 			}
 			if (!this->consumerId.empty())
 			{
-				std::cout << R"(, "consumerId": ")" << this->consumerId << "\"";
+				ss << R"(, "consumerId": ")" << this->consumerId << "\"";
 			}
 
-			std::cout << ", \"recvRtpTimestamp\": " << this->recvRtpTimestamp;
-			std::cout << ", \"sendRtpTimestamp\": " << this->sendRtpTimestamp;
-			std::cout << ", \"recvSeqNumber\": " << this->recvSeqNumber;
-			std::cout << ", \"sendSeqNumber\": " << this->sendSeqNumber;
-			std::cout << ", \"discarded\": " << (this->discarded ? "true" : "false");
-			std::cout << ", \"discardReason\": '" << discardReason2String[this->discardReason] << "'";
-			std::cout << "}" << std::endl;
+			ss << ", \"recvRtpTimestamp\": " << this->recvRtpTimestamp;
+			ss << ", \"sendRtpTimestamp\": " << this->sendRtpTimestamp;
+			ss << ", \"recvSeqNumber\": " << this->recvSeqNumber;
+			ss << ", \"sendSeqNumber\": " << this->sendSeqNumber;
+			ss << ", \"discarded\": " << (this->discarded ? "true" : "false");
+			ss << ", \"discardReason\": '" << discardReason2String[this->discardReason] << "'";
+			ss << "}";
+
+			MS_DUMP("%s", ss.str().c_str());
 		}
 
 		void RtpPacket::Clear()

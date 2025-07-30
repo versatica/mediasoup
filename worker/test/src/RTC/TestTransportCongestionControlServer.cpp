@@ -3,6 +3,7 @@
 #include "RTC/Consts.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
 
 using namespace RTC;
 
@@ -54,7 +55,7 @@ public:
 
 			if (packetResultIt->received)
 			{
-				REQUIRE(packetResultIt->receivedAtMs == testResultIt->timestamp);
+				REQUIRE(packetResultIt->receivedAtMs == static_cast<int64_t>(testResultIt->timestamp));
 			}
 		}
 	}

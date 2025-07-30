@@ -3,9 +3,11 @@ use futures_lite::future;
 use mediasoup::active_speaker_observer::ActiveSpeakerObserverOptions;
 use mediasoup::router::RouterOptions;
 use mediasoup::rtp_observer::RtpObserver;
-use mediasoup::rtp_parameters::{MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParameters};
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::rtp_parameters::{
+    MimeTypeAudio, RtpCodecCapability, RtpCodecParametersParameters,
+};
 use std::env;
 use std::num::{NonZeroU32, NonZeroU8};
 use std::sync::atomic::{AtomicUsize, Ordering};

@@ -1,10 +1,10 @@
-use crate::data_structures::AppData;
 use crate::producer::{Producer, ProducerId};
 use crate::router::Router;
 use crate::uuid_based_wrapper_type;
 use crate::worker::RequestError;
 use async_trait::async_trait;
 use event_listener_primitives::HandlerId;
+use mediasoup_types::data_structures::AppData;
 
 uuid_based_wrapper_type!(
     /// [`RtpObserver`] identifier.

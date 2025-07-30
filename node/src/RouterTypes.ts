@@ -287,4 +287,10 @@ export interface Router<RouterAppData extends AppData = AppData>
 		producerId: string;
 		rtpCapabilities: RtpCapabilities;
 	}): boolean;
+
+	/**
+	 * Update the Router media codecs. Once called, the return value of the
+	 * router.rtpCapabilities getter changes.
+	 */
+	updateMediaCodecs(mediaCodecs: RtpCodecCapability[]): void;
 }

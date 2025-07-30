@@ -64,10 +64,6 @@ namespace RTC
 		{
 			MS_THROW_TYPE_ERROR("wrong listenInfos (empty array)");
 		}
-		else if (listenInfos->size() > 8)
-		{
-			MS_THROW_TYPE_ERROR("wrong listenInfos (too many entries)");
-		}
 
 		try
 		{
@@ -84,6 +80,8 @@ namespace RTC
 				{
 					announcedAddress = listenInfo->announcedAddress()->str();
 				}
+
+				bool exposeInternalIp = listenInfo->exposeInternalIp();
 
 				RTC::Transport::SocketFlags flags;
 
@@ -127,7 +125,8 @@ namespace RTC
 						  portRangeHash);
 					}
 
-					this->udpSocketOrTcpServers.emplace_back(udpSocket, nullptr, announcedAddress);
+					this->udpSocketOrTcpServers.emplace_back(
+					  udpSocket, nullptr, announcedAddress, exposeInternalIp);
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -184,7 +183,8 @@ namespace RTC
 						  portRangeHash);
 					}
 
-					this->udpSocketOrTcpServers.emplace_back(nullptr, tcpServer, announcedAddress);
+					this->udpSocketOrTcpServers.emplace_back(
+					  nullptr, tcpServer, announcedAddress, exposeInternalIp);
 
 					if (listenInfo->sendBufferSize() != 0)
 					{
@@ -351,6 +351,10 @@ namespace RTC
 		std::vector<RTC::IceCandidate> iceCandidates;
 		uint16_t iceLocalPreferenceDecrement{ 0 };
 
+		// Optimistic preallocation which takes into account worst case (each
+		// listening item has |exposeInternalIp| set to true).
+		iceCandidates.reserve(this->udpSocketOrTcpServers.size() * 2);
+
 		for (const auto& item : this->udpSocketOrTcpServers)
 		{
 			if (item.udpSocket && enableUdp)
@@ -372,6 +376,11 @@ namespace RTC
 				{
 					iceCandidates.emplace_back(
 					  item.udpSocket, icePriority, const_cast<std::string&>(item.announcedAddress));
+
+					if (item.exposeInternalIp)
+					{
+						iceCandidates.emplace_back(item.udpSocket, icePriority - 1000);
+					}
 				}
 			}
 			else if (item.tcpServer && enableTcp)
@@ -393,6 +402,11 @@ namespace RTC
 				{
 					iceCandidates.emplace_back(
 					  item.tcpServer, icePriority, const_cast<std::string&>(item.announcedAddress));
+
+					if (item.exposeInternalIp)
+					{
+						iceCandidates.emplace_back(item.tcpServer, icePriority - 1000);
+					}
 				}
 			}
 

@@ -51,7 +51,8 @@ namespace RTC
 			const auto* listenInfos      = listenIndividual->listenInfos();
 			uint16_t iceLocalPreferenceDecrement{ 0u };
 
-			this->iceCandidates.reserve(listenInfos->size());
+			// Multiply by 2 to preallocate space in case |exposeInternalIp| is set.
+			this->iceCandidates.reserve(listenInfos->size() * 2);
 
 			for (const auto* listenInfo : *listenInfos)
 			{
@@ -66,6 +67,8 @@ namespace RTC
 				{
 					announcedAddress = listenInfo->announcedAddress()->str();
 				}
+
+				bool exposeInternalIp = listenInfo->exposeInternalIp();
 
 				RTC::Transport::SocketFlags flags;
 
@@ -121,6 +124,11 @@ namespace RTC
 					else
 					{
 						this->iceCandidates.emplace_back(udpSocket, icePriority, announcedAddress);
+
+						if (exposeInternalIp)
+						{
+							this->iceCandidates.emplace_back(udpSocket, icePriority - 1000);
+						}
 					}
 
 					if (listenInfo->sendBufferSize() != 0)
@@ -188,6 +196,11 @@ namespace RTC
 					else
 					{
 						this->iceCandidates.emplace_back(tcpServer, icePriority, announcedAddress);
+
+						if (exposeInternalIp)
+						{
+							this->iceCandidates.emplace_back(tcpServer, icePriority - 1000);
+						}
 					}
 
 					if (listenInfo->sendBufferSize() != 0)

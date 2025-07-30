@@ -14,7 +14,11 @@ namespace RTC
 		switch (type)
 		{
 			case FBS::WebRtcTransport::IceCandidateType::HOST:
+			{
 				return IceCandidate::CandidateType::HOST;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -23,7 +27,11 @@ namespace RTC
 		switch (type)
 		{
 			case IceCandidate::CandidateType::HOST:
+			{
 				return FBS::WebRtcTransport::IceCandidateType::HOST;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -33,7 +41,11 @@ namespace RTC
 		switch (type)
 		{
 			case FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE:
+			{
 				return IceCandidate::TcpCandidateType::PASSIVE;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -43,7 +55,11 @@ namespace RTC
 		switch (type)
 		{
 			case IceCandidate::TcpCandidateType::PASSIVE:
+			{
 				return FBS::WebRtcTransport::IceCandidateTcpType::PASSIVE;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 

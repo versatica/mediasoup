@@ -523,12 +523,12 @@ export function parseProducerDump(
 		rtpParameters: parseRtpParameters(data.rtpParameters()!),
 		// NOTE: optional values are represented with null instead of undefined.
 		// TODO: Make flatbuffers TS return undefined instead of null.
-		rtpMapping: data.rtpMapping() ? data.rtpMapping()!.unpack() : undefined,
+		rtpMapping: data.rtpMapping()?.unpack(),
 		// NOTE: optional values are represented with null instead of undefined.
 		// TODO: Make flatbuffers TS return undefined instead of null.
 		rtpStreams:
 			data.rtpStreamsLength() > 0
-				? fbsUtils.parseVector(data, 'rtpStreams', (rtpStream: any) =>
+				? fbsUtils.parseVector(data, 'rtpStreams', rtpStream =>
 						rtpStream.unpack()
 					)
 				: undefined,
@@ -559,6 +559,7 @@ function parseProducerScore(binary: FbsProducer.Score): ProducerScore {
 function parseTraceEventData(
 	trace: FbsProducer.TraceNotification
 ): ProducerTraceEventData {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let info: any;
 
 	if (trace.infoType() !== FbsProducer.TraceInfo.NONE) {
@@ -574,6 +575,6 @@ function parseTraceEventData(
 		timestamp: Number(trace.timestamp()),
 		direction:
 			trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-		info: info ? info.unpack() : undefined,
+		info: info?.unpack(),
 	};
 }

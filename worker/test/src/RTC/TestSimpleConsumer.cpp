@@ -4,7 +4,11 @@
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpPacket.hpp"
+#include "RTC/RtpStream.hpp"
+#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -153,13 +157,52 @@ std::unique_ptr<RtpStreamRecv> CreateRtpStreamRecv()
 SCENARIO("SimpleConsumer", "[rtp][consumer]")
 {
 	// clang-format off
-    uint8_t buffer[] =
-    {
-        0x80, 0x01, 0x00, 0x08,
-        0x00, 0x00, 0x00, 0x04,
-        0x00, 0x00, 0x00, 0x05
-    };
+	uint8_t buffer[] =
+	{
+		0x80, 0x01, 0x00, 0x08,
+		0x00, 0x00, 0x00, 0x04,
+		0x00, 0x00, 0x00, 0x05,
+		// Payload (4 bytes).
+		0xFF, 0xFF, 0xFF, 0xFF,
+		// From here this is just buffer enough for the fake
+		// packet->SetPayloadLength() calls below so when cloning the packet it
+		// doesn't read non allocated memory.
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF,
+	};
 	// clang-format on
+
+	// This is the size of the original packet.
+	size_t originalPacketLength{ 16 };
 
 	SECTION("RTP packets are not forwarded when the consumer is not active")
 	{
@@ -173,15 +216,17 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(0);
+
+		delete packet;
 	}
 
 	SECTION("RTP packets are not forwarded for unsupported payload types")
@@ -200,15 +245,17 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(0);
+
+		delete packet;
 	}
 
 	SECTION("RTP packets with empty payload are not forwarded")
@@ -227,15 +274,17 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
+		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(0);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(0);
+
+		delete packet;
 	}
 
 	SECTION("outgoing RTP packets are forwarded with increased sequence number")
@@ -254,28 +303,37 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		consumer->ProducerRtpStreamScores(&scores);
 		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-		std::shared_ptr<RtpPacket> sharedPacket;
+		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
+		RTC::SharedRtpPacket sharedPacket(packet);
 
-		uint16_t seq = 1;
+		uint16_t seq{ 1 };
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
+		sharedPacket.Assign(packet);
 
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		sharedPacket.Assign(packet);
+
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(0);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		sharedPacket.Assign(packet);
+
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(20);
-		consumer->SendRtpPacket(packet.get(), sharedPacket);
+		sharedPacket.Assign(packet);
+
+		consumer->SendRtpPacket(packet, sharedPacket);
 
 		listener->Verify(3);
+
+		delete packet;
 	}
 }

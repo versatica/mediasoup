@@ -153,8 +153,6 @@ const config = tsEslint.config(
 					ignorePrimitives: { string: true },
 				},
 			],
-			// Sorry, we need many `any` usage.
-			'@typescript-eslint/no-explicit-any': 0,
 			'@typescript-eslint/explicit-function-return-type': [
 				2,
 				{ allowExpressions: true },

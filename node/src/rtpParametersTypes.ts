@@ -68,7 +68,7 @@ export type RtpCodecCapability = {
 	 * and 'profile-level-id' in H264 or 'profile-id' in VP9) are critical for
 	 * codec matching.
 	 */
-	parameters?: any;
+	parameters?: Record<string, unknown>;
 
 	/**
 	 * Transport layer and codec-specific feedback messages for this codec.
@@ -216,7 +216,7 @@ export type RtpCodecParameters = {
 	 * as 'packetization-mode' and 'profile-level-id' in H264 or 'profile-id' in
 	 * VP9) are critical for codec matching.
 	 */
-	parameters?: any;
+	parameters?: Record<string, unknown>;
 
 	/**
 	 * Transport layer and codec-specific feedback messages for this codec.
@@ -284,9 +284,8 @@ export type RtpEncodingParameters = {
 	scalabilityMode?: string;
 
 	/**
-	 * Others.
+	 * Maximum bitrate (bps) announced for this stream.
 	 */
-	scaleResolutionDownBy?: number;
 	maxBitrate?: number;
 };
 
@@ -294,8 +293,6 @@ export type RtpHeaderExtensionUri =
 	| 'urn:ietf:params:rtp-hdrext:sdes:mid'
 	| 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id'
 	| 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id'
-	| 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07'
-	| 'urn:ietf:params:rtp-hdrext:framemarking'
 	| 'urn:ietf:params:rtp-hdrext:ssrc-audio-level'
 	| 'urn:3gpp:video-orientation'
 	| 'urn:ietf:params:rtp-hdrext:toffset'
@@ -332,7 +329,7 @@ export type RtpHeaderExtensionParameters = {
 	/**
 	 * Configuration parameters for the header extension.
 	 */
-	parameters?: any;
+	parameters?: Record<string, unknown>;
 };
 
 /**

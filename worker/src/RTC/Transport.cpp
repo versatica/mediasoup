@@ -42,8 +42,12 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::Transport::Options* options)
-	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
-	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
+	  : id(id), shared(shared), listener(listener),
+	    recvRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
+	    sendRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
+	    recvRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),
+	    sendRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),
+	    sendProbationTransmission(/*ignorePaddingOnlyPackets*/ false, 100u)
 	{
 		MS_TRACE();
 
@@ -329,7 +333,7 @@ namespace RTC
 		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -414,7 +418,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 
 		if (this->sctpAssociation)
 		{

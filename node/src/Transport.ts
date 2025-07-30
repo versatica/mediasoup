@@ -393,11 +393,11 @@ export abstract class TransportImpl<
 		this.#observer.safeEmit('close');
 	}
 
-	abstract dump(): Promise<any>;
+	abstract dump(): Promise<BaseTransportDump>;
 
-	abstract getStats(): Promise<any[]>;
+	abstract getStats(): Promise<BaseTransportStats[]>;
 
-	abstract connect(params: any): Promise<void>;
+	abstract connect(params: unknown): Promise<void>;
 
 	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
 		logger.debug(`setMaxIncomingBitrate() [bitrate:${bitrate}]`);

@@ -2,6 +2,36 @@
 
 # NEXT
 
+# 0.19.0
+
+- Enable AV1 codec (PR #1563).
+- Remove H265 codec and deprecated frame-marking RTP extension (PR #1564).
+- Remove H264-SVC codec (PR #1568).
+- Add `Router::update_media_codecs()` to dynamically change Router's RTP capabilities (#1571).
+- `TransportListenInfo`: Add `expose_internal_ip` which, if set to `true` and `announced_address` is set, exposes an additional ICE candidate in `WebRtcTransport` whose IP is `listen_info.ip` rather than `listen_info.announced_address` (PR #1583).
+- Updates from mediasoup TypeScript `3.14.11.=3.17.0`.
+
+# 0.18.2
+
+- Don't log error if `close()` on an object fails because channel is closed already (PR #1560).
+- General mediasoup changes:
+  - Sign self generated DTLS certificate with SHA256 (PR #1450).
+  - `SimulcastConsumer`: Fix cannot switch layers if initial `tsReferenceSpatialLayer disappears` disappears (PR #1459).
+  - Worker: Fix crash when using colliding `portRange` values in different transports (PR #1469).
+  - Worker: Drop VP8 packets with a higher temporal layer than the current one (PR #1009).
+  - Fix the problem of the TCC package being omitted from being sent (PR #1492).
+  - `Consumer`: Fix sequence number gap (PR #1494).
+  - Fix VP9 out of order packets forwarding (PR #1486).
+  - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+  - Worker: Fix encode retransmitted packets with the corresponding data (PR #1527).
+  - `SvcConsumer`: Fix K-SVC bitrate in `IncreaseLayer()` method (PR #1535).
+  - `Consumer` classes: Only drop packets in RTP sequence manager when they belong to current spatial layer (PR #1549).
+  - `Consumer` classes: Add target layer retransmission buffer to avoid PLIs/FIRs when RTP packets containing a key frame arrive out of order (PR #1550 and PR #1558).
+
+# 0.18.1
+
+- FBS: Provide proper data upon panic (#1523).
+
 # 0.18.0
 
 - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).

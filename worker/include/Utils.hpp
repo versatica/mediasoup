@@ -5,9 +5,9 @@
 #include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
-#include <limits>  // std::numeric_limits()
+#include <limits>  // std::numeric_limits
 #include <string>
-#include <type_traits> // std::enable_if()
+#include <type_traits> // std::enable_if, std::is_same_v
 #include <vector>
 #ifdef _WIN32
 #include <ws2ipdef.h>
@@ -315,8 +315,90 @@ namespace Utils
 		static uint8_t* Base64Decode(const std::string& str, size_t& outLen);
 	};
 
+	// T is the base type (uint16_t, uint32_t, ...).
+	// N is the max number of bits used in T.
+	template<typename T, uint8_t N = 0>
+	class Number
+	{
+	private:
+		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
+		static constexpr T Mask =
+		  (N == 0) ? std::numeric_limits<T>::max() : (static_cast<T>((T(1) << N) - 1));
+
+	public:
+		static bool IsEqualThan(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= Mask;
+			rhs &= Mask;
+
+			return (lhs == rhs);
+		}
+
+		static bool IsHigherThan(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= Mask;
+			rhs &= Mask;
+
+			return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+		}
+
+		static bool IsLowerThan(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= Mask;
+			rhs &= Mask;
+
+			return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+		}
+
+		static bool IsHigherOrEqualThan(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= Mask;
+			rhs &= Mask;
+
+			return (lhs == rhs) || ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
+			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
+		}
+
+		static bool IsLowerOrEqualThan(T lhs, T rhs)
+		{
+			static_assert(
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t>,
+			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
+
+			lhs &= Mask;
+			rhs &= Mask;
+
+			return (lhs == rhs) || ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
+			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
+		}
+	};
+
 	class Time
 	{
+	private:
 		// Seconds from Jan 1, 1900 to Jan 1, 1970.
 		static constexpr uint32_t UnixNtpOffset{ 0x83AA7E80 };
 		// NTP fractional unit.
@@ -342,32 +424,10 @@ namespace Utils
 
 		static uint64_t Ntp2TimeMs(Time::Ntp ntp)
 		{
-			// clang-format off
 			return (
-				static_cast<uint64_t>(ntp.seconds) * 1000 +
-				static_cast<uint64_t>(std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit))
-			);
-			// clang-format on
-		}
-
-		static bool IsNewerTimestamp(uint32_t timestamp, uint32_t prevTimestamp)
-		{
-			// Distinguish between elements that are exactly 0x80000000 apart.
-			// If t1>t2 and |t1-t2| = 0x80000000: IsNewer(t1,t2)=true,
-			// IsNewer(t2,t1)=false
-			// rather than having IsNewer(t1,t2) = IsNewer(t2,t1) = false.
-			if (static_cast<uint32_t>(timestamp - prevTimestamp) == 0x80000000)
-			{
-				return timestamp > prevTimestamp;
-			}
-
-			return (
-			  timestamp != prevTimestamp && static_cast<uint32_t>(timestamp - prevTimestamp) < 0x80000000);
-		}
-
-		static uint32_t LatestTimestamp(uint32_t timestamp1, uint32_t timestamp2)
-		{
-			return IsNewerTimestamp(timestamp1, timestamp2) ? timestamp1 : timestamp2;
+			  static_cast<uint64_t>(ntp.seconds) * 1000 +
+			  static_cast<uint64_t>(
+			    std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit)));
 		}
 
 		static uint32_t TimeMsToAbsSendTime(uint64_t ms)
@@ -393,7 +453,7 @@ namespace Utils
 		void PutBits(uint32_t offset, uint32_t count, uint32_t bits);
 
 	private:
-		uint8_t* data;
+		uint8_t* data{ nullptr };
 		uint32_t len{ 0 };
 		uint32_t offset{ 0 };
 	};

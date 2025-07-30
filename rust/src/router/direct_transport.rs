@@ -4,12 +4,11 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{AppData, SctpState};
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{TransportCloseRequest, TransportSendRtcpNotification};
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
-use crate::sctp_parameters::SctpParameters;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
@@ -23,6 +22,8 @@ use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{direct_transport, notification, response, transport};
+use mediasoup_types::data_structures::{AppData, SctpState};
+use mediasoup_types::sctp_parameters::SctpParameters;
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -74,10 +75,11 @@ pub struct DirectTransportDump {
     pub trace_event_types: Vec<TransportTraceEventType>,
 }
 
-impl DirectTransportDump {
-    pub(crate) fn from_fbs(
-        dump: direct_transport::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for DirectTransportDump {
+    type FbsType = direct_transport::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             id: dump.base.id.parse()?,
             direct: true,
@@ -120,26 +122,19 @@ impl DirectTransportDump {
             recv_rtp_header_extensions: RecvRtpHeaderExtensions::from_fbs(
                 dump.base.recv_rtp_header_extensions.as_ref(),
             ),
-            rtp_listener: RtpListener::from_fbs(dump.base.rtp_listener.as_ref())?,
+            rtp_listener: RtpListener::try_from_fbs(*dump.base.rtp_listener)?,
             max_message_size: dump.base.max_message_size,
             sctp_parameters: dump
                 .base
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump
-                .base
-                .sctp_state
-                .map(|state| SctpState::from_fbs(&state)),
+            sctp_state: FromFbs::from_fbs(&dump.base.sctp_state),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
-                SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
+                SctpListener::try_from_fbs(listener.as_ref().clone())
+                    .expect("Error parsing SctpListner")
             }),
-            trace_event_types: dump
-                .base
-                .trace_event_types
-                .iter()
-                .map(TransportTraceEventType::from_fbs)
-                .collect(),
+            trace_event_types: FromFbs::from_fbs(&dump.base.trace_event_types),
         })
     }
 }
@@ -181,14 +176,15 @@ pub struct DirectTransportStat {
     pub rtp_packet_loss_sent: Option<f64>,
 }
 
-impl DirectTransportStat {
-    pub(crate) fn from_fbs(
-        stats: direct_transport::GetStatsResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for DirectTransportStat {
+    type FbsType = direct_transport::GetStatsResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(stats: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: FromFbs::from_fbs(&stats.base.sctp_state),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,
@@ -234,10 +230,11 @@ enum Notification {
     Rtcp(Vec<u8>),
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::TransportTrace => {
                 let Ok(Some(notification::BodyRef::TransportTraceNotification(body))) =
@@ -247,7 +244,7 @@ impl Notification {
                 };
 
                 let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
-                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+                let trace_notification = TransportTraceEventData::from_fbs(&trace_notification_fbs);
 
                 Ok(Notification::Trace(trace_notification))
             }
@@ -309,8 +306,14 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
-                            error!("transport closing failed on drop: {}", error);
+                        match channel.request(router_id, request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("transport closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("transport closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();
@@ -510,7 +513,7 @@ impl TransportGeneric for DirectTransport {
         let response = self.dump_impl().await?;
 
         if let response::Body::DirectTransportDumpResponse(data) = response {
-            Ok(DirectTransportDump::from_fbs(*data)
+            Ok(DirectTransportDump::try_from_fbs(*data)
                 .expect("Error parsing dump response: {response:?}"))
         } else {
             panic!("Wrong message from worker: {response:?}");
@@ -527,7 +530,7 @@ impl TransportGeneric for DirectTransport {
         let response = self.get_stats_impl().await?;
 
         if let response::Body::DirectTransportGetStatsResponse(data) = response {
-            Ok(vec![DirectTransportStat::from_fbs(*data)
+            Ok(vec![DirectTransportStat::try_from_fbs(*data)
                 .expect("Error parsing dump response: {response:?}")])
         } else {
             panic!("Wrong message from worker: {response:?}");
@@ -573,7 +576,7 @@ impl DirectTransport {
             let handlers = Arc::clone(&handlers);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::Trace(trace_event_data) => {
                             handlers.trace.call_simple(&trace_event_data);

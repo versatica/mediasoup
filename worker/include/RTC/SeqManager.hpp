@@ -27,12 +27,8 @@ namespace RTC
 		};
 
 	public:
-		static bool IsSeqLowerThan(T lhs, T rhs);
 		static bool IsSeqHigherThan(T lhs, T rhs);
-
-	private:
-		static const SeqLowerThan isSeqLowerThan;   // NOLINT(readability-identifier-naming)
-		static const SeqHigherThan isSeqHigherThan; // NOLINT(readability-identifier-naming)
+		static bool IsSeqLowerThan(T lhs, T rhs);
 
 	public:
 		SeqManager() = default;

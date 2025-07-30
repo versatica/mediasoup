@@ -90,6 +90,8 @@ namespace RTC
 			{
 				return FBS::RtpParameters::Type::PIPE;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 

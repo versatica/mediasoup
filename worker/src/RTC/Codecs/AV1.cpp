@@ -4,6 +4,7 @@
 
 #include "Logger.hpp"
 #include "RTC/Codecs/AV1.hpp"
+#include <limits> // std::numeric_limits()
 
 namespace RTC
 {

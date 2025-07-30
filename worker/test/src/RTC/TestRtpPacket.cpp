@@ -85,9 +85,9 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		size_t len;
 		uint8_t extenLen;
 		uint8_t* extenValue;
-		bool voice;
-		uint8_t volume;
-		uint32_t absSendTime;
+		bool voice{ false };
+		uint8_t volume{ 0 };
+		uint32_t absSendTime{ 0 };
 
 		if (!helpers::readBinaryFile("data/packet3.raw", buffer, &len))
 		{
@@ -809,55 +809,5 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetExtension(24, extenLen));
 		REQUIRE(packet->HasExtension(24) == true);
 		REQUIRE(extenLen == 4);
-	}
-
-	SECTION("read frame-marking extension")
-	{
-		// clang-format off
-		uint8_t buffer[] =
-		{
-			0x90, 0x01, 0x00, 0x08,
-			0x00, 0x00, 0x00, 0x04,
-			0x00, 0x00, 0x00, 0x05,
-			0xbe, 0xde, 0x00, 0x01, // Header Extension
-			0x32, 0xab, 0x01, 0x05,
-			0x01, 0x02, 0x03, 0x04
-		};
-		// clang-format on
-
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
-
-		if (!packet)
-		{
-			FAIL("not a RTP packet");
-		}
-
-		REQUIRE(packet->HasMarker() == false);
-		REQUIRE(packet->HasHeaderExtension() == true);
-		REQUIRE(packet->GetPayloadType() == 1);
-		REQUIRE(packet->GetSequenceNumber() == 8);
-		REQUIRE(packet->GetTimestamp() == 4);
-		REQUIRE(packet->GetSsrc() == 5);
-		REQUIRE(packet->GetHeaderExtensionId() == 0xBEDE);
-		REQUIRE(packet->GetHeaderExtensionLength() == 4);
-		REQUIRE(packet->HasOneByteExtensions());
-		REQUIRE(packet->HasTwoBytesExtensions() == false);
-		REQUIRE(packet->GetPayloadLength() == 4);
-
-		packet->SetFrameMarkingExtensionId(3);
-
-		RtpPacket::FrameMarking* frameMarking;
-		uint8_t frameMarkingLen;
-
-		REQUIRE(packet->ReadFrameMarking(&frameMarking, frameMarkingLen) == true);
-		REQUIRE(frameMarkingLen == 3);
-		REQUIRE(frameMarking->start == 1);
-		REQUIRE(frameMarking->end == 0);
-		REQUIRE(frameMarking->independent == 1);
-		REQUIRE(frameMarking->discardable == 0);
-		REQUIRE(frameMarking->base == 1);
-		REQUIRE(frameMarking->tid == 3);
-		REQUIRE(frameMarking->lid == 1);
-		REQUIRE(frameMarking->tl0picidx == 5);
 	}
 }

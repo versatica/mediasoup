@@ -5,14 +5,17 @@
 
 using namespace Utils;
 
-SCENARIO("Utils::Time::TimeMs2Ntp() and Utils::Time::Ntp2TimeMs()", "[utils][time]")
+SCENARIO("Utils::Time", "[utils][time]")
 {
-	auto nowMs  = DepLibUV::GetTimeMs();
-	auto ntp    = Time::TimeMs2Ntp(nowMs);
-	auto nowMs2 = Time::Ntp2TimeMs(ntp);
-	auto ntp2   = Time::TimeMs2Ntp(nowMs2);
+	SECTION("Utils::Time::Ntp2TimeMs()")
+	{
+		auto nowMs  = DepLibUV::GetTimeMs();
+		auto ntp    = Time::TimeMs2Ntp(nowMs);
+		auto nowMs2 = Time::Ntp2TimeMs(ntp);
+		auto ntp2   = Time::TimeMs2Ntp(nowMs2);
 
-	REQUIRE(nowMs2 == nowMs);
-	REQUIRE(ntp2.seconds == ntp.seconds);
-	REQUIRE(ntp2.fractions == ntp.fractions);
+		REQUIRE(nowMs2 == nowMs);
+		REQUIRE(ntp2.seconds == ntp.seconds);
+		REQUIRE(ntp2.fractions == ntp.fractions);
+	}
 }

@@ -35,7 +35,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket) override;
+		void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) override;
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
@@ -61,10 +61,10 @@ namespace RTC
 		void CreateRtpStreams();
 		void RequestKeyFrame();
 		void StorePacketInTargetLayerRetransmissionBuffer(
-		  std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+		  std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
 		    targetLayerRetransmissionBuffer,
 		  RTC::RtpPacket* packet,
-		  std::shared_ptr<RTC::RtpPacket>& sharedPacket);
+		  RTC::SharedRtpPacket& sharedPacket);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -85,7 +85,7 @@ namespace RTC
 		// video key frame.
 		absl::flat_hash_map<
 		  RTC::RtpStreamSend*,
-		  std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>>
+		  std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>>
 		  mapRtpStreamTargetLayerRetransmissionBuffer;
 	};
 } // namespace RTC

@@ -1,13 +1,14 @@
-use crate::rtp_parameters::{
+use crate::fbs::{ToFbs, TryFromFbs};
+use crate::supported_rtp_capabilities;
+use mediasoup_sys::fbs::rtp_parameters;
+use mediasoup_types::rtp_parameters::{
     MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
     RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability, RtpCodecCapabilityFinalized,
     RtpCodecParameters, RtpCodecParametersParameters, RtpCodecParametersParametersValue,
     RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtensionDirection,
     RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
 };
-use crate::scalability_modes::ScalabilityMode;
-use crate::supported_rtp_capabilities;
-use mediasoup_sys::fbs::rtp_parameters;
+use mediasoup_types::scalability_modes::ScalabilityMode;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -54,33 +55,11 @@ pub struct RtpMapping {
     pub encodings: Vec<RtpMappingEncoding>,
 }
 
-impl RtpMapping {
-    pub(crate) fn to_fbs(&self) -> rtp_parameters::RtpMapping {
-        rtp_parameters::RtpMapping {
-            codecs: self
-                .codecs
-                .iter()
-                .map(|mapping| rtp_parameters::CodecMapping {
-                    payload_type: mapping.payload_type,
-                    mapped_payload_type: mapping.mapped_payload_type,
-                })
-                .collect(),
-            encodings: self
-                .encodings
-                .iter()
-                .map(|mapping| rtp_parameters::EncodingMapping {
-                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
-                    ssrc: mapping.ssrc,
-                    scalability_mode: Some(mapping.scalability_mode.to_string()),
-                    mapped_ssrc: mapping.mapped_ssrc,
-                })
-                .collect(),
-        }
-    }
+impl<'a> TryFromFbs<'a> for RtpMapping {
+    type FbsType = rtp_parameters::RtpMappingRef<'a>;
+    type Error = Box<dyn Error + Send + Sync>;
 
-    pub(crate) fn from_fbs_ref(
-        mapping: rtp_parameters::RtpMappingRef<'_>,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+    fn try_from_fbs(mapping: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             codecs: mapping
                 .codecs()?
@@ -109,6 +88,33 @@ impl RtpMapping {
                 })
                 .collect::<Result<Vec<_>, Box<dyn Error + Send + Sync>>>()?,
         })
+    }
+}
+
+impl ToFbs for RtpMapping {
+    type FbsType = rtp_parameters::RtpMapping;
+
+    fn to_fbs(&self) -> Self::FbsType {
+        rtp_parameters::RtpMapping {
+            codecs: self
+                .codecs
+                .iter()
+                .map(|mapping| rtp_parameters::CodecMapping {
+                    payload_type: mapping.payload_type,
+                    mapped_payload_type: mapping.mapped_payload_type,
+                })
+                .collect(),
+            encodings: self
+                .encodings
+                .iter()
+                .map(|mapping| rtp_parameters::EncodingMapping {
+                    rid: mapping.rid.clone().map(|rid| rid.to_string()),
+                    ssrc: mapping.ssrc,
+                    scalability_mode: Some(mapping.scalability_mode.to_string()),
+                    mapped_ssrc: mapping.mapped_ssrc,
+                })
+                .collect(),
+        }
     }
 }
 
@@ -1070,7 +1076,7 @@ fn match_codecs(
                 return Err(());
             }
         }
-        MimeType::Video(MimeTypeVideo::H264 | MimeTypeVideo::H264Svc) => {
+        MimeType::Video(MimeTypeVideo::H264) => {
             if strict {
                 let packetization_mode_a = codec_a
                     .parameters

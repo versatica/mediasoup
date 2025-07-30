@@ -613,6 +613,7 @@ export class ConsumerImpl<ConsumerAppData extends AppData = AppData>
 export function parseTraceEventData(
 	trace: FbsConsumer.TraceNotification
 ): ConsumerTraceEventData {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let info: any;
 
 	if (trace.infoType() !== FbsConsumer.TraceInfo.NONE) {
@@ -628,7 +629,7 @@ export function parseTraceEventData(
 		timestamp: Number(trace.timestamp()),
 		direction:
 			trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-		info: info ? info.unpack() : undefined,
+		info: info?.unpack(),
 	};
 }
 

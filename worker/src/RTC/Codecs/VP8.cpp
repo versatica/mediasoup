@@ -11,11 +11,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		VP8::PayloadDescriptor* VP8::Parse(
-		  const uint8_t* data,
-		  size_t len,
-		  RTC::RtpPacket::FrameMarking* /*frameMarking*/,
-		  uint8_t /*frameMarkingLen*/)
+		VP8::PayloadDescriptor* VP8::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -143,13 +139,8 @@ namespace RTC
 
 			auto* data = packet->GetPayload();
 			auto len   = packet->GetPayloadLength();
-			RtpPacket::FrameMarking* frameMarking{ nullptr };
-			uint8_t frameMarkingLen{ 0 };
 
-			// Read frame-marking.
-			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
-
-			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len, frameMarking, frameMarkingLen);
+			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len);
 
 			if (!payloadDescriptor)
 			{

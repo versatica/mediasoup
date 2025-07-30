@@ -1,5 +1,49 @@
 # Changelog
 
+### NEXT
+
+### 3.17.1
+
+- `WebRtcServer`: Remove the limit of 8 `listenInfos`.
+
+### 3.17.0
+
+- Worker: Update Meson subprojects ([PR #1582](https://github.com/versatica/mediasoup/pull/1582)).
+- `TransportListenInfo`: Add `exposeInternalIp` which, if set to `true` and `announcedAddress` is set, exposes an additional ICE candidate in `WebRtcTransport` whose IP is `listenInfo.ip` rather than `listenInfo.announcedAddress` ([PR #1583](https://github.com/versatica/mediasoup/pull/1583)).
+
+### 3.16.8
+
+- Node: Fix `PipeConsumerOptions` TypeScript type (make `ConsumerAppData` TS argument optional) ([PR #1581](https://github.com/versatica/mediasoup/pull/1581)).
+
+### 3.16.7
+
+- `Router`: Add `updateMediaCodecs()` method to dynamically change Router's RTP capabilities ([PR #1571](https://github.com/versatica/mediasoup/pull/1571)).
+- `RtpStream`: Update `maxPacketTs` if RTP timestamp moved backwards despite in-order RTP sequence number ([PR #1574](https://github.com/versatica/mediasoup/pull/1574), credits to @oppolixiang).
+- `RtpStream`: Ignore padding only RTP packets in RTP data counters ([PR #1580](https://github.com/versatica/mediasoup/pull/1580), thanks to @quanli168 for reporting the issue).
+
+### 3.16.6
+
+- Remove H265 codec and deprecated frame-marking RTP extension ([PR #1564](https://github.com/versatica/mediasoup/pull/1564)).
+- `SimulcastConsumer`: Fix selecting spatial layer higher than preferred one ([PR #1565](https://github.com/versatica/mediasoup/pull/1565)).
+- Remove H264-SVC codec ([PR #1568](https://github.com/versatica/mediasoup/pull/1568)).
+- `RateCalculator`: Fix crash due to buffer overflow and avoid time overflow ([PR #1570](https://github.com/versatica/mediasoup/pull/1570)).
+
+### 3.16.5
+
+- `Consumer` classes: Really fix target layer retransmission buffer ([PR #1558](https://github.com/versatica/mediasoup/pull/1558)).
+
+### 3.16.4
+
+- `Consumer` classes: Disable target layer retransmission buffer until [issue #1554] (https://github.com/versatica/mediasoup/issues/1554) is really fixed.
+
+### 3.16.3
+
+- `Consumer` classes: Fix target layer retransmission buffer ([PR #1555](https://github.com/versatica/mediasoup/pull/1555)).
+
+### 3.16.2
+
+- `Consumer` classes: Disable target layer retransmission buffer until [issue #1554] (https://github.com/versatica/mediasoup/issues/1554) is fixed.
+
 ### 3.16.1
 
 - libuv: Update to v1.51.0 ([PR #1543](https://github.com/versatica/mediasoup/pull/1543)).
@@ -1290,7 +1334,7 @@ Migrate `npm-scripts.js` to `npm-scripts.mjs` (ES Module) ([PR #1093](https://gi
 
 ### 3.0.5
 
-- Add support for frame-marking RTP extensions and use it to enable temporal layers switching in H264 codec (#305).
+- Add support for frame-marking RTP extension and use it to enable temporal layers switching in H264 codec (#305).
 
 ### 3.0.4
 

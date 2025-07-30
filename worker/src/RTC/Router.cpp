@@ -12,6 +12,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -659,10 +660,10 @@ namespace RTC
 
 		if (!consumers.empty())
 		{
-			// Cloned ref-counted packet that RtpStreamSend will store for as long as
-			// needed avoiding multiple allocations unless absolutely necessary.
-			// Clone only happens if needed.
-			std::shared_ptr<RTC::RtpPacket> sharedPacket;
+			// Cloned ref-counted packet that will be filled for as long as needed
+			// avoiding multiple allocations unless absolutely necessary.
+			// Clone only happens if needed and only once.
+			RTC::SharedRtpPacket sharedPacket;
 
 #ifdef MS_LIBURING_SUPPORTED
 			if (DepLibUring::IsEnabled())
@@ -683,6 +684,13 @@ namespace RTC
 				}
 
 				consumer->SendRtpPacket(packet, sharedPacket);
+
+				// Assert that, if this Consumer filled sharedPacket or it was already
+				// filled, both packet and sharedPacket are the very same RTP packet.
+				if (sharedPacket.HasPacket())
+				{
+					sharedPacket.AssertSamePacket(packet);
+				}
 			}
 
 #ifdef MS_LIBURING_SUPPORTED

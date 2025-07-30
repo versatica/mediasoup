@@ -28,7 +28,6 @@ use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions};
 use crate::data_producer::{
     DataProducer, DataProducerId, DataProducerOptions, NonClosingDataProducer, WeakDataProducer,
 };
-use crate::data_structures::{AppData, ListenInfo, Protocol};
 use crate::direct_transport::{DirectTransport, DirectTransportOptions};
 use crate::messages::{
     RouterCloseRequest, RouterCreateActiveSpeakerObserverData,
@@ -46,8 +45,6 @@ use crate::pipe_transport::{
 use crate::plain_transport::{PlainTransport, PlainTransportOptions};
 use crate::producer::{PipedProducer, Producer, ProducerId, ProducerOptions, WeakProducer};
 use crate::rtp_observer::{RtpObserver, RtpObserverId};
-use crate::rtp_parameters::{RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability};
-use crate::sctp_parameters::NumSctpStreams;
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, Transport, TransportGeneric,
     TransportId,
@@ -61,12 +58,18 @@ use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use log::{debug, error};
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    RtpCapabilities, RtpCapabilitiesFinalized, RtpCodecCapability,
+};
+use mediasoup_types::sctp_parameters::NumSctpStreams;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::net::{IpAddr, Ipv4Addr};
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex as SyncMutex;
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 
@@ -146,6 +149,7 @@ impl PipeToRouterOptions {
                 protocol: Protocol::Udp,
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 announced_address: None,
+                expose_internal_ip: false,
                 port: None,
                 port_range: None,
                 flags: None,
@@ -271,6 +275,14 @@ impl From<ProduceDataError> for PipeDataProducerToRouterError {
     }
 }
 
+/// Error that caused [`Router::update_media_codecs`] to fail.
+#[derive(Debug, Error)]
+pub enum UpdateMediaCodecsError {
+    /// RTP capabilities generation error
+    #[error("RTP capabilities generation error: {0}")]
+    FailedRtpCapabilitiesGeneration(ortc::RtpCapabilitiesError),
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
@@ -373,7 +385,7 @@ struct Handlers {
 struct Inner {
     id: RouterId,
     executor: Arc<Executor<'static>>,
-    rtp_capabilities: RtpCapabilitiesFinalized,
+    rtp_capabilities: SyncMutex<RtpCapabilitiesFinalized>,
     channel: Channel,
     handlers: Arc<Handlers>,
     app_data: AppData,
@@ -404,10 +416,17 @@ impl Inner {
             {
                 let channel = self.channel.clone();
                 let request = RouterCloseRequest { router_id: self.id };
+
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request("", request).await {
-                            error!("router closing failed on drop: {}", error);
+                        match channel.request("", request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("router closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("router closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();
@@ -477,7 +496,7 @@ impl Router {
         let inner = Arc::new(Inner {
             id,
             executor,
-            rtp_capabilities,
+            rtp_capabilities: SyncMutex::new(rtp_capabilities),
             channel,
             handlers,
             producers,
@@ -526,8 +545,8 @@ impl Router {
     /// * See also how to [filter these RTP capabilities](https://mediasoup.org/documentation/v3/tricks/#rtp-capabilities-filtering)
     ///   before using them into a client.
     #[must_use]
-    pub fn rtp_capabilities(&self) -> &RtpCapabilitiesFinalized {
-        &self.inner.rtp_capabilities
+    pub fn rtp_capabilities(&self) -> RtpCapabilitiesFinalized {
+        self.inner.rtp_capabilities.lock().unwrap().clone()
     }
 
     /// Dump Router.
@@ -610,6 +629,7 @@ impl Router {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_address: Some("9.9.9.1".to_string()),
+    ///             expose_internal_ip: false,
     ///             port: None,
     ///             port_range: None,
     ///             flags: None,
@@ -699,6 +719,7 @@ impl Router {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///         announced_address: Some("9.9.9.1".to_string()),
+    ///         expose_internal_ip: false,
     ///         port: None,
     ///         port_range: None,
     ///         flags: None,
@@ -766,6 +787,7 @@ impl Router {
     ///         protocol: Protocol::Udp,
     ///         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///         announced_address: Some("9.9.9.1".to_string()),
+    ///         expose_internal_ip: false,
     ///         port: None,
     ///         port_range: None,
     ///         flags: None,
@@ -946,7 +968,7 @@ impl Router {
     /// # Example
     /// ```rust
     /// use mediasoup::prelude::*;
-    /// use mediasoup::rtp_parameters::RtpCodecParameters;
+    /// use mediasoup_types::rtp_parameters::RtpCodecParameters;
     /// use std::net::{IpAddr, Ipv4Addr};
     /// use std::num::{NonZeroU32, NonZeroU8};
     ///
@@ -978,6 +1000,7 @@ impl Router {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_address: Some("9.9.9.1".to_string()),
+    ///             expose_internal_ip: false,
     ///             port: None,
     ///             port_range: None,
     ///             flags: None,
@@ -1022,6 +1045,7 @@ impl Router {
     ///             protocol: Protocol::Udp,
     ///             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///             announced_address: Some("9.9.9.1".to_string()),
+    ///             expose_internal_ip: false,
     ///             port: None,
     ///             port_range: None,
     ///             flags: None,
@@ -1209,6 +1233,7 @@ impl Router {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///                 announced_address: Some("9.9.9.1".to_string()),
+    ///                 expose_internal_ip: false,
     ///                 port: None,
     ///                 port_range: None,
     ///                 flags: None,
@@ -1242,6 +1267,7 @@ impl Router {
     ///                 protocol: Protocol::Udp,
     ///                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
     ///                 announced_address: Some("9.9.9.1".to_string()),
+    ///                 expose_internal_ip: false,
     ///                 port: None,
     ///                 port_range: None,
     ///                 flags: None,
@@ -1385,6 +1411,23 @@ impl Router {
             );
             false
         }
+    }
+
+    /// Update the Router media codecs. Once called, the return value of
+    /// router.rtp_capabilities() changes.
+    pub fn update_media_codecs(
+        &mut self,
+        media_codecs: Vec<RtpCodecCapability>,
+    ) -> Result<(), UpdateMediaCodecsError> {
+        debug!("update_media_codecs()");
+
+        let rtp_capabilities = ortc::generate_router_rtp_capabilities(media_codecs)
+            .map_err(UpdateMediaCodecsError::FailedRtpCapabilitiesGeneration)?;
+
+        let mut locked = self.inner.rtp_capabilities.lock().unwrap();
+        *locked = rtp_capabilities;
+
+        Ok(())
     }
 
     /// Callback is called when a new transport is created.

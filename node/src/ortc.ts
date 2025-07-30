@@ -345,7 +345,7 @@ export function getProducerRtpParametersMapping(
 
 		// Search for the associated media codec.
 		const associatedMediaCodec = params.codecs.find(
-			mediaCodec => mediaCodec.payloadType === codec.parameters.apt
+			mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
 		);
 
 		if (!associatedMediaCodec) {
@@ -360,7 +360,7 @@ export function getProducerRtpParametersMapping(
 		const associatedCapRtxCodec = caps.codecs!.find(
 			capCodec =>
 				isRtxCodec(capCodec) &&
-				capCodec.parameters.apt === capMediaCodec!.preferredPayloadType
+				capCodec.parameters!['apt'] === capMediaCodec!.preferredPayloadType
 		);
 
 		if (!associatedCapRtxCodec) {
@@ -386,19 +386,12 @@ export function getProducerRtpParametersMapping(
 	let mappedSsrc = utils.generateRandomNumber();
 
 	for (const encoding of params.encodings!) {
-		const mappedEncoding: any = {};
-
-		mappedEncoding.mappedSsrc = mappedSsrc++;
-
-		if (encoding.rid) {
-			mappedEncoding.rid = encoding.rid;
-		}
-		if (encoding.ssrc) {
-			mappedEncoding.ssrc = encoding.ssrc;
-		}
-		if (encoding.scalabilityMode) {
-			mappedEncoding.scalabilityMode = encoding.scalabilityMode;
-		}
+		const mappedEncoding = {
+			ssrc: encoding.ssrc,
+			rid: encoding.rid,
+			scalabilityMode: encoding.scalabilityMode,
+			mappedSsrc: mappedSsrc++,
+		};
 
 		rtpMapping.encodings.push(mappedEncoding);
 	}
@@ -450,7 +443,7 @@ export function getConsumableRtpParameters(
 		const consumableCapRtxCodec = caps.codecs!.find(
 			capRtxCodec =>
 				isRtxCodec(capRtxCodec) &&
-				capRtxCodec.parameters.apt === consumableCodec.payloadType
+				capRtxCodec.parameters!['apt'] === consumableCodec.payloadType
 		);
 
 		if (consumableCapRtxCodec) {
@@ -607,7 +600,7 @@ export function getConsumerRtpParameters({
 		if (isRtxCodec(codec)) {
 			// Search for the associated media codec.
 			const associatedMediaCodec = consumerParams.codecs.find(
-				mediaCodec => mediaCodec.payloadType === codec.parameters.apt
+				mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
 			);
 
 			if (associatedMediaCodec) {
@@ -841,15 +834,15 @@ function matchCodecs(
 	// Per codec special checks.
 	switch (aMimeType) {
 		case 'audio/multiopus': {
-			const aNumStreams = aCodec.parameters['num_streams'];
-			const bNumStreams = bCodec.parameters['num_streams'];
+			const aNumStreams = aCodec.parameters!['num_streams'];
+			const bNumStreams = bCodec.parameters!['num_streams'];
 
 			if (aNumStreams !== bNumStreams) {
 				return false;
 			}
 
-			const aCoupledStreams = aCodec.parameters['coupled_streams'];
-			const bCoupledStreams = bCodec.parameters['coupled_streams'];
+			const aCoupledStreams = aCodec.parameters!['coupled_streams'];
+			const bCoupledStreams = bCodec.parameters!['coupled_streams'];
 
 			if (aCoupledStreams !== bCoupledStreams) {
 				return false;
@@ -858,11 +851,12 @@ function matchCodecs(
 			break;
 		}
 
-		case 'video/h264':
-		case 'video/h264-svc': {
+		case 'video/h264': {
 			if (strict) {
-				const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
-				const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
+				const aPacketizationMode =
+					aCodec.parameters!['packetization-mode'] || 0;
+				const bPacketizationMode =
+					bCodec.parameters!['packetization-mode'] || 0;
 
 				if (aPacketizationMode !== bPacketizationMode) {
 					return false;
@@ -885,9 +879,9 @@ function matchCodecs(
 
 				if (modify) {
 					if (selectedProfileLevelId) {
-						aCodec.parameters['profile-level-id'] = selectedProfileLevelId;
+						aCodec.parameters!['profile-level-id'] = selectedProfileLevelId;
 					} else {
-						delete aCodec.parameters['profile-level-id'];
+						delete aCodec.parameters!['profile-level-id'];
 					}
 				}
 			}
@@ -897,8 +891,8 @@ function matchCodecs(
 
 		case 'video/vp9': {
 			if (strict) {
-				const aProfileId = aCodec.parameters['profile-id'] || 0;
-				const bProfileId = bCodec.parameters['profile-id'] || 0;
+				const aProfileId = aCodec.parameters!['profile-id'] || 0;
+				const bProfileId = bCodec.parameters!['profile-id'] || 0;
 
 				if (aProfileId !== bProfileId) {
 					return false;

@@ -254,7 +254,7 @@ namespace RTC
 		}
 		if (this->transportWideCc01ExtensionId != 0u)
 		{
-			uint16_t wideSeqNumber;
+			uint16_t wideSeqNumber{ 0 };
 
 			if (ReadTransportWideCc01(wideSeqNumber))
 			{
@@ -264,19 +264,10 @@ namespace RTC
 				  wideSeqNumber);
 			}
 		}
-		// Remove once it becomes RFC.
-		if (this->frameMarking07ExtensionId != 0u)
-		{
-			MS_DUMP("  frameMarking07: extId:%" PRIu8, this->frameMarking07ExtensionId);
-		}
-		if (this->frameMarkingExtensionId != 0u)
-		{
-			MS_DUMP("  frameMarking: extId:%" PRIu8, this->frameMarkingExtensionId);
-		}
 		if (this->ssrcAudioLevelExtensionId != 0u)
 		{
-			uint8_t volume;
-			bool voice;
+			uint8_t volume{ 0 };
+			bool voice{ false };
 
 			if (ReadSsrcAudioLevel(volume, voice))
 			{
@@ -289,9 +280,9 @@ namespace RTC
 		}
 		if (this->videoOrientationExtensionId != 0u)
 		{
-			bool camera;
-			bool flip;
-			uint16_t rotation;
+			bool camera{ false };
+			bool flip{ false };
+			uint16_t rotation{ 0 };
 
 			if (ReadVideoOrientation(camera, flip, rotation))
 			{
@@ -305,8 +296,8 @@ namespace RTC
 		}
 		if (this->playoutDelayExtensionId != 0u)
 		{
-			uint16_t minDelay;
-			uint16_t maxDelay;
+			uint16_t minDelay{ 0 };
+			uint16_t maxDelay{ 0 };
 
 			if (ReadPlayoutDelay(minDelay, maxDelay))
 			{
@@ -362,7 +353,7 @@ namespace RTC
 		}
 
 		// Add wideSequenceNumber.
-		uint16_t wideSequenceNumber;
+		uint16_t wideSequenceNumber{ 0 };
 		bool wideSequenceNumberSet = false;
 
 		if (this->transportWideCc01ExtensionId != 0u)
@@ -400,8 +391,6 @@ namespace RTC
 		this->rridExtensionId                 = 0u;
 		this->absSendTimeExtensionId          = 0u;
 		this->transportWideCc01ExtensionId    = 0u;
-		this->frameMarking07ExtensionId       = 0u;
-		this->frameMarkingExtensionId         = 0u;
 		this->ssrcAudioLevelExtensionId       = 0u;
 		this->videoOrientationExtensionId     = 0u;
 		this->playoutDelayExtensionId         = 0u;
@@ -762,8 +751,6 @@ namespace RTC
 		packet->rridExtensionId                 = this->rridExtensionId;
 		packet->absSendTimeExtensionId          = this->absSendTimeExtensionId;
 		packet->transportWideCc01ExtensionId    = this->transportWideCc01ExtensionId;
-		packet->frameMarking07ExtensionId       = this->frameMarking07ExtensionId; // Remove once RFC.
-		packet->frameMarkingExtensionId         = this->frameMarkingExtensionId;
 		packet->ssrcAudioLevelExtensionId       = this->ssrcAudioLevelExtensionId;
 		packet->videoOrientationExtensionId     = this->videoOrientationExtensionId;
 		packet->playoutDelayExtensionId         = this->playoutDelayExtensionId;

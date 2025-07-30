@@ -220,7 +220,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			auto templateIndex = (this->frameDependencyTemplateId + 64 - this->templateIdOffset) % 64;
+			uint8_t templateIndex = (this->frameDependencyTemplateId + 64 - this->templateIdOffset) % 64;
 
 			if (this->templateDependencyStructure->templateLayers.size() <= templateIndex)
 			{

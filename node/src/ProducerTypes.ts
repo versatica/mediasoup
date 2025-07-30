@@ -85,8 +85,8 @@ export type ProducerDump = {
 	kind: string;
 	type: ProducerType;
 	rtpParameters: RtpParameters;
-	rtpMapping: any;
-	rtpStreams: any;
+	rtpMapping: unknown;
+	rtpStreams: unknown;
 	traceEventTypes: string[];
 	paused: boolean;
 };
@@ -126,7 +126,7 @@ export type ProducerTraceEventData = {
 	/**
 	 * Per type information.
 	 */
-	info: any;
+	info: Record<string, unknown>;
 };
 
 export type ProducerEvents = {

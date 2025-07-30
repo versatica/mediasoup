@@ -10,6 +10,7 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
+#include <limits> // std::numeric_limits()
 
 namespace RTC
 {
@@ -464,8 +465,9 @@ namespace RTC
 		{
 			spatialLayer = static_cast<int16_t>(sIdx);
 
-			// If this is higher than current spatial layer and we moved to to current spatial
-			// layer due to BWE limitations, check how much it has elapsed since then.
+			// If this is higher than current spatial layer and we moved to to current
+			// spatial layer due to BWE limitations, check how much it has elapsed
+			// since then.
 			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
 			{
 				if (this->provisionalTargetSpatialLayer > -1 && spatialLayer > this->currentSpatialLayer)
@@ -481,6 +483,17 @@ namespace RTC
 			if (spatialLayer < this->provisionalTargetSpatialLayer)
 			{
 				continue;
+			}
+			// If this is the higher than preferred spatial layer, abort.
+			else if (spatialLayer > this->preferredSpatialLayer)
+			{
+				MS_DEBUG_DEV(
+				  "avoid upgrading to spatial layer %" PRIi16
+				  " since it's higher than preferred spatial layer %" PRIi16,
+				  spatialLayer,
+				  this->preferredSpatialLayer);
+
+				goto done;
 			}
 
 			// This can be null.
@@ -530,8 +543,8 @@ namespace RTC
 			// Check bitrate of every temporal layer.
 			for (; temporalLayer < producerRtpStream->GetTemporalLayers(); ++temporalLayer)
 			{
-				// Ignore temporal layers lower than the one we already have (taking into account
-				// the spatial layer too).
+				// Ignore temporal layers lower than the one we already have (taking
+				// into account the spatial layer too).
 				// clang-format off
 				if (
 					spatialLayer == this->provisionalTargetSpatialLayer &&
@@ -544,8 +557,9 @@ namespace RTC
 
 				requiredBitrate = producerRtpStream->GetLayerBitrate(nowMs, 0, temporalLayer);
 
-				// This is simulcast so we must substract the bitrate of the current temporal
-				// spatial layer if this is the temporal layer 0 of a higher spatial layer.
+				// This is simulcast so we must substract the bitrate of the current
+				// temporal spatial layer if this is the temporal layer 0 of a higher
+				// spatial layer.
 				//
 				// clang-format off
 				if (
@@ -579,7 +593,8 @@ namespace RTC
 				  virtualBitrate,
 				  requiredBitrate);
 
-				// If active layer, end iterations here. Otherwise move to next spatial layer.
+				// If active layer, end iterations here. Otherwise move to next spatial
+				// layer.
 				if (requiredBitrate)
 				{
 					goto done;
@@ -590,7 +605,7 @@ namespace RTC
 				}
 			}
 
-			// If this is the preferred or higher spatial layer, take it and exit.
+			// If this is the preferred spatial layer or higher, take it and exit.
 			if (spatialLayer >= this->preferredSpatialLayer)
 			{
 				break;
@@ -728,8 +743,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	void SimulcastConsumer::SendRtpPacket(
-	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1144,9 +1158,10 @@ namespace RTC
 			  origTimestamp);
 		}
 
-		const bool sent = this->rtpStream->ReceivePacket(packet, sharedPacket);
+		const RTC::RtpStreamSend::ReceivePacketResult result =
+		  this->rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (sent)
+		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			if (this->rtpSeqManager->GetMaxOutput() == packet->GetSequenceNumber())
 			{
@@ -1185,6 +1200,13 @@ namespace RTC
 		// Restore the original payload if needed.
 		packet->RestorePayload();
 
+		// If sharedPacket doesn't have a packet inside and it has been stored we
+		// need to clone the packet into it.
+		if (!sharedPacket.HasPacket() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		{
+			sharedPacket.Assign(packet);
+		}
+
 		// If sent packet was the first packet of a key frame, let's send buffered
 		// packets belonging to the same key frame that arrived earlier due to
 		// packet misorder.
@@ -1192,23 +1214,38 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the key
 			// frame was sent.
-			if (sent)
+			if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket.get();
+					auto* bufferedPacket       = bufferedSharedPacket.GetPacket();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
 						MS_DEBUG_DEV(
 						  "sending packet buffered in the target layer retransmission buffer [ssrc:%" PRIu32
-						  ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+						  ", seq:%" PRIu16 ", ts:%" PRIu32
+						  "] after sending first packet of the key frame [ssrc:%" PRIu32 ", seq:%" PRIu16
+						  ", ts:%" PRIu32 "]",
 						  bufferedPacket->GetSsrc(),
 						  bufferedPacket->GetSequenceNumber(),
-						  bufferedPacket->GetTimestamp());
+						  bufferedPacket->GetTimestamp(),
+						  packet->GetSsrc(),
+						  packet->GetSequenceNumber(),
+						  packet->GetTimestamp());
 
 						SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+
+						// Be sure that the target layer retransmission buffer has not been
+						// emptied as a result of sending this packet. If so, exit the loop.
+						if (this->targetLayerRetransmissionBuffer.size() == 0)
+						{
+							MS_DEBUG_DEV(
+							  "target layer retransmission buffer emptied while iterating it, exiting the loop");
+
+							break;
+						}
 					}
 				}
 			}
@@ -1767,7 +1804,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1780,9 +1817,15 @@ namespace RTC
 
 		// Store original packet into the buffer. Only clone once and only if
 		// necessary.
-		if (!sharedPacket)
+		if (!sharedPacket.HasPacket())
 		{
-			sharedPacket.reset(packet->Clone());
+			sharedPacket.Assign(packet);
+		}
+		// Assert that, if sharedPacket was already filled, both packet and
+		// sharedPacket are the very same RTP packet.
+		else
+		{
+			sharedPacket.AssertSamePacket(packet);
 		}
 
 		this->targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;

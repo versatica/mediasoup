@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+#include <stdexcept>
 #include <sys/eventfd.h>
 #include <sys/resource.h>
 #include <sys/utsname.h>
@@ -382,7 +383,15 @@ DepLibUring::LibUring::~LibUring()
 		// Get positive errno.
 		int error = -err;
 
-		MS_ABORT("close() failed: %s", std::strerror(error));
+		try
+		{
+			MS_ABORT("close() failed: %s", std::strerror(error));
+		}
+		catch (const std::exception& error)
+		{
+			// NOTE: This is to avoid a warning:
+			// warning: ‘throw’ will always call ‘terminate’ [-Wterminate]
+		}
 	}
 
 	// Close the ring.

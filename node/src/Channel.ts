@@ -1,5 +1,5 @@
 import * as os from 'node:os';
-import { Duplex } from 'node:stream';
+import type { Duplex } from 'node:stream';
 import { info, warn } from 'node:console';
 import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
@@ -22,7 +22,7 @@ const logger = new Logger('Channel');
 type Sent = {
 	id: number;
 	method: string;
-	resolve: (data?: any) => void;
+	resolve: (data: Response | PromiseLike<Response>) => void;
 	reject: (error: Error) => void;
 	close: () => void;
 };
@@ -58,16 +58,16 @@ export class Channel extends EnhancedEventEmitter {
 		consumerSocket,
 		pid,
 	}: {
-		producerSocket: any;
-		consumerSocket: any;
+		producerSocket: Duplex;
+		consumerSocket: Duplex;
 		pid: number;
 	}) {
 		super();
 
 		logger.debug('constructor()');
 
-		this.#producerSocket = producerSocket as Duplex;
-		this.#consumerSocket = consumerSocket as Duplex;
+		this.#producerSocket = producerSocket;
+		this.#consumerSocket = consumerSocket;
 
 		// Read Channel responses/notifications from the worker.
 		this.#consumerSocket.on('data', (buffer: Buffer) => {

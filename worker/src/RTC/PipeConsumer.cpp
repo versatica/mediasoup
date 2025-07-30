@@ -9,6 +9,7 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
+#include <limits> // std::numeric_limits()
 
 namespace RTC
 {
@@ -225,7 +226,7 @@ namespace RTC
 		return 0u;
 	}
 
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -251,17 +252,17 @@ namespace RTC
 			return;
 		}
 
-		// If we need to sync, support key frames and this is not a key frame, ignore
-		// the packet.
+		// If we need to sync, support key frames and this is not a key frame,
+		// ignore the packet.
 		if (syncRequired && this->keyFrameSupported && !packet->IsKeyFrame())
 		{
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
 #endif
 
-			// NOTE: No need to drop the packet in the RTP sequence manager since here
-			// we are blocking all packets but the key frame that would trigger sync
-			// below.
+			// NOTE: No need to drop the packet in the RTP sequence manager since
+			// here we are blocking all packets but the key frame that would trigger
+			// sync below.
 
 			// Store the packet for the scenario in which this packet is part of the
 			// key frame and it arrived before the first packet of the key frame.
@@ -273,8 +274,8 @@ namespace RTC
 
 		auto payloadType = packet->GetPayloadType();
 
-		// NOTE: This may happen if this Consumer supports just some codecs of those
-		// in the corresponding Producer.
+		// NOTE: This may happen if this Consumer supports just some codecs of
+		// those in the corresponding Producer.
 		if (!this->supportedCodecPayloadTypes[payloadType])
 		{
 			MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
@@ -358,9 +359,10 @@ namespace RTC
 			  origSeq);
 		}
 
-		const bool sent = rtpStream->ReceivePacket(packet, sharedPacket);
+		const RTC::RtpStreamSend::ReceivePacketResult result =
+		  rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (sent)
+		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -389,30 +391,52 @@ namespace RTC
 		packet->SetSsrc(origSsrc);
 		packet->SetSequenceNumber(origSeq);
 
+		// If sharedPacket doesn't have a packet inside and it has been stored we
+		// need to clone the packet into it.
+		if (!sharedPacket.HasPacket() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		{
+			sharedPacket.Assign(packet);
+		}
+
 		// If sent packet was the first packet of a key frame, let's send buffered
 		// packets belonging to the same key frame that arrived earlier due to
 		// packet misorder.
 		if (sendPacketsInTargetLayerRetransmissionBuffer)
 		{
-			// NOTE: Only send buffered packets if the first packet containing the key
-			// frame was sent.
-			if (sent)
+			// NOTE: Only send buffered packets if the first packet containing the
+			// key frame was sent.
+			if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : targetLayerRetransmissionBuffer)
 				{
 					auto& bufferedSharedPacket = kv.second;
-					auto* bufferedPacket       = bufferedSharedPacket.get();
+					auto* bufferedPacket       = bufferedSharedPacket.GetPacket();
 
 					if (bufferedPacket->GetSequenceNumber() > origSeq)
 					{
 						MS_DEBUG_DEV(
 						  "sending packet buffered in the target layer retransmission buffer [ssrc:%" PRIu32
-						  ", seq:%" PRIu16 ", ts:%" PRIu32 "]",
+						  ", seq:%" PRIu16 ", ts:%" PRIu32
+						  "] after sending first packet of the key frame [ssrc:%" PRIu32 ", seq:%" PRIu16
+						  ", ts:%" PRIu32 "]",
 						  bufferedPacket->GetSsrc(),
 						  bufferedPacket->GetSequenceNumber(),
-						  bufferedPacket->GetTimestamp());
+						  bufferedPacket->GetTimestamp(),
+						  packet->GetSsrc(),
+						  packet->GetSequenceNumber(),
+						  packet->GetTimestamp());
 
 						SendRtpPacket(bufferedPacket, bufferedSharedPacket);
+
+						// Be sure that the target layer retransmission buffer has not been
+						// emptied as a result of sending this packet. If so, exit the loop.
+						if (targetLayerRetransmissionBuffer.size() == 0)
+						{
+							MS_DEBUG_DEV(
+							  "target layer retransmission buffer emptied while iterating it, exiting the loop");
+
+							break;
+						}
 					}
 				}
 			}
@@ -425,8 +449,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Special condition for PipeConsumer since this method will be called in a loop for
-		// each stream in this PipeConsumer.
+		// Special condition for PipeConsumer since this method will be called in a
+		// loop for each stream in this PipeConsumer.
 		// clang-format off
 		if (
 			nowMs != this->lastRtcpSentTime &&
@@ -800,10 +824,10 @@ namespace RTC
 	}
 
 	void PipeConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  std::map<uint16_t, std::shared_ptr<RTC::RtpPacket>, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+	  std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
 	    targetLayerRetransmissionBuffer,
 	  RTC::RtpPacket* packet,
-	  std::shared_ptr<RTC::RtpPacket>& sharedPacket)
+	  RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -816,9 +840,15 @@ namespace RTC
 
 		// Store original packet into the buffer. Only clone once and only if
 		// necessary.
-		if (!sharedPacket)
+		if (!sharedPacket.HasPacket())
 		{
-			sharedPacket.reset(packet->Clone());
+			sharedPacket.Assign(packet);
+		}
+		// Assert that, if sharedPacket was already filled, both packet and
+		// sharedPacket are the very same RTP packet.
+		else
+		{
+			sharedPacket.AssertSamePacket(packet);
 		}
 
 		targetLayerRetransmissionBuffer[packet->GetSequenceNumber()] = sharedPacket;

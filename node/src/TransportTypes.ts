@@ -37,6 +37,13 @@ export type TransportListenInfo = {
 	announcedAddress?: string;
 
 	/**
+	 * In transports with ICE candidates, this field determines whether to also
+	 * expose an ICE candidate with the IP of the |ip| field when |announcedAddress|
+	 * is given.
+	 */
+	exposeInternalIp?: boolean;
+
+	/**
 	 * Listening port.
 	 */
 	port?: number;

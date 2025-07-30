@@ -368,19 +368,6 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		},
 	]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual([
-		// NOTE: Remove this once framemarking draft becomes RFC.
-		{
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			id: 6,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
 		// TODO: Enable when DD is sendrecv.
 		// {
 		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
@@ -442,20 +429,6 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		},
 	]);
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual([
-		// NOTE: Remove this once framemarking draft becomes RFC.
-		{
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			id: 6,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
-
 		// TODO: Enable when DD is sendrecv.
 		// {
 		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
@@ -571,19 +544,6 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 		},
 	]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual([
-		// NOTE: Remove this once framemarking draft becomes RFC.
-		{
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			id: 6,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
 		// TODO: Enable when DD is sendrecv.
 		// {
 		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',

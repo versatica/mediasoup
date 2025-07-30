@@ -385,7 +385,13 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	const webRtcServer = await ctx.worker!.createWebRtcServer({
 		listenInfos: [
 			{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
-			{ protocol: 'tcp', ip: '127.0.0.1', port: port2 },
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedAddress: 'media1.foo.org',
+				exposeInternalIp: true,
+				port: port2,
+			},
 		],
 	});
 
@@ -428,12 +434,24 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 	const iceCandidates = transport.iceCandidates;
 
-	expect(iceCandidates.length).toBe(1);
-	expect(iceCandidates[0]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates.length).toBe(2);
+
+	expect(iceCandidates[0]!.address).toBe('media1.foo.org');
+	expect(iceCandidates[0]!.ip).toBe('media1.foo.org');
 	expect(iceCandidates[0]!.port).toBe(port2);
 	expect(iceCandidates[0]!.protocol).toBe('tcp');
 	expect(iceCandidates[0]!.type).toBe('host');
 	expect(iceCandidates[0]!.tcpType).toBe('passive');
+	expect(iceCandidates[1]!.address).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.port).toBe(port2);
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
+
+	expect(iceCandidates[0]!.priority).toBeGreaterThan(
+		iceCandidates[1]!.priority
+	);
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();

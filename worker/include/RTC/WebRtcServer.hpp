@@ -29,14 +29,19 @@ namespace RTC
 		{
 			// Expose a constructor to use vector.emplace_back().
 			UdpSocketOrTcpServer(
-			  RTC::UdpSocket* udpSocket, RTC::TcpServer* tcpServer, std::string& announcedAddress)
-			  : udpSocket(udpSocket), tcpServer(tcpServer), announcedAddress(announcedAddress)
+			  RTC::UdpSocket* udpSocket,
+			  RTC::TcpServer* tcpServer,
+			  std::string& announcedAddress,
+			  bool exposeInternalIp)
+			  : udpSocket(udpSocket), tcpServer(tcpServer), announcedAddress(announcedAddress),
+			    exposeInternalIp(exposeInternalIp)
 			{
 			}
 
 			RTC::UdpSocket* udpSocket;
 			RTC::TcpServer* tcpServer;
 			std::string announcedAddress;
+			bool exposeInternalIp;
 		};
 
 	private:

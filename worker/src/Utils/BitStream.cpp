@@ -1,4 +1,5 @@
-#define MS_CLASS "RTC::Codecs::BitStream"
+#define MS_CLASS "Utils::BitStream"
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "Logger.hpp"
 #include "Utils.hpp"
@@ -7,10 +8,13 @@ namespace Utils
 {
 	BitStream::BitStream(uint8_t* data, size_t len) : data(data), len(len)
 	{
+		MS_TRACE();
 	}
 
 	uint8_t BitStream::GetBit()
 	{
+		MS_TRACE();
+
 		auto bit = ((*(data + (this->offset >> 0x3))) >> (0x7 - (this->offset & 0x7))) & 0x1;
 
 		this->offset++;
@@ -20,9 +24,11 @@ namespace Utils
 
 	uint32_t BitStream::GetBits(size_t count)
 	{
+		MS_TRACE();
+
 		uint32_t bits = 0;
 
-		for (unsigned i = 0; i < count; i++)
+		for (unsigned i = 0; i < count; ++i)
 		{
 			bits = 2 * bits + GetBit();
 		}
@@ -32,6 +38,8 @@ namespace Utils
 
 	uint32_t BitStream::GetLeftBits() const
 	{
+		MS_TRACE();
+
 		if (this->offset >= this->len * 8)
 		{
 			return 0;
@@ -44,11 +52,15 @@ namespace Utils
 
 	void BitStream::SkipBits(size_t count)
 	{
+		MS_TRACE();
+
 		this->offset += count;
 	}
 
 	void BitStream::Write(uint32_t offset, uint32_t n, uint32_t v)
 	{
+		MS_TRACE();
+
 		unsigned w = 0;
 		unsigned x = n;
 
@@ -59,6 +71,7 @@ namespace Utils
 		}
 
 		unsigned m = (1 << w) - n;
+
 		if (v < m)
 		{
 			this->PutBits(offset, w - 1, v);
@@ -71,6 +84,8 @@ namespace Utils
 
 	void BitStream::PutBit(uint32_t offset, uint8_t bit)
 	{
+		MS_TRACE();
+
 		// Retrieve the current byte position.
 		size_t byteOffset = offset >> 0x3;
 
@@ -91,9 +106,12 @@ namespace Utils
 
 	void BitStream::PutBits(uint32_t offset, uint32_t count, uint32_t bits)
 	{
-		MS_ASSERT(count <= 32, "count cannot be bigger than 32,count: %u, bits: %u", count, bits);
+		MS_TRACE();
 
-		for (unsigned i = 0; i < count; i++)
+		MS_ASSERT(
+		  count <= 32, "count cannot be bigger than 32 [count:%" PRIu32 ", bits:%" PRIu32 "]", count, bits);
+
+		for (unsigned i = 0; i < count; ++i)
 		{
 			uint32_t shift = count - i - 1;
 			uint8_t bit    = (bits >> shift) & 0x1;
@@ -102,4 +120,3 @@ namespace Utils
 		}
 	}
 } // namespace Utils
-  // namespace RTC

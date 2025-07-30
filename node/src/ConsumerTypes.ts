@@ -225,7 +225,7 @@ export type ConsumerTraceEventData = {
 	/**
 	 * Per type information.
 	 */
-	info: any;
+	info: Record<string, unknown>;
 };
 
 export type ConsumerEvents = {

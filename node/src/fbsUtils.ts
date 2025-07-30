@@ -2,8 +2,10 @@
  * Parse flatbuffers vector into an array of the given T.
  */
 export function parseVector<T>(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	binary: any,
 	methodName: string,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	parseFn?: (binary2: any) => T
 ): T[] {
 	const array: T[] = [];
@@ -23,6 +25,7 @@ export function parseVector<T>(
  * Parse flatbuffers vector of StringString into the corresponding array.
  */
 export function parseStringStringVector(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	binary: any,
 	methodName: string
 ): { key: string; value: string }[] {
@@ -41,6 +44,7 @@ export function parseStringStringVector(
  * Parse flatbuffers vector of StringUint8 into the corresponding array.
  */
 export function parseStringUint8Vector(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	binary: any,
 	methodName: string
 ): { key: string; value: number }[] {
@@ -59,6 +63,7 @@ export function parseStringUint8Vector(
  * Parse flatbuffers vector of Uint16String into the corresponding array.
  */
 export function parseUint16StringVector(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	binary: any,
 	methodName: string
 ): { key: number; value: string }[] {
@@ -77,6 +82,7 @@ export function parseUint16StringVector(
  * Parse flatbuffers vector of Uint32String into the corresponding array.
  */
 export function parseUint32StringVector(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	binary: any,
 	methodName: string
 ): { key: number; value: string }[] {
@@ -95,6 +101,7 @@ export function parseUint32StringVector(
  * Parse flatbuffers vector of StringStringArray into the corresponding array.
  */
 export function parseStringStringArrayVector(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	binary: any,
 	methodName: string
 ): { key: string; values: string[] }[] {

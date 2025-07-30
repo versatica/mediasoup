@@ -1,6 +1,8 @@
 #include "RTC/FuzzerRtpStreamSend.hpp"
 #include "Utils.hpp"
+#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamSend.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 
 class TestRtpStreamListener : public RTC::RtpStreamSend::Listener
 {
@@ -47,7 +49,7 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 
 	while (len >= 4u)
 	{
-		std::shared_ptr<::RTC::RtpPacket> sharedPacket;
+		::RTC::SharedRtpPacket sharedPacket;
 
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));

@@ -1,9 +1,23 @@
 import * as dgram from 'node:dgram';
+import type { Duplex } from 'node:stream';
 // @ts-expect-error -- sctp library doesn't have TS types.
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
-import { enhancedOnce } from '../enhancedEvents';
+import { EnhancedEventEmitter, enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
+
+// Events definition for the SctpSocket class.
+type SctpSocketEvents = {
+	stream: [Duplex, number];
+};
+
+// Types for the SCTP socket created via sctp.connect().
+// NOTE: This is because the sctp library doesn't have TS types.
+abstract class SctpSocket extends EnhancedEventEmitter<SctpSocketEvents> {
+	abstract createStream(streamId: number): Duplex;
+
+	abstract end(): void;
+}
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -12,9 +26,9 @@ type TestContext = {
 	dataProducer?: mediasoup.types.DataProducer;
 	dataConsumer?: mediasoup.types.DataConsumer;
 	udpSocket?: dgram.Socket;
-	sctpSocket?: any;
+	sctpSocket?: SctpSocket;
 	sctpSendStreamId?: number;
-	sctpSendStream?: any;
+	sctpSendStream?: Duplex;
 };
 
 const ctx: TestContext = {};
@@ -65,7 +79,7 @@ beforeEach(async () => {
 
 	// Wait for the SCTP association to be open.
 	await Promise.race([
-		enhancedOnce(ctx.sctpSocket, 'connect'),
+		enhancedOnce(ctx.sctpSocket!, 'connect'),
 		new Promise<void>((resolve, reject) =>
 			setTimeout(() => reject(new Error('SCTP connection timeout')), 3000)
 		),
@@ -74,7 +88,7 @@ beforeEach(async () => {
 	// Create an explicit SCTP outgoing stream with id 123 (id 0 is already used
 	// by the implicit SCTP outgoing stream built-in the SCTP socket).
 	ctx.sctpSendStreamId = 123;
-	ctx.sctpSendStream = ctx.sctpSocket.createStream(ctx.sctpSendStreamId);
+	ctx.sctpSendStream = ctx.sctpSocket!.createStream(ctx.sctpSendStreamId);
 
 	// Create a DataProducer with the corresponding SCTP stream id.
 	ctx.dataProducer = await ctx.plainTransport.produceData({
@@ -148,8 +162,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 		ctx.sctpSocket!.on('stream', onStream);
 
 		// Handle the generated SCTP incoming stream and SCTP messages receives on it.
-		// @ts-expect-error --- Custom event of sctp library.
-		ctx.sctpSocket.on('stream', (stream, streamId) => {
+		ctx.sctpSocket!.on('stream', (stream, streamId) => {
 			// It must be zero because it's the first SCTP incoming stream (so first
 			// DataConsumer).
 			if (streamId !== 0) {

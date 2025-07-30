@@ -36,7 +36,7 @@ export function serializeRtpParameters(
 
 	for (const codec of rtpParameters.codecs) {
 		const mimeTypeOffset = builder.createString(codec.mimeType);
-		const parameters = serializeParameters(builder, codec.parameters);
+		const parameters = serializeParameters(builder, codec.parameters!);
 		const parametersOffset = FbsRtpCodecParameters.createParametersVector(
 			builder,
 			parameters
@@ -78,7 +78,10 @@ export function serializeRtpParameters(
 	// RtpHeaderExtensionParameters.
 	for (const headerExtension of rtpParameters.headerExtensions ?? []) {
 		const uri = rtpHeaderExtensionUriToFbs(headerExtension.uri);
-		const parameters = serializeParameters(builder, headerExtension.parameters);
+		const parameters = serializeParameters(
+			builder,
+			headerExtension.parameters!
+		);
 		const parametersOffset = FbsRtpCodecParameters.createParametersVector(
 			builder,
 			parameters
@@ -203,7 +206,7 @@ export function serializeRtpEncodingParameters(
 
 export function serializeParameters(
 	builder: flatbuffers.Builder,
-	parameters: any
+	parameters: Record<string, unknown>
 ): number[] {
 	const fbsParameters: number[] = [];
 
@@ -280,8 +283,9 @@ export function parseRtcpFeedback(data: FbsRtcpFeedback): RtcpFeedback {
 	};
 }
 
-export function parseParameters(data: any): any {
-	const parameters: any = {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseParameters(data: any): Record<string, unknown> {
+	const parameters: Record<string, unknown> = {};
 
 	for (let i = 0; i < data.parametersLength(); i++) {
 		const fbsParameter = data.parameters(i)!;
@@ -378,14 +382,6 @@ export function rtpHeaderExtensionUriFromFbs(
 			return 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id';
 		}
 
-		case FbsRtpHeaderExtensionUri.FrameMarkingDraft07: {
-			return 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07';
-		}
-
-		case FbsRtpHeaderExtensionUri.FrameMarking: {
-			return 'urn:ietf:params:rtp-hdrext:framemarking';
-		}
-
 		case FbsRtpHeaderExtensionUri.AudioLevel: {
 			return 'urn:ietf:params:rtp-hdrext:ssrc-audio-level';
 		}
@@ -434,14 +430,6 @@ export function rtpHeaderExtensionUriToFbs(
 
 		case 'urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id': {
 			return FbsRtpHeaderExtensionUri.RepairRtpStreamId;
-		}
-
-		case 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07': {
-			return FbsRtpHeaderExtensionUri.FrameMarkingDraft07;
-		}
-
-		case 'urn:ietf:params:rtp-hdrext:framemarking': {
-			return FbsRtpHeaderExtensionUri.FrameMarking;
 		}
 
 		case 'urn:ietf:params:rtp-hdrext:ssrc-audio-level': {

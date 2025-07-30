@@ -1,8 +1,8 @@
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::webrtc_server::{WebRtcServerListenInfos, WebRtcServerOptions};
 use crate::worker::{Worker, WorkerSettings};
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
 use portpicker::pick_unused_port;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
@@ -37,6 +37,7 @@ fn worker_close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port),
                     port_range: None,
                     flags: None,

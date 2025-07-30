@@ -16,10 +16,16 @@ namespace RTC
 		switch (protocol)
 		{
 			case FBS::Transport::Protocol::UDP:
+			{
 				return TransportTuple::Protocol::UDP;
+			}
 
 			case FBS::Transport::Protocol::TCP:
+			{
 				return TransportTuple::Protocol::TCP;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -30,10 +36,16 @@ namespace RTC
 		switch (protocol)
 		{
 			case TransportTuple::Protocol::UDP:
+			{
 				return FBS::Transport::Protocol::UDP;
+			}
 
 			case TransportTuple::Protocol::TCP:
+			{
 				return FBS::Transport::Protocol::TCP;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -101,12 +113,18 @@ namespace RTC
 		switch (GetProtocol())
 		{
 			case Protocol::UDP:
+			{
 				MS_DUMP("  protocol: udp");
+
 				break;
+			}
 
 			case Protocol::TCP:
+			{
 				MS_DUMP("  protocol: tcp");
+
 				break;
+			}
 		}
 
 		MS_DUMP("</TransportTuple>");

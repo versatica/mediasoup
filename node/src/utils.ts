@@ -34,18 +34,19 @@ export function generateRandomNumber(): number {
  * Make an object or array recursively immutable.
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze.
  */
-export function deepFreeze<T>(object: T): T {
+export function deepFreeze<T>(data: T): T {
 	// Retrieve the property names defined on object.
-	const propNames = Reflect.ownKeys(object as any);
+	const propNames = Reflect.ownKeys(data as Record<string, unknown>);
 
 	// Freeze properties before freezing self.
 	for (const name of propNames) {
-		const value = (object as any)[name];
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const value = (data as any)[name];
 
 		if ((value && typeof value === 'object') || typeof value === 'function') {
 			deepFreeze(value);
 		}
 	}
 
-	return Object.freeze(object);
+	return Object.freeze(data);
 }

@@ -48,16 +48,23 @@
 //! Please check integration and unit tests for usage examples, they cover all major functionality
 //! and are a good place to start until we have demo apps built in Rust).
 
+pub use mediasoup_types as types;
+#[deprecated(note = "Deprecated in favour of types::data_structures")]
 pub mod data_structures;
+pub(crate) mod fbs;
 mod macros;
 mod messages;
 #[doc(hidden)]
 pub mod ortc;
 pub mod prelude;
 pub mod router;
+#[deprecated(note = "Deprecated in favour of types::rtp_parameters")]
 pub mod rtp_parameters;
+#[deprecated(note = "Deprecated in favour of types::scalability_modes")]
 pub mod scalability_modes;
+#[deprecated(note = "Deprecated in favour of types::sctp_parameters")]
 pub mod sctp_parameters;
+#[deprecated(note = "Deprecated in favour of types::srtp_parameters")]
 pub mod srtp_parameters;
 pub mod supported_rtp_capabilities;
 pub mod webrtc_server;
