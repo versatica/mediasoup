@@ -6,7 +6,7 @@ export type RtpCapabilities = {
 	/**
 	 * Supported media and RTX codecs.
 	 */
-	codecs?: RtpCodecCapability[];
+	codecs?: (RtpCodecCapability | RouterRtpCodecCapability)[];
 
 	/**
 	 * Supported RTP header extensions.
@@ -49,8 +49,11 @@ export type RtpCodecCapability = {
 
 	/**
 	 * The preferred RTP payload type.
+	 *
+	 * NOTE: Despite it's a mandatory field, it's optional in `mediaCodecs` of
+	 * RouterOptions.
 	 */
-	preferredPayloadType?: number;
+	preferredPayloadType: number;
 
 	/**
 	 * Codec clock rate expressed in Hertz.
@@ -74,6 +77,17 @@ export type RtpCodecCapability = {
 	 * Transport layer and codec-specific feedback messages for this codec.
 	 */
 	rtcpFeedback?: RtcpFeedback[];
+};
+
+/**
+ * Special RtpCodecCapability for RouterOptions in which preferredPayloadType
+ * is optional.
+ */
+export type RouterRtpCodecCapability = Omit<
+	RtpCodecCapability,
+	'preferredPayloadType'
+> & {
+	preferredPayloadType?: number;
 };
 
 /**

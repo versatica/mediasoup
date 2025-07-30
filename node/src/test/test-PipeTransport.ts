@@ -10,7 +10,7 @@ import type {
 import * as utils from '../utils';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	audioProducerOptions: mediasoup.types.ProducerOptions;
 	videoProducerOptions: mediasoup.types.ProducerOptions;
 	dataProducerOptions: mediasoup.types.DataProducerOptions;
@@ -29,7 +29,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',

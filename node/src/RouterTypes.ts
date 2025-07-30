@@ -30,7 +30,10 @@ import type {
 	AudioLevelObserver,
 	AudioLevelObserverOptions,
 } from './AudioLevelObserverTypes';
-import type { RtpCapabilities, RtpCodecCapability } from './rtpParametersTypes';
+import type {
+	RtpCapabilities,
+	RouterRtpCodecCapability,
+} from './rtpParametersTypes';
 import type { NumSctpStreams } from './sctpParametersTypes';
 import type { Either, AppData } from './types';
 
@@ -38,7 +41,7 @@ export type RouterOptions<RouterAppData extends AppData = AppData> = {
 	/**
 	 * Router media codecs.
 	 */
-	mediaCodecs?: RtpCodecCapability[];
+	mediaCodecs?: RouterRtpCodecCapability[];
 
 	/**
 	 * Custom application data.
@@ -292,5 +295,5 @@ export interface Router<RouterAppData extends AppData = AppData>
 	 * Update the Router media codecs. Once called, the return value of the
 	 * router.rtpCapabilities getter changes.
 	 */
-	updateMediaCodecs(mediaCodecs: RtpCodecCapability[]): void;
+	updateMediaCodecs(mediaCodecs: RouterRtpCodecCapability[]): void;
 }

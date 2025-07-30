@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Node: Make `RtpCodecCapability.preferredPayloadType` mandatory and add `RouterRtpCodecCapability` in which `preferredPayloadType` is optional ([PR #15XX](https://github.com/versatica/mediasoup/pull/15XX)).
+
 ### 3.17.1
 
 - `WebRtcServer`: Remove the limit of 8 `listenInfos`.

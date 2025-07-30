@@ -63,7 +63,10 @@ import type {
 	AudioLevelObserverOptions,
 } from './AudioLevelObserverTypes';
 import { AudioLevelObserverImpl } from './AudioLevelObserver';
-import type { RtpCapabilities, RtpCodecCapability } from './rtpParametersTypes';
+import type {
+	RtpCapabilities,
+	RouterRtpCodecCapability,
+} from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
 import * as utils from './utils';
@@ -1371,13 +1374,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		}
 	}
 
-	updateMediaCodecs(mediaCodecs: RtpCodecCapability[]): void {
+	updateMediaCodecs(mediaCodecs: RouterRtpCodecCapability[]): void {
 		logger.debug('updateMediaCodecs()');
 
 		// Clone given media codecs to not modify input data.
-		const clonedMediaCodecs = utils.clone<RtpCodecCapability[] | undefined>(
-			mediaCodecs
-		);
+		const clonedMediaCodecs = utils.clone<
+			RouterRtpCodecCapability[] | undefined
+		>(mediaCodecs);
 
 		// This may throw.
 		const rtpCapabilities =

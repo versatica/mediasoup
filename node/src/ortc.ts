@@ -6,6 +6,7 @@ import type {
 	RtpCapabilities,
 	MediaKind,
 	RtpCodecCapability,
+	RouterRtpCodecCapability,
 	RtpHeaderExtension,
 	RtpParameters,
 	RtpCodecParameters,
@@ -193,7 +194,7 @@ export function validateSctpStreamParameters(
  * mediasoup supported RTP capabilities.
  */
 export function generateRouterRtpCapabilities(
-	mediaCodecs: RtpCodecCapability[] = []
+	mediaCodecs: RouterRtpCodecCapability[] = []
 ): RtpCapabilities {
 	// Normalize supported RTP capabilities.
 	validateRtpCapabilities(supportedRtpCapabilities);
@@ -227,7 +228,9 @@ export function generateRouterRtpCapabilities(
 		}
 
 		// Clone the supported codec.
-		const codec = utils.clone<RtpCodecCapability>(matchedSupportedCodec);
+		const codec = utils.clone<RtpCodecCapability | RouterRtpCodecCapability>(
+			matchedSupportedCodec
+		);
 
 		// If the given media codec has preferredPayloadType, keep it.
 		if (typeof mediaCodec.preferredPayloadType === 'number') {
@@ -315,8 +318,10 @@ export function getProducerRtpParametersMapping(
 	};
 
 	// Match parameters media codecs to capabilities media codecs.
-	const codecToCapCodec: Map<RtpCodecParameters, RtpCodecCapability> =
-		new Map();
+	const codecToCapCodec: Map<
+		RtpCodecParameters,
+		RtpCodecCapability | RouterRtpCodecCapability
+	> = new Map();
 
 	for (const codec of params.codecs) {
 		if (isRtxCodec(codec)) {
@@ -807,13 +812,15 @@ export function getPipeConsumerRtpParameters({
 	return consumerParams;
 }
 
-function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
+function isRtxCodec(
+	codec: RtpCodecCapability | RouterRtpCodecCapability | RtpCodecParameters
+): boolean {
 	return /.+\/rtx$/i.test(codec.mimeType);
 }
 
 function matchCodecs(
-	aCodec: RtpCodecCapability | RtpCodecParameters,
-	bCodec: RtpCodecCapability | RtpCodecParameters,
+	aCodec: RtpCodecCapability | RouterRtpCodecCapability | RtpCodecParameters,
+	bCodec: RtpCodecCapability | RouterRtpCodecCapability | RtpCodecParameters,
 	{ strict = false, modify = false } = {}
 ): boolean {
 	const aMimeType = aCodec.mimeType.toLowerCase();
@@ -957,7 +964,9 @@ export function serializeRtpMapping(
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtpCodecCapability(codec: RtpCodecCapability): void {
+function validateRtpCodecCapability(
+	codec: RtpCodecCapability | RouterRtpCodecCapability
+): void {
 	const MimeTypeRegex = new RegExp('^(audio|video)/(.+)', 'i');
 
 	if (typeof codec !== 'object') {
@@ -978,7 +987,7 @@ function validateRtpCodecCapability(codec: RtpCodecCapability): void {
 	// Just override kind with media component of mimeType.
 	codec.kind = mimeTypeMatch[1]!.toLowerCase() as MediaKind;
 
-	// preferredPayloadType is optional.
+	// preferredPayloadType is optional in RouterRtpCodecCapability.
 	if (
 		codec.preferredPayloadType &&
 		typeof codec.preferredPayloadType !== 'number'

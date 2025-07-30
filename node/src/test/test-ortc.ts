@@ -3,7 +3,7 @@ import * as ortc from '../ortc';
 import { UnsupportedError } from '../errors';
 
 test('generateRouterRtpCapabilities() succeeds', () => {
-	const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [
+	const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -119,7 +119,7 @@ test('generateRouterRtpCapabilities() succeeds', () => {
 });
 
 test('generateRouterRtpCapabilities() with unsupported codecs throws UnsupportedError', () => {
-	let mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	let mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 
 	mediaCodecs = [
 		{
@@ -149,7 +149,7 @@ test('generateRouterRtpCapabilities() with unsupported codecs throws Unsupported
 });
 
 test('generateRouterRtpCapabilities() with too many codecs throws', () => {
-	const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [];
+	const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [];
 
 	for (let i = 0; i < 100; ++i) {
 		mediaCodecs.push({
@@ -166,7 +166,7 @@ test('generateRouterRtpCapabilities() with too many codecs throws', () => {
 });
 
 test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsumerRtpParameters() and getPipeConsumerRtpParameters() succeed', () => {
-	const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [
+	const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -509,7 +509,7 @@ test('getProducerRtpParametersMapping(), getConsumableRtpParameters(), getConsum
 });
 
 test('getProducerRtpParametersMapping() with incompatible params throws UnsupportedError', () => {
-	const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [
+	const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
