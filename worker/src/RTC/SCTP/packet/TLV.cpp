@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove()
-#include <limits>  // std::numeric_limits()
+#include <limits>  // std::numeric_limits
 
 namespace RTC
 {

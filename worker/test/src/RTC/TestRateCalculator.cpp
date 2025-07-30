@@ -2,7 +2,7 @@
 #include "DepLibUV.hpp"
 #include "RTC/RateCalculator.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <limits> // std::numeric_limits()
+#include <limits> // std::numeric_limits
 #include <vector>
 
 using namespace RTC;
