@@ -9,7 +9,7 @@ import type {
 import type { Worker, WorkerSettings } from './WorkerTypes';
 import { WorkerImpl, workerBin } from './Worker';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
-import type { RtpCapabilities } from './rtpParametersTypes';
+import type { RouterRtpCapabilities } from './rtpParametersTypes';
 import { parseScalabilityMode } from './scalabilityModesUtils';
 import type { AppData } from './types';
 import * as utils from './utils';
@@ -135,8 +135,8 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 /**
  * Get a cloned copy of the mediasoup supported RTP capabilities.
  */
-export function getSupportedRtpCapabilities(): RtpCapabilities {
-	return utils.clone<RtpCapabilities>(supportedRtpCapabilities);
+export function getSupportedRtpCapabilities(): RouterRtpCapabilities {
+	return utils.clone<RouterRtpCapabilities>(supportedRtpCapabilities);
 }
 
 /**

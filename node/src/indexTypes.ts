@@ -1,6 +1,6 @@
 import type { EnhancedEventEmitter } from './enhancedEvents';
 import type { Worker, WorkerSettings } from './WorkerTypes';
-import type { RtpCapabilities } from './rtpParametersTypes';
+import type { RouterRtpCapabilities } from './rtpParametersTypes';
 import type { parseScalabilityMode } from './scalabilityModesUtils';
 import type { AppData } from './types';
 
@@ -27,6 +27,6 @@ export interface Index {
 	createWorker: <WorkerAppData extends AppData = AppData>(
 		options?: WorkerSettings<WorkerAppData>
 	) => Promise<Worker<WorkerAppData>>;
-	getSupportedRtpCapabilities: () => RtpCapabilities;
+	getSupportedRtpCapabilities: () => RouterRtpCapabilities;
 	parseScalabilityMode: typeof parseScalabilityMode;
 }

@@ -1,4 +1,9 @@
 /**
+ * Media kind ('audio' or 'video').
+ */
+export type MediaKind = 'audio' | 'video';
+
+/**
  * The RTP capabilities define what mediasoup or an endpoint can receive at
  * media level.
  */
@@ -6,7 +11,7 @@ export type RtpCapabilities = {
 	/**
 	 * Supported media and RTX codecs.
 	 */
-	codecs?: (RtpCodecCapability | RouterRtpCodecCapability)[];
+	codecs?: RtpCodecCapability[];
 
 	/**
 	 * Supported RTP header extensions.
@@ -15,9 +20,12 @@ export type RtpCapabilities = {
 };
 
 /**
- * Media kind ('audio' or 'video').
+ * Special RtpCapabilities for `supportedRtpCapabilities` in which `codecs`
+ * is an array of RouterRtpCodecCapability.
  */
-export type MediaKind = 'audio' | 'video';
+export type RouterRtpCapabilities = Omit<RtpCapabilities, 'codecs'> & {
+	codecs?: RouterRtpCodecCapability[];
+};
 
 /**
  * Provides information on the capabilities of a codec within the RTP
@@ -80,7 +88,7 @@ export type RtpCodecCapability = {
 };
 
 /**
- * Special RtpCodecCapability for RouterOptions in which preferredPayloadType
+ * Special RtpCodecCapability for RouterOptions in which `preferredPayloadType`
  * is optional.
  */
 export type RouterRtpCodecCapability = Omit<
