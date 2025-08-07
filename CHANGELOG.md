@@ -3,6 +3,7 @@
 ### NEXT
 
 - `TransportTuple`: Generate hash based ont only on remote IP:port but also on local IP:port ([PR #1586](https://github.com/versatica/mediasoup/pull/1586)).
+- `IceServer`: Only update selected tuple if the new Binding request has ICE renomination ([PR #1587](https://github.com/versatica/mediasoup/pull/1587), credits to @pangsimon).
 
 ### 3.18.0
 
