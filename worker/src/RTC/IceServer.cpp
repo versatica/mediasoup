@@ -747,8 +747,8 @@ namespace RTC
 					// Store the tuple.
 					auto* storedTuple = AddTuple(tuple);
 
-					// When in completed state, only set current tuple as selected tuple
-					// if the request has nomination.
+					// When in completed state, only update selected tuple if there is ICE
+					// nomination.
 					if (hasNomination && nomination > this->remoteNomination)
 					{
 						// Mark it as selected tuple.
