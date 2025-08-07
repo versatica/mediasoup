@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- `TransportTuple`: Generate hash based ont only on remote IP:port but also on local IP:port ([PR #1585](https://github.com/versatica/mediasoup/pull/1585)).
+- `TransportTuple`: Generate hash based ont only on remote IP:port but also on local IP:port ([PR #1586](https://github.com/versatica/mediasoup/pull/1586)).
 
 ### 3.18.0
 
