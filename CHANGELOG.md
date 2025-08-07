@@ -2,9 +2,11 @@
 
 ### NEXT
 
+- `TransportTuple`: Generate hash based ont only on remote IP:port but also on local IP:port ([PR #1585](https://github.com/versatica/mediasoup/pull/1585)).
+
 ### 3.18.0
 
-- Node: Make `RtpCodecCapability.preferredPayloadType` mandatory and add `RouterRtpCodecCapability` type (in which `preferredPayloadType` is optional) and `RouterRtpCapabilities` type ([PR #15XX](https://github.com/versatica/mediasoup/pull/15XX)).
+- Node: Make `RtpCodecCapability.preferredPayloadType` mandatory and add `RouterRtpCodecCapability` type (in which `preferredPayloadType` is optional) and `RouterRtpCapabilities` type ([PR #1584](https://github.com/versatica/mediasoup/pull/1584)).
 
 ### 3.17.1
 

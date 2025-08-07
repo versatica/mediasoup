@@ -405,6 +405,7 @@ test_sources = [
   'test/src/RTC/TestSharedRtpPacket.cpp',
   'test/src/RTC/TestSimpleConsumer.cpp',
   'test/src/RTC/TestTransportCongestionControlServer.cpp',
+  'test/src/RTC/TestTransportTuple.cpp',
   'test/src/RTC/TestTrendCalculator.cpp',
   'test/src/RTC/Codecs/TestDependencyDescriptor.cpp',
   'test/src/RTC/Codecs/TestVP8.cpp',
