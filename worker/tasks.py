@@ -85,9 +85,10 @@ else:
 # normalize direct uses of WORKER_DIR
 if os.name == 'nt':
     # NOTE: this is necessary for Windows to avoid whitespace within the path breaking the command
-    WORKER_DIR = WORKER_DIR.replace('\\', '/');
+    WORKER_DIR = os.path.normpath(WORKER_DIR);
 else:
-    WORKER_DIR = f'"{WORKER_DIR}"'
+    # NOTE: this is also necessary, because Linux cd command does not accept multiple arguments
+    WORKER_DIR = f'"{WORKER_DIR}"';
 
 # Instruct Python where to look for modules it needs, such that meson actually
 # runs from installed location.
