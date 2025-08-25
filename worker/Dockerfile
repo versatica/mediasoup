@@ -32,6 +32,6 @@ ENV CXX="clang++"
 ENV MEDIASOUP_LOCAL_DEV="true"
 ENV KEEP_BUILD_ARTIFACTS="1"
 
-WORKDIR /mediasoup
+WORKDIR "/foo bar/mediasoup"
 
 CMD ["bash"]
