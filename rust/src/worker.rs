@@ -501,12 +501,6 @@ impl Inner {
         &self,
         buffer_worker_messages_guard: BufferMessagesGuard,
     ) -> io::Result<()> {
-        #[derive(Deserialize)]
-        #[serde(tag = "event", rename_all = "lowercase")]
-        enum Notification {
-            Running,
-        }
-
         let (sender, receiver) = async_oneshot::oneshot();
         let id = self.id;
         let sender = Mutex::new(Some(sender));
