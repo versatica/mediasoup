@@ -3,22 +3,10 @@
 
 use crate::fbs::{FromFbs, ToFbs, TryFromFbs};
 use mediasoup_sys::fbs::rtp_parameters;
-pub use mediasoup_types::rtp_parameters::*;
+use mediasoup_types::rtp_parameters::*;
 use std::borrow::Cow;
 use std::error::Error;
 use std::str::FromStr;
-use thiserror::Error;
-
-/// Error that caused [`MimeType`] parsing error.
-#[derive(Debug, Error, Eq, PartialEq)]
-pub enum ParseMimeTypeError {
-    /// Invalid MIME type input string
-    #[error("Invalid MIME type input string")]
-    InvalidInput,
-    /// Unknown MIME type
-    #[error("Unknown MIME type")]
-    UnknownMimeType,
-}
 
 impl<'a> TryFromFbs<'a> for RtpParameters {
     type FbsType = rtp_parameters::RtpParametersRef<'a>;
