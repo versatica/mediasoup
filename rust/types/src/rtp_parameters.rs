@@ -427,8 +427,10 @@ pub enum RtpCodecCapability {
         channels: NonZeroU8,
         /// Codec specific parameters. Some parameters (such as `packetization-mode` and
         /// `profile-level-id` in H264 or `profile-id` in VP9) are critical for codec matching.
+        #[serde(default)]
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
+        #[serde(default)]
         rtcp_feedback: Vec<RtcpFeedback>,
     },
     /// Video codec capability
@@ -443,8 +445,10 @@ pub enum RtpCodecCapability {
         clock_rate: NonZeroU32,
         /// Codec specific parameters. Some parameters (such as `packetization-mode` and
         /// `profile-level-id` in H264 or `profile-id` in VP9) are critical for codec matching.
+        #[serde(default)]
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
+        #[serde(default)]
         rtcp_feedback: Vec<RtcpFeedback>,
     },
 }
@@ -762,8 +766,10 @@ pub enum RtpCodecParameters {
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// `packetization-mode` and `profile-level-id` in H264 or `profile-id` in VP9) are critical for
         /// codec matching.
+        #[serde(default)]
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
+        #[serde(default)]
         rtcp_feedback: Vec<RtcpFeedback>,
     },
     /// Video codec
@@ -778,8 +784,10 @@ pub enum RtpCodecParameters {
         /// Codec-specific parameters available for signaling. Some parameters (such as
         /// `packetization-mode` and `profile-level-id` in H264 or `profile-id` in VP9) are critical for
         /// codec matching.
+        #[serde(default)]
         parameters: RtpCodecParametersParameters,
         /// Transport layer and codec-specific feedback messages for this codec.
+        #[serde(default)]
         rtcp_feedback: Vec<RtcpFeedback>,
     },
 }

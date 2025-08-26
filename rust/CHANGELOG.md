@@ -2,6 +2,8 @@
 
 # NEXT
 
+- Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization.
+
 # 0.19.1
 
 - Fix installation in paths with spaces (PR #1596).
