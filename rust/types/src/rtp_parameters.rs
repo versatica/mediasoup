@@ -247,7 +247,7 @@ impl MimeType {
 
 /// Known Audio MIME types.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
 pub enum MimeTypeAudio {
     /// Opus
     #[serde(rename = "audio/opus")]
@@ -291,16 +291,16 @@ impl FromStr for MimeTypeAudio {
     type Err = ParseMimeTypeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match s.to_ascii_lowercase().as_str() {
             "audio/opus" => Ok(Self::Opus),
             "audio/multiopus" => Ok(Self::MultiChannelOpus),
-            "audio/PCMU" => Ok(Self::Pcmu),
-            "audio/PCMA" => Ok(Self::Pcma),
-            "audio/ISAC" => Ok(Self::Isac),
-            "audio/G722" => Ok(Self::G722),
-            "audio/iLBC" => Ok(Self::Ilbc),
-            "audio/SILK" => Ok(Self::Silk),
-            "audio/CN" => Ok(Self::Cn),
+            "audio/pcmu" => Ok(Self::Pcmu),
+            "audio/pcma" => Ok(Self::Pcma),
+            "audio/isac" => Ok(Self::Isac),
+            "audio/g722" => Ok(Self::G722),
+            "audio/ilbc" => Ok(Self::Ilbc),
+            "audio/silk" => Ok(Self::Silk),
+            "audio/cn" => Ok(Self::Cn),
             "audio/telephone-event" => Ok(Self::TelephoneEvent),
             "audio/rtx" => Ok(Self::Rtx),
             "audio/red" => Ok(Self::Red),
@@ -310,6 +310,16 @@ impl FromStr for MimeTypeAudio {
                 ParseMimeTypeError::InvalidInput
             }),
         }
+    }
+}
+
+impl<'de> Deserialize<'de> for MimeTypeAudio {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        MimeTypeAudio::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
@@ -334,7 +344,8 @@ impl MimeTypeAudio {
 }
 
 /// Known Video MIME types.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
 pub enum MimeTypeVideo {
     /// VP8
     #[serde(rename = "video/VP8")]
@@ -363,11 +374,11 @@ impl FromStr for MimeTypeVideo {
     type Err = ParseMimeTypeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "video/VP8" => Ok(Self::Vp8),
-            "video/VP9" => Ok(Self::Vp9),
-            "video/H264" => Ok(Self::H264),
-            "video/AV1" => Ok(Self::AV1),
+        match s.to_ascii_lowercase().as_str() {
+            "video/vp8" => Ok(Self::Vp8),
+            "video/vp9" => Ok(Self::Vp9),
+            "video/h264" => Ok(Self::H264),
+            "video/av1" => Ok(Self::AV1),
             "video/rtx" => Ok(Self::Rtx),
             "video/red" => Ok(Self::Red),
             "video/ulpfec" => Ok(Self::Ulpfec),
@@ -377,6 +388,16 @@ impl FromStr for MimeTypeVideo {
                 ParseMimeTypeError::InvalidInput
             }),
         }
+    }
+}
+
+impl<'de> Deserialize<'de> for MimeTypeVideo {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        MimeTypeVideo::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
