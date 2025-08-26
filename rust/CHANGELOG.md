@@ -2,8 +2,8 @@
 
 # NEXT
 
-- Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization.
-- Make codec `mime_type` case insensitive.
+- Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization (PR #1589).
+- Make codec `mime_type` case insensitive during deserialization (PR #1590).
 
 # 0.19.1
 
