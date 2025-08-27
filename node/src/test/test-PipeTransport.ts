@@ -288,7 +288,7 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 	});
 	expect(pipeConsumer.appData).toEqual({});
 
-	expect(typeof pipeProducer.id).toBe('string');
+	expect(pipeProducer.id).toBe(ctx.audioProducer!.id);
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('audio');
 	expect(typeof pipeProducer.rtpParameters).toBe('object');
@@ -411,7 +411,7 @@ test('router.pipeToRouter() succeeds with video', async () => {
 	});
 	expect(pipeConsumer.appData).toEqual({});
 
-	expect(typeof pipeProducer.id).toBe('string');
+	expect(pipeProducer.id).toBe(ctx.videoProducer!.id);
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('video');
 	expect(typeof pipeProducer.rtpParameters).toBe('object');

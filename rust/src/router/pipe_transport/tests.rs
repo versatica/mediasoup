@@ -137,7 +137,10 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to produce video");
 
-        let PipeProducerToRouterPair { pipe_producer, .. } = router1
+        let PipeProducerToRouterPair {
+            pipe_producer,
+            pipe_consumer: _,
+        } = router1
             .pipe_producer_to_router(
                 video_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),
@@ -179,7 +182,8 @@ fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
             .expect("Failed to produce data");
 
         let PipeDataProducerToRouterPair {
-            pipe_data_producer, ..
+            pipe_data_producer,
+            pipe_data_consumer: _,
         } = router1
             .pipe_data_producer_to_router(
                 data_producer.id(),

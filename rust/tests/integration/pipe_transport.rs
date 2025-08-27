@@ -293,8 +293,8 @@ fn pipe_to_router_succeeds_with_audio() {
             .expect("Failed to produce audio");
 
         let PipeProducerToRouterPair {
-            pipe_consumer,
             pipe_producer,
+            pipe_consumer,
         } = router1
             .pipe_producer_to_router(
                 audio_producer.id(),
@@ -372,6 +372,7 @@ fn pipe_to_router_succeeds_with_audio() {
         );
         assert_eq!(pipe_consumer.app_data().downcast_ref::<()>().unwrap(), &());
 
+        assert_eq!(pipe_producer.id(), audio_producer.id());
         assert_eq!(pipe_producer.kind(), MediaKind::Audio);
         assert_eq!(pipe_producer.rtp_parameters().mid, None);
         assert_eq!(
@@ -442,8 +443,8 @@ fn pipe_to_router_succeeds_with_video() {
             .expect("Failed to pause video producer");
 
         let PipeProducerToRouterPair {
-            pipe_consumer,
             pipe_producer,
+            pipe_consumer,
         } = router1
             .pipe_producer_to_router(
                 video_producer.id(),
@@ -518,6 +519,7 @@ fn pipe_to_router_succeeds_with_video() {
         );
         assert_eq!(pipe_consumer.app_data().downcast_ref::<()>().unwrap(), &());
 
+        assert_eq!(pipe_producer.id(), video_producer.id());
         assert_eq!(pipe_producer.kind(), MediaKind::Video);
         assert_eq!(pipe_producer.rtp_parameters().mid, None);
         assert_eq!(
@@ -607,7 +609,10 @@ fn pipe_to_router_with_keep_id_false_does_not_fail_if_both_routers_belong_to_the
             .await
             .expect("Failed to produce video");
 
-        router1
+        let PipeProducerToRouterPair {
+            pipe_producer,
+            pipe_consumer: _,
+        } = router1
             .pipe_producer_to_router(video_producer.id(), {
                 let mut options = PipeToRouterOptions::new(router1bis.clone());
                 options.keep_id = false;
@@ -615,6 +620,10 @@ fn pipe_to_router_with_keep_id_false_does_not_fail_if_both_routers_belong_to_the
             })
             .await
             .expect("Failed to pipe producer to router");
+
+        let pipe_producer = pipe_producer.into_inner();
+
+        assert_ne!(pipe_producer.id(), video_producer.id());
     });
 }
 
@@ -1072,8 +1081,8 @@ fn pipe_to_router_succeeds_with_data() {
             .expect("Failed to produce data");
 
         let PipeDataProducerToRouterPair {
-            pipe_data_consumer,
             pipe_data_producer,
+            pipe_data_consumer,
         } = router1
             .pipe_data_producer_to_router(
                 data_producer.id(),
@@ -1143,7 +1152,8 @@ fn data_consume_for_pipe_data_producer_succeeds() {
             .expect("Failed to produce data");
 
         let PipeDataProducerToRouterPair {
-            pipe_data_producer, ..
+            pipe_data_producer,
+            pipe_data_consumer: _,
         } = router1
             .pipe_data_producer_to_router(
                 data_producer.id(),
