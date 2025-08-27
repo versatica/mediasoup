@@ -1097,9 +1097,13 @@ impl Router {
     ) -> Result<PipeProducerToRouterPair, PipeProducerToRouterError> {
         debug!("pipe_producer_to_router()");
 
-        let PipeToRouterOptions { keep_id, .. } = pipe_to_router_options;
+        let PipeToRouterOptions {
+            ref router,
+            keep_id,
+            ..
+        } = pipe_to_router_options;
 
-        if keep_id && pipe_to_router_options.router.id() == self.id() {
+        if keep_id && router.id() == self.id() {
             return Err(PipeProducerToRouterError::SameRouter);
         }
 
@@ -1314,9 +1318,13 @@ impl Router {
     ) -> Result<PipeDataProducerToRouterPair, PipeDataProducerToRouterError> {
         debug!("pipe_data_producer_to_router()");
 
-        let PipeToRouterOptions { keep_id, .. } = pipe_to_router_options;
+        let PipeToRouterOptions {
+            ref router,
+            keep_id,
+            ..
+        } = pipe_to_router_options;
 
-        if keep_id && pipe_to_router_options.router.id() == self.id() {
+        if keep_id && router.id() == self.id() {
             return Err(PipeDataProducerToRouterError::SameRouter);
         }
 
