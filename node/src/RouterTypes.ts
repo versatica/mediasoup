@@ -66,6 +66,16 @@ export type PipeToRouterOptions = {
 	router: Router;
 
 	/**
+	 * Whether the `id` of the returned Producer or DataProducer should be the
+	 * same than the `id` of the original Producer or DataProducer. Default true.
+	 *
+	 * @remarks
+	 * - If set to true, then the origin router and target router cannot be in the
+	 *   same worker (if so, `pipeToRouter()` with throw).
+	 */
+	keepId?: boolean;
+
+	/**
 	 * Create a SCTP association. Default true.
 	 */
 	enableSctp?: boolean;

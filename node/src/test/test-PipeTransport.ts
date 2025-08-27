@@ -902,7 +902,7 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 	expect(videoConsumer.closed).toBe(true);
 }, 2000);
 
-test('router.pipeToRouter() does not fail if both Routers belong to the same Worker', async () => {
+test('router.pipeToRouter() with keepId: true fails if both Routers belong to the same Worker', async () => {
 	const router1bis = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
 	});
@@ -911,8 +911,24 @@ test('router.pipeToRouter() does not fail if both Routers belong to the same Wor
 		ctx.router1!.pipeToRouter({
 			producerId: ctx.videoProducer!.id,
 			router: router1bis,
+			// Default value is true.
+			keepId: true,
 		})
-	).resolves.toBeDefined();
+	).rejects.toThrow(Error);
+}, 2000);
+
+test('router.pipeToRouter() with keepId: false does not fail if both Routers belong to the same Worker', async () => {
+	const router1bis = await ctx.worker1!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	const { pipeProducer } = await ctx.router1!.pipeToRouter({
+		producerId: ctx.videoProducer!.id,
+		router: router1bis,
+		keepId: false,
+	});
+
+	expect(pipeProducer!.id).not.toBe(ctx.videoProducer!.id);
 }, 2000);
 
 test('router.pipeToRouter() succeeds with data', async () => {

@@ -924,6 +924,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		producerId,
 		dataProducerId,
 		router,
+		keepId = true,
 		listenInfo,
 		listenIp,
 		enableSctp = true,
@@ -1088,8 +1089,8 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				});
 
 				pipeProducer = await remotePipeTransport!.produce({
-					// Generate a new id for the pipeProducer.
-					id: utils.generateUUIDv4(),
+					// If requested, generate a new id for the pipeProducer.
+					id: keepId ? producer.id : utils.generateUUIDv4(),
 					kind: pipeConsumer.kind,
 					rtpParameters: pipeConsumer.rtpParameters,
 					paused: pipeConsumer.producerPaused,
@@ -1146,8 +1147,8 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				});
 
 				pipeDataProducer = await remotePipeTransport!.produceData({
-					// Generate a new id for the pipeDataProducer.
-					id: utils.generateUUIDv4(),
+					// If requested, generate a new id for the pipeDataProducer.
+					id: keepId ? dataProducer.id : utils.generateUUIDv4(),
 					sctpStreamParameters: pipeDataConsumer.sctpStreamParameters,
 					label: pipeDataConsumer.label,
 					protocol: pipeDataConsumer.protocol,

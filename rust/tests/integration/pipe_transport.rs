@@ -9,6 +9,7 @@ use mediasoup::router::{
     PipeDataProducerToRouterPair, PipeProducerToRouterPair, PipeToRouterOptions, Router,
     RouterOptions,
 };
+use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
@@ -559,7 +560,40 @@ fn pipe_to_router_succeeds_with_video() {
 }
 
 #[test]
-fn pipe_to_router_fails_if_both_routers_belong_to_the_same_worker() {
+fn pipe_to_router_with_keep_id_true_fails_if_both_routers_belong_to_the_same_worker() {
+    future::block_on(async move {
+        let (worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
+
+        let router1bis = worker1
+            .create_router(RouterOptions::new(media_codecs()))
+            .await
+            .expect("Failed to create router");
+
+        let video_producer = transport1
+            .produce(video_producer_options())
+            .await
+            .expect("Failed to produce video");
+
+        let result = router1
+            .pipe_producer_to_router(
+                video_producer.id(),
+                PipeToRouterOptions::new(router1bis.clone()),
+            )
+            .await;
+
+        if let Err(PipeProducerToRouterError::ProduceFailed(ProduceError::Request(
+            RequestError::Response { reason },
+        ))) = result
+        {
+            assert!(reason.contains("already exists [method:transport.produce]"));
+        } else {
+            panic!("Unexpected result: {result:?}");
+        }
+    });
+}
+
+#[test]
+fn pipe_to_router_with_keep_id_false_does_not_fail_if_both_routers_belong_to_the_same_worker() {
     future::block_on(async move {
         let (worker1, _worker2, router1, _router2, transport1, _transport2) = init().await;
 
@@ -576,7 +610,7 @@ fn pipe_to_router_fails_if_both_routers_belong_to_the_same_worker() {
         router1
             .pipe_producer_to_router(
                 video_producer.id(),
-                PipeToRouterOptions::new(router1bis.clone()),
+                PipeToRouterOptions::new(router1bis.clone()).with_keep_id(false),
             )
             .await
             .expect("Failed to pipe producer to router");
