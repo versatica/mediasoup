@@ -170,12 +170,6 @@ impl PipeToRouterOptions {
             enable_srtp: false,
         }
     }
-
-    /// Set `keep_id`.
-    pub fn with_keep_id(mut self, keep: bool) -> Self {
-        self.keep_id = keep;
-        self
-    }
 }
 
 /// Container for pipe consumer and pipe producer pair.

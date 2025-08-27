@@ -608,10 +608,11 @@ fn pipe_to_router_with_keep_id_false_does_not_fail_if_both_routers_belong_to_the
             .expect("Failed to produce video");
 
         router1
-            .pipe_producer_to_router(
-                video_producer.id(),
-                PipeToRouterOptions::new(router1bis.clone()).with_keep_id(false),
-            )
+            .pipe_producer_to_router(video_producer.id(), {
+                let mut options = PipeToRouterOptions::new(router1bis.clone());
+                options.keep_id = false;
+                options
+            })
             .await
             .expect("Failed to pipe producer to router");
     });
