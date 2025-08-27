@@ -1004,7 +1004,10 @@ fn producer_pause_resume_are_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to pause video producer");
 
-        let PipeProducerToRouterPair { pipe_producer, .. } = router1
+        let PipeProducerToRouterPair {
+            pipe_producer,
+            pipe_consumer: _,
+        } = router1
             .pipe_producer_to_router(
                 video_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),

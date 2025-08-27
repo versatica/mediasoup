@@ -966,7 +966,7 @@ test('router.pipeToRouter() succeeds with data', async () => {
 	expect(pipeDataConsumer.label).toBe('foo');
 	expect(pipeDataConsumer.protocol).toBe('bar');
 
-	expect(typeof pipeDataProducer.id).toBe('string');
+	expect(pipeDataProducer.id).toBe(ctx.dataProducer!.id);
 	expect(pipeDataProducer.closed).toBe(false);
 	expect(pipeDataProducer.type).toBe('sctp');
 	expect(typeof pipeDataProducer.sctpStreamParameters).toBe('object');
