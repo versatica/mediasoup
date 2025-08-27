@@ -288,7 +288,7 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 	});
 	expect(pipeConsumer.appData).toEqual({});
 
-	expect(pipeProducer.id).toBe(ctx.audioProducer!.id);
+	expect(typeof pipeProducer.id).toBe('string');
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('audio');
 	expect(typeof pipeProducer.rtpParameters).toBe('object');
@@ -411,7 +411,7 @@ test('router.pipeToRouter() succeeds with video', async () => {
 	});
 	expect(pipeConsumer.appData).toEqual({});
 
-	expect(pipeProducer.id).toBe(ctx.videoProducer!.id);
+	expect(typeof pipeProducer.id).toBe('string');
 	expect(pipeProducer.closed).toBe(false);
 	expect(pipeProducer.kind).toBe('video');
 	expect(typeof pipeProducer.rtpParameters).toBe('object');
@@ -758,13 +758,13 @@ test('router.createPipeTransport() with fixed port succeeds', async () => {
 }, 2000);
 
 test('transport.consume() for a pipe Producer succeeds', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
-		producerId: ctx.videoProducer!.id,
+		producerId: pipeProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
@@ -840,7 +840,7 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 	});
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
-		producerId: ctx.videoProducer!.id,
+		producerId: pipeVideoProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
@@ -881,13 +881,13 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 }, 2000);
 
 test('producer.close() is transmitted to pipe Consumer', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
-		producerId: ctx.videoProducer!.id,
+		producerId: pipeProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
@@ -902,7 +902,7 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 	expect(videoConsumer.closed).toBe(true);
 }, 2000);
 
-test('router.pipeToRouter() fails if both Routers belong to the same Worker', async () => {
+test('router.pipeToRouter() does not fail if both Routers belong to the same Worker', async () => {
 	const router1bis = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
 	});
@@ -912,7 +912,7 @@ test('router.pipeToRouter() fails if both Routers belong to the same Worker', as
 			producerId: ctx.videoProducer!.id,
 			router: router1bis,
 		})
-	).rejects.toThrow(Error);
+	).resolves.toBeDefined();
 }, 2000);
 
 test('router.pipeToRouter() succeeds with data', async () => {
@@ -950,7 +950,7 @@ test('router.pipeToRouter() succeeds with data', async () => {
 	expect(pipeDataConsumer.label).toBe('foo');
 	expect(pipeDataConsumer.protocol).toBe('bar');
 
-	expect(pipeDataProducer.id).toBe(ctx.dataProducer!.id);
+	expect(typeof pipeDataProducer.id).toBe('string');
 	expect(pipeDataProducer.closed).toBe(false);
 	expect(pipeDataProducer.type).toBe('sctp');
 	expect(typeof pipeDataProducer.sctpStreamParameters).toBe('object');
@@ -963,13 +963,13 @@ test('router.pipeToRouter() succeeds with data', async () => {
 }, 2000);
 
 test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeDataProducer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: ctx.dataProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: pipeDataProducer!.id,
 	});
 
 	expect(typeof dataConsumer.id).toBe('string');
@@ -985,13 +985,13 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeDataProducer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: ctx.dataProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: pipeDataProducer!.id,
 	});
 
 	ctx.dataProducer!.close();

@@ -184,9 +184,6 @@ pub struct PipeProducerToRouterPair {
 /// Error that caused [`Router::pipe_producer_to_router()`] to fail.
 #[derive(Debug, Error)]
 pub enum PipeProducerToRouterError {
-    /// Destination router must be different
-    #[error("Destination router must be different")]
-    SameRouter,
     /// Producer with specified id not found
     #[error("Producer with id \"{0}\" not found")]
     ProducerNotFound(ProducerId),
@@ -240,9 +237,6 @@ pub struct PipeDataProducerToRouterPair {
 /// Error that caused [`Router::pipe_data_producer_to_router()`] to fail.
 #[derive(Debug, Error)]
 pub enum PipeDataProducerToRouterError {
-    /// Destination router must be different
-    #[error("Destination router must be different")]
-    SameRouter,
     /// Data producer with specified id not found
     #[error("Data producer with id \"{0}\" not found")]
     DataProducerNotFound(DataProducerId),
@@ -1083,10 +1077,6 @@ impl Router {
     ) -> Result<PipeProducerToRouterPair, PipeProducerToRouterError> {
         debug!("pipe_producer_to_router()");
 
-        if pipe_to_router_options.router.id() == self.id() {
-            return Err(PipeProducerToRouterError::SameRouter);
-        }
-
         let producer = match self
             .inner
             .producers
@@ -1116,7 +1106,8 @@ impl Router {
             .remote
             .produce({
                 let mut producer_options = ProducerOptions::new_pipe_transport(
-                    producer_id,
+                    // Generate a new id for the pipeProducer.
+                    ProducerId::new(),
                     pipe_consumer.kind(),
                     pipe_consumer.rtp_parameters().clone(),
                 );
@@ -1293,10 +1284,6 @@ impl Router {
     ) -> Result<PipeDataProducerToRouterPair, PipeDataProducerToRouterError> {
         debug!("pipe_data_producer_to_router()");
 
-        if pipe_to_router_options.router.id() == self.id() {
-            return Err(PipeDataProducerToRouterError::SameRouter);
-        }
-
         let data_producer = match self
             .inner
             .data_producers
@@ -1325,7 +1312,8 @@ impl Router {
             .remote
             .produce_data({
                 let mut producer_options = DataProducerOptions::new_pipe_transport(
-                    data_producer_id,
+                    // Generate a new id for the pipeDataProducer.
+                    DataProducerId::new(),
                     // We've created `DataConsumer` with SCTP above, so this should never panic
                     pipe_data_consumer.sctp_stream_parameters().unwrap(),
                 );
