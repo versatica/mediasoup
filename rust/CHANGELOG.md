@@ -2,6 +2,8 @@
 
 # NEXT
 
+- `router.pipe_producer_to_router()` and `router.pipe_data_producer_to_router()` can now connect two `Routers` in the same `Worker` (PR #1604).
+
 # 0.20.0
 
 - Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization (PR #1597).
