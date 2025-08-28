@@ -650,9 +650,8 @@ function getWorkerBin(): string {
 		);
 	} catch (error) {
 		logger.warn(
-			`getWorkerBin() | require.resolve('mediasoup') failed: ${error}`
+			`getWorkerBin() | require.resolve('mediasoup') failed, using __dirname: ${error}`
 		);
-		logger.debug('getWorkerBin() | using __dirname');
 
 		// mediasoup module path is two folders above this file.
 		mediasoupModulePath = path.join(__dirname, '..', '..');
