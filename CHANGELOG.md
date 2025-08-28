@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Node: Improve worker binary location detection ([PR #1603](https://github.com/versatica/mediasoup/pull/1603)).
+
 ### 3.18.1
 
 - `TransportTuple`: Generate hash based not only on remote IP:port but also on local IP:port ([PR #1586](https://github.com/versatica/mediasoup/pull/1586)).
