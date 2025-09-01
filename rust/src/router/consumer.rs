@@ -880,9 +880,13 @@ impl Consumer {
                             }
                         }
                         Notification::ProducerPause => {
-                            let mut producer_paused = producer_paused.lock();
-                            let paused = *paused.lock();
-                            *producer_paused = true;
+                            let paused = {
+                                let paused = paused.lock();
+                                let mut producer_paused = producer_paused.lock();
+                                *producer_paused = true;
+
+                                *paused
+                            };
 
                             handlers.producer_pause.call_simple();
 
@@ -891,9 +895,13 @@ impl Consumer {
                             }
                         }
                         Notification::ProducerResume => {
-                            let mut producer_paused = producer_paused.lock();
-                            let paused = *paused.lock();
-                            *producer_paused = false;
+                            let paused = {
+                                let paused = paused.lock();
+                                let mut producer_paused = producer_paused.lock();
+                                *producer_paused = false;
+
+                                *paused
+                            };
 
                             handlers.producer_resume.call_simple();
 
@@ -1121,9 +1129,13 @@ impl Consumer {
             .request(self.id(), ConsumerPauseRequest {})
             .await?;
 
-        let mut paused = self.inner.paused.lock();
-        let was_paused = *paused || *self.inner.producer_paused.lock();
-        *paused = true;
+        let was_paused = {
+            let mut paused = self.inner.paused.lock();
+            let was_paused = *paused || *self.inner.producer_paused.lock();
+            *paused = true;
+
+            was_paused
+        };
 
         if !was_paused {
             self.inner.handlers.pause.call_simple();
@@ -1141,9 +1153,13 @@ impl Consumer {
             .request(self.id(), ConsumerResumeRequest {})
             .await?;
 
-        let mut paused = self.inner.paused.lock();
-        let was_paused = *paused || *self.inner.producer_paused.lock();
-        *paused = false;
+        let was_paused = {
+            let mut paused = self.inner.paused.lock();
+            let was_paused = *paused || *self.inner.producer_paused.lock();
+            *paused = false;
+
+            was_paused
+        };
 
         if was_paused {
             self.inner.handlers.resume.call_simple();
