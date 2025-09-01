@@ -22,6 +22,7 @@ import sys;
 import os;
 import inspect;
 import shutil;
+from contextlib import contextmanager;
 # We import this from a custom location and pylint doesn't know.
 from invoke import task, call; # pylint: disable=import-error
 
@@ -68,7 +69,7 @@ DOCKER = os.getenv('DOCKER') or 'docker';
 # pty=True in ctx.run() is not available on Windows so if stdout is not a TTY
 # let's assume PTY is not supported. Related issue in invoke project:
 # https://github.com/pyinvoke/invoke/issues/561
-PTY_SUPPORTED = sys.stdout.isatty();
+PTY_SUPPORTED =  os.name != 'nt' and sys.stdout.isatty();
 # Use sh (widely supported, more than bash) if not in Windows.
 SHELL = '/bin/sh' if not os.name == 'nt' else None;
 
@@ -91,6 +92,18 @@ if os.name == 'nt':
 else:
     os.environ['PYTHONPATH'] = f'{PIP_INVOKE_DIR}:{PIP_MESON_NINJA_DIR}:{PIP_PYLINT_DIR}:{PYTHONPATH}';
 
+
+@contextmanager
+def cd_worker():
+    """
+    Context manager to change to worker/ folder the safe way
+    """
+    original_dir = os.getcwd()
+    os.chdir(WORKER_DIR)
+    try:
+        yield
+    finally:
+        os.chdir(original_dir)
 
 @task
 def meson_ninja(ctx):
@@ -139,7 +152,7 @@ def setup(ctx, meson_args=MESON_ARGS):
     Run meson setup
     """
     if MEDIASOUP_BUILDTYPE == 'Release':
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype release -Db_ndebug=true {meson_args} "{BUILD_DIR}"',
                 echo=True,
@@ -147,7 +160,7 @@ def setup(ctx, meson_args=MESON_ARGS):
                 shell=SHELL
             );
     elif MEDIASOUP_BUILDTYPE == 'Debug':
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype debug {meson_args} "{BUILD_DIR}"',
                 echo=True,
@@ -155,7 +168,7 @@ def setup(ctx, meson_args=MESON_ARGS):
                 shell=SHELL
             );
     else:
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{MESON}" setup --prefix "{MEDIASOUP_INSTALL_DIR}" --bindir "" --libdir "" --buildtype {MEDIASOUP_BUILDTYPE} -Db_ndebug=if-release {meson_args} "{BUILD_DIR}"',
                 echo=True,
@@ -194,7 +207,7 @@ def clean_subprojects(ctx):
     """
     Clean meson subprojects
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" subprojects purge --include-cache --confirm',
             echo=True,
@@ -208,7 +221,7 @@ def clean_all(ctx):
     """
     Clean meson subprojects and all installed/built artificats
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         try:
             ctx.run(
                 f'"{MESON}" subprojects purge --include-cache --confirm',
@@ -228,7 +241,7 @@ def update_wrap_file(ctx, subproject):
     """
     Update the wrap file of a subproject
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" subprojects update --reset {subproject}',
             echo=True,
@@ -242,7 +255,7 @@ def flatc(ctx):
     """
     Compile FlatBuffers FBS files
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" flatbuffers-generator',
             echo=True,
@@ -260,14 +273,14 @@ def mediasoup_worker(ctx):
         print('skipping mediasoup-worker compilation due to the existence of the MEDIASOUP_WORKER_BIN environment variable');
         return;
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker',
             echo=True,
@@ -281,14 +294,14 @@ def libmediasoup_worker(ctx):
     """
     Compile libmediasoup-worker library
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} libmediasoup-worker',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags libmediasoup-worker',
             echo=True,
@@ -302,7 +315,7 @@ def xcode(ctx):
     """
     Setup Xcode project
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" setup --buildtype {MEDIASOUP_BUILDTYPE.lower()} --backend xcode "{MEDIASOUP_OUT_DIR}/xcode"',
             echo=True,
@@ -316,7 +329,7 @@ def lint(ctx):
     """
     Lint source code
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{NPM}" run lint --prefix scripts/',
             echo=True,
@@ -333,7 +346,7 @@ def lint(ctx):
             shell=SHELL
         );
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{PYTHON}" -m pylint tasks.py',
             echo=True,
@@ -347,7 +360,7 @@ def format(ctx):
     """
     Format source code according to lint rules
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{NPM}" run format --prefix scripts/',
             echo=True,
@@ -361,14 +374,14 @@ def test(ctx):
     """
     Run worker tests
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test',
             echo=True,
@@ -379,7 +392,7 @@ def test(ctx):
     mediasoup_worker_test = 'mediasoup-worker-test.exe' if os.name == 'nt' else 'mediasoup-worker-test';
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{BUILD_DIR}/{mediasoup_worker_test}" --invisibles --colour-mode=ansi {mediasoup_test_tags}',
             echo=True,
@@ -393,14 +406,14 @@ def test_asan_address(ctx):
     """
     Run worker test with Address Sanitizer with '-fsanitize=address'
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-address',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-address',
             echo=True,
@@ -410,7 +423,7 @@ def test_asan_address(ctx):
 
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'ASAN_OPTIONS=detect_leaks=1 symbolize=1 detect_stack_use_after_return=1 strict_init_order=1 check_initialization_order=1 detect_container_overflow=1 "{BUILD_DIR}/mediasoup-worker-test-asan-address" --invisibles {mediasoup_test_tags}',
             echo=True,
@@ -424,14 +437,14 @@ def test_asan_undefined(ctx):
     """
     Run worker test with undefined Sanitizer with -fsanitize=undefined
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-undefined',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-undefined',
             echo=True,
@@ -441,7 +454,7 @@ def test_asan_undefined(ctx):
 
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{BUILD_DIR}/mediasoup-worker-test-asan-undefined" --invisibles {mediasoup_test_tags}',
             echo=True,
@@ -455,14 +468,14 @@ def test_asan_thread(ctx):
     """
     Run worker test with thread Sanitizer with -fsanitize=thread
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-test-asan-thread',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-test-asan-thread',
             echo=True,
@@ -472,7 +485,7 @@ def test_asan_thread(ctx):
 
     mediasoup_test_tags = os.getenv('MEDIASOUP_TEST_TAGS') or '';
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
             echo=True,
@@ -501,7 +514,7 @@ def tidy(ctx):
     if not mediasoup_tidy_files:
         mediasoup_tidy_files = 'src/*.cpp src/**/*.cpp src/**/**.cpp';
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p="{BUILD_DIR}" -j={NUM_CORES} -fix -checks={mediasoup_tidy_checks} {mediasoup_tidy_files}',
             echo=True,
@@ -519,14 +532,14 @@ def fuzzer(ctx):
     # NOTE: We need to pass '-Db_sanitize=address' to enable fuzzer in all Meson
     # subprojects, so we pass it to the setup() task.
 
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" compile -C "{BUILD_DIR}" -j {NUM_CORES} mediasoup-worker-fuzzer',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
         );
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'"{MESON}" install -C "{BUILD_DIR}" --no-rebuild --tags mediasoup-worker-fuzzer',
             echo=True,
@@ -540,7 +553,7 @@ def fuzzer_run_all(ctx):
     """
     Run all fuzzer cases
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
             f'LSAN_OPTIONS=verbosity=1:log_threads=1 "{BUILD_DIR}/mediasoup-worker-fuzzer" -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus',
             echo=True,
@@ -555,7 +568,7 @@ def docker(ctx):
     Build a Linux Ubuntu Docker image with fuzzer capable clang++
     """
     if os.getenv('DOCKER_NO_CACHE') == 'true':
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{DOCKER}" build -f Dockerfile --no-cache --tag mediasoup/docker:latest .',
                 echo=True,
@@ -563,7 +576,7 @@ def docker(ctx):
                 shell=SHELL
             );
     else:
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{DOCKER}" build -f Dockerfile --tag mediasoup/docker:latest .',
                 echo=True,
@@ -577,9 +590,9 @@ def docker_run(ctx):
     """
     Run a container of the Ubuntu Docker image created in the docker task
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
-            f'"{DOCKER}" run --name=mediasoupDocker -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/mediasoup" mediasoup/docker:latest',
+            f'"{DOCKER}" run --name=mediasoupDocker -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/foo bar/mediasoup" mediasoup/docker:latest',
             echo=True,
             pty=True, # NOTE: Needed to enter the terminal of the Docker image.
             shell=SHELL
@@ -592,7 +605,7 @@ def docker_alpine(ctx):
     Build a Linux Alpine Docker image
     """
     if os.getenv('DOCKER_NO_CACHE') == 'true':
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{DOCKER}" build -f Dockerfile.alpine --no-cache --tag mediasoup/docker-alpine:latest .',
                 echo=True,
@@ -600,7 +613,7 @@ def docker_alpine(ctx):
                 shell=SHELL
             );
     else:
-        with ctx.cd(f'"{WORKER_DIR}"'):
+        with cd_worker():
             ctx.run(
                 f'"{DOCKER}" build -f Dockerfile.alpine --tag mediasoup/docker-alpine:latest .',
                 echo=True,
@@ -614,9 +627,9 @@ def docker_alpine_run(ctx):
     """
     Run a container of the Alpine Docker image created in the docker_alpine task
     """
-    with ctx.cd(f'"{WORKER_DIR}"'):
+    with cd_worker():
         ctx.run(
-            f'"{DOCKER}" run --name=mediasoupDockerAlpine -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/mediasoup" mediasoup/docker-alpine:latest',
+            f'"{DOCKER}" run --name=mediasoupDockerAlpine -it --rm --privileged --cap-add SYS_PTRACE -v "{WORKER_DIR}/../:/foo bar/mediasoup" mediasoup/docker-alpine:latest',
             echo=True,
             pty=True, # NOTE: Needed to enter the terminal of the Docker image.
             shell=SHELL

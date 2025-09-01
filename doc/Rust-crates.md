@@ -5,10 +5,10 @@ There are 3 crates: `mediasoup`, `mediasoup-sys` and `mediasoup-types`:
 - `mediasoup-sys` crate wraps C++ worker into Rust.
 - `mediasoup-types` crate defines and exposes mediasoup Rust types.
 - `mediasoup` crate uses `mediasoup-sys` and `mediasoup-types` and it exposes nice user API in idiomatic Rust.
-- `mediasoup-sys` is the only one that needs updating if changes are purely inside the worker or inside the `mediasoup-types` crate. You can bump them all, but it is not required.
+- `mediasoup-sys` is the only one that needs updating if changes are purely inside the worker or inside the `mediasoup-sys` crate. You can bump them all, but it is not required.
 - If `mediasoup-sys`'s API changes in a breaking way, then its minor version needs to be changed, otherwise patch version needs to be changed. Same for `mediasoup-types` crate.
 
-**Important:** adding new APIs that `mediasoup` crate has to understand to continue working normally is a breaking change because it'll start crashing/printing errors if unexpected things happen.
+**Important:** Adding new APIs that `mediasoup` crate has to understand to continue working normally is a breaking change because it'll start crashing/printing errors if unexpected things happen.
 
 ## Steps to publish new mediasoup crates
 

@@ -1,6 +1,6 @@
 [package]
 name = "mediasoup-types"
-version = "0.2.0"
+version = "0.2.1"
 description = "Type definitions and shared data structures for the mediasoup crate"
 authors = [
     "Nazar Mokrynskyi <nazar@mokrynskyi.com>",

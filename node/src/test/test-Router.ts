@@ -6,13 +6,13 @@ import { InvalidStateError, UnsupportedError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
-	unsupportedMediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
+	unsupportedMediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -41,7 +41,7 @@ const ctx: TestContext = {
 		},
 	]),
 	unsupportedMediaCodecs: utils.deepFreeze<
-		mediasoup.types.RtpCodecCapability[]
+		mediasoup.types.RouterRtpCodecCapability[]
 	>([
 		{
 			kind: 'audio',

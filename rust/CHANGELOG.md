@@ -2,6 +2,20 @@
 
 # NEXT
 
+- `router.pipe_producer_to_router()` and `router.pipe_data_producer_to_router()` can now connect two `Routers` in the same `Worker` if `keep_id` is set to `false` (PR #1604).
+- Updates from mediasoup TypeScript `3.18.1.=3.19.0`.
+
+# 0.20.0
+
+- Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization (PR #1597).
+- Make codec `mime_type` case insensitive during deserialization (PR #1599).
+- Only expose `data_structures`, `rtp_parameters`, `sctp_parameters` and `srtp_parameters` through the `mediasoup-types` crate (PR #1600).
+
+# 0.19.1
+
+- Fix installation in paths with spaces (PR #1596).
+- Updates from mediasoup TypeScript `3.17.1.=3.18.1`.
+
 # 0.19.0
 
 - Enable AV1 codec (PR #1563).

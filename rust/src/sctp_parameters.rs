@@ -2,7 +2,7 @@
 
 use crate::fbs::{FromFbs, ToFbs};
 use mediasoup_sys::fbs::sctp_parameters;
-pub use mediasoup_types::sctp_parameters::*;
+use mediasoup_types::sctp_parameters::*;
 
 impl ToFbs for NumSctpStreams {
     type FbsType = sctp_parameters::NumSctpStreams;

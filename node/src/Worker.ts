@@ -22,7 +22,7 @@ import { WebRtcServerImpl } from './WebRtcServer';
 import type { Router, RouterOptions } from './RouterTypes';
 import { RouterImpl } from './Router';
 import { portRangeToFbs, socketFlagsToFbs } from './Transport';
-import type { RtpCodecCapability } from './rtpParametersTypes';
+import type { RouterRtpCodecCapability } from './rtpParametersTypes';
 import * as utils from './utils';
 import * as fbsUtils from './fbsUtils';
 import type { AppData } from './types';
@@ -32,33 +32,10 @@ import * as FbsWorker from './fbs/worker';
 import * as FbsTransport from './fbs/transport';
 import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 
-// If env MEDIASOUP_WORKER_BIN is given, use it as worker binary.
-// Otherwise if env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary.
-// Otherwise use the Release binary.
-export const workerBin = process.env['MEDIASOUP_WORKER_BIN']
-	? process.env['MEDIASOUP_WORKER_BIN']
-	: process.env['MEDIASOUP_BUILDTYPE'] === 'Debug'
-		? path.join(
-				__dirname,
-				'..',
-				'..',
-				'worker',
-				'out',
-				'Debug',
-				'mediasoup-worker'
-			)
-		: path.join(
-				__dirname,
-				'..',
-				'..',
-				'worker',
-				'out',
-				'Release',
-				'mediasoup-worker'
-			);
-
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');
+
+export const workerBin: string = getWorkerBin();
 
 export class WorkerImpl<WorkerAppData extends AppData = AppData>
 	extends EnhancedEventEmitter<WorkerEvents>
@@ -533,9 +510,9 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		}
 
 		// Clone given media codecs to not modify input data.
-		const clonedMediaCodecs = utils.clone<RtpCodecCapability[] | undefined>(
-			mediaCodecs
-		);
+		const clonedMediaCodecs = utils.clone<
+			RouterRtpCodecCapability[] | undefined
+		>(mediaCodecs);
 
 		// This may throw.
 		const rtpCapabilities =
@@ -618,9 +595,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 	}
 }
 
-export function parseWorkerDumpResponse(
-	binary: FbsWorker.DumpResponse
-): WorkerDump {
+function parseWorkerDumpResponse(binary: FbsWorker.DumpResponse): WorkerDump {
 	const dump: WorkerDump = {
 		pid: binary.pid(),
 		webRtcServerIds: fbsUtils.parseVector(binary, 'webRtcServerIds'),
@@ -646,4 +621,58 @@ export function parseWorkerDumpResponse(
 	}
 
 	return dump;
+}
+
+function getWorkerBin(): string {
+	// If MEDIASOUP_WORKER_BIN env is given, use it as worker binary.
+	if (process.env['MEDIASOUP_WORKER_BIN']) {
+		logger.debug(
+			`getWorkerBin() | using MEDIASOUP_WORKER_BIN environment variable: ${process.env['MEDIASOUP_WORKER_BIN']}`
+		);
+
+		return process.env['MEDIASOUP_WORKER_BIN'];
+	}
+
+	// Obtain the path of the mediasoup module.
+	let mediasoupModulePath: string | undefined;
+
+	try {
+		// NOTE: This will throw `MODULE_NOT_FOUND` if mediasoup is installed
+		// globally.
+		mediasoupModulePath = require.resolve('mediasoup');
+
+		// NOTE: Returned path will include 'node/lib/index.js' since that's the
+		// main entry point in package.json, so remove it.
+		mediasoupModulePath = path.join(
+			path.dirname(mediasoupModulePath),
+			'..',
+			'..'
+		);
+	} catch (error) {
+		logger.warn(
+			`getWorkerBin() | require.resolve('mediasoup') failed, using __dirname: ${error}`
+		);
+
+		// mediasoup module path is two folders above this file.
+		mediasoupModulePath = path.join(__dirname, '..', '..');
+	}
+
+	// If env MEDIASOUP_BUILDTYPE is 'Debug' use the Debug binary. Otherwise use
+	// the Release binary.
+	const buildType: 'Release' | 'Debug' =
+		process.env['MEDIASOUP_BUILDTYPE'] === 'Debug' ? 'Debug' : 'Release';
+
+	const workerBinPath = path.join(
+		mediasoupModulePath,
+		'worker',
+		'out',
+		buildType,
+		'mediasoup-worker'
+	);
+
+	logger.debug(
+		`getWorkerBin() | detected worker binary path: ${workerBinPath}`
+	);
+
+	return workerBinPath;
 }

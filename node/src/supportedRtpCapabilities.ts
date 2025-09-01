@@ -1,6 +1,6 @@
-import type { RtpCapabilities } from './rtpParametersTypes';
+import type { RouterRtpCapabilities } from './rtpParametersTypes';
 
-const supportedRtpCapabilities: RtpCapabilities = {
+const supportedRtpCapabilities: RouterRtpCapabilities = {
 	codecs: [
 		{
 			kind: 'audio',

@@ -2,7 +2,7 @@
 
 use crate::fbs::{FromFbs, ToFbs};
 use mediasoup_sys::fbs::srtp_parameters;
-pub use mediasoup_types::srtp_parameters::*;
+use mediasoup_types::srtp_parameters::*;
 
 impl FromFbs for SrtpParameters {
     type FbsType = srtp_parameters::SrtpParameters;

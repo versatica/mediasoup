@@ -18,6 +18,10 @@ Compiles mediasoup TypeScript code (`node/src` folder) JavaScript, places it int
 
 Builds the `mediasoup-worker` binary. It invokes `invoke`below.
 
+### `npm run worker:prebuild-name`
+
+Prints the name of the corresponding `mediasoup-worker` prebuild tar file.
+
 ### `npm run worker:prebuild`
 
 Creates a prebuilt of `mediasoup-worker` binary in the `worker/prebuild` folder.
@@ -83,6 +87,14 @@ Same as `npm run test:node` but it also opens a browser window with JavaScript c
 ### `npm run release:check`
 
 Runs linters and tests in Node and C++ code.
+
+### `npm run release`
+
+Publishes a new NPM version of mediasoup. Requirements for it to work:
+
+- "version" field in `package.json` must have been incremented (and not commited to Git).
+- `CHANGELOG.md` file must have been updated with an entry matching the new version.
+- Of course, permissions to publish in NPM registry are required.
 
 ## Rust
 

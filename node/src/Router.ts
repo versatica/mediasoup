@@ -63,7 +63,10 @@ import type {
 	AudioLevelObserverOptions,
 } from './AudioLevelObserverTypes';
 import { AudioLevelObserverImpl } from './AudioLevelObserver';
-import type { RtpCapabilities, RtpCodecCapability } from './rtpParametersTypes';
+import type {
+	RtpCapabilities,
+	RouterRtpCodecCapability,
+} from './rtpParametersTypes';
 import { cryptoSuiteToFbs } from './srtpParametersFbsUtils';
 import type { AppData } from './types';
 import * as utils from './utils';
@@ -921,6 +924,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		producerId,
 		dataProducerId,
 		router,
+		keepId = true,
 		listenInfo,
 		listenIp,
 		enableSctp = true,
@@ -1085,7 +1089,8 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				});
 
 				pipeProducer = await remotePipeTransport!.produce({
-					id: producer.id,
+					// If requested, generate a new id for the pipeProducer.
+					id: keepId ? producer.id : utils.generateUUIDv4(),
 					kind: pipeConsumer.kind,
 					rtpParameters: pipeConsumer.rtpParameters,
 					paused: pipeConsumer.producerPaused,
@@ -1142,7 +1147,8 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				});
 
 				pipeDataProducer = await remotePipeTransport!.produceData({
-					id: dataProducer.id,
+					// If requested, generate a new id for the pipeDataProducer.
+					id: keepId ? dataProducer.id : utils.generateUUIDv4(),
 					sctpStreamParameters: pipeDataConsumer.sctpStreamParameters,
 					label: pipeDataConsumer.label,
 					protocol: pipeDataConsumer.protocol,
@@ -1173,6 +1179,8 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				throw error;
 			}
 		} else {
+			// NOTE: This cannot happen since it's guaranteed that producer or
+			// dataProducer exists, but TypeScript is not that smart.
 			throw new Error('internal error');
 		}
 	}
@@ -1371,13 +1379,13 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 		}
 	}
 
-	updateMediaCodecs(mediaCodecs: RtpCodecCapability[]): void {
+	updateMediaCodecs(mediaCodecs: RouterRtpCodecCapability[]): void {
 		logger.debug('updateMediaCodecs()');
 
 		// Clone given media codecs to not modify input data.
-		const clonedMediaCodecs = utils.clone<RtpCodecCapability[] | undefined>(
-			mediaCodecs
-		);
+		const clonedMediaCodecs = utils.clone<
+			RouterRtpCodecCapability[] | undefined
+		>(mediaCodecs);
 
 		// This may throw.
 		const rtpCapabilities =
@@ -1396,9 +1404,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 	}
 }
 
-export function parseRouterDumpResponse(
-	binary: FbsRouter.DumpResponse
-): RouterDump {
+function parseRouterDumpResponse(binary: FbsRouter.DumpResponse): RouterDump {
 	return {
 		id: binary.id()!,
 		transportIds: fbsUtils.parseVector(binary, 'transportIds'),

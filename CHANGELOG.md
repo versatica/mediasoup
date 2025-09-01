@@ -2,6 +2,21 @@
 
 ### NEXT
 
+### 3.19.0
+
+- Node: Improve worker binary location detection ([PR #1603](https://github.com/versatica/mediasoup/pull/1603)).
+- `router.pipeToRouter()` can now connect two `Routers` in the same `Worker` if `keepId` is set to `false` ([PR #1604](https://github.com/versatica/mediasoup/pull/1604)).
+
+### 3.18.1
+
+- `TransportTuple`: Generate hash based not only on remote IP:port but also on local IP:port ([PR #1586](https://github.com/versatica/mediasoup/pull/1586)).
+- `IceServer`: Only update selected tuple if the new Binding request has ICE renomination ([PR #1587](https://github.com/versatica/mediasoup/pull/1587), credits to @pangsimon).
+- Fix installation in paths with spaces ([PR #1596](https://github.com/versatica/mediasoup/pull/1596), thanks to @ShuzhaoFeng for reporting and helping with this issue).
+
+### 3.18.0
+
+- Node: Make `RtpCodecCapability.preferredPayloadType` mandatory and add `RouterRtpCodecCapability` type (in which `preferredPayloadType` is optional) and `RouterRtpCapabilities` type ([PR #1584](https://github.com/versatica/mediasoup/pull/1584)).
+
 ### 3.17.1
 
 - `WebRtcServer`: Remove the limit of 8 `listenInfos`.

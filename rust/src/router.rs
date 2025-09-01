@@ -119,6 +119,13 @@ impl Default for RouterOptions {
 pub struct PipeToRouterOptions {
     /// Target Router instance.
     pub router: Router,
+    /// Whether the `id` of the returned Producer or DataProducer should be the
+    /// same than the `id` of the original Producer or DataProducer. Default true.
+    ///
+    /// # Note
+    /// If set to true, then the origin router and target router cannot be in the
+    /// same worker.
+    pub keep_id: bool,
     /// IP used in the PipeTransport pair.
     ///
     /// Default `{ protocol: 'udp', ip: '127.0.0.1' }`.
@@ -145,6 +152,7 @@ impl PipeToRouterOptions {
     pub fn new(router: Router) -> Self {
         Self {
             router,
+            keep_id: true,
             listen_info: ListenInfo {
                 protocol: Protocol::Udp,
                 ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
@@ -1083,7 +1091,13 @@ impl Router {
     ) -> Result<PipeProducerToRouterPair, PipeProducerToRouterError> {
         debug!("pipe_producer_to_router()");
 
-        if pipe_to_router_options.router.id() == self.id() {
+        let PipeToRouterOptions {
+            ref router,
+            keep_id,
+            ..
+        } = pipe_to_router_options;
+
+        if keep_id && router.id() == self.id() {
             return Err(PipeProducerToRouterError::SameRouter);
         }
 
@@ -1116,7 +1130,12 @@ impl Router {
             .remote
             .produce({
                 let mut producer_options = ProducerOptions::new_pipe_transport(
-                    producer_id,
+                    // Generate a new id for the pipeProducer if requested.
+                    if keep_id {
+                        producer_id
+                    } else {
+                        ProducerId::new()
+                    },
                     pipe_consumer.kind(),
                     pipe_consumer.rtp_parameters().clone(),
                 );
@@ -1293,7 +1312,13 @@ impl Router {
     ) -> Result<PipeDataProducerToRouterPair, PipeDataProducerToRouterError> {
         debug!("pipe_data_producer_to_router()");
 
-        if pipe_to_router_options.router.id() == self.id() {
+        let PipeToRouterOptions {
+            ref router,
+            keep_id,
+            ..
+        } = pipe_to_router_options;
+
+        if keep_id && router.id() == self.id() {
             return Err(PipeDataProducerToRouterError::SameRouter);
         }
 
@@ -1325,7 +1350,12 @@ impl Router {
             .remote
             .produce_data({
                 let mut producer_options = DataProducerOptions::new_pipe_transport(
-                    data_producer_id,
+                    // Generate a new id for the pipeDataProducer if requested.
+                    if keep_id {
+                        data_producer_id
+                    } else {
+                        DataProducerId::new()
+                    },
                     // We've created `DataConsumer` with SCTP above, so this should never panic
                     pipe_data_consumer.sctp_stream_parameters().unwrap(),
                 );
@@ -1509,6 +1539,7 @@ impl Router {
     ) -> Result<PipeTransportPair, RequestError> {
         let PipeToRouterOptions {
             router,
+            keep_id: _,
             listen_info,
             enable_sctp,
             num_sctp_streams,
