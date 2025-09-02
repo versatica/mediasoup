@@ -44,11 +44,12 @@ static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> strea
 	}
 }
 
-static void CheckRtxPacket(RtpPacket* packet, uint16_t seq, uint32_t timestamp)
+static void CheckRtxPacket(RtpPacket* rtxPacket, RtpPacket* origPacket)
 {
-	REQUIRE(packet);
-	REQUIRE(packet->GetSequenceNumber() == seq);
-	REQUIRE(packet->GetTimestamp() == timestamp);
+	REQUIRE(rtxPacket);
+	REQUIRE(rtxPacket->GetSequenceNumber() == origPacket->GetSequenceNumber());
+	REQUIRE(rtxPacket->GetTimestamp() == origPacket->GetTimestamp());
+	REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
 }
 
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
@@ -94,12 +95,14 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
 		// packet2 [pt:123, seq:21007, timestamp:1533790901]
 		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
+		packet2->SetMarker(true);
 		// packet3 [pt:123, seq:21008, timestamp:1533793871]
 		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
 		// packet4 [pt:123, seq:21009, timestamp:1533793871]
 		auto packet4(CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
 		// packet5 [pt:123, seq:21010, timestamp:1533796931]
 		auto packet5(CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
+		packet5->SetMarker(true);
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -144,11 +147,11 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
-		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
-		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
-		CheckRtxPacket(rtxPacket3, packet3->GetSequenceNumber(), packet3->GetTimestamp());
-		CheckRtxPacket(rtxPacket4, packet4->GetSequenceNumber(), packet4->GetTimestamp());
-		CheckRtxPacket(rtxPacket5, packet5->GetSequenceNumber(), packet5->GetTimestamp());
+		CheckRtxPacket(rtxPacket1, packet1.get());
+		CheckRtxPacket(rtxPacket2, packet2.get());
+		CheckRtxPacket(rtxPacket3, packet3.get());
+		CheckRtxPacket(rtxPacket4, packet4.get());
+		CheckRtxPacket(rtxPacket5, packet5.get());
 	}
 
 	SECTION("receive NACK and get zero retransmitted packets if useNack is not set")
@@ -306,8 +309,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		testRtpStreamListener1.retransmittedPackets.clear();
 
-		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
-		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+		CheckRtxPacket(rtxPacket1, packet1.get());
+		CheckRtxPacket(rtxPacket2, packet2.get());
 
 		// Process the NACK packet on stream2.
 		stream2->ReceiveNack(&nackPacket);
@@ -319,8 +322,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		testRtpStreamListener2.retransmittedPackets.clear();
 
-		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
-		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+		CheckRtxPacket(rtxPacket1, packet1.get());
+		CheckRtxPacket(rtxPacket2, packet2.get());
 	}
 
 	SECTION("retransmitted packets are correctly encoded")
@@ -531,8 +534,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
-		CheckRtxPacket(rtxPacket1, packet1->GetSequenceNumber(), packet1->GetTimestamp());
-		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+		CheckRtxPacket(rtxPacket1, packet1.get());
+		CheckRtxPacket(rtxPacket2, packet2.get());
 	}
 
 	SECTION("packets don't get retransmitted if MaxRetransmissionDelayForVideoMs is exceeded")
@@ -585,7 +588,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		testRtpStreamListener.retransmittedPackets.clear();
 
-		CheckRtxPacket(rtxPacket2, packet2->GetSequenceNumber(), packet2->GetTimestamp());
+		CheckRtxPacket(rtxPacket2, packet2.get());
 	}
 
 	SECTION("packets get removed from the retransmission buffer if seq number of the stream is reset")
