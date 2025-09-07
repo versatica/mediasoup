@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `IceServer`: Fix active tuple selection when in "completed" state ([PR #1608](https://github.com/versatica/mediasoup/pull/1608), credits to @pangsimon).
+
 ### 3.19.1
 
 - Worker: Fix retransmissions, set proper marker bit ([PR #1606](https://github.com/versatica/mediasoup/pull/1606)).

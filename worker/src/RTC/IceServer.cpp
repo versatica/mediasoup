@@ -587,9 +587,10 @@ namespace RTC
 				else
 				{
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					if (isNewNomination || !hasNomination)
 					{
 						MS_DEBUG_TAG(
 						  ice,
@@ -606,7 +607,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}
@@ -649,9 +650,10 @@ namespace RTC
 				else
 				{
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					if (isNewNomination || !hasNomination)
 					{
 						MS_DEBUG_TAG(
 						  ice,
@@ -668,7 +670,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}
@@ -705,9 +707,10 @@ namespace RTC
 					  nomination);
 
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					if (isNewNomination || !hasNomination)
 					{
 						// Update state.
 						this->state = IceState::COMPLETED;
@@ -716,7 +719,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}
@@ -745,17 +748,21 @@ namespace RTC
 				else
 				{
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					// When in completed state, only update selected tuple if there is ICE
-					// nomination.
-					if (hasNomination && nomination > this->remoteNomination)
+					// When in completed state, update selected tuple if there is ICE
+					// nomination or useCandidate.
+					if (isNewNomination || hasUseCandidate)
 					{
 						// Mark it as selected tuple.
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						this->remoteNomination = nomination;
+						if (isNewNomination)
+						{
+							this->remoteNomination = nomination;
+						}
 					}
 				}
 
