@@ -30,6 +30,8 @@ namespace RTC
 			uint16_t sequenceNumber{ 0u };
 			// Correct timestamp since original packet may not have the same.
 			uint32_t timestamp{ 0u };
+			// Correct marker bit since original packet may not have the same.
+			bool marker{ false };
 			// Last time this packet was resent.
 			uint64_t resentAtMs{ 0u };
 			// Number of times this packet was resent.

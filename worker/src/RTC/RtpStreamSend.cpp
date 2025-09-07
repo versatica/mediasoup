@@ -173,12 +173,14 @@ namespace RTC
 				auto origSsrc      = packet->GetSsrc();
 				auto origSeq       = packet->GetSequenceNumber();
 				auto origTimestamp = packet->GetTimestamp();
+				auto origMarker    = packet->HasMarker();
 				std::string origMid;
 
 				// Put correct info into the packet.
 				packet->SetSsrc(item->ssrc);
 				packet->SetSequenceNumber(item->sequenceNumber);
 				packet->SetTimestamp(item->timestamp);
+				packet->SetMarker(item->marker);
 
 				if (item->encoder != nullptr)
 				{
@@ -237,6 +239,7 @@ namespace RTC
 				packet->SetSsrc(origSsrc);
 				packet->SetSequenceNumber(origSeq);
 				packet->SetTimestamp(origTimestamp);
+				packet->SetMarker(origMarker);
 			}
 		}
 

@@ -755,10 +755,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
-						{
-							this->remoteNomination = nomination;
-						}
+						this->remoteNomination = nomination;
 					}
 				}
 

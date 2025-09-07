@@ -26,6 +26,7 @@ namespace RTC
 		item->ssrc           = packet->GetSsrc();
 		item->sequenceNumber = packet->GetSequenceNumber();
 		item->timestamp      = packet->GetTimestamp();
+		item->marker         = packet->HasMarker();
 
 		return item;
 	}

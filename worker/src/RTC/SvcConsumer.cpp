@@ -794,10 +794,7 @@ namespace RTC
 		packet->logger.sendSeqNumber    = seq;
 #endif
 
-		if (marker)
-		{
-			packet->SetMarker(true);
-		}
+		packet->SetMarker(marker);
 
 		if (isSyncPacket)
 		{
