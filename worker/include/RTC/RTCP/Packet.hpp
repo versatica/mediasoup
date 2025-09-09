@@ -99,8 +99,8 @@ namespace RTC
 			}
 
 		public:
-			virtual void Dump() const                 = 0;
-			virtual size_t Serialize(uint8_t* buffer) = 0;
+			virtual void Dump(int indentation = 0) const = 0;
+			virtual size_t Serialize(uint8_t* buffer)    = 0;
 			virtual Type GetType() const
 			{
 				return this->type;

@@ -80,39 +80,40 @@ namespace RTC
 			return this->templateDependencyStructure->templateLayers[this->templateId].temporalLayer;
 		}
 
-		void DependencyDescriptor::Dump() const
+		void DependencyDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<DependencyDescriptor>");
-			MS_DUMP("  startOfFrame: %s", this->startOfFrame ? "true" : "false");
-			MS_DUMP("  endOfFrame: %s", this->endOfFrame ? "true" : "false");
-			MS_DUMP("  frameDependencyTemplateId: %u", this->frameDependencyTemplateId);
-			MS_DUMP("  frameNumber: %u", this->frameNumber);
-			MS_DUMP("  templateIdOffset: %u", this->templateIdOffset);
-			MS_DUMP("  templateId: %u", this->templateId);
-			MS_DUMP("  temporalLayer: %u", this->temporalLayer);
-			MS_DUMP("  spatialLayer: %u", this->spatialLayer);
+			MS_DUMP_CLEAN(indentation, "<DependencyDescriptor>");
+			MS_DUMP_CLEAN(indentation, "  startOfFrame: %s", this->startOfFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  endOfFrame: %s", this->endOfFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  frameDependencyTemplateId: %u", this->frameDependencyTemplateId);
+			MS_DUMP_CLEAN(indentation, "  frameNumber: %u", this->frameNumber);
+			MS_DUMP_CLEAN(indentation, "  templateIdOffset: %u", this->templateIdOffset);
+			MS_DUMP_CLEAN(indentation, "  templateId: %u", this->templateId);
+			MS_DUMP_CLEAN(indentation, "  temporalLayer: %u", this->temporalLayer);
+			MS_DUMP_CLEAN(indentation, "  spatialLayer: %u", this->spatialLayer);
 
 			if (this->isKeyFrame)
 			{
-				MS_DUMP("  <TemplateDependencyStructure>");
-				MS_DUMP("    spatialLayers: %u", this->templateDependencyStructure->spatialLayers);
-				MS_DUMP("    temporalLayers: %u", this->templateDependencyStructure->temporalLayers);
-
-				MS_DUMP("    <TemplateLayers>");
+				MS_DUMP_CLEAN(indentation + 1, "<TemplateDependencyStructure>");
+				MS_DUMP_CLEAN(
+				  indentation + 1, "  spatialLayers: %u", this->templateDependencyStructure->spatialLayers);
+				MS_DUMP_CLEAN(
+				  indentation + 1, "  temporalLayers: %u", this->templateDependencyStructure->temporalLayers);
+				MS_DUMP_CLEAN(indentation + 2, "<TemplateLayers>");
 				for (const auto& layer : this->templateDependencyStructure->templateLayers)
 				{
-					MS_DUMP("      <FrameDependencyTemplate>");
-					MS_DUMP("          spatialLayerId: %u", layer.spatialLayer);
-					MS_DUMP("          temporalLayerId: %u", layer.temporalLayer);
-					MS_DUMP("      </FrameDependencyTemplate>");
+					MS_DUMP_CLEAN(indentation + 3, "<FrameDependencyTemplate>");
+					MS_DUMP_CLEAN(indentation + 3, "  spatialLayerId: %u", layer.spatialLayer);
+					MS_DUMP_CLEAN(indentation + 3, "  temporalLayerId: %u", layer.temporalLayer);
+					MS_DUMP_CLEAN(indentation + 3, "</FrameDependencyTemplate>");
 				}
-				MS_DUMP("    </TemplateLayers>");
-				MS_DUMP("  </TemplateDependencyStructure>");
+				MS_DUMP_CLEAN(indentation + 2, "</TemplateLayers>");
+				MS_DUMP_CLEAN(indentation + 1, "  </TemplateDependencyStructure>");
 			}
 
-			MS_DUMP("</DependencyDescriptor>");
+			MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
 		}
 
 		bool DependencyDescriptor::ReadMandatoryDescriptorFields()

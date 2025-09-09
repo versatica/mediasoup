@@ -59,7 +59,8 @@
  *
  * MS_DUMP(...)
  *
- * 	 Logs always. Useful for Dump() methods.
+ * 	 Logs always. Useful for temporal debugging. Do not use it for Dump()
+ * 	 methods, use MS_DUMP_CLEAN() instead.
  *
  * 	 Example:
  * 	   MS_DUMP("foo");

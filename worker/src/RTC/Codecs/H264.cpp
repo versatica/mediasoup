@@ -138,16 +138,20 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void H264::PayloadDescriptor::Dump() const
+		void H264::PayloadDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<H264::PayloadDescriptor>");
-			MS_DUMP("  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8, this->startOfFrame, this->endOfFrame);
-			MS_DUMP("  spatialLayer:%" PRIu8, this->spatialLayer);
-			MS_DUMP("  temporalLayer:%" PRIu8, this->temporalLayer);
-			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("</H264::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "<H264::PayloadDescriptor>");
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8,
+			  this->startOfFrame,
+			  this->endOfFrame);
+			MS_DUMP_CLEAN(indentation, "  spatialLayer:%" PRIu8, this->spatialLayer);
+			MS_DUMP_CLEAN(indentation, "  temporalLayer:%" PRIu8, this->temporalLayer);
+			MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "</H264::PayloadDescriptor>");
 		}
 
 		H264::PayloadDescriptorHandler::PayloadDescriptorHandler(H264::PayloadDescriptor* payloadDescriptor)

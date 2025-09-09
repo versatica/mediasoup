@@ -26,13 +26,13 @@ namespace RTC
 			return new FeedbackRtpSrReqPacket(commonHeader);
 		}
 
-		void FeedbackRtpSrReqPacket::Dump() const
+		void FeedbackRtpSrReqPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackRtpSrReqPacket>");
-			FeedbackRtpPacket::Dump();
-			MS_DUMP("</FeedbackRtpSrReqPacket>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackRtpSrReqPacket>");
+			FeedbackRtpPacket::Dump(indentation + 1);
+			MS_DUMP_CLEAN(indentation, "</FeedbackRtpSrReqPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

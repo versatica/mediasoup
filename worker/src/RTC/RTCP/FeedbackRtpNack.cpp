@@ -30,16 +30,16 @@ namespace RTC
 			return HeaderSize;
 		}
 
-		void FeedbackRtpNackItem::Dump() const
+		void FeedbackRtpNackItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
 			std::bitset<16> nackBitset(GetLostPacketBitmask());
 
-			MS_DUMP("<FeedbackRtpNackItem>");
-			MS_DUMP("  pid: %" PRIu16, this->GetPacketId());
-			MS_DUMP("  bpl: %s", nackBitset.to_string().c_str());
-			MS_DUMP("</FeedbackRtpNackItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackRtpNackItem>");
+			MS_DUMP_CLEAN(indentation, "  pid: %" PRIu16, this->GetPacketId());
+			MS_DUMP_CLEAN(indentation, "  bpl: %s", nackBitset.to_string().c_str());
+			MS_DUMP_CLEAN(indentation, "</FeedbackRtpNackItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

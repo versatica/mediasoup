@@ -88,7 +88,7 @@ namespace RTC
 			ss << ", \"discardReason\": '" << discardReason2String[this->discardReason] << "'";
 			ss << "}";
 
-			MS_DUMP("%s", ss.str().c_str());
+			MS_DUMP_CLEAN(0, "%s", ss.str().c_str());
 		}
 
 		void RtpPacket::Clear()

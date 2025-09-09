@@ -25,7 +25,7 @@ namespace RTC
 			~FeedbackPsPliPacket() override = default;
 
 		public:
-			void Dump() const override;
+			void Dump(int indentation = 0) const override;
 		};
 	} // namespace RTCP
 } // namespace RTC

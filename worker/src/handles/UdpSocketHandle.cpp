@@ -110,13 +110,13 @@ UdpSocketHandle::~UdpSocketHandle()
 	}
 }
 
-void UdpSocketHandle::Dump() const
+void UdpSocketHandle::Dump(int indentation) const
 {
-	MS_DUMP("<UdpSocketHandle>");
-	MS_DUMP("  localIp: %s", this->localIp.c_str());
-	MS_DUMP("  localPort: %" PRIu16, static_cast<uint16_t>(this->localPort));
-	MS_DUMP("  closed: %s", this->closed ? "yes" : "no");
-	MS_DUMP("</UdpSocketHandle>");
+	MS_DUMP_CLEAN(indentation, "<UdpSocketHandle>");
+	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
+	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP_CLEAN(indentation, "  closed: %s", this->closed ? "yes" : "no");
+	MS_DUMP_CLEAN(indentation, "</UdpSocketHandle>");
 }
 
 void UdpSocketHandle::Send(

@@ -83,13 +83,13 @@ namespace RTC
 		}
 
 		template<typename T>
-		void FeedbackPacket<T>::Dump() const
+		void FeedbackPacket<T>::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("  sender ssrc: %" PRIu32, GetSenderSsrc());
-			MS_DUMP("  media ssrc: %" PRIu32, GetMediaSsrc());
-			MS_DUMP("  size: %zu", this->GetSize());
+			MS_DUMP_CLEAN(indentation, "  sender ssrc: %" PRIu32, GetSenderSsrc());
+			MS_DUMP_CLEAN(indentation, "  media ssrc: %" PRIu32, GetMediaSsrc());
+			MS_DUMP_CLEAN(indentation, "  size: %zu", this->GetSize());
 		}
 
 		/* Specialization for Ps class. */

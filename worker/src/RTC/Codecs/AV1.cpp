@@ -65,17 +65,21 @@ namespace RTC
 			this->isKeyFrame    = dependencyDescriptor->isKeyFrame;
 		}
 
-		void AV1::PayloadDescriptor::Dump() const
+		void AV1::PayloadDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<AV1::PayloadDescriptor>");
-			MS_DUMP("  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8, this->startOfFrame, this->endOfFrame);
-			MS_DUMP("  spatialLayer: %" PRIu8, this->spatialLayer);
-			MS_DUMP("  frameNumber: %" PRIu16, this->frameNumber);
-			MS_DUMP("  temporalLayer: %" PRIu8, this->temporalLayer);
-			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("</AV1::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "<AV1::PayloadDescriptor>");
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8,
+			  this->startOfFrame,
+			  this->endOfFrame);
+			MS_DUMP_CLEAN(indentation, "  spatialLayer: %" PRIu8, this->spatialLayer);
+			MS_DUMP_CLEAN(indentation, "  frameNumber: %" PRIu16, this->frameNumber);
+			MS_DUMP_CLEAN(indentation, "  temporalLayer: %" PRIu8, this->temporalLayer);
+			MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "</AV1::PayloadDescriptor>");
 		}
 
 		void AV1::PayloadDescriptor::Encode(uint8_t* data, uint16_t frameNumber) const

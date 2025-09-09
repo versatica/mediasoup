@@ -18,7 +18,7 @@ namespace RTC
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() override = default;
 
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 
 				// Mandatory fields.
 				uint8_t stereo : 1;

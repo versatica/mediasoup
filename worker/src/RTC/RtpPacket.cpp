@@ -166,26 +166,27 @@ namespace RTC
 		delete[] this->buffer;
 	}
 
-	void RtpPacket::Dump() const
+	void RtpPacket::Dump(int indentation) const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<RtpPacket>");
-		MS_DUMP("  padding: %s", this->header->padding ? "true" : "false");
+		MS_DUMP_CLEAN(indentation, "<RtpPacket>");
+		MS_DUMP_CLEAN(indentation, "  padding: %s", this->header->padding ? "true" : "false");
 		if (HasHeaderExtension())
 		{
-			MS_DUMP(
+			MS_DUMP_CLEAN(
+			  indentation,
 			  "  header extension: id:%" PRIu16 ", length:%zu",
 			  GetHeaderExtensionId(),
 			  GetHeaderExtensionLength());
 		}
 		if (HasOneByteExtensions())
 		{
-			MS_DUMP("  RFC5285 ext style: One-Byte Header");
+			MS_DUMP_CLEAN(indentation, "  RFC5285 ext style: One-Byte Header");
 		}
 		if (HasTwoBytesExtensions())
 		{
-			MS_DUMP("  RFC5285 ext style: Two-Bytes Header");
+			MS_DUMP_CLEAN(indentation, "  RFC5285 ext style: Two-Bytes Header");
 		}
 		if (HasOneByteExtensions() || HasTwoBytesExtensions())
 		{
@@ -218,7 +219,7 @@ namespace RTC
 				  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ","));
 				extIdsStream << extIds.back();
 
-				MS_DUMP("  RFC5285 ext ids: %s", extIdsStream.str().c_str());
+				MS_DUMP_CLEAN(indentation, "  RFC5285 ext ids: %s", extIdsStream.str().c_str());
 			}
 		}
 		if (this->midExtensionId != 0u)
@@ -227,7 +228,8 @@ namespace RTC
 
 			if (ReadMid(mid))
 			{
-				MS_DUMP("  mid: extId:%" PRIu8 ", value:'%s'", this->midExtensionId, mid.c_str());
+				MS_DUMP_CLEAN(
+				  indentation, "  mid: extId:%" PRIu8 ", value:'%s'", this->midExtensionId, mid.c_str());
 			}
 		}
 		if (this->ridExtensionId != 0u)
@@ -236,7 +238,8 @@ namespace RTC
 
 			if (ReadRid(rid))
 			{
-				MS_DUMP("  rid: extId:%" PRIu8 ", value:'%s'", this->ridExtensionId, rid.c_str());
+				MS_DUMP_CLEAN(
+				  indentation, "  rid: extId:%" PRIu8 ", value:'%s'", this->ridExtensionId, rid.c_str());
 			}
 		}
 		if (this->rridExtensionId != 0u)
@@ -245,12 +248,13 @@ namespace RTC
 
 			if (ReadRid(rid))
 			{
-				MS_DUMP("  rrid: extId:%" PRIu8 ", value:'%s'", this->rridExtensionId, rid.c_str());
+				MS_DUMP_CLEAN(
+				  indentation, "  rrid: extId:%" PRIu8 ", value:'%s'", this->rridExtensionId, rid.c_str());
 			}
 		}
 		if (this->absSendTimeExtensionId != 0u)
 		{
-			MS_DUMP("  absSendTime: extId:%" PRIu8, this->absSendTimeExtensionId);
+			MS_DUMP_CLEAN(indentation, "  absSendTime: extId:%" PRIu8, this->absSendTimeExtensionId);
 		}
 		if (this->transportWideCc01ExtensionId != 0u)
 		{
@@ -258,7 +262,8 @@ namespace RTC
 
 			if (ReadTransportWideCc01(wideSeqNumber))
 			{
-				MS_DUMP(
+				MS_DUMP_CLEAN(
+				  indentation,
 				  "  transportWideCc01: extId:%" PRIu8 ", value:%" PRIu16,
 				  this->transportWideCc01ExtensionId,
 				  wideSeqNumber);
@@ -271,7 +276,8 @@ namespace RTC
 
 			if (ReadSsrcAudioLevel(volume, voice))
 			{
-				MS_DUMP(
+				MS_DUMP_CLEAN(
+				  indentation,
 				  "  ssrcAudioLevel: extId:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
 				  this->ssrcAudioLevelExtensionId,
 				  volume,
@@ -286,7 +292,8 @@ namespace RTC
 
 			if (ReadVideoOrientation(camera, flip, rotation))
 			{
-				MS_DUMP(
+				MS_DUMP_CLEAN(
+				  indentation,
 				  "  videoOrientation: extId:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
 				  this->videoOrientationExtensionId,
 				  camera ? "true" : "false",
@@ -301,28 +308,29 @@ namespace RTC
 
 			if (ReadPlayoutDelay(minDelay, maxDelay))
 			{
-				MS_DUMP(
+				MS_DUMP_CLEAN(
+				  indentation,
 				  "  playoutDelay: extId:%" PRIu8 ", minDelay:%" PRIu16 ", maxDelay:%" PRIu16,
 				  this->videoOrientationExtensionId,
 				  minDelay,
 				  maxDelay);
 			}
 		}
-		MS_DUMP("  csrc count: %" PRIu8, this->header->csrcCount);
-		MS_DUMP("  marker: %s", HasMarker() ? "true" : "false");
-		MS_DUMP("  payload type: %" PRIu8, GetPayloadType());
-		MS_DUMP("  sequence number: %" PRIu16, GetSequenceNumber());
-		MS_DUMP("  timestamp: %" PRIu32, GetTimestamp());
-		MS_DUMP("  ssrc: %" PRIu32, GetSsrc());
-		MS_DUMP("  payload size: %zu bytes", GetPayloadLength());
+		MS_DUMP_CLEAN(indentation, "  csrc count: %" PRIu8, this->header->csrcCount);
+		MS_DUMP_CLEAN(indentation, "  marker: %s", HasMarker() ? "true" : "false");
+		MS_DUMP_CLEAN(indentation, "  payload type: %" PRIu8, GetPayloadType());
+		MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu16, GetSequenceNumber());
+		MS_DUMP_CLEAN(indentation, "  timestamp: %" PRIu32, GetTimestamp());
+		MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
+		MS_DUMP_CLEAN(indentation, "  payload size: %zu bytes", GetPayloadLength());
 		if (this->header->padding != 0u)
 		{
-			MS_DUMP("  padding size: %" PRIu8 " bytes", this->payloadPadding);
+			MS_DUMP_CLEAN(indentation, "  padding size: %" PRIu8 " bytes", this->payloadPadding);
 		}
-		MS_DUMP("  packet size: %zu bytes", GetSize());
-		MS_DUMP("  spatial layer: %" PRIu8, GetSpatialLayer());
-		MS_DUMP("  temporal layer: %" PRIu8, GetTemporalLayer());
-		MS_DUMP("</RtpPacket>");
+		MS_DUMP_CLEAN(indentation, "  packet size: %zu bytes", GetSize());
+		MS_DUMP_CLEAN(indentation, "  spatial layer: %" PRIu8, GetSpatialLayer());
+		MS_DUMP_CLEAN(indentation, "  temporal layer: %" PRIu8, GetTemporalLayer());
+		MS_DUMP_CLEAN(indentation, "</RtpPacket>");
 	}
 
 	flatbuffers::Offset<FBS::RtpPacket::Dump> RtpPacket::FillBuffer(

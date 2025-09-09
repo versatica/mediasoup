@@ -46,16 +46,16 @@ namespace RTC
 			return offset + padding;
 		}
 
-		void FeedbackPsVbcmItem::Dump() const
+		void FeedbackPsVbcmItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsVbcmItem>");
-			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
-			MS_DUMP("  sequence number: %" PRIu8, this->GetSequenceNumber());
-			MS_DUMP("  payload type: %" PRIu8, this->GetPayloadType());
-			MS_DUMP("  length: %" PRIu16, this->GetLength());
-			MS_DUMP("</FeedbackPsVbcmItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsVbcmItem>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu8, this->GetSequenceNumber());
+			MS_DUMP_CLEAN(indentation, "  payload type: %" PRIu8, this->GetPayloadType());
+			MS_DUMP_CLEAN(indentation, "  length: %" PRIu16, this->GetLength());
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsVbcmItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

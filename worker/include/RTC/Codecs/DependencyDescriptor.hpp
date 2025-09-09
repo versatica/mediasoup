@@ -43,7 +43,7 @@ namespace RTC
 			DependencyDescriptor(
 			  const uint8_t* data, size_t len, TemplateDependencyStructure* templateDependencyStructure);
 
-			void Dump() const;
+			void Dump(int indentation = 0) const;
 
 		private:
 			uint8_t GetSpatialLayer() const;

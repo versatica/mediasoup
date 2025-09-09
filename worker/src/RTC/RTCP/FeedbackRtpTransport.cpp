@@ -174,49 +174,50 @@ namespace RTC
 			this->chunks.clear();
 		}
 
-		void FeedbackRtpTransportPacket::Dump() const
+		void FeedbackRtpTransportPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackRtpTransportPacket>");
-			MS_DUMP("  base sequence: %" PRIu16, this->baseSequenceNumber);
-			MS_DUMP("  packet status count: %" PRIu16, this->packetStatusCount);
-			MS_DUMP("  reference time: %" PRIi32, this->referenceTime);
-			MS_DUMP("  feedback packet count: %" PRIu8, this->feedbackPacketCount);
-			MS_DUMP("  size: %zu", GetSize());
+			MS_DUMP_CLEAN(indentation, "<FeedbackRtpTransportPacket>");
+			MS_DUMP_CLEAN(indentation, "  base sequence: %" PRIu16, this->baseSequenceNumber);
+			MS_DUMP_CLEAN(indentation, "  packet status count: %" PRIu16, this->packetStatusCount);
+			MS_DUMP_CLEAN(indentation, "  reference time: %" PRIi32, this->referenceTime);
+			MS_DUMP_CLEAN(indentation, "  feedback packet count: %" PRIu8, this->feedbackPacketCount);
+			MS_DUMP_CLEAN(indentation, "  size: %zu", GetSize());
 
 			for (auto* chunk : this->chunks)
 			{
-				chunk->Dump();
+				chunk->Dump(indentation + 1);
 			}
 
-			MS_DUMP("  <Deltas>");
+			MS_DUMP_CLEAN(indentation + 1, "<Deltas>");
 			for (auto delta : this->deltas)
 			{
-				MS_DUMP("    %" PRIi16 " ms", static_cast<int16_t>(delta / 4));
+				MS_DUMP_CLEAN(indentation + 1, "  %" PRIi16 " ms", static_cast<int16_t>(delta / 4));
 			}
-			MS_DUMP("  </Deltas>");
+			MS_DUMP_CLEAN(indentation + 1, "</Deltas>");
 
 			auto packetResults = GetPacketResults();
 
-			MS_DUMP("  <PacketResults>");
+			MS_DUMP_CLEAN(indentation + 1, "<PacketResults>");
 			for (auto& packetResult : packetResults)
 			{
 				if (packetResult.received)
 				{
-					MS_DUMP(
-					  "    seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi64,
+					MS_DUMP_CLEAN(
+					  indentation + 1,
+					  "  seq:%" PRIu16 ", received:yes, receivedAtMs:%" PRIi64,
 					  packetResult.sequenceNumber,
 					  packetResult.receivedAtMs);
 				}
 				else
 				{
-					MS_DUMP("    seq:%" PRIu16 ", received:no", packetResult.sequenceNumber);
+					MS_DUMP_CLEAN(
+					  indentation + 1, "  seq:%" PRIu16 ", received:no", packetResult.sequenceNumber);
 				}
 			}
-			MS_DUMP("  </PacketResults>");
-
-			MS_DUMP("</FeedbackRtpTransportPacket>");
+			MS_DUMP_CLEAN(indentation + 1, "</PacketResults>");
+			MS_DUMP_CLEAN(indentation, "</FeedbackRtpTransportPacket>");
 		}
 
 		size_t FeedbackRtpTransportPacket::Serialize(uint8_t* buffer)
@@ -725,14 +726,15 @@ namespace RTC
 			return true;
 		}
 
-		void FeedbackRtpTransportPacket::RunLengthChunk::Dump() const
+		void FeedbackRtpTransportPacket::RunLengthChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("  <RunLengthChunk>");
-			MS_DUMP("    status: %s", FeedbackRtpTransportPacket::status2String[this->status].c_str());
-			MS_DUMP("    count: %" PRIu16, this->count);
-			MS_DUMP("  </RunLengthChunk>");
+			MS_DUMP_CLEAN(indentation, "<RunLengthChunk>");
+			MS_DUMP_CLEAN(
+			  indentation, "  status: %s", FeedbackRtpTransportPacket::status2String[this->status].c_str());
+			MS_DUMP_CLEAN(indentation, "  count: %" PRIu16, this->count);
+			MS_DUMP_CLEAN(indentation, "</RunLengthChunk>");
 		}
 
 		uint16_t FeedbackRtpTransportPacket::RunLengthChunk::GetReceivedStatusCount() const
@@ -831,7 +833,7 @@ namespace RTC
 			return true;
 		}
 
-		void FeedbackRtpTransportPacket::OneBitVectorChunk::Dump() const
+		void FeedbackRtpTransportPacket::OneBitVectorChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
@@ -851,9 +853,9 @@ namespace RTC
 
 			out << "|";
 
-			MS_DUMP("  <OneBitVectorChunk>");
-			MS_DUMP("    %s", out.str().c_str());
-			MS_DUMP("  </OneBitVectorChunk>");
+			MS_DUMP_CLEAN(indentation, "<OneBitVectorChunk>");
+			MS_DUMP_CLEAN(indentation, "  %s", out.str().c_str());
+			MS_DUMP_CLEAN(indentation, "</OneBitVectorChunk>");
 		}
 
 		uint16_t FeedbackRtpTransportPacket::OneBitVectorChunk::GetReceivedStatusCount() const
@@ -971,7 +973,7 @@ namespace RTC
 			return true;
 		}
 
-		void FeedbackRtpTransportPacket::TwoBitVectorChunk::Dump() const
+		void FeedbackRtpTransportPacket::TwoBitVectorChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
@@ -991,9 +993,9 @@ namespace RTC
 
 			out << "|";
 
-			MS_DUMP("  <TwoBitVectorChunk>");
-			MS_DUMP("    %s", out.str().c_str());
-			MS_DUMP("  </TwoBitVectorChunk>");
+			MS_DUMP_CLEAN(indentation, "<TwoBitVectorChunk>");
+			MS_DUMP_CLEAN(indentation, "  %s", out.str().c_str());
+			MS_DUMP_CLEAN(indentation, "</TwoBitVectorChunk>");
 		}
 
 		uint16_t FeedbackRtpTransportPacket::TwoBitVectorChunk::GetReceivedStatusCount() const

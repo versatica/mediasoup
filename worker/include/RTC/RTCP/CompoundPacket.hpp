@@ -32,7 +32,7 @@ namespace RTC
 			{
 				return this->receiverReportPacket.GetCount();
 			}
-			void Dump();
+			void Dump(int indentation = 0);
 			// RTCP additions per Consumer (non pipe).
 			// Adds the given data and returns true if there is enough space to hold it,
 			// false otherwise.

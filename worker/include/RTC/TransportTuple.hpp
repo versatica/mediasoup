@@ -55,7 +55,7 @@ namespace RTC
 
 		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
-		void Dump() const;
+		void Dump(int indentation = 0) const;
 
 		void StoreUdpRemoteAddress()
 		{

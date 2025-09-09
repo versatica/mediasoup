@@ -69,14 +69,14 @@ TcpServerHandle::~TcpServerHandle()
 	}
 }
 
-void TcpServerHandle::Dump() const
+void TcpServerHandle::Dump(int indentation) const
 {
-	MS_DUMP("<TcpServerHandle>");
-	MS_DUMP("  localIp: %s", this->localIp.c_str());
-	MS_DUMP("  localPort: %" PRIu16, static_cast<uint16_t>(this->localPort));
-	MS_DUMP("  num connections: %zu", this->connections.size());
-	MS_DUMP("  closed: %s", this->closed ? "yes" : "no");
-	MS_DUMP("</TcpServerHandle>");
+	MS_DUMP_CLEAN(indentation, "<TcpServerHandle>");
+	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
+	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP_CLEAN(indentation, "  num connections: %zu", this->connections.size());
+	MS_DUMP_CLEAN(indentation, "  closed: %s", this->closed ? "yes" : "no");
+	MS_DUMP_CLEAN(indentation, "</TcpServerHandle>");
 }
 
 uint32_t TcpServerHandle::GetSendBufferSize() const

@@ -90,11 +90,11 @@ namespace RTC
 		  protocol);
 	}
 
-	void TransportTuple::Dump() const
+	void TransportTuple::Dump(int indentation) const
 	{
 		MS_TRACE();
 
-		MS_DUMP("<TransportTuple>");
+		MS_DUMP_CLEAN(indentation, "<TransportTuple>");
 
 		int family;
 		std::string ip;
@@ -102,32 +102,32 @@ namespace RTC
 
 		Utils::IP::GetAddressInfo(GetLocalAddress(), family, ip, port);
 
-		MS_DUMP("  localIp: %s", ip.c_str());
-		MS_DUMP("  localPort: %" PRIu16, port);
+		MS_DUMP_CLEAN(indentation, "  localIp: %s", ip.c_str());
+		MS_DUMP_CLEAN(indentation, "  localPort: %" PRIu16, port);
 
 		Utils::IP::GetAddressInfo(GetRemoteAddress(), family, ip, port);
 
-		MS_DUMP("  remoteIp: %s", ip.c_str());
-		MS_DUMP("  remotePort: %" PRIu16, port);
+		MS_DUMP_CLEAN(indentation, "  remoteIp: %s", ip.c_str());
+		MS_DUMP_CLEAN(indentation, "  remotePort: %" PRIu16, port);
 
 		switch (GetProtocol())
 		{
 			case Protocol::UDP:
 			{
-				MS_DUMP("  protocol: udp");
+				MS_DUMP_CLEAN(indentation, "  protocol: udp");
 
 				break;
 			}
 
 			case Protocol::TCP:
 			{
-				MS_DUMP("  protocol: tcp");
+				MS_DUMP_CLEAN(indentation, "  protocol: tcp");
 
 				break;
 			}
 		}
 
-		MS_DUMP("</TransportTuple>");
+		MS_DUMP_CLEAN(indentation, "</TransportTuple>");
 	}
 
 	void TransportTuple::GenerateHash()

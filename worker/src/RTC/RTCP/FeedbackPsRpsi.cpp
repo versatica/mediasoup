@@ -72,15 +72,15 @@ namespace RTC
 			return HeaderSize;
 		}
 
-		void FeedbackPsRpsiItem::Dump() const
+		void FeedbackPsRpsiItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsRpsiItem>");
-			MS_DUMP("  padding bits %" PRIu8, this->header->paddingBits);
-			MS_DUMP("  payload type: %" PRIu8, this->GetPayloadType());
-			MS_DUMP("  length: %zu", this->GetLength());
-			MS_DUMP("</FeedbackPsRpsiItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsRpsiItem>");
+			MS_DUMP_CLEAN(indentation, "  padding bits %" PRIu8, this->header->paddingBits);
+			MS_DUMP_CLEAN(indentation, "  payload type: %" PRIu8, this->GetPayloadType());
+			MS_DUMP_CLEAN(indentation, "  length: %zu", this->GetLength());
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsRpsiItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

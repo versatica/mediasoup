@@ -813,7 +813,7 @@ namespace RTC
 		delete this->timer;
 	}
 
-	void DtlsTransport::Dump() const
+	void DtlsTransport::Dump(int indentation) const
 	{
 		MS_TRACE();
 
@@ -873,11 +873,11 @@ namespace RTC
 			}
 		}
 
-		MS_DUMP("<DtlsTransport>");
-		MS_DUMP("  state: %s", state.c_str());
-		MS_DUMP("  role: %s", role.c_str());
-		MS_DUMP("  handshake done: %s", this->handshakeDone ? "yes" : "no");
-		MS_DUMP("</DtlsTransport>");
+		MS_DUMP_CLEAN(indentation, "<DtlsTransport>");
+		MS_DUMP_CLEAN(indentation, "  state: %s", state.c_str());
+		MS_DUMP_CLEAN(indentation, "  role: %s", role.c_str());
+		MS_DUMP_CLEAN(indentation, "  handshake done: %s", this->handshakeDone ? "yes" : "no");
+		MS_DUMP_CLEAN(indentation, "</DtlsTransport>");
 	}
 
 	void DtlsTransport::Run(Role localRole)

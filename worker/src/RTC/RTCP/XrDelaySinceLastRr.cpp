@@ -33,15 +33,15 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void DelaySinceLastRr::SsrcInfo::Dump() const
+		void DelaySinceLastRr::SsrcInfo::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("  <SsrcInfo>");
-			MS_DUMP("    ssrc: %" PRIu32, GetSsrc());
-			MS_DUMP("    lrr: %" PRIu32, GetLastReceiverReport());
-			MS_DUMP("    dlrr: %" PRIu32, GetDelaySinceLastReceiverReport());
-			MS_DUMP("  <SsrcInfo>");
+			MS_DUMP_CLEAN(indentation, "<SsrcInfo>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  lrr: %" PRIu32, GetLastReceiverReport());
+			MS_DUMP_CLEAN(indentation, "  dlrr: %" PRIu32, GetDelaySinceLastReceiverReport());
+			MS_DUMP_CLEAN(indentation, "<SsrcInfo>");
 		}
 
 		size_t DelaySinceLastRr::SsrcInfo::Serialize(uint8_t* buffer)
@@ -112,21 +112,22 @@ namespace RTC
 			return offset;
 		}
 
-		void DelaySinceLastRr::Dump() const
+		void DelaySinceLastRr::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<DelaySinceLastRr>");
-			MS_DUMP("  block type: %" PRIu8, (uint8_t)this->type);
-			MS_DUMP("  reserved: 0");
-			MS_DUMP(
+			MS_DUMP_CLEAN(indentation, "<DelaySinceLastRr>");
+			MS_DUMP_CLEAN(indentation, "  block type: %" PRIu8, (uint8_t)this->type);
+			MS_DUMP_CLEAN(indentation, "  reserved: 0");
+			MS_DUMP_CLEAN(
+			  indentation,
 			  "  length: %" PRIu16,
 			  static_cast<uint16_t>((SsrcInfo::BodySize * this->ssrcInfos.size() / 4)));
 			for (auto* ssrcInfo : this->ssrcInfos)
 			{
-				ssrcInfo->Dump();
+				ssrcInfo->Dump(indentation + 1);
 			}
-			MS_DUMP("</DelaySinceLastRr>");
+			MS_DUMP_CLEAN(indentation, "</DelaySinceLastRr>");
 		}
 	} // namespace RTCP
 } // namespace RTC

@@ -168,29 +168,37 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void VP8::PayloadDescriptor::Dump() const
+		void VP8::PayloadDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<VP8::PayloadDescriptor>");
-			MS_DUMP(
-			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8, this->i, this->l, this->t, this->k);
-			MS_DUMP("  extended: %" PRIu8, this->extended);
-			MS_DUMP("  nonReference: %" PRIu8, this->nonReference);
-			MS_DUMP("  start: %" PRIu8, this->start);
-			MS_DUMP("  partitionIndex: %" PRIu8, this->partitionIndex);
-			MS_DUMP("  pictureId: %" PRIu16, this->pictureId);
-			MS_DUMP("  tl0PictureIndex: %" PRIu8, this->tl0PictureIndex);
-			MS_DUMP("  tlIndex: %" PRIu8, this->tlIndex);
-			MS_DUMP("  y: %" PRIu8, this->y);
-			MS_DUMP("  keyIndex: %" PRIu8, this->keyIndex);
-			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("  hasPictureId: %s", this->hasPictureId ? "true" : "false");
-			MS_DUMP("  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
-			MS_DUMP("  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
-			MS_DUMP("  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
-			MS_DUMP("  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
-			MS_DUMP("</VP8::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "<VP8::PayloadDescriptor>");
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8,
+			  this->i,
+			  this->l,
+			  this->t,
+			  this->k);
+			MS_DUMP_CLEAN(indentation, "  extended: %" PRIu8, this->extended);
+			MS_DUMP_CLEAN(indentation, "  nonReference: %" PRIu8, this->nonReference);
+			MS_DUMP_CLEAN(indentation, "  start: %" PRIu8, this->start);
+			MS_DUMP_CLEAN(indentation, "  partitionIndex: %" PRIu8, this->partitionIndex);
+			MS_DUMP_CLEAN(indentation, "  pictureId: %" PRIu16, this->pictureId);
+			MS_DUMP_CLEAN(indentation, "  tl0PictureIndex: %" PRIu8, this->tl0PictureIndex);
+			MS_DUMP_CLEAN(indentation, "  tlIndex: %" PRIu8, this->tlIndex);
+			MS_DUMP_CLEAN(indentation, "  y: %" PRIu8, this->y);
+			MS_DUMP_CLEAN(indentation, "  keyIndex: %" PRIu8, this->keyIndex);
+			MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasPictureId: %s", this->hasPictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "</VP8::PayloadDescriptor>");
 		}
 
 		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const

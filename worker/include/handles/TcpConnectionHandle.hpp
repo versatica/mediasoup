@@ -54,7 +54,7 @@ public:
 	{
 		return this->closed;
 	}
-	void Dump() const;
+	void Dump(int indentation = 0) const;
 	void Setup(
 	  Listener* listener,
 	  struct sockaddr_storage* localAddr,

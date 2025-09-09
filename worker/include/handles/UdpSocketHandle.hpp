@@ -46,7 +46,7 @@ public:
 	{
 		return this->closed;
 	}
-	void Dump() const;
+	void Dump(int indentation = 0) const;
 	void Send(
 	  const uint8_t* data, size_t len, const struct sockaddr* addr, UdpSocketHandle::onSendCallback* cb);
 	const struct sockaddr* GetLocalAddress() const

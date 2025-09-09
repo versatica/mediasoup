@@ -38,7 +38,7 @@ namespace RTC
 			}
 
 		public:
-			virtual void Dump() const = 0;
+			virtual void Dump(int indentation = 0) const = 0;
 			virtual void Serialize()
 			{
 				delete[] this->raw;

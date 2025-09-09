@@ -623,24 +623,24 @@ namespace RTC
 		}
 	}
 
-	void PortManager::Dump()
+	void PortManager::Dump(int indentation) const
 	{
-		MS_DUMP("<PortManager>");
+		MS_DUMP_CLEAN(indentation, "<PortManager>");
 
 		for (auto& kv : PortManager::mapPortRanges)
 		{
 			auto hash      = kv.first;
 			auto portRange = kv.second;
 
-			MS_DUMP("  <PortRange>");
-			MS_DUMP("    hash: %" PRIu64, hash);
-			MS_DUMP("    minPort: %" PRIu16, portRange.minPort);
-			MS_DUMP("    maxPort: %zu", portRange.minPort + portRange.ports.size() - 1);
-			MS_DUMP("    numUsedPorts: %" PRIu16, portRange.numUsedPorts);
-			MS_DUMP("  </PortRange>");
+			MS_DUMP_CLEAN(indentation + 1, "<PortRange>");
+			MS_DUMP_CLEAN(indentation + 1, "  hash: %" PRIu64, hash);
+			MS_DUMP_CLEAN(indentation + 1, "  minPort: %" PRIu16, portRange.minPort);
+			MS_DUMP_CLEAN(indentation + 1, "  maxPort: %zu", portRange.minPort + portRange.ports.size() - 1);
+			MS_DUMP_CLEAN(indentation + 1, "  numUsedPorts: %" PRIu16, portRange.numUsedPorts);
+			MS_DUMP_CLEAN(indentation + 1, "</PortRange>");
 		}
 
-		MS_DUMP("</PortManager>");
+		MS_DUMP_CLEAN(indentation, "</PortManager>");
 	}
 
 	/*

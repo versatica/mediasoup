@@ -117,17 +117,17 @@ namespace RTC
 			return offset;
 		}
 
-		void ExtendedReportPacket::Dump() const
+		void ExtendedReportPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ExtendedReportPacket>");
-			MS_DUMP("  ssrc: %" PRIu32, this->ssrc);
+			MS_DUMP_CLEAN(indentation, "<ExtendedReportPacket>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->ssrc);
 			for (auto* report : this->reports)
 			{
-				report->Dump();
+				report->Dump(indentation + 1);
 			}
-			MS_DUMP("</ExtendedReportPacket>");
+			MS_DUMP_CLEAN(indentation, "</ExtendedReportPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

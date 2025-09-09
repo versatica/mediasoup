@@ -36,14 +36,14 @@ namespace RTC
 			return HeaderSize;
 		}
 
-		void FeedbackPsFirItem::Dump() const
+		void FeedbackPsFirItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsFirItem>");
-			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
-			MS_DUMP("  sequence number: %" PRIu8, this->GetSequenceNumber());
-			MS_DUMP("</FeedbackPsFirItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsFirItem>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu8, this->GetSequenceNumber());
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsFirItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

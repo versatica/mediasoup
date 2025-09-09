@@ -20,8 +20,8 @@ namespace RTC
 				virtual ~Encoder() = default;
 			};
 
-			virtual ~PayloadDescriptor() = default;
-			virtual void Dump() const    = 0;
+			virtual ~PayloadDescriptor()                 = default;
+			virtual void Dump(int indentation = 0) const = 0;
 		};
 
 		class PictureIdList

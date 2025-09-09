@@ -59,9 +59,9 @@ namespace RTC
 			virtual ~ExtendedReportBlock() = default;
 
 		public:
-			virtual void Dump() const                 = 0;
-			virtual size_t Serialize(uint8_t* buffer) = 0;
-			virtual size_t GetSize() const            = 0;
+			virtual void Dump(int indentation = 0) const = 0;
+			virtual size_t Serialize(uint8_t* buffer)    = 0;
+			virtual size_t GetSize() const               = 0;
 			ExtendedReportBlock::Type GetType() const
 			{
 				return this->type;
@@ -130,7 +130,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			void Dump() const override;
+			void Dump(int indentation = 0) const override;
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetCount() const override
 			{

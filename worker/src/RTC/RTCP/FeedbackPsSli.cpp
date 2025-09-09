@@ -34,15 +34,15 @@ namespace RTC
 			return HeaderSize;
 		}
 
-		void FeedbackPsSliItem::Dump() const
+		void FeedbackPsSliItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsSliItem>");
-			MS_DUMP("  first: %" PRIu16, this->first);
-			MS_DUMP("  number: %" PRIu16, this->number);
-			MS_DUMP("  picture id: %" PRIu8, this->pictureId);
-			MS_DUMP("</FeedbackPsSliItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsSliItem>");
+			MS_DUMP_CLEAN(indentation, "  first: %" PRIu16, this->first);
+			MS_DUMP_CLEAN(indentation, "  number: %" PRIu16, this->number);
+			MS_DUMP_CLEAN(indentation, "  picture id: %" PRIu8, this->pictureId);
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsSliItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

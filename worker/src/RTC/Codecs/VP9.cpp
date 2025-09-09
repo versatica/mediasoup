@@ -143,12 +143,13 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void VP9::PayloadDescriptor::Dump() const
+		void VP9::PayloadDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<VP9::PayloadDescriptor>");
-			MS_DUMP(
+			MS_DUMP_CLEAN(indentation, "<VP9::PayloadDescriptor>");
+			MS_DUMP_CLEAN(
+			  indentation,
 			  "  i:%" PRIu8 "|p:%" PRIu8 "|l:%" PRIu8 "|f:%" PRIu8 "|b:%" PRIu8 "|e:%" PRIu8 "|v:%" PRIu8,
 			  this->i,
 			  this->p,
@@ -157,20 +158,23 @@ namespace RTC
 			  this->b,
 			  this->e,
 			  this->v);
-			MS_DUMP("  pictureId: %" PRIu16, this->pictureId);
-			MS_DUMP("  slIndex: %" PRIu8, this->slIndex);
-			MS_DUMP("  tlIndex: %" PRIu8, this->tlIndex);
-			MS_DUMP("  tl0PictureIndex: %" PRIu8, this->tl0PictureIndex);
-			MS_DUMP("  interLayerDependency: %" PRIu8, this->interLayerDependency);
-			MS_DUMP("  switchingUpPoint: %" PRIu8, this->switchingUpPoint);
-			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("  hasPictureId: %s", this->hasPictureId ? "true" : "false");
-			MS_DUMP("  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
-			MS_DUMP("  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
-			MS_DUMP("  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
-			MS_DUMP("  hasSlIndex: %s", this->hasSlIndex ? "true" : "false");
-			MS_DUMP("  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
-			MS_DUMP("</VP9::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "  pictureId: %" PRIu16, this->pictureId);
+			MS_DUMP_CLEAN(indentation, "  slIndex: %" PRIu8, this->slIndex);
+			MS_DUMP_CLEAN(indentation, "  tlIndex: %" PRIu8, this->tlIndex);
+			MS_DUMP_CLEAN(indentation, "  tl0PictureIndex: %" PRIu8, this->tl0PictureIndex);
+			MS_DUMP_CLEAN(indentation, "  interLayerDependency: %" PRIu8, this->interLayerDependency);
+			MS_DUMP_CLEAN(indentation, "  switchingUpPoint: %" PRIu8, this->switchingUpPoint);
+			MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasPictureId: %s", this->hasPictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasSlIndex: %s", this->hasSlIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "</VP9::PayloadDescriptor>");
 		}
 
 		VP9::PayloadDescriptorHandler::PayloadDescriptorHandler(VP9::PayloadDescriptor* payloadDescriptor)

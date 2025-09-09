@@ -118,7 +118,7 @@ namespace RTC
 	public:
 		~RtpPacket();
 
-		void Dump() const;
+		void Dump(int indentation = 0) const;
 		flatbuffers::Offset<FBS::RtpPacket::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		const uint8_t* GetData() const

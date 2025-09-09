@@ -30,17 +30,17 @@ namespace RTC
 			return new ReceiverReferenceTime(header);
 		}
 
-		void ReceiverReferenceTime::Dump() const
+		void ReceiverReferenceTime::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ReceiverReferenceTime>");
-			MS_DUMP("  block type: %" PRIu8, static_cast<uint8_t>(this->type));
-			MS_DUMP("  reserved: 0");
-			MS_DUMP("  length: 2");
-			MS_DUMP("  ntp sec: %" PRIu32, GetNtpSec());
-			MS_DUMP("  ntp frac: %" PRIu32, GetNtpFrac());
-			MS_DUMP("</ReceiverReferenceTime>");
+			MS_DUMP_CLEAN(indentation, "<ReceiverReferenceTime>");
+			MS_DUMP_CLEAN(indentation, "  block type: %" PRIu8, static_cast<uint8_t>(this->type));
+			MS_DUMP_CLEAN(indentation, "  reserved: 0");
+			MS_DUMP_CLEAN(indentation, "  length: 2");
+			MS_DUMP_CLEAN(indentation, "  ntp sec: %" PRIu32, GetNtpSec());
+			MS_DUMP_CLEAN(indentation, "  ntp frac: %" PRIu32, GetNtpFrac());
+			MS_DUMP_CLEAN(indentation, "</ReceiverReferenceTime>");
 		}
 
 		size_t ReceiverReferenceTime::Serialize(uint8_t* buffer)

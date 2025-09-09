@@ -60,7 +60,7 @@ namespace RTC
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() override = default;
 
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 
 				// Header.
 				uint8_t i : 1; // I: Picture ID (PID) present.

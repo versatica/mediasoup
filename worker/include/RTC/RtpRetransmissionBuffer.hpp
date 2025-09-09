@@ -45,10 +45,10 @@ namespace RTC
 		RtpRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
 		~RtpRetransmissionBuffer();
 
+		void Dump(int indentation = 0) const;
 		Item* Get(uint16_t seq) const;
 		bool Insert(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
 		void Clear();
-		void Dump() const;
 
 	private:
 		Item* GetOldest() const;

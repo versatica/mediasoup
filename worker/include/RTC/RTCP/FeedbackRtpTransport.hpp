@@ -97,7 +97,7 @@ namespace RTC
 
 				virtual bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) = 0;
-				virtual void Dump() const                                                        = 0;
+				virtual void Dump(int indentation = 0) const                                     = 0;
 				virtual uint16_t GetCount() const                                                = 0;
 				virtual uint16_t GetReceivedStatusCount() const                                  = 0;
 				virtual void FillResults(
@@ -121,7 +121,7 @@ namespace RTC
 				{
 					return this->status;
 				}
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 				uint16_t GetCount() const override
 				{
 					return this->count;
@@ -149,7 +149,7 @@ namespace RTC
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 				uint16_t GetCount() const override
 				{
 					return this->statuses.size();
@@ -176,7 +176,7 @@ namespace RTC
 			public:
 				bool AddDeltas(
 				  const uint8_t* data, size_t len, std::vector<int16_t>& deltas, size_t& offset) override;
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 				uint16_t GetCount() const override
 				{
 					return this->statuses.size();
@@ -293,7 +293,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			void Dump() const override;
+			void Dump(int indentation = 0) const override;
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
