@@ -154,6 +154,27 @@ std::unique_ptr<RtpStreamRecv> CreateRtpStreamRecv()
 	return std::make_unique<RtpStreamRecv>(&streamRecvListener, params, 0u, false);
 }
 
+/**
+ * Centralize common setup and helper methods.
+ */
+class Fixture
+{
+public:
+	Fixture()
+	  : listener(std::make_unique<ConsumerListener>()), consumer(CreateConsumer(listener.get())),
+	    rtpStream(CreateRtpStreamRecv())
+	{
+		// Set producer scores and producer stream.
+		std::vector<uint8_t> scores{ 10 };
+		consumer->ProducerRtpStreamScores(&scores);
+		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
+	}
+
+	std::unique_ptr<ConsumerListener> listener;
+	std::unique_ptr<SimpleConsumer> consumer;
+	std::unique_ptr<RtpStreamRecv> rtpStream;
+};
+
 SCENARIO("SimpleConsumer", "[rtp][consumer]")
 {
 	// clang-format off
@@ -206,44 +227,26 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 
 	SECTION("RTP packets are not forwarded when the consumer is not active")
 	{
-		auto listener  = std::make_unique<ConsumerListener>();
-		auto consumer  = CreateConsumer(listener.get());
-		auto rtpStream = CreateRtpStreamRecv();
-
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
-
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
-
+		Fixture fixture;
 		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
 		RTC::SharedRtpPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
-		listener->Verify(0);
+		fixture.listener->Verify(0);
 
 		delete packet;
 	}
 
 	SECTION("RTP packets are not forwarded for unsupported payload types")
 	{
-		auto listener = std::make_unique<ConsumerListener>();
-		auto consumer = CreateConsumer(listener.get());
+		Fixture fixture;
 
 		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(consumer.get())->TransportConnected();
-
-		auto rtpStream = CreateRtpStreamRecv();
-
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
-
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
+		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
 		RTC::SharedRtpPacket sharedPacket(packet);
@@ -251,28 +254,18 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(64);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
-
-		listener->Verify(0);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.listener->Verify(0);
 
 		delete packet;
 	}
 
 	SECTION("RTP packets with empty payload are not forwarded")
 	{
-		auto listener = std::make_unique<ConsumerListener>();
-		auto consumer = CreateConsumer(listener.get());
+		Fixture fixture;
 
 		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(consumer.get())->TransportConnected();
-
-		auto rtpStream = CreateRtpStreamRecv();
-
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
-
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
+		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
 		RTC::SharedRtpPacket sharedPacket(packet);
@@ -280,28 +273,18 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		packet->SetPayloadType(PayloadType + 1);
 		packet->SetPayloadLength(0);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
-
-		listener->Verify(0);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.listener->Verify(0);
 
 		delete packet;
 	}
 
 	SECTION("outgoing RTP packets are forwarded with increased sequence number")
 	{
-		auto listener = std::make_unique<ConsumerListener>();
-		auto consumer = CreateConsumer(listener.get());
+		Fixture fixture;
 
 		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(consumer.get())->TransportConnected();
-
-		auto rtpStream = CreateRtpStreamRecv();
-
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
-
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
+		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
 
 		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
 		RTC::SharedRtpPacket sharedPacket(packet);
@@ -313,26 +296,26 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		packet->SetPayloadLength(64);
 		sharedPacket.Assign(packet);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		sharedPacket.Assign(packet);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(0);
 		sharedPacket.Assign(packet);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadLength(20);
 		sharedPacket.Assign(packet);
 
-		consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
-		listener->Verify(3);
+		fixture.listener->Verify(3);
 
 		delete packet;
 	}
