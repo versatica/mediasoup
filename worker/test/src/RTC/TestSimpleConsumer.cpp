@@ -155,7 +155,7 @@ std::unique_ptr<RtpStreamRecv> CreateRtpStreamRecv()
 }
 
 /**
- * Centralize common setup and helper methods
+ * Centralize common setup and helper methods.
  */
 class Fixture
 {
