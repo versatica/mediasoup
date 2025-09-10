@@ -28,7 +28,9 @@ namespace RTC
 
 		constexpr std::string_view Socket::State2String(Socket::State state)
 		{
-			MS_TRACE();
+			// NOTE: We cannot use MS_TRACE() here because clang in Linux will
+			// comlain about "read of non-constexpr variable 'configuration' is not
+			// allowed in a constant expression".
 
 			switch (state)
 			{
