@@ -156,7 +156,7 @@ jobs:
             run-test-asan-thread: false
         # A single Node.js version should be fine for C++.
         node:
-          - 22
+          - 24
         build-type:
           - Release
           - Debug
