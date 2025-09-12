@@ -114,6 +114,8 @@ namespace RTC
 		// video key frame.
 		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
+		// Template dependency structure for Dependency Descriptor.
+		std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 	};
 } // namespace RTC
 

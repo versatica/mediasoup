@@ -96,7 +96,6 @@ namespace RTC
 				}
 
 			public:
-				RTC::SeqManager<uint16_t> frameNumberManager;
 				bool syncRequired{ false };
 			};
 

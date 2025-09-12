@@ -161,8 +161,6 @@ namespace RTC
 			// Check whether frameNumber sync is required.
 			if (context->syncRequired)
 			{
-				context->frameNumberManager.Sync(this->payloadDescriptor->frameNumber - 1);
-
 				context->syncRequired = false;
 			}
 
@@ -209,8 +207,6 @@ namespace RTC
 			// Filter spatial layers higher than current one.
 			if (packetSpatialLayer > tmpSpatialLayer)
 			{
-				context->frameNumberManager.Drop(this->payloadDescriptor->frameNumber);
-
 				return false;
 			}
 
@@ -258,8 +254,6 @@ namespace RTC
 			// Filter temporal layers higher than current one.
 			if (packetTemporalLayer > tmpTemporalLayer)
 			{
-				context->frameNumberManager.Drop(this->payloadDescriptor->frameNumber);
-
 				return false;
 			}
 
@@ -280,16 +274,6 @@ namespace RTC
 			{
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
 			}
-
-			uint16_t frameNumber;
-
-			context->frameNumberManager.Input(this->payloadDescriptor->frameNumber, frameNumber);
-
-			// Store the encoding data for retransmissions.
-			this->payloadDescriptor->CreateEncoder({ frameNumber });
-
-			uint8_t len;
-			this->payloadDescriptor->Encode(packet->GetDependencyDescriptionExtension(len));
 
 			return true;
 		}

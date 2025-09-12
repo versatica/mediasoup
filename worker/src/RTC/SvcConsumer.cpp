@@ -1,12 +1,14 @@
+#include <cstdint>
+#include <cstring>
 #define MS_CLASS "RTC::SvcConsumer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/SvcConsumer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/SvcConsumer.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
@@ -815,6 +817,23 @@ namespace RTC
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
+
+			RTC::RtpCodecMimeType mimeType{};
+			mimeType.type    = RTC::RtpCodecMimeType::Type::VIDEO;
+			mimeType.subtype = RTC::RtpCodecMimeType::Subtype::AV1;
+
+			MS_ERROR("creating packet2");
+			auto* packet2 = packet->Clone();
+			RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
+
+			uint8_t len;
+			auto dd1 = packet->GetDependencyDescriptionExtension(len);
+			MS_DUMP_DATA(dd1, len);
+			auto dd2 = packet2->GetDependencyDescriptionExtension(len);
+			MS_DUMP_DATA(dd2, len);
+			MS_ASSERT(memcmp(dd1, dd2, len) == 0, "dd1 and dd2 are not equal");
+			delete (packet2);
+			MS_ERROR("deleting packet2");
 
 			// May emit 'trace' event.
 			EmitTraceEventRtpAndKeyFrameTypes(packet);

@@ -57,6 +57,8 @@ namespace RTC
 				return nullptr;
 			}
 
+			dependencyDescriptor->Dump();
+
 			return dependencyDescriptor.release();
 		}
 
