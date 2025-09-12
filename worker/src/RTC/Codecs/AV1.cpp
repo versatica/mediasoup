@@ -158,12 +158,6 @@ namespace RTC
 				return false;
 			}
 
-			// Check whether frameNumber sync is required.
-			if (context->syncRequired)
-			{
-				context->syncRequired = false;
-			}
-
 			// Upgrade current spatial layer if needed.
 			if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
 			{
