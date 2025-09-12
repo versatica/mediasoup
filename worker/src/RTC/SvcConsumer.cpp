@@ -822,9 +822,10 @@ namespace RTC
 			mimeType.type    = RTC::RtpCodecMimeType::Type::VIDEO;
 			mimeType.subtype = RTC::RtpCodecMimeType::Subtype::AV1;
 
-			MS_ERROR("creating packet2");
+			// TODO: Remove this block.
+			// MS_ERROR("creating packet2");
 			auto* packet2 = packet->Clone();
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
+			// RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
 
 			uint8_t len;
 			auto dd1 = packet->GetDependencyDescriptionExtension(len);
@@ -833,7 +834,7 @@ namespace RTC
 			MS_DUMP_DATA(dd2, len);
 			MS_ASSERT(memcmp(dd1, dd2, len) == 0, "dd1 and dd2 are not equal");
 			delete (packet2);
-			MS_ERROR("deleting packet2");
+			// MS_ERROR("packet2 deleted");
 
 			// May emit 'trace' event.
 			EmitTraceEventRtpAndKeyFrameTypes(packet);
