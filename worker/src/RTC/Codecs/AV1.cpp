@@ -185,10 +185,10 @@ namespace RTC
 			else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 			{
 				// clang-format off
-					if (
-						packetSpatialLayer == context->GetTargetSpatialLayer() &&
-						this->payloadDescriptor->endOfFrame
-					)
+				if (
+					packetSpatialLayer == context->GetTargetSpatialLayer() &&
+					this->payloadDescriptor->endOfFrame
+				)
 				// clang-format on
 				{
 					MS_DEBUG_DEV(
@@ -213,10 +213,7 @@ namespace RTC
 			// Upgrade current temporal layer if needed.
 			if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 			{
-				// clang-format off
-					if (
-						packetTemporalLayer >= context->GetCurrentTemporalLayer() + 1)
-				// clang-format on
+				if (packetTemporalLayer > context->GetCurrentTemporalLayer())
 				{
 					MS_DEBUG_DEV(
 					  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu8 " (packet:%" PRIu8 ":%" PRIu8
@@ -233,10 +230,10 @@ namespace RTC
 			else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 			{
 				// clang-format off
-					if (
-						packetTemporalLayer == context->GetTargetTemporalLayer() &&
-						this->payloadDescriptor->endOfFrame
-					)
+				if (
+					packetTemporalLayer == context->GetTargetTemporalLayer() &&
+					this->payloadDescriptor->endOfFrame
+				)
 				// clang-format on
 				{
 					MS_DEBUG_DEV(
@@ -247,7 +244,7 @@ namespace RTC
 					  packetSpatialLayer,
 					  packetTemporalLayer);
 
-					tmpTemporalLayer = context->GetTargetTemporalLayer();
+					tmpTemporalLayer = packetTemporalLayer;
 				}
 			}
 
