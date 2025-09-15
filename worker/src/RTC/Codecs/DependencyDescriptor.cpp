@@ -99,12 +99,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (!this->isKeyFrame)
+			{
+				return;
+			}
+
 			MS_DUMP_CLEAN(indentation, "<DependencyDescriptor>");
 			MS_DUMP_CLEAN(indentation, "  startOfFrame: %s", this->startOfFrame ? "true" : "false");
 			MS_DUMP_CLEAN(indentation, "  endOfFrame: %s", this->endOfFrame ? "true" : "false");
 			MS_DUMP_CLEAN(indentation, "  frameDependencyTemplateId: %u", this->frameDependencyTemplateId);
 			MS_DUMP_CLEAN(indentation, "  frameNumber: %u", this->frameNumber);
-			MS_DUMP_CLEAN(indentation, "  templateIdOffset: %u", this->templateIdOffset);
 			MS_DUMP_CLEAN(indentation, "  templateId: %u", this->templateId);
 			MS_DUMP_CLEAN(indentation, "  temporalLayer: %u", this->temporalLayer);
 			MS_DUMP_CLEAN(indentation, "  spatialLayer: %u", this->spatialLayer);
@@ -116,21 +120,29 @@ namespace RTC
 				  indentation + 1, "  spatialLayers: %u", this->templateDependencyStructure->spatialLayers);
 				MS_DUMP_CLEAN(
 				  indentation + 1, "  temporalLayers: %u", this->templateDependencyStructure->temporalLayers);
+				MS_DUMP_CLEAN(
+				  indentation + 1,
+				  "  templateIdOffset: %u",
+				  this->templateDependencyStructure->templateIdOffset);
+				MS_DUMP_CLEAN(
+				  indentation + 1,
+				  "  decodeTargetCount: %u",
+				  this->templateDependencyStructure->decodeTargetCount);
 				MS_DUMP_CLEAN(indentation + 2, "<TemplateLayers>");
 				for (const auto& layer : this->templateDependencyStructure->templateLayers)
 				{
 					MS_DUMP_CLEAN(indentation + 3, "<FrameDependencyTemplate>");
 					MS_DUMP_CLEAN(indentation + 3, "  spatialLayerId: %u", layer.spatialLayer);
 					MS_DUMP_CLEAN(indentation + 3, "  temporalLayerId: %u", layer.temporalLayer);
-					MS_DUMP_CLEAN(indentation + 3, "  <DecodeTargetIndications>");
 					std::string dtis;
 					for (const auto& dti : layer.decodeTargetIndications)
 					{
 						dtis += DtiToString[dti];
 					}
-					MS_DUMP_CLEAN(indentation + 3, "    %s", dtis.c_str());
-					MS_DUMP_CLEAN(indentation + 3, "  </DecodeTargetIndications>");
-					MS_DUMP_CLEAN(indentation + 3, "  <FrameDiffs>");
+					MS_DUMP_CLEAN(
+					  indentation + 3,
+					  "  <DecodeTargetIndications> %s </DecodeTargetIndications>",
+					  dtis.c_str());
 					std::string fdiffs;
 					for (const auto& fdiff : layer.frameDiffs)
 					{
@@ -141,8 +153,19 @@ namespace RTC
 
 						fdiffs += std::to_string(fdiff);
 					}
-					MS_DUMP_CLEAN(indentation + 3, "    %s", fdiffs.c_str());
-					MS_DUMP_CLEAN(indentation + 3, "  </FrameDiffs>");
+					MS_DUMP_CLEAN(indentation + 3, "  <FrameDiffs> %s </FrameDiffs>", fdiffs.c_str());
+					std::string fdiffChains;
+					for (const auto& fdiffChain : layer.frameDiffChains)
+					{
+						if (!fdiffChains.empty())
+						{
+							fdiffChains += ",";
+						}
+
+						fdiffChains += std::to_string(fdiffChain);
+					}
+					MS_DUMP_CLEAN(
+					  indentation + 3, "  <FrameDiffChains> %s </FrameDiffChains>", fdiffChains.c_str());
 					MS_DUMP_CLEAN(indentation + 3, "<FrameDependencyTemplate>");
 				}
 				MS_DUMP_CLEAN(indentation + 2, "</TemplateLayers>");
@@ -203,8 +226,8 @@ namespace RTC
 				return false;
 			}
 
-			this->templateIdOffset  = this->bitStream.GetBits(6);
-			this->decodeTargetCount = this->bitStream.GetBits(5) + 1;
+			this->templateDependencyStructure->templateIdOffset  = this->bitStream.GetBits(6);
+			this->templateDependencyStructure->decodeTargetCount = this->bitStream.GetBits(5) + 1;
 
 			if (!ReadTemplateLayers())
 			{
@@ -217,6 +240,11 @@ namespace RTC
 			}
 
 			if (!ReadTemplateFrameDiffs())
+			{
+				return false;
+			}
+
+			if (!ReadTemplateFrameDiffChains())
 			{
 				return false;
 			}
@@ -275,7 +303,8 @@ namespace RTC
 
 			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
 			{
-				for (uint8_t dtIndex = 0; dtIndex < this->decodeTargetCount; dtIndex++)
+				for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
+				     dtIndex++)
 				{
 					if (this->bitStream.GetLeftBits() < 2)
 					{
@@ -312,7 +341,7 @@ namespace RTC
 						return false;
 					}
 
-					bool fdiff = this->bitStream.GetBits(4) + 1;
+					uint8_t fdiff = this->bitStream.GetBits(4) + 1;
 
 					this->templateDependencyStructure->templateLayers[templateIndex].frameDiffs.push_back(fdiff);
 
@@ -323,11 +352,52 @@ namespace RTC
 			return true;
 		}
 
+		bool DependencyDescriptor::ReadTemplateFrameDiffChains()
+		{
+			MS_TRACE();
+
+			// TODO: Check left bits.
+			auto chainCount =
+			  this->bitStream.ReadNs(this->templateDependencyStructure->decodeTargetCount + 1);
+
+			if (chainCount == 0)
+			{
+				return true;
+			}
+
+			for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
+			     dtIndex++)
+			{
+				uint8_t chain = this->bitStream.ReadNs(chainCount);
+				this->decodeTargetProtectedBy.push_back(chain);
+			}
+
+			auto templateCount = this->templateDependencyStructure->templateLayers.size();
+
+			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			{
+				for (uint8_t chainIndex = 0; chainIndex < chainCount; chainIndex++)
+				{
+					if (this->bitStream.GetLeftBits() < 4)
+					{
+						return false;
+					}
+
+					this->templateDependencyStructure->templateLayers[templateIndex].frameDiffChains.push_back(
+					  this->bitStream.GetBits(4));
+				}
+			}
+
+			return true;
+		}
+
 		bool DependencyDescriptor::ReadFrameDependencyDefinition()
 		{
 			MS_TRACE();
 
-			uint8_t templateIndex = (this->frameDependencyTemplateId + 64 - this->templateIdOffset) % 64;
+			uint8_t templateIndex =
+			  (this->frameDependencyTemplateId + 64 - this->templateDependencyStructure->templateIdOffset) %
+			  64;
 
 			if (this->templateDependencyStructure->templateLayers.size() <= templateIndex)
 			{

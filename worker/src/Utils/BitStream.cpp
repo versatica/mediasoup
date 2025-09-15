@@ -57,6 +57,34 @@ namespace Utils
 		this->offset += count;
 	}
 
+	/*
+	 * non-symmetric unsigned encoded integer with maximum
+	 * number of values n (i.e., output in range 0..n-1).
+	 */
+	uint32_t BitStream::ReadNs(uint32_t n)
+	{
+		unsigned w = 0;
+		unsigned x = n;
+
+		while (x != 0)
+		{
+			x = x >> 1;
+			++w;
+		}
+
+		unsigned m = (1u << w) - n;
+		unsigned v = this->GetBits(w - 1);
+
+		if (v < m)
+		{
+			return v;
+		}
+
+		unsigned extra_bit = this->GetBit();
+
+		return (v << 1) - m + extra_bit;
+	}
+
 	void BitStream::Write(uint32_t offset, uint32_t n, uint32_t v)
 	{
 		MS_TRACE();

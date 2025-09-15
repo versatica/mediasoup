@@ -88,6 +88,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		auto* templateStructure = dependencyDescriptor->templateDependencyStructure;
 		std::vector<Codecs::DependencyDescriptor::DecodeTargetIndication> dtis{};
 		std::vector<uint8_t> fdiffs{};
+		std::vector<uint8_t> fdiffChains{};
 
 		REQUIRE(templateStructure->templateLayers.size() == 5);
 		REQUIRE(templateStructure->templateLayers[0].spatialLayer == 0);
@@ -100,6 +101,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		REQUIRE(templateStructure->templateLayers[0].decodeTargetIndications == dtis);
 		fdiffs = {};
 		REQUIRE(templateStructure->templateLayers[0].frameDiffs == fdiffs);
+		fdiffChains = { 0 };
+		REQUIRE(templateStructure->templateLayers[0].frameDiffChains == fdiffChains);
 
 		REQUIRE(templateStructure->templateLayers[1].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[1].temporalLayer == 0);
@@ -109,8 +112,10 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
 		};
 		REQUIRE(templateStructure->templateLayers[1].decodeTargetIndications == dtis);
-		fdiffs = { 1 };
+		fdiffs = { 4 };
 		REQUIRE(templateStructure->templateLayers[1].frameDiffs == fdiffs);
+		fdiffChains = { 4 };
+		REQUIRE(templateStructure->templateLayers[1].frameDiffChains == fdiffChains);
 
 		REQUIRE(templateStructure->templateLayers[2].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[2].temporalLayer == 1);
@@ -120,8 +125,10 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
 		};
 		REQUIRE(templateStructure->templateLayers[2].decodeTargetIndications == dtis);
-		fdiffs = { 1 };
+		fdiffs = { 2 };
 		REQUIRE(templateStructure->templateLayers[2].frameDiffs == fdiffs);
+		fdiffChains = { 2 };
+		REQUIRE(templateStructure->templateLayers[2].frameDiffChains == fdiffChains);
 
 		REQUIRE(templateStructure->templateLayers[3].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[3].temporalLayer == 2);
@@ -133,6 +140,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		REQUIRE(templateStructure->templateLayers[3].decodeTargetIndications == dtis);
 		fdiffs = { 1 };
 		REQUIRE(templateStructure->templateLayers[3].frameDiffs == fdiffs);
+		fdiffChains = { 1 };
+		REQUIRE(templateStructure->templateLayers[3].frameDiffChains == fdiffChains);
 
 		REQUIRE(templateStructure->templateLayers[4].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[4].temporalLayer == 2);
@@ -144,6 +153,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		REQUIRE(templateStructure->templateLayers[4].decodeTargetIndications == dtis);
 		fdiffs = { 1 };
 		REQUIRE(templateStructure->templateLayers[4].frameDiffs == fdiffs);
+		fdiffChains = { 3 };
+		REQUIRE(templateStructure->templateLayers[4].frameDiffChains == fdiffChains);
 	}
 
 	SECTION("Write Dependency Descriptor Frame Number")

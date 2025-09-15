@@ -425,6 +425,7 @@ namespace Utils
 		uint8_t GetBit();
 		uint32_t GetBits(size_t count);
 		uint32_t GetLeftBits() const;
+		uint32_t ReadNs(uint32_t n);
 		void SkipBits(size_t count);
 		void Write(uint32_t offset, uint32_t n, uint32_t v);
 

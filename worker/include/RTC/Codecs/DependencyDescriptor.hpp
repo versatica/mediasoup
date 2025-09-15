@@ -25,12 +25,15 @@ namespace RTC
 				uint32_t temporalLayer;
 				std::vector<DecodeTargetIndication> decodeTargetIndications;
 				std::vector<uint8_t> frameDiffs;
+				std::vector<uint8_t> frameDiffChains;
 			};
 
 			struct TemplateDependencyStructure
 			{
 				uint32_t spatialLayers{ 0 };
 				uint32_t temporalLayers{ 0 };
+				uint8_t templateIdOffset{ 0 };
+				uint8_t decodeTargetCount{ 0 };
 				std::vector<FameDependencyTemplate> templateLayers;
 			};
 
@@ -38,11 +41,10 @@ namespace RTC
 			bool endOfFrame{ false };
 			uint8_t frameDependencyTemplateId{ 0 };
 			uint16_t frameNumber{ 0 };
-			uint8_t templateIdOffset{ 0 };
 			uint8_t templateId{ 0 };
 			// Given by argument.
 			TemplateDependencyStructure* templateDependencyStructure;
-			uint8_t decodeTargetCount{ 0 };
+			std::vector<uint8_t> decodeTargetProtectedBy;
 			// Calculated.
 			uint8_t temporalLayer{ 0 };
 			uint8_t spatialLayer{ 0 };
@@ -69,6 +71,7 @@ namespace RTC
 			bool ReadTemplateLayers();
 			bool ReadTemplateDecodeTargetIndications();
 			bool ReadTemplateFrameDiffs();
+			bool ReadTemplateFrameDiffChains();
 			bool ReadFrameDependencyDefinition();
 
 		private:
