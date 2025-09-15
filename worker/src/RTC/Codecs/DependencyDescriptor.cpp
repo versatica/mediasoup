@@ -273,7 +273,7 @@ namespace RTC
 
 			auto templateCount = this->templateDependencyStructure->templateLayers.size();
 
-			for (uint8_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
 			{
 				for (uint8_t dtIndex = 0; dtIndex < this->decodeTargetCount; dtIndex++)
 				{
@@ -296,7 +296,7 @@ namespace RTC
 
 			auto templateCount = this->templateDependencyStructure->templateLayers.size();
 
-			for (uint8_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
 			{
 				if (this->bitStream.GetLeftBits() < 1)
 				{
