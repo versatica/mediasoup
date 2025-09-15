@@ -87,7 +87,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		auto* templateStructure = dependencyDescriptor->templateDependencyStructure;
 		std::vector<Codecs::DependencyDescriptor::DecodeTargetIndication> dtis{};
-		std::vector<uint16_t> fdiffs{};
+		std::vector<uint8_t> fdiffs{};
 
 		REQUIRE(templateStructure->templateLayers.size() == 5);
 		REQUIRE(templateStructure->templateLayers[0].spatialLayer == 0);

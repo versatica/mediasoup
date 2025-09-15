@@ -24,7 +24,7 @@ namespace RTC
 				uint32_t spatialLayer;
 				uint32_t temporalLayer;
 				std::vector<DecodeTargetIndication> decodeTargetIndications;
-				std::vector<uint16_t> frameDiffs;
+				std::vector<uint8_t> frameDiffs;
 			};
 
 			struct TemplateDependencyStructure
