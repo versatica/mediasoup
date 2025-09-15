@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/Codecs/DependencyDescriptor.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
 
 using namespace RTC;
 
@@ -19,6 +20,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		 *         "templateIdOffset" : 0,
 		 *         "templateInfo" : {
 		 *           "0" : {
+
 		 *             "spatialId" : 0,
 		 *             "temporalId" : 0,
 		 *             "dti" : [ "SWITCH", "SWITCH", "SWITCH" ],
@@ -85,6 +87,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		auto* templateStructure = dependencyDescriptor->templateDependencyStructure;
 		std::vector<Codecs::DependencyDescriptor::DecodeTargetIndication> dtis{};
+		std::vector<uint16_t> fdiffs{};
 
 		REQUIRE(templateStructure->templateLayers.size() == 5);
 		REQUIRE(templateStructure->templateLayers[0].spatialLayer == 0);
@@ -95,6 +98,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
 		};
 		REQUIRE(templateStructure->templateLayers[0].decodeTargetIndications == dtis);
+		fdiffs = {};
+		REQUIRE(templateStructure->templateLayers[0].frameDiffs == fdiffs);
 
 		REQUIRE(templateStructure->templateLayers[1].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[1].temporalLayer == 0);
@@ -104,6 +109,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
 		};
 		REQUIRE(templateStructure->templateLayers[1].decodeTargetIndications == dtis);
+		fdiffs = { 1 };
+		REQUIRE(templateStructure->templateLayers[1].frameDiffs == fdiffs);
 
 		REQUIRE(templateStructure->templateLayers[2].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[2].temporalLayer == 1);
@@ -113,6 +120,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
 		};
 		REQUIRE(templateStructure->templateLayers[2].decodeTargetIndications == dtis);
+		fdiffs = { 1 };
+		REQUIRE(templateStructure->templateLayers[2].frameDiffs == fdiffs);
 
 		REQUIRE(templateStructure->templateLayers[3].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[3].temporalLayer == 2);
@@ -122,6 +131,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
 		};
 		REQUIRE(templateStructure->templateLayers[3].decodeTargetIndications == dtis);
+		fdiffs = { 1 };
+		REQUIRE(templateStructure->templateLayers[3].frameDiffs == fdiffs);
 
 		REQUIRE(templateStructure->templateLayers[4].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[4].temporalLayer == 2);
@@ -131,6 +142,8 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
 		};
 		REQUIRE(templateStructure->templateLayers[4].decodeTargetIndications == dtis);
+		fdiffs = { 1 };
+		REQUIRE(templateStructure->templateLayers[4].frameDiffs == fdiffs);
 	}
 
 	SECTION("Write Dependency Descriptor Frame Number")

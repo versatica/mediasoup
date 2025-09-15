@@ -70,7 +70,7 @@ namespace RTC
 			}
 
 			// TODO: Remove.
-			// dependencyDescriptor->Dump();
+			dependencyDescriptor->Dump();
 
 			return dependencyDescriptor.release();
 		}
@@ -130,7 +130,20 @@ namespace RTC
 					}
 					MS_DUMP_CLEAN(indentation + 3, "    %s", dtis.c_str());
 					MS_DUMP_CLEAN(indentation + 3, "  </DecodeTargetIndications>");
-					MS_DUMP_CLEAN(indentation + 3, "</FrameDependencyTemplate>");
+					MS_DUMP_CLEAN(indentation + 3, "  <FrameDiffs>");
+					std::string fdiffs;
+					for (const auto& fdiff : layer.frameDiffs)
+					{
+						if (!fdiffs.empty())
+						{
+							fdiffs += ",";
+						}
+
+						fdiffs += std::to_string(fdiff);
+					}
+					MS_DUMP_CLEAN(indentation + 3, "    %s", fdiffs.c_str());
+					MS_DUMP_CLEAN(indentation + 3, "  </FrameDiffs>");
+					MS_DUMP_CLEAN(indentation + 3, "<FrameDependencyTemplate>");
 				}
 				MS_DUMP_CLEAN(indentation + 2, "</TemplateLayers>");
 				MS_DUMP_CLEAN(indentation + 1, "  </TemplateDependencyStructure>");
@@ -203,6 +216,11 @@ namespace RTC
 				return false;
 			}
 
+			if (!ReadTemplateFrameDiffs())
+			{
+				return false;
+			}
+
 			return true;
 		}
 
@@ -266,6 +284,39 @@ namespace RTC
 
 					this->templateDependencyStructure->templateLayers[templateIndex].decodeTargetIndications.push_back(
 					  static_cast<DecodeTargetIndication>(this->bitStream.GetBits(2)));
+				}
+			}
+
+			return true;
+		}
+
+		bool DependencyDescriptor::ReadTemplateFrameDiffs()
+		{
+			MS_TRACE();
+
+			auto templateCount = this->templateDependencyStructure->templateLayers.size();
+
+			for (uint8_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			{
+				if (this->bitStream.GetLeftBits() < 1)
+				{
+					return false;
+				}
+
+				bool followsFlag = this->bitStream.GetBit();
+
+				while (followsFlag)
+				{
+					if (this->bitStream.GetLeftBits() < 5)
+					{
+						return false;
+					}
+
+					bool fdiff = this->bitStream.GetBits(4) + 1;
+
+					this->templateDependencyStructure->templateLayers[templateIndex].frameDiffs.push_back(fdiff);
+
+					followsFlag = this->bitStream.GetBit();
 				}
 			}
 

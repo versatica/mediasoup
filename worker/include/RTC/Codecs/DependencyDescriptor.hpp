@@ -24,6 +24,7 @@ namespace RTC
 				uint32_t spatialLayer;
 				uint32_t temporalLayer;
 				std::vector<DecodeTargetIndication> decodeTargetIndications;
+				std::vector<uint16_t> frameDiffs;
 			};
 
 			struct TemplateDependencyStructure
@@ -66,7 +67,9 @@ namespace RTC
 			bool ReadExtendedDescriptorFields();
 			bool ReadTemplateDependencyStructure();
 			bool ReadTemplateLayers();
+			// TODO: Rename to ReadTemplateDecodeTargetIndications
 			bool ReadDecodeTargetIndications();
+			bool ReadTemplateFrameDiffs();
 			bool ReadFrameDependencyDefinition();
 
 		private:
