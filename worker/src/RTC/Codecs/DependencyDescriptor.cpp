@@ -9,6 +9,18 @@ namespace RTC
 {
 	namespace Codecs
 	{
+		/* Static members. */
+
+		// clang-format off
+		std::unordered_map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::DtiToString =
+		{
+			{ DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT, "-" },
+			{ DependencyDescriptor::DecodeTargetIndication::DISCARDABLE, "D" },
+			{ DependencyDescriptor::DecodeTargetIndication::SWITCH,      "S" },
+			{ DependencyDescriptor::DecodeTargetIndication::REQUIRED,    "R" },
+		};
+		// clang-format on
+
 		/* Class methods. */
 
 		DependencyDescriptor* DependencyDescriptor::Parse(
@@ -110,6 +122,14 @@ namespace RTC
 					MS_DUMP_CLEAN(indentation + 3, "<FrameDependencyTemplate>");
 					MS_DUMP_CLEAN(indentation + 3, "  spatialLayerId: %u", layer.spatialLayer);
 					MS_DUMP_CLEAN(indentation + 3, "  temporalLayerId: %u", layer.temporalLayer);
+					MS_DUMP_CLEAN(indentation + 3, "  <DecodeTargetIndications>");
+					std::string dtis;
+					for (const auto& dti : layer.decodeTargetIndications)
+					{
+						dtis += DtiToString[dti];
+					}
+					MS_DUMP_CLEAN(indentation + 3, "    %s", dtis.c_str());
+					MS_DUMP_CLEAN(indentation + 3, "  </DecodeTargetIndications>");
 					MS_DUMP_CLEAN(indentation + 3, "</FrameDependencyTemplate>");
 				}
 				MS_DUMP_CLEAN(indentation + 2, "</TemplateLayers>");
@@ -170,11 +190,20 @@ namespace RTC
 				return false;
 			}
 
-			this->templateIdOffset = this->bitStream.GetBits(6);
+			this->templateIdOffset  = this->bitStream.GetBits(6);
+			this->decodeTargetCount = this->bitStream.GetBits(5) + 1;
 
-			this->bitStream.SkipBits(5);
+			if (!ReadTemplateLayers())
+			{
+				return false;
+			}
 
-			return ReadTemplateLayers();
+			if (!ReadDecodeTargetIndications())
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		bool DependencyDescriptor::ReadTemplateLayers()
@@ -216,6 +245,29 @@ namespace RTC
 
 			this->templateDependencyStructure->spatialLayers  = spatialId;
 			this->templateDependencyStructure->temporalLayers = temporalId;
+
+			return true;
+		}
+
+		bool DependencyDescriptor::ReadDecodeTargetIndications()
+		{
+			MS_TRACE();
+
+			auto templateCount = this->templateDependencyStructure->templateLayers.size();
+
+			for (uint8_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			{
+				for (uint8_t dtIndex = 0; dtIndex < this->decodeTargetCount; dtIndex++)
+				{
+					if (this->bitStream.GetLeftBits() < 2)
+					{
+						return false;
+					}
+
+					this->templateDependencyStructure->templateLayers[templateIndex].decodeTargetIndications.push_back(
+					  static_cast<DecodeTargetIndication>(this->bitStream.GetBits(2)));
+				}
+			}
 
 			return true;
 		}

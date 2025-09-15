@@ -8,10 +8,22 @@ namespace RTC
 	{
 		struct DependencyDescriptor
 		{
+			enum class DecodeTargetIndication : uint8_t
+			{
+				NOT_PRESENT = 0,
+				DISCARDABLE = 1,
+				SWITCH      = 2,
+				REQUIRED    = 3
+			};
+
+			// clang-format off
+			static std::unordered_map<DecodeTargetIndication, std::string> DtiToString;
+
 			struct FameDependencyTemplate
 			{
 				uint32_t spatialLayer;
 				uint32_t temporalLayer;
+				std::vector<DecodeTargetIndication> decodeTargetIndications;
 			};
 
 			struct TemplateDependencyStructure
@@ -29,6 +41,7 @@ namespace RTC
 			uint8_t templateId{ 0 };
 			// Given by argument.
 			TemplateDependencyStructure* templateDependencyStructure;
+			uint8_t decodeTargetCount{ 0 };
 			// Calculated.
 			uint8_t temporalLayer{ 0 };
 			uint8_t spatialLayer{ 0 };
@@ -53,6 +66,7 @@ namespace RTC
 			bool ReadExtendedDescriptorFields();
 			bool ReadTemplateDependencyStructure();
 			bool ReadTemplateLayers();
+			bool ReadDecodeTargetIndications();
 			bool ReadFrameDependencyDefinition();
 
 		private:

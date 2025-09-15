@@ -84,18 +84,53 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		REQUIRE(dependencyDescriptor->frameNumber == 303);
 
 		auto* templateStructure = dependencyDescriptor->templateDependencyStructure;
+		std::vector<Codecs::DependencyDescriptor::DecodeTargetIndication> dtis{};
 
 		REQUIRE(templateStructure->templateLayers.size() == 5);
 		REQUIRE(templateStructure->templateLayers[0].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[0].temporalLayer == 0);
+		dtis = {
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		};
+		REQUIRE(templateStructure->templateLayers[0].decodeTargetIndications == dtis);
+
 		REQUIRE(templateStructure->templateLayers[1].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[1].temporalLayer == 0);
+		dtis = {
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		};
+		REQUIRE(templateStructure->templateLayers[1].decodeTargetIndications == dtis);
+
 		REQUIRE(templateStructure->templateLayers[2].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[2].temporalLayer == 1);
+		dtis = {
+			Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::SWITCH,
+		};
+		REQUIRE(templateStructure->templateLayers[2].decodeTargetIndications == dtis);
+
 		REQUIRE(templateStructure->templateLayers[3].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[3].temporalLayer == 2);
+		dtis = {
+			Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
+		};
+		REQUIRE(templateStructure->templateLayers[3].decodeTargetIndications == dtis);
+
 		REQUIRE(templateStructure->templateLayers[4].spatialLayer == 0);
 		REQUIRE(templateStructure->templateLayers[4].temporalLayer == 2);
+		dtis = {
+			Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT,
+			Codecs::DependencyDescriptor::DecodeTargetIndication::DISCARDABLE,
+		};
+		REQUIRE(templateStructure->templateLayers[4].decodeTargetIndications == dtis);
 	}
 
 	SECTION("Write Dependency Descriptor Frame Number")
