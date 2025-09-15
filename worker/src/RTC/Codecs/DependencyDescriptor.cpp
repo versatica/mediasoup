@@ -211,7 +211,7 @@ namespace RTC
 				return false;
 			}
 
-			if (!ReadDecodeTargetIndications())
+			if (!ReadTemplateDecodeTargetIndications())
 			{
 				return false;
 			}
@@ -267,7 +267,7 @@ namespace RTC
 			return true;
 		}
 
-		bool DependencyDescriptor::ReadDecodeTargetIndications()
+		bool DependencyDescriptor::ReadTemplateDecodeTargetIndications()
 		{
 			MS_TRACE();
 

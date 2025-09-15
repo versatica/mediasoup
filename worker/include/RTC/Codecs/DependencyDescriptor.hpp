@@ -67,8 +67,7 @@ namespace RTC
 			bool ReadExtendedDescriptorFields();
 			bool ReadTemplateDependencyStructure();
 			bool ReadTemplateLayers();
-			// TODO: Rename to ReadTemplateDecodeTargetIndications
-			bool ReadDecodeTargetIndications();
+			bool ReadTemplateDecodeTargetIndications();
 			bool ReadTemplateFrameDiffs();
 			bool ReadFrameDependencyDefinition();
 
