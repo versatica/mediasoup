@@ -376,7 +376,7 @@ namespace RTC
 
 			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
 			{
-				for (uint8_t chainIndex = 0; chainIndex < chainCount; chainIndex++)
+				for (uint32_t chainIndex = 0; chainIndex < chainCount; chainIndex++)
 				{
 					if (this->bitStream.GetLeftBits() < 4)
 					{
