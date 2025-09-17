@@ -173,6 +173,10 @@ namespace RTC
 			}
 
 			MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
+			MS_DUMP_CLEAN(indentation, "<ActiveDecodeTargets>");
+			MS_DUMP_CLEAN(
+			  indentation + 1, "%s", std::bitset<32>(this->activeDecodeTargetsBitmask).to_string().c_str());
+			MS_DUMP_CLEAN(indentation, "</ActiveDecodeTargets>");
 		}
 
 		bool DependencyDescriptor::ReadMandatoryDescriptorFields()
@@ -202,9 +206,10 @@ namespace RTC
 			}
 
 			auto templateDependencyStructurePresentFlag = this->bitStream.GetBit();
+			auto activeDecodeTargetLayersPresentFlag    = this->bitStream.GetBit();
 
-			// Advance 4 positions due to non interesting fields.
-			bitStream.SkipBits(4);
+			// Advance 3 positions due to non interesting fields.
+			bitStream.SkipBits(3);
 
 			if (templateDependencyStructurePresentFlag)
 			{
@@ -212,6 +217,20 @@ namespace RTC
 				{
 					return false;
 				}
+
+				this->activeDecodeTargetsBitmask =
+				  (1 << this->templateDependencyStructure->decodeTargetCount) - 1;
+			}
+
+			if (activeDecodeTargetLayersPresentFlag)
+			{
+				if (this->bitStream.GetLeftBits() < this->templateDependencyStructure->decodeTargetCount)
+				{
+					return false;
+				}
+
+				this->activeDecodeTargetsBitmask =
+				  this->bitStream.GetBits(this->templateDependencyStructure->decodeTargetCount);
 			}
 
 			return true;
