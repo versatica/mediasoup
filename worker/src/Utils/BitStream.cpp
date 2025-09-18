@@ -11,6 +11,13 @@ namespace Utils
 		MS_TRACE();
 	}
 
+	void BitStream::Reset()
+	{
+		MS_TRACE();
+
+		this->offset = 0;
+	}
+
 	uint8_t BitStream::GetBit()
 	{
 		MS_TRACE();
@@ -108,6 +115,20 @@ namespace Utils
 		{
 			this->PutBits(offset, w, v + m);
 		}
+	}
+
+	void BitStream::PutBit(uint8_t bit)
+	{
+		MS_TRACE();
+
+		this->PutBit(this->offset, bit);
+	}
+
+	void BitStream::PutBits(uint32_t count, uint32_t bits)
+	{
+		MS_TRACE();
+
+		this->PutBits(this->offset, count, bits);
 	}
 
 	void BitStream::PutBit(uint32_t offset, uint8_t bit)

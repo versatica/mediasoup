@@ -61,6 +61,7 @@ namespace RTC
 			  const uint8_t* data, size_t len, TemplateDependencyStructure* templateDependencyStructure);
 
 			void Dump(int indentation = 0) const;
+			bool UpdateActiveDecodeTargets();
 
 		private:
 			uint8_t GetSpatialLayer() const;

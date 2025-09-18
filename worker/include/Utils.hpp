@@ -74,9 +74,7 @@ namespace Utils
 
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr)
 		{
-			struct sockaddr_storage copiedAddr
-			{
-			};
+			struct sockaddr_storage copiedAddr{};
 
 			switch (addr->sa_family)
 			{
@@ -422,12 +420,15 @@ namespace Utils
 		BitStream(uint8_t* data, size_t len);
 		~BitStream() = default;
 
+		void Reset();
 		uint8_t GetBit();
 		uint32_t GetBits(size_t count);
 		uint32_t GetLeftBits() const;
 		uint32_t ReadNs(uint32_t n);
 		void SkipBits(size_t count);
 		void Write(uint32_t offset, uint32_t n, uint32_t v);
+		void PutBit(uint8_t bit);
+		void PutBits(uint32_t count, uint32_t bits);
 
 	private:
 		void PutBit(uint32_t offset, uint8_t bit);

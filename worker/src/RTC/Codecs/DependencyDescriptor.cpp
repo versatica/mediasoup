@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::DependencyDescriptor"
-// #define MS_LOG_DEV_LEVEL 3
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
@@ -29,6 +29,9 @@ namespace RTC
 		  std::unique_ptr<TemplateDependencyStructure>& templateDependencyStructure)
 		{
 			MS_TRACE();
+
+			// TODO: Remove.
+			MS_DUMP_DATA(data, len);
 
 			if (len < 3)
 			{
@@ -99,10 +102,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (!this->isKeyFrame)
-			{
-				return;
-			}
+			// if (!this->isKeyFrame)
+			// {
+			// 	return;
+			// }
 
 			MS_DUMP_CLEAN(indentation, "<DependencyDescriptor>");
 			MS_DUMP_CLEAN(indentation, "  startOfFrame: %s", this->startOfFrame ? "true" : "false");
@@ -208,7 +211,7 @@ namespace RTC
 			auto templateDependencyStructurePresentFlag = this->bitStream.GetBit();
 			auto activeDecodeTargetLayersPresentFlag    = this->bitStream.GetBit();
 
-			// Advance 3 positions due to non interesting fields.
+			// Advance 3 positios due to non interesting fields.
 			bitStream.SkipBits(3);
 
 			if (templateDependencyStructurePresentFlag)
@@ -432,6 +435,57 @@ namespace RTC
 			  this->templateDependencyStructure->templateLayers[this->templateId].spatialLayer;
 			this->temporalLayer =
 			  this->templateDependencyStructure->templateLayers[this->templateId].temporalLayer;
+
+			return true;
+		}
+
+		// TODO: Hardcoded to only set spatial 0 and temporal 0.
+		bool DependencyDescriptor::UpdateActiveDecodeTargets()
+		{
+			MS_TRACE();
+
+			if (this->isKeyFrame)
+			{
+				return true;
+			}
+
+			this->bitStream.Reset();
+
+			// Bits required for mandatory fields.
+			if (this->bitStream.GetLeftBits() < 24)
+			{
+				MS_WARN_DEV("not enough space for mandatory fields");
+
+				return false;
+			}
+
+			this->bitStream.SkipBits(24);
+
+			// Bits required for extended fields.
+			if (this->bitStream.GetLeftBits() < 5)
+			{
+				MS_WARN_DEV("not enough space for extended fields");
+
+				return false;
+			}
+
+			// Skip dependency structure present flag.
+			this->bitStream.SkipBits(1);
+			// Set the active decode targets present flag.
+			this->bitStream.PutBit(1);
+
+			// Advance 3 positions due to non interesting fields.
+			bitStream.SkipBits(3);
+
+			if (this->bitStream.GetLeftBits() < this->templateDependencyStructure->decodeTargetCount)
+			{
+				MS_WARN_DEV("not enough space for active decode targets");
+
+				return false;
+			}
+
+			// Write the active decode targets bitmask.
+			this->bitStream.PutBits(this->templateDependencyStructure->decodeTargetCount, 1);
 
 			return true;
 		}
