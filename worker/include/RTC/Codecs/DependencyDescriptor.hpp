@@ -8,6 +8,15 @@ namespace RTC
 	{
 		struct DependencyDescriptor
 		{
+			class Listener
+			{
+			public:
+				virtual ~Listener() = default;
+
+			public:
+				virtual void OnDependencyDescriptorUpdated(uint8_t* data, size_t len) = 0;
+			};
+
 			enum class DecodeTargetIndication : uint8_t
 			{
 				NOT_PRESENT = 0,
@@ -37,6 +46,7 @@ namespace RTC
 				std::vector<FameDependencyTemplate> templateLayers;
 			};
 
+			public:
 			bool startOfFrame{ false };
 			bool endOfFrame{ false };
 			uint8_t frameDependencyTemplateId{ 0 };
@@ -52,13 +62,18 @@ namespace RTC
 			// Whether the frame is a key frame. Set to true if the descriptor contains template layers.
 			bool isKeyFrame{ false };
 
+			private:
+			DependencyDescriptor::Listener* listener;
+
+			public:
 			static DependencyDescriptor* Parse(
 			  const uint8_t* data,
 			  size_t len,
+			  DependencyDescriptor::Listener* listener,
 			  std::unique_ptr<TemplateDependencyStructure>& templateDependencyStructure);
 
 			DependencyDescriptor(
-			  const uint8_t* data, size_t len, TemplateDependencyStructure* templateDependencyStructure);
+			  const uint8_t* data, size_t len, DependencyDescriptor::Listener* listener, TemplateDependencyStructure* templateDependencyStructure);
 
 			void Dump(int indentation = 0) const;
 			bool UpdateActiveDecodeTargets();

@@ -864,7 +864,7 @@ namespace RTC
 		packet->SetMarker(origMarker);
 
 		// Restore the original payload if needed.
-		packet->RestorePayload();
+		// packet->RestorePayload();
 
 		// If sharedPacket doesn't have a packet inside and it has been stored we
 		// need to clone the packet into it.

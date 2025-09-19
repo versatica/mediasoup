@@ -26,11 +26,13 @@ namespace RTC
 		DependencyDescriptor* DependencyDescriptor::Parse(
 		  const uint8_t* data,
 		  size_t len,
+		  DependencyDescriptor::Listener* listener,
 		  std::unique_ptr<TemplateDependencyStructure>& templateDependencyStructure)
 		{
 			MS_TRACE();
 
 			// TODO: Remove.
+			MS_DUMP("data:%p", data);
 			MS_DUMP_DATA(data, len);
 
 			if (len < 3)
@@ -46,7 +48,7 @@ namespace RTC
 			}
 
 			std::unique_ptr<DependencyDescriptor> dependencyDescriptor(
-			  new DependencyDescriptor(data, len, templateDependencyStructure.get()));
+			  new DependencyDescriptor(data, len, listener, templateDependencyStructure.get()));
 
 			if (!dependencyDescriptor->ReadMandatoryDescriptorFields())
 			{
@@ -81,8 +83,11 @@ namespace RTC
 		/* Instance methods. */
 
 		DependencyDescriptor::DependencyDescriptor(
-		  const uint8_t* data, size_t len, TemplateDependencyStructure* templateDependencyStructure)
-		  : templateDependencyStructure(templateDependencyStructure),
+		  const uint8_t* data,
+		  size_t len,
+		  DependencyDescriptor::Listener* listener,
+		  TemplateDependencyStructure* templateDependencyStructure)
+		  : templateDependencyStructure(templateDependencyStructure), listener(listener),
 		    bitStream(const_cast<uint8_t*>(data), len)
 		{
 			MS_TRACE();
@@ -443,6 +448,14 @@ namespace RTC
 		bool DependencyDescriptor::UpdateActiveDecodeTargets()
 		{
 			MS_TRACE();
+
+			auto len  = bitStream.GetLength();
+			auto data = bitStream.GetData();
+
+			this->listener->OnDependencyDescriptorUpdated(data, len);
+
+			// NOTE: For now don't do anything, just pass the original data.
+			return true;
 
 			if (this->isKeyFrame)
 			{

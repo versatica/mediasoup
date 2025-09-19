@@ -1193,6 +1193,7 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
+			MS_ERROR("preprocessig video packet");
 			packet->SetDependencyDescriptorExtensionId(this->rtpHeaderExtensionIds.dependencyDescriptor);
 		}
 	}
@@ -1354,7 +1355,13 @@ namespace RTC
 
 				if (extenValue)
 				{
+					auto padding = Utils::Byte::PadTo4Bytes(extenLen);
+					// NOTE: If this has a value > 1 it consumer won't render the video.
+					// static const uint8_t DEPENDENCY_DESCRIPTOR_EXTRA_LENGTH = 1;
+
 					std::memcpy(bufferPtr, extenValue, extenLen);
+					// std::memset(bufferPtr + extenLen, 0, DEPENDENCY_DESCRIPTOR_EXTRA_LENGTH);
+					extenLen += padding - extenLen;
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),

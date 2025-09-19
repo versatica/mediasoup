@@ -30,7 +30,7 @@ namespace RTC
 					EncodingData encodingData;
 				};
 
-				PayloadDescriptor(Codecs::DependencyDescriptor* dependencyDescriptor);
+				PayloadDescriptor(std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() override = default;
 
@@ -41,7 +41,10 @@ namespace RTC
 				void Encode(uint8_t* data) const;
 				void Restore(uint8_t* data) const;
 
+				void UpdateActiveDecodeTargets();
+
 				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
+
 				{
 					if (this->encoder.has_value())
 					{
@@ -65,6 +68,8 @@ namespace RTC
 				uint8_t spatialLayer{ 0 };
 				uint8_t temporalLayer{ 0 };
 
+				std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor{ nullptr };
+
 				// Parsed values.
 				bool isKeyFrame{ false };
 
@@ -72,7 +77,8 @@ namespace RTC
 			};
 
 		public:
-			static AV1::PayloadDescriptor* Parse(Codecs::DependencyDescriptor* dependencyDescriptor);
+			static AV1::PayloadDescriptor* Parse(
+			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
 			static void ProcessRtpPacket(
 			  RTC::RtpPacket* packet,
 			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&

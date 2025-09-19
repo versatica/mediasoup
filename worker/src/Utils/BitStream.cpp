@@ -6,9 +6,22 @@
 
 namespace Utils
 {
-	BitStream::BitStream(uint8_t* data, size_t len) : data(data), len(len)
+	BitStream::BitStream(uint8_t* data, size_t len) : len(len)
 	{
 		MS_TRACE();
+
+		this->data = new uint8_t[1024];
+		std::memcpy(this->data, data, len);
+	}
+
+	uint8_t* BitStream::GetData() const
+	{
+		return this->data;
+	}
+
+	size_t BitStream::GetLength() const
+	{
+		return this->len;
 	}
 
 	void BitStream::Reset()

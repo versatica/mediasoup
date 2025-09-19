@@ -16,7 +16,7 @@
 
 namespace RTC
 {
-	class RtpPacket
+	class RtpPacket : Codecs::DependencyDescriptor::Listener
 	{
 	public:
 		/* Struct for RTP header. */
@@ -461,8 +461,8 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
 
-			auto* value =
-			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
+			auto* value = Codecs::DependencyDescriptor::Parse(
+			  extenValue, extenLen, const_cast<RTC::RtpPacket*>(this), templateDependencyStructure);
 
 			if (!value)
 			{
@@ -647,6 +647,10 @@ namespace RTC
 
 	private:
 		void ParseExtensions();
+
+		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
+	public:
+		void OnDependencyDescriptorUpdated(uint8_t* data, size_t len);
 
 	private:
 		Header* header{ nullptr };

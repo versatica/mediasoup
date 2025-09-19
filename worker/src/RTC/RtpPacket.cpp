@@ -1060,4 +1060,33 @@ namespace RTC
 			}
 		}
 	}
+
+	void RtpPacket::OnDependencyDescriptorUpdated(uint8_t* data, size_t len)
+	{
+		MS_TRACE();
+
+		MS_ERROR("called RtpPacket::OnDependencyDescriptorUpdated  data:%p, length %zu", data, len);
+		MS_DUMP_DATA(data, len);
+		uint8_t extenLen;
+		uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+
+		if (!extenValue)
+		{
+			MS_ERROR("Dependency description not found!!!");
+			return;
+		}
+
+		std::memcpy(extenValue, data, len);
+
+		auto result = SetExtensionLength(this->dependencyDescriptorExtensionId, len);
+
+		if (!result)
+		{
+			MS_ERROR("Failed to set extension length");
+		}
+
+		extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+		MS_ERROR("after: extension length %d", extenLen);
+		MS_DUMP_DATA(data, extenLen + 3);
+	}
 } // namespace RTC

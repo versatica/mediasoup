@@ -5,6 +5,14 @@
 
 using namespace RTC;
 
+class Listener : public ::RTC::Codecs::DependencyDescriptor::Listener
+{
+public:
+	void OnDependencyDescriptorUpdated(uint8_t* data, size_t len) override
+	{
+	}
+};
+
 SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 {
 	SECTION("parse Dependency Descriptor")
@@ -74,10 +82,13 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
 		};
 
+		Listener listener;
+
 		// clang-format on
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
-		auto dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
-		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure));
+		auto dependencyDescriptor =
+		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
+		    data, sizeof(data), &listener, templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->startOfFrame == true);
@@ -171,10 +182,13 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
 		};
 
+		Listener listener;
+
 		// clang-format on
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
-		auto dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
-		  Codecs::DependencyDescriptor::Parse(data, sizeof(data), templateDependencyStructure));
+		auto dependencyDescriptor =
+		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
+		    data, sizeof(data), &listener, templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 303);
@@ -231,10 +245,13 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			0xFC, 0x0B, 0x3C,
 		};
 
+		Listener listener;
+
 		// clang-format on
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
-		auto dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
-		  Codecs::DependencyDescriptor::Parse(data1, sizeof(data1), templateDependencyStructure));
+		auto dependencyDescriptor =
+		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
+		    data1, sizeof(data1), &listener, templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -247,8 +264,9 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		};
 
 		// clang-format on
-		dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
-		  Codecs::DependencyDescriptor::Parse(data2, sizeof(data2), templateDependencyStructure));
+		dependencyDescriptor =
+		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
+		    data2, sizeof(data2), &listener, templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -257,8 +275,9 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		bool result = dependencyDescriptor->UpdateActiveDecodeTargets();
 		REQUIRE(result);
 
-		dependencyDescriptor = std::unique_ptr<Codecs::DependencyDescriptor>(
-		  Codecs::DependencyDescriptor::Parse(data2, sizeof(data2), templateDependencyStructure));
+		dependencyDescriptor =
+		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
+		    data2, sizeof(data2), &listener, templateDependencyStructure));
 		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 1);
 	}
 }
