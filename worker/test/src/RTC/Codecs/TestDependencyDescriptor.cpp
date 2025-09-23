@@ -8,7 +8,7 @@ using namespace RTC;
 class Listener : public ::RTC::Codecs::DependencyDescriptor::Listener
 {
 public:
-	void OnDependencyDescriptorUpdated(uint8_t* data, size_t len) override
+	void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
 	{
 	}
 };

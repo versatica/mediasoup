@@ -1061,7 +1061,7 @@ namespace RTC
 		}
 	}
 
-	void RtpPacket::OnDependencyDescriptorUpdated(uint8_t* data, size_t len)
+	void RtpPacket::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 

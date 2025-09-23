@@ -650,7 +650,7 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
-		void OnDependencyDescriptorUpdated(uint8_t* data, size_t len);
+		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len);
 
 	private:
 		Header* header{ nullptr };

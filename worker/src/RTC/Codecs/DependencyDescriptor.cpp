@@ -463,6 +463,7 @@ namespace RTC
 			}
 
 			this->bitStream.Reset();
+			MS_ERROR("bistream len %zu", this->bitStream.GetLength());
 
 			// Bits required for mandatory fields.
 			if (this->bitStream.GetLeftBits() < 24)
@@ -499,6 +500,13 @@ namespace RTC
 
 			// Write the active decode targets bitmask.
 			this->bitStream.PutBits(this->templateDependencyStructure->decodeTargetCount, 1);
+
+			// auto len  = std::ceil(bitStream.GetOffset() / 8);
+			// auto data = bitStream.GetData();
+
+			// MS_ERROR("calling onDependencyDescriptorUpdated");
+
+			// this->listener->OnDependencyDescriptorUpdated(data, len);
 
 			return true;
 		}

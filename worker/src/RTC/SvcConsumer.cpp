@@ -827,7 +827,8 @@ namespace RTC
 			// TODO: Remove this block.
 			// MS_ERROR("creating packet2");
 			auto* packet2 = packet->Clone();
-			// RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
+			MS_DUMP("Before sending packet..");
+			RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
 
 			uint8_t len;
 			auto dd1 = packet->GetDependencyDescriptionExtension(len);

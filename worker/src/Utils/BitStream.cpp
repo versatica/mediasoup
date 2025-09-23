@@ -10,11 +10,10 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		this->data = new uint8_t[1024];
 		std::memcpy(this->data, data, len);
 	}
 
-	uint8_t* BitStream::GetData() const
+	const uint8_t* BitStream::GetData() const
 	{
 		return this->data;
 	}
@@ -24,11 +23,17 @@ namespace Utils
 		return this->len;
 	}
 
+	uint32_t BitStream::GetOffset() const
+	{
+		return this->offset;
+	}
+
 	void BitStream::Reset()
 	{
 		MS_TRACE();
 
 		this->offset = 0;
+		this->len    = sizeof(this->data);
 	}
 
 	uint8_t BitStream::GetBit()

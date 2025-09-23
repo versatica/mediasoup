@@ -14,7 +14,7 @@ namespace RTC
 				virtual ~Listener() = default;
 
 			public:
-				virtual void OnDependencyDescriptorUpdated(uint8_t* data, size_t len) = 0;
+				virtual void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) = 0;
 			};
 
 			enum class DecodeTargetIndication : uint8_t
