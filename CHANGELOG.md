@@ -3,6 +3,7 @@
 ### NEXT
 
 - CI: Remove `macos-13` hosts.
+- VP8: Fix keyframe detection if "extended" bit is not set ([PR #1612](https://github.com/versatica/mediasoup/pull/1612), credits to @nifigase).
 
 ### 3.19.2
 
