@@ -117,7 +117,7 @@ namespace RTC
 				(len >= ++offset + 1) &&
 				payloadDescriptor->start &&
 				payloadDescriptor->partitionIndex == 0 &&
-				(!(data[offset] & 0x01)) //inverse Keyframe bit
+				(!(data[offset] & 0x01)) // Inverse Keyframe bit.
 			)
 			// clang-format on
 			{
