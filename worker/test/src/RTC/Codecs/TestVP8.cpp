@@ -297,6 +297,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
 		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
+
+		delete payloadDescriptor;
 	}
 
 	SECTION("parse payload descriptor. X flag is not set, keyframe")
@@ -348,6 +350,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
 		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
 		REQUIRE(payloadDescriptor->hasTlIndex == false);
+
+		delete payloadDescriptor;
 	}
 }
 
