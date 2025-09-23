@@ -322,7 +322,7 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(payloadDescriptor->start == 1);
 		REQUIRE(payloadDescriptor->partitionIndex == 0);
 
-		// optional field flags.
+		// Optional field flags.
 		REQUIRE(payloadDescriptor->i == 0);
 		REQUIRE(payloadDescriptor->l == 0);
 		REQUIRE(payloadDescriptor->t == 0);
