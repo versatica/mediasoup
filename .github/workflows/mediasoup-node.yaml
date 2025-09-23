@@ -17,14 +17,6 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-22.04
-            node: 20
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-22.04-arm
-            node: 20
-            cc: gcc
-            cxx: g++
           - os: ubuntu-24.04
             node: 22
             cc: gcc
@@ -58,11 +50,6 @@ jobs:
             # See https://github.com/versatica/mediasoup/pull/1503.
             skip-test-in-debug-build-type: true
           - os: ubuntu-24.04-arm
-            node: 20
-            cc: clang
-            cxx: clang++
-            meson_args: '-Db_sanitize=undefined'
-          - os: ubuntu-24.04-arm
             node: 24
             cc: gcc
             cxx: g++
@@ -75,10 +62,6 @@ jobs:
             node: 24
             cc: clang
             cxx: clang++
-          - os: windows-2022
-            node: 20
-            cc: cl
-            cxx: cl
           - os: windows-2022
             node: 22
             cc: cl
