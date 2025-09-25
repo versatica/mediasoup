@@ -452,7 +452,7 @@ namespace RTC
 			WriteMandatoryDescriptorFields();
 			WriteExtendedDescriptorFields();
 
-			len = std::ceil(bitStream.GetOffset() / 8);
+			len = std::ceil((this->bitStream.GetOffset() + 7) >> 3);
 
 			return this->bitStream.GetData();
 		}
@@ -500,11 +500,19 @@ namespace RTC
 			return true;
 		}
 
-		// TODO: Hardcoded to only set spatial 0 and temporal 0.
 		bool DependencyDescriptor::UpdateActiveDecodeTargets(
 		  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer)
 		{
 			MS_TRACE();
+
+			// We don't update active decode targets for key frames.
+			if (this->isKeyFrame)
+			{
+				this->listener->OnDependencyDescriptorUpdated(
+				  this->bitStream.GetData(), this->bitStream.GetLength());
+
+				return true;
+			}
 
 			auto availableSpatialLayers  = this->templateDependencyStructure->spatialLayers;
 			auto availableTemporalLayers = this->templateDependencyStructure->temporalLayers;
@@ -536,6 +544,10 @@ namespace RTC
 					bitIndex += 1;
 				}
 			}
+
+			uint8_t len;
+			auto data = this->Serialize(len);
+			this->listener->OnDependencyDescriptorUpdated(data, len);
 
 			return true;
 		}
