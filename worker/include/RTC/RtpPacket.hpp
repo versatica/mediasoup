@@ -295,6 +295,7 @@ namespace RTC
 		}
 
 		void UpdateMid(const std::string& mid);
+		void UpdateDependencyDescriptor(const uint8_t* data, size_t len);
 
 		bool ReadRid(std::string& rid) const
 		{
