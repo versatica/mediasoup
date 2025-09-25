@@ -444,6 +444,61 @@ namespace RTC
 			return true;
 		}
 
+		const uint8_t* DependencyDescriptor::Serialize(uint8_t& len)
+		{
+			MS_TRACE();
+
+			this->bitStream.Reset();
+			this->WriteMandatoryDescriptorFields();
+			this->WriteExtendedDescriptorFields();
+
+			len = std::ceil(bitStream.GetOffset() / 8);
+
+			return this->bitStream.GetData();
+		}
+
+		bool DependencyDescriptor::WriteMandatoryDescriptorFields()
+		{
+			MS_TRACE();
+
+			this->bitStream.PutBit(this->startOfFrame ? 1 : 0);
+			this->bitStream.PutBit(this->endOfFrame ? 1 : 0);
+			this->bitStream.PutBits(6, this->frameDependencyTemplateId);
+			this->bitStream.PutBits(16, this->frameNumber);
+
+			return true;
+		}
+
+		bool DependencyDescriptor::WriteExtendedDescriptorFields()
+		{
+			MS_TRACE();
+
+			// Template dependency structure present flag.
+			this->bitStream.PutBit(0);
+			// Active decode targets present flag.
+			this->bitStream.PutBit(1);
+
+			// Custom dtis flag.
+			this->bitStream.PutBit(0);
+			// Custom fdiffs flag.
+			this->bitStream.PutBit(0);
+			// Custom chains flag.
+			this->bitStream.PutBit(0);
+
+			// TODO: Write template dependency structure
+			if (0)
+			{
+			}
+
+			// Active Decode Targets
+			if (1)
+			{
+				this->bitStream.PutBits(this->templateDependencyStructure->decodeTargetCount, 1);
+			}
+
+			return true;
+		}
+
 		// TODO: Hardcoded to only set spatial 0 and temporal 0.
 		bool DependencyDescriptor::UpdateActiveDecodeTargets()
 		{

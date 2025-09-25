@@ -76,6 +76,7 @@ namespace RTC
 			  const uint8_t* data, size_t len, DependencyDescriptor::Listener* listener, TemplateDependencyStructure* templateDependencyStructure);
 
 			void Dump(int indentation = 0) const;
+			const uint8_t* Serialize(uint8_t& len);
 			bool UpdateActiveDecodeTargets();
 
 		private:
@@ -90,6 +91,8 @@ namespace RTC
 			bool ReadTemplateFrameDiffs();
 			bool ReadTemplateFrameDiffChains();
 			bool ReadFrameDependencyDefinition();
+			bool WriteMandatoryDescriptorFields();
+			bool WriteExtendedDescriptorFields();
 
 		private:
 			Utils::BitStream bitStream;

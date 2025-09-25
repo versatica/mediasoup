@@ -34,6 +34,8 @@ namespace Utils
 
 		this->offset = 0;
 		this->len    = sizeof(this->data);
+
+		std::memset(this->data, 0, this->len);
 	}
 
 	uint8_t BitStream::GetBit()
