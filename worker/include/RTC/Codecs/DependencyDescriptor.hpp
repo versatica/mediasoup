@@ -77,7 +77,7 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 			const uint8_t* Serialize(uint8_t& len);
-			bool UpdateActiveDecodeTargets();
+			bool UpdateActiveDecodeTargets(uint32_t maxSpatialLayer, uint32_t maxTemporalLayer);
 
 		private:
 			uint8_t GetSpatialLayer() const;

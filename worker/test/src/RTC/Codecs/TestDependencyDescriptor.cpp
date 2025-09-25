@@ -370,6 +370,20 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
-		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 1);
+		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 0);
+
+		dependencyDescriptor->UpdateActiveDecodeTargets(0, 1);
+
+		data = dependencyDescriptor->Serialize(len);
+
+		// clang-format on
+		dependencyDescriptor =
+		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
+		    data, sizeof(data), &listener, templateDependencyStructure));
+
+		REQUIRE(dependencyDescriptor);
+		REQUIRE(dependencyDescriptor->frameNumber == 232);
+		// activeDecodeTargetsBitmask == 00000011
+		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 3);
 	}
 }

@@ -41,7 +41,7 @@ namespace RTC
 				void Encode(uint8_t* data) const;
 				void Restore(uint8_t* data) const;
 
-				void UpdateActiveDecodeTargets();
+				void UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer);
 
 				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
 

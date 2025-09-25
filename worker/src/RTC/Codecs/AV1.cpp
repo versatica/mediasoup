@@ -118,11 +118,11 @@ namespace RTC
 			Encode(data, this->frameNumber);
 		}
 
-		void AV1::PayloadDescriptor::UpdateActiveDecodeTargets()
+		void AV1::PayloadDescriptor::UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer)
 		{
 			MS_TRACE();
 
-			this->dependencyDescriptor->UpdateActiveDecodeTargets();
+			this->dependencyDescriptor->UpdateActiveDecodeTargets(spatialLayer, temporalLayer);
 		}
 
 		void AV1::PayloadDescriptor::Encoder::Encode(
@@ -276,7 +276,8 @@ namespace RTC
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
 			}
 
-			this->payloadDescriptor->UpdateActiveDecodeTargets();
+			this->payloadDescriptor->UpdateActiveDecodeTargets(
+			  context->GetCurrentSpatialLayer(), context->GetCurrentTemporalLayer());
 
 			return true;
 		}

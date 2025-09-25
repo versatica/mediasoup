@@ -493,75 +493,49 @@ namespace RTC
 			// Active Decode Targets
 			if (1)
 			{
-				this->bitStream.PutBits(this->templateDependencyStructure->decodeTargetCount, 1);
+				this->bitStream.PutBits(
+				  this->templateDependencyStructure->decodeTargetCount, this->activeDecodeTargetsBitmask);
 			}
 
 			return true;
 		}
 
 		// TODO: Hardcoded to only set spatial 0 and temporal 0.
-		bool DependencyDescriptor::UpdateActiveDecodeTargets()
+		bool DependencyDescriptor::UpdateActiveDecodeTargets(
+		  uint32_t maxSpatialLayer, uint32_t maxTemporalLayer)
 		{
 			MS_TRACE();
 
-			auto len  = bitStream.GetLength();
-			auto data = bitStream.GetData();
+			auto availableSpatialLayers  = this->templateDependencyStructure->spatialLayers;
+			auto availableTemporalLayers = this->templateDependencyStructure->temporalLayers;
 
-			this->listener->OnDependencyDescriptorUpdated(data, len);
+			MS_ASSERT(
+			  maxSpatialLayer <= availableSpatialLayers,
+			  "maxSpatialLayer must be less than or equal to availableSpatialLayers");
+			MS_ASSERT(
+			  maxTemporalLayer <= availableTemporalLayers,
+			  "maxTemporalLayer must be less than or equal to availableTemporalLayers");
 
-			// NOTE: For now don't do anything, just pass the original data.
-			return true;
-
-			if (this->isKeyFrame)
+			this->activeDecodeTargetsBitmask = 0;
+			size_t bitIndex                  = 0;
+			for (auto spatialLayer = 0; spatialLayer <= maxSpatialLayer; ++spatialLayer)
 			{
-				return true;
+				for (auto temporalLayer = 0; temporalLayer <= availableTemporalLayers; ++temporalLayer)
+				{
+					if (temporalLayer <= maxTemporalLayer)
+					{
+						// Set a 1.
+						this->activeDecodeTargetsBitmask |= (1 << bitIndex);
+					}
+					else
+					{
+						// Set a 0.
+						this->activeDecodeTargetsBitmask &= ~(1 << bitIndex);
+					}
+
+					bitIndex += 1;
+				}
 			}
-
-			this->bitStream.Reset();
-			MS_ERROR("bistream len %zu", this->bitStream.GetLength());
-
-			// Bits required for mandatory fields.
-			if (this->bitStream.GetLeftBits() < 24)
-			{
-				MS_WARN_DEV("not enough space for mandatory fields");
-
-				return false;
-			}
-
-			this->bitStream.SkipBits(24);
-
-			// Bits required for extended fields.
-			if (this->bitStream.GetLeftBits() < 5)
-			{
-				MS_WARN_DEV("not enough space for extended fields");
-
-				return false;
-			}
-
-			// Skip dependency structure present flag.
-			this->bitStream.SkipBits(1);
-			// Set the active decode targets present flag.
-			this->bitStream.PutBit(1);
-
-			// Advance 3 positions due to non interesting fields.
-			bitStream.SkipBits(3);
-
-			if (this->bitStream.GetLeftBits() < this->templateDependencyStructure->decodeTargetCount)
-			{
-				MS_WARN_DEV("not enough space for active decode targets");
-
-				return false;
-			}
-
-			// Write the active decode targets bitmask.
-			this->bitStream.PutBits(this->templateDependencyStructure->decodeTargetCount, 1);
-
-			// auto len  = std::ceil(bitStream.GetOffset() / 8);
-			// auto data = bitStream.GetData();
-
-			// MS_ERROR("calling onDependencyDescriptorUpdated");
-
-			// this->listener->OnDependencyDescriptorUpdated(data, len);
 
 			return true;
 		}
