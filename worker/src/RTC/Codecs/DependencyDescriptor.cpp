@@ -449,8 +449,8 @@ namespace RTC
 			MS_TRACE();
 
 			this->bitStream.Reset();
-			this->WriteMandatoryDescriptorFields();
-			this->WriteExtendedDescriptorFields();
+			WriteMandatoryDescriptorFields();
+			WriteExtendedDescriptorFields();
 
 			len = std::ceil(bitStream.GetOffset() / 8);
 
