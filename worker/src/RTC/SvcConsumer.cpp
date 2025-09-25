@@ -824,20 +824,26 @@ namespace RTC
 			mimeType.type    = RTC::RtpCodecMimeType::Type::VIDEO;
 			mimeType.subtype = RTC::RtpCodecMimeType::Subtype::AV1;
 
-			// TODO: Remove this block.
-			// MS_ERROR("creating packet2");
-			auto* packet2 = packet->Clone();
-			MS_DUMP("Before sending packet..");
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
+			std::unique_ptr<RTC::Codecs::DependencyDescriptor> dependencyDescriptor;
 
-			uint8_t len;
-			auto dd1 = packet->GetDependencyDescriptionExtension(len);
-			// MS_DUMP_DATA(dd1, len);
-			auto dd2 = packet2->GetDependencyDescriptionExtension(len);
-			// MS_DUMP_DATA(dd2, len);
-			MS_ASSERT(memcmp(dd1, dd2, len) == 0, "dd1 and dd2 are not equal");
-			delete (packet2);
-			// MS_ERROR("packet2 deleted");
+			// 1.
+			// MS_DUMP("Before sending packet..");
+			// packet->ReadDependencyDescriptor(dependencyDescriptor, this->templateDependencyStructure);
+			// 2.
+			// MS_DUMP("Before sending packet..");
+			// // TODO: Remove this block.
+			// // MS_ERROR("creating packet2");
+			// auto* packet2 = packet->Clone();
+			// RTC::Codecs::Tools::ProcessRtpPacket(packet, mimeType, this->templateDependencyStructure);
+
+			// uint8_t len;
+			// auto dd1 = packet->GetDependencyDescriptionExtension(len);
+			// // MS_DUMP_DATA(dd1, len);
+			// auto dd2 = packet2->GetDependencyDescriptionExtension(len);
+			// // MS_DUMP_DATA(dd2, len);
+			// MS_ASSERT(memcmp(dd1, dd2, len) == 0, "dd1 and dd2 are not equal");
+			// delete (packet2);
+			// // MS_ERROR("packet2 deleted");
 
 			// May emit 'trace' event.
 			EmitTraceEventRtpAndKeyFrameTypes(packet);

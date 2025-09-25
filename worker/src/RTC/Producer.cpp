@@ -1357,10 +1357,16 @@ namespace RTC
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
+					// TMP: Do not try to extend headers which could
+					// not fit in 1 byte header...
+					if (extenLen + 5 <= 16)
+					{
+						extenLen += 5;
+					}
+
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
-					  // TMP: Experiement to rewrite active decode targets.
-					  extenLen + 5,
+					  extenLen,
 					  bufferPtr);
 
 					bufferPtr += extenLen;
