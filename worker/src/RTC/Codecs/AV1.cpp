@@ -1,9 +1,8 @@
-#include <cstdint>
 #define MS_CLASS "RTC::Codecs::AV1"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "Logger.hpp"
 #include "RTC/Codecs/AV1.hpp"
+#include "Logger.hpp"
 #include <limits> // std::numeric_limits
 
 namespace RTC
