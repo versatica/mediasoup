@@ -1357,11 +1357,21 @@ namespace RTC
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					// TMP: Do not try to extend headers which could
-					// not fit in 1 byte header...
-					if (extenLen + 5 <= 16)
+					// Make place for the active decode target bitmask.
+					// clang-format off
+					if (
+					  (packet->HasOneByteExtensions() &&
+					   extenLen + 5 <= RTC::Consts::OneByteRtpExtensionMaxLength) ||
+					  (packet->HasTwoBytesExtensions() &&
+					   extenLen + 5 <= RTC::Consts::TwoBytesRtpExtensionMaxLength)
+					)
+					// clang-format on
 					{
 						extenLen += 5;
+					}
+					else
+					{
+						MS_WARN_DEV("cannot increase DD extension header length, current length %zu", extenLen);
 					}
 
 					extensions.emplace_back(

@@ -448,6 +448,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_ASSERT(!this->isKeyFrame, "Serialization of key frames is not supported");
+
 			this->bitStream.Reset();
 			WriteMandatoryDescriptorFields();
 			WriteExtendedDescriptorFields();
@@ -485,10 +487,7 @@ namespace RTC
 			// Custom chains flag.
 			this->bitStream.PutBit(0);
 
-			// TODO: Write template dependency structure
-			if (0)
-			{
-			}
+			// NOTE: Write template dependency structure if ever needed.
 
 			// Active Decode Targets
 			if (1)
@@ -505,7 +504,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// We don't update active decode targets for key frames.
+			// We don't update active decode targets for key frames,
+			// as by definition they enable all decode targets.
 			if (this->isKeyFrame)
 			{
 				this->listener->OnDependencyDescriptorUpdated(

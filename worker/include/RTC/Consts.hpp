@@ -22,6 +22,16 @@ namespace RTC
 		constexpr size_t RtcpPacketMaxSize{ RTC::Consts::MtuSize - 40 - 20 - 148u };
 
 		/**
+		 * Max length for a 1 byte RTP header extension.
+		 */
+		constexpr uint8_t OneByteRtpExtensionMaxLength{ 16u };
+
+		/**
+		 * Max length for a 2 bytes RTP header extension.
+		 */
+		constexpr uint8_t TwoBytesRtpExtensionMaxLength{ 255u };
+
+		/**
 		 * MID RTP header extension max length (just used when setting/updating MID
 		 * extension).
 		 */
