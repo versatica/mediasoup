@@ -10,10 +10,6 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
-// TODO: Remove.
-#include <cstdint>
-// TODO: Remove.
-#include <cstring>
 #include <limits> // std::numeric_limits
 
 namespace RTC
