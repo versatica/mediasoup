@@ -1193,7 +1193,6 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			MS_ERROR("preprocessig video packet");
 			packet->SetDependencyDescriptorExtensionId(this->rtpHeaderExtensionIds.dependencyDescriptor);
 		}
 	}

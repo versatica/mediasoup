@@ -2,6 +2,7 @@
 #define MS_UTILS_HPP
 
 #include "common.hpp"
+#include "RTC/Consts.hpp"
 #include <openssl/evp.h>
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -440,8 +441,7 @@ namespace Utils
 		void PutBits(uint32_t offset, uint32_t count, uint32_t bits);
 
 	private:
-		// 256 is the maximum size for a RTP header extension.
-		uint8_t data[256];
+		uint8_t data[RTC::Consts::TwoBytesRtpExtensionMaxLength];
 		uint32_t len{ 0 };
 		uint32_t offset{ 0 };
 	};

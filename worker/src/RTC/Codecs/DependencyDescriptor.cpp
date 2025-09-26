@@ -31,10 +31,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// TODO: Remove.
-			MS_DUMP("data:%p", data);
-			MS_DUMP_DATA(data, len);
-
 			if (len < 3)
 			{
 				MS_WARN_DEV("ignoring payload with length < 3");
@@ -73,9 +69,6 @@ namespace RTC
 
 				return nullptr;
 			}
-
-			// TODO: Remove.
-			dependencyDescriptor->Dump();
 
 			return dependencyDescriptor.release();
 		}
