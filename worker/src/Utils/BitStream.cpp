@@ -15,16 +15,22 @@ namespace Utils
 
 	const uint8_t* BitStream::GetData() const
 	{
+		MS_TRACE();
+
 		return this->data;
 	}
 
 	size_t BitStream::GetLength() const
 	{
+		MS_TRACE();
+
 		return this->len;
 	}
 
 	uint32_t BitStream::GetOffset() const
 	{
+		MS_TRACE();
+
 		return this->offset;
 	}
 
