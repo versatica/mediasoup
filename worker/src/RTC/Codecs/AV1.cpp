@@ -3,7 +3,6 @@
 
 #include "RTC/Codecs/AV1.hpp"
 #include "Logger.hpp"
-#include <limits> // std::numeric_limits
 
 namespace RTC
 {
@@ -84,37 +83,25 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</AV1::PayloadDescriptor>");
 		}
 
-		void AV1::PayloadDescriptor::Encode(uint8_t* data, uint16_t frameNumber) const
-		{
-			MS_TRACE();
-
-			// We are overriding a value, we don't need the real buffer length.
-			static const uint8_t len = 64;
-
-			Utils::BitStream bitStream{ data, len };
-
-			static unsigned maxFrameNumber = std::numeric_limits<uint16_t>::max();
-
-			bitStream.Write(8, maxFrameNumber + 1, frameNumber);
-		}
-
-		void AV1::PayloadDescriptor::Encode(uint8_t* data) const
+		void AV1::PayloadDescriptor::Encode()
 		{
 			MS_TRACE();
 
 			if (!this->encoder.has_value())
 			{
-				MS_WARN_DEV("there is no encoder present")
+				MS_WARN_DEV("there is no encoder present");
 			}
 
-			this->encoder->Encode(data, this);
+			UpdateActiveDecodeTargets(
+			  this->encoder->encodingData.maxSpatialLayer, this->encoder->encodingData.maxTemporalLayer);
 		}
 
-		void AV1::PayloadDescriptor::Restore(uint8_t* data) const
+		void AV1::PayloadDescriptor::Restore() const
 		{
 			MS_TRACE();
 
-			Encode(data, this->frameNumber);
+			// Nothing to do as next time this packet is sent will rewrite
+			// the active decode targets mask.
 		}
 
 		void AV1::PayloadDescriptor::UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer)
@@ -124,10 +111,10 @@ namespace RTC
 			this->dependencyDescriptor->UpdateActiveDecodeTargets(spatialLayer, temporalLayer);
 		}
 
-		void AV1::PayloadDescriptor::Encoder::Encode(
-		  uint8_t* data, const PayloadDescriptor* payloadDescriptor) const
+		void AV1::PayloadDescriptor::Encoder::Encode(PayloadDescriptor* payloadDescriptor) const
 		{
-			payloadDescriptor->Encode(data, this->encodingData.frameNumber);
+			payloadDescriptor->UpdateActiveDecodeTargets(
+			  this->encodingData.maxSpatialLayer, this->encodingData.maxTemporalLayer);
 		}
 
 		AV1::PayloadDescriptorHandler::PayloadDescriptorHandler(AV1::PayloadDescriptor* payloadDescriptor)
@@ -275,8 +262,14 @@ namespace RTC
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
 			}
 
-			this->payloadDescriptor->UpdateActiveDecodeTargets(
-			  context->GetCurrentSpatialLayer(), context->GetCurrentTemporalLayer());
+			// Store the encoding data for retransmissions.
+			// clang-format off
+			this->payloadDescriptor->CreateEncoder({
+			  static_cast<uint32_t>(context->GetCurrentSpatialLayer()),
+			  static_cast<uint32_t>(context->GetCurrentTemporalLayer())
+			});
+			// clang-format on
+			this->payloadDescriptor->Encode();
 
 			return true;
 		}
@@ -288,19 +281,14 @@ namespace RTC
 
 			auto* av1Encoder = static_cast<AV1::PayloadDescriptor::Encoder*>(encoder);
 
-			uint8_t len;
-
-			av1Encoder->Encode(
-			  packet->GetDependencyDescriptionExtension(len), this->payloadDescriptor.get());
+			av1Encoder->Encode(this->payloadDescriptor.get());
 		}
 
 		void AV1::PayloadDescriptorHandler::Restore(RtpPacket* packet)
 		{
 			MS_TRACE();
 
-			uint8_t len;
-
-			this->payloadDescriptor->Encode(packet->GetDependencyDescriptionExtension(len));
+			this->payloadDescriptor->Restore();
 		}
 	} // namespace Codecs
 } // namespace RTC

@@ -1,4 +1,6 @@
 #include "common.hpp"
+#include "RTC/Codecs/AV1.hpp"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/VP8.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -52,7 +54,7 @@ static void CheckRtxPacket(RtpPacket* rtxPacket, RtpPacket* origPacket)
 	REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
 }
 
-SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
+SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend]")
 {
 	class TestRtpStreamListener : public RtpStreamSend::Listener
 	{
@@ -326,7 +328,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 		CheckRtxPacket(rtxPacket2, packet2.get());
 	}
 
-	SECTION("retransmitted packets are correctly encoded")
+	SECTION("retransmitted packets are correctly encoded [VP8]")
 	{
 		// clang-format off
 		uint8_t rtpBuffer1[] =
@@ -486,6 +488,279 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack]")
 
 		delete payloadDescriptor4;
 		delete payloadDescriptor5;
+	}
+
+	SECTION("retransmitted packets are correctly encoded [AV1]")
+	{
+		/*
+		 * <DependencyDescriptor>
+		 *	 startOfFrame: true
+		 *	 endOfFrame: false
+		 *	 frameDependencyTemplateId: 0
+		 *	 frameNumber: 1
+		 *	 templateId: 0
+		 *	 spatialLayer: 0
+		 *	 temporalLayer: 0
+		 *	 <TemplateDependencyStructure>
+		 *	 spatialLayers: 0
+		 *	 temporalLayers: 1
+		 *	 templateIdOffset: 0
+		 *	 decodeTargetCount: 2
+		 *	 <TemplateLayers>
+		 *    <FrameDependencyTemplate>
+		 *      spatialLayerId: 0
+		 *      temporalLayerId: 0
+		 *      <DecodeTargetIndications> SS </DecodeTargetIndications>
+		 *      <FrameDiffs>  </FrameDiffs>
+		 *      <FrameDiffChains> 0 </FrameDiffChains>
+		 *    <FrameDependencyTemplate>
+		 *    <FrameDependencyTemplate>
+		 *      spatialLayerId: 0
+		 *      temporalLayerId: 0
+		 *      <DecodeTargetIndications> SS </DecodeTargetIndications>
+		 *      <FrameDiffs> 2 </FrameDiffs>
+		 *      <FrameDiffChains> 2 </FrameDiffChains>
+		 *    </FrameDependencyTemplate>
+		 *    <FrameDependencyTemplate>
+		 *      spatialLayerId: 0
+		 *      temporalLayerId: 1
+		 *      <DecodeTargetIndications> -D </DecodeTargetIndications>
+		 *      <FrameDiffs> 1 </FrameDiffs>
+		 *      <FrameDiffChains> 1 </FrameDiffChains>
+		 *    </FrameDependencyTemplate>
+		 *    <FrameDependencyTemplate>
+		 *      spatialLayerId: 0
+		 *      temporalLayerId: 1
+		 *      <DecodeTargetIndications> -D </DecodeTargetIndications>
+		 *      <FrameDiffs> 1 </FrameDiffs>
+		 *      <FrameDiffChains> 1 </FrameDiffChains>
+		 *    </FrameDependencyTemplate>
+		 *	 </TemplateLayers>
+		 *	 </TemplateDependencyStructure>
+		 *	</DependencyDescriptor>
+		 */
+		// clang-format off
+		uint8_t rtpBuffer1[] =
+		{
+			0x90, 0x2D, 0x56, 0xA5,
+			0x8D, 0x76, 0xF5, 0x02,
+			0xDD, 0xD5, 0x4C, 0xB9,
+			0xBE, 0xDE, 0x00, 0x07,
+			0x22, 0x89, 0xDF, 0xFE,
+			0x31, 0x00, 0x07, 0x40,
+			0x31, 0xCE, 0x80, 0x00,
+			0x01, 0x80, 0x01, 0x1E,
+			0xA8, 0x51, 0x41, 0x01,
+			0x0C, 0x13, 0xFC, 0x0B,
+			0x3C, 0x00, 0x00, 0x00
+		};
+
+		/*
+		 * <DependencyDescriptor>
+		 * 	 startOfFrame: false
+		 * 	 endOfFrame: true
+		 * 	 frameDependencyTemplateId: 0
+		 * 	 frameNumber: 1
+		 * 	 templateId: 0
+		 * 	 spatialLayer: 0
+		 * 	 temporalLayer: 0
+		 * 	</DependencyDescriptor>
+		 */
+		uint8_t rtpBuffer2[] =
+		{
+			0x90, 0xAD, 0x56, 0xA8,
+			0x8D, 0x76, 0xF5, 0x02,
+			0xDD, 0xD5, 0x4C, 0xB9,
+			0xBE, 0xDE, 0x00, 0x04,
+			0x22, 0x8A, 0x03, 0xE5,
+			0xD0, 0x00, 0x31, 0x00,
+			0x17, 0xC2, 0x40, 0x00,
+			0x01, 0x40, 0x31, 0x00
+		};
+
+		/*
+		 * <DependencyDescriptor>
+		 * 	 startOfFrame: true
+		 * 	 endOfFrame: true
+		 * 	 frameDependencyTemplateId: 2
+		 * 	 frameNumber: 2
+		 * 	 templateId: 2
+		 * 	 temporalLayer: 1
+		 * 	 spatialLayer: 0
+		 * 	</DependencyDescriptor>
+		 */
+		uint8_t rtpBuffer3[] =
+		{
+			0x90, 0xAD, 0x56, 0xA9,
+			0x8D, 0x77, 0x02, 0xB8,
+			0xDD, 0xD5, 0x4C, 0xB9,
+			0xBE, 0xDE, 0x00, 0x04,
+			0x22, 0x8A, 0x07, 0xAB,
+			0x31, 0x00, 0x18, 0x40,
+			0x31, 0xC2, 0xC2, 0x00,
+			0x02, 0x00, 0x00, 0x00
+		};
+		// clang-format on
+
+		// packet1 [pt:123, seq:1, timestamp:1]
+		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 1, 1));
+		packet1->SetDependencyDescriptorExtensionId(12);
+		// packet2 [pt:123, seq:2, timestamp:1]
+		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 2, 1));
+		packet2->SetDependencyDescriptorExtensionId(12);
+		// packet3 [pt:123, seq:3, timestamp:1]
+		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 3, 1));
+		packet3->SetDependencyDescriptorExtensionId(12);
+
+		// Create two RtpStreamSend instances.
+		TestRtpStreamListener testRtpStreamListener1;
+		TestRtpStreamListener testRtpStreamListener2;
+
+		RtpStream::Params params1;
+
+		params1.ssrc          = 1111;
+		params1.clockRate     = 90000;
+		params1.useNack       = true;
+		params1.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+		std::unique_ptr<RtpStreamSend> stream1(new RtpStreamSend(&testRtpStreamListener1, params1, mid));
+
+		RtpStream::Params params2;
+
+		params2.ssrc          = 2222;
+		params2.clockRate     = 90000;
+		params2.useNack       = true;
+		params2.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::unique_ptr<RtpStreamSend> stream2(new RtpStreamSend(&testRtpStreamListener2, params2, mid));
+
+		// Create two AV1 encoding contexts.
+		RTC::Codecs::EncodingContext::Params params;
+		params.spatialLayers  = 1;
+		params.temporalLayers = 2;
+
+		Codecs::AV1::EncodingContext context1(params);
+		context1.SetCurrentSpatialLayer(0);
+		context1.SetCurrentTemporalLayer(0);
+		context1.SetTargetSpatialLayer(0);
+		context1.SetTargetTemporalLayer(0);
+
+		Codecs::AV1::EncodingContext context2(params);
+		context2.SetCurrentSpatialLayer(0);
+		context2.SetCurrentTemporalLayer(0);
+		context2.SetTargetSpatialLayer(0);
+		context2.SetTargetTemporalLayer(1);
+
+		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
+
+		// Parse the first packet for the shake of having the template dependency structure.
+		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor1;
+		packet1->ReadDependencyDescriptor(dependencyDescriptor1, templateDependencyStructure);
+		REQUIRE(dependencyDescriptor1);
+
+		auto* payloadDescriptor1        = Codecs::AV1::Parse(dependencyDescriptor1);
+		auto* payloadDescriptorHandler1 = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor1);
+		packet1->SetPayloadDescriptorHandler(payloadDescriptorHandler1);
+
+		bool marker    = false;
+		bool forwarded = false;
+
+		// Parse the second packet.
+		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor2;
+		packet2->ReadDependencyDescriptor(dependencyDescriptor2, templateDependencyStructure);
+		REQUIRE(dependencyDescriptor2);
+
+		auto* payloadDescriptor2        = Codecs::AV1::Parse(dependencyDescriptor2);
+		auto* payloadDescriptorHandler2 = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor2);
+		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler2);
+
+		// Process the second packet for context1.
+		forwarded = packet2->ProcessPayload(&context1, marker);
+		REQUIRE(forwarded);
+		REQUIRE(context1.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
+
+		// Process the second packet with context2.
+		forwarded = packet2->ProcessPayload(&context2, marker);
+		REQUIRE(forwarded);
+		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context2.GetCurrentTemporalLayer() == 0);
+
+		// Parse the third packet
+		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor3;
+
+		packet3->ReadDependencyDescriptor(dependencyDescriptor3, templateDependencyStructure);
+		REQUIRE(dependencyDescriptor3);
+
+		auto* payloadDescriptor3        = Codecs::AV1::Parse(dependencyDescriptor3);
+		auto* payloadDescriptorHandler3 = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor3);
+		packet3->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
+
+		// Process the third packet with context2 and verify current spatial layers.
+		forwarded = packet3->ProcessPayload(&context2, marker);
+		REQUIRE(forwarded);
+		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
+
+		// Process the second packet with context2.
+		// This way packet2 will contain an active decode target bitmask
+		// of 11 (S0T1_S0T0)
+		forwarded = packet2->ProcessPayload(&context2, marker);
+		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
+		REQUIRE(forwarded);
+
+		// Receive the second packet in the first stream.
+		SendRtpPacket({ { stream1.get(), params1.ssrc } }, packet2.get());
+
+		// Process the second packet with context1.
+		forwarded = packet2->ProcessPayload(&context1, marker);
+		REQUIRE(forwarded);
+		REQUIRE(context1.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
+
+		// Receive the second packet in the second stream.
+		SendRtpPacket({ { stream2.get(), params2.ssrc } }, packet2.get());
+
+		// Create a NACK item that requests the third packet.
+		RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(2, 0b0000000000000000);
+
+		nackPacket.AddItem(nackItem);
+
+		REQUIRE(nackItem->GetPacketId() == 2);
+		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000000000);
+
+		// Process the NACK packet on stream1.
+		stream1->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener1.retransmittedPackets.size() == 1);
+
+		auto* packet = testRtpStreamListener1.retransmittedPackets[0];
+
+		// Parse DD and check bitmask.
+		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor4;
+
+		packet->ReadDependencyDescriptor(dependencyDescriptor4, templateDependencyStructure);
+		REQUIRE(dependencyDescriptor4);
+		dependencyDescriptor4->Dump();
+		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000011);
+
+		// Process the NACK packet on stream2.
+		stream2->ReceiveNack(&nackPacket);
+
+		REQUIRE(testRtpStreamListener2.retransmittedPackets.size() == 1);
+
+		packet = testRtpStreamListener2.retransmittedPackets[0];
+
+		// Parse DD and check bitmask.
+		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor5;
+
+		packet->ReadDependencyDescriptor(dependencyDescriptor5, templateDependencyStructure);
+		REQUIRE(dependencyDescriptor5);
+		dependencyDescriptor5->Dump();
+		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000001);
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")

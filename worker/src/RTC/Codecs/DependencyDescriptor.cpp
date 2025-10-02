@@ -111,8 +111,8 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "  frameDependencyTemplateId: %u", this->frameDependencyTemplateId);
 			MS_DUMP_CLEAN(indentation, "  frameNumber: %u", this->frameNumber);
 			MS_DUMP_CLEAN(indentation, "  templateId: %u", this->templateId);
-			MS_DUMP_CLEAN(indentation, "  temporalLayer: %u", this->temporalLayer);
 			MS_DUMP_CLEAN(indentation, "  spatialLayer: %u", this->spatialLayer);
+			MS_DUMP_CLEAN(indentation, "  temporalLayer: %u", this->temporalLayer);
 
 			if (this->isKeyFrame)
 			{
@@ -173,11 +173,16 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation + 1, "  </TemplateDependencyStructure>");
 			}
 
+			if (this->activeDecodeTargetsBitmask.has_value())
+			{
+				MS_DUMP_CLEAN(indentation, "<ActiveDecodeTargets>");
+				MS_DUMP_CLEAN(
+				  indentation + 1,
+				  "%s",
+				  std::bitset<32>(this->activeDecodeTargetsBitmask.value()).to_string().c_str());
+				MS_DUMP_CLEAN(indentation, "</ActiveDecodeTargets>");
+			}
 			MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
-			MS_DUMP_CLEAN(indentation, "<ActiveDecodeTargets>");
-			MS_DUMP_CLEAN(
-			  indentation + 1, "%s", std::bitset<32>(this->activeDecodeTargetsBitmask).to_string().c_str());
-			MS_DUMP_CLEAN(indentation, "</ActiveDecodeTargets>");
 		}
 
 		bool DependencyDescriptor::ReadMandatoryDescriptorFields()
@@ -471,7 +476,7 @@ namespace RTC
 			// Template dependency structure present flag.
 			this->bitStream.PutBit(0);
 			// Active decode targets present flag.
-			this->bitStream.PutBit(1);
+			this->bitStream.PutBit(this->activeDecodeTargetsBitmask.has_value() ? 1 : 0);
 
 			// Custom dtis flag.
 			this->bitStream.PutBit(0);
@@ -483,10 +488,11 @@ namespace RTC
 			// NOTE: Write template dependency structure if ever needed.
 
 			// Active Decode Targets
-			if (1)
+			if (this->activeDecodeTargetsBitmask.has_value())
 			{
 				this->bitStream.PutBits(
-				  this->templateDependencyStructure->decodeTargetCount, this->activeDecodeTargetsBitmask);
+				  this->templateDependencyStructure->decodeTargetCount,
+				  this->activeDecodeTargetsBitmask.value());
 			}
 
 			return true;
@@ -510,6 +516,12 @@ namespace RTC
 			auto availableSpatialLayers  = this->templateDependencyStructure->spatialLayers;
 			auto availableTemporalLayers = this->templateDependencyStructure->temporalLayers;
 
+			MS_DUMP(
+			  "availableSpatialLayers: %d, maxSpatialLayer: %d", availableSpatialLayers, maxSpatialLayer);
+			MS_DUMP(
+			  "availableTemporalLayers: %d, maxTemporalLayer: %d", availableTemporalLayers, maxTemporalLayer);
+			;
+
 			MS_ASSERT(
 			  maxSpatialLayer <= availableSpatialLayers,
 			  "maxSpatialLayer must be less than or equal to availableSpatialLayers");
@@ -517,8 +529,8 @@ namespace RTC
 			  maxTemporalLayer <= availableTemporalLayers,
 			  "maxTemporalLayer must be less than or equal to availableTemporalLayers");
 
-			this->activeDecodeTargetsBitmask = 0;
-			size_t bitIndex                  = 0;
+			uint32_t activeDecodeTargetsBitmask = 0;
+			size_t bitIndex                     = 0;
 			for (uint32_t spatialLayer = 0; spatialLayer <= maxSpatialLayer; ++spatialLayer)
 			{
 				for (uint32_t temporalLayer = 0; temporalLayer <= availableTemporalLayers; ++temporalLayer)
@@ -526,17 +538,19 @@ namespace RTC
 					if (temporalLayer <= maxTemporalLayer)
 					{
 						// Set a 1.
-						this->activeDecodeTargetsBitmask |= (1 << bitIndex);
+						activeDecodeTargetsBitmask |= (1 << bitIndex);
 					}
 					else
 					{
 						// Set a 0.
-						this->activeDecodeTargetsBitmask &= ~(1 << bitIndex);
+						activeDecodeTargetsBitmask &= ~(1 << bitIndex);
 					}
 
 					bitIndex += 1;
 				}
 			}
+
+			this->activeDecodeTargetsBitmask = activeDecodeTargetsBitmask;
 
 			uint8_t len;
 			auto data = this->Serialize(len);
