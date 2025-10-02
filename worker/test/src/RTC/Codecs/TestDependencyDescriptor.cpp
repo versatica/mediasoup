@@ -244,10 +244,10 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 			0x41, 0x01, 0x0C, 0x13,
 			0xFC, 0x0B, 0x3C,
 		};
+		// clang-format on
 
 		Listener listener;
 
-		// clang-format on
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 		auto dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
@@ -270,7 +270,6 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
-		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 0);
 
 		uint8_t len;
 
@@ -283,7 +282,6 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
-		REQUIRE(dependencyDescriptor->activeDecodeTargetsBitmask == 0);
 
 		dependencyDescriptor->UpdateActiveDecodeTargets(0, 1);
 

@@ -167,20 +167,20 @@ namespace RTC
 					}
 					MS_DUMP_CLEAN(
 					  indentation + 3, "  <FrameDiffChains> %s </FrameDiffChains>", fdiffChains.c_str());
-					MS_DUMP_CLEAN(indentation + 3, "<FrameDependencyTemplate>");
+					MS_DUMP_CLEAN(indentation + 3, "</FrameDependencyTemplate>");
 				}
 				MS_DUMP_CLEAN(indentation + 2, "</TemplateLayers>");
-				MS_DUMP_CLEAN(indentation + 1, "  </TemplateDependencyStructure>");
+				MS_DUMP_CLEAN(indentation + 1, "</TemplateDependencyStructure>");
 			}
 
 			if (this->activeDecodeTargetsBitmask.has_value())
 			{
-				MS_DUMP_CLEAN(indentation, "<ActiveDecodeTargets>");
+				MS_DUMP_CLEAN(indentation, "  <ActiveDecodeTargets>");
 				MS_DUMP_CLEAN(
 				  indentation + 1,
-				  "%s",
+				  "  %s",
 				  std::bitset<32>(this->activeDecodeTargetsBitmask.value()).to_string().c_str());
-				MS_DUMP_CLEAN(indentation, "</ActiveDecodeTargets>");
+				MS_DUMP_CLEAN(indentation, "  </ActiveDecodeTargets>");
 			}
 			MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
 		}

@@ -744,7 +744,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor4, templateDependencyStructure);
 		REQUIRE(dependencyDescriptor4);
-		dependencyDescriptor4->Dump();
 		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000011);
 
 		// Process the NACK packet on stream2.
@@ -759,7 +758,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor5, templateDependencyStructure);
 		REQUIRE(dependencyDescriptor5);
-		dependencyDescriptor5->Dump();
 		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000001);
 	}
 

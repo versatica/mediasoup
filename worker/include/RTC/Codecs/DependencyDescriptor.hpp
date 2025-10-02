@@ -56,7 +56,7 @@ namespace RTC
 			// Given by argument.
 			TemplateDependencyStructure* templateDependencyStructure;
 			std::vector<uint8_t> decodeTargetProtectedBy;
-			std::optional<uint32_t> activeDecodeTargetsBitmask{ 0 };
+			std::optional<uint32_t> activeDecodeTargetsBitmask{ std::nullopt };
 			// Calculated.
 			uint8_t temporalLayer{ 0 };
 			uint8_t spatialLayer{ 0 };
