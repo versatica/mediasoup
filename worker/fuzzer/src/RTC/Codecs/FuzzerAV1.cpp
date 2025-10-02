@@ -14,8 +14,9 @@ void Fuzzer::RTC::Codecs::AV1::Fuzz(const uint8_t* data, size_t len)
 	Listener listener;
 	std::unique_ptr<::RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 
-	auto dependencyDescriptor = std::unique_ptr<::RTC::Codecs::DependencyDescriptor>(
-	  ::RTC::Codecs::DependencyDescriptor::Parse(data, len, &listener, templateDependencyStructure));
+	auto dependencyDescriptor =
+	  std::unique_ptr<::RTC::Codecs::DependencyDescriptor>(::RTC::Codecs::DependencyDescriptor::Parse(
+	    data, len, std::addressof(listener), templateDependencyStructure));
 
 	auto* descriptor = ::RTC::Codecs::AV1::Parse(dependencyDescriptor);
 

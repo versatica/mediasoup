@@ -88,7 +88,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 		auto dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), &listener, templateDependencyStructure));
+		    data, sizeof(data), std::addressof(listener), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->startOfFrame == true);
@@ -188,7 +188,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 		auto dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), &listener, templateDependencyStructure));
+		    data, sizeof(data), std::addressof(listener), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 303);
@@ -251,7 +251,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 		auto dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data1, sizeof(data1), &listener, templateDependencyStructure));
+		    data1, sizeof(data1), std::addressof(listener), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -266,7 +266,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		// clang-format on
 		dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data2, sizeof(data2), &listener, templateDependencyStructure));
+		    data2, sizeof(data2), std::addressof(listener), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -278,7 +278,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		// clang-format on
 		dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), &listener, templateDependencyStructure));
+		    data, sizeof(data), std::addressof(listener), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
@@ -290,7 +290,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		// clang-format on
 		dependencyDescriptor =
 		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), &listener, templateDependencyStructure));
+		    data, sizeof(data), std::addressof(listener), templateDependencyStructure));
 
 		REQUIRE(dependencyDescriptor);
 		REQUIRE(dependencyDescriptor->frameNumber == 232);
