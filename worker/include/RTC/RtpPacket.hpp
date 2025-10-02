@@ -649,7 +649,7 @@ namespace RTC
 	private:
 		void ParseExtensions();
 
-		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
+		/* Pure virtual methods inherited from RTC::Codecs::DependencyDescriptor::Listener. */
 	public:
 		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len);
 
