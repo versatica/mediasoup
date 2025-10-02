@@ -38,11 +38,8 @@ namespace RTC
 				void Dump(int indentation = 0) const override;
 				void Encode();
 				void Restore() const;
-
 				void UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer);
-
 				std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetEncoder() const
-
 				{
 					if (this->encoder.has_value())
 					{
