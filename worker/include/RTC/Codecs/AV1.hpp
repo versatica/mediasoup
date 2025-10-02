@@ -62,12 +62,9 @@ namespace RTC
 				uint16_t frameNumber{ 0 };
 				uint8_t spatialLayer{ 0 };
 				uint8_t temporalLayer{ 0 };
-
 				std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor{ nullptr };
-
 				// Parsed values.
 				bool isKeyFrame{ false };
-
 				std::optional<Encoder> encoder{ std::nullopt };
 			};
 
