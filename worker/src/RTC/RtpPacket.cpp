@@ -635,12 +635,7 @@ namespace RTC
 
 		std::memcpy(extenValue, data, len);
 
-		auto result = SetExtensionLength(this->dependencyDescriptorExtensionId, len);
-
-		if (!result)
-		{
-			MS_ERROR("Failed to set extension length");
-		}
+		SetExtensionLength(this->dependencyDescriptorExtensionId, len);
 	}
 
 	/**
