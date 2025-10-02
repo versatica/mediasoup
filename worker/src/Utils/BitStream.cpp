@@ -91,10 +91,9 @@ namespace Utils
 	}
 
 	/*
-	 * non-symmetric unsigned encoded integer with maximum
-	 * number of values n (i.e., output in range 0..n-1).
+	 * Calculate the number of bits needed to represent n.
 	 */
-	uint32_t BitStream::ReadNs(uint32_t n)
+	uint32_t BitStream::GetNumBits(uint32_t n) const
 	{
 		unsigned w = 0;
 		unsigned x = n;
@@ -105,6 +104,16 @@ namespace Utils
 			++w;
 		}
 
+		return w;
+	}
+
+	/*
+	 * non-symmetric unsigned encoded integer with maximum
+	 * number of values n (i.e., output in range 0..n-1).
+	 */
+	uint32_t BitStream::ReadNs(uint32_t n)
+	{
+		unsigned w = GetNumBits(n);
 		unsigned m = (1u << w) - n;
 		unsigned v = this->GetBits(w - 1);
 

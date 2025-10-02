@@ -9,7 +9,6 @@
 #include <limits>  // std::numeric_limits
 #include <string>
 #include <type_traits> // std::enable_if, std::is_same_v
-#include <vector>
 #ifdef _WIN32
 #include <ws2ipdef.h>
 // https://stackoverflow.com/a/24550632/2085408
@@ -430,6 +429,7 @@ namespace Utils
 		uint8_t GetBit();
 		uint32_t GetBits(size_t count);
 		uint32_t GetLeftBits() const;
+		uint32_t GetNumBits(uint32_t n) const;
 		uint32_t ReadNs(uint32_t n);
 		void SkipBits(size_t count);
 		void Write(uint32_t offset, uint32_t n, uint32_t v);
