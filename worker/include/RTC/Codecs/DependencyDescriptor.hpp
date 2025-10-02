@@ -18,6 +18,7 @@ namespace RTC
 				virtual void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) = 0;
 			};
 
+		public:
 			enum class DecodeTargetIndication : uint8_t
 			{
 				NOT_PRESENT = 0,
@@ -26,6 +27,7 @@ namespace RTC
 				REQUIRED    = 3
 			};
 
+		private:
 			static std::unordered_map<DecodeTargetIndication, std::string> DtiToString;
 
 			struct FameDependencyTemplate
@@ -37,6 +39,7 @@ namespace RTC
 				std::vector<uint8_t> frameDiffChains;
 			};
 
+		public:
 			struct TemplateDependencyStructure
 			{
 				uint32_t spatialLayers{ 0 };
