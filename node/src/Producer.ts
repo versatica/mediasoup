@@ -513,9 +513,7 @@ function producerTraceEventTypeFromFbs(
 	}
 }
 
-export function parseProducerDump(
-	data: FbsProducer.DumpResponse
-): ProducerDump {
+function parseProducerDump(data: FbsProducer.DumpResponse): ProducerDump {
 	return {
 		id: data.id()!,
 		kind: data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',

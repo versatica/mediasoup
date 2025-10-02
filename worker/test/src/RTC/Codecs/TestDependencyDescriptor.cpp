@@ -19,6 +19,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 	{
 		/**
 		 * Taken from https://issues.webrtc.org/issues/42225660.
+		 *
 		 * {
 		 *     "startOfFrame" : true,
 		 *     "endOfFrame" : false,

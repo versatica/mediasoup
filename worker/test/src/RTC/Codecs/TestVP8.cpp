@@ -12,7 +12,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 {
 	SECTION("parse payload descriptor")
 	{
-		/** VP8 Payload Descriptor
+		/**
+		 * VP8 Payload Descriptor
 		 *
 		 * 1 = X bit: Extended control bits present (I L T K)
 		 * 1 = R bit: Reserved for future use (Error should be zero)
@@ -49,13 +50,13 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(payloadDescriptor->start == 1);
 		REQUIRE(payloadDescriptor->partitionIndex == 0);
 
-		// optional field flags.
+		// Optional field flags.
 		REQUIRE(payloadDescriptor->i == 1);
 		REQUIRE(payloadDescriptor->l == 0);
 		REQUIRE(payloadDescriptor->t == 0);
 		REQUIRE(payloadDescriptor->k == 0);
 
-		// optional fields.
+		// Optional fields.
 		REQUIRE(payloadDescriptor->pictureId == 17);
 		REQUIRE(payloadDescriptor->tl0PictureIndex == 0);
 		REQUIRE(payloadDescriptor->tlIndex == 0);
@@ -83,7 +84,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 
 	SECTION("parse payload descriptor 2")
 	{
-		/** VP8 Payload Descriptor
+		/**
+		 * VP8 Payload Descriptor
 		 *
 		 * 1 = X bit: Extended control bits present (I L T K)
 		 * 0 = R bit: Reserved for future use
@@ -123,13 +125,13 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(payloadDescriptor->start == 0);
 		REQUIRE(payloadDescriptor->partitionIndex == 0);
 
-		// optional field flags.
+		// Optional field flags.
 		REQUIRE(payloadDescriptor->i == 0);
 		REQUIRE(payloadDescriptor->l == 0);
 		REQUIRE(payloadDescriptor->t == 1);
 		REQUIRE(payloadDescriptor->k == 1);
 
-		// optional fields.
+		// Optional fields.
 		REQUIRE(payloadDescriptor->pictureId == 0);
 		REQUIRE(payloadDescriptor->tl0PictureIndex == 0);
 		REQUIRE(payloadDescriptor->tlIndex == 3);
@@ -157,7 +159,8 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 
 	SECTION("parse payload descriptor, encode")
 	{
-		/** VP8 Payload Descriptor
+		/**
+		 * VP8 Payload Descriptor
 		 *
 		 * 1 = X bit: Extended control bits present (I L T K)
 		 * 1 = R bit: Reserved for future use (Error should be zero)
@@ -218,7 +221,9 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 
 	SECTION("parse payload descriptor. I flag set but no space for pictureId")
 	{
-		/** VP8 Payload Descriptor
+		/**
+		 * VP8 Payload Descriptor
+		 *
 		 * 1 = X bit: Extended control bits present (I L T K)
 		 * 1 = R bit: Reserved for future use (Error should be zero)
 		 * 0 = N bit: Reference frame
@@ -243,33 +248,110 @@ SCENARIO("parse VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE_FALSE(payloadDescriptor);
 	}
 
-	SECTION("parse payload descriptor. X flag is not set")
+	SECTION("parse payload descriptor. X flag is not set, no keyframe")
 	{
-		/** VP8 Payload Descriptor
+		/**
+		 * VP8 Payload Descriptor
 		 *
 		 * 0 = X bit: Extended control bits present (I L T K)
 		 * 1 = R bit: Reserved for future use (Error should be zero)
 		 * 0 = N bit: Reference frame
 		 * 1 = S bit: Start of VP8 partition
 		 * Part Id: 0
-		 * 1 = I bit: Picture ID byte present
-		 * 0 = L bit: TL0PICIDX byte not present
-		 * 0 = T bit: TID (temporal layer index) byte not present
-		 * 0 = K bit: TID/KEYIDX byte not present
-		 * 0000 = Reserved A: 0
-		 * 0001 0001 = Picture Id: 17
+		 * 000000 = Size0 | H | VER
+		 * 1 = P bit: Inverse Keyframe
 		 */
 
 		// clang-format off
 		uint8_t buffer[] =
 		{
-			0x50, 0x80, 0x11
+			0x50, 0x01
 		};
 		// clang-format on
 
 		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
 
-		REQUIRE_FALSE(payloadDescriptor);
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->extended == 0);
+		REQUIRE(payloadDescriptor->nonReference == 0);
+		REQUIRE(payloadDescriptor->start == 1);
+		REQUIRE(payloadDescriptor->partitionIndex == 0);
+
+		// Optional field flags.
+		REQUIRE(payloadDescriptor->i == 0);
+		REQUIRE(payloadDescriptor->l == 0);
+		REQUIRE(payloadDescriptor->t == 0);
+		REQUIRE(payloadDescriptor->k == 0);
+
+		// Optional fields.
+		REQUIRE(payloadDescriptor->pictureId == 0);
+		REQUIRE(payloadDescriptor->tl0PictureIndex == 0);
+		REQUIRE(payloadDescriptor->tlIndex == 0);
+		REQUIRE(payloadDescriptor->y == 0);
+		REQUIRE(payloadDescriptor->keyIndex == 0);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == false);
+		REQUIRE(payloadDescriptor->hasPictureId == false);
+		REQUIRE(payloadDescriptor->hasOneBytePictureId == false);
+		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
+		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
+		REQUIRE(payloadDescriptor->hasTlIndex == false);
+
+		delete payloadDescriptor;
+	}
+
+	SECTION("parse payload descriptor. X flag is not set, keyframe")
+	{
+		/**
+		 * VP8 Payload Descriptor
+		 *
+		 * 0 = X bit: Extended control bits present (I L T K)
+		 * 1 = R bit: Reserved for future use (Error should be zero)
+		 * 0 = N bit: Reference frame
+		 * 1 = S bit: Start of VP8 partition
+		 * Part Id: 0
+		 * 000000 = Size0 | H | VER
+		 * 0 = P bit: Inverse Keyframe
+		 */
+
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0x50, 0x00
+		};
+		// clang-format on
+
+		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+
+		REQUIRE(payloadDescriptor);
+
+		REQUIRE(payloadDescriptor->extended == 0);
+		REQUIRE(payloadDescriptor->nonReference == 0);
+		REQUIRE(payloadDescriptor->start == 1);
+		REQUIRE(payloadDescriptor->partitionIndex == 0);
+
+		// Optional field flags.
+		REQUIRE(payloadDescriptor->i == 0);
+		REQUIRE(payloadDescriptor->l == 0);
+		REQUIRE(payloadDescriptor->t == 0);
+		REQUIRE(payloadDescriptor->k == 0);
+
+		// Optional fields.
+		REQUIRE(payloadDescriptor->pictureId == 0);
+		REQUIRE(payloadDescriptor->tl0PictureIndex == 0);
+		REQUIRE(payloadDescriptor->tlIndex == 0);
+		REQUIRE(payloadDescriptor->y == 0);
+		REQUIRE(payloadDescriptor->keyIndex == 0);
+
+		REQUIRE(payloadDescriptor->isKeyFrame == true);
+		REQUIRE(payloadDescriptor->hasPictureId == false);
+		REQUIRE(payloadDescriptor->hasOneBytePictureId == false);
+		REQUIRE(payloadDescriptor->hasTwoBytesPictureId == false);
+		REQUIRE(payloadDescriptor->hasTl0PictureIndex == false);
+		REQUIRE(payloadDescriptor->hasTlIndex == false);
+
+		delete payloadDescriptor;
 	}
 }
 
@@ -458,7 +540,8 @@ SCENARIO("process VP8 payload descriptor", "[codecs][vp8]")
 
 SCENARIO("encode VP8 payload descriptor", "[codecs][vp8]")
 {
-	/** VP8 Payload Descriptor
+	/**
+	 * VP8 Payload Descriptor
 	 *
 	 * 1 = X bit: Extended control bits present (I L T K)
 	 * 0 = R bit: Reserved for future use

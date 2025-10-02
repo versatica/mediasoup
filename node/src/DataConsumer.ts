@@ -584,9 +584,7 @@ export function dataConsumerTypeToFbs(
 	}
 }
 
-export function dataConsumerTypeFromFbs(
-	type: FbsDataProducer.Type
-): DataConsumerType {
+function dataConsumerTypeFromFbs(type: FbsDataProducer.Type): DataConsumerType {
 	switch (type) {
 		case FbsDataProducer.Type.SCTP: {
 			return 'sctp';

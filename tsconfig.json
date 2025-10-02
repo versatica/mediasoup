@@ -1,7 +1,7 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"lib": ["es2024", "dom"],
+		"lib": ["es2024"],
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"outDir": "node/lib",

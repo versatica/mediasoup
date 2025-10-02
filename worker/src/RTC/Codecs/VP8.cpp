@@ -32,13 +32,7 @@ namespace RTC
 			payloadDescriptor->start          = (byte >> 4) & 0x01;
 			payloadDescriptor->partitionIndex = byte & 0x07;
 
-			if (!payloadDescriptor->extended)
-			{
-				MS_WARN_DEV("ignoring invalid payload (1)");
-
-				return nullptr;
-			}
-			else
+			if (payloadDescriptor->extended)
 			{
 				if (len < ++offset + 1)
 				{
@@ -123,7 +117,7 @@ namespace RTC
 				(len >= ++offset + 1) &&
 				payloadDescriptor->start &&
 				payloadDescriptor->partitionIndex == 0 &&
-				(!(data[offset] & 0x01))
+				(!(data[offset] & 0x01)) // Inverse Keyframe bit.
 			)
 			// clang-format on
 			{

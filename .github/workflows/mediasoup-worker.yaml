@@ -104,16 +104,6 @@ jobs:
             run-test-asan-address: true
             run-test-asan-undefined: true
             run-test-asan-thread: true
-          - os: macos-13
-            cc: gcc
-            cxx: g++
-            pip-break-system-packages: true
-            run-lint: true
-            run-test: true
-            # Address Sanitizer does not work on MacOS.
-            run-test-asan-address: false
-            run-test-asan-undefined: false
-            run-test-asan-thread: false
           - os: macos-14
             cc: clang
             cxx: clang++
@@ -156,7 +146,7 @@ jobs:
             run-test-asan-thread: false
         # A single Node.js version should be fine for C++.
         node:
-          - 22
+          - 24
         build-type:
           - Release
           - Debug

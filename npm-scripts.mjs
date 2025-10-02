@@ -25,6 +25,7 @@ const GH_REPO = 'mediasoup';
 const ESLINT_PATHS = [
 	'eslint.config.mjs',
 	'jest.config.mjs',
+	'knip.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
 	'worker/scripts',
@@ -45,6 +46,7 @@ const PRETTIER_PATHS = [
 	'doc',
 	'eslint.config.mjs',
 	'jest.config.mjs',
+	'knip.config.mjs',
 	'node/src',
 	'npm-scripts.mjs',
 	'package.json',
@@ -186,9 +188,7 @@ async function run() {
 		}
 
 		case 'format:worker': {
-			installInvoke();
-
-			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
+			formatWorker();
 
 			break;
 		}
@@ -218,8 +218,7 @@ async function run() {
 		}
 
 		case 'coverage:node': {
-			executeCmd(`jest --coverage ${taskArgs}`);
-			executeCmd('open-cli coverage/lcov-report/index.html');
+			coverageNode();
 
 			break;
 		}
@@ -358,6 +357,8 @@ function lintNode() {
 	);
 
 	executeCmd(`prettier --check ${PRETTIER_PATHS}`);
+
+	executeCmd('knip --config knip.config.mjs --treat-config-hints-as-errors');
 }
 
 function lintWorker() {
@@ -372,6 +373,14 @@ function formatNode() {
 	logInfo('formatNode()');
 
 	executeCmd(`prettier --write ${PRETTIER_PATHS}`);
+}
+
+function formatWorker() {
+	logInfo('formatWorker()');
+
+	installInvoke();
+
+	executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 }
 
 function flatcNode() {
@@ -445,6 +454,13 @@ function testWorker() {
 	installInvoke();
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
+}
+
+function coverageNode() {
+	logInfo('coverageNode()');
+
+	executeCmd(`jest --coverage ${taskArgs}`);
+	executeCmd('open-cli coverage/lcov-report/index.html');
 }
 
 function installNodeDeps() {
