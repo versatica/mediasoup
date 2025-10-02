@@ -518,6 +518,7 @@ namespace RTC
 
 			uint32_t activeDecodeTargetsBitmask = 0;
 			size_t bitIndex                     = 0;
+
 			for (uint32_t spatialLayer = 0; spatialLayer <= maxSpatialLayer; ++spatialLayer)
 			{
 				for (uint32_t temporalLayer = 0; temporalLayer <= availableTemporalLayers; ++temporalLayer)
