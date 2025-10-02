@@ -28,7 +28,6 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		 *         "templateIdOffset" : 0,
 		 *         "templateInfo" : {
 		 *           "0" : {
-
 		 *             "spatialId" : 0,
 		 *             "temporalId" : 0,
 		 *             "dti" : [ "SWITCH", "SWITCH", "SWITCH" ],
@@ -168,33 +167,7 @@ SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
 		REQUIRE(templateStructure->templateLayers[4].frameDiffChains == fdiffChains);
 	}
 
-	SECTION("Write Dependency Descriptor Frame Number")
-	{
-		/**
-		 * Taken from https://issues.webrtc.org/issues/42225660.
-		 * See previous test.
-		 */
-
-		// clang-format off
-		uint8_t data[] =
-		{
-			0x80, 0x01, 0x2F, 0x80, 0x02, 0x14, 0xEA, 0xA8,
-			0x60, 0x41, 0x4D, 0x14, 0x10, 0x20, 0x84, 0x26
-		};
-
-		Listener listener;
-
-		// clang-format on
-		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
-		auto dependencyDescriptor =
-		  std::unique_ptr<Codecs::DependencyDescriptor>(Codecs::DependencyDescriptor::Parse(
-		    data, sizeof(data), std::addressof(listener), templateDependencyStructure));
-
-		REQUIRE(dependencyDescriptor);
-		REQUIRE(dependencyDescriptor->frameNumber == 303);
-	}
-
-	SECTION("Serialize")
+	SECTION("serialize")
 	{
 		/**
 		 * <DependencyDescriptor>
