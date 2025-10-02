@@ -319,10 +319,10 @@ namespace RTC
 
 			auto templateCount = this->templateDependencyStructure->templateLayers.size();
 
-			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			for (size_t templateIndex = 0; templateIndex < templateCount; ++templateIndex)
 			{
 				for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
-				     dtIndex++)
+				     ++dtIndex)
 				{
 					if (this->bitStream.GetLeftBits() < 2)
 					{
@@ -343,7 +343,7 @@ namespace RTC
 
 			auto templateCount = this->templateDependencyStructure->templateLayers.size();
 
-			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			for (size_t templateIndex = 0; templateIndex < templateCount; ++templateIndex)
 			{
 				if (this->bitStream.GetLeftBits() < 1)
 				{
@@ -384,7 +384,7 @@ namespace RTC
 			}
 
 			for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
-			     dtIndex++)
+			     ++dtIndex)
 			{
 				uint8_t chain = this->bitStream.ReadNs(chainCount);
 				this->decodeTargetProtectedBy.push_back(chain);
@@ -392,9 +392,9 @@ namespace RTC
 
 			auto templateCount = this->templateDependencyStructure->templateLayers.size();
 
-			for (size_t templateIndex = 0; templateIndex < templateCount; templateIndex++)
+			for (size_t templateIndex = 0; templateIndex < templateCount; ++templateIndex)
 			{
-				for (uint32_t chainIndex = 0; chainIndex < chainCount; chainIndex++)
+				for (uint32_t chainIndex = 0; chainIndex < chainCount; ++chainIndex)
 				{
 					if (this->bitStream.GetLeftBits() < 4)
 					{
