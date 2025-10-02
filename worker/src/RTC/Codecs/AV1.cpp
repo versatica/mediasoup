@@ -71,15 +71,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<AV1::PayloadDescriptor>");
-			MS_DUMP_CLEAN(
-			  indentation,
-			  "  startOfFrame:%" PRIu8 "|endOfFrame:%" PRIu8,
-			  this->startOfFrame,
-			  this->endOfFrame);
-			MS_DUMP_CLEAN(indentation, "  spatialLayer: %" PRIu8, this->spatialLayer);
-			MS_DUMP_CLEAN(indentation, "  frameNumber: %" PRIu16, this->frameNumber);
-			MS_DUMP_CLEAN(indentation, "  temporalLayer: %" PRIu8, this->temporalLayer);
-			MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			this->dependencyDescriptor->Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</AV1::PayloadDescriptor>");
 		}
 

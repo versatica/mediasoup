@@ -220,7 +220,7 @@ namespace RTC
 			virtual ~PayloadDescriptorHandler() = default;
 
 		public:
-			virtual void Dump() const = 0;
+			virtual void Dump(int indentation = 0) const = 0;
 			virtual bool Process(
 			  RTC::Codecs::EncodingContext* context, RTC::RtpPacket* packet, bool& marker) = 0;
 			virtual std::unique_ptr<PayloadDescriptor::Encoder> GetEncoder() const         = 0;

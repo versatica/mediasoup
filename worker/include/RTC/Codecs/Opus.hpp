@@ -60,9 +60,9 @@ namespace RTC
 				~PayloadDescriptorHandler() override = default;
 
 			public:
-				void Dump() const override
+				void Dump(int indentation = 0) const override
 				{
-					this->payloadDescriptor->Dump();
+					this->payloadDescriptor->Dump(indentation);
 				}
 				bool Process(
 				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
