@@ -1360,9 +1360,9 @@ namespace RTC
 					// clang-format off
 					if (
 					  (packet->HasOneByteExtensions() &&
-					   extenLen + 5 <= RTC::Consts::OneByteRtpExtensionMaxLength) ||
+					   	extenLen + 5 <= RTC::Consts::OneByteRtpExtensionMaxLength) ||
 					  (packet->HasTwoBytesExtensions() &&
-					   extenLen + 5 <= RTC::Consts::TwoBytesRtpExtensionMaxLength)
+					   	extenLen + 5 <= RTC::Consts::TwoBytesRtpExtensionMaxLength)
 					)
 					// clang-format on
 					{
