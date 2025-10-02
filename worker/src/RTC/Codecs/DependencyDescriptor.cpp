@@ -1,5 +1,5 @@
 #define MS_CLASS "RTC::Codecs::DependencyDescriptor"
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/Codecs/DependencyDescriptor.hpp"
 #include "Logger.hpp"
@@ -99,11 +99,6 @@ namespace RTC
 		void DependencyDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
-
-			// if (!this->isKeyFrame)
-			// {
-			// 	return;
-			// }
 
 			MS_DUMP_CLEAN(indentation, "<DependencyDescriptor>");
 			MS_DUMP_CLEAN(indentation, "  startOfFrame: %s", this->startOfFrame ? "true" : "false");
