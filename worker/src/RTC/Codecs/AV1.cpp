@@ -82,6 +82,8 @@ namespace RTC
 			if (!this->encoder.has_value())
 			{
 				MS_WARN_DEV("there is no encoder present");
+
+				return;
 			}
 
 			UpdateActiveDecodeTargets(
