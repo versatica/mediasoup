@@ -316,6 +316,21 @@ namespace RTC
 				  maxDelay);
 			}
 		}
+		if (this->dependencyDescriptorExtensionId != 0u)
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+
+			if (extenValue)
+			{
+				MS_DUMP_CLEAN(
+				  indentation,
+				  "  dependencyDescriptor: extId:%" PRIu8 ", length:%" PRIu8,
+				  this->dependencyDescriptorExtensionId,
+				  extenLen);
+			}
+		}
+
 		MS_DUMP_CLEAN(indentation, "  csrc count: %" PRIu8, this->header->csrcCount);
 		MS_DUMP_CLEAN(indentation, "  marker: %s", HasMarker() ? "true" : "false");
 		MS_DUMP_CLEAN(indentation, "  payload type: %" PRIu8, GetPayloadType());
