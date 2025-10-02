@@ -439,7 +439,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_ASSERT(!this->isKeyFrame, "Serialization of key frames is not supported");
+			MS_ASSERT(!this->isKeyFrame, "serialization of key frames is not supported");
 
 			this->bitStream.Reset();
 			WriteMandatoryDescriptorFields();
@@ -508,12 +508,6 @@ namespace RTC
 
 			auto availableSpatialLayers  = this->templateDependencyStructure->spatialLayers;
 			auto availableTemporalLayers = this->templateDependencyStructure->temporalLayers;
-
-			MS_DUMP(
-			  "availableSpatialLayers: %d, maxSpatialLayer: %d", availableSpatialLayers, maxSpatialLayer);
-			MS_DUMP(
-			  "availableTemporalLayers: %d, maxTemporalLayer: %d", availableTemporalLayers, maxTemporalLayer);
-			;
 
 			MS_ASSERT(
 			  maxSpatialLayer <= availableSpatialLayers,
