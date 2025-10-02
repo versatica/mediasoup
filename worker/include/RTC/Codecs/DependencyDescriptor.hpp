@@ -30,6 +30,7 @@ namespace RTC
 		private:
 			static std::unordered_map<DecodeTargetIndication, std::string> DtiToString;
 
+		private:
 			struct FameDependencyTemplate
 			{
 				uint32_t spatialLayer;
