@@ -26,7 +26,6 @@ namespace RTC
 				REQUIRED    = 3
 			};
 
-			// clang-format off
 			static std::unordered_map<DecodeTargetIndication, std::string> DtiToString;
 
 			struct FameDependencyTemplate
@@ -47,7 +46,7 @@ namespace RTC
 				std::vector<FameDependencyTemplate> templateLayers;
 			};
 
-			public:
+		public:
 			bool startOfFrame{ false };
 			bool endOfFrame{ false };
 			uint8_t frameDependencyTemplateId{ 0 };
@@ -63,10 +62,10 @@ namespace RTC
 			// Whether the frame is a key frame. Set to true if the descriptor contains template layers.
 			bool isKeyFrame{ false };
 
-			private:
+		private:
 			DependencyDescriptor::Listener* listener;
 
-			public:
+		public:
 			static DependencyDescriptor* Parse(
 			  const uint8_t* data,
 			  size_t len,
@@ -74,7 +73,10 @@ namespace RTC
 			  std::unique_ptr<TemplateDependencyStructure>& templateDependencyStructure);
 
 			DependencyDescriptor(
-			  const uint8_t* data, size_t len, DependencyDescriptor::Listener* listener, TemplateDependencyStructure* templateDependencyStructure);
+			  const uint8_t* data,
+			  size_t len,
+			  DependencyDescriptor::Listener* listener,
+			  TemplateDependencyStructure* templateDependencyStructure);
 
 			void Dump(int indentation = 0) const;
 			const uint8_t* Serialize(uint8_t& len);
