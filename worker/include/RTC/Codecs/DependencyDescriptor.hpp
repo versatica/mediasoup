@@ -67,7 +67,7 @@ namespace RTC
 			bool isKeyFrame{ false };
 
 		private:
-			DependencyDescriptor::Listener* listener;
+			DependencyDescriptor::Listener* listener{ nullptr };
 
 		public:
 			static DependencyDescriptor* Parse(
