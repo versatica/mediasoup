@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- AV1: Add support for DD extension header forwarding ([#1610](https://github.com/versatica/mediasoup/pull/1610))
+
 ### 3.19.3
 
 - CI: Remove `macos-13` hosts.
