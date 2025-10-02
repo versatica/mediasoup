@@ -628,7 +628,7 @@ namespace RTC
 
 		if (!extenValue)
 		{
-			MS_ERROR("Dependency description not found");
+			MS_WARN_TAG(rtp, "dependency description not found");
 
 			return;
 		}
