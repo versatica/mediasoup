@@ -374,16 +374,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint8_t numBits =
-			  this->bitStream.GetNumBits(this->templateDependencyStructure->decodeTargetCount + 1);
+			auto chainCount =
+			  this->bitStream.ReadNs(this->templateDependencyStructure->decodeTargetCount + 1);
 
-			if (this->bitStream.GetLeftBits() < numBits)
+			if (!chainCount.has_value())
 			{
 				return false;
 			}
-
-			auto chainCount =
-			  this->bitStream.ReadNs(this->templateDependencyStructure->decodeTargetCount + 1);
 
 			if (chainCount == 0)
 			{
@@ -393,15 +390,14 @@ namespace RTC
 			for (uint8_t dtIndex = 0; dtIndex < this->templateDependencyStructure->decodeTargetCount;
 			     ++dtIndex)
 			{
-				numBits = this->bitStream.ReadNs(chainCount);
+				auto chain = this->bitStream.ReadNs(chainCount.value());
 
-				if (this->bitStream.GetLeftBits() < numBits)
+				if (!chain.has_value())
 				{
 					return false;
 				}
 
-				uint8_t chain = this->bitStream.ReadNs(chainCount);
-				this->decodeTargetProtectedBy.push_back(chain);
+				this->decodeTargetProtectedBy.push_back(chain.value());
 			}
 
 			auto templateCount = this->templateDependencyStructure->templateLayers.size();

@@ -91,9 +91,11 @@ namespace Utils
 	}
 
 	/*
-	 * Calculate the number of bits needed to represent n.
+	 * non-symmetric unsigned encoded integer with maximum
+	 * number of values n (i.e., output in range 0..n-1).
+	 * Returns std::nullopt if there are not enough bits left.
 	 */
-	uint32_t BitStream::GetNumBits(uint32_t n) const
+	std::optional<uint32_t> BitStream::ReadNs(uint32_t n)
 	{
 		unsigned w = 0;
 		unsigned x = n;
@@ -104,22 +106,22 @@ namespace Utils
 			++w;
 		}
 
-		return w;
-	}
+		if (this->GetLeftBits() < w - 1)
+		{
+			return std::nullopt;
+		}
 
-	/*
-	 * non-symmetric unsigned encoded integer with maximum
-	 * number of values n (i.e., output in range 0..n-1).
-	 */
-	uint32_t BitStream::ReadNs(uint32_t n)
-	{
-		unsigned w = GetNumBits(n);
-		unsigned m = (1u << w) - n;
 		unsigned v = this->GetBits(w - 1);
+		unsigned m = (1u << w) - n;
 
 		if (v < m)
 		{
 			return v;
+		}
+
+		if (this->GetLeftBits() < 1)
+		{
+			return std::nullopt;
 		}
 
 		unsigned extra_bit = this->GetBit();

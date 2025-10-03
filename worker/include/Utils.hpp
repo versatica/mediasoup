@@ -430,7 +430,7 @@ namespace Utils
 		uint32_t GetBits(size_t count);
 		uint32_t GetLeftBits() const;
 		uint32_t GetNumBits(uint32_t n) const;
-		uint32_t ReadNs(uint32_t n);
+		std::optional<uint32_t> ReadNs(uint32_t n);
 		void SkipBits(size_t count);
 		void Write(uint32_t offset, uint32_t n, uint32_t v);
 		void PutBit(uint8_t bit);
