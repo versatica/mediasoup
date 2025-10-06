@@ -28,16 +28,6 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID;
 			}
 
-			case FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarkingDraft07:
-			{
-				return RtpHeaderExtensionUri::Type::FRAME_MARKING_07;
-			}
-
-			case FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarking:
-			{
-				return RtpHeaderExtensionUri::Type::FRAME_MARKING;
-			}
-
 			case FBS::RtpParameters::RtpHeaderExtensionUri::AudioLevel:
 			{
 				return RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL;
@@ -46,6 +36,11 @@ namespace RTC
 			case FBS::RtpParameters::RtpHeaderExtensionUri::VideoOrientation:
 			{
 				return RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION;
+			}
+
+			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
+			{
+				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
 			}
 
 			case FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset:
@@ -67,6 +62,13 @@ namespace RTC
 			{
 				return RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME;
 			}
+
+			case FBS::RtpParameters::RtpHeaderExtensionUri::DependencyDescriptor:
+			{
+				return RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -100,16 +102,6 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::TransportWideCcDraft01;
 			}
 
-			case RtpHeaderExtensionUri::Type::FRAME_MARKING_07:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarkingDraft07;
-			}
-
-			case RtpHeaderExtensionUri::Type::FRAME_MARKING:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::FrameMarking;
-			}
-
 			case RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::AudioLevel;
@@ -118,6 +110,11 @@ namespace RTC
 			case RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::VideoOrientation;
+			}
+
+			case RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
+			{
+				return FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay;
 			}
 
 			case RtpHeaderExtensionUri::Type::TOFFSET:
@@ -129,6 +126,13 @@ namespace RTC
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime;
 			}
+
+			case RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR:
+			{
+				return FBS::RtpParameters::RtpHeaderExtensionUri::DependencyDescriptor;
+			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 

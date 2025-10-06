@@ -85,6 +85,11 @@ namespace RTC
 				this->rtpHeaderExtensionIds.videoOrientation = exten.id;
 			}
 
+			if (this->rtpHeaderExtensionIds.playoutDelay == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			{
+				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
+			}
+
 			if (this->rtpHeaderExtensionIds.absSendTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME)
 			{
 				this->rtpHeaderExtensionIds.absSendTime = exten.id;

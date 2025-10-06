@@ -1,11 +1,15 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { ConsumerEvents, DataConsumerEvents } from '../types';
+import type {
+	ConsumerEvents,
+	ProducerObserverEvents,
+	DataConsumerEvents,
+} from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	audioProducerOptions: mediasoup.types.ProducerOptions;
 	videoProducerOptions: mediasoup.types.ProducerOptions;
 	dataProducerOptions: mediasoup.types.DataProducerOptions;
@@ -24,7 +28,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -258,6 +262,12 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
+			encrypt: false,
+			parameters: {},
+		},
 	]);
 	expect(pipeConsumer.type).toBe('pipe');
 	expect(pipeConsumer.paused).toBe(false);
@@ -297,6 +307,12 @@ test('router.pipeToRouter() succeeds with audio', async () => {
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
 			encrypt: false,
 			parameters: {},
 		},
@@ -343,19 +359,13 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		},
 	]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual([
-		// NOTE: Remove this once framemarking draft becomes RFC.
-		{
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			id: 6,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
+		// TODO: Enable when DD is sendrecv.
+		// {
+		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+		// 	id: 8,
+		// 	encrypt: false,
+		// 	parameters: {},
+		// },
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 11,
@@ -371,6 +381,12 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
 			encrypt: false,
 			parameters: {},
 		},
@@ -404,19 +420,13 @@ test('router.pipeToRouter() succeeds with video', async () => {
 		},
 	]);
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual([
-		// NOTE: Remove this once framemarking draft becomes RFC.
-		{
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			id: 6,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
+		// TODO: Enable when DD is sendrecv.
+		// {
+		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+		// 	id: 8,
+		// 	encrypt: false,
+		// 	parameters: {},
+		// },
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 11,
@@ -435,12 +445,18 @@ test('router.pipeToRouter() succeeds with video', async () => {
 			encrypt: false,
 			parameters: {},
 		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
+			encrypt: false,
+			parameters: {},
+		},
 	]);
 	expect(pipeProducer.paused).toBe(true);
 }, 2000);
 
 test('router.createPipeTransport() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router1!.createPipeTransport({})).rejects.toThrow(TypeError);
 
 	await expect(
@@ -458,7 +474,7 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router1!.createPipeTransport({ listenIp: ['127.0.0.1'] })
 	).rejects.toThrow(TypeError);
 
@@ -471,7 +487,7 @@ test('router.createPipeTransport() with wrong arguments rejects with TypeError',
 	await expect(
 		ctx.router1!.createPipeTransport({
 			listenInfo: { protocol: 'udp', ip: '127.0.0.1' },
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
@@ -486,6 +502,8 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 		},
 		enableRtx: true,
 	});
+
+	expect(pipeTransport.type).toBe('pipe');
 
 	const pipeConsumer = await pipeTransport.consume({
 		producerId: ctx.videoProducer!.id,
@@ -517,19 +535,13 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 		},
 	]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual([
-		// NOTE: Remove this once framemarking draft becomes RFC.
-		{
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			id: 6,
-			encrypt: false,
-			parameters: {},
-		},
-		{
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			id: 7,
-			encrypt: false,
-			parameters: {},
-		},
+		// TODO: Enable when DD is sendrecv.
+		// {
+		// 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+		// 	id: 8,
+		// 	encrypt: false,
+		// 	parameters: {},
+		// },
 		{
 			uri: 'urn:3gpp:video-orientation',
 			id: 11,
@@ -545,6 +557,12 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 		{
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			id: 13,
+			encrypt: false,
+			parameters: {},
+		},
+		{
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			id: 14,
 			encrypt: false,
 			parameters: {},
 		},
@@ -615,7 +633,7 @@ test('pipeTransport.connect() with srtpParameters fails if enableSrtp is unset',
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: 'invalid',
 		})
 	).rejects.toThrow(TypeError);
@@ -645,7 +663,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: 1,
 		})
 	).rejects.toThrow(TypeError);
@@ -655,7 +673,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: {
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -668,7 +686,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 		pipeTransport.connect({
 			ip: '127.0.0.2',
 			port: 9999,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
 			},
@@ -681,7 +699,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			ip: '127.0.0.2',
 			port: 9999,
 			srtpParameters: {
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				cryptoSuite: 'FOO',
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -695,7 +713,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			ip: '127.0.0.2',
 			port: 9999,
 			srtpParameters: {
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				cryptoSuite: 123,
 				keyBase64:
 					'YTdjcDBvY2JoMGY5YXNlNDc0eDJsdGgwaWRvNnJsamRrdG16aWVpZHphdHo=',
@@ -710,7 +728,7 @@ test('pipeTransport.connect() with invalid srtpParameters fails', async () => {
 			port: 9999,
 			srtpParameters: {
 				cryptoSuite: 'AEAD_AES_256_GCM',
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				keyBase64: [],
 			},
 		})
@@ -731,13 +749,13 @@ test('router.createPipeTransport() with fixed port succeeds', async () => {
 }, 2000);
 
 test('transport.consume() for a pipe Producer succeeds', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
-		producerId: ctx.videoProducer!.id,
+		producerId: pipeProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
@@ -783,9 +801,9 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 		},
 	]);
 	expect(videoConsumer.rtpParameters.encodings?.length).toBe(1);
-	expect(typeof videoConsumer.rtpParameters.encodings?.[0].ssrc).toBe('number');
-	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx).toBe('object');
-	expect(typeof videoConsumer.rtpParameters.encodings?.[0].rtx?.ssrc).toBe(
+	expect(typeof videoConsumer.rtpParameters.encodings![0]!.ssrc).toBe('number');
+	expect(typeof videoConsumer.rtpParameters.encodings![0]!.rtx).toBe('object');
+	expect(typeof videoConsumer.rtpParameters.encodings![0]!.rtx?.ssrc).toBe(
 		'number'
 	);
 	expect(videoConsumer.type).toBe('simulcast');
@@ -801,13 +819,19 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 
 test('producer.pause() and producer.resume() are transmitted to pipe Consumer', async () => {
 	await ctx.videoProducer!.pause();
-	await ctx.router1!.pipeToRouter({
+
+	// We need to obtain the pipeProducer to await for its 'puase' and 'resume'
+	// events, otherwise we may get errors like this:
+	// InvalidStateError: Channel closed, pending request aborted [method:PRODUCER_PAUSE, id:8]
+	// See related fixed issue:
+	// https://github.com/versatica/mediasoup/issues/1374
+	const { pipeProducer: pipeVideoProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
-		producerId: ctx.videoProducer!.id,
+		producerId: pipeVideoProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
@@ -821,34 +845,44 @@ test('producer.pause() and producer.resume() are transmitted to pipe Consumer', 
 		videoConsumer,
 		'producerresume'
 	);
+	const promise2 = enhancedOnce<ProducerObserverEvents>(
+		pipeVideoProducer!.observer,
+		'resume'
+	);
 
 	await ctx.videoProducer!.resume();
-	await promise1;
+	await Promise.all([promise1, promise2]);
 
 	expect(videoConsumer.producerPaused).toBe(false);
 	expect(videoConsumer.paused).toBe(false);
+	expect(pipeVideoProducer!.paused).toBe(false);
 
-	const promise2 = enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
+	const promise3 = enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
+	const promise4 = enhancedOnce<ProducerObserverEvents>(
+		pipeVideoProducer!.observer,
+		'pause'
+	);
 
 	await ctx.videoProducer!.pause();
-	await promise2;
+	await Promise.all([promise3, promise4]);
 
 	expect(videoConsumer.producerPaused).toBe(true);
 	expect(videoConsumer.paused).toBe(false);
+	expect(pipeVideoProducer!.paused).toBe(true);
 }, 2000);
 
 test('producer.close() is transmitted to pipe Consumer', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeProducer } = await ctx.router1!.pipeToRouter({
 		producerId: ctx.videoProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const videoConsumer = await ctx.webRtcTransport2!.consume({
-		producerId: ctx.videoProducer!.id,
+		producerId: pipeProducer!.id,
 		rtpCapabilities: ctx.consumerDeviceCapabilities,
 	});
 
-	await ctx.videoProducer!.close();
+	ctx.videoProducer!.close();
 
 	expect(ctx.videoProducer!.closed).toBe(true);
 
@@ -859,7 +893,7 @@ test('producer.close() is transmitted to pipe Consumer', async () => {
 	expect(videoConsumer.closed).toBe(true);
 }, 2000);
 
-test('router.pipeToRouter() fails if both Routers belong to the same Worker', async () => {
+test('router.pipeToRouter() with keepId: true fails if both Routers belong to the same Worker', async () => {
 	const router1bis = await ctx.worker1!.createRouter({
 		mediaCodecs: ctx.mediaCodecs,
 	});
@@ -868,8 +902,24 @@ test('router.pipeToRouter() fails if both Routers belong to the same Worker', as
 		ctx.router1!.pipeToRouter({
 			producerId: ctx.videoProducer!.id,
 			router: router1bis,
+			// Default value is true.
+			keepId: true,
 		})
 	).rejects.toThrow(Error);
+}, 2000);
+
+test('router.pipeToRouter() with keepId: false does not fail if both Routers belong to the same Worker', async () => {
+	const router1bis = await ctx.worker1!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	const { pipeProducer } = await ctx.router1!.pipeToRouter({
+		producerId: ctx.videoProducer!.id,
+		router: router1bis,
+		keepId: false,
+	});
+
+	expect(pipeProducer!.id).not.toBe(ctx.videoProducer!.id);
 }, 2000);
 
 test('router.pipeToRouter() succeeds with data', async () => {
@@ -920,13 +970,13 @@ test('router.pipeToRouter() succeeds with data', async () => {
 }, 2000);
 
 test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeDataProducer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: ctx.dataProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: pipeDataProducer!.id,
 	});
 
 	expect(typeof dataConsumer.id).toBe('string');
@@ -942,16 +992,16 @@ test('transport.dataConsume() for a pipe DataProducer succeeds', async () => {
 }, 2000);
 
 test('dataProducer.close() is transmitted to pipe DataConsumer', async () => {
-	await ctx.router1!.pipeToRouter({
+	const { pipeDataProducer } = await ctx.router1!.pipeToRouter({
 		dataProducerId: ctx.dataProducer!.id,
 		router: ctx.router2!,
 	});
 
 	const dataConsumer = await ctx.webRtcTransport2!.consumeData({
-		dataProducerId: ctx.dataProducer!.id,
+		dataProducerId: pipeDataProducer!.id,
 	});
 
-	await ctx.dataProducer!.close();
+	ctx.dataProducer!.close();
 
 	expect(ctx.dataProducer!.closed).toBe(true);
 
@@ -1022,7 +1072,7 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	const pipeTransportsB = new Map();
 
 	routerA.observer.on('newtransport', transport => {
-		if (transport.constructor.name !== 'PipeTransport') {
+		if (transport.constructor.name !== 'PipeTransportImpl') {
 			return;
 		}
 
@@ -1031,7 +1081,7 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 	});
 
 	routerB.observer.on('newtransport', transport => {
-		if (transport.constructor.name !== 'PipeTransport') {
+		if (transport.constructor.name !== 'PipeTransportImpl') {
 			return;
 		}
 
@@ -1066,4 +1116,30 @@ test('router.pipeToRouter() called in two Routers passing one to each other as a
 
 	expect(pipeTransportsA.size).toBe(0);
 	expect(pipeTransportsB.size).toBe(0);
+}, 2000);
+
+test('router.pipeToRouter() with neither producerId nor dataProducerId fails', async () => {
+	const router1bis = await ctx.worker1!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			router: router1bis,
+		})
+	).rejects.toThrow(Error);
+}, 2000);
+
+test('router.pipeToRouter() with both producerId and dataProducerId fails', async () => {
+	const router1bis = await ctx.worker1!.createRouter({
+		mediaCodecs: ctx.mediaCodecs,
+	});
+
+	await expect(
+		ctx.router1!.pipeToRouter({
+			producerId: '1234',
+			dataProducerId: '5678',
+			router: router1bis,
+		})
+	).rejects.toThrow(Error);
 }, 2000);

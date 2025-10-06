@@ -1,12 +1,16 @@
 [package]
 name = "mediasoup-sys"
-version = "0.9.0"
+version = "0.10.0"
 description = "FFI bindings to C++ libmediasoup-worker"
-authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
+authors = [
+    "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
+    "José Luis Millán <jmillan@aliax.net>",
+    "Iñaki Baz Castillo <ibc@aliax.net>"
+]
 edition = "2021"
 license = "ISC"
 documentation = "https://docs.rs/mediasoup-sys"
-repository = "https://github.com/versatica/mediasoup/tree/v3/worker"
+repository = "https://github.com/versatica/mediasoup"
 include = [
     "/deps/libwebrtc",
     "/fbs",

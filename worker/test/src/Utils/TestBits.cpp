@@ -2,7 +2,7 @@
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("Utils::Bits::CountSetBits()")
+SCENARIO("Utils::Bits::CountSetBits()", "[utils][bits]")
 {
 	uint16_t mask;
 

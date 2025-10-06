@@ -60,7 +60,7 @@ namespace RTC
 			return reinterpret_cast<uv_tcp_t*>(Bind(Protocol::TCP, ip, minPort, maxPort, flags, hash));
 		}
 		static void Unbind(uint64_t hash, uint16_t port);
-		static void Dump();
+		void Dump(int indentation = 0) const;
 
 	private:
 		static uv_handle_t* Bind(

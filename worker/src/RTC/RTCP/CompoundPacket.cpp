@@ -3,6 +3,7 @@
 
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "Logger.hpp"
+#include "RTC/Consts.hpp"
 
 namespace RTC
 {
@@ -101,7 +102,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= MaxSize)
+			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
 			{
 				return true;
 			}
@@ -160,7 +161,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= MaxSize)
+			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
 			{
 				return true;
 			}
@@ -206,7 +207,7 @@ namespace RTC
 			}
 
 			// New items can hold in the packet, report it.
-			if (GetSize() <= MaxSize)
+			if (GetSize() <= RTC::Consts::RtcpPacketMaxSize)
 			{
 				return true;
 			}
@@ -229,37 +230,37 @@ namespace RTC
 			return false;
 		}
 
-		void CompoundPacket::Dump()
+		void CompoundPacket::Dump(int indentation)
 		{
 			MS_TRACE();
 
-			MS_DUMP("<CompoundPacket>");
+			MS_DUMP_CLEAN(indentation, "<CompoundPacket>");
 
 			if (HasSenderReport())
 			{
-				this->senderReportPacket.Dump();
+				this->senderReportPacket.Dump(indentation + 1);
 
 				if (this->receiverReportPacket.GetCount() != 0u)
 				{
-					this->receiverReportPacket.Dump();
+					this->receiverReportPacket.Dump(indentation + 1);
 				}
 			}
 			else
 			{
-				this->receiverReportPacket.Dump();
+				this->receiverReportPacket.Dump(indentation + 1);
 			}
 
 			if (this->sdesPacket.GetCount() != 0u)
 			{
-				this->sdesPacket.Dump();
+				this->sdesPacket.Dump(indentation + 1);
 			}
 
 			if (this->xrPacket.Begin() != this->xrPacket.End())
 			{
-				this->xrPacket.Dump();
+				this->xrPacket.Dump(indentation + 1);
 			}
 
-			MS_DUMP("</CompoundPacket>");
+			MS_DUMP_CLEAN(indentation, "</CompoundPacket>");
 		}
 
 		void CompoundPacket::AddSenderReport(SenderReport* report)

@@ -1,7 +1,5 @@
 use crate::data_producer::DataProducerOptions;
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::router::{Router, RouterOptions};
-use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
@@ -9,6 +7,8 @@ use crate::webrtc_transport::{
 use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 
@@ -40,6 +40,7 @@ async fn init() -> (Router, WebRtcTransport) {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,

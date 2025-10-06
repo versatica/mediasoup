@@ -29,13 +29,13 @@ namespace RTC
 			return HeaderSize;
 		}
 
-		void FeedbackPsLeiItem::Dump() const
+		void FeedbackPsLeiItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsLeiItem>");
-			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
-			MS_DUMP("</FeedbackPsLeiItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsLeiItem>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsLeiItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

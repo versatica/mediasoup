@@ -32,19 +32,19 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void ReceiverReport::Dump() const
+		void ReceiverReport::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ReceiverReport>");
-			MS_DUMP("  ssrc: %" PRIu32, GetSsrc());
-			MS_DUMP("  fraction lost: %" PRIu8, GetFractionLost());
-			MS_DUMP("  total lost: %" PRIu32, GetTotalLost());
-			MS_DUMP("  last seq: %" PRIu32, GetLastSeq());
-			MS_DUMP("  jitter: %" PRIu32, GetJitter());
-			MS_DUMP("  lsr: %" PRIu32, GetLastSenderReport());
-			MS_DUMP("  dlsr: %" PRIu32, GetDelaySinceLastSenderReport());
-			MS_DUMP("</ReceiverReport>");
+			MS_DUMP_CLEAN(indentation, "<ReceiverReport>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  fraction lost: %" PRIu8, GetFractionLost());
+			MS_DUMP_CLEAN(indentation, "  total lost: %" PRIu32, GetTotalLost());
+			MS_DUMP_CLEAN(indentation, "  last seq: %" PRIu32, GetLastSeq());
+			MS_DUMP_CLEAN(indentation, "  jitter: %" PRIu32, GetJitter());
+			MS_DUMP_CLEAN(indentation, "  lsr: %" PRIu32, GetLastSenderReport());
+			MS_DUMP_CLEAN(indentation, "  dlsr: %" PRIu32, GetDelaySinceLastSenderReport());
+			MS_DUMP_CLEAN(indentation, "</ReceiverReport>");
 		}
 
 		size_t ReceiverReport::Serialize(uint8_t* buffer)
@@ -156,17 +156,17 @@ namespace RTC
 			return offset;
 		}
 
-		void ReceiverReportPacket::Dump() const
+		void ReceiverReportPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ReceiverReportPacket>");
-			MS_DUMP("  ssrc: %" PRIu32, this->ssrc);
+			MS_DUMP_CLEAN(indentation, "<ReceiverReportPacket>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->ssrc);
 			for (auto* report : this->reports)
 			{
-				report->Dump();
+				report->Dump(indentation + 1);
 			}
-			MS_DUMP("</ReceiverReportPacket>");
+			MS_DUMP_CLEAN(indentation, "</ReceiverReportPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

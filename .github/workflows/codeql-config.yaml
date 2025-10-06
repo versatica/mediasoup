@@ -1,0 +1,19 @@
+name: 'Custom configuration for CodeQL'
+
+on: []
+
+paths-ignore:
+  - 'art/**'
+  - 'doc/**'
+  - 'node_modules/**'
+  - 'node/lib/**'
+  - 'node/src/fbs/**'
+  - 'rust/benches/**'
+  - 'rust/examples/**'
+  - 'rust/examples-frontend/**'
+  - 'worker/deps/**'
+  - 'worker/subprojects/**'
+  - 'worker/scripts/**'
+  - 'worker/fuzzer/new-corpus/**'
+  - 'worker/fuzzer/reports/**'
+  - 'worker/out/**'

@@ -31,18 +31,18 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void SenderReport::Dump() const
+		void SenderReport::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<SenderReport>");
-			MS_DUMP("  ssrc: %" PRIu32, GetSsrc());
-			MS_DUMP("  ntp sec: %" PRIu32, GetNtpSec());
-			MS_DUMP("  ntp frac: %" PRIu32, GetNtpFrac());
-			MS_DUMP("  rtp ts: %" PRIu32, GetRtpTs());
-			MS_DUMP("  packet count: %" PRIu32, GetPacketCount());
-			MS_DUMP("  octet count: %" PRIu32, GetOctetCount());
-			MS_DUMP("</SenderReport>");
+			MS_DUMP_CLEAN(indentation, "<SenderReport>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  ntp sec: %" PRIu32, GetNtpSec());
+			MS_DUMP_CLEAN(indentation, "  ntp frac: %" PRIu32, GetNtpFrac());
+			MS_DUMP_CLEAN(indentation, "  rtp ts: %" PRIu32, GetRtpTs());
+			MS_DUMP_CLEAN(indentation, "  packet count: %" PRIu32, GetPacketCount());
+			MS_DUMP_CLEAN(indentation, "  octet count: %" PRIu32, GetOctetCount());
+			MS_DUMP_CLEAN(indentation, "</SenderReport>");
 		}
 
 		size_t SenderReport::Serialize(uint8_t* buffer)
@@ -108,16 +108,16 @@ namespace RTC
 			return offset;
 		}
 
-		void SenderReportPacket::Dump() const
+		void SenderReportPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<SenderReportPacket>");
+			MS_DUMP_CLEAN(indentation, "<SenderReportPacket>");
 			for (auto* report : this->reports)
 			{
-				report->Dump();
+				report->Dump(indentation + 1);
 			}
-			MS_DUMP("</SenderReportPacket>");
+			MS_DUMP_CLEAN(indentation, "</SenderReportPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

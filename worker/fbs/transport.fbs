@@ -27,6 +27,7 @@ table ListenInfo {
     protocol: Protocol = UDP;
     ip: string (required);
     announced_address: string;
+    expose_internal_ip: bool;
     port: uint16 = 0;
     port_range: PortRange (required);
     flags: SocketFlags (required);

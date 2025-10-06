@@ -4,11 +4,16 @@
 
 [![][npm-shield-mediasoup]][npm-mediasoup]
 [![][crates-shield-mediasoup]][crates-mediasoup]
+[![][opencollective-shield-mediasoup]][opencollective-mediasoup]
+
+---
+
 [![][github-actions-shield-mediasoup-node]][github-actions-mediasoup-node]
 [![][github-actions-shield-mediasoup-worker]][github-actions-mediasoup-worker]
 [![][github-actions-shield-mediasoup-rust]][github-actions-mediasoup-rust]
+[![][github-actions-shield-mediasoup-worker-fuzzer]][github-actions-mediasoup-worker-fuzzer]
+[![][github-actions-shield-mediasoup-worker-prebuild]][github-actions-mediasoup-worker-prebuild]
 [![][codeql-shield-mediasoup]][codeql-mediasoup]
-[![][opencollective-shield-mediasoup]][opencollective-mediasoup]
 
 ## Website and Documentation
 
@@ -70,7 +75,7 @@ Try it at [v3demo.mediasoup.org](https://v3demo.mediasoup.org) ([source code](ht
 
 ## Social
 
-- Twitter: [@mediasoup_sfu](https://twitter.com/mediasoup_sfu)
+- Bluesky: [@mediasoup-sfu.bsky.social](https://bsky.app/profile/mediasoup-sfu.bsky.social)
 
 ## Sponsor
 
@@ -87,17 +92,21 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [npm-mediasoup]: https://npmjs.org/package/mediasoup
 [crates-shield-mediasoup]: https://img.shields.io/crates/v/mediasoup.svg
 [crates-mediasoup]: https://crates.io/crates/mediasoup
+[opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
+[opencollective-mediasoup]: https://opencollective.com/mediasoup
 [github-actions-shield-mediasoup-node]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-node.yaml/badge.svg
 [github-actions-mediasoup-node]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-node.yaml
 [github-actions-shield-mediasoup-worker]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker.yaml/badge.svg
 [github-actions-mediasoup-worker]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker.yaml
 [github-actions-shield-mediasoup-rust]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-rust.yaml/badge.svg
 [github-actions-mediasoup-rust]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-rust.yaml
+[github-actions-shield-mediasoup-worker-fuzzer]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-fuzzer.yaml/badge.svg
+[github-actions-mediasoup-worker-fuzzer]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-fuzzer.yaml
+[github-actions-shield-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml/badge.svg
+[github-actions-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml
 [codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml/badge.svg
 [codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml
-[opencollective-shield-mediasoup]: https://img.shields.io/opencollective/all/mediasoup.svg
-[opencollective-mediasoup]: https://opencollective.com/mediasoup/
-[sponsor]: https://mediasoup.org/sponsor/
+[sponsor]: https://mediasoup.org/sponsor
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
 [mediasoup-demo]: https://v3demo.mediasoup.org

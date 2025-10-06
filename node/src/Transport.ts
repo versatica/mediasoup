@@ -2,53 +2,83 @@ import * as flatbuffers from 'flatbuffers';
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
 import * as ortc from './ortc';
-import { Channel } from './Channel';
-import { RouterInternal } from './Router';
-import { WebRtcTransportData } from './WebRtcTransport';
-import { PlainTransportData } from './PlainTransport';
-import { PipeTransportData } from './PipeTransport';
-import { DirectTransportData } from './DirectTransport';
+import type {
+	Transport,
+	TransportType,
+	TransportProtocol,
+	TransportPortRange,
+	TransportSocketFlags,
+	TransportTuple,
+	SctpState,
+	RtpListenerDump,
+	SctpListenerDump,
+	RecvRtpHeaderExtensions,
+	BaseTransportDump,
+	BaseTransportStats,
+	TransportTraceEventType,
+	TransportTraceEventData,
+	TransportEvents,
+	TransportObserver,
+} from './TransportTypes';
+import type { Channel } from './Channel';
+import type { RouterInternal } from './Router';
+import type { WebRtcTransportData } from './WebRtcTransport';
+import type { PlainTransportData } from './PlainTransport';
+import type { PipeTransportData } from './PipeTransport';
+import type { DirectTransportData } from './DirectTransport';
+import type { Producer, ProducerOptions } from './ProducerTypes';
 import {
-	Producer,
-	ProducerOptions,
+	ProducerImpl,
 	producerTypeFromFbs,
 	producerTypeToFbs,
 } from './Producer';
-import {
+import type {
 	Consumer,
 	ConsumerOptions,
 	ConsumerType,
 	ConsumerLayers,
-} from './Consumer';
-import {
+} from './ConsumerTypes';
+import { ConsumerImpl } from './Consumer';
+import type {
 	DataProducer,
 	DataProducerOptions,
 	DataProducerType,
+} from './DataProducerTypes';
+import {
+	DataProducerImpl,
 	dataProducerTypeToFbs,
 	parseDataProducerDumpResponse,
 } from './DataProducer';
-import {
+import type {
 	DataConsumer,
 	DataConsumerOptions,
 	DataConsumerType,
+} from './DataConsumerTypes';
+import {
+	DataConsumerImpl,
 	dataConsumerTypeToFbs,
 	parseDataConsumerDumpResponse,
 } from './DataConsumer';
-import {
+import type {
 	MediaKind,
 	RtpCapabilities,
 	RtpParameters,
+} from './rtpParametersTypes';
+import {
 	serializeRtpEncodingParameters,
 	serializeRtpParameters,
-} from './RtpParameters';
+} from './rtpParametersFbsUtils';
+import type {
+	SctpParameters,
+	SctpStreamParameters,
+} from './sctpParametersTypes';
 import {
 	parseSctpParametersDump,
 	serializeSctpStreamParameters,
-	SctpParameters,
-	SctpStreamParameters,
-} from './SctpParameters';
-import { AppData } from './types';
+} from './sctpParametersFbsUtils';
+import type { AppData } from './types';
 import * as utils from './utils';
+import * as fbsUtils from './fbsUtils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsRequest from './fbs/request';
 import { MediaKind as FbsMediaKind } from './fbs/rtp-parameters/media-kind';
@@ -59,178 +89,6 @@ import * as FbsTransport from './fbs/transport';
 import * as FbsRouter from './fbs/router';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 import { SctpState as FbsSctpState } from './fbs/sctp-association/sctp-state';
-
-export type TransportListenInfo = {
-	/**
-	 * Network protocol.
-	 */
-	protocol: TransportProtocol;
-
-	/**
-	 * Listening IPv4 or IPv6.
-	 */
-	ip: string;
-
-	/**
-	 * @deprecated Use |announcedAddress| instead.
-	 *
-	 * Announced IPv4, IPv6 or hostname (useful when running mediasoup behind NAT
-	 * with private IP).
-	 */
-	announcedIp?: string;
-
-	/**
-	 * Announced IPv4, IPv6 or hostname (useful when running mediasoup behind NAT
-	 * with private IP).
-	 */
-	announcedAddress?: string;
-
-	/**
-	 * Listening port.
-	 */
-	port?: number;
-
-	/**
-	 * Listening port range. If given then |port| will be ignored.
-	 */
-	portRange?: TransportPortRange;
-
-	/**
-	 * Socket flags.
-	 */
-	flags?: TransportSocketFlags;
-
-	/**
-	 * Send buffer size (bytes).
-	 */
-	sendBufferSize?: number;
-
-	/**
-	 * Recv buffer size (bytes).
-	 */
-	recvBufferSize?: number;
-};
-
-/**
- * Use TransportListenInfo instead.
- * @deprecated
- */
-export type TransportListenIp = {
-	/**
-	 * Listening IPv4 or IPv6.
-	 */
-	ip: string;
-
-	/**
-	 * Announced IPv4, IPv6 or hostname (useful when running mediasoup behind NAT
-	 * with private IP).
-	 */
-	announcedIp?: string;
-};
-
-/**
- * Transport protocol.
- */
-export type TransportProtocol = 'udp' | 'tcp';
-
-/**
- * Port range..
- */
-export type TransportPortRange = {
-	/**
-	 * Lowest port in the range.
-	 */
-	min: number;
-	/**
-	 * Highest port in the range.
-	 */
-	max: number;
-};
-
-/**
- * UDP/TCP socket flags.
- */
-export type TransportSocketFlags = {
-	/**
-	 * Disable dual-stack support so only IPv6 is used (only if |ip| is IPv6).
-	 */
-	ipv6Only?: boolean;
-	/**
-	 * Make different transports bind to the same IP and port (only for UDP).
-	 * Useful for multicast scenarios with plain transport. Use with caution.
-	 */
-	udpReusePort?: boolean;
-};
-
-export type TransportTuple = {
-	// @deprecated Use localAddress instead.
-	localIp: string;
-	localAddress: string;
-	localPort: number;
-	remoteIp?: string;
-	remotePort?: number;
-	protocol: TransportProtocol;
-};
-
-/**
- * Valid types for 'trace' event.
- */
-export type TransportTraceEventType = 'probation' | 'bwe';
-
-/**
- * 'trace' event data.
- */
-export type TransportTraceEventData = {
-	/**
-	 * Trace type.
-	 */
-	type: TransportTraceEventType;
-
-	/**
-	 * Event timestamp.
-	 */
-	timestamp: number;
-
-	/**
-	 * Event direction.
-	 */
-	direction: 'in' | 'out';
-
-	/**
-	 * Per type information.
-	 */
-	info: any;
-};
-
-export type SctpState =
-	| 'new'
-	| 'connecting'
-	| 'connected'
-	| 'failed'
-	| 'closed';
-
-export type TransportEvents = {
-	routerclose: [];
-	listenserverclose: [];
-	trace: [TransportTraceEventData];
-	listenererror: [string, Error];
-	// Private events.
-	'@close': [];
-	'@newproducer': [Producer];
-	'@producerclose': [Producer];
-	'@newdataproducer': [DataProducer];
-	'@dataproducerclose': [DataProducer];
-	'@listenserverclose': [];
-};
-
-export type TransportObserverEvents = {
-	close: [];
-	newproducer: [Producer];
-	newconsumer: [Consumer];
-	newdataproducer: [DataProducer];
-	newdataconsumer: [DataConsumer];
-	trace: [TransportTraceEventData];
-};
 
 export type TransportConstructorOptions<TransportAppData> = {
 	internal: TransportInternal;
@@ -246,82 +104,22 @@ export type TransportInternal = RouterInternal & {
 	transportId: string;
 };
 
-export type BaseTransportDump = {
-	id: string;
-	direct: boolean;
-	producerIds: string[];
-	consumerIds: string[];
-	mapSsrcConsumerId: { key: number; value: string }[];
-	mapRtxSsrcConsumerId: { key: number; value: string }[];
-	recvRtpHeaderExtensions: RecvRtpHeaderExtensions;
-	rtpListener: RtpListenerDump;
-	maxMessageSize: number;
-	dataProducerIds: string[];
-	dataConsumerIds: string[];
-	sctpParameters?: SctpParameters;
-	sctpState?: SctpState;
-	sctpListener?: SctpListenerDump;
-	traceEventTypes?: string[];
-};
-
-export type BaseTransportStats = {
-	transportId: string;
-	timestamp: number;
-	sctpState?: SctpState;
-	bytesReceived: number;
-	recvBitrate: number;
-	bytesSent: number;
-	sendBitrate: number;
-	rtpBytesReceived: number;
-	rtpRecvBitrate: number;
-	rtpBytesSent: number;
-	rtpSendBitrate: number;
-	rtxBytesReceived: number;
-	rtxRecvBitrate: number;
-	rtxBytesSent: number;
-	rtxSendBitrate: number;
-	probationBytesSent: number;
-	probationSendBitrate: number;
-	availableOutgoingBitrate?: number;
-	availableIncomingBitrate?: number;
-	maxIncomingBitrate?: number;
-	maxOutgoingBitrate?: number;
-	minOutgoingBitrate?: number;
-	rtpPacketLossReceived?: number;
-	rtpPacketLossSent?: number;
-};
-
 type TransportData =
 	| WebRtcTransportData
 	| PlainTransportData
 	| PipeTransportData
 	| DirectTransportData;
 
-type RtpListenerDump = {
-	ssrcTable: { key: number; value: string }[];
-	midTable: { key: number; value: string }[];
-	ridTable: { key: number; value: string }[];
-};
-
-type SctpListenerDump = {
-	streamIdTable: { key: number; value: string }[];
-};
-
-type RecvRtpHeaderExtensions = {
-	mid?: number;
-	rid?: number;
-	rrid?: number;
-	absSendTime?: number;
-	transportWideCc01?: number;
-};
-
 const logger = new Logger('Transport');
 
-export class Transport<
-	TransportAppData extends AppData = AppData,
-	Events extends TransportEvents = TransportEvents,
-	ObserverEvents extends TransportObserverEvents = TransportObserverEvents,
-> extends EnhancedEventEmitter<Events> {
+export abstract class TransportImpl<
+		TransportAppData extends AppData = AppData,
+		Events extends TransportEvents = TransportEvents,
+		Observer extends TransportObserver = TransportObserver,
+	>
+	extends EnhancedEventEmitter<Events>
+	implements Transport
+{
 	// Internal data.
 	protected readonly internal: TransportInternal;
 
@@ -375,21 +173,20 @@ export class Transport<
 	#nextSctpStreamId = 0;
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<ObserverEvents>();
+	readonly #observer: Observer;
 
-	/**
-	 * @private
-	 * @interface
-	 */
-	constructor({
-		internal,
-		data,
-		channel,
-		appData,
-		getRouterRtpCapabilities,
-		getProducerById,
-		getDataProducerById,
-	}: TransportConstructorOptions<TransportAppData>) {
+	protected constructor(
+		{
+			internal,
+			data,
+			channel,
+			appData,
+			getRouterRtpCapabilities,
+			getProducerById,
+			getDataProducerById,
+		}: TransportConstructorOptions<TransportAppData>,
+		observer: Observer
+	) {
 		super();
 
 		logger.debug('constructor()');
@@ -397,58 +194,42 @@ export class Transport<
 		this.internal = internal;
 		this.#data = data;
 		this.channel = channel;
-		this.#appData = appData || ({} as TransportAppData);
+		this.#appData = appData ?? ({} as TransportAppData);
 		this.#getRouterRtpCapabilities = getRouterRtpCapabilities;
 		this.getProducerById = getProducerById;
 		this.getDataProducerById = getDataProducerById;
+		this.#observer = observer;
 	}
 
-	/**
-	 * Transport id.
-	 */
 	get id(): string {
 		return this.internal.transportId;
 	}
 
-	/**
-	 * Whether the Transport is closed.
-	 */
 	get closed(): boolean {
 		return this.#closed;
 	}
 
-	/**
-	 * App custom data.
-	 */
+	abstract get type(): TransportType;
+
 	get appData(): TransportAppData {
 		return this.#appData;
 	}
 
-	/**
-	 * App custom data setter.
-	 */
 	set appData(appData: TransportAppData) {
 		this.#appData = appData;
 	}
 
-	/**
-	 * Observer.
-	 */
-	get observer(): EnhancedEventEmitter<ObserverEvents> {
+	get observer(): Observer {
 		return this.#observer;
 	}
 
 	/**
-	 * @private
 	 * Just for testing purposes.
 	 */
 	get channelForTesting(): Channel {
 		return this.channel;
 	}
 
-	/**
-	 * Close the Transport.
-	 */
 	close(): void {
 		if (this.#closed) {
 			return;
@@ -511,12 +292,6 @@ export class Transport<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Router was closed.
-	 *
-	 * @private
-	 * @virtual
-	 */
 	routerClosed(): void {
 		if (this.#closed) {
 			return;
@@ -565,12 +340,6 @@ export class Transport<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Listen server was closed (this just happens in WebRtcTransports when their
-	 * associated WebRtcServer is closed).
-	 *
-	 * @private
-	 */
 	listenServerClosed(): void {
 		if (this.#closed) {
 			return;
@@ -624,42 +393,14 @@ export class Transport<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Dump Transport.
-	 *
-	 * @abstract
-	 */
-	async dump(): Promise<any> {
-		// Should not happen.
-		throw new Error('method implemented in the subclass');
-	}
+	abstract dump(): Promise<BaseTransportDump>;
 
-	/**
-	 * Get Transport stats.
-	 *
-	 * @abstract
-	 */
-	async getStats(): Promise<any[]> {
-		// Should not happen.
-		throw new Error('method implemented in the subclass');
-	}
+	abstract getStats(): Promise<BaseTransportStats[]>;
 
-	/**
-	 * Provide the Transport remote parameters.
-	 *
-	 * @abstract
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async connect(params: any): Promise<void> {
-		// Should not happen.
-		throw new Error('method implemented in the subclass');
-	}
+	abstract connect(params: unknown): Promise<void>;
 
-	/**
-	 * Set maximum incoming bitrate for receiving media.
-	 */
 	async setMaxIncomingBitrate(bitrate: number): Promise<void> {
-		logger.debug('setMaxIncomingBitrate() [bitrate:%s]', bitrate);
+		logger.debug(`setMaxIncomingBitrate() [bitrate:${bitrate}]`);
 
 		/* Build Request. */
 		const requestOffset =
@@ -676,11 +417,8 @@ export class Transport<
 		);
 	}
 
-	/**
-	 * Set maximum outgoing bitrate for sending media.
-	 */
 	async setMaxOutgoingBitrate(bitrate: number): Promise<void> {
-		logger.debug('setMaxOutgoingBitrate() [bitrate:%s]', bitrate);
+		logger.debug(`setMaxOutgoingBitrate() [bitrate:${bitrate}]`);
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMaxOutgoingBitrateRequestT(
@@ -695,11 +433,8 @@ export class Transport<
 		);
 	}
 
-	/**
-	 * Set minimum outgoing bitrate for sending media.
-	 */
 	async setMinOutgoingBitrate(bitrate: number): Promise<void> {
-		logger.debug('setMinOutgoingBitrate() [bitrate:%s]', bitrate);
+		logger.debug(`setMinOutgoingBitrate() [bitrate:${bitrate}]`);
 
 		/* Build Request. */
 		const requestOffset = new FbsTransport.SetMinOutgoingBitrateRequestT(
@@ -714,9 +449,6 @@ export class Transport<
 		);
 	}
 
-	/**
-	 * Create a Producer.
-	 */
 	async produce<ProducerAppData extends AppData = AppData>({
 		id = undefined,
 		kind,
@@ -752,14 +484,10 @@ export class Transport<
 
 		// Don't do this in PipeTransports since there we must keep CNAME value in
 		// each Producer.
-		if (this.constructor.name !== 'PipeTransport') {
+		if (this.type !== 'pipe') {
 			// If CNAME is given and we don't have yet a CNAME for Producers in this
 			// Transport, take it.
-			if (
-				!this.#cnameForProducers &&
-				clonedRtpParameters.rtcp &&
-				clonedRtpParameters.rtcp.cname
-			) {
+			if (!this.#cnameForProducers && clonedRtpParameters.rtcp?.cname) {
 				this.#cnameForProducers = clonedRtpParameters.rtcp.cname;
 			}
 			// Otherwise if we don't have yet a CNAME for Producers and the RTP
@@ -789,7 +517,7 @@ export class Transport<
 			rtpMapping
 		);
 
-		const producerId = id || utils.generateUUIDv4();
+		const producerId = id ?? utils.generateUUIDv4();
 		const requestOffset = createProduceRequest({
 			builder: this.channel.bufferBuilder,
 			producerId,
@@ -821,7 +549,7 @@ export class Transport<
 			consumableRtpParameters,
 		};
 
-		const producer = new Producer<ProducerAppData>({
+		const producer: Producer<ProducerAppData> = new ProducerImpl({
 			internal: {
 				...this.internal,
 				producerId,
@@ -846,11 +574,6 @@ export class Transport<
 		return producer;
 	}
 
-	/**
-	 * Create a Consumer.
-	 *
-	 * @virtual
-	 */
 	async consume<ConsumerAppData extends AppData = AppData>({
 		producerId,
 		rtpCapabilities,
@@ -948,7 +671,7 @@ export class Transport<
 			type: pipe ? 'pipe' : (producer.type as ConsumerType),
 		};
 
-		const consumer = new Consumer<ConsumerAppData>({
+		const consumer: Consumer<ConsumerAppData> = new ConsumerImpl({
 			internal: {
 				...this.internal,
 				consumerId,
@@ -962,10 +685,7 @@ export class Transport<
 			preferredLayers: status.preferredLayers
 				? {
 						spatialLayer: status.preferredLayers.spatialLayer,
-						temporalLayer:
-							status.preferredLayers.temporalLayer !== null
-								? status.preferredLayers.temporalLayer
-								: undefined,
+						temporalLayer: status.preferredLayers.temporalLayer ?? undefined,
 					}
 				: undefined,
 		});
@@ -980,9 +700,6 @@ export class Transport<
 		return consumer;
 	}
 
-	/**
-	 * Create a DataProducer.
-	 */
 	async produceData<DataProducerAppData extends AppData = AppData>({
 		id = undefined,
 		sctpStreamParameters,
@@ -1009,7 +726,7 @@ export class Transport<
 		>(sctpStreamParameters);
 
 		// If this is not a DirectTransport, sctpStreamParameters are required.
-		if (this.constructor.name !== 'DirectTransport') {
+		if (this.type !== 'direct') {
 			type = 'sctp';
 
 			// This may throw.
@@ -1028,7 +745,7 @@ export class Transport<
 			}
 		}
 
-		const dataProducerId = id || utils.generateUUIDv4();
+		const dataProducerId = id ?? utils.generateUUIDv4();
 		const requestOffset = createProduceDataRequest({
 			builder: this.channel.bufferBuilder,
 			dataProducerId,
@@ -1053,21 +770,22 @@ export class Transport<
 
 		const dump = parseDataProducerDumpResponse(produceDataResponse);
 
-		const dataProducer = new DataProducer<DataProducerAppData>({
-			internal: {
-				...this.internal,
-				dataProducerId,
-			},
-			data: {
-				type: dump.type,
-				sctpStreamParameters: dump.sctpStreamParameters,
-				label: dump.label,
-				protocol: dump.protocol,
-			},
-			channel: this.channel,
-			paused,
-			appData,
-		});
+		const dataProducer: DataProducer<DataProducerAppData> =
+			new DataProducerImpl({
+				internal: {
+					...this.internal,
+					dataProducerId,
+				},
+				data: {
+					type: dump.type,
+					sctpStreamParameters: dump.sctpStreamParameters,
+					label: dump.label,
+					protocol: dump.protocol,
+				},
+				channel: this.channel,
+				paused,
+				appData,
+			});
 
 		this.dataProducers.set(dataProducer.id, dataProducer);
 		dataProducer.on('@close', () => {
@@ -1083,9 +801,6 @@ export class Transport<
 		return dataProducer;
 	}
 
-	/**
-	 * Create a DataConsumer.
-	 */
 	async consumeData<DataConsumerAppData extends AppData = AppData>({
 		dataProducerId,
 		ordered,
@@ -1115,37 +830,8 @@ export class Transport<
 		let sctpStreamParameters: SctpStreamParameters | undefined;
 		let sctpStreamId: number;
 
-		// If this is not a DirectTransport, use sctpStreamParameters from the
-		// DataProducer (if type 'sctp') unless they are given in method parameters.
-		if (this.constructor.name !== 'DirectTransport') {
-			type = 'sctp';
-
-			sctpStreamParameters =
-				utils.clone<SctpStreamParameters | undefined>(
-					dataProducer.sctpStreamParameters
-				) ?? ({} as SctpStreamParameters);
-
-			// Override if given.
-			if (ordered !== undefined) {
-				sctpStreamParameters.ordered = ordered;
-			}
-
-			if (maxPacketLifeTime !== undefined) {
-				sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
-			}
-
-			if (maxRetransmits !== undefined) {
-				sctpStreamParameters.maxRetransmits = maxRetransmits;
-			}
-
-			// This may throw.
-			sctpStreamId = this.getNextSctpStreamId();
-
-			this.#sctpStreamIds![sctpStreamId] = 1;
-			sctpStreamParameters.streamId = sctpStreamId;
-		}
 		// If this is a DirectTransport, sctpStreamParameters must not be used.
-		else {
+		if (this.type === 'direct') {
 			type = 'direct';
 
 			if (
@@ -1156,6 +842,47 @@ export class Transport<
 				logger.warn(
 					'consumeData() | ordered, maxPacketLifeTime and maxRetransmits are ignored when consuming data on a DirectTransport'
 				);
+			}
+		}
+		// If this is not a DirectTransport, use sctpStreamParameters from the
+		// DataProducer (if type 'sctp') unless they are given in method parameters.
+		// If the DataProducer is type 'sctp' and no sctpStreamParameters are given,
+		// generate proper ones.
+		else {
+			type = 'sctp';
+
+			// This may throw.
+			sctpStreamId = this.getNextSctpStreamId();
+
+			sctpStreamParameters = dataProducer.sctpStreamParameters
+				? utils.clone<SctpStreamParameters>(dataProducer.sctpStreamParameters)
+				: {
+						streamId: sctpStreamId,
+						ordered: true,
+					};
+
+			this.#sctpStreamIds![sctpStreamId] = 1;
+			sctpStreamParameters.streamId = sctpStreamId;
+
+			if (ordered !== undefined) {
+				sctpStreamParameters.ordered = ordered;
+
+				if (ordered) {
+					sctpStreamParameters.maxPacketLifeTime = undefined;
+					sctpStreamParameters.maxRetransmits = undefined;
+				}
+			}
+
+			if (!ordered) {
+				if (maxPacketLifeTime !== undefined) {
+					sctpStreamParameters.ordered = false;
+					sctpStreamParameters.maxPacketLifeTime = maxPacketLifeTime;
+				}
+
+				if (maxRetransmits !== undefined) {
+					sctpStreamParameters.ordered = false;
+					sctpStreamParameters.maxRetransmits = maxRetransmits;
+				}
 			}
 		}
 
@@ -1188,25 +915,26 @@ export class Transport<
 
 		const dump = parseDataConsumerDumpResponse(consumeDataResponse);
 
-		const dataConsumer = new DataConsumer<DataConsumerAppData>({
-			internal: {
-				...this.internal,
-				dataConsumerId,
-			},
-			data: {
-				dataProducerId: dump.dataProducerId,
-				type: dump.type,
-				sctpStreamParameters: dump.sctpStreamParameters,
-				label: dump.label,
-				protocol: dump.protocol,
-				bufferedAmountLowThreshold: dump.bufferedAmountLowThreshold,
-			},
-			channel: this.channel,
-			paused: dump.paused,
-			subchannels: dump.subchannels,
-			dataProducerPaused: dump.dataProducerPaused,
-			appData,
-		});
+		const dataConsumer: DataConsumer<DataConsumerAppData> =
+			new DataConsumerImpl({
+				internal: {
+					...this.internal,
+					dataConsumerId,
+				},
+				data: {
+					dataProducerId: dump.dataProducerId,
+					type: dump.type,
+					sctpStreamParameters: dump.sctpStreamParameters,
+					label: dump.label,
+					protocol: dump.protocol,
+					bufferedAmountLowThreshold: dump.bufferedAmountLowThreshold,
+				},
+				channel: this.channel,
+				paused: dump.paused,
+				subchannels: dump.subchannels,
+				dataProducerPaused: dump.dataProducerPaused,
+				appData,
+			});
 
 		this.dataConsumers.set(dataConsumer.id, dataConsumer);
 		dataConsumer.on('@close', () => {
@@ -1230,9 +958,6 @@ export class Transport<
 		return dataConsumer;
 	}
 
-	/**
-	 * Enable 'trace' event.
-	 */
 	async enableTraceEvent(types: TransportTraceEventType[] = []): Promise<void> {
 		logger.debug('enableTraceEvent()');
 
@@ -1333,10 +1058,6 @@ export function parseSctpState(fbsSctpState: FbsSctpState): SctpState {
 		case FbsSctpState.CLOSED: {
 			return 'closed';
 		}
-
-		default: {
-			throw new TypeError(`invalid SctpState: ${fbsSctpState}`);
-		}
 	}
 }
 
@@ -1384,23 +1105,29 @@ export function parseBaseTransportDump(
 	binary: FbsTransport.Dump
 ): BaseTransportDump {
 	// Retrieve producerIds.
-	const producerIds = utils.parseVector<string>(binary, 'producerIds');
+	const producerIds = fbsUtils.parseVector<string>(binary, 'producerIds');
 	// Retrieve consumerIds.
-	const consumerIds = utils.parseVector<string>(binary, 'consumerIds');
+	const consumerIds = fbsUtils.parseVector<string>(binary, 'consumerIds');
 	// Retrieve map SSRC consumerId.
-	const mapSsrcConsumerId = utils.parseUint32StringVector(
+	const mapSsrcConsumerId = fbsUtils.parseUint32StringVector(
 		binary,
 		'mapSsrcConsumerId'
 	);
 	// Retrieve map RTX SSRC consumerId.
-	const mapRtxSsrcConsumerId = utils.parseUint32StringVector(
+	const mapRtxSsrcConsumerId = fbsUtils.parseUint32StringVector(
 		binary,
 		'mapRtxSsrcConsumerId'
 	);
 	// Retrieve dataProducerIds.
-	const dataProducerIds = utils.parseVector<string>(binary, 'dataProducerIds');
+	const dataProducerIds = fbsUtils.parseVector<string>(
+		binary,
+		'dataProducerIds'
+	);
 	// Retrieve dataConsumerIds.
-	const dataConsumerIds = utils.parseVector<string>(binary, 'dataConsumerIds');
+	const dataConsumerIds = fbsUtils.parseVector<string>(
+		binary,
+		'dataConsumerIds'
+	);
 	// Retrieve recvRtpHeaderExtesions.
 	const recvRtpHeaderExtensions = parseRecvRtpHeaderExtensions(
 		binary.recvRtpHeaderExtensions()!
@@ -1428,7 +1155,7 @@ export function parseBaseTransportDump(
 		: undefined;
 
 	// Retrieve traceEventTypes.
-	const traceEventTypes = utils.parseVector<TransportTraceEventType>(
+	const traceEventTypes = fbsUtils.parseVector<TransportTraceEventType>(
 		binary,
 		'traceEventTypes',
 		transportTraceEventTypeFromFbs
@@ -1436,7 +1163,6 @@ export function parseBaseTransportDump(
 
 	return {
 		id: binary.id()!,
-		direct: binary.direct(),
 		producerIds: producerIds,
 		consumerIds: consumerIds,
 		mapSsrcConsumerId: mapSsrcConsumerId,
@@ -1524,7 +1250,7 @@ export function parseTransportTraceEventData(
 				timestamp: Number(trace.timestamp()),
 				direction:
 					trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-				info: parseBweTraceInfo(info!),
+				info: parseBweTraceInfo(info),
 			};
 		}
 
@@ -1566,10 +1292,6 @@ function transportTraceEventTypeToFbs(
 
 		case 'bwe': {
 			return FbsTransport.TraceEventType.BWE;
-		}
-
-		default: {
-			throw new TypeError(`invalid TransportTraceEventType: ${eventType}`);
 		}
 	}
 }
@@ -1710,7 +1432,7 @@ function createProduceRequest({
 	producerId: string;
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
-	rtpMapping: ortc.RtpMapping;
+	rtpMapping: ortc.RtpCodecsEncodingsMapping;
 	keyFrameRequestDelay?: number;
 	paused: boolean;
 }): number {
@@ -1857,11 +1579,11 @@ function parseRtpListenerDump(
 	binary: FbsTransport.RtpListener
 ): RtpListenerDump {
 	// Retrieve ssrcTable.
-	const ssrcTable = utils.parseUint32StringVector(binary, 'ssrcTable');
+	const ssrcTable = fbsUtils.parseUint32StringVector(binary, 'ssrcTable');
 	// Retrieve midTable.
-	const midTable = utils.parseUint32StringVector(binary, 'midTable');
+	const midTable = fbsUtils.parseUint32StringVector(binary, 'midTable');
 	// Retrieve ridTable.
-	const ridTable = utils.parseUint32StringVector(binary, 'ridTable');
+	const ridTable = fbsUtils.parseUint32StringVector(binary, 'ridTable');
 
 	return {
 		ssrcTable,
@@ -1874,7 +1596,10 @@ function parseSctpListenerDump(
 	binary: FbsTransport.SctpListener
 ): SctpListenerDump {
 	// Retrieve streamIdTable.
-	const streamIdTable = utils.parseUint32StringVector(binary, 'streamIdTable');
+	const streamIdTable = fbsUtils.parseUint32StringVector(
+		binary,
+		'streamIdTable'
+	);
 
 	return { streamIdTable };
 }

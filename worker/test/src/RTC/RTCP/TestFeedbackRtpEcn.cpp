@@ -61,11 +61,11 @@ SCENARIO("RTCP Feeback RTP ECN parsing", "[parser][rtcp][feedback-rtp][ecn]")
 	{
 		using namespace TestFeedbackRtpEcn;
 
-		FeedbackRtpEcnPacket* packet = FeedbackRtpEcnPacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<FeedbackRtpEcnPacket> packet{ FeedbackRtpEcnPacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
-		verify(packet);
+		verify(packet.get());
 
 		SECTION("serialize packet instance")
 		{
@@ -78,7 +78,5 @@ SCENARIO("RTCP Feeback RTP ECN parsing", "[parser][rtcp][feedback-rtp][ecn]")
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 }

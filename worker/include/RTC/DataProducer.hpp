@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
-#include "RTC/RTCP/Packet.hpp"
 #include "RTC/SctpDictionaries.hpp"
 #include "RTC/Shared.hpp"
 #include <string>

@@ -219,6 +219,8 @@ namespace RTC
 			{
 				return DtlsTransport::Role::SERVER;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -240,6 +242,8 @@ namespace RTC
 			{
 				return FBS::WebRtcTransport::DtlsRole::SERVER;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -271,6 +275,8 @@ namespace RTC
 			{
 				return FBS::WebRtcTransport::DtlsState::CLOSED;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -303,6 +309,8 @@ namespace RTC
 			{
 				return DtlsTransport::FingerprintAlgorithm::SHA512;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -335,6 +343,8 @@ namespace RTC
 			{
 				return FBS::WebRtcTransport::FingerprintAlgorithm::SHA512;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -415,7 +425,7 @@ namespace RTC
 		}
 
 		// Sign the certificate with its own private key.
-		ret = X509_sign(DtlsTransport::certificate, DtlsTransport::privateKey, EVP_sha1());
+		ret = X509_sign(DtlsTransport::certificate, DtlsTransport::privateKey, EVP_sha256());
 
 		if (ret == 0)
 		{
@@ -549,11 +559,6 @@ namespace RTC
 		// Don't use sessions cache.
 		SSL_CTX_set_session_cache_mode(DtlsTransport::sslCtx, SSL_SESS_CACHE_OFF);
 
-		// Read always as much into the buffer as possible.
-		// NOTE: This is the default for DTLS, but a bug in non latest OpenSSL
-		// versions makes this call required.
-		SSL_CTX_set_read_ahead(DtlsTransport::sslCtx, 1);
-
 		SSL_CTX_set_verify_depth(DtlsTransport::sslCtx, 4);
 
 		// Require certificate from peer.
@@ -575,12 +580,10 @@ namespace RTC
 		}
 
 		// Enable ECDH ciphers.
-		// DOC: http://en.wikibooks.org/wiki/OpenSSL/Diffie-Hellman_parameters
-		// NOTE: https://code.google.com/p/chromium/issues/detail?id=406458
-		// NOTE: https://bugs.ruby-lang.org/issues/12324
-
-		// For OpenSSL >= 1.0.2.
-		SSL_CTX_set_ecdh_auto(DtlsTransport::sslCtx, 1);
+		//
+		// NOTE: As per official docs:
+		// "In OpenSSL 1.1.0, ECDH handling was made automatic. Applications should
+		// not call SSL_CTX_set_ecdh_auto() or similar APIs anymore."
 
 		// Set the "use_srtp" DTLS extension.
 		for (auto it = DtlsTransport::srtpCryptoSuites.begin();
@@ -810,7 +813,7 @@ namespace RTC
 		delete this->timer;
 	}
 
-	void DtlsTransport::Dump() const
+	void DtlsTransport::Dump(int indentation) const
 	{
 		MS_TRACE();
 
@@ -870,11 +873,11 @@ namespace RTC
 			}
 		}
 
-		MS_DUMP("<DtlsTransport>");
-		MS_DUMP("  state: %s", state.c_str());
-		MS_DUMP("  role: %s", role.c_str());
-		MS_DUMP("  handshake done: %s", this->handshakeDone ? "yes" : "no");
-		MS_DUMP("</DtlsTransport>");
+		MS_DUMP_CLEAN(indentation, "<DtlsTransport>");
+		MS_DUMP_CLEAN(indentation, "  state: %s", state.c_str());
+		MS_DUMP_CLEAN(indentation, "  role: %s", role.c_str());
+		MS_DUMP_CLEAN(indentation, "  handshake done: %s", this->handshakeDone ? "yes" : "no");
+		MS_DUMP_CLEAN(indentation, "</DtlsTransport>");
 	}
 
 	void DtlsTransport::Run(Role localRole)
@@ -1383,6 +1386,8 @@ namespace RTC
 				hashFunction = EVP_sha512();
 				break;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.

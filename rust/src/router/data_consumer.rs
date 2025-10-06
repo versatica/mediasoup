@@ -2,14 +2,13 @@
 mod tests;
 
 use crate::data_producer::{DataProducer, DataProducerId, WeakDataProducer};
-use crate::data_structures::{AppData, WebRtcMessage};
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     DataConsumerAddSubchannelRequest, DataConsumerCloseRequest, DataConsumerDumpRequest,
     DataConsumerGetBufferedAmountRequest, DataConsumerGetStatsRequest, DataConsumerPauseRequest,
     DataConsumerRemoveSubchannelRequest, DataConsumerResumeRequest, DataConsumerSendRequest,
     DataConsumerSetBufferedAmountLowThresholdRequest, DataConsumerSetSubchannelsRequest,
 };
-use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationParseError, RequestError, SubscriptionHandler};
@@ -17,6 +16,8 @@ use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{data_consumer, data_producer, notification, response};
+use mediasoup_types::data_structures::{AppData, WebRtcMessage};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -100,7 +101,7 @@ impl DataConsumerOptions {
     pub fn new_sctp_ordered(data_producer_id: DataProducerId) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(true),
             max_packet_life_time: None,
             max_retransmits: None,
             paused: false,
@@ -118,7 +119,7 @@ impl DataConsumerOptions {
     ) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(false),
             max_packet_life_time: Some(max_packet_life_time),
             max_retransmits: None,
             paused: false,
@@ -135,7 +136,7 @@ impl DataConsumerOptions {
     ) -> Self {
         Self {
             data_producer_id,
-            ordered: None,
+            ordered: Some(false),
             max_packet_life_time: None,
             max_retransmits: Some(max_retransmits),
             paused: false,
@@ -162,10 +163,11 @@ pub struct DataConsumerDump {
     pub data_producer_paused: bool,
 }
 
-impl DataConsumerDump {
-    pub(crate) fn from_fbs(
-        dump: data_consumer::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for DataConsumerDump {
+    type FbsType = data_consumer::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             id: dump.id.parse()?,
             data_producer_id: dump.data_producer_id.parse()?,
@@ -174,14 +176,15 @@ impl DataConsumerDump {
             } else {
                 DataConsumerType::Direct
             },
-            label: dump.label,
-            protocol: dump.protocol,
+            label: dump.label.clone(),
+            protocol: dump.protocol.clone(),
             sctp_stream_parameters: dump
                 .sctp_stream_parameters
-                .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
+                .as_ref()
+                .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
             buffered_amount_low_threshold: dump.buffered_amount_low_threshold,
             paused: dump.paused,
-            subchannels: dump.subchannels,
+            subchannels: dump.subchannels.clone(),
             data_producer_paused: dump.data_producer_paused,
         })
     }
@@ -202,8 +205,10 @@ pub struct DataConsumerStat {
     pub buffered_amount: u32,
 }
 
-impl DataConsumerStat {
-    pub(crate) fn from_fbs(stats: &data_consumer::GetStatsResponse) -> Self {
+impl FromFbs for DataConsumerStat {
+    type FbsType = data_consumer::GetStatsResponse;
+
+    fn from_fbs(stats: &Self::FbsType) -> Self {
         Self {
             timestamp: stats.timestamp,
             label: stats.label.to_string(),
@@ -242,10 +247,11 @@ enum Notification {
     },
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::DataconsumerDataproducerClose => {
                 Ok(Notification::DataProducerClose)
@@ -353,8 +359,14 @@ impl Inner {
                 self.executor
                     .spawn(async move {
                         if weak_data_producer.upgrade().is_some() {
-                            if let Err(error) = channel.request(transport_id, request).await {
-                                error!("consumer closing failed on drop: {}", error);
+                            match channel.request(transport_id, request).await {
+                                Err(RequestError::ChannelClosed) => {
+                                    debug!("data consumer closing failed on drop: Channel already closed");
+                                }
+                                Err(error) => {
+                                    error!("data consumer closing failed on drop: {}", error);
+                                }
+                                Ok(_) => {}
                             }
                         }
                     })
@@ -490,7 +502,7 @@ impl DataConsumer {
             let inner_weak = Arc::clone(&inner_weak);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::DataProducerClose => {
                             if !closed.load(Ordering::SeqCst) {
@@ -687,9 +699,9 @@ impl DataConsumer {
             .await?;
 
         if let response::Body::DataConsumerDumpResponse(data) = response {
-            Ok(DataConsumerDump::from_fbs(*data).expect("Error parsing dump response"))
+            Ok(DataConsumerDump::try_from_fbs(*data).expect("Error parsing dump response"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
@@ -709,7 +721,7 @@ impl DataConsumer {
         if let response::Body::DataConsumerGetStatsResponse(data) = response {
             Ok(vec![DataConsumerStat::from_fbs(&data)])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 

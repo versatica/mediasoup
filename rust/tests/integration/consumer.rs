@@ -3,24 +3,24 @@ use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
 use mediasoup::consumer::{ConsumerLayers, ConsumerOptions, ConsumerScore, ConsumerType};
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::prelude::*;
 use mediasoup::producer::ProducerOptions;
 use mediasoup::router::{Router, RouterOptions};
-use mediasoup::rtp_parameters::{
-    MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
-    RtpCapabilities, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
-    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtension,
-    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
-    RtpParameters,
-};
-use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::ConsumeError;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeType, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters,
+    RtpCapabilities, RtpCodecCapability, RtpCodecParameters, RtpCodecParametersParameters,
+    RtpEncodingParameters, RtpEncodingParametersRtx, RtpHeaderExtension,
+    RtpHeaderExtensionDirection, RtpHeaderExtensionParameters, RtpHeaderExtensionUri,
+    RtpParameters,
+};
+use mediasoup_types::scalability_modes::ScalabilityMode;
 use parking_lot::Mutex;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
@@ -291,7 +291,16 @@ fn consumer_device_capabilities() -> RtpCapabilities {
 }
 
 // Keeps executor threads running until dropped
-struct ExecutorGuard(Vec<async_oneshot::Sender<()>>);
+struct ExecutorGuard {
+    // Silence clippy warnings
+    _senders: Vec<async_oneshot::Sender<()>>,
+}
+
+impl ExecutorGuard {
+    fn new(_senders: Vec<async_oneshot::Sender<()>>) -> Self {
+        Self { _senders }
+    }
+}
 
 fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
     let executor = Arc::new(Executor::new());
@@ -318,7 +327,7 @@ fn create_executor() -> (ExecutorGuard, Arc<Executor<'static>>) {
         })
         .collect();
 
-    (ExecutorGuard(senders), executor)
+    (ExecutorGuard::new(senders), executor)
 }
 
 async fn init() -> (
@@ -355,6 +364,7 @@ async fn init() -> (
             protocol: Protocol::Udp,
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_address: None,
+            expose_internal_ip: false,
             port: None,
             port_range: None,
             flags: None,
@@ -573,6 +583,11 @@ fn consume_succeeds() {
                 "LOL"
             );
 
+            video_consumer
+                .get_stats()
+                .await
+                .expect("Failed to get consumer stats");
+
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
             assert_eq!(router_dump.map_producer_id_consumer_ids, {
@@ -670,6 +685,10 @@ fn consume_succeeds() {
                 video_pipe_consumer.app_data().downcast_ref::<()>().unwrap(),
                 &(),
             );
+            video_pipe_consumer
+                .get_stats()
+                .await
+                .expect("Failed to get consumer stats");
 
             let router_dump = router.dump().await.expect("Failed to get router dump");
 
@@ -977,7 +996,7 @@ fn dump_succeeds() {
                     ssrc: audio_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .ssrc,
                     rid: None,
@@ -1086,13 +1105,13 @@ fn dump_succeeds() {
                     ssrc: video_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .ssrc,
                     rtx: video_consumer
                         .rtp_parameters()
                         .encodings
-                        .get(0)
+                        .first()
                         .unwrap()
                         .rtx,
                     dtx: None,
@@ -1165,7 +1184,7 @@ fn get_stats_succeeds() {
                 audio_consumer
                     .rtp_parameters()
                     .encodings
-                    .get(0)
+                    .first()
                     .unwrap()
                     .ssrc
                     .unwrap()
@@ -1214,7 +1233,7 @@ fn get_stats_succeeds() {
                 video_consumer
                     .rtp_parameters()
                     .encodings
-                    .get(0)
+                    .first()
                     .unwrap()
                     .ssrc
                     .unwrap()

@@ -623,24 +623,24 @@ namespace RTC
 		}
 	}
 
-	void PortManager::Dump()
+	void PortManager::Dump(int indentation) const
 	{
-		MS_DUMP("<PortManager>");
+		MS_DUMP_CLEAN(indentation, "<PortManager>");
 
 		for (auto& kv : PortManager::mapPortRanges)
 		{
 			auto hash      = kv.first;
 			auto portRange = kv.second;
 
-			MS_DUMP("  <PortRange>");
-			MS_DUMP("    hash: %" PRIu64, hash);
-			MS_DUMP("    minPort: %" PRIu16, portRange.minPort);
-			MS_DUMP("    maxPort: %zu", portRange.minPort + portRange.ports.size() - 1);
-			MS_DUMP("    numUsedPorts: %" PRIu16, portRange.numUsedPorts);
-			MS_DUMP("  </PortRange>");
+			MS_DUMP_CLEAN(indentation + 1, "<PortRange>");
+			MS_DUMP_CLEAN(indentation + 1, "  hash: %" PRIu64, hash);
+			MS_DUMP_CLEAN(indentation + 1, "  minPort: %" PRIu16, portRange.minPort);
+			MS_DUMP_CLEAN(indentation + 1, "  maxPort: %zu", portRange.minPort + portRange.ports.size() - 1);
+			MS_DUMP_CLEAN(indentation + 1, "  numUsedPorts: %" PRIu16, portRange.numUsedPorts);
+			MS_DUMP_CLEAN(indentation + 1, "</PortRange>");
 		}
 
-		MS_DUMP("</PortManager>");
+		MS_DUMP_CLEAN(indentation, "</PortManager>");
 	}
 
 	/*
@@ -678,8 +678,8 @@ namespace RTC
 				// We want it in network order.
 				const uint64_t address = bindAddrIn->sin_addr.s_addr;
 
-				hash = static_cast<uint64_t>(minPort) << 48;
-				hash = static_cast<uint64_t>(maxPort) << 32;
+				hash |= static_cast<uint64_t>(minPort) << 48;
+				hash |= static_cast<uint64_t>(maxPort) << 32;
 				hash |= (address >> 2) << 2;
 				hash |= 0x0000; // AF_INET.
 
@@ -693,8 +693,8 @@ namespace RTC
 
 				const auto address = a[0] ^ a[1] ^ a[2] ^ a[3];
 
-				hash = static_cast<uint64_t>(minPort) << 48;
-				hash = static_cast<uint64_t>(maxPort) << 32;
+				hash |= static_cast<uint64_t>(minPort) << 48;
+				hash |= static_cast<uint64_t>(maxPort) << 32;
 				hash |= static_cast<uint64_t>(address) << 16;
 				hash |= (static_cast<uint64_t>(address) >> 2) << 2;
 				hash |= 0x0002; // AF_INET6.

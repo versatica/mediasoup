@@ -4,10 +4,7 @@ mod tests;
 use crate::consumer::{Consumer, ConsumerId, ConsumerOptions};
 use crate::data_consumer::{DataConsumer, DataConsumerId, DataConsumerOptions, DataConsumerType};
 use crate::data_producer::{DataProducer, DataProducerId, DataProducerOptions, DataProducerType};
-use crate::data_structures::{
-    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
-    SctpState, TransportTuple,
-};
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     TransportCloseRequest, TransportRestartIceRequest, WebRtcTransportConnectRequest,
     WebRtcTransportData,
@@ -15,7 +12,6 @@ use crate::messages::{
 use crate::producer::{Producer, ProducerId, ProducerOptions};
 use crate::router::transport::{TransportImpl, TransportType};
 use crate::router::Router;
-use crate::sctp_parameters::{NumSctpStreams, SctpParameters};
 use crate::transport::{
     ConsumeDataError, ConsumeError, ProduceDataError, ProduceError, RecvRtpHeaderExtensions,
     RtpListener, SctpListener, Transport, TransportGeneric, TransportId, TransportTraceEventData,
@@ -28,6 +24,11 @@ use async_trait::async_trait;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{notification, response, transport, web_rtc_transport};
+use mediasoup_types::data_structures::{
+    AppData, DtlsParameters, DtlsState, IceCandidate, IceParameters, IceRole, IceState, ListenInfo,
+    SctpState, TransportTuple,
+};
+use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters};
 use nohash_hasher::IntMap;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -217,10 +218,11 @@ pub struct WebRtcTransportDump {
     pub ice_selected_tuple: Option<TransportTuple>,
 }
 
-impl WebRtcTransportDump {
-    pub(crate) fn from_fbs(
-        dump: web_rtc_transport::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for WebRtcTransportDump {
+    type FbsType = web_rtc_transport::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             // Common to all Transports.
             id: dump.base.id.parse()?,
@@ -264,19 +266,17 @@ impl WebRtcTransportDump {
             recv_rtp_header_extensions: RecvRtpHeaderExtensions::from_fbs(
                 dump.base.recv_rtp_header_extensions.as_ref(),
             ),
-            rtp_listener: RtpListener::from_fbs(dump.base.rtp_listener.as_ref())?,
+            rtp_listener: RtpListener::try_from_fbs(*dump.base.rtp_listener)?,
             max_message_size: dump.base.max_message_size,
             sctp_parameters: dump
                 .base
                 .sctp_parameters
                 .as_ref()
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: dump
-                .base
-                .sctp_state
-                .map(|state| SctpState::from_fbs(&state)),
+            sctp_state: FromFbs::from_fbs(&dump.base.sctp_state),
             sctp_listener: dump.base.sctp_listener.as_ref().map(|listener| {
-                SctpListener::from_fbs(listener.as_ref()).expect("Error parsing SctpListner")
+                SctpListener::try_from_fbs(listener.as_ref().clone())
+                    .expect("Error parsing SctpListner")
             }),
             trace_event_types: dump
                 .base
@@ -285,16 +285,16 @@ impl WebRtcTransportDump {
                 .map(TransportTraceEventType::from_fbs)
                 .collect(),
             // WebRtcTransport specific.
-            dtls_parameters: DtlsParameters::from_fbs(*dump.dtls_parameters),
-            dtls_state: DtlsState::from_fbs(dump.dtls_state),
+            dtls_parameters: DtlsParameters::from_fbs(dump.dtls_parameters.as_ref()),
+            dtls_state: DtlsState::from_fbs(&dump.dtls_state),
             ice_candidates: dump
                 .ice_candidates
                 .iter()
                 .map(IceCandidate::from_fbs)
                 .collect(),
-            ice_parameters: IceParameters::from_fbs(*dump.ice_parameters),
-            ice_role: IceRole::from_fbs(dump.ice_role),
-            ice_state: IceState::from_fbs(dump.ice_state),
+            ice_parameters: IceParameters::from_fbs(dump.ice_parameters.as_ref()),
+            ice_role: IceRole::from_fbs(&dump.ice_role),
+            ice_state: IceState::from_fbs(&dump.ice_state),
             ice_selected_tuple: dump
                 .ice_selected_tuple
                 .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
@@ -346,14 +346,15 @@ pub struct WebRtcTransportStat {
     pub dtls_state: DtlsState,
 }
 
-impl WebRtcTransportStat {
-    pub(crate) fn from_fbs(
-        stats: web_rtc_transport::GetStatsResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for WebRtcTransportStat {
+    type FbsType = web_rtc_transport::GetStatsResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(stats: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             transport_id: stats.base.transport_id.parse()?,
             timestamp: stats.base.timestamp,
-            sctp_state: stats.base.sctp_state.as_ref().map(SctpState::from_fbs),
+            sctp_state: FromFbs::from_fbs(&stats.base.sctp_state),
             bytes_received: stats.base.bytes_received,
             recv_bitrate: stats.base.recv_bitrate,
             bytes_sent: stats.base.bytes_sent,
@@ -376,12 +377,12 @@ impl WebRtcTransportStat {
             rtp_packet_loss_received: stats.base.rtp_packet_loss_received,
             rtp_packet_loss_sent: stats.base.rtp_packet_loss_sent,
             // WebRtcTransport specific.
-            ice_role: IceRole::from_fbs(stats.ice_role),
-            ice_state: IceState::from_fbs(stats.ice_state),
+            ice_role: IceRole::from_fbs(&stats.ice_role),
+            ice_state: IceState::from_fbs(&stats.ice_state),
             ice_selected_tuple: stats
                 .ice_selected_tuple
                 .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
-            dtls_state: DtlsState::from_fbs(stats.dtls_state),
+            dtls_state: DtlsState::from_fbs(&stats.dtls_state),
         })
     }
 }
@@ -433,10 +434,11 @@ enum Notification {
     Trace(TransportTraceEventData),
 }
 
-impl Notification {
-    pub(crate) fn from_fbs(
-        notification: notification::NotificationRef<'_>,
-    ) -> Result<Self, NotificationParseError> {
+impl<'a> TryFromFbs<'a> for Notification {
+    type FbsType = notification::NotificationRef<'a>;
+    type Error = NotificationParseError;
+
+    fn try_from_fbs(notification: Self::FbsType) -> Result<Self, Self::Error> {
         match notification.event().unwrap() {
             notification::Event::WebrtctransportIceStateChange => {
                 let Ok(Some(notification::BodyRef::WebRtcTransportIceStateChangeNotification(
@@ -446,7 +448,7 @@ impl Notification {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                let ice_state = IceState::from_fbs(body.ice_state().unwrap());
+                let ice_state = IceState::from_fbs(&body.ice_state().unwrap());
 
                 Ok(Notification::IceStateChange { ice_state })
             }
@@ -472,7 +474,7 @@ impl Notification {
                     panic!("Wrong message from worker: {notification:?}");
                 };
 
-                let dtls_state = DtlsState::from_fbs(body.dtls_state().unwrap());
+                let dtls_state = DtlsState::from_fbs(&body.dtls_state().unwrap());
 
                 Ok(Notification::DtlsStateChange {
                     dtls_state,
@@ -498,7 +500,7 @@ impl Notification {
                 };
 
                 let trace_notification_fbs = transport::TraceNotification::try_from(body).unwrap();
-                let trace_notification = TransportTraceEventData::from_fbs(trace_notification_fbs);
+                let trace_notification = TransportTraceEventData::from_fbs(&trace_notification_fbs);
 
                 Ok(Notification::Trace(trace_notification))
             }
@@ -552,8 +554,14 @@ impl Inner {
 
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(router_id, request).await {
-                            error!("transport closing failed on drop: {}", error);
+                        match channel.request(router_id, request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!("transport closing failed on drop: Channel already closed");
+                            }
+                            Err(error) => {
+                                error!("transport closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();
@@ -743,23 +751,28 @@ impl TransportGeneric for WebRtcTransport {
     async fn dump(&self) -> Result<Self::Dump, RequestError> {
         debug!("dump()");
 
-        if let response::Body::WebRtcTransportDumpResponse(data) = self.dump_impl().await? {
-            Ok(WebRtcTransportDump::from_fbs(*data).expect("Error parsing dump response"))
+        let response = self.dump_impl().await?;
+
+        if let response::Body::WebRtcTransportDumpResponse(data) = response {
+            Ok(WebRtcTransportDump::try_from_fbs(*data)
+                .expect("Error parsing dump response: {response:?}"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
     async fn get_stats(&self) -> Result<Vec<Self::Stat>, RequestError> {
         debug!("get_stats()");
 
-        if let response::Body::WebRtcTransportGetStatsResponse(data) = self.get_stats_impl().await?
-        {
-            Ok(vec![
-                WebRtcTransportStat::from_fbs(*data).expect("Error parsing dump response")
-            ])
+        let response = self.get_stats_impl().await?;
+
+        if let response::Body::WebRtcTransportGetStatsResponse(data) = response {
+            Ok(vec![WebRtcTransportStat::try_from_fbs(
+                data.as_ref().clone(),
+            )
+            .expect("Error parsing dump response: {response:?}")])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 }
@@ -807,7 +820,7 @@ impl WebRtcTransport {
             let data = Arc::clone(&data);
 
             channel.subscribe_to_notifications(id.into(), move |notification| {
-                match Notification::from_fbs(notification) {
+                match Notification::try_from_fbs(notification) {
                     Ok(notification) => match notification {
                         Notification::IceStateChange { ice_state } => {
                             *data.ice_state.lock() = ice_state;
@@ -925,7 +938,7 @@ impl WebRtcTransport {
     ///
     /// # Example
     /// ```rust
-    /// use mediasoup::data_structures::{DtlsParameters, DtlsRole, DtlsFingerprint};
+    /// use mediasoup_types::data_structures::{DtlsParameters, DtlsRole, DtlsFingerprint};
     /// use mediasoup::webrtc_transport::WebRtcTransportRemoteParameters;
     ///
     /// # async fn f(

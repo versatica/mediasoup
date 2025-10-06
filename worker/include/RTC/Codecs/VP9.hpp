@@ -58,9 +58,9 @@ namespace RTC
 			struct PayloadDescriptor : public RTC::Codecs::PayloadDescriptor
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
-				~PayloadDescriptor() = default;
+				~PayloadDescriptor() override = default;
 
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 
 				// Header.
 				uint8_t i : 1; // I: Picture ID (PID) present.
@@ -88,11 +88,7 @@ namespace RTC
 			};
 
 		public:
-			static VP9::PayloadDescriptor* Parse(
-			  const uint8_t* data,
-			  size_t len,
-			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
-			  uint8_t frameMarkingLen                    = 0);
+			static VP9::PayloadDescriptor* Parse(const uint8_t* data, size_t len);
 			static void ProcessRtpPacket(RTC::RtpPacket* packet);
 
 		public:
@@ -128,8 +124,18 @@ namespace RTC
 				{
 					this->payloadDescriptor->Dump();
 				}
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
-				void Restore(uint8_t* data) override;
+				bool Process(
+				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
+				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
+				{
+					return nullptr;
+				}
+				void Encode(RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
+				{
+				}
+				void Restore(RtpPacket* packet) override
+				{
+				}
 				uint8_t GetSpatialLayer() const override
 				{
 					return this->payloadDescriptor->hasSlIndex ? this->payloadDescriptor->slIndex : 0u;

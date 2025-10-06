@@ -1,12 +1,11 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, WebRtcMessage};
+use crate::fbs::{FromFbs, TryFromFbs};
 use crate::messages::{
     DataProducerCloseRequest, DataProducerDumpRequest, DataProducerGetStatsRequest,
     DataProducerPauseRequest, DataProducerResumeRequest, DataProducerSendNotification,
 };
-use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::uuid_based_wrapper_type;
 use crate::worker::{Channel, NotificationError, RequestError};
@@ -14,6 +13,8 @@ use async_executor::Executor;
 use event_listener_primitives::{Bag, BagOnce, HandlerId};
 use log::{debug, error};
 use mediasoup_sys::fbs::{data_producer, response};
+use mediasoup_types::data_structures::{AppData, WebRtcMessage};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -115,10 +116,11 @@ pub struct DataProducerDump {
     pub paused: bool,
 }
 
-impl DataProducerDump {
-    pub(crate) fn from_fbs(
-        dump: data_producer::DumpResponse,
-    ) -> Result<Self, Box<dyn Error + Send + Sync>> {
+impl<'a> TryFromFbs<'a> for DataProducerDump {
+    type FbsType = data_producer::DumpResponse;
+    type Error = Box<dyn Error + Send + Sync>;
+
+    fn try_from_fbs(dump: Self::FbsType) -> Result<Self, Self::Error> {
         Ok(Self {
             id: dump.id.parse()?,
             r#type: if dump.type_ == data_producer::Type::Sctp {
@@ -130,7 +132,7 @@ impl DataProducerDump {
             protocol: dump.protocol,
             sctp_stream_parameters: dump
                 .sctp_stream_parameters
-                .map(|parameters| SctpStreamParameters::from_fbs(*parameters)),
+                .map(|parameters| SctpStreamParameters::from_fbs(parameters.as_ref())),
             paused: dump.paused,
         })
     }
@@ -150,8 +152,10 @@ pub struct DataProducerStat {
     pub bytes_received: u64,
 }
 
-impl DataProducerStat {
-    pub(crate) fn from_fbs(stats: &data_producer::GetStatsResponse) -> Self {
+impl FromFbs for DataProducerStat {
+    type FbsType = data_producer::GetStatsResponse;
+
+    fn from_fbs(stats: &Self::FbsType) -> Self {
         Self {
             timestamp: stats.timestamp,
             label: stats.label.to_string(),
@@ -211,8 +215,16 @@ impl Inner {
                 };
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request(transport_id, request).await {
-                            error!("data producer closing failed on drop: {}", error);
+                        match channel.request(transport_id, request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!(
+                                    "data producer closing failed on drop: Channel already closed"
+                                );
+                            }
+                            Err(error) => {
+                                error!("data producer closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();
@@ -426,9 +438,9 @@ impl DataProducer {
             .await?;
 
         if let response::Body::DataProducerDumpResponse(data) = response {
-            Ok(DataProducerDump::from_fbs(*data).expect("Error parsing dump response"))
+            Ok(DataProducerDump::try_from_fbs(*data).expect("Error parsing dump response"))
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 
@@ -448,7 +460,7 @@ impl DataProducer {
         if let response::Body::DataProducerGetStatsResponse(data) = response {
             Ok(vec![DataProducerStat::from_fbs(&data)])
         } else {
-            panic!("Wrong message from worker");
+            panic!("Wrong message from worker: {response:?}");
         }
     }
 

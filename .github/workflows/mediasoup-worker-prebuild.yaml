@@ -10,29 +10,25 @@ jobs:
     strategy:
       matrix:
         build:
-          # Worker prebuild for Linux with kernel version 5 Ubuntu (20.04).
-          # Let's use an old version of Ubuntu (20.04) that builds the
-          # mediasoup-worker binary using an old version of GLib, so it will work
+          # Worker prebuild for Linux with kernel version 6 Ubuntu (22.04).
+          # Let's use Ubuntu 22.04 instead of 24.04 so that it builds the
+          # mediasoup-worker binary using an old version of GLib that will work
           # on Linux hosts running more modern GLib versions.
           # See https://github.com/versatica/mediasoup/issues/1089.
-          - os: ubuntu-20.04
-            cc: gcc
-            cxx: g++
-          # Worker prebuild for Linux with kernel version 6 Ubuntu (22.04).
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-          - os: macos-12
+          - os: ubuntu-22.04-arm
+            cc: gcc
+            cxx: g++
+          - os: macos-15
             cc: clang
             cxx: clang++
-          - os: macos-14
-            cc: clang
-            cxx: clang++
-          - os: windows-2022
+          - os: windows-2025
             cc: cl
             cxx: cl
         node:
-          - 20
+          - 24
 
     runs-on: ${{ matrix.build.os }}
 
@@ -54,8 +50,11 @@ jobs:
 
       # We need to install some NPM production deps for npm-scripts.mjs to
       # work.
-      - name: npm ci --ignore-scripts
+      - name: npm ci --ignore-scripts --omit=dev --foreground-scripts
         run: npm ci --ignore-scripts --omit=dev --foreground-scripts
+
+      - name: npm run worker:prebuild-name
+        run: npm run worker:prebuild-name
 
       - name: npm run worker:build
         run: npm run worker:build

@@ -2,7 +2,6 @@
 #define MS_RTC_RTCP_FEEDBACK_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/FeedbackItem.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include <absl/container/flat_hash_map.h>
 
@@ -54,7 +53,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			void Dump() const override;
+			void Dump(int indentation = 0) const override;
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetCount() const override
 			{

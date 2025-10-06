@@ -1,8 +1,22 @@
 import * as dgram from 'node:dgram';
-// @ts-ignore
+import type { Duplex } from 'node:stream';
+// @ts-expect-error -- sctp library doesn't have TS types.
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
-import { enhancedOnce } from '../enhancedEvents';
+import { EnhancedEventEmitter, enhancedOnce } from '../enhancedEvents';
+
+// Events definition for the SctpSocket class.
+type SctpSocketEvents = {
+	stream: [Duplex, number];
+};
+
+// Types for the SCTP socket created via sctp.connect().
+// NOTE: This is because the sctp library doesn't have TS types.
+abstract class SctpSocket extends EnhancedEventEmitter<SctpSocketEvents> {
+	abstract createStream(streamId: number): Duplex;
+
+	abstract end(): void;
+}
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -11,9 +25,9 @@ type TestContext = {
 	dataProducer?: mediasoup.types.DataProducer;
 	dataConsumer?: mediasoup.types.DataConsumer;
 	udpSocket?: dgram.Socket;
-	sctpSocket?: any;
+	sctpSocket?: SctpSocket;
 	sctpSendStreamId?: number;
-	sctpSendStream?: any;
+	sctpSendStream?: Duplex;
 };
 
 const ctx: TestContext = {};
@@ -22,7 +36,7 @@ beforeEach(async () => {
 	// Set node-sctp default PMTU to 1200.
 	sctp.defaults({ PMTU: 1200 });
 
-	ctx.worker = await mediasoup.createWorker();
+	ctx.worker = await mediasoup.createWorker({ disableLiburing: true });
 	ctx.router = await ctx.worker.createRouter();
 	ctx.plainTransport = await ctx.router.createPlainTransport({
 		// https://github.com/nodejs/node/issues/14900.
@@ -45,14 +59,11 @@ beforeEach(async () => {
 	const { OS, MIS } = ctx.plainTransport.sctpParameters!;
 
 	await new Promise<void>((resolve, reject) => {
-		// @ts-ignore
-		ctx.udpSocket.connect(remoteUdpPort, remoteUdpIp, (error: Error) => {
-			if (error) {
-				reject(error);
+		ctx.udpSocket?.on('error', error => {
+			reject(error);
+		});
 
-				return;
-			}
-
+		ctx.udpSocket?.connect(remoteUdpPort, remoteUdpIp, () => {
 			ctx.sctpSocket = sctp.connect({
 				localPort: 5000, // Required for SCTP over UDP in mediasoup.
 				port: 5000, // Required for SCTP over UDP in mediasoup.
@@ -67,7 +78,7 @@ beforeEach(async () => {
 
 	// Wait for the SCTP association to be open.
 	await Promise.race([
-		enhancedOnce(ctx.sctpSocket, 'connect'),
+		enhancedOnce(ctx.sctpSocket!, 'connect'),
 		new Promise<void>((resolve, reject) =>
 			setTimeout(() => reject(new Error('SCTP connection timeout')), 3000)
 		),
@@ -76,7 +87,7 @@ beforeEach(async () => {
 	// Create an explicit SCTP outgoing stream with id 123 (id 0 is already used
 	// by the implicit SCTP outgoing stream built-in the SCTP socket).
 	ctx.sctpSendStreamId = 123;
-	ctx.sctpSendStream = ctx.sctpSocket.createStream(ctx.sctpSendStreamId);
+	ctx.sctpSendStream = ctx.sctpSocket!.createStream(ctx.sctpSendStreamId);
 
 	// Create a DataProducer with the corresponding SCTP stream id.
 	ctx.dataProducer = await ctx.plainTransport.produceData({
@@ -120,18 +131,18 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 	await new Promise<void>((resolve, reject) => {
 		sendNextMessage();
 
-		async function sendNextMessage(): Promise<void> {
+		function sendNextMessage(): void {
 			const id = ++numSentMessages;
 			const data = Buffer.from(String(id));
 
 			// Set ppid of type WebRTC DataChannel string.
 			if (id < numMessages / 2) {
-				// @ts-ignore
+				// @ts-expect-errors --- sctp library needs `ppid` field.`
 				data.ppid = sctp.PPID.WEBRTC_STRING;
 			}
 			// Set ppid of type WebRTC DataChannel binary.
 			else {
-				// @ts-ignore
+				// @ts-expect-errors --- sctp library needs `ppid` field.
 				data.ppid = sctp.PPID.WEBRTC_BINARY;
 			}
 
@@ -146,8 +157,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 		ctx.sctpSocket!.on('stream', onStream);
 
 		// Handle the generated SCTP incoming stream and SCTP messages receives on it.
-		// @ts-ignore
-		ctx.sctpSocket.on('stream', (stream, streamId) => {
+		ctx.sctpSocket!.on('stream', (stream, streamId) => {
 			// It must be zero because it's the first SCTP incoming stream (so first
 			// DataConsumer).
 			if (streamId !== 0) {
@@ -156,13 +166,12 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				return;
 			}
 
-			// @ts-ignore
 			stream.on('data', (data: Buffer) => {
 				++numReceivedMessages;
 				recvMessageBytes += data.byteLength;
 
 				const id = Number(data.toString('utf8'));
-				// @ts-ignore
+				// @ts-expect-errors --- sctp library uses `ppid` field.
 				const ppid = data.ppid;
 
 				if (id !== numReceivedMessages) {

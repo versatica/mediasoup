@@ -22,7 +22,7 @@ const logger = new Logger('Channel');
 type Sent = {
 	id: number;
 	method: string;
-	resolve: (data?: any) => void;
+	resolve: (data: Response | PromiseLike<Response>) => void;
 	reject: (error: Error) => void;
 	close: () => void;
 };
@@ -45,14 +45,11 @@ export class Channel extends EnhancedEventEmitter {
 	readonly #sents: Map<number, Sent> = new Map();
 
 	// Buffer for reading messages from the worker.
-	#recvBuffer = Buffer.alloc(0);
+	#recvBuffer: Buffer = Buffer.alloc(0);
 
 	// flatbuffers builder.
 	#bufferBuilder: flatbuffers.Builder = new flatbuffers.Builder(1024);
 
-	/**
-	 * @private
-	 */
 	constructor({
 		workerChannel,
 		pid,
@@ -88,7 +85,6 @@ export class Channel extends EnhancedEventEmitter {
 
 			let msgStart = 0;
 
-			// eslint-disable-next-line no-constant-condition
 			while (true) {
 				const readLen = this.#recvBuffer.length - msgStart;
 
@@ -179,9 +175,6 @@ export class Channel extends EnhancedEventEmitter {
 		return this.#bufferBuilder;
 	}
 
-	/**
-	 * @private
-	 */
 	close(): void {
 		if (this.#closed) {
 			return;
@@ -197,9 +190,6 @@ export class Channel extends EnhancedEventEmitter {
 		}
 	}
 
-	/**
-	 * @private
-	 */
 	notify(
 		event: Event,
 		bodyType?: NotificationBody,
@@ -280,7 +270,11 @@ export class Channel extends EnhancedEventEmitter {
 			);
 		}
 
-		this.#nextId < 4294967295 ? ++this.#nextId : (this.#nextId = 1);
+		if (this.#nextId < 4294967295) {
+			++this.#nextId;
+		} else {
+			this.#nextId = 1;
+		}
 
 		const id = this.#nextId;
 
@@ -368,7 +362,7 @@ export class Channel extends EnhancedEventEmitter {
 
 		if (!sent) {
 			logger.error(
-				`received response does not match any sent request [id:${response.id}]`
+				`received response does not match any sent request [id:${response.id()}]`
 			);
 
 			return;

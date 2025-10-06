@@ -88,11 +88,14 @@ UdpSocketHandle::UdpSocketHandle(uv_udp_t* uvHandle) : uvHandle(uvHandle)
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
-	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-	if (err != 0)
+	if (DepLibUring::IsEnabled())
 	{
-		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+		if (err != 0)
+		{
+			MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		}
 	}
 #endif
 }
@@ -107,13 +110,13 @@ UdpSocketHandle::~UdpSocketHandle()
 	}
 }
 
-void UdpSocketHandle::Dump() const
+void UdpSocketHandle::Dump(int indentation) const
 {
-	MS_DUMP("<UdpSocketHandle>");
-	MS_DUMP("  localIp: %s", this->localIp.c_str());
-	MS_DUMP("  localPort: %" PRIu16, static_cast<uint16_t>(this->localPort));
-	MS_DUMP("  closed: %s", this->closed ? "yes" : "no");
-	MS_DUMP("</UdpSocketHandle>");
+	MS_DUMP_CLEAN(indentation, "<UdpSocketHandle>");
+	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
+	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP_CLEAN(indentation, "  closed: %s", this->closed ? "yes" : "no");
+	MS_DUMP_CLEAN(indentation, "</UdpSocketHandle>");
 }
 
 void UdpSocketHandle::Send(
@@ -144,6 +147,7 @@ void UdpSocketHandle::Send(
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
+	if (DepLibUring::IsEnabled())
 	{
 		if (!DepLibUring::IsActive())
 		{

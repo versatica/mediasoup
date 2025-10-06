@@ -1,7 +1,8 @@
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { ProducerEvents } from '../types';
+import type { ProducerEvents } from '../types';
+import type { ProducerImpl } from '../Producer';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 import {
@@ -12,7 +13,7 @@ import {
 import * as FbsProducer from '../fbs/producer';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	audioProducerOptions: mediasoup.types.ProducerOptions;
 	videoProducerOptions: mediasoup.types.ProducerOptions;
 	worker?: mediasoup.types.Worker;
@@ -22,7 +23,7 @@ type TestContext = {
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -267,9 +268,9 @@ test('webRtcTransport1.produce() without header extensions and rtcp succeeds', a
 test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', async () => {
 	await expect(
 		ctx.webRtcTransport1!.produce({
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			kind: 'chicken',
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			rtpParameters: {},
 		})
 	).rejects.toThrow(TypeError);
@@ -277,7 +278,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 	await expect(
 		ctx.webRtcTransport1!.produce({
 			kind: 'audio',
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			rtpParameters: {},
 		})
 	).rejects.toThrow(TypeError);
@@ -289,7 +290,7 @@ test('webRtcTransport1.produce() with wrong arguments rejects with TypeError', a
 			rtpParameters: {
 				codecs: [],
 				headerExtensions: [],
-				// @ts-ignore
+				// @ts-expect-error --- Testing purposes.
 				encodings: [{ ssrc: '1111' }],
 				rtcp: { cname: 'qwerty' },
 			},
@@ -494,17 +495,17 @@ test('producer.dump() succeeds', async () => {
 	expect(typeof dump1.rtpParameters).toBe('object');
 	expect(Array.isArray(dump1.rtpParameters.codecs)).toBe(true);
 	expect(dump1.rtpParameters.codecs.length).toBe(1);
-	expect(dump1.rtpParameters.codecs[0].mimeType).toBe('audio/opus');
-	expect(dump1.rtpParameters.codecs[0].payloadType).toBe(0);
-	expect(dump1.rtpParameters.codecs[0].clockRate).toBe(48000);
-	expect(dump1.rtpParameters.codecs[0].channels).toBe(2);
-	expect(dump1.rtpParameters.codecs[0].parameters).toEqual({
+	expect(dump1.rtpParameters.codecs[0]!.mimeType).toBe('audio/opus');
+	expect(dump1.rtpParameters.codecs[0]!.payloadType).toBe(0);
+	expect(dump1.rtpParameters.codecs[0]!.clockRate).toBe(48000);
+	expect(dump1.rtpParameters.codecs[0]!.channels).toBe(2);
+	expect(dump1.rtpParameters.codecs[0]!.parameters).toEqual({
 		useinbandfec: 1,
 		usedtx: 1,
 		foo: 222.222,
 		bar: '333',
 	});
-	expect(dump1.rtpParameters.codecs[0].rtcpFeedback).toEqual([]);
+	expect(dump1.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([]);
 	expect(Array.isArray(dump1.rtpParameters.headerExtensions)).toBe(true);
 	expect(dump1.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(dump1.rtpParameters.headerExtensions).toEqual([
@@ -541,25 +542,25 @@ test('producer.dump() succeeds', async () => {
 	expect(typeof dump2.rtpParameters).toBe('object');
 	expect(Array.isArray(dump2.rtpParameters.codecs)).toBe(true);
 	expect(dump2.rtpParameters.codecs.length).toBe(2);
-	expect(dump2.rtpParameters.codecs[0].mimeType).toBe('video/H264');
-	expect(dump2.rtpParameters.codecs[0].payloadType).toBe(112);
-	expect(dump2.rtpParameters.codecs[0].clockRate).toBe(90000);
-	expect(dump2.rtpParameters.codecs[0].channels).toBeUndefined();
-	expect(dump2.rtpParameters.codecs[0].parameters).toEqual({
+	expect(dump2.rtpParameters.codecs[0]!.mimeType).toBe('video/H264');
+	expect(dump2.rtpParameters.codecs[0]!.payloadType).toBe(112);
+	expect(dump2.rtpParameters.codecs[0]!.clockRate).toBe(90000);
+	expect(dump2.rtpParameters.codecs[0]!.channels).toBeUndefined();
+	expect(dump2.rtpParameters.codecs[0]!.parameters).toEqual({
 		'packetization-mode': 1,
 		'profile-level-id': '4d0032',
 	});
-	expect(dump2.rtpParameters.codecs[0].rtcpFeedback).toEqual([
+	expect(dump2.rtpParameters.codecs[0]!.rtcpFeedback).toEqual([
 		{ type: 'nack' },
 		{ type: 'nack', parameter: 'pli' },
 		{ type: 'goog-remb' },
 	]);
-	expect(dump2.rtpParameters.codecs[1].mimeType).toBe('video/rtx');
-	expect(dump2.rtpParameters.codecs[1].payloadType).toBe(113);
-	expect(dump2.rtpParameters.codecs[1].clockRate).toBe(90000);
-	expect(dump2.rtpParameters.codecs[1].channels).toBeUndefined();
-	expect(dump2.rtpParameters.codecs[1].parameters).toEqual({ apt: 112 });
-	expect(dump2.rtpParameters.codecs[1].rtcpFeedback).toEqual([]);
+	expect(dump2.rtpParameters.codecs[1]!.mimeType).toBe('video/rtx');
+	expect(dump2.rtpParameters.codecs[1]!.payloadType).toBe(113);
+	expect(dump2.rtpParameters.codecs[1]!.clockRate).toBe(90000);
+	expect(dump2.rtpParameters.codecs[1]!.channels).toBeUndefined();
+	expect(dump2.rtpParameters.codecs[1]!.parameters).toEqual({ apt: 112 });
+	expect(dump2.rtpParameters.codecs[1]!.rtcpFeedback).toEqual([]);
 	expect(Array.isArray(dump2.rtpParameters.headerExtensions)).toBe(true);
 	expect(dump2.rtpParameters.headerExtensions!.length).toBe(2);
 	expect(dump2.rtpParameters.headerExtensions).toEqual([
@@ -629,11 +630,11 @@ test('producer.pause() and resume() succeed', async () => {
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
-	audioProducer.pause();
-	audioProducer.resume();
-	audioProducer.pause();
-	audioProducer.pause();
-	audioProducer.pause();
+	void audioProducer.pause();
+	void audioProducer.resume();
+	void audioProducer.pause();
+	void audioProducer.pause();
+	void audioProducer.pause();
 	await audioProducer.resume();
 
 	expect(onObserverPause).toHaveBeenCalledTimes(3);
@@ -676,13 +677,13 @@ test('producer.enableTraceEvent() succeed', async () => {
 
 	expect(dump1.traceEventTypes).toEqual(expect.arrayContaining(['rtp', 'pli']));
 
-	await audioProducer.enableTraceEvent([]);
+	await audioProducer.enableTraceEvent();
 
 	const dump2 = await audioProducer.dump();
 
 	expect(dump2.traceEventTypes).toEqual(expect.arrayContaining([]));
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await audioProducer.enableTraceEvent(['nack', 'FOO', 'fir']);
 
 	const dump3 = await audioProducer.dump();
@@ -703,16 +704,16 @@ test('producer.enableTraceEvent() with wrong arguments rejects with TypeError', 
 		ctx.audioProducerOptions
 	);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioProducer.enableTraceEvent(123)).rejects.toThrow(TypeError);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(audioProducer.enableTraceEvent('rtp')).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		audioProducer.enableTraceEvent(['fir', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -722,8 +723,8 @@ test('Producer emits "score"', async () => {
 		ctx.videoProducerOptions
 	);
 
-	// Private API.
-	const channel = videoProducer.channelForTesting;
+	// API not exposed in the interface.
+	const channel = (videoProducer as ProducerImpl).channelForTesting;
 	const onScore = jest.fn();
 
 	videoProducer.on('score', onScore);
@@ -802,11 +803,8 @@ test('Producer methods reject if closed', async () => {
 	audioProducer.close();
 
 	await expect(audioProducer.dump()).rejects.toThrow(Error);
-
 	await expect(audioProducer.getStats()).rejects.toThrow(Error);
-
 	await expect(audioProducer.pause()).rejects.toThrow(Error);
-
 	await expect(audioProducer.resume()).rejects.toThrow(Error);
 }, 2000);
 

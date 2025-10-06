@@ -1,7 +1,9 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/TransportCongestionControlServer.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <cstdint>
 
 using namespace RTC;
 
@@ -53,7 +55,7 @@ public:
 
 			if (packetResultIt->received)
 			{
-				REQUIRE(packetResultIt->receivedAtMs == testResultIt->timestamp);
+				REQUIRE(packetResultIt->receivedAtMs == static_cast<int64_t>(testResultIt->timestamp));
 			}
 		}
 	}
@@ -88,12 +90,12 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 {
 	TestTransportCongestionControlServerListener listener;
 	auto tccServer =
-	  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::MtuSize);
+	  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
 
 	tccServer.SetMaxIncomingBitrate(150000);
 	tccServer.TransportConnected();
 
-	RtpPacket* packet = RtpPacket::Parse(buffer, sizeof(buffer));
+	std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
 
 	packet->SetTransportWideCc01ExtensionId(5);
 	packet->SetSequenceNumber(1);
@@ -116,7 +118,7 @@ void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, Te
 		}
 
 		packet->UpdateTransportWideCc01(input.wideSeqNumber);
-		tccServer.IncomingPacket(input.nowMs, packet);
+		tccServer.IncomingPacket(input.nowMs, packet.get());
 	}
 
 	tccServer.FillAndSendTransportCcFeedback();

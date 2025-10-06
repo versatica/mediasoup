@@ -48,17 +48,18 @@
 //! Please check integration and unit tests for usage examples, they cover all major functionality
 //! and are a good place to start until we have demo apps built in Rust).
 
-pub mod data_structures;
+pub use mediasoup_types as types;
+mod data_structures;
+pub(crate) mod fbs;
 mod macros;
 mod messages;
 #[doc(hidden)]
 pub mod ortc;
 pub mod prelude;
 pub mod router;
-pub mod rtp_parameters;
-pub mod scalability_modes;
-pub mod sctp_parameters;
-pub mod srtp_parameters;
+mod rtp_parameters;
+mod sctp_parameters;
+mod srtp_parameters;
 pub mod supported_rtp_capabilities;
 pub mod webrtc_server;
 pub mod worker;

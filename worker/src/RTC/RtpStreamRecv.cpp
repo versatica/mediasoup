@@ -27,7 +27,7 @@ namespace RTC
 		{
 			for (uint8_t tIdx{ 0u }; tIdx < temporalLayers; ++tIdx)
 			{
-				spatialLayerCounter.emplace_back(windowSize);
+				spatialLayerCounter.emplace_back(/*ignorePaddingOnlyPackets*/ true, windowSize);
 			}
 		}
 	}
@@ -191,12 +191,13 @@ namespace RTC
 	RtpStreamRecv::RtpStreamRecv(
 	  RTC::RtpStreamRecv::Listener* listener,
 	  RTC::RtpStream::Params& params,
-	  unsigned int sendNackDelayMs,
+	  uint32_t sendNackDelayMs,
 	  bool useRtpInactivityCheck)
 	  : RTC::RtpStream::RtpStream(listener, params, 10), sendNackDelayMs(sendNackDelayMs),
 	    useRtpInactivityCheck(useRtpInactivityCheck),
 	    transmissionCounter(
-	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500)
+	      params.spatialLayers, params.temporalLayers, this->params.useDtx ? 6000 : 2500),
+	    mediaTransmissionCounter(/*ignorePaddingOnlyPackets*/ true)
 	{
 		MS_TRACE();
 
@@ -279,7 +280,7 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
+			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
 		}
 
 		// Pass the packet to the NackGenerator.
@@ -308,6 +309,12 @@ namespace RTC
 
 		// Increase media transmission counter.
 		this->mediaTransmissionCounter.Update(packet);
+
+		// Padding only packet, do not consider it for stream activation.
+		if (packet->GetPayloadLength() == 0)
+		{
+			return true;
+		}
 
 		// Not inactive anymore.
 		if (this->inactive)
@@ -403,7 +410,7 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
+			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
 		}
 
 		// Mark the packet as retransmitted.
@@ -418,6 +425,12 @@ namespace RTC
 
 			// Increase transmission counter.
 			this->transmissionCounter.Update(packet);
+
+			// Padding only packet, do not consider it for stream activation.
+			if (packet->GetPayloadLength() == 0)
+			{
+				return true;
+			}
 
 			// Not inactive anymore.
 			if (this->inactive)

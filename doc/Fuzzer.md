@@ -41,6 +41,7 @@ The mediasoup-worker fuzzer reads some custom environment variables to decide wh
 
 - `MS_FUZZ_STUN=1`: Enable STUN fuzzer.
 - `MS_FUZZ_DTLS=1`: Enable DTLS fuzzer.
+- `MS_FUZZ_SCTP=1`: Enable SCTP fuzzer.
 - `MS_FUZZ_RTP=1`: Enable RTP fuzzer.
 - `MS_FUZZ_RTCP=1`: Enable RTCP fuzzer.
 - `MS_FUZZ_CODECS=1`: Enable audio/video codecs fuzzer.
@@ -61,6 +62,12 @@ MS_FUZZ_STUN=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-wo
 
 ```bash
 MS_FUZZ_DTLS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus
+```
+
+- Detect memory leaks and just fuzz SCTP:
+
+```bash
+MS_FUZZ_SCTP=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus
 ```
 
 - Detect memory leaks and just fuzz RTP:
@@ -87,10 +94,10 @@ MS_FUZZ_CODECS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-
 MS_FUZZ_UTILS=1 LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=2000 fuzzer/new-corpus
 ```
 
-- Detect memory leaks and fuzz everything with log level "warn":
+- Detect memory leaks and fuzz everything with log level "warn" and enable log tags "rtp" and "rtcp":
 
 ```bash
-MS_FUZZ_LOG_LEVEL=warn LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
+MS_FUZZ_LOG_LEVEL=warn MS_FUZZ_LOG_TAGS="rtp rtcp" LSAN_OPTIONS=verbosity=1:log_threads=1 ./out/Release/mediasoup-worker-fuzzer -artifact_prefix=fuzzer/reports/ -max_len=1400 fuzzer/new-corpus deps/webrtc-fuzzer-corpora/corpora/stun-corpus deps/webrtc-fuzzer-corpora/corpora/rtp-corpus deps/webrtc-fuzzer-corpora/corpora/rtcp-corpus
 ```
 
 - Verify that a specific crash is fixed:

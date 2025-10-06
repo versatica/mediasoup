@@ -1,6 +1,3 @@
-use crate::data_structures::{
-    IceCandidateTcpType, IceCandidateType, IceState, ListenInfo, Protocol,
-};
 use crate::prelude::WebRtcTransport;
 use crate::router::{NewTransport, Router, RouterOptions};
 use crate::transport::Transport;
@@ -11,6 +8,9 @@ use crate::worker_manager::WorkerManager;
 use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::HashedSet;
+use mediasoup_types::data_structures::{
+    IceCandidateTcpType, IceCandidateType, IceState, ListenInfo, Protocol,
+};
 use parking_lot::Mutex;
 use portpicker::pick_unused_port;
 use std::env;
@@ -56,6 +56,7 @@ fn create_with_webrtc_server_succeeds() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port1),
                     port_range: None,
                     flags: None,
@@ -66,6 +67,7 @@ fn create_with_webrtc_server_succeeds() {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port2),
                     port_range: None,
                     flags: None,
@@ -236,6 +238,7 @@ fn router_close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("9.9.9.1".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -279,6 +282,7 @@ fn webrtc_server_close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port1),
                     port_range: None,
                     flags: None,
@@ -289,6 +293,7 @@ fn webrtc_server_close_event() {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port2),
                     port_range: None,
                     flags: None,

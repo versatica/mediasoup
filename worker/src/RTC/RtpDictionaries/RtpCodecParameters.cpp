@@ -75,7 +75,7 @@ namespace RTC
 		  &rtcpFeedback);
 	}
 
-	inline void RtpCodecParameters::CheckCodec()
+	inline void RtpCodecParameters::CheckCodec() const
 	{
 		MS_TRACE();
 

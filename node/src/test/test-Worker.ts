@@ -3,10 +3,10 @@ import * as path from 'node:path';
 import * as mediasoup from '../';
 import { InvalidStateError } from '../errors';
 
-test('Worker.workerBin matches mediasoup-worker absolute path', () => {
-	const workerBin = process.env.MEDIASOUP_WORKER_BIN
-		? process.env.MEDIASOUP_WORKER_BIN
-		: process.env.MEDIASOUP_BUILDTYPE === 'Debug'
+test('mediasoup.workerBin matches mediasoup-worker absolute path', () => {
+	const workerBin = process.env['MEDIASOUP_WORKER_BIN']
+		? process.env['MEDIASOUP_WORKER_BIN']
+		: process.env['MEDIASOUP_BUILDTYPE'] === 'Debug'
 			? path.join(
 					__dirname,
 					'..',
@@ -31,7 +31,7 @@ test('Worker.workerBin matches mediasoup-worker absolute path', () => {
 	expect(mediasoup.workerBin).toBe(workerBin);
 });
 
-test('createWorker() succeeds', async () => {
+test('mediasoup.createWorker() succeeds', async () => {
 	const onObserverNewWorker = jest.fn();
 
 	mediasoup.observer.once('newworker', onObserverNewWorker);
@@ -40,7 +40,7 @@ test('createWorker() succeeds', async () => {
 
 	expect(onObserverNewWorker).toHaveBeenCalledTimes(1);
 	expect(onObserverNewWorker).toHaveBeenCalledWith(worker1);
-	expect(worker1.constructor.name).toBe('Worker');
+	expect(worker1.constructor.name).toBe('WorkerImpl');
 	expect(typeof worker1.pid).toBe('number');
 	expect(worker1.closed).toBe(false);
 
@@ -56,10 +56,11 @@ test('createWorker() succeeds', async () => {
 		dtlsCertificateFile: path.join(__dirname, 'data', 'dtls-cert.pem'),
 		dtlsPrivateKeyFile: path.join(__dirname, 'data', 'dtls-key.pem'),
 		libwebrtcFieldTrials: 'WebRTC-Bwe-AlrLimitedBackoff/Disabled/',
+		disableLiburing: true,
 		appData: { foo: 456 },
 	});
 
-	expect(worker2.constructor.name).toBe('Worker');
+	expect(worker2.constructor.name).toBe('WorkerImpl');
 	expect(typeof worker2.pid).toBe('number');
 	expect(worker2.closed).toBe(false);
 	expect(worker2.appData).toEqual({ foo: 456 });
@@ -69,8 +70,8 @@ test('createWorker() succeeds', async () => {
 	expect(worker2.closed).toBe(true);
 }, 2000);
 
-test('createWorker() with wrong settings rejects with TypeError', async () => {
-	// @ts-ignore
+test('mediasoup.createWorker() with wrong settings rejects with TypeError', async () => {
+	// @ts-expect-error --- Testing purposes.
 	await expect(mediasoup.createWorker({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
 	);
@@ -93,7 +94,7 @@ test('createWorker() with wrong settings rejects with TypeError', async () => {
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		mediasoup.createWorker({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -111,7 +112,7 @@ test('worker.updateSettings() succeeds', async () => {
 test('worker.updateSettings() with wrong settings rejects with TypeError', async () => {
 	const worker = await mediasoup.createWorker();
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(worker.updateSettings({ logLevel: 'chicken' })).rejects.toThrow(
 		TypeError
 	);

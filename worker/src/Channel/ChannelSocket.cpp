@@ -30,6 +30,13 @@ namespace Channel
 
 	/* Instance methods. */
 
+#ifdef MS_TEST
+	ChannelSocket::ChannelSocket()
+	{
+		MS_TRACE_STD();
+	}
+#endif
+
 	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
 	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
 	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen))
@@ -162,7 +169,7 @@ namespace Channel
 
 		this->bufferBuilder.FinishSizePrefixed(message);
 		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
-		this->bufferBuilder.Reset();
+		this->bufferBuilder.Clear();
 	}
 
 	bool ChannelSocket::CallbackRead()
@@ -196,7 +203,7 @@ namespace Channel
 
 			if (message->data_type() == FBS::Message::Body::Request)
 			{
-				ChannelRequest* request;
+				ChannelRequest* request{ nullptr };
 
 				try
 				{
@@ -218,7 +225,7 @@ namespace Channel
 			}
 			else if (message->data_type() == FBS::Message::Body::Notification)
 			{
-				ChannelNotification* notification;
+				ChannelNotification* notification{ nullptr };
 
 				try
 				{
@@ -256,7 +263,7 @@ namespace Channel
 		{
 			this->channelWriteFn(payload, payloadLen, this->channelWriteCtx);
 		}
-		else
+		else if (this->producerSocket)
 		{
 			this->producerSocket->Write(payload, payloadLen);
 		}
@@ -277,7 +284,7 @@ namespace Channel
 
 		if (message->data_type() == FBS::Message::Body::Request)
 		{
-			ChannelRequest* request;
+			ChannelRequest* request{ nullptr };
 
 			try
 			{
@@ -299,7 +306,7 @@ namespace Channel
 		}
 		else if (message->data_type() == FBS::Message::Body::Notification)
 		{
-			ChannelNotification* notification;
+			ChannelNotification* notification{ nullptr };
 
 			try
 			{

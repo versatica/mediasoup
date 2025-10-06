@@ -1,6 +1,10 @@
 name: mediasoup-rust
 
-on: [pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [v3]
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
   # Cancel a currently running workflow from the same PR, branch or tag when a
@@ -15,14 +19,15 @@ jobs:
   ci:
     strategy:
       matrix:
-        ci:
-          - os: ubuntu-20.04
-          - os: ubuntu-22.04
-          - os: macos-12
+        build:
+          - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
           - os: macos-14
+          - os: macos-15
           - os: windows-2022
+          - os: windows-2025
 
-    runs-on: ${{ matrix.ci.os }}
+    runs-on: ${{ matrix.build.os }}
 
     env:
       KEEP_BUILD_ARTIFACTS: '1'
@@ -37,7 +42,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ matrix.ci.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ matrix.build.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: cargo fmt
         run: cargo fmt --all -- --check
@@ -46,7 +51,7 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
       # NOTE: In Windows this will build and test libmediasoupworker in release
-      # mode twice since build.rs doesn't allow debug mode for Windows.
+      # mode twice since build.rs doesn't allow debug mode on Windows.
       - name: cargo test
         run: |
           cargo test --verbose

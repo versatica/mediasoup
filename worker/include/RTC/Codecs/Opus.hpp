@@ -16,9 +16,9 @@ namespace RTC
 			struct PayloadDescriptor : public RTC::Codecs::PayloadDescriptor
 			{
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
-				~PayloadDescriptor() = default;
+				~PayloadDescriptor() override = default;
 
-				void Dump() const override;
+				void Dump(int indentation = 0) const override;
 
 				// Mandatory fields.
 				uint8_t stereo : 1;
@@ -57,18 +57,25 @@ namespace RTC
 			{
 			public:
 				explicit PayloadDescriptorHandler(PayloadDescriptor* payloadDescriptor);
-				~PayloadDescriptorHandler() = default;
+				~PayloadDescriptorHandler() override = default;
 
 			public:
 				void Dump() const override
 				{
 					this->payloadDescriptor->Dump();
 				}
-				bool Process(RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& marker) override;
-				void Restore(uint8_t* data) override
+				bool Process(
+				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
+				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 				{
-					return;
-				};
+					return nullptr;
+				}
+				void Encode(RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
+				{
+				}
+				void Restore(RtpPacket* packet) override
+				{
+				}
 				uint8_t GetSpatialLayer() const override
 				{
 					return 0u;

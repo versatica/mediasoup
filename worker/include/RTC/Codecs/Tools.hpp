@@ -2,8 +2,8 @@
 #define MS_RTC_CODECS_TOOLS_HPP
 
 #include "common.hpp"
+#include "RTC/Codecs/AV1.hpp"
 #include "RTC/Codecs/H264.hpp"
-#include "RTC/Codecs/H264_SVC.hpp"
 #include "RTC/Codecs/Opus.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/VP8.hpp"
@@ -29,10 +29,14 @@ namespace RTC
 							case RTC::RtpCodecMimeType::Subtype::VP8:
 							case RTC::RtpCodecMimeType::Subtype::VP9:
 							case RTC::RtpCodecMimeType::Subtype::H264:
-							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+							{
 								return true;
+							}
+
 							default:
+							{
 								return false;
+							}
 						}
 					}
 
@@ -43,7 +47,11 @@ namespace RTC
 				}
 			}
 
-			static void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType)
+			static void ProcessRtpPacket(
+			  RTC::RtpPacket* packet,
+			  const RTC::RtpCodecMimeType& mimeType,
+			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+			    templateDependencyStructure)
 			{
 				switch (mimeType.type)
 				{
@@ -67,13 +75,14 @@ namespace RTC
 
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
-								RTC::Codecs::H264::ProcessRtpPacket(packet);
+								RTC::Codecs::H264::ProcessRtpPacket(packet, templateDependencyStructure);
 
 								break;
 							}
-							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+
+							case RTC::RtpCodecMimeType::Subtype::AV1:
 							{
-								RTC::Codecs::H264_SVC::ProcessRtpPacket(packet);
+								RTC::Codecs::AV1::ProcessRtpPacket(packet, templateDependencyStructure);
 
 								break;
 							}
@@ -121,9 +130,14 @@ namespace RTC
 								{
 									case RTC::RtpCodecMimeType::Subtype::VP8:
 									case RTC::RtpCodecMimeType::Subtype::H264:
+									{
 										return true;
+									}
+
 									default:
+									{
 										return false;
+									}
 								}
 							}
 
@@ -143,10 +157,15 @@ namespace RTC
 								switch (mimeType.subtype)
 								{
 									case RTC::RtpCodecMimeType::Subtype::VP9:
-									case RTC::RtpCodecMimeType::Subtype::H264_SVC:
+									case RTC::RtpCodecMimeType::Subtype::AV1:
+									{
 										return true;
+									}
+
 									default:
+									{
 										return false;
+									}
 								}
 							}
 
@@ -161,6 +180,8 @@ namespace RTC
 					{
 						return true;
 					}
+
+						NO_DEFAULT_GCC();
 				}
 			}
 
@@ -174,15 +195,29 @@ namespace RTC
 						switch (mimeType.subtype)
 						{
 							case RTC::RtpCodecMimeType::Subtype::VP8:
+							{
 								return new RTC::Codecs::VP8::EncodingContext(params);
+							}
+
 							case RTC::RtpCodecMimeType::Subtype::VP9:
+							{
 								return new RTC::Codecs::VP9::EncodingContext(params);
+							}
+
+							case RTC::RtpCodecMimeType::Subtype::AV1:
+							{
+								return new RTC::Codecs::AV1::EncodingContext(params);
+							}
+
 							case RTC::RtpCodecMimeType::Subtype::H264:
+							{
 								return new RTC::Codecs::H264::EncodingContext(params);
-							case RTC::RtpCodecMimeType::Subtype::H264_SVC:
-								return new RTC::Codecs::H264_SVC::EncodingContext(params);
+							}
+
 							default:
+							{
 								return nullptr;
+							}
 						}
 					}
 
@@ -192,9 +227,14 @@ namespace RTC
 						{
 							case RTC::RtpCodecMimeType::Subtype::OPUS:
 							case RTC::RtpCodecMimeType::Subtype::MULTIOPUS:
+							{
 								return new RTC::Codecs::Opus::EncodingContext(params);
+							}
+
 							default:
+							{
 								return nullptr;
+							}
 						}
 					}
 

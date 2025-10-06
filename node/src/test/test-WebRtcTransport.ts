@@ -2,9 +2,11 @@ import { pickPort } from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WebRtcTransportEvents } from '../types';
+import type { WebRtcTransportEvents } from '../types';
+import type { WebRtcTransportImpl } from '../WebRtcTransport';
+import type { TransportTuple } from '../TransportTypes';
+import { serializeProtocol } from '../Transport';
 import * as utils from '../utils';
-import { serializeProtocol, TransportTuple } from '../Transport';
 import {
 	Notification,
 	Body as NotificationBody,
@@ -14,13 +16,13 @@ import * as FbsTransport from '../fbs/transport';
 import * as FbsWebRtcTransport from '../fbs/web-rtc-transport';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -70,6 +72,9 @@ test('router.createWebRtcTransport() succeeds', async () => {
 				protocol: 'udp',
 				ip: '127.0.0.1',
 				announcedAddress: '9.9.9.1',
+				// |exposeInternalIp| will generate an extra ICE candidate with |ip|
+				// value.
+				exposeInternalIp: true,
 				portRange: { min: 2000, max: 3000 },
 			},
 			{
@@ -119,6 +124,7 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	expect(onObserverNewTransport).toHaveBeenCalledWith(webRtcTransport);
 	expect(typeof webRtcTransport.id).toBe('string');
 	expect(webRtcTransport.closed).toBe(false);
+	expect(webRtcTransport.type).toBe('webrtc');
 	expect(webRtcTransport.appData).toEqual({ foo: 'bar' });
 	expect(webRtcTransport.iceRole).toBe('controlled');
 	expect(typeof webRtcTransport.iceParameters).toBe('object');
@@ -132,39 +138,57 @@ test('router.createWebRtcTransport() succeeds', async () => {
 		maxMessageSize: 1000000,
 	});
 	expect(Array.isArray(webRtcTransport.iceCandidates)).toBe(true);
-	expect(webRtcTransport.iceCandidates.length).toBe(6);
+	expect(webRtcTransport.iceCandidates.length).toBe(7);
 
 	const iceCandidates = webRtcTransport.iceCandidates;
 
-	expect(iceCandidates[0].ip).toBe('9.9.9.1');
-	expect(iceCandidates[0].protocol).toBe('udp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBeUndefined();
-	expect(iceCandidates[1].ip).toBe('9.9.9.1');
-	expect(iceCandidates[1].protocol).toBe('tcp');
-	expect(iceCandidates[1].type).toBe('host');
-	expect(iceCandidates[1].tcpType).toBe('passive');
-	expect(iceCandidates[2].ip).toBe('foo1.bar.org');
-	expect(iceCandidates[2].protocol).toBe('udp');
-	expect(iceCandidates[2].type).toBe('host');
-	expect(iceCandidates[2].tcpType).toBeUndefined();
-	expect(iceCandidates[3].ip).toBe('foo2.bar.org');
-	expect(iceCandidates[3].protocol).toBe('tcp');
-	expect(iceCandidates[3].type).toBe('host');
-	expect(iceCandidates[3].tcpType).toBe('passive');
-	expect(iceCandidates[4].ip).toBe('127.0.0.1');
-	expect(iceCandidates[4].protocol).toBe('udp');
-	expect(iceCandidates[4].type).toBe('host');
-	expect(iceCandidates[4].tcpType).toBeUndefined();
-	expect(iceCandidates[5].ip).toBe('127.0.0.1');
-	expect(iceCandidates[5].protocol).toBe('tcp');
-	expect(iceCandidates[5].type).toBe('host');
-	expect(iceCandidates[5].tcpType).toBe('passive');
-	expect(iceCandidates[0].priority).toBeGreaterThan(iceCandidates[1].priority);
-	expect(iceCandidates[1].priority).toBeGreaterThan(iceCandidates[2].priority);
-	expect(iceCandidates[2].priority).toBeGreaterThan(iceCandidates[3].priority);
-	expect(iceCandidates[3].priority).toBeGreaterThan(iceCandidates[4].priority);
-	expect(iceCandidates[4].priority).toBeGreaterThan(iceCandidates[5].priority);
+	expect(iceCandidates[0]!.ip).toBe('9.9.9.1');
+	expect(iceCandidates[0]!.protocol).toBe('udp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBeUndefined();
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.protocol).toBe('udp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBeUndefined();
+	expect(iceCandidates[2]!.ip).toBe('9.9.9.1');
+	expect(iceCandidates[2]!.protocol).toBe('tcp');
+	expect(iceCandidates[2]!.type).toBe('host');
+	expect(iceCandidates[2]!.tcpType).toBe('passive');
+	expect(iceCandidates[3]!.ip).toBe('foo1.bar.org');
+	expect(iceCandidates[3]!.protocol).toBe('udp');
+	expect(iceCandidates[3]!.type).toBe('host');
+	expect(iceCandidates[3]!.tcpType).toBeUndefined();
+	expect(iceCandidates[4]!.ip).toBe('foo2.bar.org');
+	expect(iceCandidates[4]!.protocol).toBe('tcp');
+	expect(iceCandidates[4]!.type).toBe('host');
+	expect(iceCandidates[4]!.tcpType).toBe('passive');
+	expect(iceCandidates[5]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[5]!.protocol).toBe('udp');
+	expect(iceCandidates[5]!.type).toBe('host');
+	expect(iceCandidates[5]!.tcpType).toBeUndefined();
+	expect(iceCandidates[6]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[6]!.protocol).toBe('tcp');
+	expect(iceCandidates[6]!.type).toBe('host');
+	expect(iceCandidates[6]!.tcpType).toBe('passive');
+
+	expect(iceCandidates[0]!.priority).toBeGreaterThan(
+		iceCandidates[1]!.priority
+	);
+	expect(iceCandidates[1]!.priority).toBeGreaterThan(
+		iceCandidates[2]!.priority
+	);
+	expect(iceCandidates[2]!.priority).toBeGreaterThan(
+		iceCandidates[3]!.priority
+	);
+	expect(iceCandidates[3]!.priority).toBeGreaterThan(
+		iceCandidates[4]!.priority
+	);
+	expect(iceCandidates[4]!.priority).toBeGreaterThan(
+		iceCandidates[5]!.priority
+	);
+	expect(iceCandidates[5]!.priority).toBeGreaterThan(
+		iceCandidates[6]!.priority
+	);
 
 	expect(webRtcTransport.iceState).toBe('new');
 	expect(webRtcTransport.iceSelectedTuple).toBeUndefined();
@@ -178,7 +202,6 @@ test('router.createWebRtcTransport() succeeds', async () => {
 	const dump = await webRtcTransport.dump();
 
 	expect(dump.id).toBe(webRtcTransport.id);
-	expect(dump.direct).toBe(false);
 	expect(dump.producerIds).toEqual([]);
 	expect(dump.consumerIds).toEqual([]);
 	expect(dump.iceRole).toBe(webRtcTransport.iceRole);
@@ -212,15 +235,17 @@ test('router.createWebRtcTransport() with deprecated listenIps succeeds', async 
 
 	const iceCandidates = webRtcTransport.iceCandidates;
 
-	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].protocol).toBe('udp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBeUndefined();
-	expect(iceCandidates[1].ip).toBe('127.0.0.1');
-	expect(iceCandidates[1].protocol).toBe('tcp');
-	expect(iceCandidates[1].type).toBe('host');
-	expect(iceCandidates[1].tcpType).toBe('passive');
-	expect(iceCandidates[0].priority).toBeGreaterThan(iceCandidates[1].priority);
+	expect(iceCandidates[0]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[0]!.protocol).toBe('udp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBeUndefined();
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
+	expect(iceCandidates[0]!.priority).toBeGreaterThan(
+		iceCandidates[1]!.priority
+	);
 }, 2000);
 
 test('router.createWebRtcTransport() with fixed port succeeds', async () => {
@@ -236,7 +261,7 @@ test('router.createWebRtcTransport() with fixed port succeeds', async () => {
 		],
 	});
 
-	expect(webRtcTransport.iceCandidates[0].port).toEqual(port);
+	expect(webRtcTransport.iceCandidates[0]!.port).toEqual(port);
 }, 2000);
 
 test('router.createWebRtcTransport() with portRange succeeds', async () => {
@@ -246,7 +271,7 @@ test('router.createWebRtcTransport() with portRange succeeds', async () => {
 		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
 	});
 
-	const iceCandidate1 = webRtcTransport1.iceCandidates[0];
+	const iceCandidate1 = webRtcTransport1.iceCandidates[0]!;
 
 	expect(iceCandidate1.ip).toBe('127.0.0.1');
 	expect(
@@ -258,7 +283,7 @@ test('router.createWebRtcTransport() with portRange succeeds', async () => {
 		listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', portRange }],
 	});
 
-	const iceCandidate2 = webRtcTransport2.iceCandidates[0];
+	const iceCandidate2 = webRtcTransport2.iceCandidates[0]!;
 
 	expect(iceCandidate2.ip).toBe('127.0.0.1');
 	expect(
@@ -275,7 +300,7 @@ test('router.createWebRtcTransport() with portRange succeeds', async () => {
 }, 2000);
 
 test('router.createWebRtcTransport() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.router!.createWebRtcTransport({})).rejects.toThrow(
 		TypeError
 	);
@@ -293,24 +318,24 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createWebRtcTransport({ listenIps: [123] })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createWebRtcTransport({ listenInfos: '127.0.0.1' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createWebRtcTransport({ listenIps: '127.0.0.1' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router!.createWebRtcTransport({
 			listenIps: ['127.0.0.1'],
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			appData: 'NOT-AN-OBJECT',
 		})
 	).rejects.toThrow(TypeError);
@@ -319,7 +344,7 @@ test('router.createWebRtcTransport() with wrong arguments rejects with TypeError
 		ctx.router!.createWebRtcTransport({
 			listenIps: ['127.0.0.1'],
 			enableSctp: true,
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			numSctpStreams: 'foo',
 		})
 	).rejects.toThrow(TypeError);
@@ -351,29 +376,29 @@ test('webRtcTransport.getStats() succeeds', async () => {
 
 	expect(Array.isArray(stats)).toBe(true);
 	expect(stats.length).toBe(1);
-	expect(stats[0].type).toBe('webrtc-transport');
-	expect(stats[0].transportId).toBe(webRtcTransport.id);
-	expect(typeof stats[0].timestamp).toBe('number');
-	expect(stats[0].iceRole).toBe('controlled');
-	expect(stats[0].iceState).toBe('new');
-	expect(stats[0].dtlsState).toBe('new');
-	expect(stats[0].sctpState).toBeUndefined();
-	expect(stats[0].bytesReceived).toBe(0);
-	expect(stats[0].recvBitrate).toBe(0);
-	expect(stats[0].bytesSent).toBe(0);
-	expect(stats[0].sendBitrate).toBe(0);
-	expect(stats[0].rtpBytesReceived).toBe(0);
-	expect(stats[0].rtpRecvBitrate).toBe(0);
-	expect(stats[0].rtpBytesSent).toBe(0);
-	expect(stats[0].rtpSendBitrate).toBe(0);
-	expect(stats[0].rtxBytesReceived).toBe(0);
-	expect(stats[0].rtxRecvBitrate).toBe(0);
-	expect(stats[0].rtxBytesSent).toBe(0);
-	expect(stats[0].rtxSendBitrate).toBe(0);
-	expect(stats[0].probationBytesSent).toBe(0);
-	expect(stats[0].probationSendBitrate).toBe(0);
-	expect(stats[0].iceSelectedTuple).toBeUndefined();
-	expect(stats[0].maxIncomingBitrate).toBeUndefined();
+	expect(stats[0]!.type).toBe('webrtc-transport');
+	expect(stats[0]!.transportId).toBe(webRtcTransport.id);
+	expect(typeof stats[0]!.timestamp).toBe('number');
+	expect(stats[0]!.iceRole).toBe('controlled');
+	expect(stats[0]!.iceState).toBe('new');
+	expect(stats[0]!.dtlsState).toBe('new');
+	expect(stats[0]!.sctpState).toBeUndefined();
+	expect(stats[0]!.bytesReceived).toBe(0);
+	expect(stats[0]!.recvBitrate).toBe(0);
+	expect(stats[0]!.bytesSent).toBe(0);
+	expect(stats[0]!.sendBitrate).toBe(0);
+	expect(stats[0]!.rtpBytesReceived).toBe(0);
+	expect(stats[0]!.rtpRecvBitrate).toBe(0);
+	expect(stats[0]!.rtpBytesSent).toBe(0);
+	expect(stats[0]!.rtpSendBitrate).toBe(0);
+	expect(stats[0]!.rtxBytesReceived).toBe(0);
+	expect(stats[0]!.rtxRecvBitrate).toBe(0);
+	expect(stats[0]!.rtxBytesSent).toBe(0);
+	expect(stats[0]!.rtxSendBitrate).toBe(0);
+	expect(stats[0]!.probationBytesSent).toBe(0);
+	expect(stats[0]!.probationSendBitrate).toBe(0);
+	expect(stats[0]!.iceSelectedTuple).toBeUndefined();
+	expect(stats[0]!.maxIncomingBitrate).toBeUndefined();
 }, 2000);
 
 test('webRtcTransport.connect() succeeds', async () => {
@@ -429,13 +454,13 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 
 	let dtlsRemoteParameters: mediasoup.types.DtlsParameters;
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.connect({})).rejects.toThrow(TypeError);
 
 	dtlsRemoteParameters = {
 		fingerprints: [
 			{
-				// @ts-ignore.
+				// @ts-expect-error --- Testing purposes..
 				algorithm: 'sha-256000',
 				value:
 					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
@@ -456,7 +481,7 @@ test('webRtcTransport.connect() with wrong arguments rejects with TypeError', as
 					'82:5A:68:3D:36:C3:0A:DE:AF:E7:32:43:D2:88:83:57:AC:2D:65:E5:80:C4:B6:FB:AF:1A:A0:21:9F:6D:0C:AD',
 			},
 		],
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		role: 'chicken',
 	};
 
@@ -610,18 +635,18 @@ test('transport.enableTraceEvent() succeed', async () => {
 		],
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await webRtcTransport.enableTraceEvent(['foo', 'probation']);
 	await expect(webRtcTransport.dump()).resolves.toMatchObject({
 		traceEventTypes: ['probation'],
 	});
 
-	await webRtcTransport.enableTraceEvent([]);
+	await webRtcTransport.enableTraceEvent();
 	await expect(webRtcTransport.dump()).resolves.toMatchObject({
 		traceEventTypes: [],
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await webRtcTransport.enableTraceEvent(['probation', 'FOO', 'bwe', 'BAR']);
 	await expect(webRtcTransport.dump()).resolves.toMatchObject({
 		traceEventTypes: ['probation', 'bwe'],
@@ -640,18 +665,18 @@ test('transport.enableTraceEvent() with wrong arguments rejects with TypeError',
 		],
 	});
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.enableTraceEvent(123)).rejects.toThrow(
 		TypeError
 	);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.enableTraceEvent('probation')).rejects.toThrow(
 		TypeError
 	);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		webRtcTransport.enableTraceEvent(['probation', 123.123])
 	).rejects.toThrow(TypeError);
 }, 2000);
@@ -663,8 +688,8 @@ test('WebRtcTransport events succeed', async () => {
 		],
 	});
 
-	// Private API.
-	const channel = webRtcTransport.channelForTesting;
+	// API not exposed in the interface.
+	const channel = (webRtcTransport as WebRtcTransportImpl).channelForTesting;
 	const onIceStateChange = jest.fn();
 
 	webRtcTransport.on('icestatechange', onIceStateChange);
@@ -812,7 +837,7 @@ test('WebRtcTransport methods reject if closed', async () => {
 
 	await expect(webRtcTransport.getStats()).rejects.toThrow(Error);
 
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(webRtcTransport.connect({})).rejects.toThrow(Error);
 
 	await expect(webRtcTransport.setMaxIncomingBitrate(200000)).rejects.toThrow(

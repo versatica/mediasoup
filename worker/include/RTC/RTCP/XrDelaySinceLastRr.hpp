@@ -58,7 +58,7 @@ namespace RTC
 				{
 				}
 
-				void Dump() const;
+				void Dump(int indentation = 0) const;
 				size_t Serialize(uint8_t* buffer);
 				size_t GetSize() const
 				{
@@ -143,7 +143,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from ExtendedReportBlock. */
 		public:
-			void Dump() const override;
+			void Dump(int indentation = 0) const override;
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{

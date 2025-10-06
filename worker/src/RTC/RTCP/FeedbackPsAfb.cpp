@@ -60,13 +60,13 @@ namespace RTC
 			return offset + this->size;
 		}
 
-		void FeedbackPsAfbPacket::Dump() const
+		void FeedbackPsAfbPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsAfbPacket>");
-			FeedbackPsPacket::Dump();
-			MS_DUMP("</FeedbackPsAfbPacket>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsAfbPacket>");
+			FeedbackPsPacket::Dump(indentation + 1);
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsAfbPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

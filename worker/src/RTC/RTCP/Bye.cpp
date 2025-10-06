@@ -87,20 +87,20 @@ namespace RTC
 			return offset + padding;
 		}
 
-		void ByePacket::Dump() const
+		void ByePacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<ByePacket>");
+			MS_DUMP_CLEAN(indentation, "<ByePacket>");
 			for (auto ssrc : this->ssrcs)
 			{
-				MS_DUMP("  ssrc: %" PRIu32, ssrc);
+				MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, ssrc);
 			}
 			if (!this->reason.empty())
 			{
-				MS_DUMP("  reason: %s", this->reason.c_str());
+				MS_DUMP_CLEAN(indentation, "  reason: %s", this->reason.c_str());
 			}
-			MS_DUMP("</ByePacket>");
+			MS_DUMP_CLEAN(indentation, "</ByePacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

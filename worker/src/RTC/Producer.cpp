@@ -7,8 +7,12 @@
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 #include <absl/container/inlined_vector.h>
 #include <cstring> // std::memcpy()
 
@@ -162,17 +166,6 @@ namespace RTC
 				this->rtpHeaderExtensionIds.transportWideCc01 = exten.id;
 			}
 
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			if (this->rtpHeaderExtensionIds.frameMarking07 == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07)
-			{
-				this->rtpHeaderExtensionIds.frameMarking07 = exten.id;
-			}
-
-			if (this->rtpHeaderExtensionIds.frameMarking == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING)
-			{
-				this->rtpHeaderExtensionIds.frameMarking = exten.id;
-			}
-
 			if (this->rtpHeaderExtensionIds.ssrcAudioLevel == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL)
 			{
 				this->rtpHeaderExtensionIds.ssrcAudioLevel = exten.id;
@@ -191,6 +184,18 @@ namespace RTC
 			if (this->rtpHeaderExtensionIds.absCaptureTime == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME)
 			{
 				this->rtpHeaderExtensionIds.absCaptureTime = exten.id;
+			}
+
+			if (this->rtpHeaderExtensionIds.playoutDelay == 0u && exten.type == RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY)
+			{
+				this->rtpHeaderExtensionIds.playoutDelay = exten.id;
+			}
+
+			if (
+			  this->rtpHeaderExtensionIds.dependencyDescriptor == 0u &&
+			  exten.type == RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR)
+			{
+				this->rtpHeaderExtensionIds.dependencyDescriptor = exten.id;
 			}
 		}
 
@@ -519,7 +524,7 @@ namespace RTC
 				// Increase receive transmission.
 				this->listener->OnProducerReceiveData(this, len);
 
-				if (len > RTC::MtuSize + 100)
+				if (len > RTC::Consts::MtuSize + 100)
 				{
 					MS_WARN_TAG(rtp, "given RTP packet exceeds maximum size [len:%i]", len);
 
@@ -530,7 +535,7 @@ namespace RTC
 				// receiving buffer now.
 				if (!Producer::buffer)
 				{
-					Producer::buffer = new uint8_t[RTC::MtuSize + 100];
+					Producer::buffer = new uint8_t[RTC::Consts::MtuSize + 100];
 				}
 
 				// Copy the received packet into this buffer so it can be expanded later.
@@ -579,7 +584,7 @@ namespace RTC
 			MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_NOT_FOUND);
 #endif
 
 			return ReceiveRtpPacketResult::DISCARDED;
@@ -606,7 +611,7 @@ namespace RTC
 				}
 
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_DISCARDED);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_STREAM_DISCARDED);
 #endif
 
 				return result;
@@ -622,7 +627,7 @@ namespace RTC
 			if (!rtpStream->ReceiveRtxPacket(packet))
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::RECV_RTP_STREAM_NOT_FOUND);
+				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::RECV_RTP_RTX_STREAM_DISCARDED);
 #endif
 
 				return result;
@@ -1188,9 +1193,7 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			packet->SetFrameMarking07ExtensionId(this->rtpHeaderExtensionIds.frameMarking07);
-			packet->SetFrameMarkingExtensionId(this->rtpHeaderExtensionIds.frameMarking);
+			packet->SetDependencyDescriptorExtensionId(this->rtpHeaderExtensionIds.dependencyDescriptor);
 		}
 	}
 
@@ -1241,7 +1244,7 @@ namespace RTC
 
 			// Add urn:ietf:params:rtp-hdrext:sdes:mid.
 			{
-				extenLen = RTC::MidMaxLength;
+				extenLen = RTC::Consts::MidRtpExtensionMaxLength;
 
 				extensions.emplace_back(
 				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID), extenLen, bufferPtr);
@@ -1260,6 +1263,19 @@ namespace RTC
 				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME),
 				  extenLen,
 				  bufferPtr);
+
+				bufferPtr += extenLen;
+			}
+
+			// Proxy http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+			extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.playoutDelay, extenLen);
+
+			if (extenValue)
+			{
+				std::memcpy(bufferPtr, extenValue, extenLen);
+
+				extensions.emplace_back(
+				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY), extenLen, bufferPtr);
 
 				bufferPtr += extenLen;
 			}
@@ -1318,35 +1334,6 @@ namespace RTC
 					bufferPtr += extenLen;
 				}
 
-				// NOTE: Remove this once framemarking draft becomes RFC.
-				// Proxy http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking07, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07),
-					  extenLen,
-					  bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
-				// Proxy urn:ietf:params:rtp-hdrext:framemarking.
-				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.frameMarking, extenLen);
-
-				if (extenValue)
-				{
-					std::memcpy(bufferPtr, extenValue, extenLen);
-
-					extensions.emplace_back(
-					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING), extenLen, bufferPtr);
-
-					bufferPtr += extenLen;
-				}
-
 				// Proxy urn:3gpp:video-orientation.
 				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.videoOrientation, extenLen);
 
@@ -1356,6 +1343,21 @@ namespace RTC
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION),
+					  extenLen,
+					  bufferPtr);
+
+					bufferPtr += extenLen;
+				}
+
+				// Proxy https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension.
+				extenValue = packet->GetExtension(this->rtpHeaderExtensionIds.dependencyDescriptor, extenLen);
+
+				if (extenValue)
+				{
+					std::memcpy(bufferPtr, extenValue, extenLen);
+
+					extensions.emplace_back(
+					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
 					  extenLen,
 					  bufferPtr);
 
@@ -1377,8 +1379,8 @@ namespace RTC
 				}
 			}
 
-			// Set the new extensions into the packet using One-Byte format.
-			packet->SetExtensions(1, extensions);
+			// Set the new extensions into the packet.
+			packet->SetExtensions(packet->HasTwoBytesExtensions() ? 2 : 1, extensions);
 
 			// Assign mediasoup RTP header extension ids (just those that mediasoup may
 			// be interested in after passing it to the Router).
@@ -1387,15 +1389,14 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME));
 			packet->SetTransportWideCc01ExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01));
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			packet->SetFrameMarking07ExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING_07));
-			packet->SetFrameMarkingExtensionId(
-			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::FRAME_MARKING));
 			packet->SetSsrcAudioLevelExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
 			packet->SetVideoOrientationExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION));
+			packet->SetPlayoutDelayExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY));
+			packet->SetDependencyDescriptorExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR));
 		}
 
 		return true;
@@ -1407,9 +1408,9 @@ namespace RTC
 
 		if (this->kind == RTC::Media::Kind::VIDEO)
 		{
-			bool camera;
-			bool flip;
-			uint16_t rotation;
+			bool camera{ false };
+			bool flip{ false };
+			uint16_t rotation{ 0 };
 
 			if (packet->ReadVideoOrientation(camera, flip, rotation))
 			{

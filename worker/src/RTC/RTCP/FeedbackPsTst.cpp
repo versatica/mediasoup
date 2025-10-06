@@ -36,15 +36,15 @@ namespace RTC
 		}
 
 		template<typename T>
-		void FeedbackPsTstItem<T>::Dump() const
+		void FeedbackPsTstItem<T>::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsTstItem>");
-			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
-			MS_DUMP("  sequence number: %" PRIu32, this->GetSequenceNumber());
-			MS_DUMP("  index: %" PRIu32, this->GetIndex());
-			MS_DUMP("</FeedbackPsTstItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsTstItem>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu32, this->GetSequenceNumber());
+			MS_DUMP_CLEAN(indentation, "  index: %" PRIu32, this->GetIndex());
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsTstItem>");
 		}
 
 		/* Specialization for Tstr class. */

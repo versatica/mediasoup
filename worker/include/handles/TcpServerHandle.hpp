@@ -17,7 +17,7 @@ public:
 	~TcpServerHandle() override;
 
 public:
-	void Dump() const;
+	void Dump(int indentation = 0) const;
 	const struct sockaddr* GetLocalAddress() const
 	{
 		return reinterpret_cast<const struct sockaddr*>(&this->localAddr);

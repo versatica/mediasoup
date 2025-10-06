@@ -1,7 +1,10 @@
 import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { WebRtcServerEvents } from '../types';
+import type { WorkerImpl } from '../Worker';
+import type { WebRtcServerEvents } from '../types';
+import type { WebRtcServerImpl } from '../WebRtcServer';
+import type { RouterImpl } from '../Router';
 import { InvalidStateError } from '../errors';
 
 type TestContext = {
@@ -76,15 +79,15 @@ test('worker.createWebRtcServer() succeeds', async () => {
 		tupleHashes: [],
 	});
 
-	// Private API.
-	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).webRtcServersForTesting.size).toBe(1);
 
 	ctx.worker!.close();
 
 	expect(webRtcServer.closed).toBe(true);
 
-	// Private API.
-	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createWebRtcServer() with portRange succeeds', async () => {
@@ -145,15 +148,15 @@ test('worker.createWebRtcServer() with portRange succeeds', async () => {
 		tupleHashes: [],
 	});
 
-	// Private API.
-	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).webRtcServersForTesting.size).toBe(1);
 
 	ctx.worker!.close();
 
 	expect(webRtcServer.closed).toBe(true);
 
-	// Private API.
-	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createWebRtcServer() without specifying port/portRange succeeds', async () => {
@@ -201,28 +204,28 @@ test('worker.createWebRtcServer() without specifying port/portRange succeeds', a
 		tupleHashes: [],
 	});
 
-	// Private API.
-	expect(ctx.worker!.webRtcServersForTesting.size).toBe(1);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).webRtcServersForTesting.size).toBe(1);
 
 	ctx.worker!.close();
 
 	expect(webRtcServer.closed).toBe(true);
 
-	// Private API.
-	expect(ctx.worker!.webRtcServersForTesting.size).toBe(0);
+	// API not exposed in the interface.
+	expect((ctx.worker! as WorkerImpl).webRtcServersForTesting.size).toBe(0);
 }, 2000);
 
 test('worker.createWebRtcServer() with wrong arguments rejects with TypeError', async () => {
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	await expect(ctx.worker!.createWebRtcServer({})).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createWebRtcServer({ listenInfos: 'NOT-AN-ARRAY' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createWebRtcServer({ listenInfos: ['NOT-AN-OBJECT'] })
 	).rejects.toThrow(Error);
 
@@ -378,7 +381,13 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	const webRtcServer = await ctx.worker!.createWebRtcServer({
 		listenInfos: [
 			{ protocol: 'udp', ip: '127.0.0.1', port: port1 },
-			{ protocol: 'tcp', ip: '127.0.0.1', port: port2 },
+			{
+				protocol: 'tcp',
+				ip: '127.0.0.1',
+				announcedAddress: 'media1.foo.org',
+				exposeInternalIp: true,
+				port: port2,
+			},
 		],
 	});
 
@@ -421,18 +430,34 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 
 	const iceCandidates = transport.iceCandidates;
 
-	expect(iceCandidates.length).toBe(1);
-	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].port).toBe(port2);
-	expect(iceCandidates[0].protocol).toBe('tcp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBe('passive');
+	expect(iceCandidates.length).toBe(2);
+
+	expect(iceCandidates[0]!.address).toBe('media1.foo.org');
+	expect(iceCandidates[0]!.ip).toBe('media1.foo.org');
+	expect(iceCandidates[0]!.port).toBe(port2);
+	expect(iceCandidates[0]!.protocol).toBe('tcp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBe('passive');
+	expect(iceCandidates[1]!.address).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.port).toBe(port2);
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
+
+	expect(iceCandidates[0]!.priority).toBeGreaterThan(
+		iceCandidates[1]!.priority
+	);
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();
 
-	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
-	expect(router.transportsForTesting.size).toBe(1);
+	// API not exposed in the interface.
+	expect(
+		(webRtcServer as WebRtcServerImpl).webRtcTransportsForTesting.size
+	).toBe(1);
+	// API not exposed in the interface.
+	expect((router as RouterImpl).transportsForTesting.size).toBe(1);
 
 	await expect(webRtcServer.dump()).resolves.toMatchObject({
 		id: webRtcServer.id,
@@ -450,8 +475,12 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and transport is
 	expect(transport.closed).toBe(true);
 	expect(onObserverWebRtcTransportUnhandled).toHaveBeenCalledTimes(1);
 	expect(onObserverWebRtcTransportUnhandled).toHaveBeenCalledWith(transport);
-	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
-	expect(router.transportsForTesting.size).toBe(0);
+	// API not exposed in the interface.
+	expect(
+		(webRtcServer as WebRtcServerImpl).webRtcTransportsForTesting.size
+	).toBe(0);
+	// API not exposed in the interface.
+	expect((router as RouterImpl).transportsForTesting.size).toBe(0);
 
 	await expect(webRtcServer.dump()).resolves.toMatchObject({
 		id: webRtcServer.id,
@@ -513,22 +542,26 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	const iceCandidates = transport.iceCandidates;
 
 	expect(iceCandidates.length).toBe(2);
-	expect(iceCandidates[0].ip).toBe('127.0.0.1');
-	expect(iceCandidates[0].port).toBe(port1);
-	expect(iceCandidates[0].protocol).toBe('udp');
-	expect(iceCandidates[0].type).toBe('host');
-	expect(iceCandidates[0].tcpType).toBeUndefined();
-	expect(iceCandidates[1].ip).toBe('127.0.0.1');
-	expect(iceCandidates[1].port).toBe(port2);
-	expect(iceCandidates[1].protocol).toBe('tcp');
-	expect(iceCandidates[1].type).toBe('host');
-	expect(iceCandidates[1].tcpType).toBe('passive');
+	expect(iceCandidates[0]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[0]!.port).toBe(port1);
+	expect(iceCandidates[0]!.protocol).toBe('udp');
+	expect(iceCandidates[0]!.type).toBe('host');
+	expect(iceCandidates[0]!.tcpType).toBeUndefined();
+	expect(iceCandidates[1]!.ip).toBe('127.0.0.1');
+	expect(iceCandidates[1]!.port).toBe(port2);
+	expect(iceCandidates[1]!.protocol).toBe('tcp');
+	expect(iceCandidates[1]!.type).toBe('host');
+	expect(iceCandidates[1]!.tcpType).toBe('passive');
 
 	expect(transport.iceState).toBe('new');
 	expect(transport.iceSelectedTuple).toBeUndefined();
 
-	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(1);
-	expect(router.transportsForTesting.size).toBe(1);
+	// API not exposed in the interface.
+	expect(
+		(webRtcServer as WebRtcServerImpl).webRtcTransportsForTesting.size
+	).toBe(1);
+	// API not exposed in the interface.
+	expect((router as RouterImpl).transportsForTesting.size).toBe(1);
 
 	await expect(webRtcServer.dump()).resolves.toMatchObject({
 		id: webRtcServer.id,
@@ -577,8 +610,12 @@ test('router.createWebRtcTransport() with webRtcServer succeeds and webRtcServer
 	expect(transport.iceSelectedTuple).toBe(undefined);
 	expect(transport.dtlsState).toBe('closed');
 	expect(transport.sctpState).toBe(undefined);
-	expect(webRtcServer.webRtcTransportsForTesting.size).toBe(0);
-	expect(router.transportsForTesting.size).toBe(0);
+	// API not exposed in the interface.
+	expect(
+		(webRtcServer as WebRtcServerImpl).webRtcTransportsForTesting.size
+	).toBe(0);
+	// API not exposed in the interface.
+	expect((router as RouterImpl).transportsForTesting.size).toBe(0);
 
 	await expect(ctx.worker!.dump()).resolves.toMatchObject({
 		pid: ctx.worker!.pid,

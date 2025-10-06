@@ -1,14 +1,11 @@
 use crate::consumer::ConsumerOptions;
 use crate::data_consumer::DataConsumerOptions;
 use crate::data_producer::DataProducerOptions;
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::producer::ProducerOptions;
-use crate::router::{PipeToRouterOptions, Router, RouterOptions};
-use crate::rtp_parameters::{
-    MediaKind, MimeTypeVideo, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
-    RtpCodecParametersParameters, RtpParameters,
+use crate::router::{
+    PipeDataProducerToRouterPair, PipeProducerToRouterPair, PipeToRouterOptions, Router,
+    RouterOptions,
 };
-use crate::sctp_parameters::SctpStreamParameters;
 use crate::transport::Transport;
 use crate::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
@@ -16,6 +13,12 @@ use crate::webrtc_transport::{
 use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeTypeVideo, RtpCapabilities, RtpCodecCapability, RtpCodecParameters,
+    RtpCodecParametersParameters, RtpParameters,
+};
+use mediasoup_types::sctp_parameters::SctpStreamParameters;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::NonZeroU32;
@@ -102,6 +105,7 @@ async fn init() -> (Router, Router, WebRtcTransport, WebRtcTransport) {
             protocol: Protocol::Udp,
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_address: None,
+            expose_internal_ip: false,
             port: None,
             port_range: None,
             flags: None,
@@ -133,7 +137,10 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to produce video");
 
-        router1
+        let PipeProducerToRouterPair {
+            pipe_producer,
+            pipe_consumer: _,
+        } = router1
             .pipe_producer_to_router(
                 video_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),
@@ -141,9 +148,11 @@ fn producer_close_is_transmitted_to_pipe_consumer() {
             .await
             .expect("Failed to pipe video producer to router");
 
+        let pipe_producer = pipe_producer.into_inner();
+
         let video_consumer = transport2
             .consume(ConsumerOptions::new(
-                video_producer.id(),
+                pipe_producer.id(),
                 consumer_device_capabilities(),
             ))
             .await
@@ -172,7 +181,10 @@ fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
             .await
             .expect("Failed to produce data");
 
-        router1
+        let PipeDataProducerToRouterPair {
+            pipe_data_producer,
+            pipe_data_consumer: _,
+        } = router1
             .pipe_data_producer_to_router(
                 data_producer.id(),
                 PipeToRouterOptions::new(router2.clone()),
@@ -180,8 +192,10 @@ fn data_producer_close_is_transmitted_to_pipe_data_consumer() {
             .await
             .expect("Failed to pipe data producer to router");
 
+        let pipe_data_producer = pipe_data_producer.into_inner();
+
         let data_consumer = transport2
-            .consume_data(DataConsumerOptions::new_sctp(data_producer.id()))
+            .consume_data(DataConsumerOptions::new_sctp(pipe_data_producer.id()))
             .await
             .expect("Failed to create data consumer");
 

@@ -20,7 +20,7 @@ namespace RTC
 		enum class Protocol : uint8_t
 		{
 			UDP = 1,
-			TCP
+			TCP = 2
 		};
 
 		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
@@ -30,13 +30,13 @@ namespace RTC
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
 		  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
 		{
-			SetHash();
+			GenerateHash();
 		}
 
 		explicit TransportTuple(RTC::TcpConnection* tcpConnection)
 		  : tcpConnection(tcpConnection), protocol(Protocol::TCP)
 		{
-			SetHash();
+			GenerateHash();
 		}
 
 		explicit TransportTuple(const TransportTuple* tuple)
@@ -55,7 +55,7 @@ namespace RTC
 
 		flatbuffers::Offset<FBS::Transport::Tuple> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
-		void Dump() const;
+		void Dump(int indentation = 0) const;
 
 		void StoreUdpRemoteAddress()
 		{
@@ -142,6 +142,8 @@ namespace RTC
 
 	private:
 		void SetHash();
+		void GenerateHash();
+		uint64_t GenerateFnv1aHash(const uint8_t* data, size_t size);
 
 	public:
 		uint64_t hash{ 0u };

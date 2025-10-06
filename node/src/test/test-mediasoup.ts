@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { enhancedOnce } from '../enhancedEvents';
 import * as mediasoup from '../';
+import type { WorkerEvents } from '../types';
 
 const PKG = JSON.parse(
 	fs.readFileSync(path.join(__dirname, '..', '..', '..', 'package.json'), {
@@ -15,6 +17,26 @@ test('mediasoup.version matches version field in package.json', () => {
 	expect(version).toBe(PKG.version);
 });
 
+test('mediasoup.setLoggerEventListeners() succeeds', async () => {
+	const onDebug = jest.fn();
+
+	mediasoup.setLogEventListeners({
+		ondebug: onDebug,
+		onwarn: undefined,
+		onerror: undefined,
+	});
+
+	const worker = await mediasoup.createWorker();
+
+	worker.close();
+
+	expect(onDebug).toHaveBeenCalled();
+
+	if (worker.subprocessClosed === false) {
+		await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
+	}
+}, 2000);
+
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () => {
 	const rtpCapabilities = getSupportedRtpCapabilities();
 
@@ -22,7 +44,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 
 	// Mangle retrieved codecs to check that, if called again,
 	// getSupportedRtpCapabilities() returns a cloned object.
-	// @ts-ignore
+	// @ts-expect-error --- Testing purposes.
 	rtpCapabilities.codecs = 'bar';
 
 	const rtpCapabilities2 = getSupportedRtpCapabilities();
@@ -30,7 +52,7 @@ test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabili
 	expect(rtpCapabilities2).not.toEqual(rtpCapabilities);
 });
 
-test('parseScalabilityMode() works', () => {
+test('mediasoup.parseScalabilityMode() succeeds', () => {
 	expect(parseScalabilityMode('L1T3')).toEqual({
 		spatialLayers: 1,
 		temporalLayers: 3,

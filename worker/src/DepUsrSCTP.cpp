@@ -251,19 +251,25 @@ void DepUsrSCTP::Checker::OnTimer(TimerHandle* /*timer*/)
 	const int elapsedMs = this->lastCalledAtMs ? static_cast<int>(nowMs - this->lastCalledAtMs) : 0;
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Activate liburing usage.
-	// 'usrsctp_handle_timers()' will synchronously call the send/recv
-	// callbacks for the pending data. If there are multiple messages to be
-	// sent over the network then we will send those messages within a single
-	// system call.
-	DepLibUring::SetActive();
+	if (DepLibUring::IsEnabled())
+	{
+		// Activate liburing usage.
+		// 'usrsctp_handle_timers()' will synchronously call the send/recv
+		// callbacks for the pending data. If there are multiple messages to be
+		// sent over the network then we will send those messages within a single
+		// system call.
+		DepLibUring::SetActive();
+	}
 #endif
 
 	usrsctp_handle_timers(elapsedMs);
 
 #ifdef MS_LIBURING_SUPPORTED
-	// Submit all prepared submission entries.
-	DepLibUring::Submit();
+	if (DepLibUring::IsEnabled())
+	{
+		// Submit all prepared submission entries.
+		DepLibUring::Submit();
+	}
 #endif
 
 	this->lastCalledAtMs = nowMs;

@@ -56,11 +56,6 @@ inline static void onCloseTcp(uv_handle_t* handle)
 	delete reinterpret_cast<uv_tcp_t*>(handle);
 }
 
-inline static void onCloseShutdown(uv_handle_t* handle)
-{
-	delete reinterpret_cast<uv_shutdown_t*>(handle);
-}
-
 inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 {
 	auto* handle = req->handle;
@@ -68,7 +63,7 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 	delete req;
 
 	// Now do close the handle.
-	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseShutdown));
+	uv_close(reinterpret_cast<uv_handle_t*>(handle), static_cast<uv_close_cb>(onCloseTcp));
 }
 
 /* Instance methods. */
@@ -110,15 +105,15 @@ void TcpConnectionHandle::TriggerClose()
 	this->listener->OnTcpConnectionClosed(this);
 }
 
-void TcpConnectionHandle::Dump() const
+void TcpConnectionHandle::Dump(int indentation) const
 {
-	MS_DUMP("<TcpConnectionHandle>");
-	MS_DUMP("  localIp: %s", this->localIp.c_str());
-	MS_DUMP("  localPort: %" PRIu16, static_cast<uint16_t>(this->localPort));
-	MS_DUMP("  remoteIp: %s", this->peerIp.c_str());
-	MS_DUMP("  remotePort: %" PRIu16, static_cast<uint16_t>(this->peerPort));
-	MS_DUMP("  closed: %s", this->closed ? "yes" : "no");
-	MS_DUMP("</TcpConnectionHandle>");
+	MS_DUMP_CLEAN(indentation, "<TcpConnectionHandle>");
+	MS_DUMP_CLEAN(indentation, "  local IP: %s", this->localIp.c_str());
+	MS_DUMP_CLEAN(indentation, "  local port: %" PRIu16, static_cast<uint16_t>(this->localPort));
+	MS_DUMP_CLEAN(indentation, "  remote IP: %s", this->peerIp.c_str());
+	MS_DUMP_CLEAN(indentation, "  remote port: %" PRIu16, static_cast<uint16_t>(this->peerPort));
+	MS_DUMP_CLEAN(indentation, "  closed: %s", this->closed ? "yes" : "no");
+	MS_DUMP_CLEAN(indentation, "</TcpConnectionHandle>");
 }
 
 void TcpConnectionHandle::Setup(
@@ -173,11 +168,14 @@ void TcpConnectionHandle::Start()
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
-	err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
-
-	if (err != 0)
+	if (DepLibUring::IsEnabled())
 	{
-		MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		err = uv_fileno(reinterpret_cast<uv_handle_t*>(this->uvHandle), std::addressof(this->fd));
+
+		if (err != 0)
+		{
+			MS_THROW_ERROR("uv_fileno() failed: %s", uv_strerror(err));
+		}
 	}
 #endif
 }
@@ -214,6 +212,7 @@ void TcpConnectionHandle::Write(
 	}
 
 #ifdef MS_LIBURING_SUPPORTED
+	if (DepLibUring::IsEnabled())
 	{
 		if (!DepLibUring::IsActive())
 		{

@@ -106,15 +106,15 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void Opus::PayloadDescriptor::Dump() const
+		void Opus::PayloadDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<Opus::PayloadDescriptor>");
-			MS_DUMP("  stereo: %" PRIu8, this->stereo);
-			MS_DUMP("  code: %" PRIu8, this->code);
-			MS_DUMP("  isDtx: %s", this->isDtx ? "true" : "false");
-			MS_DUMP("</Opus::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "<Opus::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "  stereo: %" PRIu8, this->stereo);
+			MS_DUMP_CLEAN(indentation, "  code: %" PRIu8, this->code);
+			MS_DUMP_CLEAN(indentation, "  is dtx: %s", this->isDtx ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "</Opus::PayloadDescriptor>");
 		}
 
 		Opus::PayloadDescriptorHandler::PayloadDescriptorHandler(Opus::PayloadDescriptor* payloadDescriptor)
@@ -125,7 +125,7 @@ namespace RTC
 		}
 
 		bool Opus::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& /*marker*/)
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* /*packet*/, bool& /*marker*/)
 		{
 			MS_TRACE();
 

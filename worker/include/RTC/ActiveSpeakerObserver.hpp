@@ -5,7 +5,6 @@
 #include "RTC/Shared.hpp"
 #include "handles/TimerHandle.hpp"
 #include <absl/container/flat_hash_map.h>
-#include <utility>
 #include <vector>
 
 // Implementation of Dominant Speaker Identification for Multipoint

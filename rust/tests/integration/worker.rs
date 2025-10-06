@@ -1,10 +1,10 @@
 use futures_lite::future;
-use mediasoup::data_structures::AppData;
 use mediasoup::worker::{
     ChannelMessageHandlers, WorkerDtlsFiles, WorkerLogLevel, WorkerLogTag, WorkerSettings,
     WorkerUpdateSettings,
 };
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::AppData;
 use std::{env, io};
 
 async fn init() -> WorkerManager {

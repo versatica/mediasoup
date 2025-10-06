@@ -139,7 +139,7 @@ namespace RTC
 		~DtlsTransport() override;
 
 	public:
-		void Dump() const;
+		void Dump(int indentation = 0) const;
 		void Run(Role localRole);
 		bool SetRemoteFingerprint(const Fingerprint& fingerprint);
 		void ProcessDtlsData(const uint8_t* data, size_t len);

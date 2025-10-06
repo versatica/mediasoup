@@ -1,5 +1,68 @@
 # Changelog
 
+# NEXT
+
+- `router.pipe_producer_to_router()` and `router.pipe_data_producer_to_router()` can now connect two `Routers` in the same `Worker` if `keep_id` is set to `false` (PR #1604).
+- Updates from mediasoup TypeScript `3.18.1.=3.19.0`.
+- Ensure that the order of acquiring the `paused` and `producer_paused` locks in `consumer.rs` is consistent at all times to avoid deadlock (PR #1605).
+
+# 0.20.0
+
+- Make `parameters` and `rtcp_feedback` optional in `RtpCodecParameters` and `RtpCodecCapability` during deserialization (PR #1597).
+- Make codec `mime_type` case insensitive during deserialization (PR #1599).
+- Only expose `data_structures`, `rtp_parameters`, `sctp_parameters` and `srtp_parameters` through the `mediasoup-types` crate (PR #1600).
+
+# 0.19.1
+
+- Fix installation in paths with spaces (PR #1596).
+- Updates from mediasoup TypeScript `3.17.1.=3.18.1`.
+
+# 0.19.0
+
+- Enable AV1 codec (PR #1563).
+- Remove H265 codec and deprecated frame-marking RTP extension (PR #1564).
+- Remove H264-SVC codec (PR #1568).
+- Add `Router::update_media_codecs()` to dynamically change Router's RTP capabilities (#1571).
+- `TransportListenInfo`: Add `expose_internal_ip` which, if set to `true` and `announced_address` is set, exposes an additional ICE candidate in `WebRtcTransport` whose IP is `listen_info.ip` rather than `listen_info.announced_address` (PR #1583).
+- Updates from mediasoup TypeScript `3.14.11.=3.17.0`.
+
+# 0.18.2
+
+- Don't log error if `close()` on an object fails because channel is closed already (PR #1560).
+- General mediasoup changes:
+  - Sign self generated DTLS certificate with SHA256 (PR #1450).
+  - `SimulcastConsumer`: Fix cannot switch layers if initial `tsReferenceSpatialLayer disappears` disappears (PR #1459).
+  - Worker: Fix crash when using colliding `portRange` values in different transports (PR #1469).
+  - Worker: Drop VP8 packets with a higher temporal layer than the current one (PR #1009).
+  - Fix the problem of the TCC package being omitted from being sent (PR #1492).
+  - `Consumer`: Fix sequence number gap (PR #1494).
+  - Fix VP9 out of order packets forwarding (PR #1486).
+  - Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+  - Worker: Fix encode retransmitted packets with the corresponding data (PR #1527).
+  - `SvcConsumer`: Fix K-SVC bitrate in `IncreaseLayer()` method (PR #1535).
+  - `Consumer` classes: Only drop packets in RTP sequence manager when they belong to current spatial layer (PR #1549).
+  - `Consumer` classes: Add target layer retransmission buffer to avoid PLIs/FIRs when RTP packets containing a key frame arrive out of order (PR #1550 and PR #1558).
+
+# 0.18.1
+
+- FBS: Provide proper data upon panic (#1523).
+
+# 0.18.0
+
+- Fix wrong SCTP stream parameters in SCTP `DataConsumer` that consumes from a direct `DataProducer` (PR #1516).
+- New enum variant was added in 0.17.2.
+
+# 0.17.2
+
+- Fix `PipeConsumer::get_stats()` (PR #1511).
+
+# 0.17.1
+
+- Update Rust toolchain channel to version 1.79.0 (PR #1409).
+- Updates from mediasoup TypeScript `3.14.7..=3.14.10`.
+- General mediasoup changes:
+  - Worker: Add `enable_liburing` boolean option (`true` by default) to disable `io_uring` even if it's supported by the prebuilt `mediasoup-worker` and by current host (PR #1442).
+
 # 0.17.0
 
 - Updates from mediasoup TypeScript `3.13.18..=3.14.6`.

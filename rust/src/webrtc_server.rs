@@ -10,7 +10,6 @@
 #[cfg(test)]
 mod tests;
 
-use crate::data_structures::{AppData, ListenInfo};
 use crate::messages::{WebRtcServerCloseRequest, WebRtcServerDumpRequest};
 use crate::transport::TransportId;
 use crate::uuid_based_wrapper_type;
@@ -20,7 +19,7 @@ use async_executor::Executor;
 use event_listener_primitives::{BagOnce, HandlerId};
 use hash_hasher::HashedSet;
 use log::{debug, error};
-use mediasoup_sys::fbs::transport;
+use mediasoup_types::data_structures::{AppData, ListenInfo};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -90,13 +89,6 @@ impl WebRtcServerListenInfos {
     pub fn insert(mut self, listen_info: ListenInfo) -> Self {
         self.0.push(listen_info);
         self
-    }
-
-    pub(crate) fn to_fbs(&self) -> Vec<transport::ListenInfo> {
-        self.0
-            .iter()
-            .map(|listen_info| listen_info.to_fbs())
-            .collect()
     }
 }
 
@@ -182,10 +174,19 @@ impl Inner {
                 let request = WebRtcServerCloseRequest {
                     webrtc_server_id: self.id,
                 };
+
                 self.executor
                     .spawn(async move {
-                        if let Err(error) = channel.request("", request).await {
-                            error!("WebRTC server closing failed on drop: {}", error);
+                        match channel.request("", request).await {
+                            Err(RequestError::ChannelClosed) => {
+                                debug!(
+                                    "WebRTC server closing failed on drop: Channel already closed"
+                                );
+                            }
+                            Err(error) => {
+                                error!("WebRTC server closing failed on drop: {}", error);
+                            }
+                            Ok(_) => {}
                         }
                     })
                     .detach();

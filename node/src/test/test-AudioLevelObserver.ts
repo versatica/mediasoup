@@ -4,13 +4,13 @@ import { AudioLevelObserverEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -44,6 +44,7 @@ test('router.createAudioLevelObserver() succeeds', async () => {
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(audioLevelObserver);
 	expect(typeof audioLevelObserver.id).toBe('string');
 	expect(audioLevelObserver.closed).toBe(false);
+	expect(audioLevelObserver.type).toBe('audiolevel');
 	expect(audioLevelObserver.paused).toBe(false);
 	expect(audioLevelObserver.appData).toEqual({});
 
@@ -62,17 +63,17 @@ test('router.createAudioLevelObserver() with wrong arguments rejects with TypeEr
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createAudioLevelObserver({ threshold: 'foo' })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createAudioLevelObserver({ interval: false })
 	).rejects.toThrow(TypeError);
 
 	await expect(
-		// @ts-ignore
+		// @ts-expect-error --- Testing purposes.
 		ctx.router!.createAudioLevelObserver({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
 }, 2000);

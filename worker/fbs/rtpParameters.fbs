@@ -65,14 +65,14 @@ enum RtpHeaderExtensionUri: uint8 {
     Mid,
     RtpStreamId,
     RepairRtpStreamId,
-    FrameMarkingDraft07,
-    FrameMarking,
     AudioLevel,
     VideoOrientation,
     TimeOffset,
     TransportWideCcDraft01,
     AbsSendTime,
     AbsCaptureTime,
+    PlayoutDelay,
+    DependencyDescriptor,
 }
 
 table RtpHeaderExtensionParameters {
@@ -125,4 +125,3 @@ table RtpMapping {
     codecs: [CodecMapping] (required);
     encodings: [EncodingMapping] (required);
 }
-

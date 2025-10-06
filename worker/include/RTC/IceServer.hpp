@@ -9,6 +9,7 @@
 #include "handles/TimerHandle.hpp"
 #include <list>
 #include <string>
+#include <unordered_map>
 
 namespace RTC
 {
@@ -22,10 +23,6 @@ namespace RTC
 			COMPLETED,
 			DISCONNECTED,
 		};
-
-	public:
-		static IceState RoleFromFbs(FBS::WebRtcTransport::IceState state);
-		static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
 
 	public:
 		class Listener
@@ -55,6 +52,13 @@ namespace RTC
 		};
 
 	public:
+		static const std::string& IceStateToString(IceState iceState);
+		static FBS::WebRtcTransport::IceState IceStateToFbs(IceState state);
+
+	private:
+		static std::unordered_map<IceState, std::string> iceStateToString;
+
+	public:
 		IceServer(
 		  Listener* listener,
 		  const std::string& usernameFragment,
@@ -63,6 +67,7 @@ namespace RTC
 		~IceServer() override;
 
 	public:
+		void Dump(int indentation = 0) const;
 		void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
 		const std::string& GetUsernameFragment() const
 		{
@@ -138,7 +143,6 @@ namespace RTC
 		std::list<RTC::TransportTuple> tuples;
 		RTC::TransportTuple* selectedTuple{ nullptr };
 		TimerHandle* consentCheckTimer{ nullptr };
-		uint64_t lastConsentRequestReceivedAtMs{ 0u };
 		bool isRemovingTuples{ false };
 	};
 } // namespace RTC

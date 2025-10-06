@@ -43,7 +43,7 @@ namespace RTC
 			{
 			}
 
-			void Dump() const;
+			void Dump(int indentation = 0) const;
 			size_t Serialize(uint8_t* buffer);
 			size_t GetSize() const
 			{
@@ -189,7 +189,7 @@ namespace RTC
 
 			/* Pure virtual methods inherited from Packet. */
 		public:
-			void Dump() const override;
+			void Dump(int indentation = 0) const override;
 			size_t Serialize(uint8_t* buffer) override;
 			// NOTE: We need to force this since when we parse a SenderReportPacket that
 			// contains receive report blocks we also generate a second ReceiverReportPacket

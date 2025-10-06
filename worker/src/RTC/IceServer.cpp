@@ -15,35 +15,31 @@ namespace RTC
 	static constexpr uint8_t ConsentCheckMinTimeoutSec{ 10u };
 	static constexpr uint8_t ConsentCheckMaxTimeoutSec{ 60u };
 
-	/* Class methods. */
-	IceServer::IceState IceStateFromFbs(FBS::WebRtcTransport::IceState state)
+	/* Class variables. */
+
+	// clang-format off
+	std::unordered_map<IceServer::IceState, std::string> IceServer::iceStateToString =
 	{
-		switch (state)
-		{
-			case FBS::WebRtcTransport::IceState::NEW:
-			{
-				return IceServer::IceState::NEW;
-			}
+		{ IceServer::IceState::NEW,          "new"          },
+		{ IceServer::IceState::CONNECTED,    "connected"    },
+		{ IceServer::IceState::COMPLETED,    "completed"    },
+		{ IceServer::IceState::DISCONNECTED, "disconnected" },
+	};
+	// clang-format on
 
-			case FBS::WebRtcTransport::IceState::CONNECTED:
-			{
-				return IceServer::IceState::CONNECTED;
-			}
+	/* Class methods. */
 
-			case FBS::WebRtcTransport::IceState::COMPLETED:
-			{
-				return IceServer::IceState::COMPLETED;
-			}
+	const std::string& IceServer::IceStateToString(IceState iceState)
+	{
+		MS_TRACE();
 
-			case FBS::WebRtcTransport::IceState::DISCONNECTED:
-			{
-				return IceServer::IceState::DISCONNECTED;
-			}
-		}
+		return IceServer::iceStateToString.at(iceState);
 	}
 
 	FBS::WebRtcTransport::IceState IceServer::IceStateToFbs(IceServer::IceState state)
 	{
+		MS_TRACE();
+
 		switch (state)
 		{
 			case IceServer::IceState::NEW:
@@ -65,6 +61,8 @@ namespace RTC
 			{
 				return FBS::WebRtcTransport::IceState::DISCONNECTED;
 			}
+
+				NO_DEFAULT_GCC();
 		}
 	}
 
@@ -146,6 +144,27 @@ namespace RTC
 		// Delete the ICE consent check timer.
 		delete this->consentCheckTimer;
 		this->consentCheckTimer = nullptr;
+	}
+
+	void IceServer::Dump(int indentation) const
+	{
+		MS_TRACE();
+
+		MS_DUMP_CLEAN(indentation, "<IceServer>");
+		MS_DUMP_CLEAN(indentation, "  state: %s", IceServer::IceStateToString(this->state).c_str());
+		MS_DUMP_CLEAN(indentation, "  tuples:");
+		for (const auto& tuple : this->tuples)
+		{
+			tuple.Dump(indentation + 2);
+		}
+		if (this->selectedTuple)
+		{
+			MS_DUMP_CLEAN(indentation, "  selected tuple:");
+			this->selectedTuple->Dump(indentation + 2);
+		}
+		MS_DUMP_CLEAN(indentation, "  consent timeout (ms): %" PRIu16, this->consentTimeoutMs);
+		MS_DUMP_CLEAN(indentation, "  remote nomination: %" PRIu32, this->remoteNomination);
+		MS_DUMP_CLEAN(indentation, "</IceServer>");
 	}
 
 	void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
@@ -583,9 +602,10 @@ namespace RTC
 				else
 				{
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					if (isNewNomination || !hasNomination)
 					{
 						MS_DEBUG_TAG(
 						  ice,
@@ -602,7 +622,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}
@@ -645,9 +665,10 @@ namespace RTC
 				else
 				{
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					if (isNewNomination || !hasNomination)
 					{
 						MS_DEBUG_TAG(
 						  ice,
@@ -664,7 +685,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}
@@ -701,9 +722,10 @@ namespace RTC
 					  nomination);
 
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					if (isNewNomination || !hasNomination)
 					{
 						// Update state.
 						this->state = IceState::COMPLETED;
@@ -712,7 +734,7 @@ namespace RTC
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}
@@ -741,15 +763,18 @@ namespace RTC
 				else
 				{
 					// Store the tuple.
-					auto* storedTuple = AddTuple(tuple);
+					auto* storedTuple          = AddTuple(tuple);
+					const auto isNewNomination = hasNomination && nomination > this->remoteNomination;
 
-					if ((hasNomination && nomination > this->remoteNomination) || !hasNomination)
+					// When in completed state, update selected tuple if there is ICE
+					// nomination or useCandidate.
+					if (isNewNomination || hasUseCandidate)
 					{
 						// Mark it as selected tuple.
 						SetSelectedTuple(storedTuple);
 
 						// Update nomination.
-						if (hasNomination && nomination > this->remoteNomination)
+						if (isNewNomination)
 						{
 							this->remoteNomination = nomination;
 						}

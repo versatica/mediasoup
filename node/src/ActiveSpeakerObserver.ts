@@ -1,68 +1,50 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
-import {
-	RtpObserver,
-	RtpObserverEvents,
-	RtpObserverObserverEvents,
-	RtpObserverConstructorOptions,
-} from './RtpObserver';
-import { Producer } from './Producer';
-import { AppData } from './types';
+import type {
+	ActiveSpeakerObserver,
+	ActiveSpeakerObserverDominantSpeaker,
+	ActiveSpeakerObserverEvents,
+	ActiveSpeakerObserverObserver,
+	ActiveSpeakerObserverObserverEvents,
+} from './ActiveSpeakerObserverTypes';
+import type { RtpObserver } from './RtpObserverTypes';
+import { RtpObserverImpl, RtpObserverConstructorOptions } from './RtpObserver';
+import type { AppData } from './types';
 import { Event, Notification } from './fbs/notification';
 import * as FbsActiveSpeakerObserver from './fbs/active-speaker-observer';
-
-export type ActiveSpeakerObserverOptions<
-	ActiveSpeakerObserverAppData extends AppData = AppData,
-> = {
-	interval?: number;
-
-	/**
-	 * Custom application data.
-	 */
-	appData?: ActiveSpeakerObserverAppData;
-};
-
-export type ActiveSpeakerObserverDominantSpeaker = {
-	/**
-	 * The audio Producer instance.
-	 */
-	producer: Producer;
-};
-
-export type ActiveSpeakerObserverEvents = RtpObserverEvents & {
-	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
-};
-
-export type ActiveSpeakerObserverObserverEvents = RtpObserverObserverEvents & {
-	dominantspeaker: [ActiveSpeakerObserverDominantSpeaker];
-};
 
 type RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData> =
 	RtpObserverConstructorOptions<ActiveSpeakerObserverAppData>;
 
 const logger = new Logger('ActiveSpeakerObserver');
 
-export class ActiveSpeakerObserver<
-	ActiveSpeakerObserverAppData extends AppData = AppData,
-> extends RtpObserver<
-	ActiveSpeakerObserverAppData,
-	ActiveSpeakerObserverEvents
-> {
-	/**
-	 * @private
-	 */
+export class ActiveSpeakerObserverImpl<
+		ActiveSpeakerObserverAppData extends AppData = AppData,
+	>
+	extends RtpObserverImpl<
+		ActiveSpeakerObserverAppData,
+		ActiveSpeakerObserverEvents,
+		ActiveSpeakerObserverObserver
+	>
+	implements RtpObserver, ActiveSpeakerObserver
+{
 	constructor(
 		options: RtpObserverObserverConstructorOptions<ActiveSpeakerObserverAppData>
 	) {
-		super(options);
+		const observer: ActiveSpeakerObserverObserver =
+			new EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents>();
+
+		super(options, observer);
 
 		this.handleWorkerNotifications();
+		this.handleListenerError();
 	}
 
-	/**
-	 * Observer.
-	 */
-	get observer(): EnhancedEventEmitter<ActiveSpeakerObserverObserverEvents> {
+	get type(): 'activespeaker' {
+		return 'activespeaker';
+	}
+
+	override get observer(): ActiveSpeakerObserverObserver {
 		return super.observer;
 	}
 
@@ -94,10 +76,19 @@ export class ActiveSpeakerObserver<
 					}
 
 					default: {
-						logger.error('ignoring unknown event "%s"', event);
+						logger.error(`ignoring unknown event "${event}"`);
 					}
 				}
 			}
 		);
+	}
+
+	private handleListenerError(): void {
+		this.on('listenererror', (eventName, error) => {
+			logger.error(
+				`event listener threw an error [eventName:${eventName}]:`,
+				error
+			);
+		});
 	}
 }

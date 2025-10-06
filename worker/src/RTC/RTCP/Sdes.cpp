@@ -87,15 +87,15 @@ namespace RTC
 			std::memcpy(this->header->value, value, this->header->length);
 		}
 
-		void SdesItem::Dump() const
+		void SdesItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<SdesItem>");
-			MS_DUMP("  type: %s", SdesItem::Type2String(this->GetType()).c_str());
-			MS_DUMP("  length: %" PRIu8, this->header->length);
-			MS_DUMP("  value: %.*s", this->header->length, this->header->value);
-			MS_DUMP("</SdesItem>");
+			MS_DUMP_CLEAN(indentation, "<SdesItem>");
+			MS_DUMP_CLEAN(indentation, "  type: %s", SdesItem::Type2String(this->GetType()).c_str());
+			MS_DUMP_CLEAN(indentation, "  length: %" PRIu8, this->header->length);
+			MS_DUMP_CLEAN(indentation, "  value: %.*s", this->header->length, this->header->value);
+			MS_DUMP_CLEAN(indentation, "</SdesItem>");
 		}
 
 		size_t SdesItem::Serialize(uint8_t* buffer)
@@ -164,9 +164,8 @@ namespace RTC
 
 			// Then check that there are 0, 1, 2 or 3 (no more) null octets that pad
 			// the chunk to 4 bytes.
-			uint16_t neededAdditionalNullOctets =
-			  Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
-			  static_cast<uint16_t>(chunkLength);
+			auto neededAdditionalNullOctets = Utils::Byte::PadTo4Bytes(static_cast<uint16_t>(chunkLength)) -
+			                                  static_cast<uint16_t>(chunkLength);
 			uint16_t foundAdditionalNullOctets{ 0u };
 
 			for (uint16_t i{ 0u }; len > offset && i < neededAdditionalNullOctets; ++i)
@@ -235,17 +234,17 @@ namespace RTC
 			return offset + padding;
 		}
 
-		void SdesChunk::Dump() const
+		void SdesChunk::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<SdesChunk>");
-			MS_DUMP("  ssrc: %" PRIu32, this->ssrc);
+			MS_DUMP_CLEAN(indentation, "<SdesChunk>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->ssrc);
 			for (auto* item : this->items)
 			{
-				item->Dump();
+				item->Dump(indentation + 1);
 			}
-			MS_DUMP("</SdesChunk>");
+			MS_DUMP_CLEAN(indentation, "</SdesChunk>");
 		}
 
 		/* Static Class members */
@@ -328,16 +327,16 @@ namespace RTC
 			return offset;
 		}
 
-		void SdesPacket::Dump() const
+		void SdesPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<SdesPacket>");
+			MS_DUMP_CLEAN(indentation, "<SdesPacket>");
 			for (auto* chunk : this->chunks)
 			{
-				chunk->Dump();
+				chunk->Dump(indentation + 1);
 			}
-			MS_DUMP("</SdesPacket>");
+			MS_DUMP_CLEAN(indentation, "</SdesPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

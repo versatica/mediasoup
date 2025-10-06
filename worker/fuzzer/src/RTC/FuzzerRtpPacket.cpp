@@ -15,7 +15,7 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	// below will try to write into packet memory.
 	//
 	// NOTE: Let's make the buffer bigger to test API that increases packet size.
-	uint8_t data2[len + 64];
+	std::unique_ptr<uint8_t[]> data2(new uint8_t[len + 64]);
 	uint8_t extenLen;
 	bool voice;
 	uint8_t volume;
@@ -23,14 +23,16 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	bool flip;
 	uint16_t rotation;
 	uint32_t absSendTime;
+	uint16_t playoutDelayMinDelay;
+	uint16_t playoutDelayMaxDelay;
 	uint16_t wideSeqNumber;
 	std::string mid;
 	std::string rid;
 	std::vector<::RTC::RtpPacket::GenericExtension> extensions;
 
-	std::memcpy(data2, data, len);
+	std::memcpy(data2.get(), data, len);
 
-	::RTC::RtpPacket* packet = ::RTC::RtpPacket::Parse(data2, len);
+	::RTC::RtpPacket* packet = ::RTC::RtpPacket::Parse(data2.get(), len);
 
 	if (!packet)
 	{
@@ -90,6 +92,11 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(2);
 	packet->GetExtension(2, extenLen);
 	packet->ReadVideoOrientation(camera, flip, rotation);
+
+	packet->SetPlayoutDelayExtensionId(8);
+	packet->HasExtension(8);
+	packet->GetExtension(8, extenLen);
+	packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
 
 	packet->HasExtension(6);
 	packet->HasExtension(7);
@@ -177,6 +184,11 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->HasExtension(12);
 	packet->GetExtension(12, extenLen);
 	packet->ReadVideoOrientation(camera, flip, rotation);
+
+	packet->SetPlayoutDelayExtensionId(15);
+	packet->HasExtension(15);
+	packet->GetExtension(15, extenLen);
+	packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
 
 	packet->GetPayload();
 	packet->GetPayloadLength();

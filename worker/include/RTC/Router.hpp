@@ -2,7 +2,6 @@
 #define MS_RTC_ROUTER_HPP
 
 #include "common.hpp"
-#include "Channel/ChannelNotification.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"

@@ -29,13 +29,13 @@ namespace RTC
 			return packet.release();
 		}
 
-		void FeedbackPsPliPacket::Dump() const
+		void FeedbackPsPliPacket::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackPsPliPacket>");
-			FeedbackPsPacket::Dump();
-			MS_DUMP("</FeedbackPsPliPacket>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackPsPliPacket>");
+			FeedbackPsPacket::Dump(indentation + 1);
+			MS_DUMP_CLEAN(indentation, "</FeedbackPsPliPacket>");
 		}
 	} // namespace RTCP
 } // namespace RTC

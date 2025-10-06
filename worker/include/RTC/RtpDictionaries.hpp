@@ -46,9 +46,7 @@ namespace RTC
 			VP8 = 200,
 			VP9,
 			H264,
-			H264_SVC,
-			X_H264UC,
-			H265,
+			AV1,
 			// Complementary codecs:
 			CN = 300,
 			TELEPHONE_EVENT,
@@ -121,12 +119,12 @@ namespace RTC
 			REPAIRED_RTP_STREAM_ID = 3,
 			ABS_SEND_TIME          = 4,
 			TRANSPORT_WIDE_CC_01   = 5,
-			FRAME_MARKING_07       = 6, // NOTE: Remove once RFC.
-			FRAME_MARKING          = 7,
+			DEPENDENCY_DESCRIPTOR  = 8,
 			SSRC_AUDIO_LEVEL       = 10,
 			VIDEO_ORIENTATION      = 11,
 			TOFFSET                = 12,
 			ABS_CAPTURE_TIME       = 13,
+			PLAYOUT_DELAY          = 14,
 		};
 
 	public:
@@ -158,7 +156,7 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 
 	private:
-		void CheckCodec();
+		void CheckCodec() const;
 
 	public:
 		RtpCodecMimeType mimeType;

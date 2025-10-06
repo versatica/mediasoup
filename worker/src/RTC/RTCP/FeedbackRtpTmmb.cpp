@@ -63,15 +63,15 @@ namespace RTC
 		}
 
 		template<typename T>
-		void FeedbackRtpTmmbItem<T>::Dump() const
+		void FeedbackRtpTmmbItem<T>::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackRtpTmmbItem>");
-			MS_DUMP("  ssrc: %" PRIu32, this->GetSsrc());
-			MS_DUMP("  bitrate: %" PRIu64, this->GetBitrate());
-			MS_DUMP("  overhead: %" PRIu16, this->GetOverhead());
-			MS_DUMP("</FeedbackRtpTmmbItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackRtpTmmbItem>");
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, this->GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  bitrate: %" PRIu64, this->GetBitrate());
+			MS_DUMP_CLEAN(indentation, "  overhead: %" PRIu16, this->GetOverhead());
+			MS_DUMP_CLEAN(indentation, "</FeedbackRtpTmmbItem>");
 		}
 
 		/* Specialization for Tmmbr class. */

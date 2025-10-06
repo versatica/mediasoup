@@ -2,8 +2,19 @@ pub(super) use mediasoup_sys::{ChannelWriteCtx, ChannelWriteFn};
 use std::os::raw::c_void;
 use std::slice;
 
-#[allow(clippy::type_complexity)]
-pub(super) struct ChannelReadCallback(Box<dyn FnMut(&[u8]) + Send + 'static>);
+/// TypeAlias to silience clippy::type_complexity warnings
+type CallbackType = Box<dyn FnMut(&[u8]) + Send + 'static>;
+
+pub(super) struct ChannelReadCallback {
+    // Silence clippy warnings
+    _callback: CallbackType,
+}
+
+impl ChannelReadCallback {
+    pub(super) fn new(_callback: CallbackType) -> Self {
+        Self { _callback }
+    }
+}
 
 pub(crate) struct PreparedChannelWrite {
     channel_write_fn: ChannelWriteFn,
@@ -54,6 +65,6 @@ where
     PreparedChannelWrite {
         channel_write_fn: wrapper::<F>,
         channel_write_ctx: ChannelWriteCtx(read_callback.as_ref() as *const F as *const c_void),
-        read_callback: ChannelReadCallback(read_callback),
+        read_callback: ChannelReadCallback::new(read_callback),
     }
 }

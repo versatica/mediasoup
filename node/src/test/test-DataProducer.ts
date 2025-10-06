@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { DataProducerEvents } from '../types';
+import type { DataProducerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -142,7 +142,7 @@ test('webRtcTransport1.produceData() with wrong arguments rejects with TypeError
 	// Missing or empty sctpStreamParameters.streamId.
 	await expect(
 		ctx.webRtcTransport1!.produceData({
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			sctpStreamParameters: { foo: 'foo' },
 		})
 	).rejects.toThrow(TypeError);
@@ -267,11 +267,11 @@ test('dataProducer.pause() and resume() succeed', async () => {
 
 	// Even if we don't await for pause()/resume() completion, the observer must
 	// fire 'pause' and 'resume' events if state was the opposite.
-	dataProducer1.pause();
-	dataProducer1.resume();
-	dataProducer1.pause();
-	dataProducer1.pause();
-	dataProducer1.pause();
+	void dataProducer1.pause();
+	void dataProducer1.resume();
+	void dataProducer1.pause();
+	void dataProducer1.pause();
+	void dataProducer1.pause();
 	await dataProducer1.resume();
 
 	expect(onObserverPause).toHaveBeenCalledTimes(3);

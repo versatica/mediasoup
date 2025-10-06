@@ -8,6 +8,6 @@
 	},
 	"dependencies": {
 		"clang-format": "^1.8.0",
-		"glob": "^10.3.12"
+		"glob": "^11.0.3"
 	}
 }

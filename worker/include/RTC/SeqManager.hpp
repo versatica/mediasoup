@@ -26,16 +26,13 @@ namespace RTC
 			bool operator()(T lhs, T rhs) const;
 		};
 
-	private:
-		static const SeqLowerThan isSeqLowerThan;   // NOLINT(readability-identifier-naming)
-		static const SeqHigherThan isSeqHigherThan; // NOLINT(readability-identifier-naming)
-
 	public:
-		static bool IsSeqLowerThan(T lhs, T rhs);
 		static bool IsSeqHigherThan(T lhs, T rhs);
+		static bool IsSeqLowerThan(T lhs, T rhs);
 
 	public:
 		SeqManager() = default;
+		SeqManager(T initialOutput);
 
 	public:
 		void Sync(T input);
@@ -50,6 +47,7 @@ namespace RTC
 	private:
 		// Whether at least a sequence number has been inserted.
 		bool started{ false };
+		T initialOutput{ 0 };
 		T base{ 0 };
 		T maxOutput{ 0 };
 		T maxInput{ 0 };

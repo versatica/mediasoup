@@ -1,22 +1,22 @@
 use async_io::Timer;
 use futures_lite::future;
 use hash_hasher::{HashedMap, HashedSet};
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::prelude::*;
 use mediasoup::producer::{ProducerOptions, ProducerTraceEventType, ProducerType};
 use mediasoup::router::{Router, RouterOptions};
-use mediasoup::rtp_parameters::{
-    MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCodecCapability,
-    RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
-    RtpEncodingParametersRtx, RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
-};
-use mediasoup::scalability_modes::ScalabilityMode;
 use mediasoup::transport::ProduceError;
 use mediasoup::webrtc_transport::{
     WebRtcTransport, WebRtcTransportListenInfos, WebRtcTransportOptions,
 };
 use mediasoup::worker::{Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
+use mediasoup_types::rtp_parameters::{
+    MediaKind, MimeTypeAudio, MimeTypeVideo, RtcpFeedback, RtcpParameters, RtpCodecCapability,
+    RtpCodecParameters, RtpCodecParametersParameters, RtpEncodingParameters,
+    RtpEncodingParametersRtx, RtpHeaderExtensionParameters, RtpHeaderExtensionUri, RtpParameters,
+};
+use mediasoup_types::scalability_modes::ScalabilityMode;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::{NonZeroU32, NonZeroU8};
@@ -206,6 +206,7 @@ async fn init() -> (Worker, Router, WebRtcTransport, WebRtcTransport) {
             protocol: Protocol::Udp,
             ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
             announced_address: None,
+            expose_internal_ip: false,
             port: None,
             port_range: None,
             flags: None,

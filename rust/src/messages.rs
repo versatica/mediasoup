@@ -5,11 +5,8 @@ use crate::consumer::{
 };
 use crate::data_consumer::{DataConsumerId, DataConsumerType};
 use crate::data_producer::{DataProducerId, DataProducerType};
-use crate::data_structures::{
-    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
-    ListenInfo, SctpState, TransportTuple,
-};
 use crate::direct_transport::DirectTransportOptions;
+use crate::fbs::{FromFbs, ToFbs, TryFromFbs};
 use crate::ortc::RtpMapping;
 use crate::pipe_transport::PipeTransportOptions;
 use crate::plain_transport::PlainTransportOptions;
@@ -18,9 +15,6 @@ use crate::router::consumer::ConsumerDump;
 use crate::router::producer::ProducerDump;
 use crate::router::{RouterDump, RouterId};
 use crate::rtp_observer::RtpObserverId;
-use crate::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
-use crate::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
-use crate::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use crate::transport::{TransportId, TransportTraceEventType};
 use crate::webrtc_server::{
     WebRtcServerDump, WebRtcServerIceUsernameFragment, WebRtcServerId, WebRtcServerIpPort,
@@ -35,6 +29,13 @@ use mediasoup_sys::fbs::{
     direct_transport, message, notification, pipe_transport, plain_transport, producer, request,
     response, router, rtp_observer, transport, web_rtc_server, web_rtc_transport, worker,
 };
+use mediasoup_types::data_structures::{
+    DtlsParameters, DtlsRole, DtlsState, IceCandidate, IceParameters, IceRole, IceState,
+    ListenInfo, SctpState, TransportTuple,
+};
+use mediasoup_types::rtp_parameters::{MediaKind, RtpEncodingParameters, RtpParameters};
+use mediasoup_types::sctp_parameters::{NumSctpStreams, SctpParameters, SctpStreamParameters};
+use mediasoup_types::srtp_parameters::{SrtpCryptoSuite, SrtpParameters};
 use parking_lot::Mutex;
 use planus::Builder;
 use serde::{Deserialize, Serialize};
@@ -42,6 +43,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::net::IpAddr;
 use std::num::NonZeroU16;
+use std::ops::Deref;
 
 pub(crate) trait Request
 where
@@ -567,8 +569,12 @@ impl RouterCreateDirectTransportData {
             max_message_size: direct_transport_options.max_message_size,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> direct_transport::DirectTransportOptions {
+impl ToFbs for RouterCreateDirectTransportData {
+    type FbsType = direct_transport::DirectTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         direct_transport::DirectTransportOptions {
             base: Box::new(transport::Options {
                 direct: true,
@@ -636,16 +642,15 @@ enum RouterCreateWebrtcTransportListen {
     },
 }
 
-impl RouterCreateWebrtcTransportListen {
-    pub(crate) fn to_fbs(&self) -> web_rtc_transport::Listen {
+impl ToFbs for RouterCreateWebrtcTransportListen {
+    type FbsType = web_rtc_transport::Listen;
+
+    fn to_fbs(&self) -> Self::FbsType {
         match self {
             RouterCreateWebrtcTransportListen::Individual { listen_infos } => {
                 web_rtc_transport::Listen::ListenIndividual(Box::new(
                     web_rtc_transport::ListenIndividual {
-                        listen_infos: listen_infos
-                            .iter()
-                            .map(|listen_info| listen_info.to_fbs())
-                            .collect(),
+                        listen_infos: ToFbs::to_fbs(listen_infos.deref()),
                     },
                 ))
             }
@@ -710,8 +715,12 @@ impl RouterCreateWebrtcTransportData {
             is_data_channel: true,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> web_rtc_transport::WebRtcTransportOptions {
+impl ToFbs for RouterCreateWebrtcTransportData {
+    type FbsType = web_rtc_transport::WebRtcTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         web_rtc_transport::WebRtcTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
@@ -795,30 +804,22 @@ impl Request for RouterCreateWebRtcTransportRequest {
         let data = web_rtc_transport::DumpResponse::try_from(data)?;
 
         Ok(WebRtcTransportData {
-            ice_role: IceRole::from_fbs(data.ice_role),
-            ice_parameters: IceParameters::from_fbs(*data.ice_parameters),
-            ice_candidates: data
-                .ice_candidates
-                .iter()
-                .map(IceCandidate::from_fbs)
-                .collect(),
-            ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
+            ice_role: IceRole::from_fbs(&data.ice_role),
+            ice_parameters: IceParameters::from_fbs(data.ice_parameters.as_ref()),
+            ice_candidates: FromFbs::from_fbs(&data.ice_candidates),
+            ice_state: Mutex::new(IceState::from_fbs(&data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
                     .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             ),
-            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
-            dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
+            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(data.dtls_parameters.as_ref())),
+            dtls_state: Mutex::new(DtlsState::from_fbs(&data.dtls_state)),
             dtls_remote_cert: Mutex::new(None),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
         })
     }
 }
@@ -872,30 +873,22 @@ impl Request for RouterCreateWebRtcTransportWithServerRequest {
         let data = web_rtc_transport::DumpResponse::try_from(data)?;
 
         Ok(WebRtcTransportData {
-            ice_role: IceRole::from_fbs(data.ice_role),
-            ice_parameters: IceParameters::from_fbs(*data.ice_parameters),
-            ice_candidates: data
-                .ice_candidates
-                .iter()
-                .map(IceCandidate::from_fbs)
-                .collect(),
-            ice_state: Mutex::new(IceState::from_fbs(data.ice_state)),
+            ice_role: IceRole::from_fbs(&data.ice_role),
+            ice_parameters: IceParameters::from_fbs(data.ice_parameters.as_ref()),
+            ice_candidates: FromFbs::from_fbs(&data.ice_candidates),
+            ice_state: Mutex::new(IceState::from_fbs(&data.ice_state)),
             ice_selected_tuple: Mutex::new(
                 data.ice_selected_tuple
                     .map(|tuple| TransportTuple::from_fbs(tuple.as_ref())),
             ),
-            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(*data.dtls_parameters)),
-            dtls_state: Mutex::new(DtlsState::from_fbs(data.dtls_state)),
+            dtls_parameters: Mutex::new(DtlsParameters::from_fbs(data.dtls_parameters.as_ref())),
+            dtls_state: Mutex::new(DtlsState::from_fbs(&data.dtls_state)),
             dtls_remote_cert: Mutex::new(None),
             sctp_parameters: data
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
         })
     }
 }
@@ -937,8 +930,12 @@ impl RouterCreatePlainTransportData {
             is_data_channel: false,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> plain_transport::PlainTransportOptions {
+impl ToFbs for RouterCreatePlainTransportData {
+    type FbsType = plain_transport::PlainTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         plain_transport::PlainTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
@@ -958,7 +955,7 @@ impl RouterCreatePlainTransportData {
             rtcp_mux: self.rtcp_mux,
             comedia: self.comedia,
             enable_srtp: self.enable_srtp,
-            srtp_crypto_suite: Some(SrtpCryptoSuite::to_fbs(self.srtp_crypto_suite)),
+            srtp_crypto_suite: Some(SrtpCryptoSuite::to_fbs(&self.srtp_crypto_suite)),
         }
     }
 }
@@ -1014,11 +1011,7 @@ impl Request for RouterCreatePlainTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
                     .map(|parameters| SrtpParameters::from_fbs(parameters.as_ref())),
@@ -1069,8 +1062,12 @@ impl RouterCreatePipeTransportData {
             is_data_channel: false,
         }
     }
+}
 
-    pub(crate) fn to_fbs(&self) -> pipe_transport::PipeTransportOptions {
+impl ToFbs for RouterCreatePipeTransportData {
+    type FbsType = pipe_transport::PipeTransportOptions;
+
+    fn to_fbs(&self) -> Self::FbsType {
         pipe_transport::PipeTransportOptions {
             base: Box::new(transport::Options {
                 direct: false,
@@ -1136,11 +1133,7 @@ impl Request for RouterCreatePipeTransportRequest {
                 .base
                 .sctp_parameters
                 .map(|parameters| SctpParameters::from_fbs(parameters.as_ref())),
-            sctp_state: Mutex::new(
-                data.base
-                    .sctp_state
-                    .map(|state| SctpState::from_fbs(&state)),
-            ),
+            sctp_state: Mutex::new(FromFbs::from_fbs(&data.base.sctp_state)),
             rtx: data.rtx,
             srtp_parameters: Mutex::new(
                 data.srtp_parameters
@@ -1445,7 +1438,7 @@ impl Request for WebRtcTransportConnectRequest {
         let data = web_rtc_transport::ConnectResponse::try_from(data)?;
 
         Ok(WebRtcTransportConnectResponse {
-            dtls_local_role: DtlsRole::from_fbs(data.dtls_local_role),
+            dtls_local_role: DtlsRole::from_fbs(&data.dtls_local_role),
         })
     }
 }
@@ -1473,7 +1466,7 @@ impl Request for PipeTransportConnectRequest {
             &mut builder,
             self.ip.to_string(),
             self.port,
-            self.srtp_parameters.map(|parameters| parameters.to_fbs()),
+            ToFbs::to_fbs(&self.srtp_parameters),
         );
         let request_body = request::Body::create_pipe_transport_connect_request(&mut builder, data);
         let request = request::Request::create(
@@ -1531,7 +1524,7 @@ impl Request for TransportConnectPlainRequest {
             self.ip.map(|ip| ip.to_string()),
             self.port,
             self.rtcp_port,
-            self.srtp_parameters.map(|parameters| parameters.to_fbs()),
+            ToFbs::to_fbs(&self.srtp_parameters),
         );
         let request_body =
             request::Body::create_plain_transport_connect_request(&mut builder, data);
@@ -1709,7 +1702,7 @@ impl Request for TransportRestartIceRequest {
 
         let data = transport::RestartIceResponse::try_from(data)?;
 
-        Ok(IceParameters::from_fbs(web_rtc_transport::IceParameters {
+        Ok(IceParameters::from_fbs(&web_rtc_transport::IceParameters {
             username_fragment: data.username_fragment,
             password: data.password,
             ice_lite: data.ice_lite,
@@ -1743,7 +1736,7 @@ impl Request for TransportProduceRequest {
             &mut builder,
             self.producer_id.to_string(),
             self.kind.to_fbs(),
-            Box::new(self.rtp_parameters.into_fbs()),
+            Box::new(self.rtp_parameters.to_fbs()),
             Box::new(self.rtp_mapping.to_fbs()),
             self.key_frame_request_delay,
             self.paused,
@@ -1772,7 +1765,7 @@ impl Request for TransportProduceRequest {
         let data = transport::ProduceResponse::try_from(data)?;
 
         Ok(TransportProduceResponse {
-            r#type: ProducerType::from_fbs(data.type_),
+            r#type: ProducerType::from_fbs(&data.type_),
         })
     }
 }
@@ -1810,14 +1803,12 @@ impl Request for TransportConsumeRequest {
             self.consumer_id.to_string(),
             self.producer_id.to_string(),
             self.kind.to_fbs(),
-            Box::new(self.rtp_parameters.into_fbs()),
+            Box::new(self.rtp_parameters.to_fbs()),
             self.r#type.to_fbs(),
-            self.consumable_rtp_encodings
-                .iter()
-                .map(RtpEncodingParameters::to_fbs)
-                .collect::<Vec<_>>(),
+            ToFbs::to_fbs(&self.consumable_rtp_encodings),
             self.paused,
-            self.preferred_layers.map(ConsumerLayers::to_fbs),
+            ToFbs::to_fbs(&self.preferred_layers),
+            // self.preferred_layers.map(ConsumerLayers::to_fbs),
             self.ignore_dtx,
         );
         let request_body = request::Body::create_transport_consume_request(&mut builder, data);
@@ -1846,10 +1837,10 @@ impl Request for TransportConsumeRequest {
         Ok(TransportConsumeResponse {
             paused: data.paused,
             producer_paused: data.producer_paused,
-            score: ConsumerScore::from_fbs(*data.score),
+            score: ConsumerScore::from_fbs(data.score.as_ref()),
             preferred_layers: data
                 .preferred_layers
-                .map(|preferred_layers| ConsumerLayers::from_fbs(*preferred_layers)),
+                .map(|preferred_layers| ConsumerLayers::from_fbs(preferred_layers.as_ref())),
         })
     }
 }
@@ -1888,8 +1879,7 @@ impl Request for TransportProduceDataRequest {
                 DataProducerType::Sctp => data_producer::Type::Sctp,
                 DataProducerType::Direct => data_producer::Type::Direct,
             },
-            self.sctp_stream_parameters
-                .map(SctpStreamParameters::to_fbs),
+            ToFbs::to_fbs(&self.sctp_stream_parameters),
             if self.label.is_empty() {
                 None
             } else {
@@ -1930,9 +1920,9 @@ impl Request for TransportProduceDataRequest {
                 data_producer::Type::Sctp => DataProducerType::Sctp,
                 data_producer::Type::Direct => DataProducerType::Direct,
             },
-            sctp_stream_parameters: data
-                .sctp_stream_parameters
-                .map(|stream_parameters| SctpStreamParameters::from_fbs(*stream_parameters)),
+            sctp_stream_parameters: data.sctp_stream_parameters.map(|stream_parameters| {
+                SctpStreamParameters::from_fbs(stream_parameters.as_ref())
+            }),
             label: data.label.to_string(),
             protocol: data.protocol.to_string(),
             paused: data.paused,
@@ -1978,8 +1968,7 @@ impl Request for TransportConsumeDataRequest {
                 DataConsumerType::Sctp => data_producer::Type::Sctp,
                 DataConsumerType::Direct => data_producer::Type::Direct,
             },
-            self.sctp_stream_parameters
-                .map(SctpStreamParameters::to_fbs),
+            ToFbs::to_fbs(&self.sctp_stream_parameters),
             if self.label.is_empty() {
                 None
             } else {
@@ -2021,9 +2010,9 @@ impl Request for TransportConsumeDataRequest {
                 data_producer::Type::Sctp => DataConsumerType::Sctp,
                 data_producer::Type::Direct => DataConsumerType::Direct,
             },
-            sctp_stream_parameters: data
-                .sctp_stream_parameters
-                .map(|stream_parameters| SctpStreamParameters::from_fbs(*stream_parameters)),
+            sctp_stream_parameters: data.sctp_stream_parameters.map(|stream_parameters| {
+                SctpStreamParameters::from_fbs(stream_parameters.as_ref())
+            }),
             label: data.label.to_string(),
             protocol: data.protocol.to_string(),
             paused: data.paused,
@@ -2047,11 +2036,7 @@ impl Request for TransportEnableTraceEventRequest {
         let mut builder = Builder::new();
 
         let data = transport::EnableTraceEventRequest {
-            events: self
-                .types
-                .into_iter()
-                .map(TransportTraceEventType::to_fbs)
-                .collect(),
+            events: ToFbs::to_fbs(&self.types),
         };
 
         let request_body = request::Body::TransportEnableTraceEventRequest(Box::new(data));
@@ -2177,7 +2162,7 @@ impl Request for ProducerDumpRequest {
             panic!("Wrong message from worker: {response:?}");
         };
 
-        ProducerDump::from_fbs_ref(data)
+        ProducerDump::try_from_fbs(data)
     }
 }
 
@@ -2293,11 +2278,7 @@ impl Request for ProducerEnableTraceEventRequest {
         let mut builder = Builder::new();
 
         let data = producer::EnableTraceEventRequest {
-            events: self
-                .types
-                .into_iter()
-                .map(ProducerTraceEventType::to_fbs)
-                .collect(),
+            events: ToFbs::to_fbs(&self.types),
         };
 
         let request_body = request::Body::ProducerEnableTraceEventRequest(Box::new(data));
@@ -2423,7 +2404,7 @@ impl Request for ConsumerDumpRequest {
             panic!("Wrong message from worker: {response:?}");
         };
 
-        ConsumerDump::from_fbs_ref(data)
+        ConsumerDump::try_from_fbs(data)
     }
 }
 
@@ -2540,7 +2521,7 @@ impl Request for ConsumerSetPreferredLayersRequest {
 
         let data = consumer::SetPreferredLayersRequest::create(
             &mut builder,
-            ConsumerLayers::to_fbs(self.data),
+            ConsumerLayers::to_fbs(&self.data),
         );
         let request_body =
             request::Body::create_consumer_set_preferred_layers_request(&mut builder, data);
@@ -2568,7 +2549,7 @@ impl Request for ConsumerSetPreferredLayersRequest {
         let data = consumer::SetPreferredLayersResponse::try_from(data)?;
 
         match data.preferred_layers {
-            Some(preferred_layers) => Ok(Some(ConsumerLayers::from_fbs(*preferred_layers))),
+            Some(preferred_layers) => Ok(Some(ConsumerLayers::from_fbs(preferred_layers.as_ref()))),
             None => Ok(None),
         }
     }
@@ -2667,11 +2648,7 @@ impl Request for ConsumerEnableTraceEventRequest {
         let mut builder = Builder::new();
 
         let data = consumer::EnableTraceEventRequest {
-            events: self
-                .types
-                .into_iter()
-                .map(ConsumerTraceEventType::to_fbs)
-                .collect(),
+            events: ToFbs::to_fbs(&self.types),
         };
 
         let request_body = request::Body::ConsumerEnableTraceEventRequest(Box::new(data));

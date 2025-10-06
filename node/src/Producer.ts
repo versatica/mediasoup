@@ -1,12 +1,26 @@
 import { Logger } from './Logger';
 import { EnhancedEventEmitter } from './enhancedEvents';
+import type {
+	Producer,
+	ProducerType,
+	ProducerScore,
+	ProducerVideoOrientation,
+	ProducerDump,
+	ProducerStat,
+	ProducerTraceEventType,
+	ProducerTraceEventData,
+	ProducerEvents,
+	ProducerObserver,
+	ProducerObserverEvents,
+} from './ProducerTypes';
 import { Channel } from './Channel';
-import { TransportInternal } from './Transport';
-import { MediaKind, RtpParameters, parseRtpParameters } from './RtpParameters';
+import type { TransportInternal } from './Transport';
+import type { MediaKind, RtpParameters } from './rtpParametersTypes';
+import { parseRtpParameters } from './rtpParametersFbsUtils';
+import { parseRtpStreamRecvStats } from './rtpStreamStatsFbsUtils';
+import type { AppData } from './types';
+import * as fbsUtils from './fbsUtils';
 import { Event, Notification } from './fbs/notification';
-import { parseRtpStreamRecvStats, RtpStreamRecvStats } from './RtpStream';
-import { AppData } from './types';
-import * as utils from './utils';
 import { TraceDirection as FbsTraceDirection } from './fbs/common';
 import * as FbsNotification from './fbs/notification';
 import * as FbsRequest from './fbs/request';
@@ -15,154 +29,11 @@ import * as FbsProducer from './fbs/producer';
 import * as FbsProducerTraceInfo from './fbs/producer/trace-info';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 
-export type ProducerOptions<ProducerAppData extends AppData = AppData> = {
-	/**
-	 * Producer id (just for Router.pipeToRouter() method).
-	 */
-	id?: string;
-
-	/**
-	 * Media kind ('audio' or 'video').
-	 */
-	kind: MediaKind;
-
-	/**
-	 * RTP parameters defining what the endpoint is sending.
-	 */
-	rtpParameters: RtpParameters;
-
-	/**
-	 * Whether the producer must start in paused mode. Default false.
-	 */
-	paused?: boolean;
-
-	/**
-	 * Just for video. Time (in ms) before asking the sender for a new key frame
-	 * after having asked a previous one. Default 0.
-	 */
-	keyFrameRequestDelay?: number;
-
-	/**
-	 * Custom application data.
-	 */
-	appData?: ProducerAppData;
-};
-
-/**
- * Valid types for 'trace' event.
- */
-export type ProducerTraceEventType =
-	| 'rtp'
-	| 'keyframe'
-	| 'nack'
-	| 'pli'
-	| 'fir'
-	| 'sr';
-
-/**
- * 'trace' event data.
- */
-export type ProducerTraceEventData = {
-	/**
-	 * Trace type.
-	 */
-	type: ProducerTraceEventType;
-
-	/**
-	 * Event timestamp.
-	 */
-	timestamp: number;
-
-	/**
-	 * Event direction.
-	 */
-	direction: 'in' | 'out';
-
-	/**
-	 * Per type information.
-	 */
-	info: any;
-};
-
-export type ProducerScore = {
-	/**
-	 * Index of the RTP stream in the rtpParameters.encodings array.
-	 */
-	encodingIdx: number;
-
-	/**
-	 * SSRC of the RTP stream.
-	 */
-	ssrc: number;
-
-	/**
-	 * RID of the RTP stream.
-	 */
-	rid?: string;
-
-	/**
-	 * The score of the RTP stream.
-	 */
-	score: number;
-};
-
-export type ProducerVideoOrientation = {
-	/**
-	 * Whether the source is a video camera.
-	 */
-	camera: boolean;
-
-	/**
-	 * Whether the video source is flipped.
-	 */
-	flip: boolean;
-
-	/**
-	 * Rotation degrees (0, 90, 180 or 270).
-	 */
-	rotation: number;
-};
-
-export type ProducerStat = RtpStreamRecvStats;
-
-/**
- * Producer type.
- */
-export type ProducerType = 'simple' | 'simulcast' | 'svc';
-
-export type ProducerEvents = {
-	transportclose: [];
-	score: [ProducerScore[]];
-	videoorientationchange: [ProducerVideoOrientation];
-	trace: [ProducerTraceEventData];
-	listenererror: [string, Error];
-	// Private events.
-	'@close': [];
-};
-
-export type ProducerObserverEvents = {
-	close: [];
-	pause: [];
-	resume: [];
-	score: [ProducerScore[]];
-	videoorientationchange: [ProducerVideoOrientation];
-	trace: [ProducerTraceEventData];
-};
-
-type ProducerDump = {
-	id: string;
-	kind: string;
-	type: ProducerType;
-	rtpParameters: RtpParameters;
-	rtpMapping: any;
-	rtpStreams: any;
-	traceEventTypes: string[];
-	paused: boolean;
-};
-
 type ProducerInternal = TransportInternal & {
 	producerId: string;
 };
+
+const logger = new Logger('Producer');
 
 type ProducerData = {
 	kind: MediaKind;
@@ -171,11 +42,10 @@ type ProducerData = {
 	consumableRtpParameters: RtpParameters;
 };
 
-const logger = new Logger('Producer');
-
-export class Producer<
-	ProducerAppData extends AppData = AppData,
-> extends EnhancedEventEmitter<ProducerEvents> {
+export class ProducerImpl<ProducerAppData extends AppData = AppData>
+	extends EnhancedEventEmitter<ProducerEvents>
+	implements Producer
+{
 	// Internal data.
 	readonly #internal: ProducerInternal;
 
@@ -198,11 +68,9 @@ export class Producer<
 	#score: ProducerScore[] = [];
 
 	// Observer instance.
-	readonly #observer = new EnhancedEventEmitter<ProducerObserverEvents>();
+	readonly #observer: ProducerObserver =
+		new EnhancedEventEmitter<ProducerObserverEvents>();
 
-	/**
-	 * @private
-	 */
 	constructor({
 		internal,
 		data,
@@ -224,101 +92,65 @@ export class Producer<
 		this.#data = data;
 		this.#channel = channel;
 		this.#paused = paused;
-		this.#appData = appData || ({} as ProducerAppData);
+		this.#appData = appData ?? ({} as ProducerAppData);
 
 		this.handleWorkerNotifications();
+		this.handleListenerError();
 	}
 
-	/**
-	 * Producer id.
-	 */
 	get id(): string {
 		return this.#internal.producerId;
 	}
 
-	/**
-	 * Whether the Producer is closed.
-	 */
 	get closed(): boolean {
 		return this.#closed;
 	}
 
-	/**
-	 * Media kind.
-	 */
 	get kind(): MediaKind {
 		return this.#data.kind;
 	}
 
-	/**
-	 * RTP parameters.
-	 */
 	get rtpParameters(): RtpParameters {
 		return this.#data.rtpParameters;
 	}
 
-	/**
-	 * Producer type.
-	 */
 	get type(): ProducerType {
 		return this.#data.type;
 	}
 
-	/**
-	 * Consumable RTP parameters.
-	 *
-	 * @private
-	 */
 	get consumableRtpParameters(): RtpParameters {
 		return this.#data.consumableRtpParameters;
 	}
 
-	/**
-	 * Whether the Producer is paused.
-	 */
 	get paused(): boolean {
 		return this.#paused;
 	}
 
-	/**
-	 * Producer score list.
-	 */
 	get score(): ProducerScore[] {
 		return this.#score;
 	}
 
-	/**
-	 * App custom data.
-	 */
 	get appData(): ProducerAppData {
 		return this.#appData;
 	}
 
-	/**
-	 * App custom data setter.
-	 */
 	set appData(appData: ProducerAppData) {
 		this.#appData = appData;
 	}
 
-	/**
-	 * Observer.
-	 */
-	get observer(): EnhancedEventEmitter<ProducerObserverEvents> {
+	get observer(): ProducerObserver {
 		return this.#observer;
 	}
 
 	/**
-	 * @private
 	 * Just for testing purposes.
+	 *
+	 * @private
 	 */
 	get channelForTesting(): Channel {
 		return this.#channel;
 	}
 
-	/**
-	 * Close the Producer.
-	 */
 	close(): void {
 		if (this.#closed) {
 			return;
@@ -351,11 +183,6 @@ export class Producer<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Transport was closed.
-	 *
-	 * @private
-	 */
 	transportClosed(): void {
 		if (this.#closed) {
 			return;
@@ -374,9 +201,6 @@ export class Producer<
 		this.#observer.safeEmit('close');
 	}
 
-	/**
-	 * Dump Producer.
-	 */
 	async dump(): Promise<ProducerDump> {
 		logger.debug('dump()');
 
@@ -395,9 +219,6 @@ export class Producer<
 		return parseProducerDump(dumpResponse);
 	}
 
-	/**
-	 * Get Producer stats.
-	 */
 	async getStats(): Promise<ProducerStat[]> {
 		logger.debug('getStats()');
 
@@ -416,9 +237,6 @@ export class Producer<
 		return parseProducerStats(data);
 	}
 
-	/**
-	 * Pause the Producer.
-	 */
 	async pause(): Promise<void> {
 		logger.debug('pause()');
 
@@ -439,9 +257,6 @@ export class Producer<
 		}
 	}
 
-	/**
-	 * Resume the Producer.
-	 */
 	async resume(): Promise<void> {
 		logger.debug('resume()');
 
@@ -462,9 +277,6 @@ export class Producer<
 		}
 	}
 
-	/**
-	 * Enable 'trace' event.
-	 */
 	async enableTraceEvent(types: ProducerTraceEventType[] = []): Promise<void> {
 		logger.debug('enableTraceEvent()');
 
@@ -499,10 +311,7 @@ export class Producer<
 		);
 	}
 
-	/**
-	 * Send RTP packet (just valid for Producers created on a DirectTransport).
-	 */
-	send(rtpPacket: Buffer) {
+	send(rtpPacket: Buffer): void {
 		if (!Buffer.isBuffer(rtpPacket)) {
 			throw new TypeError('rtpPacket must be a Buffer');
 		}
@@ -533,7 +342,7 @@ export class Producer<
 
 						data!.body(notification);
 
-						const score: ProducerScore[] = utils.parseVector(
+						const score: ProducerScore[] = fbsUtils.parseVector(
 							notification,
 							'scores',
 							parseProducerScore
@@ -583,11 +392,20 @@ export class Producer<
 					}
 
 					default: {
-						logger.error('ignoring unknown event "%s"', event);
+						logger.error(`ignoring unknown event "${event}"`);
 					}
 				}
 			}
 		);
+	}
+
+	private handleListenerError(): void {
+		this.on('listenererror', (eventName, error) => {
+			logger.error(
+				`event listener threw an error [eventName:${eventName}]:`,
+				error
+			);
+		});
 	}
 }
 
@@ -623,6 +441,10 @@ export function producerTypeToFbs(type: ProducerType): FbsRtpParameters.Type {
 
 		case 'svc': {
 			return FbsRtpParameters.Type.SVC;
+		}
+
+		default: {
+			throw new TypeError(`invalid ProducerType: ${type}`);
 		}
 	}
 }
@@ -691,9 +513,7 @@ function producerTraceEventTypeFromFbs(
 	}
 }
 
-export function parseProducerDump(
-	data: FbsProducer.DumpResponse
-): ProducerDump {
+function parseProducerDump(data: FbsProducer.DumpResponse): ProducerDump {
 	return {
 		id: data.id()!,
 		kind: data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
@@ -701,16 +521,16 @@ export function parseProducerDump(
 		rtpParameters: parseRtpParameters(data.rtpParameters()!),
 		// NOTE: optional values are represented with null instead of undefined.
 		// TODO: Make flatbuffers TS return undefined instead of null.
-		rtpMapping: data.rtpMapping() ? data.rtpMapping()!.unpack() : undefined,
+		rtpMapping: data.rtpMapping()?.unpack(),
 		// NOTE: optional values are represented with null instead of undefined.
 		// TODO: Make flatbuffers TS return undefined instead of null.
 		rtpStreams:
 			data.rtpStreamsLength() > 0
-				? utils.parseVector(data, 'rtpStreams', (rtpStream: any) =>
+				? fbsUtils.parseVector(data, 'rtpStreams', rtpStream =>
 						rtpStream.unpack()
 					)
 				: undefined,
-		traceEventTypes: utils.parseVector<ProducerTraceEventType>(
+		traceEventTypes: fbsUtils.parseVector<ProducerTraceEventType>(
 			data,
 			'traceEventTypes',
 			producerTraceEventTypeFromFbs
@@ -722,7 +542,7 @@ export function parseProducerDump(
 function parseProducerStats(
 	binary: FbsProducer.GetStatsResponse
 ): ProducerStat[] {
-	return utils.parseVector(binary, 'stats', parseRtpStreamRecvStats);
+	return fbsUtils.parseVector(binary, 'stats', parseRtpStreamRecvStats);
 }
 
 function parseProducerScore(binary: FbsProducer.Score): ProducerScore {
@@ -737,6 +557,7 @@ function parseProducerScore(binary: FbsProducer.Score): ProducerScore {
 function parseTraceEventData(
 	trace: FbsProducer.TraceNotification
 ): ProducerTraceEventData {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let info: any;
 
 	if (trace.infoType() !== FbsProducer.TraceInfo.NONE) {
@@ -752,6 +573,6 @@ function parseTraceEventData(
 		timestamp: Number(trace.timestamp()),
 		direction:
 			trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-		info: info ? info.unpack() : undefined,
+		info: info?.unpack(),
 	};
 }

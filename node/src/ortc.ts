@@ -1,11 +1,13 @@
 import * as h264 from 'h264-profile-level-id';
 import * as flatbuffers from 'flatbuffers';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
-import { parse as parseScalabilityMode } from './scalabilityModes';
-import {
+import { parseScalabilityMode } from './scalabilityModesUtils';
+import type {
 	RtpCapabilities,
+	RouterRtpCapabilities,
 	MediaKind,
 	RtpCodecCapability,
+	RouterRtpCodecCapability,
 	RtpHeaderExtension,
 	RtpParameters,
 	RtpCodecParameters,
@@ -13,18 +15,17 @@ import {
 	RtpEncodingParameters,
 	RtpHeaderExtensionParameters,
 	RtcpParameters,
-} from './RtpParameters';
-import { SctpStreamParameters } from './SctpParameters';
+} from './rtpParametersTypes';
+import type { SctpStreamParameters } from './sctpParametersTypes';
 import * as utils from './utils';
 import { UnsupportedError } from './errors';
 import * as FbsRtpParameters from './fbs/rtp-parameters';
 
-export type RtpMapping = {
+export type RtpCodecsEncodingsMapping = {
 	codecs: {
 		payloadType: number;
 		mappedPayloadType: number;
 	}[];
-
 	encodings: {
 		ssrc?: number;
 		rid?: string;
@@ -44,7 +45,9 @@ const DynamicPayloadTypes = [
  * fields with default values.
  * It throws if invalid.
  */
-export function validateRtpCapabilities(caps: RtpCapabilities): void {
+export function validateRtpCapabilities(
+	caps: RtpCapabilities | RouterRtpCapabilities
+): void {
 	if (typeof caps !== 'object') {
 		throw new TypeError('caps is not an object');
 	}
@@ -194,7 +197,7 @@ export function validateSctpStreamParameters(
  * mediasoup supported RTP capabilities.
  */
 export function generateRouterRtpCapabilities(
-	mediaCodecs: RtpCodecCapability[] = []
+	mediaCodecs: RouterRtpCodecCapability[] = []
 ): RtpCapabilities {
 	// Normalize supported RTP capabilities.
 	validateRtpCapabilities(supportedRtpCapabilities);
@@ -203,7 +206,7 @@ export function generateRouterRtpCapabilities(
 		throw new TypeError('mediaCodecs must be an Array');
 	}
 
-	const clonedSupportedRtpCapabilities = utils.clone<RtpCapabilities>(
+	const clonedSupportedRtpCapabilities = utils.clone<RouterRtpCapabilities>(
 		supportedRtpCapabilities
 	);
 	const dynamicPayloadTypes = utils.clone<number[]>(DynamicPayloadTypes);
@@ -228,7 +231,7 @@ export function generateRouterRtpCapabilities(
 		}
 
 		// Clone the supported codec.
-		const codec = utils.clone<RtpCodecCapability>(matchedSupportedCodec);
+		const codec = utils.clone<RouterRtpCodecCapability>(matchedSupportedCodec);
 
 		// If the given media codec has preferredPayloadType, keep it.
 		if (typeof mediaCodec.preferredPayloadType === 'number') {
@@ -270,7 +273,7 @@ export function generateRouterRtpCapabilities(
 		codec.parameters = { ...codec.parameters, ...mediaCodec.parameters };
 
 		// Append to the codec list.
-		caps.codecs!.push(codec);
+		caps.codecs!.push(codec as RtpCodecCapability);
 
 		// Add a RTX video codec if video.
 		if (codec.kind === 'video') {
@@ -309,8 +312,8 @@ export function generateRouterRtpCapabilities(
 export function getProducerRtpParametersMapping(
 	params: RtpParameters,
 	caps: RtpCapabilities
-): RtpMapping {
-	const rtpMapping: RtpMapping = {
+): RtpCodecsEncodingsMapping {
+	const rtpMapping: RtpCodecsEncodingsMapping = {
 		codecs: [],
 		encodings: [],
 	};
@@ -346,7 +349,7 @@ export function getProducerRtpParametersMapping(
 
 		// Search for the associated media codec.
 		const associatedMediaCodec = params.codecs.find(
-			mediaCodec => mediaCodec.payloadType === codec.parameters.apt
+			mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
 		);
 
 		if (!associatedMediaCodec) {
@@ -361,7 +364,7 @@ export function getProducerRtpParametersMapping(
 		const associatedCapRtxCodec = caps.codecs!.find(
 			capCodec =>
 				isRtxCodec(capCodec) &&
-				capCodec.parameters.apt === capMediaCodec!.preferredPayloadType
+				capCodec.parameters!['apt'] === capMediaCodec!.preferredPayloadType
 		);
 
 		if (!associatedCapRtxCodec) {
@@ -379,7 +382,7 @@ export function getProducerRtpParametersMapping(
 	for (const [codec, capCodec] of codecToCapCodec) {
 		rtpMapping.codecs.push({
 			payloadType: codec.payloadType,
-			mappedPayloadType: capCodec.preferredPayloadType!,
+			mappedPayloadType: capCodec.preferredPayloadType,
 		});
 	}
 
@@ -387,19 +390,12 @@ export function getProducerRtpParametersMapping(
 	let mappedSsrc = utils.generateRandomNumber();
 
 	for (const encoding of params.encodings!) {
-		const mappedEncoding: any = {};
-
-		mappedEncoding.mappedSsrc = mappedSsrc++;
-
-		if (encoding.rid) {
-			mappedEncoding.rid = encoding.rid;
-		}
-		if (encoding.ssrc) {
-			mappedEncoding.ssrc = encoding.ssrc;
-		}
-		if (encoding.scalabilityMode) {
-			mappedEncoding.scalabilityMode = encoding.scalabilityMode;
-		}
+		const mappedEncoding = {
+			ssrc: encoding.ssrc,
+			rid: encoding.rid,
+			scalabilityMode: encoding.scalabilityMode,
+			mappedSsrc: mappedSsrc++,
+		};
 
 		rtpMapping.encodings.push(mappedEncoding);
 	}
@@ -415,7 +411,7 @@ export function getConsumableRtpParameters(
 	kind: string,
 	params: RtpParameters,
 	caps: RtpCapabilities,
-	rtpMapping: RtpMapping
+	rtpMapping: RtpCodecsEncodingsMapping
 ): RtpParameters {
 	const consumableParams: RtpParameters = {
 		codecs: [],
@@ -439,7 +435,7 @@ export function getConsumableRtpParameters(
 
 		const consumableCodec: RtpCodecParameters = {
 			mimeType: matchedCapCodec.mimeType,
-			payloadType: matchedCapCodec.preferredPayloadType!,
+			payloadType: matchedCapCodec.preferredPayloadType,
 			clockRate: matchedCapCodec.clockRate,
 			channels: matchedCapCodec.channels,
 			parameters: codec.parameters, // Keep the Producer codec parameters.
@@ -451,13 +447,13 @@ export function getConsumableRtpParameters(
 		const consumableCapRtxCodec = caps.codecs!.find(
 			capRtxCodec =>
 				isRtxCodec(capRtxCodec) &&
-				capRtxCodec.parameters.apt === consumableCodec.payloadType
+				capRtxCodec.parameters!['apt'] === consumableCodec.payloadType
 		);
 
 		if (consumableCapRtxCodec) {
 			const consumableRtxCodec: RtpCodecParameters = {
 				mimeType: consumableCapRtxCodec.mimeType,
-				payloadType: consumableCapRtxCodec.preferredPayloadType!,
+				payloadType: consumableCapRtxCodec.preferredPayloadType,
 				clockRate: consumableCapRtxCodec.clockRate,
 				parameters: consumableCapRtxCodec.parameters,
 				rtcpFeedback: consumableCapRtxCodec.rtcpFeedback,
@@ -491,8 +487,8 @@ export function getConsumableRtpParameters(
 		utils.clone<RtpEncodingParameters[] | undefined>(params.encodings) ?? [];
 
 	for (let i = 0; i < consumableEncodings.length; ++i) {
-		const consumableEncoding = consumableEncodings[i];
-		const { mappedSsrc } = rtpMapping.encodings[i];
+		const consumableEncoding = consumableEncodings[i]!;
+		const { mappedSsrc } = rtpMapping.encodings[i]!;
 
 		// Remove useless fields.
 		delete consumableEncoding.rid;
@@ -538,7 +534,7 @@ export function canConsume(
 	}
 
 	// Ensure there is at least one media codec.
-	if (matchingCodecs.length === 0 || isRtxCodec(matchingCodecs[0])) {
+	if (matchingCodecs.length === 0 || isRtxCodec(matchingCodecs[0]!)) {
 		return false;
 	}
 
@@ -603,12 +599,12 @@ export function getConsumerRtpParameters({
 
 	// Must sanitize the list of matched codecs by removing useless RTX codecs.
 	for (let idx = consumerParams.codecs.length - 1; idx >= 0; --idx) {
-		const codec = consumerParams.codecs[idx];
+		const codec = consumerParams.codecs[idx]!;
 
 		if (isRtxCodec(codec)) {
 			// Search for the associated media codec.
 			const associatedMediaCodec = consumerParams.codecs.find(
-				mediaCodec => mediaCodec.payloadType === codec.parameters.apt
+				mediaCodec => mediaCodec.payloadType === codec.parameters!['apt']
 			);
 
 			if (associatedMediaCodec) {
@@ -622,7 +618,7 @@ export function getConsumerRtpParameters({
 	// Ensure there is at least one media codec.
 	if (
 		consumerParams.codecs.length === 0 ||
-		isRtxCodec(consumerParams.codecs[0])
+		isRtxCodec(consumerParams.codecs[0]!)
 	) {
 		throw new UnsupportedError('no compatible media codecs');
 	}
@@ -723,7 +719,7 @@ export function getConsumerRtpParameters({
 		const baseRtxSsrc = utils.generateRandomNumber();
 
 		for (let i = 0; i < consumableEncodings.length; ++i) {
-			const encoding = consumableEncodings[i];
+			const encoding = consumableEncodings[i]!;
 
 			encoding.ssrc = baseSsrc + i;
 
@@ -799,7 +795,7 @@ export function getPipeConsumerRtpParameters({
 	const baseRtxSsrc = utils.generateRandomNumber();
 
 	for (let i = 0; i < consumableEncodings.length; ++i) {
-		const encoding = consumableEncodings[i];
+		const encoding = consumableEncodings[i]!;
 
 		encoding.ssrc = baseSsrc + i;
 
@@ -820,8 +816,8 @@ function isRtxCodec(codec: RtpCodecCapability | RtpCodecParameters): boolean {
 }
 
 function matchCodecs(
-	aCodec: RtpCodecCapability | RtpCodecParameters,
-	bCodec: RtpCodecCapability | RtpCodecParameters,
+	aCodec: RtpCodecCapability | RouterRtpCodecCapability | RtpCodecParameters,
+	bCodec: RtpCodecCapability | RouterRtpCodecCapability | RtpCodecParameters,
 	{ strict = false, modify = false } = {}
 ): boolean {
 	const aMimeType = aCodec.mimeType.toLowerCase();
@@ -842,15 +838,15 @@ function matchCodecs(
 	// Per codec special checks.
 	switch (aMimeType) {
 		case 'audio/multiopus': {
-			const aNumStreams = aCodec.parameters['num_streams'];
-			const bNumStreams = bCodec.parameters['num_streams'];
+			const aNumStreams = aCodec.parameters!['num_streams'];
+			const bNumStreams = bCodec.parameters!['num_streams'];
 
 			if (aNumStreams !== bNumStreams) {
 				return false;
 			}
 
-			const aCoupledStreams = aCodec.parameters['coupled_streams'];
-			const bCoupledStreams = bCodec.parameters['coupled_streams'];
+			const aCoupledStreams = aCodec.parameters!['coupled_streams'];
+			const bCoupledStreams = bCodec.parameters!['coupled_streams'];
 
 			if (aCoupledStreams !== bCoupledStreams) {
 				return false;
@@ -859,11 +855,12 @@ function matchCodecs(
 			break;
 		}
 
-		case 'video/h264':
-		case 'video/h264-svc': {
+		case 'video/h264': {
 			if (strict) {
-				const aPacketizationMode = aCodec.parameters['packetization-mode'] || 0;
-				const bPacketizationMode = bCodec.parameters['packetization-mode'] || 0;
+				const aPacketizationMode =
+					aCodec.parameters!['packetization-mode'] || 0;
+				const bPacketizationMode =
+					bCodec.parameters!['packetization-mode'] || 0;
 
 				if (aPacketizationMode !== bPacketizationMode) {
 					return false;
@@ -886,9 +883,9 @@ function matchCodecs(
 
 				if (modify) {
 					if (selectedProfileLevelId) {
-						aCodec.parameters['profile-level-id'] = selectedProfileLevelId;
+						aCodec.parameters!['profile-level-id'] = selectedProfileLevelId;
 					} else {
-						delete aCodec.parameters['profile-level-id'];
+						delete aCodec.parameters!['profile-level-id'];
 					}
 				}
 			}
@@ -898,8 +895,8 @@ function matchCodecs(
 
 		case 'video/vp9': {
 			if (strict) {
-				const aProfileId = aCodec.parameters['profile-id'] || 0;
-				const bProfileId = bCodec.parameters['profile-id'] || 0;
+				const aProfileId = aCodec.parameters!['profile-id'] || 0;
+				const bProfileId = bCodec.parameters!['profile-id'] || 0;
 
 				if (aProfileId !== bProfileId) {
 					return false;
@@ -915,7 +912,7 @@ function matchCodecs(
 
 export function serializeRtpMapping(
 	builder: flatbuffers.Builder,
-	rtpMapping: RtpMapping
+	rtpMapping: RtpCodecsEncodingsMapping
 ): number {
 	const codecs: number[] = [];
 
@@ -964,7 +961,9 @@ export function serializeRtpMapping(
  * fields with default values.
  * It throws if invalid.
  */
-function validateRtpCodecCapability(codec: RtpCodecCapability): void {
+function validateRtpCodecCapability(
+	codec: RtpCodecCapability | RouterRtpCodecCapability
+): void {
 	const MimeTypeRegex = new RegExp('^(audio|video)/(.+)', 'i');
 
 	if (typeof codec !== 'object') {
@@ -983,9 +982,9 @@ function validateRtpCodecCapability(codec: RtpCodecCapability): void {
 	}
 
 	// Just override kind with media component of mimeType.
-	codec.kind = mimeTypeMatch[1].toLowerCase() as MediaKind;
+	codec.kind = mimeTypeMatch[1]!.toLowerCase() as MediaKind;
 
-	// preferredPayloadType is optional.
+	// preferredPayloadType is optional in RouterRtpCodecCapability.
 	if (
 		codec.preferredPayloadType &&
 		typeof codec.preferredPayloadType !== 'number'
@@ -1137,7 +1136,7 @@ function validateRtpCodecParameters(codec: RtpCodecParameters): void {
 		throw new TypeError('missing codec.clockRate');
 	}
 
-	const kind = mimeTypeMatch[1].toLowerCase() as MediaKind;
+	const kind = mimeTypeMatch[1]!.toLowerCase() as MediaKind;
 
 	// channels is optional. If unset, set it to 1 (just if audio).
 	if (kind === 'audio') {

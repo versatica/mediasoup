@@ -45,11 +45,12 @@ SCENARIO("RTCP Feeback RTP TLLEI parsing", "[parser][rtcp][feedback-rtp][tllei]"
 	{
 		using namespace TestFeedbackRtpTllei;
 
-		FeedbackRtpTlleiPacket* packet = FeedbackRtpTlleiPacket::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<FeedbackRtpTlleiPacket> packet{ FeedbackRtpTlleiPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
-		verify(packet);
+		verify(packet.get());
 
 		SECTION("serialize packet instance")
 		{
@@ -62,7 +63,5 @@ SCENARIO("RTCP Feeback RTP TLLEI parsing", "[parser][rtcp][feedback-rtp][tllei]"
 				REQUIRE(std::memcmp(buffer, serialized, sizeof(buffer)) == 0);
 			}
 		}
-
-		delete packet;
 	}
 }

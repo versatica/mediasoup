@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
+#include "RTC/SharedRtpPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -36,14 +37,14 @@ public:
 		};
 		// clang-format on
 
-		auto* packet = RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer));
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer)) };
 
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
-		std::shared_ptr<RtpPacket> sharedPacket;
+		RTC::SharedRtpPacket sharedPacket;
 
-		RtpRetransmissionBuffer::Insert(packet, sharedPacket);
+		RtpRetransmissionBuffer::Insert(packet.get(), sharedPacket);
 	}
 
 	void AssertBuffer(std::vector<VerificationItem> verificationBuffer)

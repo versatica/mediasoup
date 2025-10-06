@@ -6,12 +6,10 @@ import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import * as tar from 'tar';
 import * as ini from 'ini';
+import pkg from './package.json' with { type: 'json' };
 
-const PKG = JSON.parse(
-	fs.readFileSync('./package.json', { encoding: 'utf-8' })
-);
 const IS_WINDOWS = os.platform() === 'win32';
-const MAYOR_VERSION = PKG.version.split('.')[0];
+const MAYOR_VERSION = pkg.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
@@ -25,13 +23,20 @@ const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
 // Paths for ESLint to check. Converted to string for convenience.
-const ESLINT_PATHS = ['node/src', 'npm-scripts.mjs', 'worker/scripts'].join(
-	' '
-);
+const ESLINT_PATHS = [
+	'eslint.config.mjs',
+	'jest.config.mjs',
+	'knip.config.mjs',
+	'node/src',
+	'npm-scripts.mjs',
+	'worker/scripts',
+].join(' ');
+
 // Paths for ESLint to ignore. Converted to string argument for convenience.
 const ESLINT_IGNORE_PATTERN_ARGS = ['node/src/fbs']
 	.map(entry => `--ignore-pattern ${entry}`)
 	.join(' ');
+
 // Paths for Prettier to check/write. Converted to string for convenience.
 // NOTE: Prettier ignores paths in .gitignore so we don't need to care about
 // node/src/fbs.
@@ -40,15 +45,18 @@ const PRETTIER_PATHS = [
 	'CONTRIBUTING.md',
 	'README.md',
 	'doc',
+	'eslint.config.mjs',
+	'jest.config.mjs',
+	'knip.config.mjs',
 	'node/src',
-	'node/tsconfig.json',
 	'npm-scripts.mjs',
 	'package.json',
+	'tsconfig.json',
 	'worker/scripts',
 ].join(' ');
 
 const task = process.argv[2];
-const args = process.argv.slice(3).join(' ');
+const taskArgs = process.argv.slice(3).join(' ');
 
 // PYTHONPATH env must be updated now so all invoke calls below will find the
 // pip invoke module.
@@ -62,20 +70,22 @@ if (process.env.PYTHONPATH) {
 	process.env.PYTHONPATH = PIP_INVOKE_DIR;
 }
 
-run();
+void run();
 
 async function run() {
-	logInfo(args ? `[args:"${args}"]` : '');
+	logInfo(taskArgs ? `[args:"${taskArgs}"]` : '');
 
 	switch (task) {
 		// As per NPM documentation (https://docs.npmjs.com/cli/v9/using-npm/scripts)
 		// `prepare` script:
 		//
-		// - Runs BEFORE the package is packed, i.e. during `npm publish` and `npm pack`.
+		// - Runs BEFORE the package is packed, i.e. during `npm publish` and
+		//   `npm pack`.
 		// - Runs on local `npm install` without any arguments.
-		// - NOTE: If a package being installed through git contains a `prepare` script,
-		//   its dependencies and devDependencies will be installed, and the `prepare`
-		//   script will be run, before the package is packaged and installed.
+		// - NOTE: If a package being installed through git contains a `prepare`
+		//   script, its dependencies and devDependencies will be installed, and
+		//   the `prepare` script will be run, before the package is packaged and
+		//   installed.
 		//
 		// So here we generate flatbuffers definitions for TypeScript and compile
 		// TypeScript to JavaScript.
@@ -96,8 +106,8 @@ async function run() {
 			}
 			// If MEDIASOUP_LOCAL_DEV is given, or if MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD
 			// env is given, or if mediasoup package is being installed via git+ssh
-			// (instead of via npm), and if MEDIASOUP_FORCE_PREBUILT_WORKER_DOWNLOAD env is
-			// not set, then skip mediasoup-worker prebuilt download.
+			// (instead of via npm), and if MEDIASOUP_FORCE_PREBUILT_WORKER_DOWNLOAD
+			// env is not set, then skip mediasoup-worker prebuilt download.
 			else if (
 				(process.env.MEDIASOUP_LOCAL_DEV ||
 					process.env.MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD ||
@@ -133,21 +143,25 @@ async function run() {
 		}
 
 		case 'typescript:build': {
-			installNodeDeps();
 			buildTypescript({ force: true });
 
 			break;
 		}
 
 		case 'typescript:watch': {
-			deleteNodeLib();
-			executeCmd(`tsc --project node --watch ${args}`);
+			watchTypescript();
 
 			break;
 		}
 
 		case 'worker:build': {
 			buildWorkerLib();
+
+			break;
+		}
+
+		case 'worker:prebuild-name': {
+			getWorkerPrebuildTarName();
 
 			break;
 		}
@@ -177,9 +191,7 @@ async function run() {
 		}
 
 		case 'format:worker': {
-			installInvoke();
-
-			executeCmd(`"${PYTHON}" -m invoke -r worker format`);
+			formatWorker();
 
 			break;
 		}
@@ -197,7 +209,6 @@ async function run() {
 		}
 
 		case 'test:node': {
-			buildTypescript({ force: false });
 			testNode();
 
 			break;
@@ -210,9 +221,7 @@ async function run() {
 		}
 
 		case 'coverage:node': {
-			buildTypescript({ force: false });
-			executeCmd(`jest --coverage ${args}`);
-			executeCmd('open-cli coverage/lcov-report/index.html');
+			coverageNode();
 
 			break;
 		}
@@ -224,36 +233,7 @@ async function run() {
 		}
 
 		case 'release': {
-			let octokit;
-			let versionChanges;
-
-			try {
-				octokit = await getOctokit();
-				versionChanges = await getVersionChanges();
-			} catch (error) {
-				logError(error.message);
-
-				exitWithError();
-			}
-
-			checkRelease();
-			executeCmd(`git commit -am '${PKG.version}'`);
-			executeCmd(`git tag -a ${PKG.version} -m '${PKG.version}'`);
-			executeCmd(`git push origin v${MAYOR_VERSION}`);
-			executeCmd(`git push origin '${PKG.version}'`);
-
-			logInfo('creating release in GitHub');
-
-			await octokit.repos.createRelease({
-				owner: GH_OWNER,
-				repo: GH_REPO,
-				name: PKG.version,
-				body: versionChanges,
-				tag_name: PKG.version,
-				draft: false,
-			});
-
-			executeCmd('npm publish');
+			release();
 
 			break;
 		}
@@ -282,17 +262,23 @@ function getPython() {
 }
 
 function getWorkerPrebuildTarName() {
-	let name = `libmediasoup-worker-${PKG.version}-${os.platform()}-${os.arch()}`;
+	let workerPrebuildTarName = `libmediasoup-worker-${pkg.version}-${os.platform()}-${os.arch()}`;
 
 	// In Linux we want to know about kernel version since kernel >= 6 supports
 	// io-uring.
 	if (os.platform() === 'linux') {
 		const kernelMajorVersion = Number(os.release().split('.')[0]);
 
-		name += `-kernel${kernelMajorVersion}`;
+		workerPrebuildTarName += `-kernel${kernelMajorVersion}`;
 	}
 
-	return `${name}.tgz`;
+	workerPrebuildTarName = `${workerPrebuildTarName}.tgz`;
+
+	logInfo(
+		`getWorkerPrebuildTarName() [workerPrebuildTarName:${workerPrebuildTarName}]`
+	);
+
+	return workerPrebuildTarName;
 }
 
 function installInvoke() {
@@ -305,8 +291,7 @@ function installInvoke() {
 	// Install pip invoke into custom location, so we don't depend on system-wide
 	// installation.
 	executeCmd(
-		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`,
-		/* exitOnError */ true
+		`"${PYTHON}" -m pip install --upgrade --no-user --target "${PIP_INVOKE_DIR}" invoke`
 	);
 }
 
@@ -320,7 +305,7 @@ function deleteNodeLib() {
 	fs.rmSync('node/lib', { recursive: true, force: true });
 }
 
-function buildTypescript({ force = false } = { force: false }) {
+function buildTypescript({ force }) {
 	if (!force && fs.existsSync('node/lib')) {
 		return;
 	}
@@ -328,7 +313,16 @@ function buildTypescript({ force = false } = { force: false }) {
 	logInfo('buildTypescript()');
 
 	deleteNodeLib();
-	executeCmd('tsc --project node');
+
+	executeCmd(`tsc ${taskArgs}`);
+}
+
+function watchTypescript() {
+	logInfo('watchTypescript()');
+
+	deleteNodeLib();
+
+	executeCmd(`tsc --watch ${taskArgs}`);
 }
 
 function buildWorkerLib() {
@@ -356,8 +350,10 @@ function cleanWorkerArtifacts() {
 
 	// Clean build artifacts except `mediasoup-worker`.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-build`);
+
 	// Clean downloaded dependencies.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-subprojects`);
+
 	// Clean PIP/Meson/Ninja.
 	executeCmd(`"${PYTHON}" -m invoke -r worker clean-pip`);
 }
@@ -367,13 +363,15 @@ function lintNode() {
 
 	// Ensure there are no rules that are unnecessary or conflict with Prettier
 	// rules.
-	executeCmd('eslint-config-prettier .eslintrc.js');
+	executeCmd('eslint-config-prettier eslint.config.mjs');
 
 	executeCmd(
-		`eslint -c .eslintrc.js --ext=ts,js,mjs --max-warnings 0 ${ESLINT_IGNORE_PATTERN_ARGS} ${ESLINT_PATHS}`
+		`eslint -c eslint.config.mjs --max-warnings 0 ${ESLINT_IGNORE_PATTERN_ARGS} ${ESLINT_PATHS}`
 	);
 
 	executeCmd(`prettier --check ${PRETTIER_PATHS}`);
+
+	executeCmd('knip --config knip.config.mjs --treat-config-hints-as-errors');
 }
 
 function lintWorker() {
@@ -388,6 +386,14 @@ function formatNode() {
 	logInfo('formatNode()');
 
 	executeCmd(`prettier --write ${PRETTIER_PATHS}`);
+}
+
+function formatWorker() {
+	logInfo('formatWorker()');
+
+	installInvoke();
+
+	executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 }
 
 function flatcNode() {
@@ -452,7 +458,7 @@ function flatcWorker() {
 function testNode() {
 	logInfo('testNode()');
 
-	executeCmd(`jest --silent false --detectOpenHandles ${args}`);
+	executeCmd(`jest --silent false --detectOpenHandles ${taskArgs}`);
 }
 
 function testWorker() {
@@ -463,13 +469,24 @@ function testWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker test`);
 }
 
+function coverageNode() {
+	logInfo('coverageNode()');
+
+	executeCmd(`jest --coverage ${taskArgs}`);
+	executeCmd('open-cli coverage/lcov-report/index.html');
+}
+
 function installNodeDeps() {
 	logInfo('installNodeDeps()');
 
 	// Install/update Node deps.
 	executeCmd('npm ci --ignore-scripts');
+
 	// Update package-lock.json.
 	executeCmd('npm install --package-lock-only --ignore-scripts');
+
+	// Check vulnerabilities in deps (exclude dev deps).
+	executeCmd('npm audit --omit=dev');
 }
 
 function checkRelease() {
@@ -486,6 +503,41 @@ function checkRelease() {
 	testWorker();
 }
 
+async function release() {
+	logInfo('release()');
+
+	let octokit;
+	let versionChanges;
+
+	try {
+		octokit = await getOctokit();
+		versionChanges = await getVersionChanges();
+	} catch (error) {
+		logError(error.message);
+
+		exitWithError();
+	}
+
+	checkRelease();
+	executeCmd(`git commit -am '${pkg.version}'`);
+	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
+	executeCmd(`git push origin v${MAYOR_VERSION}`);
+	executeCmd(`git push origin '${pkg.version}'`);
+
+	logInfo('creating release in GitHub');
+
+	await octokit.repos.createRelease({
+		owner: GH_OWNER,
+		repo: GH_REPO,
+		name: pkg.version,
+		body: versionChanges,
+		tag_name: pkg.version,
+		draft: false,
+	});
+
+	executeInteractiveCmd('npm publish');
+}
+
 function ensureDir(dir) {
 	logInfo(`ensureDir() [dir:${dir}]`);
 
@@ -499,21 +551,37 @@ async function prebuildWorker() {
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
-	return new Promise((resolve, reject) => {
-		// Generate a gzip file which just contains mediasoup-worker binary without
-		// any folder.
-		tar
-			.create(
-				{
-					cwd: WORKER_RELEASE_DIR,
-					gzip: true,
-				},
-				[WORKER_RELEASE_BIN]
-			)
-			.pipe(fs.createWriteStream(WORKER_PREBUILD_TAR_PATH))
-			.on('finish', resolve)
-			.on('error', reject);
-	});
+	const workerPrebuildTar = getWorkerPrebuildTarName();
+	const workerPrebuildTarPath = `${WORKER_PREBUILD_DIR}/${workerPrebuildTar}`;
+
+	try {
+		await new Promise((resolve, reject) => {
+			// Generate a gzip file which just contains mediasoup-worker binary
+			// without any folder.
+			tar
+				.create(
+					{
+						cwd: WORKER_RELEASE_DIR,
+						gzip: true,
+						strict: true,
+					},
+					[WORKER_RELEASE_BIN]
+				)
+				// This is needed for the case in which tar.create() fails before
+				// invoking pipe() on its result.
+				.on('error', reject)
+				.pipe(fs.createWriteStream(workerPrebuildTarPath))
+				.on('finish', resolve)
+				.on('error', reject);
+		});
+	} catch (error) {
+		logError(
+			'prebuildWorker() | failed to create mediasoup-worker prebuilt tar file:',
+			error
+		);
+
+		exitWithError();
+	}
 }
 
 // Returns a Promise resolving to true if a mediasoup-worker prebuilt binary
@@ -521,20 +589,23 @@ async function prebuildWorker() {
 async function downloadPrebuiltWorker() {
 	const releaseBase =
 		process.env.MEDIASOUP_WORKER_PREBUILT_DOWNLOAD_BASE_URL ||
-		`${PKG.repository.url
+		`${pkg.repository.url
 			.replace(/^git\+/, '')
 			.replace(/\.git$/, '')}/releases/download`;
 
-	const tarUrl = `${releaseBase}/${PKG.version}/${WORKER_PREBUILD_TAR}`;
+	const workerPrebuildTar = getWorkerPrebuildTarName();
+	const workerPrebuildTarUrl = `${releaseBase}/${pkg.version}/${workerPrebuildTar}`;
 
-	logInfo(`downloadPrebuiltWorker() [tarUrl:${tarUrl}]`);
+	logInfo(
+		`downloadPrebuiltWorker() [workerPrebuildTarUrl:${workerPrebuildTarUrl}]`
+	);
 
 	ensureDir(WORKER_PREBUILD_DIR);
 
 	let res;
 
 	try {
-		res = await fetch(tarUrl);
+		res = await fetch(workerPrebuildTarUrl);
 
 		if (res.status === 404) {
 			logInfo(
@@ -564,8 +635,9 @@ async function downloadPrebuiltWorker() {
 		res.body
 			.pipe(
 				tar.extract({
-					newer: false,
 					cwd: WORKER_RELEASE_DIR,
+					newer: false,
+					strict: true,
 				})
 			)
 			.on('finish', () => {
@@ -581,10 +653,51 @@ async function downloadPrebuiltWorker() {
 						`downloadPrebuiltWorker() | failed to give execution permissions to the mediasoup-worker prebuilt binary: ${error}`
 					);
 				}
+
+				// Let's confirm that the fetched mediasoup-worker prebuit binary does
+				// run in current host. This is to prevent weird issues related to
+				// different versions of libc in the system and so on.
+				// So run mediasoup-worker without the required MEDIASOUP_VERSION env
+				// and expect exit code 41 (see main.cpp).
+
+				logInfo(
+					'downloadPrebuiltWorker() | checking fetched mediasoup-worker prebuilt binary in current host'
+				);
+
+				try {
+					const resolvedBinPath = path.resolve(WORKER_RELEASE_BIN_PATH);
+
+					// This will always fail on purpose, but if status code is 41 then
+					// it's good.
+					execSync(`"${resolvedBinPath}"`, {
+						stdio: ['ignore', 'ignore', 'ignore'],
+						// Ensure no env is passed to avoid accidents.
+						env: {},
+					});
+				} catch (error) {
+					if (error.status === 41) {
+						logInfo(
+							'downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary is valid for current host'
+						);
+
+						resolve(true);
+					} else {
+						logError(
+							`downloadPrebuiltWorker() | fetched mediasoup-worker prebuilt binary fails to run in this host [status:${error.status}]`
+						);
+
+						try {
+							fs.unlinkSync(WORKER_RELEASE_BIN_PATH);
+						} catch (error2) {}
+
+						resolve(false);
+					}
+				}
 			})
 			.on('error', error => {
 				logError(
-					`downloadPrebuiltWorker() | failed to uncompress downloaded mediasoup-worker prebuilt binary: ${error}`
+					`downloadPrebuiltWorker() | failed to extract downloaded mediasoup-worker prebuilt binary:`,
+					error
 				);
 
 				resolve(false);
@@ -619,7 +732,7 @@ async function getVersionChanges() {
 	for (let idx = 0; idx < entries.length; ++idx) {
 		const entry = entries[idx];
 
-		if (entry.type === 'heading' && entry.text === PKG.version) {
+		if (entry.type === 'heading' && entry.text === pkg.version) {
 			const changes = entries[idx + 1].raw;
 
 			return changes;
@@ -628,39 +741,47 @@ async function getVersionChanges() {
 
 	// This should not happen (unless author forgot to update CHANGELOG).
 	throw new Error(
-		`no entry found in CHANGELOG.md for version '${PKG.version}'`
+		`no entry found in CHANGELOG.md for version '${pkg.version}'`
 	);
 }
 
-function executeCmd(command, exitOnError = true) {
+function executeCmd(command) {
 	logInfo(`executeCmd(): ${command}`);
 
 	try {
 		execSync(command, { stdio: ['ignore', process.stdout, process.stderr] });
 	} catch (error) {
-		if (exitOnError) {
-			logError(`executeCmd() failed, exiting: ${error}`);
+		logError(`executeCmd() failed, exiting: ${error}`);
 
-			exitWithError();
-		} else {
-			logInfo(`executeCmd() failed, ignoring: ${error}`);
-		}
+		exitWithError();
 	}
 }
 
-function logInfo(message) {
-	// eslint-disable-next-line no-console
-	console.log(`npm-scripts.mjs \x1b[36m[INFO] [${task}]\x1b[0m`, message);
+function executeInteractiveCmd(command) {
+	logInfo(`executeInteractiveCmd(): ${command}`);
+
+	try {
+		execSync(command, { stdio: 'inherit', env: process.env });
+	} catch (error) {
+		logError(`executeInteractiveCmd() failed, exiting: ${error}`);
+
+		exitWithError();
+	}
 }
 
-function logWarn(message) {
+function logInfo(...args) {
 	// eslint-disable-next-line no-console
-	console.warn(`npm-scripts.mjs \x1b[33m[WARN] [${task}]\x1b\0m`, message);
+	console.log(`npm-scripts.mjs \x1b[36m[INFO] [${task}]\x1b[0m`, ...args);
 }
 
-function logError(message) {
+function logWarn(...args) {
 	// eslint-disable-next-line no-console
-	console.error(`npm-scripts.mjs \x1b[31m[ERROR] [${task}]\x1b[0m`, message);
+	console.warn(`npm-scripts.mjs \x1b[33m[WARN] [${task}]\x1b\0m`, ...args);
+}
+
+function logError(...args) {
+	// eslint-disable-next-line no-console
+	console.error(`npm-scripts.mjs \x1b[31m[ERROR] [${task}]\x1b[0m`, ...args);
 }
 
 function exitWithError() {

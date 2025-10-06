@@ -29,14 +29,14 @@ namespace RTC
 			return HeaderSize;
 		}
 
-		void FeedbackRtpTlleiItem::Dump() const
+		void FeedbackRtpTlleiItem::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<FeedbackRtpTlleiItem>");
-			MS_DUMP("  pid: %" PRIu16, this->GetPacketId());
-			MS_DUMP("  bpl: %" PRIu16, this->GetLostPacketBitmask());
-			MS_DUMP("</FeedbackRtpTlleiItem>");
+			MS_DUMP_CLEAN(indentation, "<FeedbackRtpTlleiItem>");
+			MS_DUMP_CLEAN(indentation, "  pid: %" PRIu16, this->GetPacketId());
+			MS_DUMP_CLEAN(indentation, "  bpl: %" PRIu16, this->GetLostPacketBitmask());
+			MS_DUMP_CLEAN(indentation, "</FeedbackRtpTlleiItem>");
 		}
 	} // namespace RTCP
 } // namespace RTC

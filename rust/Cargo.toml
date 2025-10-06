@@ -1,20 +1,20 @@
 [package]
 name = "mediasoup"
-version = "0.17.0"
+version = "0.20.0"
 description = "Cutting Edge WebRTC Video Conferencing in Rust"
 categories = ["api-bindings", "multimedia", "network-programming"]
-authors = ["Nazar Mokrynskyi <nazar@mokrynskyi.com>"]
+authors = [
+    "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
+    "José Luis Millán <jmillan@aliax.net>",
+    "Iñaki Baz Castillo <ibc@aliax.net>"
+]
 edition = "2021"
 license = "ISC"
 keywords = ["webrtc", "ortc", "sfu"]
 documentation = "https://docs.rs/mediasoup"
 repository = "https://github.com/versatica/mediasoup"
 readme = "README.md"
-include = [
-    "/benches",
-    "/src",
-    "/README.md"
-]
+include = ["/benches", "/src", "/README.md"]
 
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
@@ -46,7 +46,11 @@ version = "0.8.1"
 
 [dependencies.mediasoup-sys]
 path = "../worker"
-version = "0.9.0"
+version = "0.10.0"
+
+[dependencies.mediasoup-types]
+path = "./types"
+version = "0.2.1"
 
 [dependencies.parking_lot]
 version = "0.12.1"

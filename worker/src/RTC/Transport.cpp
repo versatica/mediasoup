@@ -11,11 +11,11 @@
 #include "Utils.hpp"
 #include "FBS/transport.h"
 #include "RTC/BweType.hpp"
+#include "RTC/Consts.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
@@ -23,6 +23,9 @@
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 #include <libwebrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h> // webrtc::RtpPacketSendInfo
 #include <iterator>                                              // std::ostream_iterator
 #include <map>                                                   // std::multimap
@@ -39,8 +42,12 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  const FBS::Transport::Options* options)
-	  : id(id), shared(shared), listener(listener), recvRtxTransmission(1000u),
-	    sendRtxTransmission(1000u), sendProbationTransmission(100u)
+	  : id(id), shared(shared), listener(listener),
+	    recvRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
+	    sendRtpTransmission(/*ignorePaddingOnlyPackets*/ false),
+	    recvRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),
+	    sendRtxTransmission(/*ignorePaddingOnlyPackets*/ false, 1000u),
+	    sendProbationTransmission(/*ignorePaddingOnlyPackets*/ false, 100u)
 	{
 		MS_TRACE();
 
@@ -326,7 +333,7 @@ namespace RTC
 		// Add sctpParameters.
 		flatbuffers::Offset<FBS::SctpParameters::SctpParameters> sctpParameters;
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 		// Add sctpListener.
 		flatbuffers::Offset<FBS::Transport::SctpListener> sctpListener;
 
@@ -411,7 +418,7 @@ namespace RTC
 		auto nowMs = DepLibUV::GetTimeMs();
 
 		// Add sctpState.
-		FBS::SctpAssociation::SctpState sctpState;
+		FBS::SctpAssociation::SctpState sctpState{ FBS::SctpAssociation::SctpState::NEW };
 
 		if (this->sctpAssociation)
 		{
@@ -758,8 +765,8 @@ namespace RTC
 
 					if (createTccServer)
 					{
-						this->tccServer =
-						  std::make_shared<RTC::TransportCongestionControlServer>(this, bweType, RTC::MtuSize);
+						this->tccServer = std::make_shared<RTC::TransportCongestionControlServer>(
+						  this, bweType, RTC::Consts::RtcpPacketMaxSize);
 
 						if (this->maxIncomingBitrate != 0u)
 						{
@@ -1570,7 +1577,7 @@ namespace RTC
 		if (!producer)
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Dropped(RtcLogger::RtpPacket::DropReason::PRODUCER_NOT_FOUND);
+			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::PRODUCER_NOT_FOUND);
 #endif
 
 			MS_WARN_TAG(
@@ -2158,8 +2165,11 @@ namespace RTC
 		std::unique_ptr<RTC::RTCP::CompoundPacket> packet{ new RTC::RTCP::CompoundPacket() };
 
 #ifdef MS_LIBURING_SUPPORTED
-		// Activate liburing usage.
-		DepLibUring::SetActive();
+		if (DepLibUring::IsEnabled())
+		{
+			// Activate liburing usage.
+			DepLibUring::SetActive();
+		}
 #endif
 
 		for (auto& kv : this->mapConsumers)
@@ -2207,8 +2217,11 @@ namespace RTC
 		}
 
 #ifdef MS_LIBURING_SUPPORTED
-		// Submit all prepared submission entries.
-		DepLibUring::Submit();
+		if (DepLibUring::IsEnabled())
+		{
+			// Submit all prepared submission entries.
+			DepLibUring::Submit();
+		}
 #endif
 	}
 

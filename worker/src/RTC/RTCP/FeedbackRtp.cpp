@@ -70,17 +70,19 @@ namespace RTC
 		}
 
 		template<typename Item>
-		void FeedbackRtpItemsPacket<Item>::Dump() const
+		void FeedbackRtpItemsPacket<Item>::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<%s>", FeedbackRtpPacket::MessageType2String(Item::messageType).c_str());
-			FeedbackRtpPacket::Dump();
+			MS_DUMP_CLEAN(
+			  indentation, "<%s>", FeedbackRtpPacket::MessageType2String(Item::messageType).c_str());
+			FeedbackRtpPacket::Dump(indentation + 1);
 			for (auto* item : this->items)
 			{
-				item->Dump();
+				item->Dump(indentation + 1);
 			}
-			MS_DUMP("</%s>", FeedbackRtpPacket::MessageType2String(Item::messageType).c_str());
+			MS_DUMP_CLEAN(
+			  indentation, "</%s>", FeedbackRtpPacket::MessageType2String(Item::messageType).c_str());
 		}
 
 		// Explicit instantiation to have all FeedbackRtpPacket definitions in this file.

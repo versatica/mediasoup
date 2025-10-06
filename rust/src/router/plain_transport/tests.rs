@@ -1,10 +1,10 @@
-use crate::data_structures::{ListenInfo, Protocol};
 use crate::plain_transport::PlainTransportOptions;
 use crate::router::{Router, RouterOptions};
 use crate::transport::Transport;
 use crate::worker::WorkerSettings;
 use crate::worker_manager::WorkerManager;
 use futures_lite::future;
+use mediasoup_types::data_structures::{ListenInfo, Protocol};
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 
@@ -41,6 +41,7 @@ fn router_close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("4.4.4.4".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,

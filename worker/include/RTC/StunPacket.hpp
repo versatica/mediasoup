@@ -78,7 +78,7 @@ namespace RTC
 		  Class klass, Method method, const uint8_t* transactionId, const uint8_t* data, size_t size);
 		~StunPacket();
 
-		void Dump() const;
+		void Dump(int indentation = 0) const;
 		Class GetClass() const
 		{
 			return this->klass;

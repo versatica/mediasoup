@@ -1,6 +1,6 @@
-import { RtpCapabilities } from './RtpParameters';
+import type { RouterRtpCapabilities } from './rtpParametersTypes';
 
-const supportedRtpCapabilities: RtpCapabilities = {
+const supportedRtpCapabilities: RouterRtpCapabilities = {
 	codecs: [
 		{
 			kind: 'audio',
@@ -191,26 +191,9 @@ const supportedRtpCapabilities: RtpCapabilities = {
 		},
 		{
 			kind: 'video',
-			mimeType: 'video/H264-SVC',
+			mimeType: 'video/AV1',
 			clockRate: 90000,
-			parameters: {
-				'level-asymmetry-allowed': 1,
-			},
-			rtcpFeedback: [
-				{ type: 'nack' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb' },
-				{ type: 'transport-cc' },
-			],
-		},
-		{
-			kind: 'video',
-			mimeType: 'video/H265',
-			clockRate: 90000,
-			parameters: {
-				'level-asymmetry-allowed': 1,
-			},
+			parameters: {},
 			rtcpFeedback: [
 				{ type: 'nack' },
 				{ type: 'nack', parameter: 'pli' },
@@ -278,20 +261,12 @@ const supportedRtpCapabilities: RtpCapabilities = {
 			preferredEncrypt: false,
 			direction: 'sendrecv',
 		},
-		// NOTE: Remove this once framemarking draft becomes RFC.
 		{
 			kind: 'video',
-			uri: 'http://tools.ietf.org/html/draft-ietf-avtext-framemarking-07',
-			preferredId: 6,
+			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+			preferredId: 8,
 			preferredEncrypt: false,
-			direction: 'sendrecv',
-		},
-		{
-			kind: 'video',
-			uri: 'urn:ietf:params:rtp-hdrext:framemarking',
-			preferredId: 7,
-			preferredEncrypt: false,
-			direction: 'sendrecv',
+			direction: 'recvonly',
 		},
 		{
 			kind: 'audio',
@@ -325,6 +300,20 @@ const supportedRtpCapabilities: RtpCapabilities = {
 			kind: 'video',
 			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time',
 			preferredId: 13,
+			preferredEncrypt: false,
+			direction: 'sendrecv',
+		},
+		{
+			kind: 'audio',
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			preferredId: 14,
+			preferredEncrypt: false,
+			direction: 'sendrecv',
+		},
+		{
+			kind: 'video',
+			uri: 'http://www.webrtc.org/experiments/rtp-hdrext/playout-delay',
+			preferredId: 14,
 			preferredEncrypt: false,
 			direction: 'sendrecv',
 		},

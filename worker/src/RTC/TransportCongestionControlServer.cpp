@@ -115,7 +115,7 @@ namespace RTC
 		{
 			case RTC::BweType::TRANSPORT_CC:
 			{
-				uint16_t wideSeqNumber;
+				uint16_t wideSeqNumber{ 0 };
 
 				if (!packet->ReadTransportWideCc01(wideSeqNumber))
 				{
@@ -155,7 +155,7 @@ namespace RTC
 
 			case RTC::BweType::REMB:
 			{
-				uint32_t absSendTime;
+				uint32_t absSendTime{ 0 };
 
 				if (!packet->ReadAbsSendTime(absSendTime))
 				{
@@ -233,13 +233,19 @@ namespace RTC
 
 				case RTC::RTCP::FeedbackRtpTransportPacket::AddPacketResult::MAX_SIZE_EXCEEDED:
 				{
-					// This should not happen.
-					MS_WARN_TAG(rtcp, "transport-cc feedback packet is exceeded");
+					// Send ongoing feedback packet.
+					auto sent = SendTransportCcFeedback();
+
+					if (sent)
+					{
+						++this->transportCcFeedbackPacketCount;
+					}
 
 					// Create a new feedback packet.
-					// NOTE: Do not increment packet count it since the previous ongoing
-					// feedback packet was not sent.
 					ResetTransportCcFeedback(this->transportCcFeedbackPacketCount);
+
+					// Decrease iterator to add current packet again.
+					--it;
 
 					break;
 				}

@@ -31,14 +31,14 @@ namespace RTC
 				return this->isCorrect;
 			}
 
-		protected:
+		public:
 			virtual ~FeedbackItem()
 			{
 				delete[] this->raw;
 			}
 
 		public:
-			virtual void Dump() const = 0;
+			virtual void Dump(int indentation = 0) const = 0;
 			virtual void Serialize()
 			{
 				delete[] this->raw;

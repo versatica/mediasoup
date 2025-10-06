@@ -13,7 +13,7 @@
 
 using namespace Utils;
 
-SCENARIO("Utils::IP::GetFamily()")
+SCENARIO("Utils::IP::GetFamily()", "[utils][ip]")
 {
 	std::string ip;
 
@@ -72,7 +72,7 @@ SCENARIO("Utils::IP::GetFamily()")
 	REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
 }
 
-SCENARIO("Utils::IP::NormalizeIp()")
+SCENARIO("Utils::IP::NormalizeIp()", "[utils][ip]")
 {
 	std::string ip;
 
@@ -117,7 +117,7 @@ SCENARIO("Utils::IP::NormalizeIp()")
 	REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
 }
 
-SCENARIO("Utils::IP::GetAddressInfo()")
+SCENARIO("Utils::IP::GetAddressInfo()", "[utils][ip]")
 {
 	struct sockaddr_in sin;
 

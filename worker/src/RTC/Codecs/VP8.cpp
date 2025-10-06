@@ -11,11 +11,7 @@ namespace RTC
 	{
 		/* Class methods. */
 
-		VP8::PayloadDescriptor* VP8::Parse(
-		  const uint8_t* data,
-		  size_t len,
-		  RTC::RtpPacket::FrameMarking* /*frameMarking*/,
-		  uint8_t /*frameMarkingLen*/)
+		VP8::PayloadDescriptor* VP8::Parse(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -36,13 +32,7 @@ namespace RTC
 			payloadDescriptor->start          = (byte >> 4) & 0x01;
 			payloadDescriptor->partitionIndex = byte & 0x07;
 
-			if (!payloadDescriptor->extended)
-			{
-				MS_WARN_DEV("ignoring invalid payload (1)");
-
-				return nullptr;
-			}
-			else
+			if (payloadDescriptor->extended)
 			{
 				if (len < ++offset + 1)
 				{
@@ -127,7 +117,7 @@ namespace RTC
 				(len >= ++offset + 1) &&
 				payloadDescriptor->start &&
 				payloadDescriptor->partitionIndex == 0 &&
-				(!(data[offset] & 0x01))
+				(!(data[offset] & 0x01)) // Inverse Keyframe bit.
 			)
 			// clang-format on
 			{
@@ -143,13 +133,8 @@ namespace RTC
 
 			auto* data = packet->GetPayload();
 			auto len   = packet->GetPayloadLength();
-			RtpPacket::FrameMarking* frameMarking{ nullptr };
-			uint8_t frameMarkingLen{ 0 };
 
-			// Read frame-marking.
-			packet->ReadFrameMarking(&frameMarking, frameMarkingLen);
-
-			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len, frameMarking, frameMarkingLen);
+			PayloadDescriptor* payloadDescriptor = VP8::Parse(data, len);
 
 			if (!payloadDescriptor)
 			{
@@ -177,29 +162,37 @@ namespace RTC
 
 		/* Instance methods. */
 
-		void VP8::PayloadDescriptor::Dump() const
+		void VP8::PayloadDescriptor::Dump(int indentation) const
 		{
 			MS_TRACE();
 
-			MS_DUMP("<VP8::PayloadDescriptor>");
-			MS_DUMP(
-			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8, this->i, this->l, this->t, this->k);
-			MS_DUMP("  extended: %" PRIu8, this->extended);
-			MS_DUMP("  nonReference: %" PRIu8, this->nonReference);
-			MS_DUMP("  start: %" PRIu8, this->start);
-			MS_DUMP("  partitionIndex: %" PRIu8, this->partitionIndex);
-			MS_DUMP("  pictureId: %" PRIu16, this->pictureId);
-			MS_DUMP("  tl0PictureIndex: %" PRIu8, this->tl0PictureIndex);
-			MS_DUMP("  tlIndex: %" PRIu8, this->tlIndex);
-			MS_DUMP("  y: %" PRIu8, this->y);
-			MS_DUMP("  keyIndex: %" PRIu8, this->keyIndex);
-			MS_DUMP("  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
-			MS_DUMP("  hasPictureId: %s", this->hasPictureId ? "true" : "false");
-			MS_DUMP("  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
-			MS_DUMP("  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
-			MS_DUMP("  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
-			MS_DUMP("  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
-			MS_DUMP("</VP8::PayloadDescriptor>");
+			MS_DUMP_CLEAN(indentation, "<VP8::PayloadDescriptor>");
+			MS_DUMP_CLEAN(
+			  indentation,
+			  "  i:%" PRIu8 "|l:%" PRIu8 "|t:%" PRIu8 "|k:%" PRIu8,
+			  this->i,
+			  this->l,
+			  this->t,
+			  this->k);
+			MS_DUMP_CLEAN(indentation, "  extended: %" PRIu8, this->extended);
+			MS_DUMP_CLEAN(indentation, "  nonReference: %" PRIu8, this->nonReference);
+			MS_DUMP_CLEAN(indentation, "  start: %" PRIu8, this->start);
+			MS_DUMP_CLEAN(indentation, "  partitionIndex: %" PRIu8, this->partitionIndex);
+			MS_DUMP_CLEAN(indentation, "  pictureId: %" PRIu16, this->pictureId);
+			MS_DUMP_CLEAN(indentation, "  tl0PictureIndex: %" PRIu8, this->tl0PictureIndex);
+			MS_DUMP_CLEAN(indentation, "  tlIndex: %" PRIu8, this->tlIndex);
+			MS_DUMP_CLEAN(indentation, "  y: %" PRIu8, this->y);
+			MS_DUMP_CLEAN(indentation, "  keyIndex: %" PRIu8, this->keyIndex);
+			MS_DUMP_CLEAN(indentation, "  isKeyFrame: %s", this->isKeyFrame ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasPictureId: %s", this->hasPictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasOneBytePictureId: %s", this->hasOneBytePictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasTwoBytesPictureId: %s", this->hasTwoBytesPictureId ? "true" : "false");
+			MS_DUMP_CLEAN(
+			  indentation, "  hasTl0PictureIndex: %s", this->hasTl0PictureIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  hasTlIndex: %s", this->hasTlIndex ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "</VP8::PayloadDescriptor>");
 		}
 
 		void VP8::PayloadDescriptor::Encode(uint8_t* data, uint16_t pictureId, uint8_t tl0PictureIndex) const
@@ -242,11 +235,38 @@ namespace RTC
 			}
 		}
 
+		void VP8::PayloadDescriptor::Encode(uint8_t* data) const
+		{
+			MS_TRACE();
+
+			if (this->encoder == std::nullopt)
+			{
+				return;
+			}
+
+			this->encoder->Encode(data, this);
+		}
+
 		void VP8::PayloadDescriptor::Restore(uint8_t* data) const
 		{
 			MS_TRACE();
 
-			Encode(data, this->pictureId, this->tl0PictureIndex);
+			// clang-format off
+			if (
+				this->hasPictureId &&
+				this->hasTl0PictureIndex
+			)
+			// clang-format on
+			{
+				Encode(data, this->pictureId, this->tl0PictureIndex);
+			}
+		}
+
+		void VP8::PayloadDescriptor::Encoder::Encode(
+		  uint8_t* data, const PayloadDescriptor* payloadDescriptor) const
+		{
+			payloadDescriptor->Encode(
+			  data, this->encodingData.pictureId, this->encodingData.tl0PictureIndex);
 		}
 
 		VP8::PayloadDescriptorHandler::PayloadDescriptorHandler(VP8::PayloadDescriptor* payloadDescriptor)
@@ -257,7 +277,7 @@ namespace RTC
 		}
 
 		bool VP8::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, uint8_t* data, bool& /*marker*/)
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& /*marker*/)
 		{
 			MS_TRACE();
 
@@ -359,7 +379,7 @@ namespace RTC
 			// clang-format off
 			if (
 				this->payloadDescriptor->hasTlIndex &&
-				this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer()
+				this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer()
 			)
 			// clang-format on
 			{
@@ -375,6 +395,12 @@ namespace RTC
 				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
 			}
 
+			// Do not send tlIndex higher than current one.
+			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+			{
+				return false;
+			}
+
 			// clang-format off
 			if (
 				this->payloadDescriptor->hasPictureId &&
@@ -382,13 +408,25 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				this->payloadDescriptor->Encode(data, pictureId, tl0PictureIndex);
+				// Store the encoding data for retransmissions.
+				this->payloadDescriptor->CreateEncoder({ pictureId, tl0PictureIndex });
+				this->payloadDescriptor->Encode(packet->GetPayload());
 			}
 
 			return true;
 		};
 
-		void VP8::PayloadDescriptorHandler::Restore(uint8_t* data)
+		void VP8::PayloadDescriptorHandler::Encode(
+		  RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder)
+		{
+			MS_TRACE();
+
+			auto* vp8Encoder = static_cast<VP8::PayloadDescriptor::Encoder*>(encoder);
+
+			vp8Encoder->Encode(packet->GetPayload(), this->payloadDescriptor.get());
+		}
+
+		void VP8::PayloadDescriptorHandler::Restore(RtpPacket* packet)
 		{
 			MS_TRACE();
 
@@ -399,7 +437,7 @@ namespace RTC
 			)
 			// clang-format on
 			{
-				this->payloadDescriptor->Restore(data);
+				this->payloadDescriptor->Restore(packet->GetPayload());
 			}
 		}
 	} // namespace Codecs

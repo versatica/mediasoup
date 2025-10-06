@@ -1,14 +1,19 @@
 use futures_lite::future;
 use hash_hasher::HashedSet;
-use mediasoup::data_structures::{AppData, ListenInfo, Protocol};
 use mediasoup::webrtc_server::{WebRtcServerIpPort, WebRtcServerListenInfos, WebRtcServerOptions};
 use mediasoup::worker::{ChannelMessageHandlers, CreateWebRtcServerError, Worker, WorkerSettings};
 use mediasoup::worker_manager::WorkerManager;
+use mediasoup_types::data_structures::{AppData, ListenInfo, Protocol};
 use portpicker::pick_unused_port;
 use std::env;
 use std::net::{IpAddr, Ipv4Addr};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+
+#[derive(Debug, PartialEq)]
+struct CustomAppData {
+    foo: u32,
+}
 
 async fn init() -> (Worker, Worker) {
     {
@@ -52,17 +57,13 @@ fn create_webrtc_server_succeeds() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         let webrtc_server = worker1
             .create_webrtc_server({
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port1),
                     port_range: None,
                     flags: None,
@@ -73,6 +74,7 @@ fn create_webrtc_server_succeeds() {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("foo.bar.org".to_string()),
+                    expose_internal_ip: false,
                     port: Some(port2),
                     port_range: None,
                     flags: None,
@@ -150,17 +152,13 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         let webrtc_server = worker1
             .create_webrtc_server({
                 let listen_infos = WebRtcServerListenInfos::new(ListenInfo {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -171,6 +169,7 @@ fn create_webrtc_server_without_specifying_port_succeeds() {
                     protocol: Protocol::Tcp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: Some("1.2.3.4".to_string()),
+                    expose_internal_ip: false,
                     port: None,
                     port_range: None,
                     flags: None,
@@ -233,11 +232,6 @@ fn unavailable_infos_fails() {
             })
             .detach();
 
-        #[derive(Debug, PartialEq)]
-        struct CustomAppData {
-            foo: u32,
-        }
-
         // Using an unavailable listen IP.
         {
             let create_result = worker1
@@ -246,6 +240,7 @@ fn unavailable_infos_fails() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
+                        expose_internal_ip: false,
                         port: Some(port1),
                         port_range: None,
                         flags: None,
@@ -256,6 +251,7 @@ fn unavailable_infos_fails() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4)),
                         announced_address: None,
+                        expose_internal_ip: false,
                         port: Some(port2),
                         port_range: None,
                         flags: None,
@@ -281,6 +277,7 @@ fn unavailable_infos_fails() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
+                        expose_internal_ip: false,
                         port: Some(port1),
                         port_range: None,
                         flags: None,
@@ -291,6 +288,7 @@ fn unavailable_infos_fails() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                         announced_address: Some("1.2.3.4".to_string()),
+                        expose_internal_ip: false,
                         port: Some(port1),
                         port_range: None,
                         flags: None,
@@ -316,6 +314,7 @@ fn unavailable_infos_fails() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
+                        expose_internal_ip: false,
                         port: Some(port1),
                         port_range: None,
                         flags: None,
@@ -332,6 +331,7 @@ fn unavailable_infos_fails() {
                         protocol: Protocol::Udp,
                         ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                         announced_address: None,
+                        expose_internal_ip: false,
                         port: Some(port1),
                         port_range: None,
                         flags: None,
@@ -362,6 +362,7 @@ fn close_event() {
                     protocol: Protocol::Udp,
                     ip: IpAddr::V4(Ipv4Addr::LOCALHOST),
                     announced_address: None,
+                    expose_internal_ip: false,
                     port: Some(port),
                     port_range: None,
                     flags: None,

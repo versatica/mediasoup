@@ -16,12 +16,6 @@
 
 namespace RTC
 {
-	// Max MTU size.
-	constexpr size_t MtuSize{ 1500u };
-	// MID header extension max length (just used when setting/updating MID
-	// extension).
-	constexpr uint8_t MidMaxLength{ 8u };
-
 	class RtpPacket
 	{
 	public:
@@ -92,29 +86,6 @@ namespace RTC
 		};
 
 	public:
-		/* Struct with frame-marking information. */
-		struct FrameMarking
-		{
-#if defined(MS_LITTLE_ENDIAN)
-			uint8_t tid : 3;
-			uint8_t base : 1;
-			uint8_t discardable : 1;
-			uint8_t independent : 1;
-			uint8_t end : 1;
-			uint8_t start : 1;
-#elif defined(MS_BIG_ENDIAN)
-			uint8_t start : 1;
-			uint8_t end : 1;
-			uint8_t independent : 1;
-			uint8_t discardable : 1;
-			uint8_t base : 1;
-			uint8_t tid : 3;
-#endif
-			uint8_t lid;
-			uint8_t tl0picidx;
-		};
-
-	public:
 		static const size_t HeaderSize{ 12 };
 		static bool IsRtp(const uint8_t* data, size_t len)
 		{
@@ -147,12 +118,12 @@ namespace RTC
 	public:
 		~RtpPacket();
 
-		void Dump() const;
+		void Dump(int indentation = 0) const;
 		flatbuffers::Offset<FBS::RtpPacket::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
 
 		const uint8_t* GetData() const
 		{
-			return (const uint8_t*)this->header;
+			return reinterpret_cast<const uint8_t*>(this->header);
 		}
 
 		size_t GetSize() const
@@ -288,17 +259,6 @@ namespace RTC
 			this->transportWideCc01ExtensionId = id;
 		}
 
-		// NOTE: Remove once RFC.
-		void SetFrameMarking07ExtensionId(uint8_t id)
-		{
-			this->frameMarking07ExtensionId = id;
-		}
-
-		void SetFrameMarkingExtensionId(uint8_t id)
-		{
-			this->frameMarkingExtensionId = id;
-		}
-
 		void SetSsrcAudioLevelExtensionId(uint8_t id)
 		{
 			this->ssrcAudioLevelExtensionId = id;
@@ -307,6 +267,16 @@ namespace RTC
 		void SetVideoOrientationExtensionId(uint8_t id)
 		{
 			this->videoOrientationExtensionId = id;
+		}
+
+		void SetPlayoutDelayExtensionId(uint8_t id)
+		{
+			this->playoutDelayExtensionId = id;
+		}
+
+		void SetDependencyDescriptorExtensionId(uint8_t id)
+		{
+			this->dependencyDescriptorExtensionId = id;
 		}
 
 		bool ReadMid(std::string& mid) const
@@ -413,28 +383,6 @@ namespace RTC
 			return true;
 		}
 
-		bool ReadFrameMarking(RtpPacket::FrameMarking** frameMarking, uint8_t& length) const
-		{
-			uint8_t extenLen;
-			uint8_t* extenValue = GetExtension(this->frameMarkingExtensionId, extenLen);
-
-			// NOTE: Remove this once framemarking draft becomes RFC.
-			if (!extenValue)
-			{
-				extenValue = GetExtension(this->frameMarking07ExtensionId, extenLen);
-			}
-
-			if (!extenValue || extenLen > 3u)
-			{
-				return false;
-			}
-
-			*frameMarking = reinterpret_cast<RtpPacket::FrameMarking*>(extenValue);
-			length        = extenLen;
-
-			return true;
-		}
-
 		bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const
 		{
 			uint8_t extenLen;
@@ -489,6 +437,43 @@ namespace RTC
 			return true;
 		}
 
+		bool ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->playoutDelayExtensionId, extenLen);
+
+			if (extenLen != 3)
+			{
+				return false;
+			}
+
+			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
+			minDelay   = v >> 12u;
+			maxDelay   = v & 0xFFFu;
+			return true;
+		}
+
+		bool ReadDependencyDescriptor(
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		    templateDependencyStructure) const
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+
+			auto* value =
+			  Codecs::DependencyDescriptor::Parse(extenValue, extenLen, templateDependencyStructure);
+
+			if (!value)
+			{
+				return false;
+			}
+
+			dependencyDescriptor.reset(value);
+
+			return true;
+		}
+
 		bool HasExtension(uint8_t id) const
 		{
 			if (id == 0u)
@@ -502,7 +487,8 @@ namespace RTC
 					return false;
 				}
 
-				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				// `-1` because we have 14 elements total 0..13 and `id` is in the
+				// range 1..14.
 				return this->oneByteExtensions[id - 1] != nullptr;
 			}
 			else if (HasTwoBytesExtensions())
@@ -516,7 +502,8 @@ namespace RTC
 
 				auto* extension = it->second;
 
-				// In Two-Byte extensions value length may be zero. If so, return false.
+				// In Two-Byte extensions value length may be zero. If so, return
+				// false.
 				return extension->len != 0u;
 			}
 			else
@@ -540,7 +527,8 @@ namespace RTC
 					return nullptr;
 				}
 
-				// `-1` because we have 14 elements total 0..13 and `id` is in the range 1..14.
+				// `-1` because we have 14 elements total 0..13 and `id` is in the
+				// range 1..14.
 				auto* extension = this->oneByteExtensions[id - 1];
 
 				if (!extension)
@@ -566,7 +554,8 @@ namespace RTC
 
 				len = extension->len;
 
-				// In Two-Byte extensions value length may be zero. If so, return nullptr.
+				// In Two-Byte extensions value length may be zero. If so, return
+				// nullptr.
 				if (extension->len == 0u)
 				{
 					return nullptr;
@@ -578,6 +567,11 @@ namespace RTC
 			{
 				return nullptr;
 			}
+		}
+
+		uint8_t* GetDependencyDescriptionExtension(uint8_t& len) const
+		{
+			return GetExtension(this->dependencyDescriptorExtensionId, len);
 		}
 
 		bool SetExtensionLength(uint8_t id, uint8_t len);
@@ -642,6 +636,10 @@ namespace RTC
 
 		bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
 
+		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder();
+
+		void EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder);
+
 		void RestorePayload();
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
@@ -655,12 +653,12 @@ namespace RTC
 		void ParseExtensions();
 
 	private:
-		// Passed by argument.
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
 		// There might be up to 14 one-byte header extensions
-		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use std::array.
+		// (https://datatracker.ietf.org/doc/html/rfc5285#section-4.2), use
+		// std::array.
 		std::array<OneByteExtension*, 14> oneByteExtensions{};
 		absl::flat_hash_map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
 		uint8_t midExtensionId{ 0u };
@@ -668,10 +666,10 @@ namespace RTC
 		uint8_t rridExtensionId{ 0u };
 		uint8_t absSendTimeExtensionId{ 0u };
 		uint8_t transportWideCc01ExtensionId{ 0u };
-		uint8_t frameMarking07ExtensionId{ 0u }; // NOTE: Remove once RFC.
-		uint8_t frameMarkingExtensionId{ 0u };
 		uint8_t ssrcAudioLevelExtensionId{ 0u };
 		uint8_t videoOrientationExtensionId{ 0u };
+		uint8_t playoutDelayExtensionId{ 0u };
+		uint8_t dependencyDescriptorExtensionId{ 0u };
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0u };
 		uint8_t payloadPadding{ 0u };

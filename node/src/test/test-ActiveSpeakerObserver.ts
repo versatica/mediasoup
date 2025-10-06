@@ -1,16 +1,16 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import { ActiveSpeakerObserverEvents } from '../types';
+import type { ActiveSpeakerObserverEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
-	mediaCodecs: mediasoup.types.RtpCodecCapability[];
+	mediaCodecs: mediasoup.types.RouterRtpCodecCapability[];
 	worker?: mediasoup.types.Worker;
 	router?: mediasoup.types.Router;
 };
 
 const ctx: TestContext = {
-	mediaCodecs: utils.deepFreeze<mediasoup.types.RtpCodecCapability[]>([
+	mediaCodecs: utils.deepFreeze<mediasoup.types.RouterRtpCodecCapability[]>([
 		{
 			kind: 'audio',
 			mimeType: 'audio/opus',
@@ -44,6 +44,7 @@ test('router.createActiveSpeakerObserver() succeeds', async () => {
 	expect(onObserverNewRtpObserver).toHaveBeenCalledWith(activeSpeakerObserver);
 	expect(typeof activeSpeakerObserver.id).toBe('string');
 	expect(activeSpeakerObserver.closed).toBe(false);
+	expect(activeSpeakerObserver.type).toBe('activespeaker');
 	expect(activeSpeakerObserver.paused).toBe(false);
 	expect(activeSpeakerObserver.appData).toEqual({});
 
@@ -55,14 +56,14 @@ test('router.createActiveSpeakerObserver() succeeds', async () => {
 test('router.createActiveSpeakerObserver() with wrong arguments rejects with TypeError', async () => {
 	await expect(
 		ctx.router!.createActiveSpeakerObserver(
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			{ interval: false }
 		)
 	).rejects.toThrow(TypeError);
 
 	await expect(
 		ctx.router!.createActiveSpeakerObserver(
-			// @ts-ignore
+			// @ts-expect-error --- Testing purposes.
 			{ appData: 'NOT-AN-OBJECT' }
 		)
 	).rejects.toThrow(TypeError);
@@ -81,8 +82,8 @@ test('activeSpeakerObserver.pause() and resume() succeed', async () => {
 }, 2000);
 
 test('activeSpeakerObserver.close() succeeds', async () => {
-	const activeSpeakerObserver = await ctx.router!.createAudioLevelObserver({
-		maxEntries: 8,
+	const activeSpeakerObserver = await ctx.router!.createActiveSpeakerObserver({
+		interval: 500,
 	});
 
 	let dump = await ctx.router!.dump();
@@ -99,7 +100,7 @@ test('activeSpeakerObserver.close() succeeds', async () => {
 }, 2000);
 
 test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () => {
-	const activeSpeakerObserver = await ctx.router!.createAudioLevelObserver();
+	const activeSpeakerObserver = await ctx.router!.createActiveSpeakerObserver();
 
 	const promise = enhancedOnce<ActiveSpeakerObserverEvents>(
 		activeSpeakerObserver,
@@ -113,7 +114,7 @@ test('ActiveSpeakerObserver emits "routerclose" if Router is closed', async () =
 }, 2000);
 
 test('ActiveSpeakerObserver emits "routerclose" if Worker is closed', async () => {
-	const activeSpeakerObserver = await ctx.router!.createAudioLevelObserver();
+	const activeSpeakerObserver = await ctx.router!.createActiveSpeakerObserver();
 
 	const promise = enhancedOnce<ActiveSpeakerObserverEvents>(
 		activeSpeakerObserver,

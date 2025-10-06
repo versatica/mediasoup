@@ -18,17 +18,21 @@ Compiles mediasoup TypeScript code (`node/src` folder) JavaScript, places it int
 
 Builds the `mediasoup-worker` binary. It invokes `invoke`below.
 
+### `npm run worker:prebuild-name`
+
+Prints the name of the corresponding `mediasoup-worker` prebuild tar file.
+
 ### `npm run worker:prebuild`
 
 Creates a prebuilt of `mediasoup-worker` binary in the `worker/prebuild` folder.
 
 ### `npm run lint`
 
-Runs both `npm run lint:node` and `npm run lint:worker`.
+Runs both `lint:node` and `lint:worker` tasks.
 
 ### `npm run lint:node`
 
-Validates mediasoup JavaScript files using [ESLint](https://eslint.org).
+Validates mediasoup TypeScript files using [ESLint](https://eslint.org), [Prettier](https://prettier.io) and [Knip](https://knip.dev/).
 
 ### `npm run lint:worker`
 
@@ -36,7 +40,7 @@ Validates mediasoup worker C++ files using [clang-format](https://clang.llvm.org
 
 ### `npm run format`
 
-Runs both `npm run format:node` and `npm run format:worker`.
+Runs both `format:node` and `format:worker` tasks.
 
 ### `npm run format:node`
 
@@ -48,7 +52,7 @@ Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/
 
 ### `npm run flatc`
 
-Runs both `npm run flatc:node` and `npm run flatc:worker`.
+Runs both `flatc:node` and `flatc:worker` tasks.
 
 ### `npm run flatc:node`
 
@@ -60,7 +64,7 @@ Compiles [FlatBuffers](https://github.com/google/flatbuffers) `.fbs` files in `w
 
 ### `npm run test`
 
-Runs both `npm run test:node` and `npm run test:worker`.
+Runs both `test:node` and `test:worker` tasks.
 
 ### `npm run test:node`
 
@@ -69,20 +73,32 @@ Runs [Jest](https://jestjs.io) test units located at `node/test` folder.
 Jest command arguments can be given using `--` as follows:
 
 ```bash
-npm run test:node -- --testPathPattern "test-Worker.ts" --testNamePattern "createWorker"
+npm run test:node -- --testPathPatterns "node/src/test/test-Worker.ts" --testNamePattern "createWorker"
 ```
 
 ### `npm run test:worker`
 
 Runs [Catch2](https://github.com/catchorg/Catch2) test units located at `worker/test` folder. It invokes `invoke test` below.
 
+### `npm run coverage`
+
+Runs `coverage:node` task.
+
 ### `npm run coverage:node`
 
-Same as `npm run test:node` but it also opens a browser window with JavaScript coverage results.
+Same as `test:node` task but it also opens a browser window with TypeScript coverage results.
 
 ### `npm run release:check`
 
 Runs linters and tests in Node and C++ code.
+
+### `npm run release`
+
+Publishes a new NPM version of mediasoup. Requirements for it to work:
+
+- "version" field in `package.json` must have been incremented (and not commited to Git).
+- `CHANGELOG.md` file must have been updated with an entry matching the new version.
+- Of course, permissions to publish in NPM registry are required.
 
 ## Rust
 
@@ -188,9 +204,17 @@ Rewrites mediasoup worker C++ files using [clang-format](https://clang.llvm.org/
 
 Builds and runs the `mediasoup-worker-test` binary at `worker/out/Release` (or at `worker/out/Debug` if the "MEDIASOUP_BUILDTYPE" environment variable is set to "Debug"), which uses [Catch2](https://github.com/catchorg/Catch2) to run test units located at `worker/test` folder.
 
-### `invoke test-asan`
+### `invoke test-asan-address`
 
-Run test with Address Sanitizer.
+Run test with Address Sanitizer with `-fsanitize=address`.
+
+### `invoke test-asan-undefined`
+
+Run test with Address Sanitizer with `-fsanitize=undefined`.
+
+### `invoke test-asan-thread`
+
+Run test with Address Sanitizer with `-fsanitize=thread`.
 
 ### `invoke tidy`
 

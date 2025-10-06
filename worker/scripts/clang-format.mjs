@@ -4,7 +4,7 @@ import clangFormat from 'clang-format';
 
 const task = process.argv.slice(2).join(' ');
 
-run();
+void run();
 
 async function run() {
 	const clangFormatNativeBinary = clangFormat.getNativeBinary();
@@ -12,7 +12,7 @@ async function run() {
 		'../src/**/*.cpp',
 		'../include/**/*.hpp',
 		'../test/src/**/*.cpp',
-		'../test/include/helpers.hpp',
+		'../test/include/**/**.hpp',
 		'../fuzzer/src/**/*.cpp',
 		'../fuzzer/include/**/*.hpp',
 		'../../node/src/workerChannel/include/**/*.hpp',

@@ -1,35 +1,36 @@
-import { EventEmitter, once } from 'node:events';
-import { Logger } from './Logger';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-const enhancedEventEmitterLogger = new Logger('EnhancedEventEmitter');
+import { EventEmitter, once } from 'node:events';
 
 type Events = Record<string, any[]>;
 
 export class EnhancedEventEmitter<
 	E extends Events = Events,
+	BuiltInEvents extends Events = {
+		listenererror: [keyof E, Error];
+	},
+	E2 extends Events = E & BuiltInEvents,
 > extends EventEmitter {
 	constructor() {
 		super();
+
 		this.setMaxListeners(Infinity);
 	}
 
-	emit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean {
+	override emit<K extends keyof E2 & string>(
+		eventName: K,
+		...args: E2[K]
+	): boolean {
 		return super.emit(eventName, ...args);
 	}
 
 	/**
 	 * Special addition to the EventEmitter API.
 	 */
-	safeEmit<K extends keyof E & string>(eventName: K, ...args: E[K]): boolean {
+	safeEmit<K extends keyof E2 & string>(eventName: K, ...args: E2[K]): boolean {
 		try {
 			return super.emit(eventName, ...args);
 		} catch (error) {
-			enhancedEventEmitterLogger.error(
-				'safeEmit() | event listener threw an error [eventName:%s]:%o',
-				eventName,
-				error
-			);
-
 			try {
 				super.emit('listenererror', eventName, error);
 			} catch (error2) {
@@ -40,84 +41,88 @@ export class EnhancedEventEmitter<
 		}
 	}
 
-	on<K extends keyof E & string>(
+	override on<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.on(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	off<K extends keyof E & string>(
+	override off<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.off(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	addListener<K extends keyof E & string>(
+	override addListener<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.on(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	prependListener<K extends keyof E & string>(
+	override prependListener<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.prependListener(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	once<K extends keyof E & string>(
+	override once<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.once(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	prependOnceListener<K extends keyof E & string>(
+	override prependOnceListener<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.prependOnceListener(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	removeListener<K extends keyof E & string>(
+	override removeListener<K extends keyof E2 & string>(
 		eventName: K,
-		listener: (...args: E[K]) => void
+		listener: (...args: E2[K]) => void
 	): this {
 		super.off(eventName, listener as (...args: any[]) => void);
 
 		return this;
 	}
 
-	removeAllListeners<K extends keyof E & string>(eventName?: K): this {
+	override removeAllListeners<K extends keyof E2 & string>(
+		eventName?: K
+	): this {
 		super.removeAllListeners(eventName);
 
 		return this;
 	}
 
-	listenerCount<K extends keyof E & string>(eventName: K): number {
+	override listenerCount<K extends keyof E2 & string>(eventName: K): number {
 		return super.listenerCount(eventName);
 	}
 
-	listeners<K extends keyof E & string>(eventName: K): Function[] {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+	override listeners<K extends keyof E2 & string>(eventName: K): Function[] {
 		return super.listeners(eventName);
 	}
 
-	rawListeners<K extends keyof E & string>(eventName: K): Function[] {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+	override rawListeners<K extends keyof E2 & string>(eventName: K): Function[] {
 		return super.rawListeners(eventName);
 	}
 }
@@ -129,7 +134,7 @@ export class EnhancedEventEmitter<
  * Usage example:
  * ```ts
  * await enhancedOnce<ConsumerEvents>(videoConsumer, 'producerpause');
- * ````
+ * ```
  */
 export async function enhancedOnce<E extends Events = Events>(
 	emmiter: EnhancedEventEmitter<E>,
