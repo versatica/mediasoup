@@ -1,14 +1,14 @@
 import { EventEmitter } from 'events';
 import { EnhancedEventEmitter } from '../../enhancedEvents';
 
-const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
+const buildType = process.env['MEDIASOUP_BUILDTYPE'] ?? 'Release';
 
 /**
  * NOTE: The following path is reachable from:
  * - current file:       node/src/workerChannel/src/index.ts
  * - transpiled JS file: node/lib/workerChannel/src/index.js
  */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { WorkerChannel: NativeWorkerChannel } = require(
 	`../../../src/workerChannel/build/${buildType}/worker-channel.node`
 );
@@ -41,7 +41,7 @@ export class WorkerChannel extends EnhancedEventEmitter<WorkerChannelEvents> {
 		});
 	}
 
-	close() {
+	close(): void {
 		// By setting the instance to `undefined`, the garbage collector will clean up
 		// the native instance, calling its `Finalize()` method accordingly.
 		// Without it, the tests will never finish due to remaining open handles.
