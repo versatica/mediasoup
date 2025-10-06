@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 /**
  * NOTE: These tests are to be run locally only, if needed.
  * When running them within a testing environment (jest|node) the native addon
@@ -5,12 +7,14 @@
  * CI process fail.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import assert = require('node:assert');
 import { beforeEach, describe, it } from 'node:test';
+import { WorkerChannel } from '.';
 
-const buildType = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
+const buildType = process.env['MEDIASOUP_BUILDTYPE'] ?? 'Release';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { WorkerChannel: NativeWorkerChannel } = require(
 	`../build/${buildType}/worker-channel.node`
 );
@@ -21,7 +25,7 @@ describe('NativeWorkerChannel constructor', () => {
 	});
 
 	it('fails if a single argument is passed', () => {
-		const func = () => {};
+		const func = (): void => {};
 
 		assert.throws(() => new NativeWorkerChannel(func), TypeError);
 	});
@@ -36,7 +40,7 @@ describe('NativeWorkerChannel constructor', () => {
 
 	[true, 1, () => {}].forEach(version => {
 		it(`fails if the second argument ("${version}") is not a String`, () => {
-			const func = () => {};
+			const func = (): void => {};
 
 			assert.throws(() => new NativeWorkerChannel(func, version), TypeError);
 		});
@@ -44,7 +48,7 @@ describe('NativeWorkerChannel constructor', () => {
 
 	[true, 1, 'one', () => {}].forEach(args => {
 		it(`fails if the third argument is present ("${args}") and is not an Array`, () => {
-			const func = () => {};
+			const func = (): void => {};
 			const version = 'X';
 
 			assert.throws(
@@ -56,11 +60,11 @@ describe('NativeWorkerChannel constructor', () => {
 
 	[true, 1, () => {}].forEach(item => {
 		it(`fails if the third argument is present and contains a non String item (${item})`, () => {
-			const func = () => {};
+			const func = (): void => {};
 			const version = 'X';
 			const args = ['one', 'two', 'three'];
 
-			// @ts-ignore.
+			// @ts-expect-error --- Testing purposes.
 			args.push(item);
 
 			assert.throws(
@@ -71,14 +75,14 @@ describe('NativeWorkerChannel constructor', () => {
 	});
 
 	it('succeeds if the given arguments are a Function and a String respectively', () => {
-		const func = () => {};
+		const func = (): void => {};
 		const version = 'X';
 
 		assert.doesNotThrow(() => new NativeWorkerChannel(func, version));
 	});
 
 	it('succeeds if the third argument is an Array of Strings', () => {
-		const func = () => {};
+		const func = (): void => {};
 		const version = 'X';
 		const args = ['one', 'two', 'three'];
 
@@ -88,9 +92,9 @@ describe('NativeWorkerChannel constructor', () => {
 
 describe('NativeWorkerChannel send', () => {
 	const version = 'X';
-	const func = () => {};
+	const func = (): void => {};
 
-	let workerChannel: any;
+	let workerChannel: WorkerChannel;
 
 	beforeEach(() => {
 		workerChannel = new NativeWorkerChannel(func, version);
@@ -98,6 +102,7 @@ describe('NativeWorkerChannel send', () => {
 
 	[true, 1, 'one', () => {}].forEach(data => {
 		it(`fails if send() is called with a value (${data}) different than an Uint8Array`, () => {
+			// @ts-expect-error --- Testing purposes.
 			assert.throws(() => workerChannel.send(data), TypeError);
 		});
 	});
