@@ -29,7 +29,7 @@ beforeEach(async () => {
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
 });
 

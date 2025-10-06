@@ -202,7 +202,7 @@ beforeEach(async () => {
 	);
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker1?.close();
 	ctx.worker2?.close();
 });
