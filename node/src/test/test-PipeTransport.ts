@@ -369,10 +369,10 @@ test('router.pipeToRouter() succeeds with video', async () => {
 	]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual([
 		{
-		 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-		 	id: 8,
-		 	encrypt: false,
-		 	parameters: {},
+			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+			id: 8,
+			encrypt: false,
+			parameters: {},
 		},
 		{
 			uri: 'urn:3gpp:video-orientation',
@@ -429,10 +429,10 @@ test('router.pipeToRouter() succeeds with video', async () => {
 	]);
 	expect(pipeProducer.rtpParameters.headerExtensions).toEqual([
 		{
-		 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-		 	id: 8,
-		 	encrypt: false,
-		 	parameters: {},
+			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+			id: 8,
+			encrypt: false,
+			parameters: {},
 		},
 		{
 			uri: 'urn:3gpp:video-orientation',
@@ -543,10 +543,10 @@ test('router.createPipeTransport() with enableRtx succeeds', async () => {
 	]);
 	expect(pipeConsumer.rtpParameters.headerExtensions).toEqual([
 		{
-		 	uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
-		 	id: 8,
-		 	encrypt: false,
-		 	parameters: {},
+			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
+			id: 8,
+			encrypt: false,
+			parameters: {},
 		},
 		{
 			uri: 'urn:3gpp:video-orientation',
