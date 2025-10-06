@@ -8,7 +8,7 @@
       'target_name': 'worker-channel',
       'sources': [
         'src/binding.cpp',
-        'src/workerChannel.cpp'
+        'src/WorkerChannel.cpp'
       ],
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],

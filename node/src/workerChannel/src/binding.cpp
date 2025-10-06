@@ -1,6 +1,6 @@
 #include <napi.h>
 
-#include "../include/workerChannel.hpp"
+#include "../include/WorkerChannel.hpp"
 
 // Initialize native add-on.
 Napi::Object Init(Napi::Env env, Napi::Object exports)

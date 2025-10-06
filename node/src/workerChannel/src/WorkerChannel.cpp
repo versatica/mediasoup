@@ -1,4 +1,4 @@
-#include "../include/workerChannel.hpp"
+#include "../include/WorkerChannel.hpp"
 #include "napi.h"
 #include <cstring>
 #include <vector>
