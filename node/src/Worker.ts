@@ -139,7 +139,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 				this.emit('@failure', new TypeError('wrong settings'));
 			} else {
 				logger.error(
-					`worker failed unexpectedly [pid:${this.#pid}, code:${code}]`,
+					`worker failed unexpectedly [pid:${this.#pid}, code:${code}]`
 				);
 
 				this.emit('@failure', new Error(`[pid:${this.#pid}, code:${code}]`));
