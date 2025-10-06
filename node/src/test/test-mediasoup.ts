@@ -31,10 +31,6 @@ test('mediasoup.setLoggerEventListeners() succeeds', async () => {
 	worker.close();
 
 	expect(onDebug).toHaveBeenCalled();
-
-	if (worker.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-	}
 }, 2000);
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () => {
