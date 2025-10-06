@@ -38,6 +38,13 @@ namespace RTC
 				return nullptr;
 			}
 
+			if (len > Consts::TwoBytesRtpExtensionMaxLength)
+			{
+				MS_WARN_DEV("ignoring payload with length > %" PRIu8, Consts::TwoBytesRtpExtensionMaxLength);
+
+				return nullptr;
+			}
+
 			if (templateDependencyStructure == nullptr)
 			{
 				templateDependencyStructure = std::make_unique<TemplateDependencyStructure>();
