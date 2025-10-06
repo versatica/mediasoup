@@ -46,7 +46,7 @@ beforeEach(async () => {
 	});
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
 });
 

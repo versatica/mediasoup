@@ -17,7 +17,7 @@ beforeEach(async () => {
 	ctx.worker = await mediasoup.createWorker();
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
 });
 

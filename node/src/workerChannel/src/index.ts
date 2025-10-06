@@ -13,7 +13,7 @@ const { WorkerChannel: NativeWorkerChannel } = require(
 	`../../../src/workerChannel/build/${buildType}/worker-channel.node`
 );
 
-export type WorkerChannelEvents = {
+type WorkerChannelEvents = {
 	data: [Buffer];
 	error: [number];
 };

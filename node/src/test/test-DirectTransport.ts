@@ -14,7 +14,7 @@ beforeEach(async () => {
 	ctx.router = await ctx.worker.createRouter();
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
 });
 

@@ -45,7 +45,7 @@ beforeEach(async () => {
 	ctx.directDataProducer = await ctx.directTransport.produceData();
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
 });
 

@@ -9,7 +9,7 @@ const config = {
 		'node/src/srtpParametersFbsUtils.ts',
 		'node/src/utils.ts',
 	],
-	ignoreDependencies: ['open-cli', 'supports-color'],
+	ignoreDependencies: ['open-cli', 'supports-color', 'node-addon-api'],
 	typescript: {
 		config: ['tsconfig.json'],
 	},
