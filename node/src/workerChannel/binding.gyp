@@ -62,7 +62,7 @@
             "CLANG_CXX_LIBRARY": 'libc++',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             # TODO: This should be the same as the one used for libmediasoup?
-            'MACOSX_DEPLOYMENT_TARGET': '14'
+            'MACOSX_DEPLOYMENT_TARGET': '15'
           }
         }]
       ]
