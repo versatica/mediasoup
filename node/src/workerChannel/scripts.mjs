@@ -42,7 +42,8 @@ function buildBinding() {
 		process.env.GYP_DEFINES += ` mediasoup_worker_lib=${process.env.MEDIASOUP_WORKER_LIB}`;
 	}
 
-	executeCmd('node-gyp configure -- -f compile_commands_json');
+	// NOTE: Fails in Windows. Just useful for dev.
+	// executeCmd('node-gyp configure -- -f compile_commands_json');
 	executeCmd(`node-gyp rebuild --${buildType.toLowerCase()} --verbose`);
 }
 
