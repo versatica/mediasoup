@@ -1,8 +1,7 @@
 {
   'variables': {
     'mediasoup_build_type%': 'Release',
-    'mediasoup_worker_lib%': '',
-    'meson_args%': ''
+    'mediasoup_worker_lib%': ''
   },
   "targets": [
     {
