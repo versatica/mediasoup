@@ -40,8 +40,8 @@
             }, {
               'variables': {
                 'runtime_library': '1',
-              },
-            }],
+              }
+            }]
           ],
           'msvs_settings': {
             'VCCLCompilerTool': {
@@ -55,10 +55,12 @@
             },
             'VCLinkerTool': {
               'AdditionalOptions': ['/FORCE:MULTIPLE'],
-            },
+            }
           }
         }],
         ['OS=="mac"', {
+          'cflags!': [ '-fno-exceptions' ],
+          'cflags_cc!': [ '-fno-exceptions' ],
           'xcode_settings': {
             "CLANG_CXX_LIBRARY": 'libc++',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
@@ -66,23 +68,10 @@
             'MACOSX_DEPLOYMENT_TARGET': '15'
           }
         }],
-        ['OS=="linux" and meson_args=="-Db_sanitize=address"', {
-          'cflags': [ '-fsanitize=address' ],
-          'cflags_cc': [ '-fsanitize=address' ],
-          'libraries': [
-            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/libmediasoup-worker.a',
-            '-lasan'
-          ],
-        }],
-        ['OS=="linux" and meson_args=="-Db_sanitize=thread"', {
-          'cflags': [ '-fsanitize=thread' ],
-          'cflags_cc': [ '-fsanitize=thread' ],
-          'libraries': [
-            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/libmediasoup-worker.a',
-            '-ltsan'
-          ],
-        }],
-      ]
+        ['OS=="linux"', {
+        'cflags!': [ '-fno-exceptions' ],
+        'cflags_cc!': [ '-fno-exceptions' ],
+        }]
     }
   ]
 }
