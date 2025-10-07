@@ -35,11 +35,11 @@
           'conditions': [
             ['mediasoup_build_type=="Release"', {
               'variables': {
-                'runtime_library': '0',
+                'runtime_library': '2',
               },
             }, {
               'variables': {
-                'runtime_library': '1',
+                'runtime_library': '3',
               }
             }]
           ],
