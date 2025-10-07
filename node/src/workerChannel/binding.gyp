@@ -64,14 +64,15 @@
           'xcode_settings': {
             "CLANG_CXX_LIBRARY": 'libc++',
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-            # TODO: This should be the same as the one used for libmediasoup?
+            # NOTE: This should be the same as the one used for libmediasoup
             'MACOSX_DEPLOYMENT_TARGET': '15'
           }
         }],
         ['OS=="linux"', {
-        'cflags!': [ '-fno-exceptions' ],
-        'cflags_cc!': [ '-fno-exceptions' ],
+          'cflags!': [ '-fno-exceptions' ],
+          'cflags_cc!': [ '-fno-exceptions' ],
         }]
+      ]
     }
   ]
 }
