@@ -10,8 +10,6 @@
         'src/binding.cpp',
         'src/WorkerChannel.cpp'
       ],
-      'cflags!': [ '-fno-exceptions' ],
-      'cflags_cc!': [ '-fno-exceptions' ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
         "<(module_root_dir)/../../../worker/include",
