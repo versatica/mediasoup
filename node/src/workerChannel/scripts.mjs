@@ -44,6 +44,7 @@ function buildBinding() {
 
 	// NOTE: Fails in Windows. Just useful for dev.
 	// executeCmd('node-gyp configure -- -f compile_commands_json');
+	executeCmd('node-gyp configure --verbose');
 	executeCmd(`node-gyp rebuild --${buildType.toLowerCase()} --verbose`);
 }
 

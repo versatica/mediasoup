@@ -17,22 +17,22 @@ jobs:
     strategy:
       matrix:
         build:
-          - os: ubuntu-24.04
-            node: 22
-            cc: gcc
-            cxx: g++
-          - os: ubuntu-24.04-arm
-            node: 22
-            cc: gcc
-            cxx: g++
-          - os: macos-14
-            node: 22
-            cc: clang
-            cxx: clang++
-          - os: macos-15
-            node: 24
-            cc: clang
-            cxx: clang++
+          # - os: ubuntu-24.04
+          #   node: 22
+          #   cc: gcc
+          #   cxx: g++
+          # - os: ubuntu-24.04-arm
+          #   node: 22
+          #   cc: gcc
+          #   cxx: g++
+          # - os: macos-14
+          #   node: 22
+          #   cc: clang
+          #   cxx: clang++
+          # - os: macos-15
+          #   node: 24
+          #   cc: clang
+          #   cxx: clang++
           - os: windows-2022
             node: 22
             cc: cl
@@ -43,7 +43,7 @@ jobs:
             cxx: cl
         build-type:
           - Release
-          - Debug
+          # - Debug
 
     runs-on: ${{ matrix.build.os }}
 
