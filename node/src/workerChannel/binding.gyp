@@ -1,7 +1,8 @@
 {
   'variables': {
     'mediasoup_build_type%': 'Release',
-    'mediasoup_worker_lib%': ''
+    'mediasoup_worker_lib%': '',
+    'meson_args%': ''
   },
   "targets": [
     {
@@ -64,7 +65,17 @@
             # TODO: This should be the same as the one used for libmediasoup?
             'MACOSX_DEPLOYMENT_TARGET': '15'
           }
-        }]
+        }],
+        ['OS=="linux" and meson_args=="-Db_sanitize=address"', {
+          'cflags': [ '-fsanitize=address' ],
+          'cflags_cc': [ '-fsanitize=address' ],
+          'ldflags': [ '-fsanitize=address' ],
+        }],
+        ['OS=="linux" and meson_args=="-Db_sanitize=thread"', {
+          'cflags': [ '-fsanitize=thread' ],
+          'cflags_cc': [ '-fsanitize=thread' ],
+          'ldflags': [ '-fsanitize=thread' ],
+        }],
       ]
     }
   ]
