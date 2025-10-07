@@ -74,7 +74,7 @@
         ['OS=="linux" and meson_args=="-Db_sanitize=thread"', {
           'cflags': [ '-fsanitize=thread' ],
           'cflags_cc': [ '-fsanitize=thread' ],
-          'ldflags': [ '-fsanitize=thread','-static-libasan' ],
+          'ldflags': [ '-fsanitize=thread','-static-libtsan' ],
         }],
       ]
     }
