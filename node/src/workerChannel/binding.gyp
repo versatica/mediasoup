@@ -69,12 +69,12 @@
         ['OS=="linux" and meson_args=="-Db_sanitize=address"', {
           'cflags': [ '-fsanitize=address' ],
           'cflags_cc': [ '-fsanitize=address' ],
-          'ldflags': [ '-fsanitize=address','-static-libasan' ],
+          'ldflags': [ '-fsanitize=address','-lasan' ],
         }],
         ['OS=="linux" and meson_args=="-Db_sanitize=thread"', {
           'cflags': [ '-fsanitize=thread' ],
           'cflags_cc': [ '-fsanitize=thread' ],
-          'ldflags': [ '-fsanitize=thread','-static-libtsan' ],
+          'ldflags': [ '-fsanitize=thread','-ltsan' ],
         }],
       ]
     }
