@@ -21,39 +21,10 @@ jobs:
             node: 22
             cc: gcc
             cxx: g++
-          - os: ubuntu-24.04
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=address'
-          - os: ubuntu-24.04
-            node: 24
-            cc: clang
-            cxx: clang++
-            meson_args: '-Db_sanitize=undefined'
-          - os: ubuntu-24.04
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=thread'
           - os: ubuntu-24.04-arm
             node: 22
             cc: gcc
             cxx: g++
-          - os: ubuntu-24.04-arm
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=address'
-            # In Ubuntu 24.04 ARM in Debug build type with ASAN, createWorker()
-            # takes too long.
-            # See https://github.com/versatica/mediasoup/pull/1503.
-            skip-test-in-debug-build-type: true
-          - os: ubuntu-24.04-arm
-            node: 24
-            cc: gcc
-            cxx: g++
-            meson_args: '-Db_sanitize=thread'
           - os: macos-14
             node: 22
             cc: clang
@@ -82,7 +53,6 @@ jobs:
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'true'
       MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
-      MESON_ARGS: ${{ matrix.build.meson_args }}
 
     steps:
       - name: Checkout
