@@ -69,12 +69,18 @@
         ['OS=="linux" and meson_args=="-Db_sanitize=address"', {
           'cflags': [ '-fsanitize=address' ],
           'cflags_cc': [ '-fsanitize=address' ],
-          'ldflags': [ '-fsanitize=address','-lasan' ],
+          'libraries': [
+            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/libmediasoup-worker.a',
+            '-lasan'
+          ],
         }],
         ['OS=="linux" and meson_args=="-Db_sanitize=thread"', {
           'cflags': [ '-fsanitize=thread' ],
           'cflags_cc': [ '-fsanitize=thread' ],
-          'ldflags': [ '-fsanitize=thread','-ltsan' ],
+          'libraries': [
+            '<(module_root_dir)/../../../worker/out/<(mediasoup_build_type)/libmediasoup-worker.a',
+            '-ltsan'
+          ],
         }],
       ]
     }
