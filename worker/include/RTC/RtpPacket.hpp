@@ -16,7 +16,7 @@
 
 namespace RTC
 {
-	class RtpPacket : Codecs::DependencyDescriptor::Listener
+	class RtpPacket : public Codecs::DependencyDescriptor::Listener
 	{
 	public:
 		/* Struct for RTP header. */

@@ -806,6 +806,12 @@ namespace RTC
 		packet->dependencyDescriptorExtensionId = this->dependencyDescriptorExtensionId;
 		// Assign the payload descriptor handler.
 		packet->payloadDescriptorHandler = this->payloadDescriptorHandler;
+
+		if (this->payloadDescriptorHandler)
+		{
+			packet->payloadDescriptorHandler->RtpPacketCloned(packet);
+		}
+
 		// Store allocated buffer.
 		packet->buffer = buffer;
 

@@ -185,6 +185,11 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
 		}
 
+		void DependencyDescriptor::UpdateListener(DependencyDescriptor::Listener* listener)
+		{
+			this->listener = listener;
+		}
+
 		bool DependencyDescriptor::ReadMandatoryDescriptorFields()
 		{
 			MS_TRACE();

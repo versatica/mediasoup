@@ -36,6 +36,13 @@ namespace RTC
 				~PayloadDescriptor() override = default;
 
 				void Dump(int indentation = 0) const override;
+				void UpdateListener(Codecs::DependencyDescriptor::Listener* listener)
+				{
+					if (this->dependencyDescriptor)
+					{
+						this->dependencyDescriptor->UpdateListener(listener);
+					}
+				}
 				void Encode();
 				void Restore() const;
 				void UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer);
@@ -110,6 +117,10 @@ namespace RTC
 				}
 				bool Process(
 				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
+				void RtpPacketCloned(RtpPacket* packet) override
+				{
+					this->payloadDescriptor->UpdateListener(packet);
+				};
 				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 				{
 					return this->payloadDescriptor->GetEncoder();
