@@ -3,6 +3,7 @@
 ### NEXT
 
 - AV1: Add support for DD extension header forwarding ([#1610](https://github.com/versatica/mediasoup/pull/1610)).
+- DependencyDescriptor: Update listener on RtpPacket clone ([#1618](https://github.com/versatica/mediasoup/pull/1618)).
 
 ### 3.19.3
 
