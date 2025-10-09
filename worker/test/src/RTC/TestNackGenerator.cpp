@@ -45,12 +45,13 @@ public:
 	{
 		return true;
 	}
-
+	void RtpPacketCloned(RTC::RtpPacket* packet) override
+	{
+	}
 	std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 	{
 		return nullptr;
 	}
-
 	void Encode(RtpPacket* /*packet*/, RTC::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
 	{
 	}

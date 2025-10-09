@@ -54,6 +54,19 @@ static void CheckRtxPacket(RtpPacket* rtxPacket, RtpPacket* origPacket)
 	REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
 }
 
+static void ParseAV1RtpPacket(
+  RtpPacket* packet,
+  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>& templateDependencyStructure)
+{
+	std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor;
+	packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
+	REQUIRE(dependencyDescriptor);
+
+	auto* payloadDescriptor        = Codecs::AV1::Parse(dependencyDescriptor);
+	auto* payloadDescriptorHandler = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor);
+	packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
+}
+
 SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend]")
 {
 	class TestRtpStreamListener : public RtpStreamSend::Listener
@@ -557,29 +570,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		/*
 		 * <DependencyDescriptor>
-		 * 	 startOfFrame: false
-		 * 	 endOfFrame: true
-		 * 	 frameDependencyTemplateId: 0
-		 * 	 frameNumber: 1
-		 * 	 templateId: 0
-		 * 	 spatialLayer: 0
-		 * 	 temporalLayer: 0
-		 * 	</DependencyDescriptor>
-		 */
-		uint8_t rtpBuffer2[] =
-		{
-			0x90, 0xAD, 0x56, 0xA8,
-			0x8D, 0x76, 0xF5, 0x02,
-			0xDD, 0xD5, 0x4C, 0xB9,
-			0xBE, 0xDE, 0x00, 0x04,
-			0x22, 0x8A, 0x03, 0xE5,
-			0xD0, 0x00, 0x31, 0x00,
-			0x17, 0xC2, 0x40, 0x00,
-			0x01, 0x40, 0x31, 0x00
-		};
-
-		/*
-		 * <DependencyDescriptor>
 		 * 	 startOfFrame: true
 		 * 	 endOfFrame: true
 		 * 	 frameDependencyTemplateId: 2
@@ -589,7 +579,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 		 * 	 spatialLayer: 0
 		 * 	</DependencyDescriptor>
 		 */
-		uint8_t rtpBuffer3[] =
+		uint8_t rtpBuffer2[] =
 		{
 			0x90, 0xAD, 0x56, 0xA9,
 			0x8D, 0x77, 0x02, 0xB8,
@@ -599,6 +589,29 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 			0x31, 0x00, 0x18, 0x40,
 			0x31, 0xC2, 0xC2, 0x00,
 			0x02, 0x00, 0x00, 0x00
+		};
+
+		/*
+		 * <DependencyDescriptor>
+		 * 	 startOfFrame: false
+		 * 	 endOfFrame: true
+		 * 	 frameDependencyTemplateId: 0
+		 * 	 frameNumber: 1
+		 * 	 templateId: 0
+		 * 	 spatialLayer: 0
+		 * 	 temporalLayer: 0
+		 * 	</DependencyDescriptor>
+		 */
+		uint8_t rtpBuffer3[] =
+		{
+			0x90, 0xAD, 0x56, 0xA8,
+			0x8D, 0x76, 0xF5, 0x02,
+			0xDD, 0xD5, 0x4C, 0xB9,
+			0xBE, 0xDE, 0x00, 0x04,
+			0x22, 0x8A, 0x03, 0xE5,
+			0xD0, 0x00, 0x31, 0x00,
+			0x17, 0xC2, 0x40, 0x00,
+			0x01, 0x40, 0x31, 0x00
 		};
 		// clang-format on
 
@@ -655,47 +668,41 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 		std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
 
 		// Parse the first packet for the shake of having the template dependency structure.
-		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor1;
-		packet1->ReadDependencyDescriptor(dependencyDescriptor1, templateDependencyStructure);
-		REQUIRE(dependencyDescriptor1);
-
-		auto* payloadDescriptor1        = Codecs::AV1::Parse(dependencyDescriptor1);
-		auto* payloadDescriptorHandler1 = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor1);
-		packet1->SetPayloadDescriptorHandler(payloadDescriptorHandler1);
+		ParseAV1RtpPacket(packet1.get(), templateDependencyStructure);
+		// Parse the second packet.
+		ParseAV1RtpPacket(packet2.get(), templateDependencyStructure);
 
 		bool marker    = false;
 		bool forwarded = false;
 
-		// Parse the second packet.
-		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor2;
-		packet2->ReadDependencyDescriptor(dependencyDescriptor2, templateDependencyStructure);
-		REQUIRE(dependencyDescriptor2);
-
-		auto* payloadDescriptor2        = Codecs::AV1::Parse(dependencyDescriptor2);
-		auto* payloadDescriptorHandler2 = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor2);
-		packet2->SetPayloadDescriptorHandler(payloadDescriptorHandler2);
-
 		// Process the second packet for context1.
 		forwarded = packet2->ProcessPayload(&context1, marker);
-		REQUIRE(forwarded);
-		REQUIRE(context1.GetCurrentSpatialLayer() == 0);
-		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
+		REQUIRE(!forwarded);
 
 		// Process the second packet with context2.
 		forwarded = packet2->ProcessPayload(&context2, marker);
 		REQUIRE(forwarded);
 		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
-		REQUIRE(context2.GetCurrentTemporalLayer() == 0);
+		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
 
 		// Parse the third packet
-		std::unique_ptr<Codecs::DependencyDescriptor> dependencyDescriptor3;
+		ParseAV1RtpPacket(packet3.get(), templateDependencyStructure);
 
-		packet3->ReadDependencyDescriptor(dependencyDescriptor3, templateDependencyStructure);
-		REQUIRE(dependencyDescriptor3);
+		// Process the third packet with context1 and verify current spatial layers.
+		forwarded = packet3->ProcessPayload(&context1, marker);
+		REQUIRE(forwarded);
+		REQUIRE(context1.GetCurrentSpatialLayer() == 0);
+		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
 
-		auto* payloadDescriptor3        = Codecs::AV1::Parse(dependencyDescriptor3);
-		auto* payloadDescriptorHandler3 = new Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor3);
-		packet3->SetPayloadDescriptorHandler(payloadDescriptorHandler3);
+		RTC::SharedRtpPacket sharedPacket;
+
+		packet3->SetSsrc(params1.ssrc);
+		// Whenever packet3 is Nacked on stream1, it must always be set a
+		// 00000001 (S0_T1) active decode target bitmas.
+		auto result = stream1->ReceivePacket(packet3.get(), sharedPacket);
+
+		REQUIRE(result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+		sharedPacket.Assign(packet3.get());
 
 		// Process the third packet with context2 and verify current spatial layers.
 		forwarded = packet3->ProcessPayload(&context2, marker);
@@ -703,33 +710,19 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
 		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
 
-		// Process the second packet with context2.
-		// This way packet2 will contain an active decode target bitmask
-		// of 11 (S0T1_S0T0)
-		forwarded = packet2->ProcessPayload(&context2, marker);
-		REQUIRE(context2.GetCurrentSpatialLayer() == 0);
-		REQUIRE(context2.GetCurrentTemporalLayer() == 1);
-		REQUIRE(forwarded);
+		packet3->SetSsrc(params2.ssrc);
 
-		// Receive the second packet in the first stream.
-		SendRtpPacket({ { stream1.get(), params1.ssrc } }, packet2.get());
-
-		// Process the second packet with context1.
-		forwarded = packet2->ProcessPayload(&context1, marker);
-		REQUIRE(forwarded);
-		REQUIRE(context1.GetCurrentSpatialLayer() == 0);
-		REQUIRE(context1.GetCurrentTemporalLayer() == 0);
-
-		// Receive the second packet in the second stream.
-		SendRtpPacket({ { stream2.get(), params2.ssrc } }, packet2.get());
+		// Whenever packet3 is Nacked on stream2, it must always be set a
+		// 00000011 (S0_T1) active decode target bitmas.
+		stream2->ReceivePacket(packet3.get(), sharedPacket);
 
 		// Create a NACK item that requests the third packet.
 		RTCP::FeedbackRtpNackPacket nackPacket(0, params1.ssrc);
-		auto* nackItem = new RTCP::FeedbackRtpNackItem(2, 0b0000000000000000);
+		auto* nackItem = new RTCP::FeedbackRtpNackItem(3, 0b0000000000000000);
 
 		nackPacket.AddItem(nackItem);
 
-		REQUIRE(nackItem->GetPacketId() == 2);
+		REQUIRE(nackItem->GetPacketId() == 3);
 		REQUIRE(nackItem->GetLostPacketBitmask() == 0b0000000000000000);
 
 		// Process the NACK packet on stream1.
@@ -744,7 +737,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor4, templateDependencyStructure);
 		REQUIRE(dependencyDescriptor4);
-		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000011);
+		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
 
 		// Process the NACK packet on stream2.
 		stream2->ReceiveNack(&nackPacket);
@@ -758,7 +751,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor5, templateDependencyStructure);
 		REQUIRE(dependencyDescriptor5);
-		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000001);
+		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")
