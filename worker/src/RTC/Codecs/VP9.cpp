@@ -381,7 +381,7 @@ namespace RTC
 			}
 
 			// Set marker bit if needed.
-			// NOTE: As per the spec the correct way to se the marker bit is:
+			// NOTE: As per the spec the correct way to set the marker bit is:
 			// if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
 			// https://www.rfc-editor.org/rfc/rfc9628.html#name-rtp-header-usage
 			// But that generates a lot of freezes when there is downlink packet loss.

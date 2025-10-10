@@ -239,7 +239,7 @@ namespace RTC
 			}
 
 			// Set marker bit if needed.
-			// NOTE: As per the spec the correct way to se the marker bit is:
+			// NOTE: As per the spec the correct way to set the marker bit is:
 			// if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
 			// https://aomediacodec.github.io/av1-rtp-spec/v1.0.0.html#rtp-header-marker
 			// But that generates a lot of freezes when there is downlink packet loss.
