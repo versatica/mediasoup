@@ -4,6 +4,8 @@
 
 - AV1: Add support for DD extension header forwarding ([#1610](https://github.com/versatica/mediasoup/pull/1610)).
 - DependencyDescriptor: Update listener on RtpPacket clone ([#1618](https://github.com/versatica/mediasoup/pull/1618)).
+- AV1: Fix AV1 freezes due to wrong marker bit setting ([#1619](https://github.com/versatica/mediasoup/pull/1619)), thanks to @vpalmisano
+  for his investigation and suggestions.
 - VP9: Fix VP9 freezes due to wrong marker bit setting ([#1620](https://github.com/versatica/mediasoup/pull/1620)), thanks to @geirbakke
   for reporting.
 
