@@ -381,12 +381,6 @@ namespace RTC
 			}
 
 			// Set marker bit if needed.
-			// NOTE: As per the spec the correct way to set the marker bit is:
-			// if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
-			// https://www.rfc-editor.org/rfc/rfc9628.html#name-rtp-header-usage
-			// But that generates a lot of freezes when there is downlink packet loss.
-			// Issue may be in client side: https://issues.webrtc.org/issues/449408585
-			// https://github.com/versatica/mediasoup/issues/1616
 			if (this->payloadDescriptor->e)
 			{
 				marker = true;

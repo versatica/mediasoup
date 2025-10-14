@@ -239,12 +239,6 @@ namespace RTC
 			}
 
 			// Set marker bit if needed.
-			// NOTE: As per the spec the correct way to set the marker bit is:
-			// if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
-			// https://aomediacodec.github.io/av1-rtp-spec/v1.0.0.html#rtp-header-marker
-			// But that generates a lot of freezes when there is downlink packet loss.
-			// Issue may be in client side: https://issues.webrtc.org/issues/449408585
-			// Reference: https://github.com/versatica/mediasoup/issues/1536
 			if (this->payloadDescriptor->endOfFrame)
 			{
 				marker = true;
