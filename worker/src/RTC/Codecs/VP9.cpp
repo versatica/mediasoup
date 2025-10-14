@@ -381,7 +381,7 @@ namespace RTC
 			}
 
 			// Set marker bit if needed.
-			if (this->payloadDescriptor->e)
+			if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
 			{
 				marker = true;
 			}
