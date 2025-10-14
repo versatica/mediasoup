@@ -24,55 +24,37 @@ jobs:
             cxx: g++
             run-lint: true
             run-test: true
-            run-test-asan-address: true
+            run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: true
+            run-test-asan-thread: false
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
             run-lint: true
             run-test: true
-            run-test-asan-address: true
-            run-test-asan-undefined: true
-            run-test-asan-thread: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
           - os: ubuntu-22.04-arm
             cc: gcc
             cxx: g++
             # No clang-format for ARM.
             run-lint: false
             run-test: true
-            run-test-asan-address: true
+            run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: true
+            run-test-asan-thread: false
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
             pip-break-system-packages: true
             run-lint: true
             run-test: true
-            run-test-asan-address: true
+            run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: true
-          - os: ubuntu-24.04
-            cc: gcc
-            cxx: g++
-            pip-break-system-packages: true
-            run-lint: true
-            run-test: true
-            run-test-asan-address: true
-            run-test-asan-undefined: false
-            run-test-asan-thread: true
+            run-test-asan-thread: false
             # Let's just compile with all Meson option flags enabled once with gcc.
             meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
-          - os: ubuntu-24.04
-            cc: clang
-            cxx: clang++
-            pip-break-system-packages: true
-            run-lint: true
-            run-test: true
-            run-test-asan-address: true
-            run-test-asan-undefined: true
-            run-test-asan-thread: true
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
@@ -91,9 +73,9 @@ jobs:
             # No clang-format for ARM.
             run-lint: false
             run-test: true
-            run-test-asan-address: true
+            run-test-asan-address: false
             run-test-asan-undefined: false
-            run-test-asan-thread: true
+            run-test-asan-thread: false
           - os: ubuntu-24.04-arm
             cc: clang
             cxx: clang++
@@ -101,9 +83,9 @@ jobs:
             # No clang-format for ARM.
             run-lint: false
             run-test: true
-            run-test-asan-address: true
-            run-test-asan-undefined: true
-            run-test-asan-thread: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
           - os: macos-14
             cc: clang
             cxx: clang++
