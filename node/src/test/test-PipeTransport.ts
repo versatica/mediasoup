@@ -2,7 +2,6 @@ import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type {
-	WorkerEvents,
 	ConsumerEvents,
 	ProducerObserverEvents,
 	DataConsumerEvents,
@@ -203,17 +202,9 @@ beforeEach(async () => {
 	);
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker1?.close();
 	ctx.worker2?.close();
-
-	if (ctx.worker1?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker1, 'subprocessclose');
-	}
-
-	if (ctx.worker2?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker2, 'subprocessclose');
-	}
 });
 
 test('router.pipeToRouter() succeeds with audio', async () => {

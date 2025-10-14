@@ -4,7 +4,6 @@ import type { Duplex } from 'node:stream';
 import * as sctp from 'sctp';
 import * as mediasoup from '../';
 import { EnhancedEventEmitter, enhancedOnce } from '../enhancedEvents';
-import type { WorkerEvents } from '../types';
 
 // Events definition for the SctpSocket class.
 type SctpSocketEvents = {
@@ -111,10 +110,6 @@ afterEach(async () => {
 	ctx.udpSocket?.close();
 	ctx.sctpSocket?.end();
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 
 	// NOTE: For some reason we have to wait a bit for the SCTP stuff to release
 	// internal things, otherwise Jest reports open handles. We don't care much

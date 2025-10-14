@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import type { WorkerEvents, DataProducerEvents } from '../types';
+import type { DataProducerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -46,12 +46,8 @@ beforeEach(async () => {
 	});
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('webRtcTransport1.produceData() succeeds', async () => {

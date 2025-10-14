@@ -1,8 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { enhancedOnce } from '../enhancedEvents';
 import * as mediasoup from '../';
-import type { WorkerEvents } from '../types';
 
 const PKG = JSON.parse(
 	fs.readFileSync(path.join(__dirname, '..', '..', '..', 'package.json'), {
@@ -31,10 +29,6 @@ test('mediasoup.setLoggerEventListeners() succeeds', async () => {
 	worker.close();
 
 	expect(onDebug).toHaveBeenCalled();
-
-	if (worker.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(worker, 'subprocessclose');
-	}
 }, 2000);
 
 test('mediasoup.getSupportedRtpCapabilities() returns the mediasoup RTP capabilities', () => {

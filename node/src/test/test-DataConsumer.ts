@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import type { WorkerEvents, DataConsumerEvents } from '../types';
+import type { DataConsumerEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -45,12 +45,8 @@ beforeEach(async () => {
 	ctx.directDataProducer = await ctx.directTransport.produceData();
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('transport.consumeData() succeeds', async () => {

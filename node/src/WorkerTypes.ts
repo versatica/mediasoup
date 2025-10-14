@@ -188,8 +188,6 @@ export type WorkerDump = {
 };
 
 export type WorkerEvents = {
-	died: [Error];
-	subprocessclose: [];
 	// Private events.
 	'@success': [];
 	'@failure': [Error];
@@ -214,16 +212,6 @@ export interface Worker<WorkerAppData extends AppData = AppData>
 	 * Whether the Worker is closed.
 	 */
 	get closed(): boolean;
-
-	/**
-	 * Whether the Worker died.
-	 */
-	get died(): boolean;
-
-	/**
-	 * Whether the Worker subprocess is closed.
-	 */
-	get subprocessClosed(): boolean;
 
 	/**
 	 * App custom data.

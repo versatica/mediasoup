@@ -1,6 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import type { WorkerEvents, ActiveSpeakerObserverEvents } from '../types';
+import type { ActiveSpeakerObserverEvents } from '../types';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -29,12 +29,8 @@ beforeEach(async () => {
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('router.createActiveSpeakerObserver() succeeds', async () => {

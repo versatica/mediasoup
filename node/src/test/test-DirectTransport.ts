@@ -1,7 +1,6 @@
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { DirectTransportEvents } from '../DirectTransportTypes';
-import type { WorkerEvents } from '../types';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -15,12 +14,8 @@ beforeEach(async () => {
 	ctx.router = await ctx.worker.createRouter();
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('router.createDirectTransport() succeeds', async () => {

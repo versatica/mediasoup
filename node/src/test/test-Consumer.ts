@@ -1,7 +1,7 @@
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import type { WorkerEvents, ConsumerEvents } from '../types';
+import type { ConsumerEvents } from '../types';
 import type { ConsumerImpl } from '../Consumer';
 import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
@@ -246,12 +246,8 @@ beforeEach(async () => {
 	);
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('transport.consume() succeeds', async () => {

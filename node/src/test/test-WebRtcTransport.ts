@@ -2,7 +2,7 @@ import { pickPort } from 'pick-port';
 import * as flatbuffers from 'flatbuffers';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
-import type { WorkerEvents, WebRtcTransportEvents } from '../types';
+import type { WebRtcTransportEvents } from '../types';
 import type { WebRtcTransportImpl } from '../WebRtcTransport';
 import type { TransportTuple } from '../TransportTypes';
 import { serializeProtocol } from '../Transport';
@@ -57,12 +57,8 @@ beforeEach(async () => {
 	ctx.router = await ctx.worker.createRouter({ mediaCodecs: ctx.mediaCodecs });
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('router.createWebRtcTransport() succeeds', async () => {

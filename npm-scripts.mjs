@@ -13,11 +13,10 @@ const MAYOR_VERSION = pkg.version.split('.')[0];
 const PYTHON = getPython();
 const PIP_INVOKE_DIR = path.resolve('worker/pip_invoke');
 const WORKER_RELEASE_DIR = 'worker/out/Release';
-const WORKER_RELEASE_BIN = IS_WINDOWS
-	? 'mediasoup-worker.exe'
-	: 'mediasoup-worker';
+const WORKER_RELEASE_BIN = 'libmediasoup-worker.a';
 const WORKER_RELEASE_BIN_PATH = `${WORKER_RELEASE_DIR}/${WORKER_RELEASE_BIN}`;
 const WORKER_PREBUILD_DIR = 'worker/prebuild';
+const WORKER_CHANNEL_ADDON_PATH = 'node/src/workerChannel';
 const GH_OWNER = 'versatica';
 const GH_REPO = 'mediasoup';
 
@@ -117,7 +116,8 @@ async function run() {
 					'skipping mediasoup-worker prebuilt download, building it locally'
 				);
 
-				buildWorker();
+				buildWorkerLib();
+				buildAddon();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -129,7 +129,8 @@ async function run() {
 					`couldn't fetch any mediasoup-worker prebuilt binary, building it locally`
 				);
 
-				buildWorker();
+				buildWorkerLib();
+				buildAddon();
 
 				if (!process.env.MEDIASOUP_LOCAL_DEV) {
 					cleanWorkerArtifacts();
@@ -152,7 +153,7 @@ async function run() {
 		}
 
 		case 'worker:build': {
-			buildWorker();
+			buildWorkerLib();
 
 			break;
 		}
@@ -259,7 +260,7 @@ function getPython() {
 }
 
 function getWorkerPrebuildTarName() {
-	let workerPrebuildTarName = `mediasoup-worker-${pkg.version}-${os.platform()}-${os.arch()}`;
+	let workerPrebuildTarName = `libmediasoup-worker-${pkg.version}-${os.platform()}-${os.arch()}`;
 
 	// In Linux we want to know about kernel version since kernel >= 6 supports
 	// io-uring.
@@ -322,12 +323,22 @@ function watchTypescript() {
 	executeCmd(`tsc --watch ${taskArgs}`);
 }
 
-function buildWorker() {
-	logInfo('buildWorker()');
+function buildWorkerLib() {
+	logInfo('buildWorkerLib()');
 
 	installInvoke();
 
-	executeCmd(`"${PYTHON}" -m invoke -r worker mediasoup-worker`);
+	executeCmd(`"${PYTHON}" -m invoke -r worker libmediasoup-worker`);
+}
+
+function buildAddon() {
+	logInfo('buildAddon()');
+
+	installInvoke();
+
+	executeCmd(
+		`cd ${WORKER_CHANNEL_ADDON_PATH} && node scripts.mjs binding:build`
+	);
 }
 
 function cleanWorkerArtifacts() {
@@ -482,7 +493,8 @@ function checkRelease() {
 	installNodeDeps();
 	flatcNode();
 	buildTypescript({ force: true });
-	buildWorker();
+	buildWorkerLib();
+	buildAddon();
 	lintNode();
 	lintWorker();
 	testNode();

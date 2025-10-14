@@ -5,6 +5,7 @@ project(
     'warning_level=1',
     'cpp_std=c++17',
     'default_library=static',
+    'b_vscrt=static_from_buildtype',
   ],
   meson_version: '>= 1.1.0',
 )

@@ -2,7 +2,7 @@ import { pickPort } from 'pick-port';
 import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerImpl } from '../Worker';
-import type { WorkerEvents, WebRtcServerEvents } from '../types';
+import type { WebRtcServerEvents } from '../types';
 import type { WebRtcServerImpl } from '../WebRtcServer';
 import type { RouterImpl } from '../Router';
 import { InvalidStateError } from '../errors';
@@ -17,12 +17,8 @@ beforeEach(async () => {
 	ctx.worker = await mediasoup.createWorker();
 });
 
-afterEach(async () => {
+afterEach(() => {
 	ctx.worker?.close();
-
-	if (ctx.worker?.subprocessClosed === false) {
-		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
-	}
 });
 
 test('worker.createWebRtcServer() succeeds', async () => {
