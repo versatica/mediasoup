@@ -239,7 +239,7 @@ namespace RTC
 			}
 
 			// Set marker bit if needed.
-			if (this->payloadDescriptor->endOfFrame)
+			if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->endOfFrame)
 			{
 				marker = true;
 			}
