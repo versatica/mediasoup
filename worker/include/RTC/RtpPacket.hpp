@@ -87,6 +87,7 @@ namespace RTC
 
 	public:
 		static const size_t HeaderSize{ 12 };
+
 		static bool IsRtp(const uint8_t* data, size_t len)
 		{
 			// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
@@ -269,6 +270,11 @@ namespace RTC
 			this->videoOrientationExtensionId = id;
 		}
 
+		void SetAbsCaptureTimeExtensionId(uint8_t id)
+		{
+			this->absCaptureTimeExtensionId = id;
+		}
+
 		void SetPlayoutDelayExtensionId(uint8_t id)
 		{
 			this->playoutDelayExtensionId = id;
@@ -433,6 +439,34 @@ namespace RTC
 					break;
 				default:
 					rotation = 0;
+			}
+
+			return true;
+		}
+
+		bool ReadAbsCaptureTime(uint64_t& absCaptureTimestamp, int64_t& estimatedCaptureClockOffset) const
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->absCaptureTimeExtensionId, extenLen);
+
+			// Extension value can be 8 or 16 bytes depending on whether it contains
+			// estimated capture clock offset or not.
+			//
+			// https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/rtp-hdrext/abs-capture-time
+			if (!extenValue || (extenLen != 8u && extenLen != 16u))
+			{
+				return false;
+			}
+
+			absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
+
+			if (extenLen == 16)
+			{
+				estimatedCaptureClockOffset = static_cast<int64_t>(Utils::Byte::Get8Bytes(extenValue, 8));
+			}
+			else
+			{
+				estimatedCaptureClockOffset = 0;
 			}
 
 			return true;
@@ -673,6 +707,7 @@ namespace RTC
 		uint8_t transportWideCc01ExtensionId{ 0u };
 		uint8_t ssrcAudioLevelExtensionId{ 0u };
 		uint8_t videoOrientationExtensionId{ 0u };
+		uint8_t absCaptureTimeExtensionId{ 0u };
 		uint8_t playoutDelayExtensionId{ 0u };
 		uint8_t dependencyDescriptorExtensionId{ 0u };
 		uint8_t* payload{ nullptr };
