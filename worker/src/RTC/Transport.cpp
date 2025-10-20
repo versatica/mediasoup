@@ -697,6 +697,12 @@ namespace RTC
 					  producerRtpHeaderExtensionIds.transportWideCc01;
 				}
 
+				if (producerRtpHeaderExtensionIds.absCaptureTime != 0u)
+				{
+					this->recvRtpHeaderExtensionIds.absCaptureTime =
+					  producerRtpHeaderExtensionIds.absCaptureTime;
+				}
+
 				// Create status response.
 				auto responseOffset = FBS::Transport::CreateProduceResponse(
 				  request->GetBufferBuilder(), FBS::RtpParameters::Type(producer->GetType()));
@@ -1562,6 +1568,7 @@ namespace RTC
 		packet->SetRepairedRidExtensionId(this->recvRtpHeaderExtensionIds.rrid);
 		packet->SetAbsSendTimeExtensionId(this->recvRtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->recvRtpHeaderExtensionIds.transportWideCc01);
+		packet->SetAbsCaptureTimeExtensionId(this->recvRtpHeaderExtensionIds.absCaptureTime);
 
 		auto nowMs = DepLibUV::GetTimeMs();
 
