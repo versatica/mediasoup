@@ -1410,6 +1410,8 @@ namespace RTC
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL));
 			packet->SetVideoOrientationExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION));
+			packet->SetAbsCaptureTimeExtensionId(
+			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME));
 			packet->SetPlayoutDelayExtensionId(
 			  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY));
 			packet->SetDependencyDescriptorExtensionId(
