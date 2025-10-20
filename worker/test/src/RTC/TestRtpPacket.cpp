@@ -538,7 +538,6 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		REQUIRE(packet->GetPayloadLength() == 12);
 		REQUIRE(packet->GetPayloadPadding() == 4);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
-		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() + packet->GetPayloadPadding() - 1] == 4);
 		REQUIRE(packet->GetPayload()[0] == 0x11);
 		REQUIRE(packet->GetPayload()[packet->GetPayloadLength() - 1] == 0xCC);
 
@@ -607,7 +606,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		packet->SetExtensions(1, extensions);
 
-		REQUIRE(packet->GetSize() == 60); // Takinng into account padding in header extension.
+		REQUIRE(packet->GetSize() == 60); // Taking into account padding in header extension.
 		REQUIRE(packet->HasHeaderExtension() == true);
 		REQUIRE(packet->GetHeaderExtensionId() == 0xBEDE);
 		REQUIRE(packet->GetHeaderExtensionLength() == 28); // 25 + 3 bytes for padding.
@@ -782,7 +781,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		packet->SetExtensions(2, extensions);
 
-		REQUIRE(packet->GetSize() == 72); // Takinng into account padding in header extension.
+		REQUIRE(packet->GetSize() == 72); // Taking into account padding in header extension.
 		REQUIRE(packet->HasHeaderExtension() == true);
 		REQUIRE(packet->GetHeaderExtensionId() == 0b0001000000000000);
 		REQUIRE(packet->GetHeaderExtensionLength() == 40); // 39 + 1 byte for padding.
