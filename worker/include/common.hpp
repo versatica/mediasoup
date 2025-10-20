@@ -10,14 +10,7 @@
 #include <optional>
 #ifdef _WIN32
 #include <winsock2.h>
-// Avoid uv/win.h: error C2628 'intptr_t' followed by 'int' is illegal.
-#if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED)
 #include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#define SSIZE_MAX INTPTR_MAX
-#define _SSIZE_T_
-#define _SSIZE_T_DEFINED
-#endif
 #else
 #include <arpa/inet.h>  // htonl(), htons(), ntohl(), ntohs()
 #include <netinet/in.h> // sockaddr_in, sockaddr_in6
