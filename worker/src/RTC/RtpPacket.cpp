@@ -1,3 +1,4 @@
+#include <cstdint>
 #define MS_CLASS "RTC::RtpPacket"
 // #define MS_LOG_DEV_LEVEL 3
 // #define DUMP_PAYLOAD_DESCRIPTOR 1
@@ -14,6 +15,10 @@
 
 namespace RTC
 {
+	/* Class variables. */
+
+	thread_local uint64_t RtpPacket::nextUniqueId{ 0 };
+
 	/* Class methods. */
 
 	RtpPacket* RtpPacket::Parse(const uint8_t* data, size_t len)
@@ -126,20 +131,25 @@ namespace RTC
 		           payloadLength + size_t{ payloadPadding },
 		  "packet's computed size does not match received size");
 
-		return new RtpPacket(header, headerExtension, payload, payloadLength, payloadPadding, len);
+		auto uniqueId = RtpPacket::nextUniqueId++;
+
+		return new RtpPacket(
+		  uniqueId, header, headerExtension, payload, payloadLength, payloadPadding, len);
 	}
 
 	/* Instance methods. */
 
 	RtpPacket::RtpPacket(
+	  uint64_t uniqueId,
 	  Header* header,
 	  HeaderExtension* headerExtension,
 	  const uint8_t* payload,
 	  size_t payloadLength,
 	  uint8_t payloadPadding,
 	  size_t size)
-	  : header(header), headerExtension(headerExtension), payload(const_cast<uint8_t*>(payload)),
-	    payloadLength(payloadLength), payloadPadding(payloadPadding), size(size)
+	  : uniqueId(uniqueId), header(header), headerExtension(headerExtension),
+	    payload(const_cast<uint8_t*>(payload)), payloadLength(payloadLength),
+	    payloadPadding(payloadPadding), size(size)
 	{
 		MS_TRACE();
 
@@ -172,6 +182,7 @@ namespace RTC
 		MS_TRACE();
 
 		MS_DUMP_CLEAN(indentation, "<RtpPacket>");
+		MS_DUMP_CLEAN(indentation, "  unique id: %" PRIu64, this->uniqueId);
 		MS_DUMP_CLEAN(indentation, "  padding: %s", this->header->padding ? "true" : "false");
 		if (HasHeaderExtension())
 		{
@@ -792,7 +803,13 @@ namespace RTC
 
 		// Create the new RtpPacket instance and return it.
 		auto* packet = new RtpPacket(
-		  newHeader, newHeaderExtension, newPayload, this->payloadLength, this->payloadPadding, this->size);
+		  this->uniqueId,
+		  newHeader,
+		  newHeaderExtension,
+		  newPayload,
+		  this->payloadLength,
+		  this->payloadPadding,
+		  this->size);
 
 		// Keep already set extension ids.
 		packet->midExtensionId                  = this->midExtensionId;

@@ -87,6 +87,9 @@ namespace RTC
 
 	public:
 		static const size_t HeaderSize{ 12 };
+
+		thread_local static uint64_t nextUniqueId;
+
 		static bool IsRtp(const uint8_t* data, size_t len)
 		{
 			// NOTE: RtcpPacket::IsRtcp() must always be called before this method.
@@ -108,6 +111,7 @@ namespace RTC
 
 	private:
 		RtpPacket(
+		  uint64_t uniqueId,
 		  Header* header,
 		  HeaderExtension* headerExtension,
 		  const uint8_t* payload,
@@ -120,6 +124,11 @@ namespace RTC
 
 		void Dump(int indentation = 0) const;
 		flatbuffers::Offset<FBS::RtpPacket::Dump> FillBuffer(flatbuffers::FlatBufferBuilder& builder) const;
+
+		uint64_t GetUniqueId() const
+		{
+			return this->uniqueId;
+		}
 
 		const uint8_t* GetData() const
 		{
@@ -658,6 +667,9 @@ namespace RTC
 		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len);
 
 	private:
+		// Unique id to identify this packet when debugging (it shows up in Dump()
+		// and remains the same in cloned packets).
+		uint64_t uniqueId{ 0u };
 		Header* header{ nullptr };
 		uint8_t* csrcList{ nullptr };
 		HeaderExtension* headerExtension{ nullptr };
