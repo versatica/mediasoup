@@ -56,6 +56,9 @@ pub struct ProducerOptions {
     /// Just for video. Time (in ms) before asking the sender for a new key frame after having asked
     /// a previous one. If 0 there is no delay.
     pub key_frame_request_delay: u32,
+    /// Add mediasoup custom 'urn:mediasoup:params:rtp-hdrext:packet-id' header extension
+    /// to RTP packets received from the sender endpoint.
+    pub enable_mediasoup_packet_id_header_extension: bool,
     /// Custom application data.
     pub app_data: AppData,
 }
@@ -74,6 +77,7 @@ impl ProducerOptions {
             rtp_parameters,
             paused: false,
             key_frame_request_delay: 0,
+            enable_mediasoup_packet_id_header_extension: false,
             app_data: AppData::default(),
         }
     }
@@ -87,6 +91,7 @@ impl ProducerOptions {
             rtp_parameters,
             paused: false,
             key_frame_request_delay: 0,
+            enable_mediasoup_packet_id_header_extension: false,
             app_data: AppData::default(),
         }
     }

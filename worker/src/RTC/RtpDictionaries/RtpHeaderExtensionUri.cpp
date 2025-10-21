@@ -28,7 +28,17 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID;
 			}
 
-			case FBS::RtpParameters::RtpHeaderExtensionUri::AudioLevel:
+			case FBS::RtpParameters::RtpHeaderExtensionUri::AbsSendTime:
+			{
+				return RtpHeaderExtensionUri::Type::ABS_SEND_TIME;
+			}
+
+			case FBS::RtpParameters::RtpHeaderExtensionUri::TransportWideCcDraft01:
+			{
+				return RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01;
+			}
+
+			case FBS::RtpParameters::RtpHeaderExtensionUri::SsrcAudioLevel:
 			{
 				return RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL;
 			}
@@ -38,24 +48,14 @@ namespace RTC
 				return RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION;
 			}
 
+			case FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset:
+			{
+				return RtpHeaderExtensionUri::Type::TIME_OFFSET;
+			}
+
 			case FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay:
 			{
 				return RtpHeaderExtensionUri::Type::PLAYOUT_DELAY;
-			}
-
-			case FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset:
-			{
-				return RtpHeaderExtensionUri::Type::TOFFSET;
-			}
-
-			case FBS::RtpParameters::RtpHeaderExtensionUri::TransportWideCcDraft01:
-			{
-				return RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01;
-			}
-
-			case FBS::RtpParameters::RtpHeaderExtensionUri::AbsSendTime:
-			{
-				return RtpHeaderExtensionUri::Type::ABS_SEND_TIME;
 			}
 
 			case FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime:
@@ -66,6 +66,11 @@ namespace RTC
 			case FBS::RtpParameters::RtpHeaderExtensionUri::DependencyDescriptor:
 			{
 				return RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR;
+			}
+
+			case FBS::RtpParameters::RtpHeaderExtensionUri::MediasoupPacketId:
+			{
+				return RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID;
 			}
 
 				NO_DEFAULT_GCC();
@@ -104,7 +109,12 @@ namespace RTC
 
 			case RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL:
 			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::AudioLevel;
+				return FBS::RtpParameters::RtpHeaderExtensionUri::SsrcAudioLevel;
+			}
+
+			case RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR:
+			{
+				return FBS::RtpParameters::RtpHeaderExtensionUri::DependencyDescriptor;
 			}
 
 			case RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION:
@@ -112,12 +122,7 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::VideoOrientation;
 			}
 
-			case RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
-			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay;
-			}
-
-			case RtpHeaderExtensionUri::Type::TOFFSET:
+			case RtpHeaderExtensionUri::Type::TIME_OFFSET:
 			{
 				return FBS::RtpParameters::RtpHeaderExtensionUri::TimeOffset;
 			}
@@ -127,9 +132,14 @@ namespace RTC
 				return FBS::RtpParameters::RtpHeaderExtensionUri::AbsCaptureTime;
 			}
 
-			case RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR:
+			case RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
 			{
-				return FBS::RtpParameters::RtpHeaderExtensionUri::DependencyDescriptor;
+				return FBS::RtpParameters::RtpHeaderExtensionUri::PlayoutDelay;
+			}
+
+			case RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID:
+			{
+				return FBS::RtpParameters::RtpHeaderExtensionUri::MediasoupPacketId;
 			}
 
 				NO_DEFAULT_GCC();

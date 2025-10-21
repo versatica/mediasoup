@@ -1716,8 +1716,9 @@ pub(crate) struct TransportProduceRequest {
     pub(crate) kind: MediaKind,
     pub(crate) rtp_parameters: RtpParameters,
     pub(crate) rtp_mapping: RtpMapping,
-    pub(crate) key_frame_request_delay: u32,
     pub(crate) paused: bool,
+    pub(crate) key_frame_request_delay: u32,
+    pub(crate) enable_mediasoup_packet_id_header_extension: bool,
 }
 
 #[derive(Debug)]
@@ -1738,8 +1739,9 @@ impl Request for TransportProduceRequest {
             self.kind.to_fbs(),
             Box::new(self.rtp_parameters.to_fbs()),
             Box::new(self.rtp_mapping.to_fbs()),
-            self.key_frame_request_delay,
             self.paused,
+            self.key_frame_request_delay,
+            self.enable_mediasoup_packet_id_header_extension,
         );
         let request_body = request::Body::create_transport_produce_request(&mut builder, data);
         let request = request::Request::create(

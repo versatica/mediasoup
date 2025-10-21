@@ -561,32 +561,35 @@ pub enum RtpHeaderExtensionUri {
     /// urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
     #[serde(rename = "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id")]
     RepairRtpStreamId,
+    /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
+    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
+    AbsSendTime,
+    /// <http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01>
+    #[serde(rename = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")]
+    TransportWideCcDraft01,
+    /// urn:ietf:params:rtp-hdrext:ssrc-audio-level
+    #[serde(rename = "urn:ietf:params:rtp-hdrext:ssrc-audio-level")]
+    SsrcAudioLevel,
     /// <https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension>
     #[serde(
         rename = "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension"
     )]
     DependencyDescriptor,
-    /// urn:ietf:params:rtp-hdrext:ssrc-audio-level
-    #[serde(rename = "urn:ietf:params:rtp-hdrext:ssrc-audio-level")]
-    AudioLevel,
     /// urn:3gpp:video-orientation
     #[serde(rename = "urn:3gpp:video-orientation")]
     VideoOrientation,
     /// urn:ietf:params:rtp-hdrext:toffset
     #[serde(rename = "urn:ietf:params:rtp-hdrext:toffset")]
     TimeOffset,
-    /// <http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01>
-    #[serde(rename = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")]
-    TransportWideCcDraft01,
-    /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time>
-    #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")]
-    AbsSendTime,
     /// <http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time")]
     AbsCaptureTime,
     /// <http://www.webrtc.org/experiments/rtp-hdrext/playout-delay>
     #[serde(rename = "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay")]
     PlayoutDelay,
+    /// urn:mediasoup:params:rtp-hdrext:packet-id
+    #[serde(rename = "urn:mediasoup:params:rtp-hdrext:packet-id")]
+    MediasoupPacketId,
 
     #[doc(hidden)]
     #[serde(other, rename = "unsupported")]
@@ -601,18 +604,19 @@ impl FromStr for RtpHeaderExtensionUri {
             "urn:ietf:params:rtp-hdrext:sdes:mid" => Ok(Self::Mid),
             "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id" => Ok(Self::RtpStreamId),
             "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id" => Ok(Self::RepairRtpStreamId),
-            "urn:ietf:params:rtp-hdrext:ssrc-audio-level" => Ok(Self::AudioLevel),
-            "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension" => Ok(Self::DependencyDescriptor),
-            "urn:3gpp:video-orientation" => Ok(Self::VideoOrientation),
-            "urn:ietf:params:rtp-hdrext:toffset" => Ok(Self::TimeOffset),
+            "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time" => Ok(Self::AbsSendTime),
             "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01" => {
                 Ok(Self::TransportWideCcDraft01)
             }
-            "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time" => Ok(Self::AbsSendTime),
+            "urn:ietf:params:rtp-hdrext:ssrc-audio-level" => Ok(Self::SsrcAudioLevel),
+            "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension" => Ok(Self::DependencyDescriptor),
+            "urn:3gpp:video-orientation" => Ok(Self::VideoOrientation),
+            "urn:ietf:params:rtp-hdrext:toffset" => Ok(Self::TimeOffset),
             "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time" => {
                 Ok(Self::AbsCaptureTime)
             }
             "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay" => Ok(Self::PlayoutDelay),
+            "urn:mediasoup:params:rtp-hdrext:packet-id" => Ok(Self::MediasoupPacketId),
             _ => Err(RtpHeaderExtensionUriParseError::Unsupported),
         }
     }
@@ -628,21 +632,24 @@ impl RtpHeaderExtensionUri {
             RtpHeaderExtensionUri::RepairRtpStreamId => {
                 "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
             }
-            RtpHeaderExtensionUri::DependencyDescriptor => "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension",
-            RtpHeaderExtensionUri::AudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
-            RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
-            RtpHeaderExtensionUri::TimeOffset => "urn:ietf:params:rtp-hdrext:toffset",
-            RtpHeaderExtensionUri::TransportWideCcDraft01 => {
-                "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
-            }
             RtpHeaderExtensionUri::AbsSendTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
             }
+            RtpHeaderExtensionUri::TransportWideCcDraft01 => {
+                "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+            }
+            RtpHeaderExtensionUri::SsrcAudioLevel => "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
+            RtpHeaderExtensionUri::DependencyDescriptor => "https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension",
+            RtpHeaderExtensionUri::VideoOrientation => "urn:3gpp:video-orientation",
+            RtpHeaderExtensionUri::TimeOffset => "urn:ietf:params:rtp-hdrext:toffset",
             RtpHeaderExtensionUri::AbsCaptureTime => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/abs-capture-time"
             }
             RtpHeaderExtensionUri::PlayoutDelay => {
                 "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay"
+            }
+            RtpHeaderExtensionUri::MediasoupPacketId => {
+                "urn:mediasoup:params:rtp-hdrext:packet-id"
             }
             RtpHeaderExtensionUri::Unsupported => "unsupported",
         }

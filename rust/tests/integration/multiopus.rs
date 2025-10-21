@@ -58,7 +58,7 @@ fn audio_producer_options() -> ProducerOptions {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
+                    uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                     id: 12,
                     encrypt: false,
                 },
@@ -99,7 +99,7 @@ fn consumer_device_capabilities() -> RtpCapabilities {
             },
             RtpHeaderExtension {
                 kind: MediaKind::Audio,
-                uri: RtpHeaderExtensionUri::AudioLevel,
+                uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                 preferred_id: 10,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),

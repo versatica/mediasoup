@@ -1,6 +1,8 @@
 #ifndef MS_RTC_CONSTS_HPP
 #define MS_RTC_CONSTS_HPP
 
+#include "common.hpp"
+
 namespace RTC
 {
 	namespace Consts

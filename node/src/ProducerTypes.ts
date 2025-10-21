@@ -31,6 +31,12 @@ export type ProducerOptions<ProducerAppData extends AppData = AppData> = {
 	keyFrameRequestDelay?: number;
 
 	/**
+	 * Add mediasoup custom 'urn:mediasoup:params:rtp-hdrext:packet-id' header
+	 * extension to RTP packets received from the sender endpoint.
+	 */
+	enableMediasoupPacketIdHeaderExtension?: boolean;
+
+	/**
 	 * Custom application data.
 	 */
 	appData?: ProducerAppData;

@@ -515,6 +515,7 @@ pub(super) trait TransportImpl: TransportGeneric {
             mut rtp_parameters,
             paused,
             key_frame_request_delay,
+            enable_mediasoup_packet_id_header_extension,
             app_data,
         } = producer_options;
 
@@ -574,6 +575,7 @@ pub(super) trait TransportImpl: TransportGeneric {
                     rtp_parameters: rtp_parameters.clone(),
                     rtp_mapping,
                     key_frame_request_delay,
+                    enable_mediasoup_packet_id_header_extension,
                     paused,
                 },
             )

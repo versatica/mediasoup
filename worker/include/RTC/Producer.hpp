@@ -14,7 +14,9 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
+#include <cstdint>
 #include <string>
+#include <sys/types.h>
 #include <vector>
 
 namespace RTC
@@ -163,6 +165,9 @@ namespace RTC
 		void EmitTraceEventNackType() const;
 		void EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
+		uint8_t GetHighestExtenId(
+		  uint8_t currentHighestExtenId, RTC::RtpHeaderExtensionUri::Type extenId) const;
+		uint8_t GetHighestExtenLen(uint8_t currentHighestExtenLen, uint8_t extenLen) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
@@ -198,6 +203,7 @@ namespace RTC
 		absl::flat_hash_map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
+		bool enableMediasoupPacketIdHeaderExtension{ false };
 		RTC::RtpPacket* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0u };

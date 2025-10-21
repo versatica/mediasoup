@@ -44,10 +44,10 @@ jobs:
             ~/.cargo/git
           key: ${{ matrix.build.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: cargo fmt
+      - name: cargo fmt --all -- --check
         run: cargo fmt --all -- --check
 
-      - name: cargo clippy
+      - name: cargo clippy --all-targets -- -D warnings
         run: cargo clippy --all-targets -- -D warnings
 
       # NOTE: In Windows this will build and test libmediasoupworker in release
@@ -57,7 +57,7 @@ jobs:
           cargo test --verbose
           cargo test --release --verbose
 
-      - name: cargo doc
+      - name: cargo doc --locked --all --no-deps --lib
         run: cargo doc --locked --all --no-deps --lib
         env:
           DOCS_RS: '1'

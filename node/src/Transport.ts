@@ -455,6 +455,7 @@ export abstract class TransportImpl<
 		rtpParameters,
 		paused = false,
 		keyFrameRequestDelay,
+		enableMediasoupPacketIdHeaderExtension,
 		appData,
 	}: ProducerOptions<ProducerAppData>): Promise<Producer<ProducerAppData>> {
 		logger.debug('produce()');
@@ -524,8 +525,9 @@ export abstract class TransportImpl<
 			kind,
 			rtpParameters: clonedRtpParameters,
 			rtpMapping,
-			keyFrameRequestDelay,
 			paused,
+			keyFrameRequestDelay,
+			enableMediasoupPacketIdHeaderExtension,
 		});
 
 		const response = await this.channel.request(
@@ -1425,16 +1427,18 @@ function createProduceRequest({
 	kind,
 	rtpParameters,
 	rtpMapping,
-	keyFrameRequestDelay,
 	paused,
+	keyFrameRequestDelay,
+	enableMediasoupPacketIdHeaderExtension,
 }: {
 	builder: flatbuffers.Builder;
 	producerId: string;
 	kind: MediaKind;
 	rtpParameters: RtpParameters;
 	rtpMapping: ortc.RtpCodecsEncodingsMapping;
-	keyFrameRequestDelay?: number;
 	paused: boolean;
+	keyFrameRequestDelay?: number;
+	enableMediasoupPacketIdHeaderExtension?: boolean;
 }): number {
 	const producerIdOffset = builder.createString(producerId);
 	const rtpParametersOffset = serializeRtpParameters(builder, rtpParameters);
@@ -1448,11 +1452,15 @@ function createProduceRequest({
 	);
 	FbsTransport.ProduceRequest.addRtpParameters(builder, rtpParametersOffset);
 	FbsTransport.ProduceRequest.addRtpMapping(builder, rtpMappingOffset);
+	FbsTransport.ProduceRequest.addPaused(builder, paused);
 	FbsTransport.ProduceRequest.addKeyFrameRequestDelay(
 		builder,
 		keyFrameRequestDelay ?? 0
 	);
-	FbsTransport.ProduceRequest.addPaused(builder, paused);
+	FbsTransport.ProduceRequest.addEnableMediasoupPacketIdHeaderExtension(
+		builder,
+		enableMediasoupPacketIdHeaderExtension ?? false
+	);
 
 	return FbsTransport.ProduceRequest.endProduceRequest(builder);
 }

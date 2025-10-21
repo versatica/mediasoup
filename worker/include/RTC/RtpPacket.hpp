@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
+#include <cstdint>
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
@@ -106,6 +107,11 @@ namespace RTC
 		}
 
 		static RtpPacket* Parse(const uint8_t* data, size_t len);
+
+		static uint32_t GetNextMediasoupPacketId();
+
+	private:
+		thread_local static uint32_t nextMediasoupPacketId;
 
 	private:
 		RtpPacket(
@@ -265,6 +271,11 @@ namespace RTC
 			this->ssrcAudioLevelExtensionId = id;
 		}
 
+		void SetDependencyDescriptorExtensionId(uint8_t id)
+		{
+			this->dependencyDescriptorExtensionId = id;
+		}
+
 		void SetVideoOrientationExtensionId(uint8_t id)
 		{
 			this->videoOrientationExtensionId = id;
@@ -280,9 +291,9 @@ namespace RTC
 			this->playoutDelayExtensionId = id;
 		}
 
-		void SetDependencyDescriptorExtensionId(uint8_t id)
+		void SetMediasoupPacketIdExtensionId(uint8_t id)
 		{
-			this->dependencyDescriptorExtensionId = id;
+			this->mediasoupPacketIdExtensionId = id;
 		}
 
 		bool ReadMid(std::string& mid) const
@@ -301,7 +312,6 @@ namespace RTC
 		}
 
 		void UpdateMid(const std::string& mid);
-		void UpdateDependencyDescriptor(const uint8_t* data, size_t len);
 
 		bool ReadRid(std::string& rid) const
 		{
@@ -407,6 +417,29 @@ namespace RTC
 			return true;
 		}
 
+		bool ReadDependencyDescriptor(
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		    templateDependencyStructure) const
+		{
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+
+			auto* value = Codecs::DependencyDescriptor::Parse(
+			  extenValue, extenLen, const_cast<RTC::RtpPacket*>(this), templateDependencyStructure);
+
+			if (!value)
+			{
+				return false;
+			}
+
+			dependencyDescriptor.reset(value);
+
+			return true;
+		}
+
+		void UpdateDependencyDescriptor(const uint8_t* data, size_t len);
+
 		bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const
 		{
 			uint8_t extenLen;
@@ -485,26 +518,24 @@ namespace RTC
 			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
 			minDelay   = v >> 12u;
 			maxDelay   = v & 0xFFFu;
+
 			return true;
 		}
 
-		bool ReadDependencyDescriptor(
-		  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
-		  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-		    templateDependencyStructure) const
+		/**
+		 * Custom id to identify this packet.
+		 */
+		bool ReadMediasoupPacketId(uint32_t& mediasoupPacketId) const
 		{
 			uint8_t extenLen;
-			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+			uint8_t* extenValue = GetExtension(this->mediasoupPacketIdExtensionId, extenLen);
 
-			auto* value = Codecs::DependencyDescriptor::Parse(
-			  extenValue, extenLen, const_cast<RTC::RtpPacket*>(this), templateDependencyStructure);
-
-			if (!value)
+			if (extenLen != 4u)
 			{
 				return false;
 			}
 
-			dependencyDescriptor.reset(value);
+			mediasoupPacketId = Utils::Byte::Get4Bytes(extenValue, 0);
 
 			return true;
 		}
@@ -706,10 +737,11 @@ namespace RTC
 		uint8_t absSendTimeExtensionId{ 0u };
 		uint8_t transportWideCc01ExtensionId{ 0u };
 		uint8_t ssrcAudioLevelExtensionId{ 0u };
+		uint8_t dependencyDescriptorExtensionId{ 0u };
 		uint8_t videoOrientationExtensionId{ 0u };
 		uint8_t absCaptureTimeExtensionId{ 0u };
 		uint8_t playoutDelayExtensionId{ 0u };
-		uint8_t dependencyDescriptorExtensionId{ 0u };
+		uint8_t mediasoupPacketIdExtensionId{ 0u };
 		uint8_t* payload{ nullptr };
 		size_t payloadLength{ 0u };
 		uint8_t payloadPadding{ 0u };

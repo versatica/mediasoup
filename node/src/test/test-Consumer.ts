@@ -209,19 +209,19 @@ const ctx: TestContext = {
 				{
 					kind: 'audio',
 					uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-					preferredId: 10,
+					preferredId: 6,
 					preferredEncrypt: false,
 				},
 				{
 					kind: 'video',
 					uri: 'urn:3gpp:video-orientation',
-					preferredId: 11,
+					preferredId: 8,
 					preferredEncrypt: false,
 				},
 				{
 					kind: 'video',
 					uri: 'urn:ietf:params:rtp-hdrext:toffset',
-					preferredId: 12,
+					preferredId: 9,
 					preferredEncrypt: false,
 				},
 			],
@@ -641,7 +641,7 @@ test('consumer.dump() succeeds', async () => {
 		},
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			id: 10,
+			id: 6,
 			parameters: {},
 			encrypt: false,
 		},
@@ -711,13 +711,13 @@ test('consumer.dump() succeeds', async () => {
 		},
 		{
 			uri: 'urn:3gpp:video-orientation',
-			id: 11,
+			id: 8,
 			parameters: {},
 			encrypt: false,
 		},
 		{
 			uri: 'urn:ietf:params:rtp-hdrext:toffset',
-			id: 12,
+			id: 9,
 			parameters: {},
 			encrypt: false,
 		},

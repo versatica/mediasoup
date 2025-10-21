@@ -86,7 +86,7 @@ fn audio_producer_options() -> ProducerOptions {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
+                    uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                     id: 12,
                     encrypt: false,
                 },

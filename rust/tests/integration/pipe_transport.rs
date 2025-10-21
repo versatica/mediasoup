@@ -208,8 +208,8 @@ fn consumer_device_capabilities() -> RtpCapabilities {
             },
             RtpHeaderExtension {
                 kind: MediaKind::Audio,
-                uri: RtpHeaderExtensionUri::AudioLevel,
-                preferred_id: 10,
+                uri: RtpHeaderExtensionUri::SsrcAudioLevel,
+                preferred_id: 6,
                 preferred_encrypt: false,
                 direction: RtpHeaderExtensionDirection::default(),
             },
@@ -343,20 +343,25 @@ fn pipe_to_router_succeeds_with_audio() {
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
-                    id: 10,
+                    uri: RtpHeaderExtensionUri::SsrcAudioLevel,
+                    id: 6,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 13,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 14,
+                    id: 11,
                     encrypt: false,
-                }
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::MediasoupPacketId,
+                    id: 12,
+                    encrypt: false,
+                },
             ],
         );
         assert_eq!(pipe_consumer.r#type(), ConsumerType::Pipe);
@@ -393,18 +398,23 @@ fn pipe_to_router_succeeds_with_audio() {
             pipe_producer.rtp_parameters().header_extensions,
             vec![
                 RtpHeaderExtensionParameters {
-                    uri: RtpHeaderExtensionUri::AudioLevel,
-                    id: 10,
+                    uri: RtpHeaderExtensionUri::SsrcAudioLevel,
+                    id: 6,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 13,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 14,
+                    id: 11,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::MediasoupPacketId,
+                    id: 12,
                     encrypt: false,
                 },
             ],
@@ -485,23 +495,33 @@ fn pipe_to_router_succeeds_with_video() {
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
                 RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::DependencyDescriptor,
+                    id: 7,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
-                    id: 11,
+                    id: 8,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
-                    id: 12,
+                    id: 9,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 13,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 14,
+                    id: 11,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::MediasoupPacketId,
+                    id: 12,
                     encrypt: false,
                 },
             ],
@@ -536,23 +556,33 @@ fn pipe_to_router_succeeds_with_video() {
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
                 RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::DependencyDescriptor,
+                    id: 7,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
-                    id: 11,
+                    id: 8,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
-                    id: 12,
+                    id: 9,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 13,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 14,
+                    id: 11,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::MediasoupPacketId,
+                    id: 12,
                     encrypt: false,
                 },
             ],
@@ -763,23 +793,33 @@ fn create_with_enable_rtx_succeeds() {
             pipe_consumer.rtp_parameters().header_extensions,
             vec![
                 RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::DependencyDescriptor,
+                    id: 7,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::VideoOrientation,
-                    id: 11,
+                    id: 8,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::TimeOffset,
-                    id: 12,
+                    id: 9,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
-                    id: 13,
+                    id: 10,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::PlayoutDelay,
-                    id: 14,
+                    id: 11,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::MediasoupPacketId,
+                    id: 12,
                     encrypt: false,
                 },
             ],

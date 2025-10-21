@@ -119,12 +119,13 @@ namespace RTC
 			REPAIRED_RTP_STREAM_ID = 3,
 			ABS_SEND_TIME          = 4,
 			TRANSPORT_WIDE_CC_01   = 5,
-			DEPENDENCY_DESCRIPTOR  = 8,
-			SSRC_AUDIO_LEVEL       = 10,
-			VIDEO_ORIENTATION      = 11,
-			TOFFSET                = 12,
-			ABS_CAPTURE_TIME       = 13,
-			PLAYOUT_DELAY          = 14,
+			SSRC_AUDIO_LEVEL       = 6,
+			DEPENDENCY_DESCRIPTOR  = 7,
+			VIDEO_ORIENTATION      = 8,
+			TIME_OFFSET            = 9,
+			ABS_CAPTURE_TIME       = 10,
+			PLAYOUT_DELAY          = 11,
+			MEDIASOUP_PACKET_ID    = 12
 		};
 
 	public:
