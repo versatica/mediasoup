@@ -273,7 +273,7 @@ const supportedRtpCapabilities: RouterRtpCapabilities = {
 			uri: 'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension',
 			preferredId: 7,
 			preferredEncrypt: false,
-			direction: 'sendrecv',
+			direction: 'recvonly',
 		},
 		{
 			kind: 'video',

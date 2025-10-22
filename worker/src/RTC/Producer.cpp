@@ -1347,10 +1347,6 @@ namespace RTC
 				{
 					std::memcpy(bufferPtr, extenValue, extenLen);
 
-					// Make place for the active decode target bitmask by adding 5 bytes
-					// to the original length in the received packet.
-					extenLen += 5u;
-
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
 					  extenLen,

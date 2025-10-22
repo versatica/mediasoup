@@ -256,14 +256,15 @@ namespace RTC
 				context->SetCurrentTemporalLayer(tmpTemporalLayer);
 			}
 
-			// Store the encoding data for retransmissions.
-			// clang-format off
-			this->payloadDescriptor->CreateEncoder({
-			  static_cast<uint32_t>(context->GetCurrentSpatialLayer()),
-			  static_cast<uint32_t>(context->GetCurrentTemporalLayer())
-			});
-			// clang-format on
-			this->payloadDescriptor->Encode();
+			// TODO: Enable once we rewrite the Dependency Descriptor header extension.
+			// // Store the encoding data for retransmissions.
+			// // clang-format off
+			// this->payloadDescriptor->CreateEncoder({
+			//   static_cast<uint32_t>(context->GetCurrentSpatialLayer()),
+			//   static_cast<uint32_t>(context->GetCurrentTemporalLayer())
+			// });
+			// // clang-format on
+			// this->payloadDescriptor->Encode();
 
 			return true;
 		}
