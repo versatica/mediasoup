@@ -40,6 +40,18 @@ const DynamicPayloadTypes = [
 	99,
 ];
 
+// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
+// extension.
+//
+// This is an object where we store some objects we may later need.
+type Cache = {
+	dependencyDescriptorHeaderExtensionParametersForPipeConsumer?: RtpHeaderExtensionParameters;
+};
+
+const cache: Cache = {
+	dependencyDescriptorHeaderExtensionParametersForPipeConsumer: undefined,
+};
+
 /**
  * Validates RtpCapabilities. It may modify given data by adding missing
  * fields with default values.
@@ -298,6 +310,32 @@ export function generateRouterRtpCapabilities(
 			// Append to the codec list.
 			caps.codecs!.push(rtxCodec);
 		}
+	}
+
+	// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
+	// extension.
+	//
+	// We need to create and store this Dependency-Descriptor header extension to
+	// leter be used by `getPipeConsumerRtpParameters()` function.
+	const dependencyDescriptorHeaderExtensionForPipeConsumer:
+		| RtpHeaderExtension
+		| undefined = supportedRtpCapabilities.headerExtensions!.find(
+		headerExtension =>
+			headerExtension.uri ===
+			'https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension'
+	);
+
+	if (
+		dependencyDescriptorHeaderExtensionForPipeConsumer &&
+		dependencyDescriptorHeaderExtensionForPipeConsumer.direction !== 'sendrecv'
+	) {
+		cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer = {
+			uri: dependencyDescriptorHeaderExtensionForPipeConsumer.uri,
+			id: dependencyDescriptorHeaderExtensionForPipeConsumer.preferredId,
+			encrypt:
+				dependencyDescriptorHeaderExtensionForPipeConsumer.preferredEncrypt,
+			parameters: {},
+		};
 	}
 
 	return caps;
@@ -786,6 +824,17 @@ export function getPipeConsumerRtpParameters({
 				ext.uri !==
 					'http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01'
 		);
+
+	// TODO: Remove this if we switch to 'sendrecv' in Dependency-Descriptor header
+	// extension.
+	//
+	// We need to add Dependency-Descriptor header extension manually since it's
+	// 'recvonly' so it's not present in received `consumableRtpParameters`.
+	if (cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer) {
+		consumerParams.headerExtensions.push(
+			cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer
+		);
+	}
 
 	const consumableEncodings =
 		utils.clone<RtpEncodingParameters[] | undefined>(
