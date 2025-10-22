@@ -1246,8 +1246,6 @@ namespace RTC
 
 			extensions.clear();
 
-			uint8_t highestExtenId{ 0u };
-			uint8_t highestExtenLen{ 0u };
 			uint8_t* extenValue;
 			uint8_t extenLen;
 			uint8_t* bufferPtr{ buffer };
@@ -1259,8 +1257,6 @@ namespace RTC
 				extensions.emplace_back(
 				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::MID), extenLen, bufferPtr);
 
-				highestExtenId  = GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::MID);
-				highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 				bufferPtr += extenLen;
 			}
 
@@ -1276,9 +1272,6 @@ namespace RTC
 				  extenLen,
 				  bufferPtr);
 
-				highestExtenId =
-				  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME);
-				highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 				bufferPtr += extenLen;
 			}
 
@@ -1292,9 +1285,6 @@ namespace RTC
 				extensions.emplace_back(
 				  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY), extenLen, bufferPtr);
 
-				highestExtenId =
-				  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY);
-				highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 				bufferPtr += extenLen;
 			}
 
@@ -1312,9 +1302,6 @@ namespace RTC
 					  extenLen,
 					  bufferPtr);
 
-					highestExtenId =
-					  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 					bufferPtr += extenLen;
 				}
 			}
@@ -1333,9 +1320,6 @@ namespace RTC
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME), extenLen, bufferPtr);
 
-					highestExtenId =
-					  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 					bufferPtr += extenLen;
 				}
 
@@ -1354,9 +1338,6 @@ namespace RTC
 					  extenLen,
 					  bufferPtr);
 
-					highestExtenId = GetHighestExtenId(
-					  highestExtenId, RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 					bufferPtr += extenLen;
 				}
 
@@ -1369,16 +1350,13 @@ namespace RTC
 
 					// Make place for the active decode target bitmask by adding 5 bytes
 					// to the original length in the received packet.
-					extenLen += 5;
+					extenLen += 5u;
 
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR),
 					  extenLen,
 					  bufferPtr);
 
-					highestExtenId = GetHighestExtenId(
-					  highestExtenId, RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 					bufferPtr += extenLen;
 				}
 
@@ -1394,9 +1372,6 @@ namespace RTC
 					  extenLen,
 					  bufferPtr);
 
-					highestExtenId =
-					  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 					bufferPtr += extenLen;
 				}
 
@@ -1410,9 +1385,6 @@ namespace RTC
 					extensions.emplace_back(
 					  static_cast<uint8_t>(RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET), extenLen, bufferPtr);
 
-					highestExtenId =
-					  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
 					bufferPtr += extenLen;
 				}
 			}
@@ -1435,10 +1407,6 @@ namespace RTC
 					  extenLen,
 					  bufferPtr);
 
-					highestExtenId =
-					  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
-
 					// Not needed since this is the latest added extension.
 					// bufferPtr += extenLen;
 				}
@@ -1453,12 +1421,24 @@ namespace RTC
 					  extenLen,
 					  bufferPtr);
 
-					highestExtenId =
-					  GetHighestExtenId(highestExtenId, RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID);
-					highestExtenLen = GetHighestExtenLen(highestExtenLen, extenLen);
-
 					// Not needed since this is the latest added extension.
 					// bufferPtr += extenLen;
+				}
+			}
+
+			uint8_t highestExtenId{ 0u };
+			uint8_t highestExtenLen{ 0u };
+
+			for (const auto& extension : extensions)
+			{
+				if (extension.id > highestExtenId)
+				{
+					highestExtenId = extension.id;
+				}
+
+				if (extension.len > highestExtenLen)
+				{
+					highestExtenLen = extension.len;
 				}
 			}
 
@@ -1716,35 +1696,6 @@ namespace RTC
 		  FBS::Notification::Event::PRODUCER_TRACE,
 		  FBS::Notification::Body::Producer_TraceNotification,
 		  notification);
-	}
-
-	inline uint8_t Producer::GetHighestExtenId(
-	  uint8_t currentHighestExtenId, RTC::RtpHeaderExtensionUri::Type extenId) const
-	{
-		MS_TRACE();
-
-		if (static_cast<uint8_t>(extenId) > currentHighestExtenId)
-		{
-			return static_cast<uint8_t>(extenId);
-		}
-		else
-		{
-			return currentHighestExtenId;
-		}
-	}
-
-	inline uint8_t Producer::GetHighestExtenLen(uint8_t currentHighestExtenLen, uint8_t extenLen) const
-	{
-		MS_TRACE();
-
-		if (extenLen > currentHighestExtenLen)
-		{
-			return extenLen;
-		}
-		else
-		{
-			return currentHighestExtenLen;
-		}
 	}
 
 	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)

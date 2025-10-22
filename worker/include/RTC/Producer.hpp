@@ -163,9 +163,6 @@ namespace RTC
 		void EmitTraceEventNackType() const;
 		void EmitTraceEventSrType(RTC::RTCP::SenderReport* report) const;
 		void EmitTraceEvent(flatbuffers::Offset<FBS::Producer::TraceNotification>& notification) const;
-		uint8_t GetHighestExtenId(
-		  uint8_t currentHighestExtenId, RTC::RtpHeaderExtensionUri::Type extenId) const;
-		uint8_t GetHighestExtenLen(uint8_t currentHighestExtenLen, uint8_t extenLen) const;
 
 		/* Pure virtual methods inherited from RTC::RtpStreamRecv::Listener. */
 	public:
