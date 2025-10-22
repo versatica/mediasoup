@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include "RTC/Codecs/DependencyDescriptor.hpp"
 #include <catch2/catch_test_macros.hpp>
-#include <cstdint>
 
 using namespace RTC;
 

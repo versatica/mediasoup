@@ -5,7 +5,6 @@
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include <cstdint>
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif

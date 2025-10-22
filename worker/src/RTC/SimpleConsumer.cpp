@@ -319,8 +319,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		packet->Dump();
-
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
 #endif

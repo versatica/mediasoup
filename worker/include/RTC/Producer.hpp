@@ -14,9 +14,7 @@
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
-#include <cstdint>
 #include <string>
-#include <sys/types.h>
 #include <vector>
 
 namespace RTC
