@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- AV1 : Set DependencyDescriptor Header Extension to 'recvonly' but forward it between pipe transports ([#1632](https://github.com/versatica/mediasoup/pull/1632))
+
 ### 3.19.5
 
 - Add custom 'urn:mediasoup:params:rtp-hdrext:packet-id' (mediasoup-packet-id) header extension ([#1631](https://github.com/versatica/mediasoup/pull/1631)).
