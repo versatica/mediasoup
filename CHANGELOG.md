@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- AV1 : Set DependencyDescriptor Header Extension to 'recvonly' but forward it between pipe transports ([#1632](https://github.com/versatica/mediasoup/pull/1632))
+- AV1 : Set DependencyDescriptor Header Extension to 'recvonly' but forward it between pipe transports ([#1632](https://github.com/versatica/mediasoup/pull/1632)).
 
 ### 3.19.5
 
