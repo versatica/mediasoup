@@ -408,13 +408,15 @@ pub(crate) fn generate_router_rtp_capabilities(
         .find(|ext| ext.uri == RtpHeaderExtensionUri::DependencyDescriptor);
 
     if let Some(dependency_descriptor) = dependency_descriptor_header_extension_for_pipe_consumer {
-        let mut cache = CACHE.lock();
-        cache.dependency_descriptor_header_extension_parameters_for_pipe_consumer =
-            Some(RtpHeaderExtensionParameters {
-                uri: dependency_descriptor.uri,
-                id: dependency_descriptor.preferred_id,
-                encrypt: dependency_descriptor.preferred_encrypt,
-            });
+        if dependency_descriptor.direction != RtpHeaderExtensionDirection::SendRecv {
+            let mut cache = CACHE.lock();
+            cache.dependency_descriptor_header_extension_parameters_for_pipe_consumer =
+                Some(RtpHeaderExtensionParameters {
+                    uri: dependency_descriptor.uri,
+                    id: dependency_descriptor.preferred_id,
+                    encrypt: dependency_descriptor.preferred_encrypt,
+                });
+        }
     }
 
     Ok(caps)
