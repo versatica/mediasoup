@@ -834,6 +834,9 @@ export function getPipeConsumerRtpParameters({
 		consumerParams.headerExtensions.push(
 			cache.dependencyDescriptorHeaderExtensionParametersForPipeConsumer
 		);
+
+		// Sort header extensions by ID.
+		consumerParams.headerExtensions.sort((a, b) => a.id - b.id);
 	}
 
 	const consumableEncodings =

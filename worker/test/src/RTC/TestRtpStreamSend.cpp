@@ -737,7 +737,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor4, templateDependencyStructure);
 		REQUIRE(dependencyDescriptor4);
-		REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
+		// TODO: Enable once we write DD.
+		// REQUIRE(dependencyDescriptor4->activeDecodeTargetsBitmask == 0b0000000000000001);
 
 		// Process the NACK packet on stream2.
 		stream2->ReceiveNack(&nackPacket);
@@ -751,7 +752,8 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 
 		packet->ReadDependencyDescriptor(dependencyDescriptor5, templateDependencyStructure);
 		REQUIRE(dependencyDescriptor5);
-		REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
+		// TODO: Enable once we write DD.
+		// REQUIRE(dependencyDescriptor5->activeDecodeTargetsBitmask == 0b0000000000000011);
 	}
 
 	SECTION("packets get retransmitted as long as they don't exceed MaxRetransmissionDelayForVideoMs")

@@ -348,6 +348,11 @@ fn pipe_to_router_succeeds_with_audio() {
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::DependencyDescriptor,
+                    id: 7,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::AbsCaptureTime,
                     id: 10,
                     encrypt: false,
@@ -400,6 +405,11 @@ fn pipe_to_router_succeeds_with_audio() {
                 RtpHeaderExtensionParameters {
                     uri: RtpHeaderExtensionUri::SsrcAudioLevel,
                     id: 6,
+                    encrypt: false,
+                },
+                RtpHeaderExtensionParameters {
+                    uri: RtpHeaderExtensionUri::DependencyDescriptor,
+                    id: 7,
                     encrypt: false,
                 },
                 RtpHeaderExtensionParameters {
