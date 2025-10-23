@@ -402,10 +402,11 @@ pub(crate) fn generate_router_rtp_capabilities(
     //
     // We need to create and store this Dependency-Descriptor header extension to
     // leter be used by `getPipeConsumerRtpParameters()` function.
-    let dependency_descriptor_header_extension_for_pipe_consumer = caps
-        .header_extensions
-        .iter()
-        .find(|ext| ext.uri == RtpHeaderExtensionUri::DependencyDescriptor);
+    let dependency_descriptor_header_extension_for_pipe_consumer =
+        caps.header_extensions.iter().find(|ext| {
+            ext.uri == RtpHeaderExtensionUri::DependencyDescriptor
+                && ext.direction != RtpHeaderExtensionDirection::SendRecv
+        });
 
     if let Some(dependency_descriptor) = dependency_descriptor_header_extension_for_pipe_consumer {
         if dependency_descriptor.direction != RtpHeaderExtensionDirection::SendRecv {
