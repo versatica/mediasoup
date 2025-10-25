@@ -235,6 +235,7 @@ fn get_producer_rtp_parameters_mapping_get_consumable_rtp_parameters_get_consume
             cname: Some("qwerty1234".to_string()),
             ..RtcpParameters::default()
         },
+        msid: None(),
     };
 
     let rtp_mapping =
@@ -696,6 +697,7 @@ fn get_producer_rtp_parameters_mapping_unsupported() {
             cname: Some("qwerty1234".to_string()),
             ..RtcpParameters::default()
         },
+        msid: None(),
     };
 
     assert!(matches!(
