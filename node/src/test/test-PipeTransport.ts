@@ -106,6 +106,7 @@ const ctx: TestContext = {
 			rtcp: {
 				cname: 'FOOBAR',
 			},
+			msid: 'aaaa-bbbb',
 		},
 		appData: { foo: 'bar2' },
 	}),
@@ -854,6 +855,7 @@ test('transport.consume() for a pipe Producer succeeds', async () => {
 	expect(typeof videoConsumer.rtpParameters.encodings![0]!.rtx?.ssrc).toBe(
 		'number'
 	);
+	expect(videoConsumer.rtpParameters.msid).toBe('aaaa-bbbb');
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(false);
 	expect(videoConsumer.producerPaused).toBe(false);

@@ -119,14 +119,15 @@ export function serializeRtpParameters(
 	);
 
 	const midOffset = builder.createString(rtpParameters.mid);
+	const msidOffset = builder.createString(rtpParameters.msid);
 
 	FbsRtpParameters.startRtpParameters(builder);
 	FbsRtpParameters.addMid(builder, midOffset);
 	FbsRtpParameters.addCodecs(builder, codecsOffset);
-
 	FbsRtpParameters.addHeaderExtensions(builder, headerExtensionsOffset);
 	FbsRtpParameters.addEncodings(builder, encodingsOffset);
 	FbsRtpParameters.addRtcp(builder, rtcpOffset);
+	FbsRtpParameters.addMsid(builder, msidOffset);
 
 	return FbsRtpParameters.endRtpParameters(builder);
 }
@@ -494,12 +495,12 @@ export function parseRtpEncodingParameters(
 ): RtpEncodingParameters {
 	return {
 		ssrc: data.ssrc() ?? undefined,
-		rid: data.rid() ?? undefined,
+		rid: data.rid() || undefined,
 		codecPayloadType:
 			data.codecPayloadType() !== null ? data.codecPayloadType()! : undefined,
 		rtx: data.rtx() ? { ssrc: data.rtx()!.ssrc() } : undefined,
 		dtx: data.dtx(),
-		scalabilityMode: data.scalabilityMode() ?? undefined,
+		scalabilityMode: data.scalabilityMode() || undefined,
 		maxBitrate: data.maxBitrate() !== null ? data.maxBitrate()! : undefined,
 	};
 }
@@ -533,16 +534,17 @@ export function parseRtpParameters(data: FbsRtpParameters): RtpParameters {
 		const fbsRtcp = data.rtcp()!;
 
 		rtcp = {
-			cname: fbsRtcp.cname() ?? undefined,
+			cname: fbsRtcp.cname() || undefined,
 			reducedSize: fbsRtcp.reducedSize(),
 		};
 	}
 
 	return {
-		mid: data.mid() ?? undefined,
+		mid: data.mid() || undefined,
 		codecs,
 		headerExtensions,
 		encodings,
 		rtcp,
+		msid: data.msid() || undefined,
 	};
 }

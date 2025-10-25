@@ -105,11 +105,6 @@ namespace RTC
 		if (data->mid())
 		{
 			this->mid = data->mid()->str();
-
-			if (this->mid.empty())
-			{
-				MS_THROW_TYPE_ERROR("empty mid");
-			}
 		}
 
 		this->codecs.reserve(data->codecs()->size());
@@ -148,6 +143,12 @@ namespace RTC
 
 		// This may throw.
 		this->rtcp = RTC::RtcpParameters(data->rtcp());
+
+		// msid is optional.
+		if (data->msid())
+		{
+			this->msid = data->msid()->str();
+		}
 
 		// Validate RTP parameters.
 		ValidateCodecs();
@@ -192,7 +193,7 @@ namespace RTC
 		rtcp = this->rtcp.FillBuffer(builder);
 
 		return FBS::RtpParameters::CreateRtpParametersDirect(
-		  builder, mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp);
+		  builder, this->mid.c_str(), &codecs, &headerExtensions, &encodings, rtcp, this->msid.c_str());
 	}
 
 	const RTC::RtpCodecParameters* RtpParameters::GetCodecForEncoding(RtpEncodingParameters& encoding) const

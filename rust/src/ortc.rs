@@ -711,6 +711,8 @@ pub(crate) fn get_consumable_rtp_parameters(
         reduced_size: true,
     };
 
+    consumable_params.msid = params.msid.clone();
+
     consumable_params
 }
 
@@ -753,6 +755,7 @@ pub(crate) fn get_consumer_rtp_parameters(
 ) -> Result<RtpParameters, ConsumerRtpParametersError> {
     let mut consumer_params = RtpParameters {
         rtcp: consumable_rtp_parameters.rtcp.clone(),
+        msid: consumable_rtp_parameters.msid.clone(),
         ..RtpParameters::default()
     };
 
@@ -933,6 +936,7 @@ pub(crate) fn get_pipe_consumer_rtp_parameters(
         header_extensions: vec![],
         encodings: vec![],
         rtcp: consumable_rtp_parameters.rtcp.clone(),
+        msid: consumable_rtp_parameters.msid.clone(),
     };
 
     for codec in &consumable_rtp_parameters.codecs {

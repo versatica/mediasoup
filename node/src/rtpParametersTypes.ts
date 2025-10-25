@@ -204,6 +204,12 @@ export type RtpParameters = {
 	 * Parameters used for RTCP.
 	 */
 	rtcp?: RtcpParameters;
+	/**
+	 * MSID (WebRTC MediaStream Identification).
+	 *
+	 * @see https://datatracker.ietf.org/doc/html/rfc8830
+	 */
+	msid?: string;
 };
 
 /**

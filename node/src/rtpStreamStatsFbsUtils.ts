@@ -66,7 +66,7 @@ function parseBaseStreamStats(
 		timestamp: Number(binary.timestamp()),
 		ssrc: binary.ssrc(),
 		rtxSsrc: binary.rtxSsrc() ?? undefined,
-		rid: binary.rid() ?? undefined,
+		rid: binary.rid() || undefined,
 		kind:
 			binary.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
 		mimeType: binary.mimeType()!,

@@ -274,6 +274,7 @@ namespace RTC
 		std::vector<RtpEncodingParameters> encodings;
 		std::vector<RtpHeaderExtensionParameters> headerExtensions;
 		RtcpParameters rtcp;
+		std::string msid;
 	};
 } // namespace RTC
 

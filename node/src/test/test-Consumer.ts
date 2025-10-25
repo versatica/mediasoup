@@ -85,6 +85,7 @@ const ctx: TestContext = {
 			rtcp: {
 				cname: 'FOOBAR',
 			},
+			msid: '1111-1111-1111-1111 2222-2222-2222-2222',
 		},
 		appData: { foo: 1, bar: '2' },
 	}),
@@ -294,6 +295,9 @@ test('transport.consume() succeeds', async () => {
 		},
 		rtcpFeedback: [],
 	});
+	expect(audioConsumer.rtpParameters.msid).toBe(
+		'1111-1111-1111-1111 2222-2222-2222-2222'
+	);
 	expect(audioConsumer.type).toBe('simple');
 	expect(audioConsumer.paused).toBe(false);
 	expect(audioConsumer.producerPaused).toBe(false);
@@ -380,6 +384,7 @@ test('transport.consume() succeeds', async () => {
 		parameters: { apt: 103 },
 		rtcpFeedback: [],
 	});
+	expect(videoConsumer.rtpParameters.msid).toBe(undefined);
 	expect(videoConsumer.type).toBe('simulcast');
 	expect(videoConsumer.paused).toBe(true);
 	expect(videoConsumer.producerPaused).toBe(true);
@@ -654,6 +659,9 @@ test('consumer.dump() succeeds', async () => {
 			ssrc: audioConsumer.rtpParameters.encodings![0]!.ssrc,
 		}),
 	]);
+	expect(dump1.rtpParameters.msid).toBe(
+		'1111-1111-1111-1111 2222-2222-2222-2222'
+	);
 	expect(dump1.type).toBe('simple');
 	expect(Array.isArray(dump1.consumableRtpEncodings)).toBe(true);
 	expect(dump1.consumableRtpEncodings!.length).toBe(1);
@@ -734,6 +742,7 @@ test('consumer.dump() succeeds', async () => {
 			scalabilityMode: 'L4T5',
 		},
 	]);
+	expect(dump2.rtpParameters.msid).toBe(undefined);
 	expect(Array.isArray(dump2.consumableRtpEncodings)).toBe(true);
 	expect(dump2.consumableRtpEncodings!.length).toBe(4);
 	expect(dump2.consumableRtpEncodings![0]).toEqual(

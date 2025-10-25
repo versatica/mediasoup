@@ -108,6 +108,7 @@ fn audio_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: Some("1111-1111-1111-1111 2222-2222-2222-2222".to_string()),
         },
     );
 
@@ -186,6 +187,7 @@ fn video_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: None(),
         },
     );
 
@@ -456,6 +458,10 @@ fn consume_succeeds() {
                     rtcp_feedback: vec![],
                 }]
             );
+            assert_eq!(
+                audio_consumer.rtp_parameters().msid,
+                Some("1111-1111-1111-1111 2222-2222-2222-2222".to_string())
+            );
             assert_eq!(audio_consumer.r#type(), ConsumerType::Simple);
             assert!(!audio_consumer.paused());
             assert!(!audio_consumer.producer_paused());
@@ -554,6 +560,7 @@ fn consume_succeeds() {
                     },
                 ]
             );
+            assert_eq!(video_consumer.rtp_parameters().msid, None());
             assert_eq!(video_consumer.r#type(), ConsumerType::Simulcast);
             assert!(video_consumer.paused());
             assert!(video_consumer.producer_paused());

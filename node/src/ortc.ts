@@ -140,6 +140,11 @@ export function validateRtpParameters(params: RtpParameters): void {
 		params.rtcp = {};
 	}
 
+	// msid is optional.
+	if (params.msid && typeof params.msid !== 'string') {
+		throw new TypeError('params.msid is not a string');
+	}
+
 	validateRtcpParameters(params.rtcp);
 }
 
@@ -454,6 +459,7 @@ export function getConsumableRtpParameters(
 		headerExtensions: [],
 		encodings: [],
 		rtcp: {},
+		msid: undefined,
 	};
 
 	for (const codec of params.codecs) {
@@ -542,6 +548,8 @@ export function getConsumableRtpParameters(
 		reducedSize: true,
 	};
 
+	consumableParams.msid = params.msid;
+
 	return consumableParams;
 }
 
@@ -600,6 +608,7 @@ export function getConsumerRtpParameters({
 		headerExtensions: [],
 		encodings: [],
 		rtcp: consumableRtpParameters.rtcp,
+		msid: consumableRtpParameters.msid,
 	};
 
 	for (const capCodec of remoteRtpCapabilities.codecs!) {
@@ -790,6 +799,7 @@ export function getPipeConsumerRtpParameters({
 		headerExtensions: [],
 		encodings: [],
 		rtcp: consumableRtpParameters.rtcp,
+		msid: consumableRtpParameters.msid,
 	};
 
 	const consumableCodecs =

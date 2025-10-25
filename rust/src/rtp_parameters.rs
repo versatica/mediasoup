@@ -125,6 +125,7 @@ impl<'a> TryFromFbs<'a> for RtpParameters {
                     .map(|cname| cname.to_string()),
                 reduced_size: rtp_parameters.rtcp()?.reduced_size()?,
             },
+            msid: rtp_parameters.msid()?.map(|msid| msid.to_string()),
         })
     }
 }
@@ -354,6 +355,7 @@ impl ToFbs for RtpParameters {
                 cname: self.rtcp.cname.clone(),
                 reduced_size: self.rtcp.reduced_size,
             }),
+            msid: self.msid.clone(),
         }
     }
 }

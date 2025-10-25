@@ -108,6 +108,7 @@ table RtpParameters {
     header_extensions: [RtpHeaderExtensionParameters] (required);
     encodings: [RtpEncodingParameters] (required);
     rtcp: RtcpParameters (required);
+    msid: string;
 }
 
 table CodecMapping {
