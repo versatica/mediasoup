@@ -83,7 +83,7 @@ fn audio_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
-            msid: None()
+            msid: None(),
         },
     );
 
@@ -143,7 +143,7 @@ fn video_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
-            msid: Some("aaaa-bbbb")
+            msid: Some("aaaa-bbbb"),
         },
     );
 
