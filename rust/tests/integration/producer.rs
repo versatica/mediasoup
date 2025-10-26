@@ -97,6 +97,7 @@ fn audio_producer_options() -> ProducerOptions {
                 cname: Some("audio-1".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: None,
         },
     );
 
@@ -172,6 +173,7 @@ fn video_producer_options() -> ProducerOptions {
                 cname: Some("video-1".to_string()),
                 ..RtcpParameters::default()
             },
+            msid: None,
         },
     );
 
@@ -415,6 +417,7 @@ fn produce_wrong_arguments() {
             let produce_result = transport_1
                 .produce(ProducerOptions::new(MediaKind::Video, {
                     let mut parameters = RtpParameters::default();
+
                     parameters.codecs = vec![
                         RtpCodecParameters::Video {
                             mime_type: MimeTypeVideo::H264,
@@ -441,6 +444,7 @@ fn produce_wrong_arguments() {
                         cname: Some("qwerty".to_string()),
                         ..RtcpParameters::default()
                     };
+
                     parameters
                 }))
                 .await;
@@ -453,6 +457,7 @@ fn produce_wrong_arguments() {
             let produce_result = transport_1
                 .produce(ProducerOptions::new(MediaKind::Video, {
                     let mut parameters = RtpParameters::default();
+
                     parameters.codecs = vec![
                         RtpCodecParameters::Video {
                             mime_type: MimeTypeVideo::H264,
@@ -484,6 +489,7 @@ fn produce_wrong_arguments() {
                         cname: Some("video-1".to_string()),
                         ..RtcpParameters::default()
                     };
+
                     parameters
                 }))
                 .await;
@@ -506,6 +512,7 @@ fn produce_unsupported_codecs() {
             transport_1
                 .produce(ProducerOptions::new(MediaKind::Audio, {
                     let mut parameters = RtpParameters::default();
+
                     parameters.codecs = vec![RtpCodecParameters::Audio {
                         mime_type: MimeTypeAudio::Isac,
                         payload_type: 108,
@@ -523,6 +530,7 @@ fn produce_unsupported_codecs() {
                         cname: Some("audio".to_string()),
                         ..RtcpParameters::default()
                     };
+
                     parameters
                 }))
                 .await,
@@ -534,6 +542,7 @@ fn produce_unsupported_codecs() {
             let produce_result = transport_1
                 .produce(ProducerOptions::new(MediaKind::Video, {
                     let mut parameters = RtpParameters::default();
+
                     parameters.codecs = vec![
                         RtpCodecParameters::Video {
                             mime_type: MimeTypeVideo::H264,
@@ -561,6 +570,7 @@ fn produce_unsupported_codecs() {
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 6667 }),
                         ..RtpEncodingParameters::default()
                     }];
+
                     parameters
                 }))
                 .await;
@@ -587,6 +597,7 @@ fn produce_already_used_mid_ssrc() {
             let produce_result = transport_1
                 .produce(ProducerOptions::new(MediaKind::Audio, {
                     let mut parameters = RtpParameters::default();
+
                     parameters.mid = Some("AUDIO".to_string());
                     parameters.codecs = vec![RtpCodecParameters::Audio {
                         mime_type: MimeTypeAudio::Opus,
@@ -605,6 +616,7 @@ fn produce_already_used_mid_ssrc() {
                         cname: Some("audio-2".to_string()),
                         ..RtcpParameters::default()
                     };
+
                     parameters
                 }))
                 .await;
@@ -622,6 +634,7 @@ fn produce_already_used_mid_ssrc() {
             let produce_result = transport_2
                 .produce(ProducerOptions::new(MediaKind::Video, {
                     let mut parameters = RtpParameters::default();
+
                     parameters.mid = Some("VIDEO2".to_string());
                     parameters.codecs = vec![RtpCodecParameters::Video {
                         mime_type: MimeTypeVideo::Vp8,
@@ -635,6 +648,7 @@ fn produce_already_used_mid_ssrc() {
                         rtx: Some(RtpEncodingParametersRtx { ssrc: 6667 }),
                         ..RtpEncodingParameters::default()
                     }];
+
                     parameters
                 }))
                 .await;
@@ -652,6 +666,7 @@ fn produce_no_mid_single_encoding_without_rid_or_ssrc() {
         let produce_result = transport_1
             .produce(ProducerOptions::new(MediaKind::Audio, {
                 let mut parameters = RtpParameters::default();
+
                 parameters.codecs = vec![RtpCodecParameters::Audio {
                     mime_type: MimeTypeAudio::Opus,
                     payload_type: 111,
@@ -666,6 +681,7 @@ fn produce_no_mid_single_encoding_without_rid_or_ssrc() {
                     cname: Some("audio-2".to_string()),
                     ..RtcpParameters::default()
                 };
+
                 parameters
             }))
             .await;
