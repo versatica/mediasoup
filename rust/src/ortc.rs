@@ -711,7 +711,7 @@ pub(crate) fn get_consumable_rtp_parameters(
         reduced_size: true,
     };
 
-    consumable_params.msid = consumable_params.msid.clone_from(&params.msid);
+    consumable_params.msid.clone_from(&params.msid);
 
     consumable_params
 }
