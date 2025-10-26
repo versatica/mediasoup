@@ -2,6 +2,9 @@
 
 ### NEXT
 
+- Bump up Meson from 1.5.0 to 1.9.1 ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).
+- `RtpParameters`: Add `msid` optional field ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).
+
 ### 3.19.6
 
 - AV1: Set DependencyDescriptor Header Extension to 'recvonly' but forward it between pipe transports ([#1632](https://github.com/versatica/mediasoup/pull/1632)).
