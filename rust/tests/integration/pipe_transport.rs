@@ -1025,7 +1025,10 @@ fn consume_for_pipe_producer_succeeds() {
         assert_eq!(video_consumer.rtp_parameters().encodings.len(), 1);
         assert!(video_consumer.rtp_parameters().encodings[0].ssrc.is_some());
         assert!(video_consumer.rtp_parameters().encodings[0].rtx.is_some());
-        assert_eq!(video_consumer.msid(), "aaaa-bbbb");
+        assert_eq!(
+            video_consumer.rtp_parameters().msid,
+            Some("aaaa-bbbb".to_string())
+        );
         assert_eq!(video_consumer.r#type(), ConsumerType::Simulcast);
         assert!(!video_consumer.paused());
         assert!(video_consumer.producer_paused());
