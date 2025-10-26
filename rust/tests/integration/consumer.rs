@@ -187,7 +187,7 @@ fn video_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
-            msid: None(),
+            msid: None,
         },
     );
 
@@ -560,7 +560,7 @@ fn consume_succeeds() {
                     },
                 ]
             );
-            assert_eq!(video_consumer.rtp_parameters().msid, None());
+            assert_eq!(video_consumer.rtp_parameters().msid, None);
             assert_eq!(video_consumer.r#type(), ConsumerType::Simulcast);
             assert!(video_consumer.paused());
             assert!(video_consumer.producer_paused());

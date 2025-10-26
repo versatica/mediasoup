@@ -83,7 +83,7 @@ fn audio_producer_options() -> ProducerOptions {
                 cname: Some("FOOBAR".to_string()),
                 ..RtcpParameters::default()
             },
-            msid: None(),
+            msid: None,
         },
     );
 
