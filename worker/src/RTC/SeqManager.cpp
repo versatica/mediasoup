@@ -61,11 +61,19 @@ namespace RTC
 		// Mark as dropped if 'input' is higher than anyone already processed.
 		if (SeqManager<T, N>::IsSeqHigherThan(input, this->maxInput))
 		{
-			this->maxInput = input;
+			this->maxInput   = input;
+			this->maxDropped = input;
 			// Insert input in the last position.
 			// Explicitly indicate insert() to add the input at the end, which is
 			// more performant.
 			this->dropped.insert(this->dropped.end(), input);
+
+			ClearDropped();
+		}
+		// Input lower than the max input, which is already dropped.
+		else if (this->maxInput == this->maxDropped)
+		{
+			this->dropped.insert(input);
 
 			ClearDropped();
 		}
