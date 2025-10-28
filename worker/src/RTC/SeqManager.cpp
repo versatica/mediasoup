@@ -70,7 +70,9 @@ namespace RTC
 
 			ClearDropped();
 		}
-		// Input lower than the max input, which is already dropped.
+		// Mark as dropped if 'input' is not higher than anyone already processed
+		// but the last seen input 'this->maxInput' was dropped.
+		// It represents two dropped inputs that came out of order.
 		else if (this->maxInput == this->maxDropped)
 		{
 			this->dropped.insert(input);
