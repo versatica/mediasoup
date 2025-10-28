@@ -1450,4 +1450,125 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 		SeqManager<uint16_t> seqManager;
 		validate(seqManager, inputs);
 	}
+
+	SECTION("receive dropped inputs out of order, 2")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 0,   0, false, false },
+			{ 1,   1, false, false },
+			{ 2,   2, false, false },
+			{ 4,   4, false, false },
+			{ 5,   5, false, false },
+			{ 6,   0, false, true  },
+			{ 7,   0, false, true  },
+			{ 8,   0, false, true  },
+			{ 3,   0, false, true  },
+			{ 9,   0, false, true  },
+			{ 10,  6, false, false }
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("receive dropped inputs out of order, 3")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 1, 1, false, false },
+			{ 2, 2, false, false },
+			{ 3, 3, false, false },
+			{ 4, 4, false, false },
+			{ 5, 0, false, true },
+			{ 6, 0, false, true },
+			{ 7, 0, false, true },
+			{ 8, 0, false, true },
+			{ 0, 0, false, true },
+			{ 9, 5, false, false },
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
+
+	SECTION("receive dropped inputs out of order, 4")
+	{
+		// clang-format off
+		std::vector<TestSeqManagerInput<uint16_t>> inputs =
+		{
+			{ 1, 1, false, false },
+			{ 2, 2, false, false },
+			{ 3, 3, false, false },
+			{ 4, 4, false, false },
+			{ 5, 5, false, false },
+			{ 6, 6, false, false },
+			{ 7, 7, false, false },
+			{ 8, 8, false, false },
+			{ 9, 9, false, false },
+			{ 10, 10, false, false },
+			{ 11, 11, false, false },
+			{ 12, 12, false, false },
+			{ 13, 13, false, false },
+			{ 14, 14, false, false },
+			{ 15, 15, false, false },
+			{ 16, 16, false, false },
+			{ 17, 17, false, false },
+			{ 18, 18, false, false },
+			{ 19, 19, false, false },
+			{ 21, 21, false, false },
+			{ 22, 22, false, false },
+			{ 23, 23, false, false },
+			{ 24, 24, false, false },
+			{ 25, 25, false, false },
+			{ 26, 26, false, false },
+			{ 27, 0, false, true },
+			{ 28, 0, false, true },
+			{ 29, 0, false, true },
+			{ 20, 20, false, false },
+			{ 30, 0, false, true },
+			{ 31, 0, false, true },
+			{ 32, 0, false, true },
+			{ 33, 0, false, true },
+			{ 34, 0, false, true },
+			{ 35, 0, false, true },
+			{ 36, 0, false, true },
+			{ 38, 0, false, true },
+			{ 39, 0, false, true },
+			{ 40, 0, false, true },
+			{ 41, 0, false, true },
+			{ 42, 0, false, true },
+			{ 44, 0, false, true },
+			{ 45, 0, false, true },
+			{ 46, 0, false, true },
+			{ 47, 29, false, false },
+			{ 48, 30, false, false },
+			{ 49, 31, false, false },
+			{ 51, 33, false, false },
+			{ 52, 34, false, false },
+			{ 53, 35, false, false },
+			{ 54, 36, false, false },
+			{ 55, 0, false, true },
+			{ 56, 0, false, true },
+			{ 57, 0, false, true },
+			{ 58, 0, false, true },
+			{ 59, 0, false, true },
+			{ 37, 0, false, true },
+			{ 60, 0, false, true },
+			{ 61, 0, false, true },
+			{ 62, 0, false, true },
+			{ 63, 0, false, true },
+			{ 64, 0, false, true },
+			{ 43, 0, false, true },
+			{ 50, 32, false, false },
+		};
+		// clang-format on
+
+		SeqManager<uint16_t> seqManager;
+		validate(seqManager, inputs);
+	}
 }

@@ -52,6 +52,7 @@ namespace RTC
 		T maxOutput{ 0 };
 		T maxInput{ 0 };
 		T maxDropped{ 0 };
+		T maxForwarded{ 0 };
 		std::set<T, SeqLowerThan> dropped;
 	};
 } // namespace RTC
