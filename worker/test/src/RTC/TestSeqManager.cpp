@@ -730,13 +730,6 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 			{ 36964, 36964, false, false },
 			{ 65396 ,    0, false, true  }, // Drop.
 			{ 25855, 25854, false, false },
-			// TODO: Why are we testing an already dropped input?.
-			// { 29793 ,    0, false, true  }, // Drop.
-			// { 65396, 25854, false, false }, // Previously dropped.
-			// { 25087,    0,  false, true  }, // Drop.
-			// { 29793, 25854, false, false }, // Previously dropped.
-			// { 65535 ,    0, false, true  }, // Drop.
-			// { 25087, 25086, false, false }, // Previously dropped.
 		};
 		// clang-format on
 
@@ -1420,13 +1413,6 @@ SCENARIO("SeqManager", "[rtc][SeqManager]")
 			{ 36964, 37964, false, false },
 			{ 65396 , 1000, false, true  }, // Drop.
 			{ 25855, 26854, false, false },
-			// TODO: Why are we testing an already dropped input?.
-			// { 29793 , 1000, false, true  }, // Drop.
-			// { 65396, 26854, false, false }, // Previously dropped.
-			// { 25087,  1000,  false, true  }, // Drop.
-			// { 29793, 26854, false, false }, // Previously dropped.
-			// { 65535 , 1000, false, true  }, // Drop.
-			// { 25087, 26086, false, false }, // Previously dropped.
 		};
 		// clang-format on
 
