@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- SeqManager: Fix, properly account out of order drops until an input is forwarded ([#1635](https://github.com/versatica/mediasoup/pull/1635)), thanks to @pnts-se-whereby for reporting.
+- `SeqManager`: Fix, properly account out of order drops until an input is forwarded ([#1635](https://github.com/versatica/mediasoup/pull/1635)), thanks to @pnts-se-whereby for reporting.
 
 ### 3.19.6
 
