@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- SeqManager: Fix, properly account out of order drops until an input is forwarded ([#1635](https://github.com/versatica/mediasoup/pull/1635)).
+
 ### 3.19.6
 
 - AV1: Set DependencyDescriptor Header Extension to 'recvonly' but forward it between pipe transports ([#1632](https://github.com/versatica/mediasoup/pull/1632)).
