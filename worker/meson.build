@@ -256,7 +256,7 @@ libuv_proj = subproject(
 openssl_proj = subproject(
   'openssl',
   default_options: [
-    'c_std=c11',
+    'c_std=gnu11',
     'warning_level=0',
   ],
 )
