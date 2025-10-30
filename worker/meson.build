@@ -2,9 +2,9 @@ project(
   'mediasoup-worker',
   ['c', 'cpp'],
   default_options : [
-    'warning_level=1',
     'cpp_std=c++17',
     'default_library=static',
+    'warning_level=1',
   ],
   meson_version: '>= 1.1.0',
 )
@@ -243,25 +243,28 @@ common_sources = [
   'src/RTC/SCTP/packet/errorCauses/UnknownErrorCause.cpp',
 ]
 
-openssl_proj = subproject(
-  'openssl',
-  default_options: [
-    'warning_level=0',
-  ],
-)
-
 libuv_proj = subproject(
   'libuv',
   default_options: [
+    'c_std=c11',
     'warning_level=0',
     'build_tests=false',
     'build_benchmarks=false',
   ],
 )
 
+openssl_proj = subproject(
+  'openssl',
+  default_options: [
+    'c_std=c11',
+    'warning_level=0',
+  ],
+)
+
 libsrtp3_proj = subproject(
   'libsrtp3',
   default_options: [
+    'c_std=c11',
     'warning_level=0',
     'crypto-library=openssl',
     'crypto-library-kdf=disabled',
@@ -272,6 +275,7 @@ libsrtp3_proj = subproject(
 usrsctp_proj = subproject(
   'usrsctp',
   default_options: [
+    'c_std=c11',
     'warning_level=0',
     'sctp_build_programs=false',
   ],
@@ -295,6 +299,7 @@ catch2_proj = subproject(
 flatbuffers_proj = subproject(
   'flatbuffers',
   default_options: [
+    'c_std=c11',
     'warning_level=0',
   ],
 )
