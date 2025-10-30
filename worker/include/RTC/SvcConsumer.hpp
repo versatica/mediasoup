@@ -27,12 +27,12 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
-		RTC::Consumer::Layers GetPreferredLayers() const override
+		RTC::Consumer::VideoLayers GetPreferredLayers() const override
 		{
-			RTC::Consumer::Layers layers;
+			RTC::Consumer::VideoLayers layers;
 
-			layers.spatial  = this->preferredSpatialLayer;
-			layers.temporal = this->preferredTemporalLayer;
+			layers.spatial  = this->preferredLayers.spatial;
+			layers.temporal = this->preferredLayers.temporal;
 
 			return layers;
 		}
@@ -103,10 +103,8 @@ namespace RTC
 		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool syncRequired{ false };
 		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
-		int16_t preferredSpatialLayer{ -1 };
-		int16_t preferredTemporalLayer{ -1 };
-		int16_t provisionalTargetSpatialLayer{ -1 };
-		int16_t provisionalTargetTemporalLayer{ -1 };
+		VideoLayers preferredLayers;
+		VideoLayers provisionalTargetLayers;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		// Last time we moved to lower spatial layer due to BWE.
 		uint64_t lastBweDowngradeAtMs{ 0u };

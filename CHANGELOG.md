@@ -3,6 +3,7 @@
 ### NEXT
 
 - Bump up Meson from 1.5.0 to 1.9.1 ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).
+- `SeqManager`: Fix, properly account out of order drops until an input is forwarded ([#1635](https://github.com/versatica/mediasoup/pull/1635)), thanks to @pnts-se-whereby for reporting.
 - `RtpParameters`: Add `msid` optional field ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).
 
 ### 3.19.6

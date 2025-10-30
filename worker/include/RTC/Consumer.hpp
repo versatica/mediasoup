@@ -39,10 +39,38 @@ namespace RTC
 		};
 
 	public:
-		struct Layers
+		struct VideoLayers
 		{
 			int16_t spatial{ -1 };
 			int16_t temporal{ -1 };
+
+			VideoLayers() : spatial(-1), temporal(-1)
+			{
+			}
+
+			VideoLayers(int16_t spatial, int16_t temporal) : spatial(spatial), temporal(temporal)
+			{
+			}
+
+			VideoLayers(const VideoLayers& other) : spatial(other.spatial), temporal(other.temporal)
+			{
+			}
+
+			bool operator==(const VideoLayers& other) const
+			{
+				return spatial == other.spatial && temporal == other.temporal;
+			}
+
+			bool operator!=(const VideoLayers& other) const
+			{
+				return !(*this == other);
+			}
+
+			void Reset()
+			{
+				spatial  = -1;
+				temporal = -1;
+			}
 		};
 
 	private:
@@ -91,10 +119,10 @@ namespace RTC
 		{
 			return this->type;
 		}
-		virtual Layers GetPreferredLayers() const
+		virtual VideoLayers GetPreferredLayers() const
 		{
 			// By default return 1:1.
-			Consumer::Layers layers;
+			Consumer::VideoLayers layers;
 
 			return layers;
 		}
