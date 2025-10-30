@@ -43,6 +43,34 @@ namespace RTC
 		{
 			int16_t spatial{ -1 };
 			int16_t temporal{ -1 };
+
+			Layers() : spatial(-1), temporal(-1)
+			{
+			}
+
+			Layers(int16_t spatial, int16_t temporal) : spatial(spatial), temporal(temporal)
+			{
+			}
+
+			Layers(const Layers& other) : spatial(other.spatial), temporal(other.temporal)
+			{
+			}
+
+			bool operator==(const Layers& other) const
+			{
+				return spatial == other.spatial && temporal == other.temporal;
+			}
+
+			bool operator!=(const Layers& other) const
+			{
+				return !(*this == other);
+			}
+
+			void Reset()
+			{
+				spatial  = -1;
+				temporal = -1;
+			}
 		};
 
 	private:

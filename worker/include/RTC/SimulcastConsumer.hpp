@@ -32,8 +32,8 @@ namespace RTC
 		{
 			RTC::Consumer::Layers layers;
 
-			layers.spatial  = this->preferredSpatialLayer;
-			layers.temporal = this->preferredTemporalLayer;
+			layers.spatial  = this->preferredLayers.spatial;
+			layers.temporal = this->preferredLayers.temporal;
 
 			return layers;
 		}
@@ -92,7 +92,7 @@ namespace RTC
 		void RequestKeyFrameForTargetSpatialLayer();
 		void RequestKeyFrameForCurrentSpatialLayer();
 		void MayChangeLayers(bool force = false);
-		bool RecalculateTargetLayers(int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const;
+		bool RecalculateTargetLayers(Layers& newTargetLayers) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
@@ -119,12 +119,9 @@ namespace RTC
 		int16_t spatialLayerToSync{ -1 };
 		bool lastSentPacketHasMarker{ false };
 		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
-		int16_t preferredSpatialLayer{ -1 };
-		int16_t preferredTemporalLayer{ -1 };
-		int16_t provisionalTargetSpatialLayer{ -1 };
-		int16_t provisionalTargetTemporalLayer{ -1 };
-		int16_t targetSpatialLayer{ -1 };
-		int16_t targetTemporalLayer{ -1 };
+		Layers preferredLayers;
+		Layers provisionalTargetLayers;
+		Layers targetLayers;
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		uint16_t snReferenceSpatialLayer{ 0 };
