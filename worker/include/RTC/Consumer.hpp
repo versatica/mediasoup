@@ -5,6 +5,7 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/consumer.h"
+#include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -21,6 +22,8 @@
 
 namespace RTC
 {
+	using namespace ConsumerTypes;
+
 	class Consumer : public Channel::ChannelSocket::RequestHandler
 	{
 	public:
@@ -36,41 +39,6 @@ namespace RTC
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer)                        = 0;
 			virtual void OnConsumerProducerClosed(RTC::Consumer* consumer)                         = 0;
-		};
-
-	public:
-		struct VideoLayers
-		{
-			int16_t spatial{ -1 };
-			int16_t temporal{ -1 };
-
-			VideoLayers() : spatial(-1), temporal(-1)
-			{
-			}
-
-			VideoLayers(int16_t spatial, int16_t temporal) : spatial(spatial), temporal(temporal)
-			{
-			}
-
-			VideoLayers(const VideoLayers& other) : spatial(other.spatial), temporal(other.temporal)
-			{
-			}
-
-			bool operator==(const VideoLayers& other) const
-			{
-				return spatial == other.spatial && temporal == other.temporal;
-			}
-
-			bool operator!=(const VideoLayers& other) const
-			{
-				return !(*this == other);
-			}
-
-			void Reset()
-			{
-				spatial  = -1;
-				temporal = -1;
-			}
 		};
 
 	private:
@@ -122,7 +90,7 @@ namespace RTC
 		virtual VideoLayers GetPreferredLayers() const
 		{
 			// By default return 1:1.
-			Consumer::VideoLayers layers;
+			VideoLayers layers;
 
 			return layers;
 		}

@@ -538,17 +538,7 @@ namespace RTC
 		// Reset provisional target layers.
 		this->provisionalTargetLayers.Reset();
 
-		if (!IsActive())
-		{
-			return;
-		}
-
-		// clang-format off
-		if (
-			provisionalTargetLayers.spatial != this->encodingContext->GetTargetSpatialLayer() ||
-			provisionalTargetLayers.temporal != this->encodingContext->GetTargetTemporalLayer()
-		)
-		// clang-format on
+		if (provisionalTargetLayers != this->encodingContext->GetTargetLayers())
 		{
 			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
 
@@ -733,8 +723,7 @@ namespace RTC
 			this->syncRequired = false;
 		}
 
-		auto previousSpatialLayer  = this->encodingContext->GetCurrentSpatialLayer();
-		auto previousTemporalLayer = this->encodingContext->GetCurrentTemporalLayer();
+		auto previousLayers = this->encodingContext->GetCurrentLayers();
 
 		bool marker{ false };
 		const bool origMarker = packet->HasMarker();
@@ -750,12 +739,7 @@ namespace RTC
 			return;
 		}
 
-		// clang-format off
-		if (
-			previousSpatialLayer != this->encodingContext->GetCurrentSpatialLayer() ||
-			previousTemporalLayer != this->encodingContext->GetCurrentTemporalLayer()
-		)
-		// clang-format on
+		if (previousLayers != this->encodingContext->GetCurrentLayers())
 		{
 			// Emit the layersChange event.
 			EmitLayersChange();
@@ -1167,10 +1151,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		int16_t newTargetSpatialLayer;
-		int16_t newTargetTemporalLayer;
+		VideoLayers newTargetLayers;
 
-		if (RecalculateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer))
+		if (RecalculateTargetLayers(newTargetLayers))
 		{
 			// If bitrate externally managed, don't bother the transport unless
 			// the newTargetSpatialLayer has changed (or force is true).
@@ -1179,26 +1162,24 @@ namespace RTC
 			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
 			{
-				if (newTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() || force)
+				if (newTargetLayers.spatial != this->encodingContext->GetTargetSpatialLayer() || force)
 				{
 					this->listener->OnConsumerNeedBitrateChange(this);
 				}
 			}
 			else
 			{
-				UpdateTargetLayers(newTargetSpatialLayer, newTargetTemporalLayer);
+				UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
 			}
 		}
 	}
 
-	bool SvcConsumer::RecalculateTargetLayers(
-	  int16_t& newTargetSpatialLayer, int16_t& newTargetTemporalLayer) const
+	bool SvcConsumer::RecalculateTargetLayers(VideoLayers& newTargetLayers) const
 	{
 		MS_TRACE();
 
 		// Start with no layers.
-		newTargetSpatialLayer  = -1;
-		newTargetTemporalLayer = -1;
+		newTargetLayers.Reset();
 
 		auto nowMs = DepLibUV::GetTimeMs();
 		int16_t spatialLayer{ 0 };
@@ -1219,7 +1200,7 @@ namespace RTC
 			// layer due to BWE limitations, check how much it has elapsed since then.
 			if (nowMs - this->lastBweDowngradeAtMs < BweDowngradeConservativeMs)
 			{
-				if (newTargetSpatialLayer > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
+				if (newTargetLayers.spatial > -1 && spatialLayer > this->encodingContext->GetCurrentSpatialLayer())
 				{
 					continue;
 				}
@@ -1230,7 +1211,7 @@ namespace RTC
 				continue;
 			}
 
-			newTargetSpatialLayer = spatialLayer;
+			newTargetLayers.spatial = spatialLayer;
 
 			// If this is the preferred or higher spatial layer and has bitrate,
 			// take it and exit.
@@ -1240,31 +1221,26 @@ namespace RTC
 			}
 		}
 
-		if (newTargetSpatialLayer != -1)
+		if (newTargetLayers.spatial != -1)
 		{
-			if (newTargetSpatialLayer == this->preferredLayers.spatial)
+			if (newTargetLayers.spatial == this->preferredLayers.spatial)
 			{
-				newTargetTemporalLayer = this->preferredLayers.temporal;
+				newTargetLayers.temporal = this->preferredLayers.temporal;
 			}
-			else if (newTargetSpatialLayer < this->preferredLayers.spatial)
+			else if (newTargetLayers.spatial < this->preferredLayers.spatial)
 			{
-				newTargetTemporalLayer = static_cast<int16_t>(this->rtpStream->GetTemporalLayers() - 1);
+				newTargetLayers.temporal = static_cast<int16_t>(this->rtpStream->GetTemporalLayers() - 1);
 			}
 			else
 			{
-				newTargetTemporalLayer = 0;
+				newTargetLayers.temporal = 0;
 			}
 		}
 
 	done:
 
 		// Return true if any target layer changed.
-		// clang-format off
-		return (
-			newTargetSpatialLayer != this->encodingContext->GetTargetSpatialLayer() ||
-			newTargetTemporalLayer != this->encodingContext->GetTargetTemporalLayer()
-		);
-		// clang-format on
+		return newTargetLayers != this->encodingContext->GetTargetLayers();
 	}
 
 	void SvcConsumer::UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer)
