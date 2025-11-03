@@ -121,7 +121,7 @@ namespace RTC
 		const float scale = this->scale / this->windowSizeMs;
 
 		this->lastTime = nowMs;
-		this->lastRate = static_cast<uint32_t>(std::trunc(this->totalCount * scale + 0.5f));
+		this->lastRate = static_cast<uint32_t>(std::trunc((this->totalCount * scale) + 0.5f));
 
 		return this->lastRate;
 	}

@@ -106,7 +106,14 @@ UdpSocketHandle::~UdpSocketHandle()
 
 	if (!this->closed)
 	{
-		InternalClose();
+		try
+		{
+			InternalClose();
+		}
+		catch (const std::exception& e)
+		{
+			MS_ERROR("error closing UDP socket: %s", e.what());
+		}
 	}
 }
 

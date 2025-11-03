@@ -36,6 +36,7 @@ Checks: "*,\
   -fuchsia-default-arguments-calls,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
+  -fuchsia-statically-constructed-objects,\
   -google-default-arguments,\
   -google-readability-*,\
   -google-runtime-references,\
