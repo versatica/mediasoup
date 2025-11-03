@@ -183,7 +183,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(packet->GetFirstChunkOfType<HeartbeatRequestChunk>() == nullptr);
 		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() == nullptr);
 
-		auto* chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
+		const auto* chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
 
 		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == chunk1);
 
@@ -215,7 +215,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(chunk1->GetUserData()[0] == 0xAB);
 		REQUIRE(chunk1->GetUserData()[1] == 0xCD);
 
-		auto* chunk2 = reinterpret_cast<const UnknownChunk*>(packet->GetChunkAt(1));
+		const auto* chunk2 = reinterpret_cast<const UnknownChunk*>(packet->GetChunkAt(1));
 
 		REQUIRE(packet->GetFirstChunkOfType<UnknownChunk>() == chunk2);
 
@@ -242,7 +242,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// Padding.
 		REQUIRE(chunk2->GetUnknownValue()[3] == 0x00);
 
-		auto* chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(packet->GetChunkAt(2));
+		const auto* chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(packet->GetChunkAt(2));
 
 		REQUIRE(packet->GetFirstChunkOfType<HeartbeatAckChunk>() == chunk3);
 
@@ -261,7 +261,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter3_1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
+		const auto* parameter3_1 =
+		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter3_1,
@@ -681,18 +682,18 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		delete packet;
 
-		auto* obtainedChunk1 = reinterpret_cast<const InitChunk*>(clonedPacket->GetChunkAt(0));
+		const auto* obtainedChunk1 = reinterpret_cast<const InitChunk*>(clonedPacket->GetChunkAt(0));
 
-		auto* obtainedParameter1_1 =
+		const auto* obtainedParameter1_1 =
 		  reinterpret_cast<const IPv4AddressParameter*>(obtainedChunk1->GetParameterAt(0));
 
-		auto* obtainedParameter1_2 =
+		const auto* obtainedParameter1_2 =
 		  reinterpret_cast<const CookiePreservativeParameter*>(obtainedChunk1->GetParameterAt(1));
 
-		auto* obtainedChunk2 =
+		const auto* obtainedChunk2 =
 		  reinterpret_cast<const HeartbeatRequestChunk*>(clonedPacket->GetChunkAt(1));
 
-		auto* obtainedParameter2_1 =
+		const auto* obtainedParameter2_1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
 
 		CHECK_PACKET(
@@ -835,7 +836,8 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*hasValidCrc32cChecksum*/ false,
 		  /*chunksCount*/ 1);
 
-		auto* obtainedChunk1 = reinterpret_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));
+		const auto* obtainedChunk1 =
+		  reinterpret_cast<const ShutdownCompleteChunk*>(packet->GetChunkAt(0));
 
 		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() == obtainedChunk1);
 

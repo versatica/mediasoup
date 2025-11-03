@@ -2,6 +2,8 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamSend.hpp"
+
+#include <algorithm>
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
 #endif
@@ -309,10 +311,7 @@ namespace RTC
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		// Avoid negative RTT value since it doesn't make sense.
-		if (this->rtt <= 0.0f)
-		{
-			this->rtt = 0.0f;
-		}
+		this->rtt = std::max(this->rtt, 0.0f);
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
@@ -630,15 +629,8 @@ namespace RTC
 			return;
 		}
 
-		if (lost > sent)
-		{
-			lost = sent;
-		}
-
-		if (repaired > lost)
-		{
-			repaired = lost;
-		}
+		lost     = std::min<size_t>(lost, sent);
+		repaired = std::min(repaired, lost);
 
 #if MS_LOG_DEV_LEVEL == 3
 		MS_DEBUG_TAG(

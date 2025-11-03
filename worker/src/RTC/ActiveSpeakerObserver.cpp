@@ -4,6 +4,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <algorithm> // std::max, std::min
 
 namespace RTC
 {
@@ -34,10 +35,7 @@ namespace RTC
 	{
 		const int32_t m = n - r;
 
-		if (r < m)
-		{
-			r = m;
-		}
+		r = std::max(r, m);
 
 		int64_t t{ 1 };
 
@@ -55,10 +53,7 @@ namespace RTC
 		double activityScore = std::log(binomialCoefficient(nR, vL)) + vL * std::log(p) +
 		                       (nR - vL) * std::log(1 - p) - std::log(lambda) + lambda * vL;
 
-		if (activityScore < MinActivityScore)
-		{
-			activityScore = MinActivityScore;
-		}
+		activityScore = std::max(activityScore, MinActivityScore);
 
 		return activityScore;
 	}
@@ -595,10 +590,7 @@ namespace RTC
 			}
 			else
 			{
-				if (this->nextMinLevel > level)
-				{
-					this->nextMinLevel = level;
-				}
+				this->nextMinLevel = std::min<int>(this->nextMinLevel, level);
 
 				this->nextMinLevelWindowLen++;
 

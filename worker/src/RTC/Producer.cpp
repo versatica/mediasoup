@@ -14,7 +14,8 @@
 #include "RTC/RtcLogger.hpp"
 #endif
 #include <absl/container/inlined_vector.h>
-#include <cstring> // std::memcpy()
+#include <algorithm> // std::max, std::min
+#include <cstring>   // std::memcpy()
 
 namespace RTC
 {
@@ -1426,15 +1427,8 @@ namespace RTC
 
 			for (const auto& extension : extensions)
 			{
-				if (extension.id > highestExtenId)
-				{
-					highestExtenId = extension.id;
-				}
-
-				if (extension.len > highestExtenLen)
-				{
-					highestExtenLen = extension.len;
-				}
+				highestExtenId  = std::max(extension.id, highestExtenId);
+				highestExtenLen = std::max(extension.len, highestExtenLen);
 			}
 
 			// Set the new extensions into the packet.
