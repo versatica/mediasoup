@@ -1130,7 +1130,7 @@ namespace RTC
 
 		const bool wasHandshakeDone = this->handshakeDone;
 
-		int err = SSL_get_error(this->ssl, returnCode);
+		const int err = SSL_get_error(this->ssl, returnCode);
 
 		switch (err)
 		{
@@ -1580,7 +1580,7 @@ namespace RTC
 
 		// Ensure that the SRTP crypto suite has been negotiated.
 		// NOTE: This is a OpenSSL type.
-		SRTP_PROTECTION_PROFILE* sslSrtpCryptoSuite = SSL_get_selected_srtp_profile(this->ssl);
+		const SRTP_PROTECTION_PROFILE* sslSrtpCryptoSuite = SSL_get_selected_srtp_profile(this->ssl);
 
 		if (!sslSrtpCryptoSuite)
 		{

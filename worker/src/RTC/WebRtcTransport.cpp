@@ -749,7 +749,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendRtpPacket(
-	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, const RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 

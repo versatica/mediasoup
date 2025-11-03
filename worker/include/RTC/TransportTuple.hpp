@@ -25,6 +25,7 @@ namespace RTC
 
 		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
 		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
+		static uint64_t GenerateFnv1aHash(const uint8_t* data, size_t size);
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
@@ -143,7 +144,6 @@ namespace RTC
 	private:
 		void SetHash();
 		void GenerateHash();
-		uint64_t GenerateFnv1aHash(const uint8_t* data, size_t size);
 
 	public:
 		uint64_t hash{ 0u };

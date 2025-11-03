@@ -543,7 +543,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RtpRetransmissionBuffer::Item* oldestItem{ nullptr };
+		const RtpRetransmissionBuffer::Item* oldestItem{ nullptr };
 		bool itemsRemoved{ false };
 
 		// Go through all buffer items starting with the first and free all items

@@ -112,8 +112,8 @@ namespace RTC
 		}
 
 		// Get payload.
-		uint8_t* payload     = ptr;
-		size_t payloadLength = len - (ptr - data);
+		const uint8_t* payload = ptr;
+		size_t payloadLength   = len - (ptr - data);
 		uint8_t payloadPadding{ 0 };
 
 		MS_ASSERT(len >= static_cast<size_t>(ptr - data), "payload has negative size");
@@ -337,7 +337,7 @@ namespace RTC
 		if (this->dependencyDescriptorExtensionId != 0u)
 		{
 			uint8_t extenLen;
-			uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
+			const uint8_t* extenValue = GetExtension(this->dependencyDescriptorExtensionId, extenLen);
 
 			if (extenValue)
 			{

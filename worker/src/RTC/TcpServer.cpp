@@ -34,7 +34,7 @@ namespace RTC
 	  : // This may throw.
 	    ::TcpServerHandle::TcpServerHandle(
 	      RTC::PortManager::BindTcp(ip, minPort, maxPort, flags, portRangeHash)),
-	    listener(listener), connListener(connListener), fixedPort(false)
+	    listener(listener), connListener(connListener)
 	{
 		MS_TRACE();
 

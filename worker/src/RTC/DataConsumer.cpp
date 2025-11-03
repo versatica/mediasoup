@@ -521,7 +521,7 @@ namespace RTC
 	  uint32_t ppid,
 	  std::vector<uint16_t>& subchannels,
 	  std::optional<uint16_t> requiredSubchannel,
-	  onQueuedCallback* cb)
+	  const onQueuedCallback* cb)
 	{
 		MS_TRACE();
 

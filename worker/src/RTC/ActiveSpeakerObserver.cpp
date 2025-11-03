@@ -30,7 +30,7 @@ namespace RTC
 	static constexpr uint32_t LevelsBuffLen{ LongCount * N3 * N2 };
 	static constexpr double MinActivityScore{ 0.0000000001 };
 
-	inline int64_t BinomialCoefficient(int32_t n, int32_t r)
+	static inline int64_t binomialCoefficient(int32_t n, int32_t r)
 	{
 		const int32_t m = n - r;
 
@@ -49,10 +49,10 @@ namespace RTC
 		return t;
 	}
 
-	inline double ComputeActivityScore(
+	static inline double computeActivityScore(
 	  const uint8_t vL, const uint32_t nR, const double p, const double lambda)
 	{
-		double activityScore = std::log(BinomialCoefficient(nR, vL)) + vL * std::log(p) +
+		double activityScore = std::log(binomialCoefficient(nR, vL)) + vL * std::log(p) +
 		                       (nR - vL) * std::log(1 - p) - std::log(lambda) + lambda * vL;
 
 		if (activityScore < MinActivityScore)
@@ -554,21 +554,21 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		this->immediateActivityScore = ComputeActivityScore(this->immediates[0], N1, 0.5, 0.78);
+		this->immediateActivityScore = computeActivityScore(this->immediates[0], N1, 0.5, 0.78);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalMediumActivityScore()
 	{
 		MS_TRACE();
 
-		this->mediumActivityScore = ComputeActivityScore(this->mediums[0], N2, 0.5, 24);
+		this->mediumActivityScore = computeActivityScore(this->mediums[0], N2, 0.5, 24);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalLongActivityScore()
 	{
 		MS_TRACE();
 
-		this->longActivityScore = ComputeActivityScore(this->longs[0], N3, 0.5, 47);
+		this->longActivityScore = computeActivityScore(this->longs[0], N3, 0.5, 47);
 	}
 
 	void ActiveSpeakerObserver::Speaker::UpdateMinLevel(int8_t level)
