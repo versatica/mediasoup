@@ -28,9 +28,9 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
-		RTC::Consumer::VideoLayers GetPreferredLayers() const override
+		VideoLayers GetPreferredLayers() const override
 		{
-			RTC::Consumer::VideoLayers layers;
+			VideoLayers layers;
 
 			layers.spatial  = this->preferredLayers.spatial;
 			layers.temporal = this->preferredLayers.temporal;

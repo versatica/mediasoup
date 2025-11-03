@@ -3,12 +3,15 @@
 
 #include "common.hpp"
 #include "DependencyDescriptor.hpp"
+#include "RTC/ConsumerTypes.hpp"
 #include "RTC/SeqManager.hpp"
 #include <deque>
 
 namespace RTC
 {
 	class RtpPacket;
+
+	using namespace ConsumerTypes;
 
 	namespace Codecs
 	{
@@ -118,19 +121,27 @@ namespace RTC
 			}
 			int16_t GetTargetSpatialLayer() const
 			{
-				return this->targetSpatialLayer;
+				return this->targetLayers.spatial;
 			}
 			int16_t GetTargetTemporalLayer() const
 			{
-				return this->targetTemporalLayer;
+				return this->targetLayers.temporal;
+			}
+			const VideoLayers& GetTargetLayers() const
+			{
+				return this->targetLayers;
 			}
 			int16_t GetCurrentSpatialLayer() const
 			{
-				return this->currentSpatialLayer;
+				return this->currentLayers.spatial;
 			}
 			int16_t GetCurrentTemporalLayer() const
 			{
-				return this->currentTemporalLayer;
+				return this->currentLayers.temporal;
+			}
+			const VideoLayers& GetCurrentLayers() const
+			{
+				return this->currentLayers;
 			}
 			bool GetIgnoreDtx() const
 			{
@@ -138,19 +149,19 @@ namespace RTC
 			}
 			void SetTargetSpatialLayer(int16_t spatialLayer)
 			{
-				this->targetSpatialLayer = spatialLayer;
+				this->targetLayers.spatial = spatialLayer;
 			}
 			void SetTargetTemporalLayer(int16_t temporalLayer)
 			{
-				this->targetTemporalLayer = temporalLayer;
+				this->targetLayers.temporal = temporalLayer;
 			}
 			void SetCurrentSpatialLayer(int16_t spatialLayer)
 			{
-				this->currentSpatialLayer = spatialLayer;
+				this->currentLayers.spatial = spatialLayer;
 			}
 			void SetCurrentTemporalLayer(int16_t temporalLayer)
 			{
-				this->currentTemporalLayer = temporalLayer;
+				this->currentLayers.temporal = temporalLayer;
 			}
 			void SetIgnoreDtx(bool ignoreDtx)
 			{
@@ -159,23 +170,23 @@ namespace RTC
 			virtual void SyncRequired() = 0;
 			void SetCurrentSpatialLayer(int16_t spatialLayer, uint16_t pictureId)
 			{
-				if (this->currentSpatialLayer == spatialLayer)
+				if (this->currentLayers.spatial == spatialLayer)
 				{
 					return;
 				}
 
 				this->spatialLayerPictureIdList.Push(pictureId, spatialLayer);
-				this->currentSpatialLayer = spatialLayer;
+				this->currentLayers.spatial = spatialLayer;
 			}
 			void SetCurrentTemporalLayer(int16_t temporalLayer, uint16_t pictureId)
 			{
-				if (this->currentTemporalLayer == temporalLayer)
+				if (this->currentLayers.temporal == temporalLayer)
 				{
 					return;
 				}
 
 				this->temporalLayerPictureIdList.Push(pictureId, temporalLayer);
-				this->currentTemporalLayer = temporalLayer;
+				this->currentLayers.temporal = temporalLayer;
 			}
 			int16_t GetSpatialLayerForPictureId(uint16_t pictureId) const
 			{
@@ -186,7 +197,7 @@ namespace RTC
 					return layer;
 				}
 
-				return this->currentSpatialLayer;
+				return this->currentLayers.spatial;
 			}
 			int16_t GetTemporalLayerForPictureId(uint16_t pictureId) const
 			{
@@ -197,15 +208,13 @@ namespace RTC
 					return layer;
 				}
 
-				return this->currentTemporalLayer;
+				return this->currentLayers.temporal;
 			}
 
 		private:
 			Params params;
-			int16_t targetSpatialLayer{ -1 };
-			int16_t targetTemporalLayer{ -1 };
-			int16_t currentSpatialLayer{ -1 };
-			int16_t currentTemporalLayer{ -1 };
+			VideoLayers targetLayers;
+			VideoLayers currentLayers;
 			bool ignoreDtx{ false };
 
 		private:
