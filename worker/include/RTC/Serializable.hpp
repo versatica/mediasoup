@@ -69,7 +69,7 @@ namespace RTC
 		 * Current exact length of the Serializable, including padding bytes (if
 		 * any).
 		 */
-		virtual const size_t GetLength() const final
+		virtual size_t GetLength() const final
 		{
 			return this->length;
 		}

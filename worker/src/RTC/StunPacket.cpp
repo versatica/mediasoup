@@ -280,7 +280,7 @@ namespace RTC
 
 					const uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
 					const uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
-					auto errorCode            = static_cast<uint16_t>(errorClass * 100 + errorNumber);
+					auto errorCode            = static_cast<uint16_t>((errorClass * 100) + errorNumber);
 
 					packet->SetErrorCode(errorCode);
 

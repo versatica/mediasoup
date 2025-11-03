@@ -812,7 +812,7 @@ namespace RTC
 		MS_TRACE();
 
 		auto* buffer = new uint8_t[RTC::Consts::MtuSize + 100];
-		auto* ptr    = const_cast<uint8_t*>(buffer);
+		auto* ptr    = buffer;
 
 		size_t numBytes{ 0 };
 

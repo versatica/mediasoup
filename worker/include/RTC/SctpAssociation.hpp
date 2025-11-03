@@ -12,7 +12,7 @@ namespace RTC
 	class SctpAssociation
 	{
 	public:
-		enum class SctpState
+		enum class SctpState : uint8_t
 		{
 			NEW = 1,
 			CONNECTING,
@@ -22,7 +22,7 @@ namespace RTC
 		};
 
 	private:
-		enum class StreamDirection
+		enum class StreamDirection : uint8_t
 		{
 			INCOMING = 1,
 			OUTGOING

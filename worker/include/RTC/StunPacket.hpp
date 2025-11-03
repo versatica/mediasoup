@@ -10,7 +10,7 @@ namespace RTC
 	{
 	public:
 		// STUN message class.
-		enum class Class : uint16_t
+		enum class Class : uint8_t
 		{
 			REQUEST          = 0,
 			INDICATION       = 1,
@@ -19,7 +19,7 @@ namespace RTC
 		};
 
 		// STUN message method.
-		enum class Method : uint16_t
+		enum class Method : uint8_t
 		{
 			BINDING = 1
 		};
@@ -46,7 +46,7 @@ namespace RTC
 		};
 
 		// Authentication result.
-		enum class Authentication
+		enum class Authentication : uint8_t
 		{
 			OK           = 0,
 			UNAUTHORIZED = 1,

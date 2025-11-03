@@ -112,8 +112,8 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
-		const std::string dataProducerId;
+		std::string id;
+		std::string dataProducerId;
 
 	private:
 		// Passed by argument.

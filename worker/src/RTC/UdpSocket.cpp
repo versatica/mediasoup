@@ -29,7 +29,7 @@ namespace RTC
 	  : // This may throw.
 	    ::UdpSocketHandle::UdpSocketHandle(
 	      RTC::PortManager::BindUdp(ip, minPort, maxPort, flags, portRangeHash)),
-	    listener(listener), fixedPort(false)
+	    listener(listener)
 	{
 		MS_TRACE();
 

@@ -449,7 +449,7 @@ namespace RTC
 		// via onSendSctpData.
 		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
 
-		const int ret = usrsctp_sendv(
+		const ssize_t ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret < 0)

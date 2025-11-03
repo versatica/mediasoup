@@ -5,7 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Settings.hpp"
 #include "Utils.hpp"
 #include <tuple>   // std:make_tuple()
 #include <utility> // std::piecewise_construct

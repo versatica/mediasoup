@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove(), std::memset()
-#include <utility> // std::move()
 
 namespace RTC
 {
@@ -127,7 +126,7 @@ namespace RTC
 
 		AssertNotFrozen();
 
-		this->consolidatedListener = std::move(listener);
+		this->consolidatedListener = listener;
 	}
 
 	void Serializable::AssertNotFrozen() const
