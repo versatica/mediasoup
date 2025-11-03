@@ -3,6 +3,7 @@
 
 #include "RTC/StunPacket.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -842,6 +843,12 @@ namespace RTC
 					pos += 4 + 20;
 
 					break;
+				}
+
+				// This cannot happen.
+				default:
+				{
+					MS_THROW_ERROR("unknown IP family");
 				}
 			}
 		}

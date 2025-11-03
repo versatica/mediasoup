@@ -119,6 +119,12 @@ namespace RTC
 
 				break;
 			}
+
+			// This cannot happen.
+			default:
+			{
+				MS_THROW_ERROR("unknown IP family");
+			}
 		}
 
 		// Try to bind on it.
@@ -394,6 +400,12 @@ namespace RTC
 					(reinterpret_cast<struct sockaddr_in6*>(&bindAddr))->sin6_port = htons(port);
 
 					break;
+				}
+
+				// This cannot happen.
+				default:
+				{
+					MS_THROW_ERROR("unknown IP family");
 				}
 			}
 
@@ -699,6 +711,12 @@ namespace RTC
 				hash |= 0x0002; // AF_INET6.
 
 				break;
+			}
+
+			// This cannot happen.
+			default:
+			{
+				MS_THROW_ERROR("unknown IP family");
 			}
 		}
 
