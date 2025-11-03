@@ -2,8 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtpStreamSend.hpp"
-
-#include <algorithm>
 #ifdef MS_LIBURING_SUPPORTED
 #include "DepLibUring.hpp"
 #endif
@@ -11,6 +9,7 @@
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include <algorithm> // std::max, std::min
 
 namespace RTC
 {
