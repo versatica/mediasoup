@@ -230,7 +230,7 @@ namespace RTC
 		 *
 		 * @see Consolidate()
 		 */
-		virtual void SetConsolidatedListener(const ConsolidatedListener&& listener) final;
+		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a

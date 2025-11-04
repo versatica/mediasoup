@@ -120,13 +120,13 @@ namespace RTC
 		std::memset(this->buffer + this->length - padding, 0x00, padding);
 	}
 
-	void Serializable::SetConsolidatedListener(const ConsolidatedListener&& listener)
+	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
 	{
 		MS_TRACE();
 
 		AssertNotFrozen();
 
-		this->consolidatedListener = listener;
+		this->consolidatedListener = std::move(listener);
 	}
 
 	void Serializable::AssertNotFrozen() const
