@@ -22,7 +22,6 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            run-lint: true
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -30,7 +29,6 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
-            run-lint: true
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -38,8 +36,6 @@ jobs:
           - os: ubuntu-22.04-arm
             cc: gcc
             cxx: g++
-            # No clang-format for ARM.
-            run-lint: false
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -48,7 +44,6 @@ jobs:
             cc: gcc
             cxx: g++
             pip-break-system-packages: true
-            run-lint: true
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -59,7 +54,6 @@ jobs:
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
-            run-lint: true
             run-test: true
             run-test-asan-address: true
             run-test-asan-undefined: true
@@ -70,8 +64,6 @@ jobs:
             cc: gcc
             cxx: g++
             pip-break-system-packages: true
-            # No clang-format for ARM.
-            run-lint: false
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -80,8 +72,6 @@ jobs:
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
-            # No clang-format for ARM.
-            run-lint: false
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -90,7 +80,6 @@ jobs:
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
-            run-lint: true
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -99,7 +88,6 @@ jobs:
             cc: clang
             cxx: clang++
             pip-break-system-packages: true
-            run-lint: true
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
@@ -107,8 +95,6 @@ jobs:
           - os: windows-2022
             cc: cl
             cxx: cl
-            # No clang-format for Windows.
-            run-lint: false
             # Maybe some day we fix this.
             run-test: false
             # Address Sanitizer does not work on Windows.
@@ -118,8 +104,6 @@ jobs:
           - os: windows-2025
             cc: cl
             cxx: cl
-            # No clang-format for Windows.
-            run-lint: false
             # Maybe some day we fix this.
             run-test: false
             # Address Sanitizer does not work on Windows.
@@ -171,14 +155,12 @@ jobs:
         name: pip3 install --break-system-packages invoke
         run: pip3 install --break-system-packages invoke
 
-      # We need to install npm deps of worker/scripts/package.json.
-      - if: ${{ matrix.build.run-lint }}
-        name: npm ci --prefix worker/scripts
-        run: npm ci --prefix worker/scripts --foreground-scripts
-
-      - if: ${{ matrix.build.run-lint }}
+      # Run clang-format on macOS.
+      - if: ${{ startsWith(matrix.build.os, 'macos'}}
         name: invoke -r worker lint
-        run: invoke -r worker lint
+        run: |
+          brew install clang-format@21
+          invoke -r worker lint
 
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker

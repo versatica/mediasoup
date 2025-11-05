@@ -94,9 +94,7 @@ protected:
 	  const uint8_t* data, size_t len, const struct sockaddr* addr) = 0;
 
 protected:
-	struct sockaddr_storage localAddr
-	{
-	};
+	struct sockaddr_storage localAddr{};
 	std::string localIp;
 	uint16_t localPort{ 0u };
 

@@ -8,7 +8,7 @@
 #include <sys/stat.h> // stat()
 #ifdef _WIN32
 #include <io.h>
-#define __S_ISTYPE(mode, mask) (((mode)&_S_IFMT) == (mask))
+#define __S_ISTYPE(mode, mask) (((mode) & _S_IFMT) == (mask))
 #define S_ISREG(mode) __S_ISTYPE((mode), _S_IFREG)
 #else
 #include <unistd.h> // access(), R_OK
@@ -20,9 +20,7 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		struct stat fileStat
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct stat fileStat{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		int err;
 
 		// Ensure the given file exists.

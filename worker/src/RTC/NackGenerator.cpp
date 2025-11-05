@@ -200,13 +200,14 @@ namespace RTC
 				continue;
 			}
 
-			this->nackList.emplace(std::make_pair(
-			  seq,
-			  NackInfo{
-			    DepLibUV::GetTimeMs(),
+			this->nackList.emplace(
+			  std::make_pair(
 			    seq,
-			    seq,
-			  }));
+			    NackInfo{
+			      DepLibUV::GetTimeMs(),
+			      seq,
+			      seq,
+			    }));
 		}
 	}
 

@@ -177,8 +177,9 @@ namespace RTC
 
 			for (; idx < this->maxEntries && rit != mapDBovsProducer.crend(); ++idx, ++rit)
 			{
-				volumes.emplace_back(FBS::AudioLevelObserver::CreateVolumeDirect(
-				  this->shared->channelNotifier->GetBufferBuilder(), rit->second->id.c_str(), rit->first));
+				volumes.emplace_back(
+				  FBS::AudioLevelObserver::CreateVolumeDirect(
+				    this->shared->channelNotifier->GetBufferBuilder(), rit->second->id.c_str(), rit->first));
 			}
 
 			auto notification = FBS::AudioLevelObserver::CreateVolumesNotificationDirect(

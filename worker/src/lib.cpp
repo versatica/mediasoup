@@ -181,9 +181,7 @@ void IgnoreSignals()
 	MS_TRACE();
 
 	int err;
-	struct sigaction act
-	{
-	}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+	struct sigaction act{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	// clang-format off
 	absl::flat_hash_map<std::string, int> const ignoredSignals =

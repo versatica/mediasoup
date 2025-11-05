@@ -33,7 +33,7 @@ namespace Fuzzer
 
 			void Fuzz(const uint8_t* data, size_t len);
 		} // namespace DtlsTransport
-	}   // namespace RTC
+	} // namespace RTC
 } // namespace Fuzzer
 
 #endif

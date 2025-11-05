@@ -76,12 +76,8 @@ namespace RTC
 		ListenInfo rtcpListenInfo;
 		bool rtcpMux{ true };
 		bool comedia{ false };
-		struct sockaddr_storage remoteAddrStorage
-		{
-		};
-		struct sockaddr_storage rtcpRemoteAddrStorage
-		{
-		};
+		struct sockaddr_storage remoteAddrStorage{};
+		struct sockaddr_storage rtcpRemoteAddrStorage{};
 		RTC::SrtpSession::CryptoSuite srtpCryptoSuite{
 			RTC::SrtpSession::CryptoSuite::AES_CM_128_HMAC_SHA1_80
 		};

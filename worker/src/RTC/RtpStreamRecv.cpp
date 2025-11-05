@@ -247,8 +247,9 @@ namespace RTC
 				{
 					auto layer = std::to_string(sIdx) + "." + std::to_string(tIdx);
 
-					bitrateByLayer.emplace_back(FBS::RtpStream::CreateBitrateByLayerDirect(
-					  builder, layer.c_str(), GetBitrate(nowMs, sIdx, tIdx)));
+					bitrateByLayer.emplace_back(
+					  FBS::RtpStream::CreateBitrateByLayerDirect(
+					    builder, layer.c_str(), GetBitrate(nowMs, sIdx, tIdx)));
 				}
 			}
 		}

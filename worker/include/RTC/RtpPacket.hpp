@@ -78,7 +78,7 @@ namespace RTC
 		/* Struct for replacing and setting header extensions. */
 		struct GenericExtension
 		{
-			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value){};
+			GenericExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value) {};
 
 			uint8_t id;
 			uint8_t len;

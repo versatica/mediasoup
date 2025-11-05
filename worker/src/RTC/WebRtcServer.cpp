@@ -269,13 +269,15 @@ namespace RTC
 		{
 			if (item.udpSocket)
 			{
-				udpSockets.emplace_back(FBS::WebRtcServer::CreateIpPortDirect(
-				  builder, item.udpSocket->GetLocalIp().c_str(), item.udpSocket->GetLocalPort()));
+				udpSockets.emplace_back(
+				  FBS::WebRtcServer::CreateIpPortDirect(
+				    builder, item.udpSocket->GetLocalIp().c_str(), item.udpSocket->GetLocalPort()));
 			}
 			else if (item.tcpServer)
 			{
-				tcpServers.emplace_back(FBS::WebRtcServer::CreateIpPortDirect(
-				  builder, item.tcpServer->GetLocalIp().c_str(), item.tcpServer->GetLocalPort()));
+				tcpServers.emplace_back(
+				  FBS::WebRtcServer::CreateIpPortDirect(
+				    builder, item.tcpServer->GetLocalIp().c_str(), item.tcpServer->GetLocalPort()));
 			}
 		}
 
@@ -295,8 +297,9 @@ namespace RTC
 			const auto& localIceUsernameFragment = kv.first;
 			const auto* webRtcTransport          = kv.second;
 
-			localIceUsernameFragments.emplace_back(FBS::WebRtcServer::CreateIceUserNameFragmentDirect(
-			  builder, localIceUsernameFragment.c_str(), webRtcTransport->id.c_str()));
+			localIceUsernameFragments.emplace_back(
+			  FBS::WebRtcServer::CreateIceUserNameFragmentDirect(
+			    builder, localIceUsernameFragment.c_str(), webRtcTransport->id.c_str()));
 		}
 
 		// Add tupleHashes.

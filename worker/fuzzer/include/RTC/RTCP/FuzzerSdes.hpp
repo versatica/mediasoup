@@ -15,7 +15,7 @@ namespace Fuzzer
 				void Fuzz(::RTC::RTCP::SdesPacket* packet);
 			}
 		} // namespace RTCP
-	}   // namespace RTC
+	} // namespace RTC
 } // namespace Fuzzer
 
 #endif

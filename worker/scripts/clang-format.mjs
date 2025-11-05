@@ -1,13 +1,27 @@
 import { execSync } from 'node:child_process';
 import { glob } from 'glob';
-import clangFormat from 'clang-format';
 
+const REQUIRED_CLANG_FORMAT_VERSION = 21;
 const task = process.argv.slice(2).join(' ');
+
+let clangFormatBinary = 'clang-format';
 
 void run();
 
 async function run() {
-	const clangFormatNativeBinary = clangFormat.getNativeBinary();
+	if (!process.env.MEDIASOUP_CLANG_FORMAT_BINARY) {
+		logInfo(
+			'MEDIASOUP_CLANG_FORMAT_BINARY not specified, using "clang-format"'
+		);
+	} else {
+		clangFormatBinary = process.env.MEDIASOUP_CLANG_FORMAT_BINARY;
+		logInfo(
+			`MEDIASOUP_CLANG_FORMAT_BINARY specified, using "${clangFormatBinary}"`
+		);
+	}
+
+	checkClangFormatVersion(REQUIRED_CLANG_FORMAT_VERSION);
+
 	const workerFiles = await glob([
 		'../src/**/*.cpp',
 		'../include/**/*.hpp',
@@ -20,18 +34,14 @@ async function run() {
 	switch (task) {
 		case 'lint': {
 			executeCmd(
-				`"${clangFormatNativeBinary}" --Werror --dry-run ${workerFiles.join(
-					' '
-				)}`
+				`"${clangFormatBinary}" --Werror --dry-run ${workerFiles.join(' ')}`
 			);
 
 			break;
 		}
 
 		case 'format': {
-			executeCmd(
-				`"${clangFormatNativeBinary}" --Werror -i ${workerFiles.join(' ')}`
-			);
+			executeCmd(`"${clangFormatBinary}" --Werror -i ${workerFiles.join(' ')}`);
 
 			break;
 		}
@@ -54,7 +64,6 @@ function executeCmd(command) {
 	}
 }
 
-// eslint-disable-next-line no-unused-vars
 function logInfo(message) {
 	// eslint-disable-next-line no-console
 	console.log(`clang-format.mjs \x1b[36m[INFO] [${task}]\x1b[0m`, message);
@@ -73,4 +82,44 @@ function logError(message) {
 
 function exitWithError() {
 	process.exit(1);
+}
+
+function getClangFormatVersion() {
+	try {
+		// Run the command and capture the output.
+		const output = execSync(`${clangFormatBinary} --version`, {
+			encoding: 'utf-8',
+		});
+
+		// Extract the mayor version number from the output.
+		const match = output.match(/version (\d+)/);
+
+		if (match && match[1]) {
+			return parseInt(match[1], 10);
+		} else {
+			logError(`Unable to parse clang-format version: ${output}`);
+			exitWithError();
+		}
+	} catch (error) {
+		logError(`Error executing clang-format --version: ${error.message}`);
+		exitWithError();
+	}
+}
+
+function checkClangFormatVersion(requiredVersion) {
+	try {
+		const version = getClangFormatVersion();
+
+		if (version === requiredVersion) {
+			logInfo(`clang-format version is the required one (${requiredVersion})`);
+		} else {
+			logInfo(
+				`clang-format version (${version}) is not the required one (${requiredVersion})`
+			);
+			exitWithError();
+		}
+	} catch (error) {
+		logInfo(`Failed to check clang-format version: ${error.message}`);
+		exitWithError();
+	}
 }

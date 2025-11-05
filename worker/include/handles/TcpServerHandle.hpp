@@ -64,9 +64,7 @@ public:
 	void OnTcpConnectionClosed(TcpConnectionHandle* connection) override;
 
 protected:
-	struct sockaddr_storage localAddr
-	{
-	};
+	struct sockaddr_storage localAddr{};
 	std::string localIp;
 	uint16_t localPort{ 0u };
 

@@ -46,10 +46,10 @@ class ConsumerListener : public Consumer::Listener
 	void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) final
 	{
 	}
-	void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final{};
-	void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) final{};
-	void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) final{};
-	void OnConsumerProducerClosed(RTC::Consumer* consumer) final{};
+	void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final {};
+	void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) final {};
+	void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) final {};
+	void OnConsumerProducerClosed(RTC::Consumer* consumer) final {};
 
 public:
 	// Verifies that the given number of packets have been sent,

@@ -74,9 +74,7 @@ namespace Utils
 
 		static struct sockaddr_storage CopyAddress(const struct sockaddr* addr)
 		{
-			struct sockaddr_storage copiedAddr
-			{
-			};
+			struct sockaddr_storage copiedAddr{};
 
 			switch (addr->sa_family)
 			{

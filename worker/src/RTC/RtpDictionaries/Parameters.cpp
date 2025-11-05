@@ -38,8 +38,9 @@ namespace RTC
 				{
 					auto valueOffset = FBS::RtpParameters::CreateInteger32(builder, value.integerValue);
 
-					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::Integer32, valueOffset.Union()));
+					parameters.emplace_back(
+					  FBS::RtpParameters::CreateParameterDirect(
+					    builder, key.c_str(), FBS::RtpParameters::Value::Integer32, valueOffset.Union()));
 
 					break;
 				}
@@ -48,8 +49,9 @@ namespace RTC
 				{
 					auto valueOffset = FBS::RtpParameters::CreateDouble(builder, value.doubleValue);
 
-					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::Double, valueOffset.Union()));
+					parameters.emplace_back(
+					  FBS::RtpParameters::CreateParameterDirect(
+					    builder, key.c_str(), FBS::RtpParameters::Value::Double, valueOffset.Union()));
 
 					break;
 				}
@@ -59,8 +61,9 @@ namespace RTC
 					auto valueOffset =
 					  FBS::RtpParameters::CreateStringDirect(builder, value.stringValue.c_str());
 
-					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::String, valueOffset.Union()));
+					parameters.emplace_back(
+					  FBS::RtpParameters::CreateParameterDirect(
+					    builder, key.c_str(), FBS::RtpParameters::Value::String, valueOffset.Union()));
 
 					break;
 				}
@@ -70,8 +73,9 @@ namespace RTC
 					auto valueOffset =
 					  FBS::RtpParameters::CreateInteger32ArrayDirect(builder, &value.arrayOfIntegers);
 
-					parameters.emplace_back(FBS::RtpParameters::CreateParameterDirect(
-					  builder, key.c_str(), FBS::RtpParameters::Value::Integer32Array, valueOffset.Union()));
+					parameters.emplace_back(
+					  FBS::RtpParameters::CreateParameterDirect(
+					    builder, key.c_str(), FBS::RtpParameters::Value::Integer32Array, valueOffset.Union()));
 
 					break;
 				}

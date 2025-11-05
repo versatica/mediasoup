@@ -164,8 +164,9 @@ namespace RTC
 				dataConsumerIds.emplace_back(builder.CreateString(dataConsumer->id));
 			}
 
-			mapDataProducerIdDataConsumerIds.emplace_back(FBS::Common::CreateStringStringArrayDirect(
-			  builder, dataProducer->id.c_str(), &dataConsumerIds));
+			mapDataProducerIdDataConsumerIds.emplace_back(
+			  FBS::Common::CreateStringStringArrayDirect(
+			    builder, dataProducer->id.c_str(), &dataConsumerIds));
 		}
 
 		// Add mapDataConsumerIdDataProducerId.
@@ -177,8 +178,9 @@ namespace RTC
 			auto* dataConsumer = kv.first;
 			auto* dataProducer = kv.second;
 
-			mapDataConsumerIdDataProducerId.emplace_back(FBS::Common::CreateStringStringDirect(
-			  builder, dataConsumer->id.c_str(), dataProducer->id.c_str()));
+			mapDataConsumerIdDataProducerId.emplace_back(
+			  FBS::Common::CreateStringStringDirect(
+			    builder, dataConsumer->id.c_str(), dataProducer->id.c_str()));
 		}
 
 		return FBS::Router::CreateDumpResponseDirect(

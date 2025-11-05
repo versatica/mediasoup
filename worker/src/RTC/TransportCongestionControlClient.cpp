@@ -29,8 +29,9 @@ namespace RTC
 	  uint32_t maxOutgoingBitrate,
 	  uint32_t minOutgoingBitrate)
 	  : listener(listener), bweType(bweType),
-	    initialAvailableBitrate(std::max<uint32_t>(
-	      initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
+	    initialAvailableBitrate(
+	      std::max<uint32_t>(
+	        initialAvailableBitrate, RTC::TransportCongestionControlMinOutgoingBitrate)),
 	    maxOutgoingBitrate(maxOutgoingBitrate), minOutgoingBitrate(minOutgoingBitrate)
 	{
 		MS_TRACE();
@@ -162,7 +163,7 @@ namespace RTC
 		}
 
 		// Notify the transport feedback adapter about the sent packet.
-		rtc::SentPacket const sentPacket(packetInfo.transport_sequence_number, nowMs);
+		const rtc::SentPacket sentPacket(packetInfo.transport_sequence_number, nowMs);
 		this->rtpTransportControllerSend->OnSentPacket(sentPacket, packetInfo.length);
 	}
 

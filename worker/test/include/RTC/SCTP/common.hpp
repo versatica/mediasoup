@@ -25,6 +25,7 @@ extern thread_local uint8_t ThrowBuffer[66665];
 
 void resetBuffers();
 
+// clang-format off
 #define CHECK_PACKET(                                                                              \
   /*const Packet**/ packet,                                                                        \
   /*const uint8_t**/ buffer,                                                                       \
@@ -203,5 +204,6 @@ void resetBuffers();
 		REQUIRE_THROWS_AS(errorCause->Clone(ThrowBuffer, length - 1), MediaSoupError);                 \
 	}                                                                                                \
 	while (false)
+// clang-format on
 
 #endif

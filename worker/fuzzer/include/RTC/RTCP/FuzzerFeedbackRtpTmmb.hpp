@@ -20,7 +20,7 @@ namespace Fuzzer
 				void Fuzz(::RTC::RTCP::FeedbackRtpTmmbrPacket* packet);
 			}
 		} // namespace RTCP
-	}   // namespace RTC
+	} // namespace RTC
 } // namespace Fuzzer
 
 #endif

@@ -160,9 +160,7 @@ namespace RTC
 		// This ensures that the usrsctp close call deletes the association. This
 		// prevents usrsctp from calling the global send callback with references to
 		// this class as the address.
-		struct linger lingerOpt
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct linger lingerOpt{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		lingerOpt.l_onoff  = 1;
 		lingerOpt.l_linger = 0;
@@ -177,9 +175,7 @@ namespace RTC
 		}
 
 		// Set SCTP_ENABLE_STREAM_RESET.
-		struct sctp_assoc_value av
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_assoc_value av{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		av.assoc_value =
 		  SCTP_ENABLE_RESET_STREAM_REQ | SCTP_ENABLE_RESET_ASSOC_REQ | SCTP_ENABLE_CHANGE_ASSOC_REQ;
@@ -206,9 +202,7 @@ namespace RTC
 		}
 
 		// Enable events.
-		struct sctp_event event
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_event event{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&event, 0, sizeof(event));
 		event.se_on = 1;
@@ -228,9 +222,7 @@ namespace RTC
 		}
 
 		// Init message.
-		struct sctp_initmsg initmsg
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_initmsg initmsg{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&initmsg, 0, sizeof(initmsg));
 		initmsg.sinit_num_ostreams  = this->os;
@@ -246,9 +238,7 @@ namespace RTC
 		}
 
 		// Server side.
-		struct sockaddr_conn sconn
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sockaddr_conn sconn{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&sconn, 0, sizeof(sconn));
 		sconn.sconn_family = AF_CONN;
@@ -309,9 +299,7 @@ namespace RTC
 		try
 		{
 			int ret;
-			struct sockaddr_conn rconn
-			{
-			}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+			struct sockaddr_conn rconn{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 			std::memset(&rconn, 0, sizeof(rconn));
 			rconn.sconn_family = AF_CONN;
@@ -407,9 +395,7 @@ namespace RTC
 		const auto& parameters = dataConsumer->GetSctpStreamParameters();
 
 		// Fill sctp_sendv_spa.
-		struct sctp_sendv_spa spa
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_sendv_spa spa{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&spa, 0, sizeof(spa));
 		spa.sendv_flags             = SCTP_SEND_SNDINFO_VALID;
@@ -547,9 +533,7 @@ namespace RTC
 		}
 
 		int ret;
-		struct sctp_assoc_value av
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_assoc_value av{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 		socklen_t len = sizeof(av);
 
 		ret = usrsctp_getsockopt(this->socket, IPPROTO_SCTP, SCTP_RECONFIG_SUPPORTED, &av, &len);
@@ -647,9 +631,7 @@ namespace RTC
 			return;
 		}
 
-		struct sctp_add_streams sas
-		{
-		}; // NOLINT(cppcoreguidelines-pro-type-member-init)
+		struct sctp_add_streams sas{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 		std::memset(&sas, 0, sizeof(sas));
 		sas.sas_instrms  = 0;
