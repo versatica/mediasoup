@@ -32,7 +32,7 @@ Runs both `lint:node` and `lint:worker` tasks.
 
 #### Install clang-format
 
-A specific clang-format version is required to be installed in the system, which is defined in [clang-format-mjs](../worker/scripts/clang-format-mjs).
+A specific clang-format version is required to be installed in the system, which is defined in [clang-format-mjs](../worker/scripts/clang-format.mjs).
 
 MacOS:
 
