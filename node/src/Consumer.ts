@@ -629,7 +629,7 @@ function parseTraceEventData(
 		timestamp: Number(trace.timestamp()),
 		direction:
 			trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-		info: info?.unpack(),
+		info: fbsUtils.nullToUndefined(info?.unpack()),
 	};
 }
 

@@ -519,11 +519,7 @@ function parseProducerDump(data: FbsProducer.DumpResponse): ProducerDump {
 		kind: data.kind() === FbsRtpParameters.MediaKind.AUDIO ? 'audio' : 'video',
 		type: producerTypeFromFbs(data.type()),
 		rtpParameters: parseRtpParameters(data.rtpParameters()!),
-		// NOTE: optional values are represented with null instead of undefined.
-		// TODO: Make flatbuffers TS return undefined instead of null.
-		rtpMapping: data.rtpMapping()?.unpack(),
-		// NOTE: optional values are represented with null instead of undefined.
-		// TODO: Make flatbuffers TS return undefined instead of null.
+		rtpMapping: fbsUtils.nullToUndefined(data.rtpMapping()?.unpack()),
 		rtpStreams:
 			data.rtpStreamsLength() > 0
 				? fbsUtils.parseVector(data, 'rtpStreams', rtpStream =>
@@ -573,6 +569,6 @@ function parseTraceEventData(
 		timestamp: Number(trace.timestamp()),
 		direction:
 			trace.direction() === FbsTraceDirection.DIRECTION_IN ? 'in' : 'out',
-		info: info?.unpack(),
+				info: fbsUtils.nullToUndefined(info?.unpack()),
 	};
 }

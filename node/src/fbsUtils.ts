@@ -120,3 +120,12 @@ export function parseStringStringArrayVector(
 
 	return array;
 }
+
+/**
+ * Convert FlatBuffers null to TypeScript undefined.
+ * FlatBuffers TypeScript implementation returns null for optional values,
+ * but TypeScript best practices prefer undefined for missing values.
+ */
+export function nullToUndefined<T>(value: T | null): T | undefined {
+	return value === null ? undefined : value;
+}
