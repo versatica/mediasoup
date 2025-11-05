@@ -159,6 +159,7 @@ jobs:
       - if: ${{ startsWith(matrix.build.os, 'macos') }}
         name: invoke -r worker lint
         run: |
+          npm ci --prefix worker/scripts
           brew install clang-format@21
           invoke -r worker lint
 
