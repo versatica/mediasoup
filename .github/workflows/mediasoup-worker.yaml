@@ -156,7 +156,7 @@ jobs:
         run: pip3 install --break-system-packages invoke
 
       # Run clang-format on macOS.
-      - if: ${{ startsWith(matrix.build.os, 'macos'}}
+      - if: ${{ startsWith(matrix.build.os, 'macos') }}
         name: invoke -r worker lint
         run: |
           brew install clang-format@21
