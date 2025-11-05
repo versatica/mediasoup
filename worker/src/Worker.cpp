@@ -372,7 +372,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 			}
 
 			// Remove it from the map and delete it.
-			this->mapWebRtcServers.erase(webRtcServer->id);
+			this->mapWebRtcServers.erase(webRtcServer->GetId());
 
 			delete webRtcServer;
 

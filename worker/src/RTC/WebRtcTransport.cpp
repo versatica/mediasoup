@@ -27,8 +27,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return std::pow(2, 24) * IceTypePreference + std::pow(2, 8) * localPreference +
-		       std::pow(2, 0) * (256 - IceComponent);
+		return (std::pow(2, 24) * IceTypePreference) + (std::pow(2, 8) * localPreference) +
+		       (std::pow(2, 0) * (256 - IceComponent));
 	}
 
 	/* Instance methods. */
@@ -749,7 +749,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendRtpPacket(
-	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, const RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 

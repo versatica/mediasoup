@@ -3,6 +3,7 @@
 
 #include "RTC/StunPacket.hpp"
 #include "Logger.hpp"
+#include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy()
@@ -280,7 +281,7 @@ namespace RTC
 
 					const uint8_t errorClass  = Utils::Byte::Get1Byte(attrValuePos, 2);
 					const uint8_t errorNumber = Utils::Byte::Get1Byte(attrValuePos, 3);
-					auto errorCode            = static_cast<uint16_t>(errorClass * 100 + errorNumber);
+					auto errorCode            = static_cast<uint16_t>((errorClass * 100) + errorNumber);
 
 					packet->SetErrorCode(errorCode);
 
@@ -842,6 +843,12 @@ namespace RTC
 					pos += 4 + 20;
 
 					break;
+				}
+
+				// This cannot happen.
+				default:
+				{
+					MS_THROW_ERROR("unknown IP family");
 				}
 			}
 		}

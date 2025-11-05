@@ -69,7 +69,7 @@ namespace RTC
 		 * Current exact length of the Serializable, including padding bytes (if
 		 * any).
 		 */
-		virtual const size_t GetLength() const final
+		virtual size_t GetLength() const final
 		{
 			return this->length;
 		}
@@ -230,7 +230,7 @@ namespace RTC
 		 *
 		 * @see Consolidate()
 		 */
-		virtual void SetConsolidatedListener(const ConsolidatedListener&& listener) final;
+		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
 
 		/**
 		 * Assert that the Serializable is not frozen, otherwise it throws a

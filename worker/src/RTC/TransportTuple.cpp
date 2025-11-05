@@ -49,6 +49,22 @@ namespace RTC
 		}
 	}
 
+	uint64_t TransportTuple::GenerateFnv1aHash(const uint8_t* data, size_t size)
+	{
+		MS_TRACE();
+
+		const uint64_t fnvOffsetBasis = 14695981039346656037ull;
+		const uint64_t fnvPrime       = 1099511628211ull;
+		uint64_t hash                 = fnvOffsetBasis;
+
+		for (size_t i = 0; i < size; ++i)
+		{
+			hash = (hash ^ data[i]) * fnvPrime;
+		}
+
+		return hash;
+	}
+
 	/* Instance methods. */
 
 	void TransportTuple::CloseTcpConnection()
@@ -143,9 +159,9 @@ namespace RTC
 		{
 			if (addr->sa_family == AF_INET)
 			{
-				const sockaddr_in* in = reinterpret_cast<const sockaddr_in*>(addr);
-				const uint8_t* ip     = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
-				uint16_t port         = ntohs(in->sin_port);
+				const auto* in = reinterpret_cast<const sockaddr_in*>(addr);
+				const auto* ip = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
+				uint16_t port  = ntohs(in->sin_port);
 
 				buffer.insert(buffer.end(), ip, ip + 4);
 				buffer.push_back((port >> 8) & 0xFF);
@@ -153,9 +169,9 @@ namespace RTC
 			}
 			else if (addr->sa_family == AF_INET6)
 			{
-				const sockaddr_in6* in6 = reinterpret_cast<const sockaddr_in6*>(addr);
-				const uint8_t* ip       = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
-				uint16_t port           = ntohs(in6->sin6_port);
+				const auto* in6 = reinterpret_cast<const sockaddr_in6*>(addr);
+				const auto* ip  = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
+				uint16_t port   = ntohs(in6->sin6_port);
 
 				buffer.insert(buffer.end(), ip, ip + 16);
 				buffer.push_back((port >> 8) & 0xFF);
@@ -168,22 +184,6 @@ namespace RTC
 
 		buffer.push_back(static_cast<uint8_t>(this->protocol));
 
-		this->hash = GenerateFnv1aHash(buffer.data(), buffer.size());
-	}
-
-	uint64_t TransportTuple::GenerateFnv1aHash(const uint8_t* data, size_t size)
-	{
-		MS_TRACE();
-
-		const uint64_t fnvOffsetBasis = 14695981039346656037ull;
-		const uint64_t fnvPrime       = 1099511628211ull;
-		uint64_t hash                 = fnvOffsetBasis;
-
-		for (size_t i = 0; i < size; ++i)
-		{
-			hash = (hash ^ data[i]) * fnvPrime;
-		}
-
-		return hash;
+		this->hash = TransportTuple::GenerateFnv1aHash(buffer.data(), buffer.size());
 	}
 } // namespace RTC

@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memmove(), std::memset()
-#include <utility> // std::move()
 
 namespace RTC
 {
@@ -121,7 +120,7 @@ namespace RTC
 		std::memset(this->buffer + this->length - padding, 0x00, padding);
 	}
 
-	void Serializable::SetConsolidatedListener(const ConsolidatedListener&& listener)
+	void Serializable::SetConsolidatedListener(ConsolidatedListener&& listener)
 	{
 		MS_TRACE();
 

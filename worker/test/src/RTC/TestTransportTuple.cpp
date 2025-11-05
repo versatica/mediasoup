@@ -19,7 +19,7 @@ public:
 	}
 };
 
-std::unique_ptr<UdpSocket> makeUdpSocket(const std::string& ip, uint16_t minPort, uint16_t maxPort)
+static std::unique_ptr<UdpSocket> makeUdpSocket(const std::string& ip, uint16_t minPort, uint16_t maxPort)
 {
 	UdpSocketListener listener;
 	auto flags = Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
@@ -30,7 +30,7 @@ std::unique_ptr<UdpSocket> makeUdpSocket(const std::string& ip, uint16_t minPort
 	return std::unique_ptr<UdpSocket>(udpSocket);
 }
 
-std::unique_ptr<sockaddr> makeUdpSockAddr(int family, const std::string& ip, uint16_t port)
+static std::unique_ptr<sockaddr> makeUdpSockAddr(int family, const std::string& ip, uint16_t port)
 {
 	if (family == AF_INET)
 	{

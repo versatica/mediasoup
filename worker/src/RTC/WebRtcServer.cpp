@@ -22,8 +22,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return std::pow(2, 24) * IceTypePreference + std::pow(2, 8) * localPreference +
-		       std::pow(2, 0) * (256 - IceComponent);
+		return (std::pow(2, 24) * IceTypePreference) + (std::pow(2, 8) * localPreference) +
+		       (std::pow(2, 0) * (256 - IceComponent));
 	}
 
 	/* Class methods. */

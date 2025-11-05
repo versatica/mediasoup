@@ -12,7 +12,7 @@ namespace RTC
 		/* Static members. */
 
 		// clang-format off
-		std::unordered_map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::DtiToString =
+		std::unordered_map<DependencyDescriptor::DecodeTargetIndication, std::string> DependencyDescriptor::dtiToString =
 		{
 			{ DependencyDescriptor::DecodeTargetIndication::NOT_PRESENT, "-" },
 			{ DependencyDescriptor::DecodeTargetIndication::DISCARDABLE, "D" },
@@ -140,7 +140,7 @@ namespace RTC
 					std::string dtis;
 					for (const auto& dti : layer.decodeTargetIndications)
 					{
-						dtis += DtiToString[dti];
+						dtis += dtiToString[dti];
 					}
 					MS_DUMP_CLEAN(
 					  indentation + 4, "<DecodeTargetIndications> %s </DecodeTargetIndications>", dtis.c_str());

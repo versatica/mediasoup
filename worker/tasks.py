@@ -22,6 +22,7 @@ import sys;
 import os;
 import inspect;
 import shutil;
+import glob;
 from contextlib import contextmanager;
 # We import this from a custom location and pylint doesn't know.
 from invoke import task, call; # pylint: disable=import-error
@@ -512,7 +513,7 @@ def tidy(ctx):
         mediasoup_tidy_checks = '-*,' + mediasoup_tidy_checks;
 
     if not mediasoup_tidy_files:
-        mediasoup_tidy_files = 'src/*.cpp src/**/*.cpp src/**/**.cpp';
+        mediasoup_tidy_files = " ".join(glob.glob("src/**/*.cpp", recursive=True))
 
     with cd_worker():
         ctx.run(

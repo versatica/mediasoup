@@ -3,6 +3,7 @@ Checks: "*,\
   -altera*,\
   -android*,\
   -boost-use-to-string,\
+  -boost-use-ranges,\
   -bugprone-easily-swappable-parameters,\
   -bugprone-implicit-widening-of-multiplication-result,\
   -bugprone-lambda-function-name,\
@@ -31,9 +32,11 @@ Checks: "*,\
   -cppcoreguidelines-pro-type-union-access,\
   -cppcoreguidelines-pro-type-vararg,\
   -cppcoreguidelines-special-member-functions,\
+  -hicpp-exception-baseclass,\
   -fuchsia-default-arguments-calls,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
+  -fuchsia-statically-constructed-objects,\
   -google-default-arguments,\
   -google-readability-*,\
   -google-runtime-references,\
@@ -70,7 +73,6 @@ Checks: "*,\
   -readability-uppercase-literal-suffix,\
   "
 
-AnalyzeTemporaryDtors: false
 User: mediasoup
 FormatStyle: file
 

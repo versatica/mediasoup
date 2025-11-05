@@ -28,7 +28,7 @@ namespace RTC
 			};
 
 		private:
-			static std::unordered_map<DecodeTargetIndication, std::string> DtiToString;
+			static std::unordered_map<DecodeTargetIndication, std::string> dtiToString;
 
 		private:
 			struct FameDependencyTemplate

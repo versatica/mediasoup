@@ -660,7 +660,7 @@ namespace RTC
 		// Decrypt the SRTP packet.
 		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			const RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
 
 			if (!packet)
 			{

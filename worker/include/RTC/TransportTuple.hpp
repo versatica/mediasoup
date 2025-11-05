@@ -25,10 +25,12 @@ namespace RTC
 
 		static Protocol ProtocolFromFbs(FBS::Transport::Protocol protocol);
 		static FBS::Transport::Protocol ProtocolToFbs(Protocol protocol);
+		static uint64_t GenerateFnv1aHash(const uint8_t* data, size_t size);
 
 	public:
 		TransportTuple(RTC::UdpSocket* udpSocket, const struct sockaddr* udpRemoteAddr)
-		  : udpSocket(udpSocket), udpRemoteAddr((struct sockaddr*)udpRemoteAddr), protocol(Protocol::UDP)
+		  : udpSocket(udpSocket), udpRemoteAddr(const_cast<struct sockaddr*>(udpRemoteAddr)),
+		    protocol(Protocol::UDP)
 		{
 			GenerateHash();
 		}
@@ -62,7 +64,7 @@ namespace RTC
 			// Clone the given address into our address storage and make the sockaddr
 			// pointer point to it.
 			this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
-			this->udpRemoteAddr        = (struct sockaddr*)&this->udpRemoteAddrStorage;
+			this->udpRemoteAddr        = reinterpret_cast<struct sockaddr*>(&this->udpRemoteAddrStorage);
 		}
 
 		bool Compare(const TransportTuple* tuple) const
@@ -143,7 +145,6 @@ namespace RTC
 	private:
 		void SetHash();
 		void GenerateHash();
-		uint64_t GenerateFnv1aHash(const uint8_t* data, size_t size);
 
 	public:
 		uint64_t hash{ 0u };

@@ -9,7 +9,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring> // std::memset()
-#include <stdexcept>
 
 namespace RTC
 {
@@ -200,7 +199,7 @@ namespace RTC
 		policy.ssrc.value = 0;
 		policy.key        = key;
 		// Required for sending RTP retransmission without RTX.
-		policy.allow_repeat_tx = 1;
+		policy.allow_repeat_tx = true;
 		policy.window_size     = 1024;
 		policy.next            = nullptr;
 

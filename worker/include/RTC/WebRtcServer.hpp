@@ -95,12 +95,14 @@ namespace RTC
 	public:
 		void OnTcpConnectionPacketReceived(
 		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
-
-	public:
-		// Passed by argument.
-		const std::string id;
+		const std::string& GetId() const
+		{
+			return this->id;
+		}
 
 	private:
+		// Passed by argument.
+		std::string id;
 		// Passed by argument.
 		RTC::Shared* shared{ nullptr };
 		// Vector of UdpSockets and TcpServers in the user given order.

@@ -435,7 +435,7 @@ namespace RTC
 		// via onSendSctpData.
 		this->listener->OnSctpAssociationBufferedAmount(this, this->sctpBufferedAmount);
 
-		const int ret = usrsctp_sendv(
+		const ssize_t ret = usrsctp_sendv(
 		  this->socket, msg, len, nullptr, 0, &spa, static_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
 
 		if (ret < 0)
@@ -522,7 +522,7 @@ namespace RTC
 		ResetSctpStream(streamId, StreamDirection::OUTGOING);
 	}
 
-	void SctpAssociation::ResetSctpStream(uint16_t streamId, StreamDirection direction)
+	void SctpAssociation::ResetSctpStream(uint16_t streamId, StreamDirection direction) const
 	{
 		MS_TRACE();
 
@@ -558,7 +558,7 @@ namespace RTC
 		}
 
 		// As per spec: https://tools.ietf.org/html/rfc6525#section-4.1
-		len = sizeof(sctp_assoc_t) + (2 + 1) * sizeof(uint16_t);
+		len = sizeof(sctp_assoc_t) + ((2 + 1) * sizeof(uint16_t));
 
 		auto* srs = static_cast<struct sctp_reset_streams*>(std::malloc(len));
 

@@ -197,7 +197,7 @@ namespace RTC
 	private:
 		virtual bool IsConnected() const = 0;
 		virtual void SendRtpPacket(
-		  RTC::Consumer* consumer, RTC::RtpPacket* packet, onSendCallback* cb = nullptr) = 0;
+		  RTC::Consumer* consumer, RTC::RtpPacket* packet, const onSendCallback* cb = nullptr) = 0;
 		void HandleRtcpPacket(RTC::RTCP::Packet* packet);
 		void SendRtcp(uint64_t nowMs);
 		virtual void SendRtcpPacket(RTC::RTCP::Packet* packet)                 = 0;

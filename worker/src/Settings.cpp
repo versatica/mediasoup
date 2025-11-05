@@ -10,7 +10,6 @@
 #include <iterator> // std::ostream_iterator
 #include <mutex>
 #include <sstream> // std::ostringstream
-#include <stdexcept>
 extern "C"
 {
 #include <getopt.h>

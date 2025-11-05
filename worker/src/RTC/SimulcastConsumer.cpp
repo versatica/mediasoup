@@ -10,7 +10,8 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
-#include <limits> // std::numeric_limits
+#include <algorithm> // std::max, std::min
+#include <limits>    // std::numeric_limits
 
 namespace RTC
 {
@@ -705,20 +706,14 @@ namespace RTC
 
 			auto streamBitrate = producerRtpStream->GetBitrate(nowMs);
 
-			if (streamBitrate > desiredBitrate)
-			{
-				desiredBitrate = streamBitrate;
-			}
+			desiredBitrate = std::max(streamBitrate, desiredBitrate);
 		}
 
 		// If consumer.rtpParameters.encodings[0].maxBitrate was given and it's
 		// greater than computed one, then use it.
 		auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
 
-		if (maxBitrate > desiredBitrate)
-		{
-			desiredBitrate = maxBitrate;
-		}
+		desiredBitrate = std::max(maxBitrate, desiredBitrate);
 
 		return desiredBitrate;
 	}
@@ -958,7 +953,7 @@ namespace RTC
 
 				const int64_t maxTsExtraOffset = MaxExtraOffsetMs * this->rtpStream->GetClockRate() / 1000;
 				uint32_t tsExtraOffset = this->rtpStream->GetMaxPacketTs() - packet->GetTimestamp() +
-				                         tsOffset + MsOffset * this->rtpStream->GetClockRate() / 1000;
+				                         tsOffset + (MsOffset * this->rtpStream->GetClockRate() / 1000);
 
 				// NOTE: Don't ask for a key frame if already done.
 				if (this->keyFrameForTsOffsetRequested)
@@ -1284,10 +1279,7 @@ namespace RTC
 		auto fractionLost = this->rtpStream->GetFractionLost();
 
 		// If our fraction lost is worse than the given one, update it.
-		if (fractionLost > worstRemoteFractionLost)
-		{
-			worstRemoteFractionLost = fractionLost;
-		}
+		worstRemoteFractionLost = std::max(fractionLost, worstRemoteFractionLost);
 	}
 
 	void SimulcastConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)
