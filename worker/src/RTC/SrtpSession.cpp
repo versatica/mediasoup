@@ -226,6 +226,7 @@ namespace RTC
 				{
 					MS_ABORT("srtp_dealloc() failed: %s", DepLibSRTP::GetErrorString(err).c_str());
 				}
+				// NOLINTNEXTLINE
 				catch (const std::exception& error)
 				{
 					// NOTE: This is to avoid a warning:

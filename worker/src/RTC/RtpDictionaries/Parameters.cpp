@@ -97,8 +97,7 @@ namespace RTC
 			{
 				case FBS::RtpParameters::Value::Boolean:
 				{
-					this->mapKeyValues.emplace(
-					  key, Value((parameter->value_as_Boolean()->value() == 0) ? false : true));
+					this->mapKeyValues.emplace(key, Value(parameter->value_as_Boolean()->value() != 0));
 
 					break;
 				}

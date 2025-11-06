@@ -16,13 +16,13 @@ namespace RTC
 		using Protocol = TransportTuple::Protocol;
 
 	public:
-		enum class CandidateType
+		enum class CandidateType : uint8_t
 		{
 			HOST = 1
 		};
 
 	public:
-		enum class TcpCandidateType
+		enum class TcpCandidateType : uint8_t
 		{
 			PASSIVE = 1
 		};

@@ -32,7 +32,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 8 };
-			static const FeedbackRtp::MessageType messageType;
+			static const FeedbackRtp::MessageType MessageType;
 
 		public:
 			FeedbackRtpTmmbItem() = default;

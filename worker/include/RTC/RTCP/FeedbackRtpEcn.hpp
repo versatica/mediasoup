@@ -43,7 +43,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 20 };
-			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::ECN };
+			static const FeedbackRtp::MessageType MessageType{ FeedbackRtp::MessageType::ECN };
 
 		public:
 			explicit FeedbackRtpEcnItem(Header* header) : header(header)

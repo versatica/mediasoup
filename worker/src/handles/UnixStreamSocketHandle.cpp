@@ -123,7 +123,14 @@ UnixStreamSocketHandle::~UnixStreamSocketHandle()
 
 	if (!this->closed)
 	{
-		Close();
+		try
+		{
+			Close();
+		}
+		catch (const std::exception& e)
+		{
+			MS_ERROR("error closing UnixStreamSocketHandle: %s", e.what());
+		}
 	}
 
 	delete[] this->buffer;

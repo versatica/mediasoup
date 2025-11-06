@@ -31,12 +31,12 @@ namespace RTC
 					EncodingData encodingData;
 				};
 
-				PayloadDescriptor(std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
+				explicit PayloadDescriptor(std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor);
 				/* Pure virtual methods inherited from RTC::Codecs::PayloadDescriptor. */
 				~PayloadDescriptor() override = default;
 
 				void Dump(int indentation = 0) const override;
-				void UpdateListener(Codecs::DependencyDescriptor::Listener* listener)
+				void UpdateListener(Codecs::DependencyDescriptor::Listener* listener) const
 				{
 					if (this->dependencyDescriptor)
 					{

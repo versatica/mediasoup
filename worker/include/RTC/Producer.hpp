@@ -74,10 +74,10 @@ namespace RTC
 		};
 
 	public:
-		enum class ReceiveRtpPacketResult
+		enum class ReceiveRtpPacketResult : uint8_t
 		{
-			DISCARDED = 0,
-			MEDIA     = 1,
+			DISCARDED,
+			MEDIA,
 			RETRANSMISSION
 		};
 
@@ -177,7 +177,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	private:
 		// Passed by argument.

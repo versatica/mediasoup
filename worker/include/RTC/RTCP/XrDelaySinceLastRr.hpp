@@ -106,7 +106,7 @@ namespace RTC
 			{
 				this->header = header;
 			}
-			~DelaySinceLastRr()
+			~DelaySinceLastRr() override
 			{
 				for (auto* ssrcInfo : this->ssrcInfos)
 				{

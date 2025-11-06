@@ -50,13 +50,13 @@ namespace RTC
 		/* Specialization for Tstr class. */
 
 		template<>
-		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::messageType =
+		const FeedbackPs::MessageType FeedbackPsTstItem<Tstr>::MessageType =
 		  FeedbackPs::MessageType::TSTR;
 
 		/* Specialization for Tstn class. */
 
 		template<>
-		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::messageType =
+		const FeedbackPs::MessageType FeedbackPsTstItem<Tstn>::MessageType =
 		  FeedbackPs::MessageType::TSTN;
 
 		// Explicit instantiation to have all definitions in this file.

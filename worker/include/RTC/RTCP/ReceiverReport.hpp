@@ -59,7 +59,7 @@ namespace RTC
 			}
 			uint8_t GetFractionLost() const
 			{
-				return uint8_t{ Utils::Byte::Get1Byte((uint8_t*)this->header, 4) };
+				return Utils::Byte::Get1Byte((uint8_t*)this->header, 4);
 			}
 			void SetFractionLost(uint8_t fractionLost)
 			{

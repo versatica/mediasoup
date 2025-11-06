@@ -28,7 +28,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 4 };
-			static const FeedbackRtp::MessageType messageType{ FeedbackRtp::MessageType::TLLEI };
+			static const FeedbackRtp::MessageType MessageType{ FeedbackRtp::MessageType::TLLEI };
 
 		public:
 			explicit FeedbackRtpTlleiItem(Header* header) : header(header)

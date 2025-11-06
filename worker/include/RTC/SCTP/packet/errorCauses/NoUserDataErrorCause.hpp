@@ -68,11 +68,11 @@ namespace RTC
 			NoUserDataErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~NoUserDataErrorCause() override;
+			~NoUserDataErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual NoUserDataErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			NoUserDataErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint32_t GetTsn() const
 			{
@@ -82,14 +82,14 @@ namespace RTC
 			void SetTsn(uint32_t value);
 
 		protected:
-			virtual NoUserDataErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			NoUserDataErrorCause* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Error Cause
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength;
 			}

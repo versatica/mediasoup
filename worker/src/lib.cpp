@@ -23,7 +23,7 @@
 #include <csignal> // sigaction()
 #include <string>
 
-void IgnoreSignals();
+static void ignoreSignals();
 
 // NOLINTNEXTLINE
 extern "C" int mediasoup_worker_run(
@@ -135,7 +135,7 @@ extern "C" int mediasoup_worker_run(
 
 #ifdef MS_EXECUTABLE
 		// Ignore some signals.
-		IgnoreSignals();
+		ignoreSignals();
 #endif
 
 		// Run the Worker.
@@ -175,7 +175,7 @@ extern "C" int mediasoup_worker_run(
 #endif
 }
 
-void IgnoreSignals()
+static void ignoreSignals()
 {
 #ifndef _WIN32
 	MS_TRACE();

@@ -65,11 +65,11 @@ namespace RTC
 			HeartbeatInfoParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~HeartbeatInfoParameter() override;
+			~HeartbeatInfoParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual HeartbeatInfoParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			HeartbeatInfoParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasInfo() const final
 			{
@@ -89,7 +89,7 @@ namespace RTC
 			void SetInfo(const uint8_t* info, uint16_t infoLength);
 
 		protected:
-			virtual HeartbeatInfoParameter* SoftClone(const uint8_t* buffer) const final override;
+			HeartbeatInfoParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

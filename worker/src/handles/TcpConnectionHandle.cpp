@@ -85,7 +85,14 @@ TcpConnectionHandle::~TcpConnectionHandle()
 
 	if (!this->closed)
 	{
-		InternalClose();
+		try
+		{
+			InternalClose();
+		}
+		catch (const std::exception& e)
+		{
+			MS_ERROR("error closing TCP socket: %s", e.what());
+		}
 	}
 
 	delete[] this->buffer;

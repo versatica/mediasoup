@@ -27,7 +27,7 @@ public:
 		uint8_t* store{ nullptr };
 	};
 
-	enum class Role
+	enum class Role : uint8_t
 	{
 		PRODUCER = 1,
 		CONSUMER

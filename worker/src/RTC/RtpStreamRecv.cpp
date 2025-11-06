@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
+#include <algorithm> // std::max, std::min
 
 namespace RTC
 {
@@ -630,10 +631,7 @@ namespace RTC
 		this->rtt += (static_cast<float>(rtt & 0x0000FFFF) / 65536) * 1000;
 
 		// Avoid negative RTT value since it doesn't make sense.
-		if (this->rtt <= 0.0f)
-		{
-			this->rtt = 0.0f;
-		}
+		this->rtt = std::max(this->rtt, 0.0f);
 
 		// Tell it to the NackGenerator.
 		if (this->params.useNack)
@@ -793,10 +791,7 @@ namespace RTC
 			return;
 		}
 
-		if (lost > received)
-		{
-			lost = received;
-		}
+		lost = std::min(lost, received);
 
 		if (repaired > lost)
 		{

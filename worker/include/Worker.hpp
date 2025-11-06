@@ -19,7 +19,7 @@ class Worker : public Channel::ChannelSocket::Listener,
 {
 public:
 	explicit Worker(Channel::ChannelSocket* channel);
-	~Worker();
+	~Worker() override;
 
 private:
 	void Close();

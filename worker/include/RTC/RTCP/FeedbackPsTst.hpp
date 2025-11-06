@@ -50,7 +50,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize{ 8 };
-			static const FeedbackPs::MessageType messageType;
+			static const FeedbackPs::MessageType MessageType;
 
 		public:
 			explicit FeedbackPsTstItem(Header* header) : header(header)

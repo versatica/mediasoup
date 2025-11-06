@@ -11,7 +11,8 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
-#include <limits> // std::numeric_limits
+#include <algorithm> // std::max, std::min
+#include <limits>    // std::numeric_limits
 
 namespace RTC
 {
@@ -307,10 +308,7 @@ namespace RTC
 		// greater than computed one, then use it.
 		auto maxBitrate = this->rtpParameters.encodings[0].maxBitrate;
 
-		if (maxBitrate > desiredBitrate)
-		{
-			desiredBitrate = maxBitrate;
-		}
+		desiredBitrate = std::max(maxBitrate, desiredBitrate);
 
 		return desiredBitrate;
 	}
@@ -589,10 +587,7 @@ namespace RTC
 		auto fractionLost = this->rtpStream->GetFractionLost();
 
 		// If our fraction lost is worse than the given one, update it.
-		if (fractionLost > worstRemoteFractionLost)
-		{
-			worstRemoteFractionLost = fractionLost;
-		}
+		worstRemoteFractionLost = std::max(fractionLost, worstRemoteFractionLost);
 	}
 
 	void SimpleConsumer::ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket)

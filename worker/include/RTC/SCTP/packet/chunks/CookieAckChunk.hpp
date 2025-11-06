@@ -66,7 +66,7 @@ namespace RTC
 			CookieAckChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~CookieAckChunk() override;
+			~CookieAckChunk() override;
 
 			virtual void Dump(int indentation = 0) const override final;
 

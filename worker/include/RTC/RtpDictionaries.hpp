@@ -30,7 +30,8 @@ namespace RTC
 		};
 
 	public:
-		enum class Subtype : uint16_t
+		// NOLINTNEXTLINE
+		enum class Subtype
 		{
 			// Audio codecs:
 			OPUS = 100,

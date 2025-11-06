@@ -12,9 +12,7 @@ namespace RTC
 			int16_t spatial{ -1 };
 			int16_t temporal{ -1 };
 
-			VideoLayers() : spatial(-1), temporal(-1)
-			{
-			}
+			VideoLayers() = default;
 
 			VideoLayers(int16_t spatial, int16_t temporal) : spatial(spatial), temporal(temporal)
 			{

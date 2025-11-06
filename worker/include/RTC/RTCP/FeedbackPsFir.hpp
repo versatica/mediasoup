@@ -36,7 +36,7 @@ namespace RTC
 
 		public:
 			static const size_t HeaderSize = 8;
-			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::FIR };
+			static const FeedbackPs::MessageType MessageType{ FeedbackPs::MessageType::FIR };
 
 		public:
 			explicit FeedbackPsFirItem(Header* header) : header(header)

@@ -35,7 +35,7 @@ namespace Utils
 		const uint8_t* in;
 		size_t olen;
 
-		olen = len * 4 / 3 + 4; // 3-byte blocks to 4-byte.
+		olen = (len * 4 / 3) + 4; // 3-byte blocks to 4-byte.
 
 		if (olen < len)
 		{

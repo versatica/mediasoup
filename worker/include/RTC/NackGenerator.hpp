@@ -40,7 +40,7 @@ namespace RTC
 			uint8_t retries{ 0u };
 		};
 
-		enum class NackFilter
+		enum class NackFilter : uint8_t
 		{
 			SEQ,
 			TIME

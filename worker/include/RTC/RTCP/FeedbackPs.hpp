@@ -25,10 +25,10 @@ namespace RTC
 			{
 			}
 			explicit FeedbackPsItemsPacket(uint32_t senderSsrc, uint32_t mediaSsrc = 0)
-			  : FeedbackPsPacket(Item::messageType, senderSsrc, mediaSsrc)
+			  : FeedbackPsPacket(Item::MessageType, senderSsrc, mediaSsrc)
 			{
 			}
-			~FeedbackPsItemsPacket()
+			~FeedbackPsItemsPacket() override
 			{
 				for (auto* item : this->items)
 				{

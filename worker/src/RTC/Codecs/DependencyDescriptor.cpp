@@ -563,7 +563,7 @@ namespace RTC
 			this->activeDecodeTargetsBitmask = activeDecodeTargetsBitmask;
 
 			uint8_t len;
-			auto data = this->Serialize(len);
+			const auto* data = this->Serialize(len);
 			this->listener->OnDependencyDescriptorUpdated(data, len);
 
 			return true;

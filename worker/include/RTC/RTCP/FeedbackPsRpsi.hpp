@@ -22,7 +22,7 @@ namespace RTC
 	{
 		class FeedbackPsRpsiItem : public FeedbackItem
 		{
-			const static size_t maxBitStringSize{ 6 };
+			const static size_t MaxBitStringSize{ 6 };
 
 		public:
 			struct Header
@@ -35,12 +35,12 @@ namespace RTC
 				uint8_t zero : 1;
 				uint8_t payloadType : 7;
 #endif
-				uint8_t bitString[maxBitStringSize];
+				uint8_t bitString[MaxBitStringSize];
 			};
 
 		public:
 			static const size_t HeaderSize = 8;
-			static const FeedbackPs::MessageType messageType{ FeedbackPs::MessageType::RPSI };
+			static const FeedbackPs::MessageType MessageType{ FeedbackPs::MessageType::RPSI };
 
 		public:
 			explicit FeedbackPsRpsiItem(Header* header);

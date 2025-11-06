@@ -327,7 +327,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	protected:
 		RTC::Shared* shared{ nullptr };

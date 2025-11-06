@@ -131,14 +131,7 @@ namespace RTC
 
 			auto* context = static_cast<RTC::Codecs::Opus::EncodingContext*>(encodingContext);
 
-			if (this->payloadDescriptor->isDtx && context->GetIgnoreDtx())
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
+			return !(this->payloadDescriptor->isDtx && context->GetIgnoreDtx());
 		};
 	} // namespace Codecs
 } // namespace RTC

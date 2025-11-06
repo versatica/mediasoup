@@ -85,14 +85,14 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(
-			  indentation, "<%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
+			  indentation, "<%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
 			FeedbackPsPacket::Dump(indentation + 1);
 			for (auto* item : this->items)
 			{
 				item->Dump(indentation + 1);
 			}
 			MS_DUMP_CLEAN(
-			  indentation, "</%s>", FeedbackPsPacket::MessageType2String(Item::messageType).c_str());
+			  indentation, "</%s>", FeedbackPsPacket::MessageType2String(Item::MessageType).c_str());
 		}
 
 		// explicit instantiation to have all FeedbackRtpPacket definitions in this file.

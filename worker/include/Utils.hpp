@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
+#include <algorithm> // std::max, std::min
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits
@@ -233,10 +234,7 @@ namespace Utils
 				--max;
 			}
 
-			if (min > max)
-			{
-				min = max;
-			}
+			min = std::min(min, max);
 
 			return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
 		}
@@ -248,10 +246,7 @@ namespace Utils
 				                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 				                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
 
-			if (len > 64)
-			{
-				len = 64;
-			}
+			len = std::min<size_t>(len, 64);
 
 			for (size_t i{ 0 }; i < len; ++i)
 			{

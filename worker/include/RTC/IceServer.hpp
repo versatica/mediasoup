@@ -16,7 +16,7 @@ namespace RTC
 	class IceServer : public TimerHandle::Listener
 	{
 	public:
-		enum class IceState
+		enum class IceState : uint8_t
 		{
 			NEW = 1,
 			CONNECTED,

@@ -17,7 +17,7 @@ namespace RTC
 	class DtlsTransport : public TimerHandle::Listener
 	{
 	public:
-		enum class DtlsState
+		enum class DtlsState : uint8_t
 		{
 			NEW = 1,
 			CONNECTING,
@@ -27,7 +27,7 @@ namespace RTC
 		};
 
 	public:
-		enum class Role
+		enum class Role : uint8_t
 		{
 			AUTO = 1,
 			CLIENT,
@@ -35,7 +35,7 @@ namespace RTC
 		};
 
 	public:
-		enum class FingerprintAlgorithm
+		enum class FingerprintAlgorithm : uint8_t
 		{
 			SHA1 = 1,
 			SHA224,

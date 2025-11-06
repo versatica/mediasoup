@@ -32,7 +32,7 @@ namespace RTC
 
 	public:
 		SeqManager() = default;
-		SeqManager(T initialOutput);
+		explicit SeqManager(T initialOutput);
 
 	public:
 		void Sync(T input);

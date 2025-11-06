@@ -60,10 +60,10 @@ namespace RTC
 			};
 
 		public:
-			enum class AddPacketResult
+			enum class AddPacketResult : uint8_t
 			{
-				SUCCESS           = 0,
-				MAX_SIZE_EXCEEDED = 1,
+				SUCCESS,
+				MAX_SIZE_EXCEEDED,
 				FATAL
 			};
 
@@ -254,7 +254,7 @@ namespace RTC
 			}
 			int64_t GetReferenceTimestamp() const // Reference time in ms.
 			{
-				return TimeWrapPeriod + static_cast<int64_t>(this->referenceTime) * BaseTimeTick;
+				return TimeWrapPeriod + (static_cast<int64_t>(this->referenceTime) * BaseTimeTick);
 			}
 			int64_t GetBaseDelta(const int64_t previousTimestampMs) const
 			{
