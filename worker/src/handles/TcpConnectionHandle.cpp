@@ -85,14 +85,7 @@ TcpConnectionHandle::~TcpConnectionHandle()
 
 	if (!this->closed)
 	{
-		try
-		{
-			InternalClose();
-		}
-		catch (const std::exception& e)
-		{
-			MS_ERROR("error closing TCP socket: %s", e.what());
-		}
+		InternalClose();
 	}
 
 	delete[] this->buffer;
@@ -366,7 +359,17 @@ void TcpConnectionHandle::InternalClose()
 
 	if (err != 0)
 	{
-		MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		try
+		{
+			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		}
+		// NOLINTNEXTLINE
+		catch (const std::exception& e)
+		{
+			// NOTE: This is to avoid a warning:
+			// '~TcpConnectionHandle' has a non-throwing exception specification but can
+			// still throw [-Wexceptions]
+		}
 	}
 
 	// If there is no error and the peer didn't close its connection side then close gracefully.
