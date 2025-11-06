@@ -89,11 +89,11 @@ namespace RTC
 		public:
 			~Packet() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual void Serialize(uint8_t* buffer, size_t bufferLength) override final;
+			void Serialize(uint8_t* buffer, size_t bufferLength) final;
 
-			virtual Packet* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			Packet* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint16_t GetSourcePort() const
 			{

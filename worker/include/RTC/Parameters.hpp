@@ -41,7 +41,8 @@ namespace RTC
 			{
 			}
 
-			explicit Value(std::string&& stringValue) : type(Type::STRING), stringValue(stringValue)
+			explicit Value(std::string&& stringValue)
+			  : type(Type::STRING), stringValue(std::move(stringValue))
 			{
 			}
 

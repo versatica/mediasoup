@@ -398,7 +398,7 @@ namespace Utils
 		static uint64_t Ntp2TimeMs(Time::Ntp ntp)
 		{
 			return (
-			  static_cast<uint64_t>(ntp.seconds) * 1000 +
+			  (static_cast<uint64_t>(ntp.seconds) * 1000) +
 			  static_cast<uint64_t>(
 			    std::round((static_cast<double>(ntp.fractions) * 1000) / NtpFractionalUnit)));
 		}

@@ -56,13 +56,13 @@ namespace RTC
 			UnknownChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnknownChunk() override;
+			~UnknownChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UnknownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			UnknownChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool HasUnknownType() const override
+			bool HasUnknownType() const override
 			{
 				return true;
 			}
@@ -83,7 +83,7 @@ namespace RTC
 			}
 
 		protected:
-			virtual UnknownChunk* SoftClone(const uint8_t* buffer) const final override;
+			UnknownChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -45,6 +45,7 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 			size_t Serialize(uint8_t* buffer);
+			// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 			size_t GetSize() const
 			{
 				return HeaderSize;
@@ -59,15 +60,15 @@ namespace RTC
 			}
 			uint8_t GetFractionLost() const
 			{
-				return Utils::Byte::Get1Byte((uint8_t*)this->header, 4);
+				return Utils::Byte::Get1Byte(reinterpret_cast<uint8_t*>(this->header), 4);
 			}
 			void SetFractionLost(uint8_t fractionLost)
 			{
-				Utils::Byte::Set1Byte((uint8_t*)this->header, 4, fractionLost);
+				Utils::Byte::Set1Byte(reinterpret_cast<uint8_t*>(this->header), 4, fractionLost);
 			}
 			int32_t GetTotalLost() const
 			{
-				auto value = uint32_t{ Utils::Byte::Get3Bytes((uint8_t*)this->header, 5) };
+				auto value = Utils::Byte::Get3Bytes(reinterpret_cast<uint8_t*>(this->header), 5);
 
 				// Possitive value.
 				if (((value >> 23) & 1) == 0)

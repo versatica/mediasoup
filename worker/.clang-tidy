@@ -70,7 +70,10 @@ Checks: "*,\
   -readability-implicit-bool-conversion,\
   -readability-magic-numbers,\
   -readability-redundant-access-specifiers, \
+  -readability-simplify-boolean-expr,\
   -readability-uppercase-literal-suffix,\
+  -cppcoreguidelines-narrowing-conversions,\
+  -bugprone-narrowing-conversions,\
   "
 
 User: mediasoup

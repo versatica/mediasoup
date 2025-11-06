@@ -68,12 +68,12 @@ namespace RTC
 			RestartOfAnAssociationWithNewAddressesErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~RestartOfAnAssociationWithNewAddressesErrorCause() override;
+			~RestartOfAnAssociationWithNewAddressesErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual RestartOfAnAssociationWithNewAddressesErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			RestartOfAnAssociationWithNewAddressesErrorCause* Clone(
+			  uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasNewAddressTlvs() const final
 			{
@@ -93,8 +93,7 @@ namespace RTC
 			void SetNewAddressTlvs(const uint8_t* tlvs, uint16_t tlvsLength);
 
 		protected:
-			virtual RestartOfAnAssociationWithNewAddressesErrorCause* SoftClone(
-			  const uint8_t* buffer) const final override;
+			RestartOfAnAssociationWithNewAddressesErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

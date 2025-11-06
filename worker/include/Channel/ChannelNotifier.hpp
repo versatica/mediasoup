@@ -55,7 +55,7 @@ namespace Channel
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
 		// Others.
-		flatbuffers::FlatBufferBuilder bufferBuilder{};
+		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};
 } // namespace Channel
 

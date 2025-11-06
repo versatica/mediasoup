@@ -65,12 +65,11 @@ namespace RTC
 			UnrecognizedChunkTypeErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnrecognizedChunkTypeErrorCause() override;
+			~UnrecognizedChunkTypeErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UnrecognizedChunkTypeErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			UnrecognizedChunkTypeErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasUnrecognizedChunk() const final
 			{
@@ -90,7 +89,7 @@ namespace RTC
 			void SetUnrecognizedChunk(const uint8_t* chunk, uint16_t chunkLength);
 
 		protected:
-			virtual UnrecognizedChunkTypeErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			UnrecognizedChunkTypeErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

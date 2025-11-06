@@ -65,12 +65,11 @@ namespace RTC
 			UserInitiatedAbortErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UserInitiatedAbortErrorCause() override;
+			~UserInitiatedAbortErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UserInitiatedAbortErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			UserInitiatedAbortErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasUpperLayerAbortReason() const final
 			{
@@ -90,7 +89,7 @@ namespace RTC
 			void SetUpperLayerAbortReason(const uint8_t* reason, uint16_t reasonLength);
 
 		protected:
-			virtual UserInitiatedAbortErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			UserInitiatedAbortErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC
