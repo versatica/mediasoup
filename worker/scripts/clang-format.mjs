@@ -11,10 +11,11 @@ void run();
 async function run() {
 	if (!process.env.MEDIASOUP_CLANG_FORMAT_BINARY) {
 		logInfo(
-			'MEDIASOUP_CLANG_FORMAT_BINARY not specified, using "clang-format"'
+			`MEDIASOUP_CLANG_FORMAT_BINARY not specified, using default "${clangFormatBinary}"`
 		);
 	} else {
 		clangFormatBinary = process.env.MEDIASOUP_CLANG_FORMAT_BINARY;
+
 		logInfo(
 			`MEDIASOUP_CLANG_FORMAT_BINARY specified, using "${clangFormatBinary}"`
 		);
@@ -54,6 +55,58 @@ async function run() {
 	}
 }
 
+function getClangFormatVersion() {
+	try {
+		// Run the command and capture the output.
+		const output = execSync(`${clangFormatBinary} --version`, {
+			encoding: 'utf-8',
+		});
+
+		// Extract the mayor version number from the output.
+		const match = output.match(/version (\d+)/);
+
+		if (match && match[1]) {
+			return parseInt(match[1], 10);
+		} else {
+			logError(
+				`getClangFormatVersion() | unable to parse clang-format version: ${output}`
+			);
+
+			exitWithError();
+		}
+	} catch (error) {
+		logError(
+			`getClangFormatVersion() | error executing clang-format --version: ${error.message}`
+		);
+
+		exitWithError();
+	}
+}
+
+function checkClangFormatVersion(requiredVersion) {
+	try {
+		const version = getClangFormatVersion();
+
+		if (version === requiredVersion) {
+			logInfo(
+				`checkClangFormatVersion() | clang-format version is the required one (${requiredVersion})`
+			);
+		} else {
+			logInfo(
+				`checkClangFormatVersion() | clang-format version (${version}) is not the required one (${requiredVersion})`
+			);
+
+			exitWithError();
+		}
+	} catch (error) {
+		logInfo(
+			`checkClangFormatVersion() | failed to check clang-format version: ${error.message}`
+		);
+
+		exitWithError();
+	}
+}
+
 function executeCmd(command) {
 	try {
 		execSync(command, { stdio: ['ignore', process.stdout, process.stderr] });
@@ -82,44 +135,4 @@ function logError(message) {
 
 function exitWithError() {
 	process.exit(1);
-}
-
-function getClangFormatVersion() {
-	try {
-		// Run the command and capture the output.
-		const output = execSync(`${clangFormatBinary} --version`, {
-			encoding: 'utf-8',
-		});
-
-		// Extract the mayor version number from the output.
-		const match = output.match(/version (\d+)/);
-
-		if (match && match[1]) {
-			return parseInt(match[1], 10);
-		} else {
-			logError(`Unable to parse clang-format version: ${output}`);
-			exitWithError();
-		}
-	} catch (error) {
-		logError(`Error executing clang-format --version: ${error.message}`);
-		exitWithError();
-	}
-}
-
-function checkClangFormatVersion(requiredVersion) {
-	try {
-		const version = getClangFormatVersion();
-
-		if (version === requiredVersion) {
-			logInfo(`clang-format version is the required one (${requiredVersion})`);
-		} else {
-			logInfo(
-				`clang-format version (${version}) is not the required one (${requiredVersion})`
-			);
-			exitWithError();
-		}
-	} catch (error) {
-		logInfo(`Failed to check clang-format version: ${error.message}`);
-		exitWithError();
-	}
 }

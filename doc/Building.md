@@ -37,7 +37,7 @@ A specific clang-format version is required to be installed in the system, which
 MacOS:
 
 ```bash
-brew install clang-format-VERSION
+brew install clang-format@VERSION
 ```
 
 Linux:
