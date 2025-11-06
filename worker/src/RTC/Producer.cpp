@@ -14,8 +14,7 @@
 #include "RTC/RtcLogger.hpp"
 #endif
 #include <absl/container/inlined_vector.h>
-#include <algorithm> // std::max, std::min
-#include <cstring>   // std::memcpy()
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {

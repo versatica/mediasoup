@@ -5,7 +5,6 @@
 #include "Logger.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
-#include <algorithm> // std::max, std::min
 
 namespace RTC
 {

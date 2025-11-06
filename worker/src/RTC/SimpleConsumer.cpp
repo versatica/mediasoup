@@ -11,8 +11,7 @@
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
-#include <algorithm> // std::max, std::min
-#include <limits>    // std::numeric_limits
+#include <limits> // std::numeric_limits
 
 namespace RTC
 {

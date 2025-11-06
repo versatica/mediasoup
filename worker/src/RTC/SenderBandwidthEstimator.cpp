@@ -4,7 +4,6 @@
 #include "RTC/SenderBandwidthEstimator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <algorithm> // std::max, std::min
 
 namespace RTC
 {

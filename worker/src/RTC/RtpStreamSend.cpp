@@ -9,7 +9,6 @@
 #include "Utils.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <algorithm> // std::max, std::min
 
 namespace RTC
 {

@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include <openssl/evp.h>
-#include <algorithm> // std::max, std::min
 #include <cmath>
 #include <cstring> // std::memcmp(), std::memcpy()
 #include <limits>  // std::numeric_limits

@@ -4,7 +4,6 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include <algorithm> // std::max, std::min
 
 namespace RTC
 {
