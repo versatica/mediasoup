@@ -1,7 +1,6 @@
 #ifndef MS_CHANNEL_NOTIFICATION_HPP
 #define MS_CHANNEL_NOTIFICATION_HPP
 
-#include "common.hpp"
 #include "FBS/notification.h"
 #include <absl/container/flat_hash_map.h>
 #include <string>

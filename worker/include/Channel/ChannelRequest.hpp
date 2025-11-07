@@ -28,7 +28,7 @@ namespace Channel
 		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
 		~ChannelRequest() = default;
 
-		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
+		static flatbuffers::FlatBufferBuilder& GetBufferBuilder()
 		{
 			return ChannelRequest::bufferBuilder;
 		}

@@ -1,7 +1,6 @@
 #ifndef MS_CHANNEL_NOTIFIER_HPP
 #define MS_CHANNEL_NOTIFIER_HPP
 
-#include "common.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include <string>
 

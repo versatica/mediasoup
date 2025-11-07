@@ -2,16 +2,16 @@
 #define MS_TEST_RTC_SCTP_CHUNKS_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include "helpers.hpp" // in worker/test/include/
-#include "RTC/SCTP/packet/Chunk.hpp"
-#include "RTC/SCTP/packet/ErrorCause.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
-#include "RTC/SCTP/packet/Parameter.hpp"
-#include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp"
-#include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
-#include <catch2/catch_test_macros.hpp>
+#include "MediaSoupErrors.hpp"            // IWYU pragma: export
+#include "Utils.hpp"                      // IWYU pragma: export
+#include "helpers.hpp"                    // IWYU pragma: export in worker/test/include/
+#include "RTC/SCTP/packet/Chunk.hpp"      // IWYU pragma: export
+#include "RTC/SCTP/packet/ErrorCause.hpp" // IWYU pragma: export
+#include "RTC/SCTP/packet/Packet.hpp"     // IWYU pragma: export
+#include "RTC/SCTP/packet/Parameter.hpp"  // IWYU pragma: export
+#include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp" // IWYU pragma: export
+#include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"             // IWYU pragma: export
+#include <catch2/catch_test_macros.hpp>                                      // IWYU pragma: export
 
 using namespace RTC::SCTP;
 

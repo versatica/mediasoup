@@ -1,7 +1,6 @@
 #ifndef MS_WORKER_HPP
 #define MS_WORKER_HPP
 
-#include "common.hpp"
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/worker.h"
