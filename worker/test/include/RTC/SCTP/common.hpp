@@ -141,6 +141,7 @@ void resetBuffers();
   /*Parameter::ParameterType*/ parameterType,                                                       \
   /*bool*/ unknownType,                                                                             \
   /*Parameter::ActionForUnknownParameterType*/ actionForUnknownParameterType)                       \
+	do                                                                                                \
 	{                                                                                                 \
 		REQUIRE(parameter);                                                                             \
 		REQUIRE(parameter->GetBuffer() != nullptr);                                                     \
@@ -180,6 +181,7 @@ void resetBuffers();
   /*bool*/ frozen,                                                                                 \
   /*ErrorCause::ErrorCauseCode*/ causeCode,                                                        \
   /*bool*/ unknownCode)                                                                            \
+	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(errorCause);                                                                           \
 		REQUIRE(errorCause->GetBuffer() != nullptr);                                                   \
