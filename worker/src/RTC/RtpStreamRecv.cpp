@@ -36,14 +36,15 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		size_t spatialLayer  = packet->GetSpatialLayer();
-		size_t temporalLayer = packet->GetTemporalLayer();
+		auto spatialLayer  = packet->GetSpatialLayer();
+		auto temporalLayer = packet->GetTemporalLayer();
 
 		// Sanity check. Do not allow spatial layers higher than defined.
-		spatialLayer = std::min(spatialLayer, this->spatialLayerCounters.size() - 1);
+		spatialLayer = std::min(static_cast<size_t>(spatialLayer), this->spatialLayerCounters.size() - 1);
 
 		// Sanity check. Do not allow temporal layers higher than defined.
-		temporalLayer = std::min(temporalLayer, this->spatialLayerCounters[0].size() - 1);
+		temporalLayer =
+		  std::min(static_cast<size_t>(temporalLayer), this->spatialLayerCounters[0].size() - 1);
 
 		auto& counter = this->spatialLayerCounters[spatialLayer][temporalLayer];
 
