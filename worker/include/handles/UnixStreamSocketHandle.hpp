@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include <uv.h>
-#include <string>
 
 class UnixStreamSocketHandle
 {

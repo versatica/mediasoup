@@ -59,7 +59,7 @@ namespace RTC
 		}
 
 		CookiePreservativeParameter* CookiePreservativeParameter::ParseStrict(
-		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t padding)
+		  const uint8_t* buffer, size_t bufferLength, uint16_t parameterLength, uint8_t /*padding*/)
 		{
 			MS_TRACE();
 

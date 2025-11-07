@@ -5,8 +5,6 @@
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "RTC/RTCP/FeedbackPsRemb.hpp"
-#include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
 
 namespace RTC
 {

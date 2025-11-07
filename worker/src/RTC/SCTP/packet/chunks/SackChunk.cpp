@@ -187,7 +187,7 @@ namespace RTC
 
 			// Add the new ack block.
 			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), GetNumberOfGapAckBlocks() * 4, start);
-			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), GetNumberOfGapAckBlocks() * 4 + 2, end);
+			Utils::Byte::Set2Bytes(GetAckBlocksPointer(), (GetNumberOfGapAckBlocks() * 4) + 2, end);
 
 			// Update the counter field.
 			// NOTE: Do this after moving bytes.

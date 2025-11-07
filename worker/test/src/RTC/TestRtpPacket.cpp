@@ -8,8 +8,9 @@
 
 using namespace RTC;
 
-static uint8_t buffer[65536];
+static uint8_t Buffer[65536];
 
+// NOLINTNEXTLINE (clang-tidy readability-function-size)
 SCENARIO("parse RTP packets", "[parser][rtp]")
 {
 	SECTION("parse packet1.raw")
@@ -19,12 +20,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t* extenValue;
 		std::string rid;
 
-		if (!helpers::readBinaryFile("data/packet1.raw", buffer, &len))
+		if (!helpers::readBinaryFile("data/packet1.raw", Buffer, &len))
 		{
 			FAIL("cannot open file");
 		}
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(Buffer, len) };
 
 		if (!packet)
 		{
@@ -56,12 +57,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	{
 		size_t len;
 
-		if (!helpers::readBinaryFile("data/packet2.raw", buffer, &len))
+		if (!helpers::readBinaryFile("data/packet2.raw", Buffer, &len))
 		{
 			FAIL("cannot open file");
 		}
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(Buffer, len) };
 
 		if (!packet)
 		{
@@ -89,12 +90,12 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t volume{ 0 };
 		uint32_t absSendTime{ 0 };
 
-		if (!helpers::readBinaryFile("data/packet3.raw", buffer, &len))
+		if (!helpers::readBinaryFile("data/packet3.raw", Buffer, &len))
 		{
 			FAIL("cannot open file");
 		}
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, len) };
+		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(Buffer, len) };
 
 		if (!packet)
 		{
@@ -137,7 +138,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		std::unique_ptr<RtpPacket> clonedPacket{ packet->Clone() };
 
-		std::memset(buffer, '0', sizeof(buffer));
+		std::memset(Buffer, '0', sizeof(Buffer));
 
 		REQUIRE(clonedPacket->HasMarker() == false);
 		REQUIRE(clonedPacket->HasHeaderExtension() == true);

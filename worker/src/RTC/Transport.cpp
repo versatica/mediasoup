@@ -2920,7 +2920,11 @@ namespace RTC
 		}
 		catch (std::exception& error)
 		{
-			// Nothing to do.
+			MS_WARN_TAG(
+			  sctp,
+			  "DataProducer::ReceiveMessage() failed for received SCTP message [streamId:%" PRIu16 "]: %s",
+			  streamId,
+			  error.what());
 		}
 	}
 

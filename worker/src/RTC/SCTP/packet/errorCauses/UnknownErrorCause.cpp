@@ -3,7 +3,6 @@
 
 #include "RTC/SCTP/packet/errorCauses/UnknownErrorCause.hpp"
 #include "Logger.hpp"
-#include "MediaSoupErrors.hpp"
 
 namespace RTC
 {

@@ -25,7 +25,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
-		void Socket::Dump(int indentation) const
+		void Socket::Dump(int /*indentation*/) const
 		{
 			MS_TRACE();
 

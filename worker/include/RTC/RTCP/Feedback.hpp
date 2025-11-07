@@ -64,7 +64,7 @@ namespace RTC
 				return Packet::CommonHeaderSize + HeaderSize;
 			}
 
-		protected:
+		public:
 			explicit FeedbackPacket(CommonHeader* commonHeader);
 			FeedbackPacket(typename T::MessageType messageType, uint32_t senderSsrc, uint32_t mediaSsrc);
 			~FeedbackPacket() override;

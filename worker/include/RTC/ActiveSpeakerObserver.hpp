@@ -65,7 +65,7 @@ namespace RTC
 		};
 
 	private:
-		static const size_t RelativeSpeachActivitiesLen{ 3u };
+		static const uint8_t RelativeSpeachActivitiesLen{ 3u };
 
 	public:
 		ActiveSpeakerObserver(

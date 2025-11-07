@@ -136,7 +136,7 @@ namespace RTC
 		class ReceiverReportPacket : public Packet
 		{
 		public:
-			static size_t MaxReportsPerPacket;
+			static size_t maxReportsPerPacket;
 
 			using Iterator = std::vector<ReceiverReport*>::iterator;
 
@@ -210,7 +210,7 @@ namespace RTC
 				// If number of reports exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
 				size_t size = (Packet::CommonHeaderSize + 4u /* this->ssrc */) *
-				              ((this->GetCount() / MaxReportsPerPacket) + 1);
+				              ((this->GetCount() / maxReportsPerPacket) + 1);
 				size += ReceiverReport::HeaderSize * this->GetCount();
 
 				return size;
