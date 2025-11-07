@@ -9,7 +9,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Unknown Parameter", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UnknownParameter::Parse() succeeds")
 	{

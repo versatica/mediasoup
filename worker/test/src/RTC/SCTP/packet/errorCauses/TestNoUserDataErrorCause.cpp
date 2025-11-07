@@ -8,7 +8,7 @@
 
 SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("NoUserDataErrorCause::Parse() succeeds")
 	{

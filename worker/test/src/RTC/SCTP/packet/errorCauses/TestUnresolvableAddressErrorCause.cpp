@@ -8,7 +8,7 @@
 
 SCENARIO("Unresolvable Address Error Cause (5)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UnresolvableAddressErrorCause::Parse() succeeds")
 	{

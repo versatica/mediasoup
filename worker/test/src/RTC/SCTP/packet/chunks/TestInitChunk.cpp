@@ -13,7 +13,7 @@
 
 SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("InitChunk::Parse() succeeds")
 	{

@@ -2,9 +2,7 @@
 #define MS_RTC_RTX_STREAM_HPP
 
 #include "common.hpp"
-#include "DepLibUV.hpp"
 #include "FBS/rtxStream.h"
-#include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RtpDictionaries.hpp"

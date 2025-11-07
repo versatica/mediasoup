@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("IPv4AddressParameter::Parse() succeeds")
 	{

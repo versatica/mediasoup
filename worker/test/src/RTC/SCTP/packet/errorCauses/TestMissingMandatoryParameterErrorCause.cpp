@@ -9,7 +9,7 @@
 
 SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("MissingMandatoryParameterErrorCause::Parse() succeeds")
 	{

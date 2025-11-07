@@ -7,7 +7,7 @@
 
 SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UnknownErrorCause::Parse() succeeds")
 	{

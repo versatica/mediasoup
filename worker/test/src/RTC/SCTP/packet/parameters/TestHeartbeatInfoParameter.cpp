@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("HeartbeatInfoParameter::Parse() succeeds")
 	{

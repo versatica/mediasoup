@@ -13,7 +13,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("HeartbeatAckChunk::Parse() succeeds")
 	{

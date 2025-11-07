@@ -8,7 +8,7 @@
 
 namespace helpers
 {
-	bool readBinaryFile(const char* file, uint8_t* buffer, size_t* len)
+	bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
 		std::string filePath = "test/" + std::string(file);
 
@@ -32,11 +32,11 @@ namespace helpers
 		return true;
 	}
 
-	bool addToBuffer(uint8_t* buf, int* size, uint8_t* data, size_t len)
+	bool AddToBuffer(uint8_t* buf, int* size, const uint8_t* data, size_t len)
 	{
-		static size_t BUFFER_SIZE{ 65536 };
+		static size_t bufferSize{ 65536 };
 
-		if (*size + len > BUFFER_SIZE)
+		if (*size + len > bufferSize)
 		{
 			return false;
 		}
@@ -60,7 +60,7 @@ namespace helpers
 		return true;
 	}
 
-	bool readPayloadData(const char* file, int pos, int bytes, uint8_t* payload)
+	bool ReadPayloadData(const char* file, int pos, int bytes, uint8_t* payload)
 	{
 		std::string filePath = "test/" + std::string(file);
 
@@ -83,9 +83,9 @@ namespace helpers
 		return true;
 	}
 
-	bool writeRtpPacket(
+	bool WriteRtpPacket(
 	  const char* file,
-	  uint8_t nalType,
+	  uint8_t /*nalType*/,
 	  size_t nalLength,
 	  int32_t sid,
 	  int32_t tid,
@@ -104,11 +104,12 @@ namespace helpers
 
 		uint8_t buffer[16] = { 144, 111, 92, 65, 98, 245, 71, 218, 159, 113, 8, 226, 190, 222, 0, 1 };
 
-		int packet_size = 0;
+		int packetSize  = 0;
 		uint8_t oneByte = 0;
 
 		// Write the RTP header.
-		if (!addToBuffer(buf, &packet_size, buffer, 16))
+		// NOLINTNEXTLINE (readability-suspicious-call-argument)
+		if (!AddToBuffer(buf, &packetSize, buffer, 16))
 		{
 			return false;
 		}
@@ -122,7 +123,7 @@ namespace helpers
 			oneByte = oneByte | 0x01;
 		}
 
-		if (!addToBuffer(buf, &packet_size, &oneByte, 1))
+		if (!AddToBuffer(buf, &packetSize, &oneByte, 1))
 		{
 			return false;
 		}
@@ -150,7 +151,7 @@ namespace helpers
 			oneByte = oneByte | tid;
 		}
 
-		if (!addToBuffer(buf, &packet_size, &oneByte, 1))
+		if (!AddToBuffer(buf, &packetSize, &oneByte, 1))
 		{
 			return false;
 		}
@@ -163,7 +164,7 @@ namespace helpers
 			oneByte = oneByte | sid << 6;
 		}
 
-		if (!addToBuffer(buf, &packet_size, &oneByte, 1))
+		if (!AddToBuffer(buf, &packetSize, &oneByte, 1))
 		{
 			return false;
 		}
@@ -171,23 +172,38 @@ namespace helpers
 		// Write TL0PICIDX.
 		oneByte = 0;
 
-		if (!addToBuffer(buf, &packet_size, &oneByte, 1))
+		if (!AddToBuffer(buf, &packetSize, &oneByte, 1))
 		{
 			return false;
 		}
 
 		// Write payload.
-		if (!addToBuffer(buf, &packet_size, payload, nalLength))
+		if (!AddToBuffer(buf, &packetSize, payload, nalLength))
 		{
 			return false;
 		}
 
-		*len = packet_size;
+		*len = packetSize;
+
+		std::FILE* f = std::fopen(filePath.c_str(), "wb");
+
+		MS_ASSERT(f != nullptr, "cannot open file %s", filePath.c_str());
+
+		const auto written = fwrite(buf, 1, packetSize, f);
+
+		MS_ASSERT(
+		  written == packetSize,
+		  "[%d] should be written to file [%s], but %zu bytes were written",
+		  packetSize,
+		  filePath.c_str(),
+		  written);
+
+		std::fclose(f);
 
 		return true;
 	}
 
-	bool areBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
+	bool AreBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
 	{
 		if (size1 != size2)
 		{
@@ -197,7 +213,7 @@ namespace helpers
 		return std::memcmp(data1, data2, size1) == 0;
 	}
 
-	uint8_t buffer[65536] = { 0 };
+	static uint8_t Buffer[65536] = { 0 };
 
 	std::unique_ptr<RTC::RtpPacket> CreateRtpPacket(uint8_t* payload, size_t len)
 	{
@@ -210,10 +226,10 @@ namespace helpers
 		};
 		// clang-format off
 
-		std::memcpy(buffer, headers, sizeof(headers));
-		std::memcpy(buffer + sizeof(headers), payload, len);
+		std::memcpy(Buffer, headers, sizeof(headers));
+		std::memcpy(Buffer + sizeof(headers), payload, len);
 
-		std::unique_ptr<RTC::RtpPacket> rtpPacket{ RTC::RtpPacket::Parse(buffer, sizeof(headers)+len) };
+		std::unique_ptr<RTC::RtpPacket> rtpPacket{ RTC::RtpPacket::Parse(Buffer, sizeof(headers)+len) };
 
 		MS_ASSERT(rtpPacket != nullptr, "invalid packet");
 

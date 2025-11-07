@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("SupportedAddressTypesParameter::Parse() succeeds")
 	{

@@ -14,7 +14,7 @@
 // NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("OperationErrorChunk::Parse() succeeds")
 	{

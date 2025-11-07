@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("StateCookieParameter::Parse() succeeds")
 	{

@@ -8,7 +8,7 @@
 
 SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UnrecognizedChunkTypeErrorCause::Parse() succeeds")
 	{

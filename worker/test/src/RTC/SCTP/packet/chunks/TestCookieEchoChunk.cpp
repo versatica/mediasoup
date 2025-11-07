@@ -8,9 +8,10 @@
 
 using namespace RTC::SCTP;
 
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("CookieEchoChunk::Parse() succeeds")
 	{

@@ -6,9 +6,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("SackChunk::Parse() succeeds")
 	{

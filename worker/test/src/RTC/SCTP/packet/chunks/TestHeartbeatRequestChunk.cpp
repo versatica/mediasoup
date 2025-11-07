@@ -8,10 +8,10 @@
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
-
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("HeartbeatRequestChunk::Parse() succeeds")
 	{
@@ -55,7 +55,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		const auto* parameter1 =
+		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -79,7 +80,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
+		const auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,
@@ -288,7 +289,8 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		auto* parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
+		const auto* parameter1 =
+		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter1,
@@ -312,7 +314,7 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter1->GetInfo()[7] == 0x00);
 
-		auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
+		const auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
 		CHECK_PARAMETER(
 		  /*parameter*/ parameter2,

@@ -20,7 +20,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t* extenValue;
 		std::string rid;
 
-		if (!helpers::readBinaryFile("data/packet1.raw", Buffer, &len))
+		if (!helpers::ReadBinaryFile("data/packet1.raw", Buffer, &len))
 		{
 			FAIL("cannot open file");
 		}
@@ -57,7 +57,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 	{
 		size_t len;
 
-		if (!helpers::readBinaryFile("data/packet2.raw", Buffer, &len))
+		if (!helpers::ReadBinaryFile("data/packet2.raw", Buffer, &len))
 		{
 			FAIL("cannot open file");
 		}
@@ -90,7 +90,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		uint8_t volume{ 0 };
 		uint32_t absSendTime{ 0 };
 
-		if (!helpers::readBinaryFile("data/packet3.raw", Buffer, &len))
+		if (!helpers::ReadBinaryFile("data/packet3.raw", Buffer, &len))
 		{
 			FAIL("cannot open file");
 		}

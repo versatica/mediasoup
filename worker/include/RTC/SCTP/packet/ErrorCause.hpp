@@ -45,7 +45,9 @@ namespace RTC
 		public:
 			/**
 			 * Error Cause Code.
+			 * NOTE: This field MUST be 2 bytes long.
 			 */
+			// NOLINTNEXTLINE (performance-enum-size)
 			enum class ErrorCauseCode : uint16_t
 			{
 				INVALID_STREAM_IDENTIFIER                    = 0x0001,
@@ -116,11 +118,11 @@ namespace RTC
 			ErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ErrorCause() override;
+			~ErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override = 0;
+			void Dump(int indentation = 0) const override = 0;
 
-			virtual ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
+			ErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const override = 0;
 
 			virtual ErrorCauseCode GetCode() const final
 			{
@@ -141,7 +143,7 @@ namespace RTC
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
 			 */
-			virtual void DumpCommon(int indentation) const override final;
+			void DumpCommon(int indentation) const final;
 
 			virtual void SoftSerialize(const uint8_t* buffer) final;
 
@@ -156,7 +158,7 @@ namespace RTC
 			 * must override this method and return their header length (excluding
 			 * variable-length field considered "value").
 			 */
-			virtual size_t GetHeaderLength() const override
+			size_t GetHeaderLength() const override
 			{
 				return ErrorCause::ErrorCauseHeaderLength;
 			}

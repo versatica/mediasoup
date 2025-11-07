@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("ReconfigurationResponseParameter::Parse() with Sender's and Receiver's Next TSN succeeds")
 	{

@@ -4,15 +4,15 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
 #include "FBS/rtpStream.h"
-#include "RTC/RTCP/FeedbackPsFir.hpp"
-#include "RTC/RTCP/FeedbackPsPli.hpp"
-#include "RTC/RTCP/FeedbackRtpNack.hpp"
-#include "RTC/RTCP/Packet.hpp"
-#include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RTCP/Sdes.hpp"
-#include "RTC/RTCP/SenderReport.hpp"
-#include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#include "RTC/RTCP/XrReceiverReferenceTime.hpp"
+#include "RTC/RTCP/FeedbackPsFir.hpp"           // IWYU pragma: export
+#include "RTC/RTCP/FeedbackPsPli.hpp"           // IWYU pragma: export
+#include "RTC/RTCP/FeedbackRtpNack.hpp"         // IWYU pragma: export
+#include "RTC/RTCP/Packet.hpp"                  // IWYU pragma: export
+#include "RTC/RTCP/ReceiverReport.hpp"          // IWYU pragma: export
+#include "RTC/RTCP/Sdes.hpp"                    // IWYU pragma: export
+#include "RTC/RTCP/SenderReport.hpp"            // IWYU pragma: export
+#include "RTC/RTCP/XrDelaySinceLastRr.hpp"      // IWYU pragma: export
+#include "RTC/RTCP/XrReceiverReferenceTime.hpp" // IWYU pragma: export
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtxStream.hpp"

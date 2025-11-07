@@ -8,7 +8,7 @@
 
 SCENARIO("Stale Cookie Error Cause (3)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("StaleCookieErrorCause::Parse() succeeds")
 	{

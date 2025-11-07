@@ -12,7 +12,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("IDataChunk::Parse() succeeds")
 	{

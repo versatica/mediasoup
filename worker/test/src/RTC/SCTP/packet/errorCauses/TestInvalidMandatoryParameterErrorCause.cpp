@@ -7,7 +7,7 @@
 
 SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("InvalidMandatoryParameterErrorCause::Parse() succeeds")
 	{

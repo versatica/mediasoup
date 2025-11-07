@@ -226,6 +226,7 @@ namespace RTC
 		return 0u;
 	}
 
+	// NOLINTNEXTLINE (misc-no-recursion)
 	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();

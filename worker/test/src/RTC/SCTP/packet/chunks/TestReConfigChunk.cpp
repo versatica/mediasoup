@@ -12,7 +12,7 @@
 
 SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("ReConfigChunk::Parse() succeeds")
 	{

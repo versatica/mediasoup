@@ -2,6 +2,7 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RtxStream.hpp"
+#include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
 
