@@ -28,7 +28,8 @@ namespace Channel
 		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
 		~ChannelRequest() = default;
 
-		static flatbuffers::FlatBufferBuilder& GetBufferBuilder()
+		// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
 		{
 			return ChannelRequest::bufferBuilder;
 		}

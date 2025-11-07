@@ -1,6 +1,7 @@
 #ifndef RTC_SEQ_MANAGER_HPP
 #define RTC_SEQ_MANAGER_HPP
 
+#include "common.hpp"
 #include <limits> // std::numeric_limits
 #include <set>
 
