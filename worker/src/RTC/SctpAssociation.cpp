@@ -586,6 +586,8 @@ namespace RTC
 		{
 			MS_WARN_TAG(sctp, "usrsctp_setsockopt(SCTP_RESET_STREAMS) failed: %s", std::strerror(errno));
 		}
+
+		std::free(srs);
 	}
 
 	void SctpAssociation::AddOutgoingStreams(bool force)
