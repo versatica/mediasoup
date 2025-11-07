@@ -26,6 +26,7 @@ extern thread_local uint8_t ThrowBuffer[66665];
 void resetBuffers();
 
 // clang-format off
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_PACKET(                                                                              \
   /*const Packet**/ packet,                                                                        \
   /*const uint8_t**/ buffer,                                                                       \
@@ -64,6 +65,7 @@ void resetBuffers();
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
 	} while (false)
 
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_CHUNK(                                                                                 \
   /*const Chunk**/ chunk,                                                                            \
   /*uint8_t**/ buffer,                                                                               \
@@ -129,6 +131,7 @@ void resetBuffers();
 		REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, length - 1), MediaSoupError);                        \
 	} while (false)
 
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_PARAMETER(                                                                            \
   /*const Parameter**/ parameter,                                                                   \
   /*const uint8_t**/ buffer,                                                                        \
@@ -168,6 +171,7 @@ void resetBuffers();
 	}                                                                                                 \
 	while (false)
 
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_ERROR_CAUSE(                                                                         \
   /*const ErrorCause**/ errorCause,                                                                \
   /*const uint8_t**/ buffer,                                                                       \

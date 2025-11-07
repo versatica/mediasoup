@@ -25,6 +25,7 @@ namespace RTC
 			MS_TRACE();
 		}
 
+		// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 		void Socket::Dump(int /*indentation*/) const
 		{
 			MS_TRACE();
@@ -32,6 +33,7 @@ namespace RTC
 			// TODO
 		}
 
+		// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 		void Socket::SendInitChunk()
 		{
 			MS_TRACE();

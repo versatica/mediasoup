@@ -11,6 +11,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 {
 	resetBuffers();
@@ -55,7 +56,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ true,
 		  /*errorCausesCount*/ 3);
 
-		auto* errorCause1 =
+		const auto* errorCause1 =
 		  reinterpret_cast<const InvalidStreamIdentifierErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		REQUIRE(chunk->GetFirstErrorCauseOfCode<InvalidStreamIdentifierErrorCause>() == errorCause1);
@@ -71,7 +72,8 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 
 		REQUIRE(errorCause1->GetStreamIdentifier() == 0x1234);
 
-		auto* errorCause2 = reinterpret_cast<const OutOfResourceErrorCause*>(chunk->GetErrorCauseAt(1));
+		const auto* errorCause2 =
+		  reinterpret_cast<const OutOfResourceErrorCause*>(chunk->GetErrorCauseAt(1));
 
 		REQUIRE(chunk->GetFirstErrorCauseOfCode<OutOfResourceErrorCause>() == errorCause2);
 
@@ -84,7 +86,7 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
-		auto* errorCause3 = reinterpret_cast<const UnknownErrorCause*>(chunk->GetErrorCauseAt(2));
+		const auto* errorCause3 = reinterpret_cast<const UnknownErrorCause*>(chunk->GetErrorCauseAt(2));
 
 		REQUIRE(chunk->GetFirstErrorCauseOfCode<UnknownErrorCause>() == errorCause3);
 

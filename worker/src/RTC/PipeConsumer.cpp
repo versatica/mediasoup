@@ -513,10 +513,7 @@ namespace RTC
 			auto fractionLost = rtpStream->GetFractionLost();
 
 			// If our fraction lost is worse than the given one, update it.
-			if (fractionLost > worstRemoteFractionLost)
-			{
-				worstRemoteFractionLost = fractionLost;
-			}
+			worstRemoteFractionLost = std::max(fractionLost, worstRemoteFractionLost);
 		}
 	}
 
@@ -617,10 +614,7 @@ namespace RTC
 
 		for (auto* rtpStream : this->rtpStreams)
 		{
-			if (rtpStream->GetRtt() > rtt)
-			{
-				rtt = rtpStream->GetRtt();
-			}
+			rtt = std::max(rtpStream->GetRtt(), rtt);
 		}
 
 		return rtt;

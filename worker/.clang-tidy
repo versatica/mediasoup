@@ -8,6 +8,7 @@ Checks: "*,\
   -bugprone-implicit-widening-of-multiplication-result,\
   -bugprone-lambda-function-name,\
   -bugprone-macro-parentheses,\
+  -bugprone-narrowing-conversions,\
   -bugprone-reserved-identifier,\
   -cert-*,\
   -clang-analyzer-optin.osx.*,\
@@ -19,6 +20,7 @@ Checks: "*,\
   -cppcoreguidelines-avoid-non-const-global-variables,\
   -cppcoreguidelines-avoid-magic-numbers,\
   -cppcoreguidelines-init-variables,\
+  -cppcoreguidelines-narrowing-conversions,\
   -cppcoreguidelines-no-malloc,\
   -cppcoreguidelines-non-private-member-variables-in-classes,\
   -cppcoreguidelines-owning-memory,\
@@ -63,6 +65,7 @@ Checks: "*,\
   -modernize-pass-by-value,\
   -modernize-use-nodiscard, \
   -modernize-use-trailing-return-type,\
+  -performance-no-int-to-ptr,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
   -readability-identifier-length,\
@@ -72,8 +75,6 @@ Checks: "*,\
   -readability-redundant-access-specifiers, \
   -readability-simplify-boolean-expr,\
   -readability-uppercase-literal-suffix,\
-  -cppcoreguidelines-narrowing-conversions,\
-  -bugprone-narrowing-conversions,\
   "
 
 User: mediasoup
