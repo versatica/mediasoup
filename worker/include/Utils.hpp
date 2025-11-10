@@ -86,8 +86,7 @@ namespace Utils
 					std::memcpy(std::addressof(copiedAddr), addr, sizeof(struct sockaddr_in6));
 					break;
 
-				default:
-					break;
+				default:;
 			}
 
 			return copiedAddr;
