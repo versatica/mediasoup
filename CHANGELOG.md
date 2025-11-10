@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- Fix RTCP cumulative total lost computation ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+- Fix RTCP cumulative total lost computation ([PR #1650](https://github.com/versatica/mediasoup/pull/1650)).
 
 ### 3.19.7
 
