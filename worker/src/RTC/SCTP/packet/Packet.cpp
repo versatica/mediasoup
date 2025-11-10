@@ -45,7 +45,7 @@ namespace RTC
 
 			// Pointer that initially points to the given data buffer and is later
 			// incremented to point to other parts of the Packet.
-			auto* ptr = buffer;
+			const auto* ptr = buffer;
 
 			// Move to chunks.
 			ptr = packet->GetChunksPointer();

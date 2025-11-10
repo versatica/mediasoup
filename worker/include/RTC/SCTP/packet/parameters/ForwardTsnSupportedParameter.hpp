@@ -62,15 +62,14 @@ namespace RTC
 			ForwardTsnSupportedParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ForwardTsnSupportedParameter() override;
+			~ForwardTsnSupportedParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ForwardTsnSupportedParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			ForwardTsnSupportedParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 		protected:
-			virtual ForwardTsnSupportedParameter* SoftClone(const uint8_t* buffer) const final override;
+			ForwardTsnSupportedParameter* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

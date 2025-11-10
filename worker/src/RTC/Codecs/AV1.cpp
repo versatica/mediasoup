@@ -63,7 +63,7 @@ namespace RTC
 			this->temporalLayer = dependencyDescriptor->temporalLayer;
 			this->isKeyFrame    = dependencyDescriptor->isKeyFrame;
 
-			this->dependencyDescriptor.reset(dependencyDescriptor.release());
+			this->dependencyDescriptor = std::move(dependencyDescriptor);
 		}
 
 		void AV1::PayloadDescriptor::Dump(int indentation) const
@@ -90,6 +90,7 @@ namespace RTC
 			  this->encoder->encodingData.maxSpatialLayer, this->encoder->encodingData.maxTemporalLayer);
 		}
 
+		// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 		void AV1::PayloadDescriptor::Restore() const
 		{
 			MS_TRACE();
@@ -98,6 +99,7 @@ namespace RTC
 			// the active decode targets mask.
 		}
 
+		// NOLINTNEXTLINE (readability-make-member-function-const)
 		void AV1::PayloadDescriptor::UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer)
 		{
 			MS_TRACE();
@@ -119,7 +121,7 @@ namespace RTC
 		}
 
 		bool AV1::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker)
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* /*packet*/, bool& marker)
 		{
 			MS_TRACE();
 
@@ -270,7 +272,7 @@ namespace RTC
 		}
 
 		void AV1::PayloadDescriptorHandler::Encode(
-		  RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder)
+		  RtpPacket* /*packet*/, Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 
@@ -279,7 +281,7 @@ namespace RTC
 			av1Encoder->Encode(this->payloadDescriptor.get());
 		}
 
-		void AV1::PayloadDescriptorHandler::Restore(RtpPacket* packet)
+		void AV1::PayloadDescriptorHandler::Restore(RtpPacket* /*packet*/)
 		{
 			MS_TRACE();
 

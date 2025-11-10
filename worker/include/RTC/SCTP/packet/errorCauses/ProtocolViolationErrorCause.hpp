@@ -65,12 +65,11 @@ namespace RTC
 			ProtocolViolationErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ProtocolViolationErrorCause() override;
+			~ProtocolViolationErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ProtocolViolationErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			ProtocolViolationErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasAdditionalInformation() const final
 			{
@@ -90,7 +89,7 @@ namespace RTC
 			void SetAdditionalInformation(const uint8_t* info, uint16_t infoLength);
 
 		protected:
-			virtual ProtocolViolationErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			ProtocolViolationErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

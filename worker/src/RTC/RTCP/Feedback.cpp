@@ -251,8 +251,6 @@ namespace RTC
 					break;
 
 				case FeedbackRtp::MessageType::PS:
-					break;
-
 				case FeedbackRtp::MessageType::EXT:
 					break;
 

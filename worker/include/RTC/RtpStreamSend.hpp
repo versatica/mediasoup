@@ -17,10 +17,10 @@ namespace RTC
 		const static uint32_t MaxRetransmissionDelayForAudioMs;
 
 	public:
-		enum class ReceivePacketResult
+		enum class ReceivePacketResult : uint8_t
 		{
-			DISCARDED               = 0,
-			ACCEPTED_AND_NOT_STORED = 1,
+			DISCARDED,
+			ACCEPTED_AND_NOT_STORED,
 			ACCEPTED_AND_STORED
 		};
 

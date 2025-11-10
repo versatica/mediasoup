@@ -4,9 +4,7 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <iterator> // std::ostream_iterator
-#include <sstream>  // std::ostringstream
-#include <utility>  // std::make_pair()
+#include <utility> // std::make_pair()
 
 namespace RTC
 {

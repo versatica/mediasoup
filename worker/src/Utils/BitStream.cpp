@@ -6,6 +6,7 @@
 
 namespace Utils
 {
+	//NOLINTNEXTLINE (cppcoreguidelines-pro-type-member-init)
 	BitStream::BitStream(uint8_t* data, size_t len) : len(len)
 	{
 		MS_TRACE();
@@ -63,7 +64,7 @@ namespace Utils
 
 		for (unsigned i = 0; i < count; ++i)
 		{
-			bits = 2 * bits + GetBit();
+			bits = (2 * bits) + GetBit();
 		}
 
 		return bits;
@@ -78,7 +79,7 @@ namespace Utils
 			return 0;
 		}
 
-		auto leftBits = this->len * 8 - this->offset;
+		auto leftBits = (this->len * 8) - this->offset;
 
 		return leftBits;
 	}
@@ -124,9 +125,9 @@ namespace Utils
 			return std::nullopt;
 		}
 
-		unsigned extra_bit = this->GetBit();
+		unsigned extraBit = this->GetBit();
 
-		return (v << 1) - m + extra_bit;
+		return (v << 1) - m + extraBit;
 	}
 
 	void BitStream::Write(uint32_t offset, uint32_t n, uint32_t v)

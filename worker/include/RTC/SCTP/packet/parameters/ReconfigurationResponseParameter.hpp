@@ -41,6 +41,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
+			// NOLINTNEXTLINE (performance-enum-siz)
 			enum class Result : uint32_t
 			{
 				SUCCESS_NOTHING_TO_DO             = 0x00000000,
@@ -95,12 +96,11 @@ namespace RTC
 			ReconfigurationResponseParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ReconfigurationResponseParameter() override;
+			~ReconfigurationResponseParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ReconfigurationResponseParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			ReconfigurationResponseParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint32_t GetReconfigurationResponseSequenceNumber() const
 			{
@@ -146,13 +146,13 @@ namespace RTC
 			void SetNextTsns(uint32_t senderNextTsn, uint32_t receiverNextTsn);
 
 		protected:
-			virtual ReconfigurationResponseParameter* SoftClone(const uint8_t* buffer) const final override;
+			ReconfigurationResponseParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We need to override this method since this Chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return ReconfigurationResponseParameter::ReconfigurationResponseParameterHeaderLength;
 			}

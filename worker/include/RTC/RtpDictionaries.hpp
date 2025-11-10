@@ -20,6 +20,7 @@ namespace RTC
 		};
 	};
 
+	// NOLINTNEXTLINE (cppcoreguidelines-pro-type-member-init)
 	class RtpCodecMimeType
 	{
 	public:
@@ -206,6 +207,7 @@ namespace RTC
 		bool ksvc{ false };
 	};
 
+	// NOLINTNEXTLINE (cppcoreguidelines-pro-type-member-init)
 	class RtpHeaderExtensionParameters
 	{
 	public:

@@ -119,9 +119,9 @@ namespace RTC
 
 			~StateCookie() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual StateCookie* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			StateCookie* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			/**
 			 * The value of the Initiate Tag field we put in our INIT or INIT_ACK
