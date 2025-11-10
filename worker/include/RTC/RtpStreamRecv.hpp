@@ -123,7 +123,7 @@ namespace RTC
 		// although it's exposed as integer in the stats.
 		float jitter{ 0 };
 		uint8_t firSeqNumber{ 0u };
-		uint32_t reportedPacketLost{ 0u };
+		int32_t reportedPacketsLost{ 0 };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
 		TimerHandle* inactivityCheckPeriodicTimer{ nullptr };
 		bool inactive{ false };

@@ -70,8 +70,8 @@ namespace RTC
 
 			MS_ASSERT(
 			  this->newestItemIndex != this->oldestItemIndex || this->oldestItemIndex == -1,
-			  "newest index overlaps with the oldest one [newestItemIndex:%" PRId32
-			  ", oldestItemIndex:%" PRId32 "]",
+			  "newest index overlaps with the oldest one [newestItemIndex:%" PRIi32
+			  ", oldestItemIndex:%" PRIi32 "]",
 			  this->newestItemIndex,
 			  this->oldestItemIndex);
 

@@ -48,7 +48,7 @@ table BaseStats {
     ssrc: uint32;
     kind: FBS.RtpParameters.MediaKind;
     mime_type: string (required);
-    packets_lost: uint64;
+    packets_lost: int32;
     fraction_lost: uint8;
     packets_discarded: uint64;
     packets_retransmitted: uint64;

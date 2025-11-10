@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Fix RTCP packets lost in stats ([PR #1651](https://github.com/versatica/mediasoup/pull/1651)).
+
 ### 3.19.8
 
 - Fix RTCP cumulative total lost computation ([PR #1650](https://github.com/versatica/mediasoup/pull/1650)).

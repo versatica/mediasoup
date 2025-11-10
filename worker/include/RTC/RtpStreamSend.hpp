@@ -69,7 +69,7 @@ namespace RTC
 
 	private:
 		// Packets lost at last interval for score calculation.
-		uint32_t lostPriorScore{ 0u };
+		int32_t lostPriorScore{ 0 };
 		// Packets sent at last interval for score calculation.
 		uint32_t sentPriorScore{ 0u };
 		std::string mid;

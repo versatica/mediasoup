@@ -396,7 +396,7 @@ pub struct ConsumerStat {
     pub rtx_ssrc: Option<u32>,
     pub kind: MediaKind,
     pub mime_type: MimeType,
-    pub packets_lost: u64,
+    pub packets_lost: i32,
     pub fraction_lost: u8,
     pub packets_discarded: u64,
     pub packets_retransmitted: u64,
