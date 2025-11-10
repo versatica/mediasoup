@@ -8,7 +8,7 @@
 
 SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("RestartOfAnAssociationWithNewAddressesErrorCause::Parse() succeeds")
 	{

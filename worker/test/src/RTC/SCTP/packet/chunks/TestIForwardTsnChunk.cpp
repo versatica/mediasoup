@@ -8,7 +8,7 @@
 
 SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("IForwardTsnChunk::Parse() succeeds")
 	{

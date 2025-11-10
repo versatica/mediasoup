@@ -10,7 +10,7 @@
 
 SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("AbortAssociationChunk::Parse() succeeds")
 	{

@@ -630,6 +630,7 @@ namespace RTC
 		}
 	}
 
+	// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 	void PortManager::Dump(int indentation) const
 	{
 		MS_DUMP_CLEAN(indentation, "<PortManager>");

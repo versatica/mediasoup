@@ -34,7 +34,7 @@ Runs both `lint:node` and `lint:worker` tasks.
 
 A specific clang-format version is required to be installed in the system, which is defined in [clang-format-mjs](../worker/scripts/clang-format.mjs).
 
-MacOS:
+macOS:
 
 ```bash
 brew install clang-format@VERSION
@@ -262,7 +262,7 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 **Usage example in macOS:**
 
 ```bash
-MEDIASOUP_CLANG_TIDY_DIR=/usr/local/opt/llvm/bin invoke tidy
+MEDIASOUP_CLANG_TIDY_DIR=/opt/homebrew/opt/llvm/bin/ invoke tidy
 ```
 
 ### `invoke fuzzer`

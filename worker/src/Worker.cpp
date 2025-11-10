@@ -170,6 +170,7 @@ flatbuffers::Offset<FBS::Worker::DumpResponse> Worker::FillBuffer(
 #endif
 }
 
+// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResourceUsage(
   flatbuffers::FlatBufferBuilder& builder) const
 {

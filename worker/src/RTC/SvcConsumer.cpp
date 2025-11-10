@@ -607,6 +607,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
+	// NOLINTNEXTLINE (misc-no-recursion)
 	void SvcConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
 	{
 		MS_TRACE();

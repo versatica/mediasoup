@@ -8,7 +8,7 @@
 
 SCENARIO("Unrecognized Parameters Error Cause (8)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UnrecognizedParametersErrorCause::Parse() succeeds")
 	{

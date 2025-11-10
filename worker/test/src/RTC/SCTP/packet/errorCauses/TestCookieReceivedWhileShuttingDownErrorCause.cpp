@@ -7,7 +7,7 @@
 
 SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("CookieReceivedWhileShuttingDownErrorCause::Parse() succeeds")
 	{

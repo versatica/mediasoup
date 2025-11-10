@@ -9,7 +9,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("ForwardTsnSupportedParameter::Parse() succeeds")
 	{

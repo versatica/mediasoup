@@ -9,7 +9,7 @@ thread_local uint8_t CloneBuffer[];
 thread_local uint8_t DataBuffer[];
 thread_local uint8_t ThrowBuffer[];
 
-void resetBuffers()
+void ResetBuffers()
 {
 	std::memset(FactoryBuffer, 0xAA, sizeof(FactoryBuffer));
 	std::memset(SerializeBuffer, 0xBB, sizeof(SerializeBuffer));

@@ -18,9 +18,10 @@
 
 using namespace RTC::SCTP;
 
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Packet", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("Packet::Parse() without Chunks succeeds")
 	{
@@ -261,6 +262,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		const auto* parameter3_1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
@@ -578,6 +580,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		chunk1->SetInitialTsn(14141414);
 
 		// Parameter 1.1: IPV4_ADDRESS, length: 8 bytes.
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		auto* parameter1_1 = chunk1->BuildParameterInPlace<IPv4AddressParameter>();
 
 		// 192.168.0.3 IPv4 in network order.
@@ -589,6 +592,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(chunk1->GetFirstParameterOfType<IPv4AddressParameter>() == parameter1_1);
 
 		// Parameter 1.2: COOKIE_PRESERVATIVE, length: 8 bytes.
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		auto* parameter1_2 = chunk1->BuildParameterInPlace<CookiePreservativeParameter>();
 
 		parameter1_2->SetLifeSpanIncrement(987654321);
@@ -608,6 +612,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		auto* chunk2 = packet->BuildChunkInPlace<HeartbeatRequestChunk>();
 
 		// Parameter 2.1: HEARTBEAT_INFO, length: 4 bytes.
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		auto* parameter2_1 = chunk2->BuildParameterInPlace<HeartbeatInfoParameter>();
 
 		// Parameter 2.1: Add 3 bytes of info + 1 byte of padding.
@@ -684,15 +689,18 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		const auto* obtainedChunk1 = reinterpret_cast<const InitChunk*>(clonedPacket->GetChunkAt(0));
 
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		const auto* obtainedParameter1_1 =
 		  reinterpret_cast<const IPv4AddressParameter*>(obtainedChunk1->GetParameterAt(0));
 
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		const auto* obtainedParameter1_2 =
 		  reinterpret_cast<const CookiePreservativeParameter*>(obtainedChunk1->GetParameterAt(1));
 
 		const auto* obtainedChunk2 =
 		  reinterpret_cast<const HeartbeatRequestChunk*>(clonedPacket->GetChunkAt(1));
 
+		// NOLINTNEXTLINE (readability-identifier-naming)
 		const auto* obtainedParameter2_1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
 

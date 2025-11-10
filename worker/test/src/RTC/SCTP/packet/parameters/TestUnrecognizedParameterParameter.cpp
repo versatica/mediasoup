@@ -8,9 +8,10 @@
 
 using namespace RTC::SCTP;
 
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UnrecognizedParameterParameter::Parse() succeeds")
 	{

@@ -8,7 +8,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("StateCookie::Parse() succeeds")
 	{

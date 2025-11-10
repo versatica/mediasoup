@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("SCTP Shutdown Ack Chunk (8)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("ShutdownAckChunk::Parse() succeeds")
 	{

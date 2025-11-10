@@ -8,7 +8,7 @@
 
 SCENARIO("User-Initiated Abort Error Cause (12)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("UserInitiatedAbortErrorCause::Parse() succeeds")
 	{

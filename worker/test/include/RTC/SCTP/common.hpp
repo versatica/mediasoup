@@ -23,7 +23,7 @@ extern thread_local uint8_t CloneBuffer[66663];
 extern thread_local uint8_t DataBuffer[66664];
 extern thread_local uint8_t ThrowBuffer[66665];
 
-void resetBuffers();
+void ResetBuffers();
 
 // clang-format off
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
@@ -59,7 +59,7 @@ void resetBuffers();
 		REQUIRE(packet->HasChunks() == (chunksCount > 0));                                             \
 		REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);                                           \
 		REQUIRE(                                                                                       \
-		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
+		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
@@ -123,7 +123,7 @@ void resetBuffers();
 		if (buffer)                                                                                      \
 		{                                                                                                \
 			REQUIRE(                                                                                       \
-			  helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);   \
+			  helpers::AreBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);   \
 		}                                                                                                \
 		REQUIRE_THROWS_AS(                                                                               \
 		  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))->Serialize(ThrowBuffer, length - 1), \
@@ -141,6 +141,7 @@ void resetBuffers();
   /*Parameter::ParameterType*/ parameterType,                                                       \
   /*bool*/ unknownType,                                                                             \
   /*Parameter::ActionForUnknownParameterType*/ actionForUnknownParameterType)                       \
+	do                                                                                                \
 	{                                                                                                 \
 		REQUIRE(parameter);                                                                             \
 		REQUIRE(parameter->GetBuffer() != nullptr);                                                     \
@@ -160,7 +161,7 @@ void resetBuffers();
 		if (buffer)                                                                                     \
 		{                                                                                               \
 			REQUIRE(                                                                                      \
-			  helpers::areBuffersEqual(parameter->GetBuffer(), parameter->GetLength(), buffer, length) == \
+			  helpers::AreBuffersEqual(parameter->GetBuffer(), parameter->GetLength(), buffer, length) == \
 			  true);                                                                                      \
 		}                                                                                               \
 		REQUIRE_THROWS_AS(                                                                              \
@@ -180,6 +181,7 @@ void resetBuffers();
   /*bool*/ frozen,                                                                                 \
   /*ErrorCause::ErrorCauseCode*/ causeCode,                                                        \
   /*bool*/ unknownCode)                                                                            \
+	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(errorCause);                                                                           \
 		REQUIRE(errorCause->GetBuffer() != nullptr);                                                   \
@@ -198,7 +200,7 @@ void resetBuffers();
 		if (buffer)                                                                                    \
 		{                                                                                              \
 			REQUIRE(                                                                                     \
-			  helpers::areBuffersEqual(                                                                  \
+			  helpers::AreBuffersEqual(                                                                  \
 			    errorCause->GetBuffer(), errorCause->GetLength(), buffer, length) == true);              \
 		}                                                                                              \
 		REQUIRE_THROWS_AS(                                                                             \

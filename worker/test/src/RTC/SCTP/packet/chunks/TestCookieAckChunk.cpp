@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("SCTP Cookie Acknowledgement Chunk (11)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("CookieAckChunk::Parse() succeeds")
 	{

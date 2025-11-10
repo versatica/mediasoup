@@ -57,7 +57,7 @@ namespace RTC
 		return activityScore;
 	}
 
-	inline bool ComputeBigs(
+	static inline bool computeBigs(
 	  const std::vector<uint8_t>& littles, std::vector<uint8_t>& bigs, uint8_t threashold)
 	{
 		const uint32_t littleLen       = littles.size();
@@ -534,14 +534,14 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		return ComputeBigs(this->immediates, this->mediums, MediumThreshold);
+		return computeBigs(this->immediates, this->mediums, MediumThreshold);
 	}
 
 	bool ActiveSpeakerObserver::Speaker::ComputeLongs()
 	{
 		MS_TRACE();
 
-		return ComputeBigs(this->mediums, this->longs, LongThreashold);
+		return computeBigs(this->mediums, this->longs, LongThreashold);
 	}
 
 	void ActiveSpeakerObserver::Speaker::EvalImmediateActivityScore()

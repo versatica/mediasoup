@@ -11,7 +11,7 @@
 // NOTE: Simplified since it's similar to InitChunk.
 SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("InitAckChunk::Parse() succeeds")
 	{

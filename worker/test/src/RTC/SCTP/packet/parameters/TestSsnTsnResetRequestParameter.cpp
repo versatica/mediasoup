@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("SsnTsnResetRequestParameter::Parse() succeeds")
 	{

@@ -10,6 +10,13 @@ namespace RTC
 {
 	class PipeConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
 	{
+	private:
+		static void StorePacketInTargetLayerRetransmissionBuffer(
+		  std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+		    targetLayerRetransmissionBuffer,
+		  RTC::RtpPacket* packet,
+		  RTC::SharedRtpPacket& sharedPacket);
+
 	public:
 		PipeConsumer(
 		  RTC::Shared* shared,
@@ -60,11 +67,6 @@ namespace RTC
 		void UserOnResumed() override;
 		void CreateRtpStreams();
 		void RequestKeyFrame();
-		void StorePacketInTargetLayerRetransmissionBuffer(
-		  std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
-		    targetLayerRetransmissionBuffer,
-		  RTC::RtpPacket* packet,
-		  RTC::SharedRtpPacket& sharedPacket);
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:

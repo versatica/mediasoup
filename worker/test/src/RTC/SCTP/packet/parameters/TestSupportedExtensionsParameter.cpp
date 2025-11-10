@@ -11,7 +11,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("SupportedExtensionsParameter::Parse() succeeds")
 	{

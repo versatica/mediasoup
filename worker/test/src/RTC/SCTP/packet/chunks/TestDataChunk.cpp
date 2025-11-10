@@ -10,9 +10,10 @@
 
 using namespace RTC::SCTP;
 
+// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("DataChunk::Parse() succeeds")
 	{

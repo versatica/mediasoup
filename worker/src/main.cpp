@@ -1,7 +1,7 @@
 #define MS_CLASS "mediasoup-worker"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "MediaSoupErrors.hpp"
+#include "Logger.hpp"
 #include "lib.hpp"
 #include <cstdlib> // std::_Exit()
 #include <string>

@@ -7,7 +7,7 @@
 
 SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("OutOfResourceErrorCause::Parse() succeeds")
 	{

@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("ZeroChecksumAcceptableParameter::Parse() succeeds")
 	{

@@ -6,13 +6,13 @@
 
 namespace helpers
 {
-	bool readBinaryFile(const char* file, uint8_t* buffer, size_t* len);
+	bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len);
 
-	bool addToBuffer(uint8_t* buf, int* size, uint8_t* data, size_t len);
+	bool AddToBuffer(uint8_t* buf, int* size, const uint8_t* data, size_t len);
 
-	bool readPayloadData(const char* file, int pos, int bytes, uint8_t* payload);
+	bool ReadPayloadData(const char* file, int pos, int bytes, uint8_t* payload);
 
-	bool writeRtpPacket(
+	bool WriteRtpPacket(
 	  const char* file,
 	  uint8_t nalType,
 	  size_t nalLength,
@@ -25,7 +25,7 @@ namespace helpers
 	  uint8_t* buf,
 	  size_t* len);
 
-	bool areBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2);
+	bool AreBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2);
 	std::unique_ptr<RTC::RtpPacket> CreateRtpPacket(uint8_t* payload, size_t len);
 } // namespace helpers
 

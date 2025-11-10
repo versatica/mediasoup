@@ -10,7 +10,7 @@ using namespace RTC::SCTP;
 
 SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 {
-	resetBuffers();
+	ResetBuffers();
 
 	SECTION("AddIncomingStreamsRequestParameter::Parse() succeeds")
 	{

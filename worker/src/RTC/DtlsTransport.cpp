@@ -358,6 +358,7 @@ namespace RTC
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
 		// Create key with curve.
+		// NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
 		DtlsTransport::privateKey = EVP_EC_gen(SN_X9_62_prime256v1);
 
 		if (!DtlsTransport::privateKey)
