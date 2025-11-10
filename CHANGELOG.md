@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Fix RTCP cumulative total lost computation ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX)).
+
 ### 3.19.7
 
 - Bump up Meson from 1.5.0 to 1.9.1 ([PR #1634](https://github.com/versatica/mediasoup/pull/1634)).

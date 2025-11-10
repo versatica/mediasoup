@@ -16,7 +16,7 @@ namespace TestReceiverReport
 		0x5d, 0x93, 0x15, 0x34, // Sender SSRC: 0x5d931534
 		// Receiver Report
 		0x01, 0x93, 0x2d, 0xb4, // SSRC. 0x01932db4
-		0x00, 0x00, 0x00, 0x01, // Fraction lost: 0, Total lost: 1
+		0x00, 0xFF, 0xFF, 0xFF, // Fraction lost: 0, Total lost: -1
 		0x00, 0x00, 0x00, 0x00, // Extended highest sequence number: 0
 		0x00, 0x00, 0x00, 0x00, // Jitter: 0
 		0x00, 0x00, 0x00, 0x00, // Last SR: 0
@@ -29,7 +29,7 @@ namespace TestReceiverReport
 
 	uint32_t ssrc{ 0x01932db4 };
 	uint8_t fractionLost{ 0 };
-	uint8_t totalLost{ 1 };
+	int32_t totalLost{ -1 };
 	uint32_t lastSeq{ 0 };
 	uint32_t jitter{ 0 };
 	uint32_t lastSenderReport{ 0 };

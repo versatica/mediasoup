@@ -68,32 +68,11 @@ namespace RTC
 			}
 			int32_t GetTotalLost() const
 			{
-				auto value = Utils::Byte::Get3Bytes(reinterpret_cast<uint8_t*>(this->header), 5);
-
-				// Possitive value.
-				if (((value >> 23) & 1) == 0)
-				{
-					return value;
-				}
-
-				// Negative value.
-				if (value != 0x0800000)
-				{
-					value &= ~(1 << 23);
-				}
-
-				return -value;
+				return Utils::Byte::Get3BytesSigned(reinterpret_cast<uint8_t*>(this->header), 5);
 			}
 			void SetTotalLost(int32_t totalLost)
 			{
-				// Get the limit value for possitive and negative totalLost.
-				int32_t clamp = (totalLost >= 0)         ? totalLost > 0x07FFFFF ? 0x07FFFFF : totalLost
-				                : -totalLost > 0x0800000 ? 0x0800000
-				                                         : -totalLost;
-
-				uint32_t value = (totalLost >= 0) ? (clamp & 0x07FFFFF) : (clamp | 0x0800000);
-
-				Utils::Byte::Set3Bytes(reinterpret_cast<uint8_t*>(this->header), 5, value);
+				Utils::Byte::Set3BytesSigned(reinterpret_cast<uint8_t*>(this->header), 5, totalLost);
 			}
 			uint32_t GetLastSeq() const
 			{
@@ -192,10 +171,11 @@ namespace RTC
 		public:
 			void Dump(int indentation = 0) const override;
 			size_t Serialize(uint8_t* buffer) override;
-			// NOTE: We need to force this since when we parse a SenderReportPacket that
-			// contains receive report blocks we also generate a second ReceiverReportPacket
-			// from same data and len, so parent Packet::GetType() would return
-			// this->type which would be SR instead of RR.
+			// NOTE: We need to force this since when we parse a SenderReportPacket
+			// that contains receive report blocks we also generate a second
+			// ReceiverReportPacket/ from same data and len, so parent
+			// Packet::GetType() would return this->type which would be SR instead of
+			// RR.
 			Type GetType() const override
 			{
 				return Type::RR;
