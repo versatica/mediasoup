@@ -470,7 +470,7 @@ namespace RTC
 
 		report->SetSsrc(GetSsrc());
 
-		const uint32_t prevPacketsLost = this->packetsLost;
+		const int32_t prevPacketsLost = this->packetsLost;
 
 		// Calculate Packets Expected and Lost.
 		auto expected = GetExpectedPackets();
@@ -481,7 +481,7 @@ namespace RTC
 		}
 		else
 		{
-			this->packetsLost = 0u;
+			this->packetsLost = 0;
 		}
 
 		// Calculate Fraction Lost.
@@ -508,9 +508,9 @@ namespace RTC
 		// Worst remote fraction lost is not worse than local one.
 		if (worstRemoteFractionLost <= this->fractionLost)
 		{
-			this->reportedPacketLost += (this->packetsLost - prevPacketsLost);
+			this->reportedPacketsLost += (this->packetsLost - prevPacketsLost);
 
-			report->SetTotalLost(this->reportedPacketLost);
+			report->SetTotalLost(this->reportedPacketsLost);
 			report->SetFractionLost(this->fractionLost);
 		}
 		else
@@ -518,9 +518,9 @@ namespace RTC
 			// Recalculate packetsLost.
 			const uint32_t newLostInterval = (worstRemoteFractionLost * expectedInterval) >> 8;
 
-			this->reportedPacketLost += newLostInterval;
+			this->reportedPacketsLost += newLostInterval;
 
-			report->SetTotalLost(this->reportedPacketLost);
+			report->SetTotalLost(this->reportedPacketsLost);
 			report->SetFractionLost(worstRemoteFractionLost);
 		}
 

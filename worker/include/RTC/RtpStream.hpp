@@ -197,7 +197,7 @@ namespace RTC
 		uint32_t maxPacketTs{ 0u };
 		// When the packet with highest timestammp was seen.
 		uint64_t maxPacketMs{ 0u };
-		uint32_t packetsLost{ 0u };
+		int32_t packetsLost{ 0 };
 		uint8_t fractionLost{ 0u };
 		size_t packetsDiscarded{ 0u };
 		size_t packetsRetransmitted{ 0u };

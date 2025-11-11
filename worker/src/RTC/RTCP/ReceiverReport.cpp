@@ -39,7 +39,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<ReceiverReport>");
 			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
 			MS_DUMP_CLEAN(indentation, "  fraction lost: %" PRIu8, GetFractionLost());
-			MS_DUMP_CLEAN(indentation, "  total lost: %" PRIu32, GetTotalLost());
+			MS_DUMP_CLEAN(indentation, "  total lost: %" PRIi32, GetTotalLost());
 			MS_DUMP_CLEAN(indentation, "  last seq: %" PRIu32, GetLastSeq());
 			MS_DUMP_CLEAN(indentation, "  jitter: %" PRIu32, GetJitter());
 			MS_DUMP_CLEAN(indentation, "  lsr: %" PRIu32, GetLastSenderReport());
