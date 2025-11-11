@@ -214,7 +214,8 @@ namespace RTC
 				// A serialized packet can contain a maximum of 31 chunks.
 				// If number of chunks exceeds 31 then the required number of packets
 				// will be serialized which will take the size calculated below.
-				size_t size = Packet::CommonHeaderSize * ((this->GetCount() / (maxChunksPerPacket + 1)) + 1);
+				size_t size =
+				  Packet::CommonHeaderSize * ((this->GetCount() / (SdesPacket::maxChunksPerPacket + 1)) + 1);
 
 				for (auto* chunk : this->chunks)
 				{
