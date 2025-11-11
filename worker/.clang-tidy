@@ -67,6 +67,7 @@ Checks: "*,\
   -modernize-use-nodiscard, \
   -modernize-use-trailing-return-type,\
   -performance-no-int-to-ptr,\
+  -readability-convert-member-functions-to-static,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
   -readability-identifier-length,\

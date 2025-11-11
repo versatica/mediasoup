@@ -90,7 +90,6 @@ namespace RTC
 			  this->encoder->encodingData.maxSpatialLayer, this->encoder->encodingData.maxTemporalLayer);
 		}
 
-		// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 		void AV1::PayloadDescriptor::Restore() const
 		{
 			MS_TRACE();

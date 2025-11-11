@@ -45,7 +45,6 @@ namespace RTC
 
 			void Dump(int indentation = 0) const;
 			size_t Serialize(uint8_t* buffer);
-			// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 			size_t GetSize() const
 			{
 				return HeaderSize;

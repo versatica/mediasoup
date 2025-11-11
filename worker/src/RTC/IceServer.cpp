@@ -518,7 +518,6 @@ namespace RTC
 		}
 	}
 
-	// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 	void IceServer::ProcessStunIndication(RTC::StunPacket* /*indication*/)
 	{
 		MS_TRACE();
@@ -528,7 +527,6 @@ namespace RTC
 		// Nothig else to do. We just discard STUN indications.
 	}
 
-	// NOLINTNEXTLINE (readability-convert-member-functions-to-static)
 	void IceServer::ProcessStunResponse(RTC::StunPacket* response)
 	{
 		MS_TRACE();
