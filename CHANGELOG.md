@@ -2,7 +2,7 @@
 
 ### NEXT
 
-Fix RTX packets containing non yet seen RTP packets being discarded ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX), credits to @penguinol and @mengbieting).
+Fix RTX packets containing non yet seen RTP packets being discarded ([PR #1653](https://github.com/versatica/mediasoup/pull/1653), credits to @penguinol and @mengbieting).
 
 ### 3.19.9
 
