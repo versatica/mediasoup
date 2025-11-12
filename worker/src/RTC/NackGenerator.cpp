@@ -118,7 +118,13 @@ namespace RTC
 
 		if (isRecovered)
 		{
-			this->recoveredList.insert(seq);
+			const auto inserted = this->recoveredList.insert(seq).second;
+
+			// Packet already recovered, ignore it.
+			if (!inserted)
+			{
+				return false;
+			}
 
 			// Remove old ones so we don't accumulate recovered packets.
 			auto it = this->recoveredList.lower_bound(seq - MaxPacketAge);
@@ -128,9 +134,10 @@ namespace RTC
 				this->recoveredList.erase(this->recoveredList.begin(), it);
 			}
 
-			// Do not let a packet pass if it's newer than last seen seq and came via
-			// RTX.
-			return false;
+			// NOTE: It may happen that this packet received via RTX contains a real
+			// RTP packet that (with highest seq not seen yet) whose transmission
+			// failed so we didn't receive it. So do not return false here but let
+			// the packet go through.
 		}
 
 		AddPacketsToNackList(this->lastSeq + 1, seq);
@@ -152,7 +159,10 @@ namespace RTC
 			MayRunTimer();
 		}
 
-		return false;
+		// libwebrtc may use RTX for probation and such packets may contain
+		// RTX-encoded real RTP packets that were sent before but didn't arrive yet
+		// to us or they were lost. Let's deal with them as normal packets.
+		return isRecovered ? true : false;
 	}
 
 	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)

@@ -2,6 +2,8 @@
 
 ### NEXT
 
+Fix RTX packets containing non yet seen RTP packets being discarded ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX), credits to @penguinol and @mengbieting).
+
 ### 3.19.9
 
 - Fix RTCP packets lost in stats ([PR #1651](https://github.com/versatica/mediasoup/pull/1651)).
