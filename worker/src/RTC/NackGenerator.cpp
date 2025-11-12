@@ -68,10 +68,8 @@ namespace RTC
 		// or a retransmitted packet.
 		if (SeqManager<uint16_t>::IsSeqLowerThan(seq, this->lastSeq))
 		{
-			auto it = this->nackList.find(seq);
-
 			// It was a nacked packet.
-			if (it != this->nackList.end())
+			if (this->nackList.erase(seq) != 0u)
 			{
 				MS_DEBUG_DEV(
 				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", recovered:%s]",
@@ -79,11 +77,11 @@ namespace RTC
 				  packet->GetSequenceNumber(),
 				  isRecovered ? "true" : "false");
 
-				auto retries = it->second.retries;
+				// NOTE: Even if we didn't send yet the NACK requesting this packet (this
+				// is, if nackInfo.retries == 0), we accept this packet and let it go
+				// through because we would request it later anyway.
 
-				this->nackList.erase(it);
-
-				return retries != 0;
+				return true;
 			}
 
 			// Out of order packet or already handled NACKed packet.
