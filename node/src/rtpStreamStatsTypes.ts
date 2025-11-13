@@ -1,6 +1,5 @@
 export type RtpStreamRecvStats = BaseRtpStreamStats & {
 	type: string;
-	jitter: number;
 	packetCount: number;
 	byteCount: number;
 	bitrate: number;
@@ -23,6 +22,7 @@ export type BaseRtpStreamStats = {
 	mimeType: string;
 	packetsLost: number;
 	fractionLost: number;
+	jitter: number;
 	packetsDiscarded: number;
 	packetsRetransmitted: number;
 	packetsRepaired: number;
@@ -30,9 +30,9 @@ export type BaseRtpStreamStats = {
 	nackPacketCount: number;
 	pliCount: number;
 	firCount: number;
-	score: number;
 	roundTripTime?: number;
 	rtxPacketsDiscarded?: number;
+	score: number;
 };
 
 export type BitrateByLayer = { [key: string]: number };

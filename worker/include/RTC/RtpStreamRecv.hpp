@@ -119,9 +119,6 @@ namespace RTC
 		uint64_t lastSrReceived{ 0u };
 		// Relative transit time for prev packet.
 		int32_t transit{ 0u };
-		// Jitter in RTP timestamp units. As per spec it's kept as floating value
-		// although it's exposed as integer in the stats.
-		float jitter{ 0 };
 		uint8_t firSeqNumber{ 0u };
 		int32_t reportedPacketsLost{ 0 };
 		std::unique_ptr<RTC::NackGenerator> nackGenerator;
