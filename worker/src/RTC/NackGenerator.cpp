@@ -35,6 +35,9 @@ namespace RTC
 
 	/**
 	 * Returns true if this is a found nacked packet. False otherwise.
+	 *
+	 * NOTE: It also returns true if packet comes via RTX and contains a sequence
+	 * number higher than the highest seen.
 	 */
 	bool NackGenerator::ReceivePacket(RTC::RtpPacket* packet, bool isRecovered)
 	{
