@@ -69,6 +69,7 @@ Checks: "*,\
   -modernize-use-nodiscard, \
   -modernize-use-trailing-return-type,\
   -performance-no-int-to-ptr,\
+  -portability-template-virtual-member-function,\
   -readability-convert-member-functions-to-static,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
