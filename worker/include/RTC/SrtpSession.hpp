@@ -45,7 +45,7 @@ namespace RTC
 		bool DecryptSrtcp(uint8_t* data, size_t* len);
 		void RemoveStream(uint32_t ssrc)
 		{
-			srtp_stream_remove(this->session, uint32_t{ htonl(ssrc) });
+			srtp_stream_remove(this->session, htonl(ssrc));
 		}
 
 	private:

@@ -36,19 +36,19 @@ namespace RTC
 			}
 			uint32_t GetSenderSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->senderSsrc) };
+				return ntohl(this->header->senderSsrc);
 			}
 			void SetSenderSsrc(uint32_t ssrc)
 			{
-				this->header->senderSsrc = uint32_t{ htonl(ssrc) };
+				this->header->senderSsrc = htonl(ssrc);
 			}
 			uint32_t GetMediaSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->mediaSsrc) };
+				return ntohl(this->header->mediaSsrc);
 			}
 			void SetMediaSsrc(uint32_t ssrc)
 			{
-				this->header->mediaSsrc = uint32_t{ htonl(ssrc) };
+				this->header->mediaSsrc = htonl(ssrc);
 			}
 
 			/* Pure virtual methods inherited from Packet. */

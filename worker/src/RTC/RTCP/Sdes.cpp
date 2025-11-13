@@ -321,7 +321,7 @@ namespace RTC
 				  static_cast<uint8_t>((i % SdesPacket::maxChunksPerPacket) + 1);
 
 				// Adjust the header length field.
-				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = htons((length / 4) - 1);
 			}
 
 			return offset;

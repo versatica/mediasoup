@@ -51,11 +51,11 @@ namespace RTC
 			}
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return ntohl(this->header->ssrc);
 			}
 			void SetSsrc(uint32_t ssrc)
 			{
-				this->header->ssrc = uint32_t{ htonl(ssrc) };
+				this->header->ssrc = htonl(ssrc);
 			}
 			uint8_t GetFractionLost() const
 			{
@@ -75,35 +75,35 @@ namespace RTC
 			}
 			uint32_t GetLastSeq() const
 			{
-				return uint32_t{ ntohl(this->header->lastSeq) };
+				return ntohl(this->header->lastSeq);
 			}
 			void SetLastSeq(uint32_t lastSeq)
 			{
-				this->header->lastSeq = uint32_t{ htonl(lastSeq) };
+				this->header->lastSeq = htonl(lastSeq);
 			}
 			uint32_t GetJitter() const
 			{
-				return uint32_t{ ntohl(this->header->jitter) };
+				return ntohl(this->header->jitter);
 			}
 			void SetJitter(float jitter)
 			{
-				this->header->jitter = uint32_t{ htonl(static_cast<uint32_t>(jitter)) };
+				this->header->jitter = htonl(static_cast<uint32_t>(jitter));
 			}
 			uint32_t GetLastSenderReport() const
 			{
-				return uint32_t{ ntohl(this->header->lsr) };
+				return ntohl(this->header->lsr);
 			}
 			void SetLastSenderReport(uint32_t lsr)
 			{
-				this->header->lsr = uint32_t{ htonl(lsr) };
+				this->header->lsr = htonl(lsr);
 			}
 			uint32_t GetDelaySinceLastSenderReport() const
 			{
-				return uint32_t{ ntohl(this->header->dlsr) };
+				return ntohl(this->header->dlsr);
 			}
 			void SetDelaySinceLastSenderReport(uint32_t dlsr)
 			{
-				this->header->dlsr = uint32_t{ htonl(dlsr) };
+				this->header->dlsr = htonl(dlsr);
 			}
 
 		private:

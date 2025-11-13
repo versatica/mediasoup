@@ -352,7 +352,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			GetHeaderPointer()->sourcePort = uint16_t{ htons(sourcePort) };
+			GetHeaderPointer()->sourcePort = htons(sourcePort);
 		}
 
 		void Packet::SetDestinationPort(uint16_t destinationPort)
@@ -361,7 +361,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			GetHeaderPointer()->destinationPort = uint16_t{ htons(destinationPort) };
+			GetHeaderPointer()->destinationPort = htons(destinationPort);
 		}
 
 		void Packet::SetVerificationTag(uint32_t verificationTag)
@@ -370,7 +370,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			GetHeaderPointer()->verificationTag = uint32_t{ htonl(verificationTag) };
+			GetHeaderPointer()->verificationTag = htonl(verificationTag);
 		}
 
 		void Packet::SetChecksum(uint32_t checksum)
@@ -379,7 +379,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			GetHeaderPointer()->checksum = uint32_t{ htonl(checksum) };
+			GetHeaderPointer()->checksum = htonl(checksum);
 		}
 
 		void Packet::AddChunk(const Chunk* chunk)
@@ -436,7 +436,7 @@ namespace RTC
 
 			auto computedCrc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
 
-			GetHeaderPointer()->checksum = uint32_t{ htonl(crc32c) };
+			GetHeaderPointer()->checksum = htonl(crc32c);
 
 			return computedCrc32c == crc32c;
 		}

@@ -32,7 +32,7 @@ namespace RTC
 			auto* negotiatedCapabilitiesField =
 			  reinterpret_cast<NegotiatedCapabilitiesField*>(const_cast<uint8_t*>(buffer) + 32);
 
-			if (uint16_t{ ntohs(negotiatedCapabilitiesField->magicValue2) } != StateCookie::MagicValue2)
+			if (ntohs(negotiatedCapabilitiesField->magicValue2) != StateCookie::MagicValue2)
 			{
 				MS_WARN_TAG(sctp, "incorrect Magic Value 2");
 
@@ -82,11 +82,11 @@ namespace RTC
 			negotiatedCapabilitiesField->bitB        = negotiatedCapabilities.messageInterleaving;
 			negotiatedCapabilitiesField->bitC        = negotiatedCapabilities.reconfig;
 			negotiatedCapabilitiesField->bitD        = negotiatedCapabilities.zeroChecksum;
-			negotiatedCapabilitiesField->magicValue2 = uint16_t{ htons(StateCookie::MagicValue2) };
+			negotiatedCapabilitiesField->magicValue2 = htons(StateCookie::MagicValue2);
 			negotiatedCapabilitiesField->maxOutboundStreams =
-			  uint16_t{ htons(negotiatedCapabilities.maxOutboundStreams) };
+			  htons(negotiatedCapabilities.maxOutboundStreams);
 			negotiatedCapabilitiesField->maxInboundStreams =
-			  uint16_t{ htons(negotiatedCapabilities.maxInboundStreams) };
+			  htons(negotiatedCapabilities.maxInboundStreams);
 
 			return stateCookie;
 		}
@@ -148,9 +148,9 @@ namespace RTC
 			NegotiatedCapabilities negotiatedCapabilities;
 
 			negotiatedCapabilities.maxOutboundStreams =
-			  uint16_t{ ntohs(negotiatedCapabilitiesField->maxOutboundStreams) };
+			  ntohs(negotiatedCapabilitiesField->maxOutboundStreams);
 			negotiatedCapabilities.maxInboundStreams =
-			  uint16_t{ ntohs(negotiatedCapabilitiesField->maxInboundStreams) };
+			  ntohs(negotiatedCapabilitiesField->maxInboundStreams);
 			negotiatedCapabilities.partialReliability  = negotiatedCapabilitiesField->bitA;
 			negotiatedCapabilities.messageInterleaving = negotiatedCapabilitiesField->bitB;
 			negotiatedCapabilities.reconfig            = negotiatedCapabilitiesField->bitC;

@@ -400,6 +400,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
+			// NOLINTNEXTLINE (bugprone-misplaced-widening-cast)
 			auto currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)

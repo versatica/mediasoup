@@ -105,6 +105,8 @@ namespace RTC
 
 					break;
 				}
+
+				default:;
 			}
 
 			return false;

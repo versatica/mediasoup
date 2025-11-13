@@ -1241,6 +1241,7 @@ namespace RTC
 		}
 	}
 
+	// NOLINTNEXTLINE (misc-no-recursion)
 	bool DtlsTransport::SetTimeout()
 	{
 		MS_TRACE();
@@ -1695,6 +1696,7 @@ namespace RTC
 		// callback).
 	}
 
+	// NOLINTNEXTLINE (misc-no-recursion)
 	void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();

@@ -150,7 +150,7 @@ namespace RTC
 				size_t length = (Packet::CommonHeaderSize + 4u /* this->ssrc */);
 				length += ReceiverReport::HeaderSize * ((i % maxReportsPerPacket) + 1);
 
-				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };
+				reinterpret_cast<Packet::CommonHeader*>(header)->length = htons((length / 4) - 1);
 			}
 
 			return offset;

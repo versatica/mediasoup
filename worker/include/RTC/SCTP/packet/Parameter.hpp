@@ -141,8 +141,7 @@ namespace RTC
 
 			virtual ParameterType GetType() const final
 			{
-				return static_cast<ParameterType>(
-				  uint16_t{ ntohs(static_cast<uint16_t>(GetHeaderPointer()->type)) });
+				return static_cast<ParameterType>(ntohs(static_cast<uint16_t>(GetHeaderPointer()->type)));
 			}
 
 			/**
@@ -196,7 +195,7 @@ namespace RTC
 			virtual void SetType(ParameterType parameterType) final
 			{
 				GetHeaderPointer()->type =
-				  static_cast<ParameterType>(uint16_t{ htons(static_cast<uint16_t>(parameterType)) });
+				  static_cast<ParameterType>(htons(static_cast<uint16_t>(parameterType)));
 			}
 		};
 	} // namespace SCTP
