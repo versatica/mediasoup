@@ -78,9 +78,9 @@ namespace RTC
 				  packet->GetSequenceNumber(),
 				  isRecovered ? "true" : "false");
 
-				// NOTE: Even if we didn't send yet the NACK requesting this packet (this
-				// is, if nackInfo.retries == 0), we accept this packet and let it go
-				// through because we would request it later anyway.
+				// NOTE: Accept the packet since it was in the `nackList`, regardless
+				// the NACK requesting this packet was not sent yet (this is, if nackInfo.retries == 0)
+				// because we would request it later anyway.
 
 				return true;
 			}

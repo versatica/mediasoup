@@ -300,6 +300,7 @@ pub struct ProducerStat {
     pub mime_type: MimeType,
     pub packets_lost: i32,
     pub fraction_lost: u8,
+    pub jitter: u32,
     pub packets_discarded: u64,
     pub packets_retransmitted: u64,
     pub packets_repaired: u64,
@@ -307,14 +308,13 @@ pub struct ProducerStat {
     pub nack_packet_count: u64,
     pub pli_count: u64,
     pub fir_count: u64,
-    pub score: u8,
     pub packet_count: u64,
     pub byte_count: u64,
     pub bitrate: u32,
     pub round_trip_time: Option<f32>,
     pub rtx_packets_discarded: Option<u64>,
+    pub score: u8,
     // RtpStreamRecv specific.
-    pub jitter: u32,
     pub bitrate_by_layer: Vec<BitrateByLayer>,
 }
 
@@ -339,6 +339,7 @@ impl FromFbs for ProducerStat {
             mime_type: base.mime_type.to_string().parse().unwrap(),
             packets_lost: base.packets_lost,
             fraction_lost: base.fraction_lost,
+            jitter: base.jitter,
             packets_discarded: base.packets_discarded,
             packets_retransmitted: base.packets_retransmitted,
             packets_repaired: base.packets_repaired,
@@ -346,13 +347,12 @@ impl FromFbs for ProducerStat {
             nack_packet_count: base.nack_packet_count,
             pli_count: base.pli_count,
             fir_count: base.fir_count,
-            score: base.score,
             packet_count: stats.packet_count,
             byte_count: stats.byte_count,
             bitrate: stats.bitrate,
             round_trip_time: Some(base.round_trip_time),
             rtx_packets_discarded: Some(base.rtx_packets_discarded),
-            jitter: stats.jitter,
+            score: base.score,
             bitrate_by_layer: stats
                 .bitrate_by_layer
                 .iter()

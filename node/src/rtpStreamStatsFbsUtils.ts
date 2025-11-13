@@ -31,7 +31,6 @@ export function parseRtpStreamRecvStats(
 	return {
 		...base,
 		type: 'inbound-rtp',
-		jitter: recvStats.jitter(),
 		byteCount: Number(recvStats.byteCount()),
 		packetCount: Number(recvStats.packetCount()),
 		bitrate: Number(recvStats.bitrate()),
@@ -72,6 +71,7 @@ function parseBaseStreamStats(
 		mimeType: binary.mimeType()!,
 		packetsLost: Number(binary.packetsLost()),
 		fractionLost: Number(binary.fractionLost()),
+		jitter: Number(binary.jitter()),
 		packetsDiscarded: Number(binary.packetsDiscarded()),
 		packetsRetransmitted: Number(binary.packetsRetransmitted()),
 		packetsRepaired: Number(binary.packetsRepaired()),
@@ -79,11 +79,11 @@ function parseBaseStreamStats(
 		nackPacketCount: Number(binary.nackPacketCount()),
 		pliCount: Number(binary.pliCount()),
 		firCount: Number(binary.firCount()),
-		score: binary.score(),
 		roundTripTime: binary.roundTripTime(),
 		rtxPacketsDiscarded: binary.rtxPacketsDiscarded()
 			? Number(binary.rtxPacketsDiscarded())
 			: undefined,
+		score: binary.score(),
 	};
 }
 
