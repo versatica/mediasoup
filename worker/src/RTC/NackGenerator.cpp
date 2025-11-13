@@ -79,8 +79,8 @@ namespace RTC
 				  isRecovered ? "true" : "false");
 
 				// NOTE: Accept the packet since it was in the `nackList`, regardless
-				// the NACK requesting this packet was not sent yet (this is, if nackInfo.retries == 0)
-				// because we would request it later anyway.
+				// the NACK requesting this packet was not sent yet (this is, if
+				// nackInfo.retries == 0) because we would request it later anyway.
 
 				return true;
 			}
