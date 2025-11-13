@@ -264,8 +264,8 @@ namespace RTC
 				case RTC::RtpCodecMimeType::Subtype::RTX:
 				{
 					// NOTE: RtpCodecParameters already asserted that there is apt parameter.
-					int32_t apt = codec.parameters.GetInteger(AptString);
-					auto it     = this->codecs.begin();
+					const int32_t apt = codec.parameters.GetInteger(AptString);
+					auto it           = this->codecs.begin();
 
 					for (; it != this->codecs.end(); ++it)
 					{
