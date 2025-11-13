@@ -32,9 +32,7 @@ namespace RTC
 			static constexpr uint16_t MaxCurrentLayerPictureIdNum{ 1000u };
 
 		public:
-			explicit PictureIdList()
-			{
-			}
+			explicit PictureIdList() = default;
 
 			~PictureIdList()
 			{

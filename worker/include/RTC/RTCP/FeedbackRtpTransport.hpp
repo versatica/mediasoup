@@ -2,7 +2,7 @@
 #define MS_RTC_RTCP_FEEDBACK_RTP_TRANSPORT_HPP
 
 #include "common.hpp"
-#include "RTC/RTCP/FeedbackRtp.hpp"
+#include "RTC/RTCP/Feedback.hpp"
 #include <vector>
 
 /* RTP Extensions for Transport-wide Congestion Control

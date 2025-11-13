@@ -75,12 +75,11 @@ namespace RTC
 			IncomingSsnResetRequestParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~IncomingSsnResetRequestParameter() override;
+			~IncomingSsnResetRequestParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual IncomingSsnResetRequestParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			IncomingSsnResetRequestParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint32_t GetReconfigurationRequestSequenceNumber() const
 			{
@@ -102,13 +101,13 @@ namespace RTC
 			void AddStream(uint16_t stream);
 
 		protected:
-			virtual IncomingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final override;
+			IncomingSsnResetRequestParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We need to override this method since this Chunk has a variable-length
 			 * value and the fixed header doesn't have default length.
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return IncomingSsnResetRequestParameter::IncomingSsnResetRequestParameterHeaderLength;
 			}

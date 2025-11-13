@@ -110,6 +110,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			// NOLINTNEXTLINE (bugprone-parent-virtual-call)
 			size_t offset     = FeedbackPsPacket::Serialize(buffer);
 			uint64_t mantissa = this->bitrate;
 			uint8_t exponent{ 0u };
@@ -146,6 +147,7 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<FeedbackPsRembPacket>");
+			// NOLINTNEXTLINE (bugprone-parent-virtual-call)
 			FeedbackPsPacket::Dump();
 			MS_DUMP_CLEAN(indentation, "  bitrate (bps): %" PRIu64, this->bitrate);
 			for (auto ssrc : this->ssrcs)

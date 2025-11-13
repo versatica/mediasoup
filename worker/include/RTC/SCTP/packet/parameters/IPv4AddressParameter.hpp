@@ -67,11 +67,11 @@ namespace RTC
 			IPv4AddressParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~IPv4AddressParameter() override;
+			~IPv4AddressParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual IPv4AddressParameter* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			IPv4AddressParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			/**
 			 * @return A pointer to a 4 bytes unsigned integer in network order
@@ -89,14 +89,14 @@ namespace RTC
 			void SetIPv4Address(const uint8_t* ip);
 
 		protected:
-			virtual IPv4AddressParameter* SoftClone(const uint8_t* buffer) const final override;
+			IPv4AddressParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return IPv4AddressParameter::IPv4AddressParameterHeaderLength;
 			}

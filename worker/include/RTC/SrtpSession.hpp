@@ -4,13 +4,14 @@
 #include "common.hpp"
 #include "FBS/srtpParameters.h"
 #include <srtp.h>
+#include <cstdint>
 
 namespace RTC
 {
 	class SrtpSession
 	{
 	public:
-		enum class CryptoSuite
+		enum class CryptoSuite : uint8_t
 		{
 			AEAD_AES_256_GCM = 0,
 			AEAD_AES_128_GCM,
@@ -19,7 +20,7 @@ namespace RTC
 		};
 
 	public:
-		enum class Type
+		enum class Type : uint8_t
 		{
 			INBOUND = 1,
 			OUTBOUND

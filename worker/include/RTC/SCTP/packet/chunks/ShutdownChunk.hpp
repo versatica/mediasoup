@@ -75,11 +75,11 @@ namespace RTC
 			ShutdownChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ShutdownChunk() override;
+			~ShutdownChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ShutdownChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			ShutdownChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			uint32_t GetCumulativeTsnAck() const
 			{
@@ -89,14 +89,14 @@ namespace RTC
 			void SetCumulativeTsnAck(uint32_t value);
 
 		protected:
-			virtual ShutdownChunk* SoftClone(const uint8_t* buffer) const final override;
+			ShutdownChunk* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Chunk doesn't
 			 * have variable-length value (despite the fixed header doesn't have
 			 * default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return ShutdownChunk::ShutdownChunkHeaderLength;
 			}

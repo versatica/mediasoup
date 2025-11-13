@@ -46,7 +46,7 @@ namespace RTC
 				  : RTC::Codecs::EncodingContext(params)
 				{
 				}
-				~EncodingContext() = default;
+				~EncodingContext() override = default;
 
 				/* Pure virtual methods inherited from RTC::Codecs::EncodingContext. */
 			public:

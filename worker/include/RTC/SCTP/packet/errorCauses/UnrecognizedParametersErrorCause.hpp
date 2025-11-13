@@ -65,12 +65,11 @@ namespace RTC
 			UnrecognizedParametersErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnrecognizedParametersErrorCause() override;
+			~UnrecognizedParametersErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UnrecognizedParametersErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			UnrecognizedParametersErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasUnrecognizedParameters() const final
 			{
@@ -90,7 +89,7 @@ namespace RTC
 			void SetUnrecognizedParameters(const uint8_t* parameters, uint16_t parametersLength);
 
 		protected:
-			virtual UnrecognizedParametersErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			UnrecognizedParametersErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

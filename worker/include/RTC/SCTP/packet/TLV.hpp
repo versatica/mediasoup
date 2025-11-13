@@ -46,7 +46,7 @@ namespace RTC
 			TLV(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~TLV() override;
+			~TLV() override;
 
 		protected:
 			/**

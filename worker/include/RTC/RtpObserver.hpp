@@ -1,7 +1,6 @@
 #ifndef MS_RTC_RTP_OBSERVER_HPP
 #define MS_RTC_RTP_OBSERVER_HPP
 
-#include "common.hpp"
 #include "RTC/Producer.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/Shared.hpp"
@@ -52,7 +51,7 @@ namespace RTC
 
 	public:
 		// Passed by argument.
-		const std::string id;
+		std::string id;
 
 	protected:
 		// Passed by argument.

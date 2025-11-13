@@ -62,7 +62,7 @@ namespace RTC
 			}
 			uint8_t GetSequenceNumber() const
 			{
-				return uint8_t{ this->header->sequenceNumber };
+				return this->header->sequenceNumber;
 			}
 			uint8_t GetPayloadType() const
 			{

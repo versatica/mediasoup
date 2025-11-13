@@ -249,7 +249,7 @@ namespace RTC
 
 		/* Static Class members */
 
-		size_t SdesPacket::MaxChunksPerPacket = 31;
+		size_t SdesPacket::maxChunksPerPacket = 31;
 
 		/* Class methods. */
 
@@ -301,7 +301,7 @@ namespace RTC
 			for (size_t i{ 0u }; i < this->GetCount(); ++i)
 			{
 				// Create a new SDES packet header for each 31 chunks.
-				if (i % MaxChunksPerPacket == 0)
+				if (i % SdesPacket::maxChunksPerPacket == 0)
 				{
 					// Reference current common header.
 					header = buffer + offset;
@@ -318,7 +318,7 @@ namespace RTC
 
 				// Adjust the header count field.
 				reinterpret_cast<Packet::CommonHeader*>(header)->count =
-				  static_cast<uint8_t>((i % MaxChunksPerPacket) + 1);
+				  static_cast<uint8_t>((i % SdesPacket::maxChunksPerPacket) + 1);
 
 				// Adjust the header length field.
 				reinterpret_cast<Packet::CommonHeader*>(header)->length = uint16_t{ htons((length / 4) - 1) };

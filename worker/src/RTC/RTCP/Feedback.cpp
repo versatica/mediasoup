@@ -250,9 +250,9 @@ namespace RTC
 					packet = FeedbackRtpEcnPacket::Parse(data, len);
 					break;
 
+				// NOLINTNEXTLINE (bugprone-branch-clone)
 				case FeedbackRtp::MessageType::PS:
 					break;
-
 				case FeedbackRtp::MessageType::EXT:
 					break;
 

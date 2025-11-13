@@ -4,7 +4,6 @@
 #include "common.hpp"
 #include "RTC/Consts.hpp"
 #include "RTC/SCTP/association/TransmissionControlBlock.hpp"
-#include "RTC/SCTP/packet/Packet.hpp"
 #include "RTC/SCTP/packet/parameters/ZeroChecksumAcceptableParameter.hpp"
 
 namespace RTC

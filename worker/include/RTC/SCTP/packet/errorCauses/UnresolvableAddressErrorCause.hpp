@@ -65,12 +65,11 @@ namespace RTC
 			UnresolvableAddressErrorCause(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~UnresolvableAddressErrorCause() override;
+			~UnresolvableAddressErrorCause() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual UnresolvableAddressErrorCause* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			UnresolvableAddressErrorCause* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			virtual bool HasUnresolvableAddress() const final
 			{
@@ -90,7 +89,7 @@ namespace RTC
 			void SetUnresolvableAddress(const uint8_t* address, uint16_t addressLength);
 
 		protected:
-			virtual UnresolvableAddressErrorCause* SoftClone(const uint8_t* buffer) const final override;
+			UnresolvableAddressErrorCause* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

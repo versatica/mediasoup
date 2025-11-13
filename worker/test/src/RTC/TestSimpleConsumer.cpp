@@ -110,7 +110,7 @@ flatbuffers::Offset<FBS::RtpParameters::RtpParameters> CreateRtpParameters(
 	return rtpParameters.FillBuffer(builder);
 };
 
-std::unique_ptr<RTC::SimpleConsumer> CreateConsumer(ConsumerListener* listener)
+static std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* listener)
 {
 	flatbuffers::FlatBufferBuilder bufferBuilder;
 
@@ -146,7 +146,7 @@ std::unique_ptr<RTC::SimpleConsumer> CreateConsumer(ConsumerListener* listener)
 	  consumeRequest);
 }
 
-std::unique_ptr<RtpStreamRecv> CreateRtpStreamRecv()
+static std::unique_ptr<RtpStreamRecv> createRtpStreamRecv()
 {
 	RtpStreamRecvListener streamRecvListener;
 	RtpStream::Params params;
@@ -161,8 +161,8 @@ class Fixture
 {
 public:
 	Fixture()
-	  : listener(std::make_unique<ConsumerListener>()), consumer(CreateConsumer(listener.get())),
-	    rtpStream(CreateRtpStreamRecv())
+	  : listener(std::make_unique<ConsumerListener>()), consumer(createConsumer(listener.get())),
+	    rtpStream(createRtpStreamRecv())
 	{
 		// Set producer scores and producer stream.
 		std::vector<uint8_t> scores{ 10 };

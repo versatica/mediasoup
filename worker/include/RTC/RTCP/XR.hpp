@@ -50,7 +50,7 @@ namespace RTC
 			static ExtendedReportBlock* Parse(const uint8_t* data, size_t len);
 
 		public:
-			ExtendedReportBlock(Type type) : type(type)
+			explicit ExtendedReportBlock(Type type) : type(type)
 			{
 				this->header = reinterpret_cast<CommonHeader*>(this->raw);
 

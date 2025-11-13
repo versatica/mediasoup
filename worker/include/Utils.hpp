@@ -85,6 +85,8 @@ namespace Utils
 				case AF_INET6:
 					std::memcpy(std::addressof(copiedAddr), addr, sizeof(struct sockaddr_in6));
 					break;
+
+				default:;
 			}
 
 			return copiedAddr;

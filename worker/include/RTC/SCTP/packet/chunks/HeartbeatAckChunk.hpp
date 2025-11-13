@@ -74,19 +74,19 @@ namespace RTC
 			HeartbeatAckChunk(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~HeartbeatAckChunk() override;
+			~HeartbeatAckChunk() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual HeartbeatAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const override final;
+			HeartbeatAckChunk* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual bool CanHaveParameters() const final
+			bool CanHaveParameters() const final
 			{
 				return true;
 			}
 
 		protected:
-			virtual HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final override;
+			HeartbeatAckChunk* SoftClone(const uint8_t* buffer) const final;
 		};
 	} // namespace SCTP
 } // namespace RTC

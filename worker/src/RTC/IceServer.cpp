@@ -2,7 +2,6 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/IceServer.hpp"
-#include "DepLibUV.hpp"
 #include "Logger.hpp"
 
 namespace RTC
@@ -519,7 +518,7 @@ namespace RTC
 		}
 	}
 
-	void IceServer::ProcessStunIndication(RTC::StunPacket* indication)
+	void IceServer::ProcessStunIndication(RTC::StunPacket* /*indication*/)
 	{
 		MS_TRACE();
 
@@ -532,6 +531,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// NOLINTNEXTLINE (bugprone-unused-local-non-trivial-variable)
 		const std::string responseType = response->GetClass() == RTC::StunPacket::Class::SUCCESS_RESPONSE
 		                                   ? "success"
 		                                   : std::to_string(response->GetErrorCode()) + " error";

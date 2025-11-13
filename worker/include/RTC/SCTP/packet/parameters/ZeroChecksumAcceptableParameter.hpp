@@ -38,6 +38,7 @@ namespace RTC
 			/**
 			 * Zero Checksum Alternate Error Detection Method.
 			 */
+			// NOLINTNEXTLINE (performance-enum-size)
 			enum class AlternateErrorDetectionMethod : uint32_t
 			{
 				NONE           = 0x0000,
@@ -87,12 +88,11 @@ namespace RTC
 			ZeroChecksumAcceptableParameter(uint8_t* buffer, size_t bufferLength);
 
 		public:
-			virtual ~ZeroChecksumAcceptableParameter() override;
+			~ZeroChecksumAcceptableParameter() override;
 
-			virtual void Dump(int indentation = 0) const override final;
+			void Dump(int indentation = 0) const final;
 
-			virtual ZeroChecksumAcceptableParameter* Clone(
-			  uint8_t* buffer, size_t bufferLength) const override final;
+			ZeroChecksumAcceptableParameter* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
 			AlternateErrorDetectionMethod GetAlternateErrorDetectionMethod() const
 			{
@@ -102,14 +102,14 @@ namespace RTC
 			void SetAlternateErrorDetectionMethod(AlternateErrorDetectionMethod alternateErrorDetectionMethod);
 
 		protected:
-			virtual ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final override;
+			ZeroChecksumAcceptableParameter* SoftClone(const uint8_t* buffer) const final;
 
 			/**
 			 * We don't really need to override this method since this Parameter
 			 * doesn't have variable-length value (despite the fixed header doesn't
 			 * have default length).
 			 */
-			virtual size_t GetHeaderLength() const override final
+			size_t GetHeaderLength() const final
 			{
 				return ZeroChecksumAcceptableParameter::ZeroChecksumAcceptableParameterHeaderLength;
 			}
