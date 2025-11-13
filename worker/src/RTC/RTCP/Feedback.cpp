@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = Packet::Serialize(buffer);
+			const size_t offset = Packet::Serialize(buffer);
 
 			// Copy the header.
 			std::memcpy(buffer + offset, this->header, HeaderSize);

@@ -305,7 +305,7 @@ namespace RTC
 			// * higher than current one
 			// * different than the current one when KSVC is enabled and this is not a keyframe
 			// (interframe p bit = 1)
-			uint16_t spatialLayerForPictureId =
+			const uint16_t spatialLayerForPictureId =
 			  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
 			              : tmpSpatialLayer;
 
@@ -371,7 +371,7 @@ namespace RTC
 			}
 
 			// Filter temporal layers higher than current one.
-			uint16_t temporalLayerForPictureId =
+			const uint16_t temporalLayerForPictureId =
 			  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
 			              : tmpTemporalLayer;
 

@@ -38,7 +38,7 @@ namespace RTC
 			// bytes despite item Length field doesn't not include padding.
 			// NOTE: We must cast to size_t, otherwise a maximum item Length value of
 			// 65535 would generate a padded length of 0 bytes!
-			size_t paddedItemLength = Utils::Byte::PadTo4Bytes(size_t{ itemLength });
+			const size_t paddedItemLength = Utils::Byte::PadTo4Bytes(size_t{ itemLength });
 
 			if (bufferLength < paddedItemLength)
 			{

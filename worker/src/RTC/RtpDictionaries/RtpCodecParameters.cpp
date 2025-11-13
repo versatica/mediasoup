@@ -79,7 +79,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		static std::string aptString{ "apt" };
+		const static std::string AptString{ "apt" };
 
 		// Check per MIME parameters and set default values.
 		switch (this->mimeType.subtype)
@@ -87,7 +87,7 @@ namespace RTC
 			case RTC::RtpCodecMimeType::Subtype::RTX:
 			{
 				// A RTX codec must have 'apt' parameter.
-				if (!this->parameters.HasPositiveInteger(aptString))
+				if (!this->parameters.HasPositiveInteger(AptString))
 				{
 					MS_THROW_TYPE_ERROR("missing apt parameter in RTX codec");
 				}

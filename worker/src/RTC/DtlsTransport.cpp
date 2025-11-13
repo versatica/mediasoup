@@ -65,7 +65,7 @@ inline static long onSslBioOut(
   int ret,
   size_t* /*processed*/)
 {
-	long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
+	const long resultOfcallback = (operationType == BIO_CB_RETURN) ? static_cast<long>(ret) : 1;
 
 	// This callback is called twice for write operations:
 	// - First one with operationType = BIO_CB_WRITE.

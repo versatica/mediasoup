@@ -54,7 +54,7 @@ namespace RTC
 			{
 				// The remaining length in the buffer is the potential buffer length
 				// of the Chunk.
-				size_t chunkMaxBufferLength = bufferLength - (ptr - buffer);
+				const size_t chunkMaxBufferLength = bufferLength - (ptr - buffer);
 
 				// Here we must anticipate the type of each Chunk to use its appropriate
 				// parser.
@@ -245,7 +245,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t computedLength = Packet::CommonHeaderLength;
+			const size_t computedLength = Packet::CommonHeaderLength;
 
 			// No space for common header.
 			if (bufferLength < computedLength)
@@ -316,7 +316,7 @@ namespace RTC
 
 			for (auto* chunk : this->chunks)
 			{
-				size_t offset = chunk->GetBuffer() - previousBuffer;
+				const size_t offset = chunk->GetBuffer() - previousBuffer;
 
 				chunk->SoftSerialize(buffer + offset);
 			}
@@ -333,7 +333,7 @@ namespace RTC
 			// Soft clone Packet Chunks into the given cloned Packet.
 			for (auto* chunk : this->chunks)
 			{
-				size_t offset = chunk->GetBuffer() - GetBuffer();
+				const size_t offset = chunk->GetBuffer() - GetBuffer();
 
 				auto* softClonedChunk = chunk->SoftClone(buffer + offset);
 
@@ -388,7 +388,7 @@ namespace RTC
 
 			AssertNotFrozen();
 
-			size_t length = GetLength() + chunk->GetLength();
+			const size_t length = GetLength() + chunk->GetLength();
 
 			// Let's append the Chunk at the end of existing Chunks.
 			auto* clonedChunk =

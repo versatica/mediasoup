@@ -34,7 +34,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			std::bitset<16> nackBitset(GetLostPacketBitmask());
+			const std::bitset<16> nackBitset(GetLostPacketBitmask());
 
 			MS_DUMP_CLEAN(indentation, "<FeedbackRtpNackItem>");
 			MS_DUMP_CLEAN(indentation, "  pid: %" PRIu16, this->GetPacketId());

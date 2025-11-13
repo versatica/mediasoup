@@ -200,8 +200,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		uint8_t payloadType = encoding.codecPayloadType;
-		auto it             = this->codecs.begin();
+		const uint8_t payloadType = encoding.codecPayloadType;
+		auto it                   = this->codecs.begin();
 
 		for (; it != this->codecs.end(); ++it)
 		{
@@ -228,7 +228,7 @@ namespace RTC
 
 		static const std::string AptString{ "apt" };
 
-		uint8_t payloadType = encoding.codecPayloadType;
+		const uint8_t payloadType = encoding.codecPayloadType;
 
 		for (const auto& codec : this->codecs)
 		{

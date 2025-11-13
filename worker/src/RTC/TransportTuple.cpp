@@ -159,9 +159,9 @@ namespace RTC
 		{
 			if (addr->sa_family == AF_INET)
 			{
-				const auto* in = reinterpret_cast<const sockaddr_in*>(addr);
-				const auto* ip = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
-				uint16_t port  = ntohs(in->sin_port);
+				const auto* in      = reinterpret_cast<const sockaddr_in*>(addr);
+				const auto* ip      = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
+				const uint16_t port = ntohs(in->sin_port);
 
 				buffer.insert(buffer.end(), ip, ip + 4);
 				buffer.push_back((port >> 8) & 0xFF);
@@ -169,9 +169,9 @@ namespace RTC
 			}
 			else if (addr->sa_family == AF_INET6)
 			{
-				const auto* in6 = reinterpret_cast<const sockaddr_in6*>(addr);
-				const auto* ip  = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
-				uint16_t port   = ntohs(in6->sin6_port);
+				const auto* in6     = reinterpret_cast<const sockaddr_in6*>(addr);
+				const auto* ip      = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
+				const uint16_t port = ntohs(in6->sin6_port);
 
 				buffer.insert(buffer.end(), ip, ip + 16);
 				buffer.push_back((port >> 8) & 0xFF);

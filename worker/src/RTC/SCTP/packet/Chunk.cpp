@@ -144,7 +144,7 @@ namespace RTC
 			{
 				for (auto* parameter : this->parameters)
 				{
-					size_t offset = parameter->GetBuffer() - previousBuffer;
+					const size_t offset = parameter->GetBuffer() - previousBuffer;
 
 					parameter->SoftSerialize(buffer + offset);
 				}
@@ -154,7 +154,7 @@ namespace RTC
 			{
 				for (auto* errorCause : this->errorCauses)
 				{
-					size_t offset = errorCause->GetBuffer() - previousBuffer;
+					const size_t offset = errorCause->GetBuffer() - previousBuffer;
 
 					errorCause->SoftSerialize(buffer + offset);
 				}
@@ -168,7 +168,7 @@ namespace RTC
 			AssertNotFrozen();
 			AssertCanHaveParameters();
 
-			size_t previousLength = GetLength();
+			const size_t previousLength = GetLength();
 
 			// This will update the total length and Length field of the Chunk.
 			// NOTE: It may throw.
@@ -192,7 +192,7 @@ namespace RTC
 			AssertNotFrozen();
 			AssertCanHaveErrorCauses();
 
-			size_t previousLength = GetLength();
+			const size_t previousLength = GetLength();
 
 			// This will update the total length and Length field of the Chunk.
 			// NOTE: It may throw.
@@ -263,7 +263,7 @@ namespace RTC
 			{
 				for (auto* parameter : this->parameters)
 				{
-					size_t offset = parameter->GetBuffer() - previousBuffer;
+					const size_t offset = parameter->GetBuffer() - previousBuffer;
 
 					parameter->SoftSerialize(buffer + offset);
 				}
@@ -273,7 +273,7 @@ namespace RTC
 			{
 				for (auto* errorCause : this->errorCauses)
 				{
-					size_t offset = errorCause->GetBuffer() - previousBuffer;
+					const size_t offset = errorCause->GetBuffer() - previousBuffer;
 
 					errorCause->SoftSerialize(buffer + offset);
 				}
@@ -289,7 +289,7 @@ namespace RTC
 			{
 				for (auto* parameter : this->parameters)
 				{
-					size_t offset = parameter->GetBuffer() - GetBuffer();
+					const size_t offset = parameter->GetBuffer() - GetBuffer();
 
 					auto* softClonedParameter = parameter->SoftClone(chunk->GetBuffer() + offset);
 
@@ -306,7 +306,7 @@ namespace RTC
 			{
 				for (auto* errorCause : this->errorCauses)
 				{
-					size_t offset = errorCause->GetBuffer() - GetBuffer();
+					const size_t offset = errorCause->GetBuffer() - GetBuffer();
 
 					auto* softClonedErrorCause = errorCause->SoftClone(chunk->GetBuffer() + offset);
 
@@ -356,7 +356,7 @@ namespace RTC
 			{
 				// The remaining length in the given length is the potential buffer
 				// length of the Parameter.
-				size_t parameterMaxBufferLength = end - ptr;
+				const size_t parameterMaxBufferLength = end - ptr;
 
 				// Here we must anticipate the type of each Parameter to use its
 				// appropriate parser.
@@ -563,7 +563,7 @@ namespace RTC
 			{
 				// The remaining length in the given length is the potential buffer
 				// length of the Error Cause.
-				size_t errorCauseMaxBufferLength = end - ptr;
+				const size_t errorCauseMaxBufferLength = end - ptr;
 
 				// Here we must anticipate the type of each Error Cause to use its
 				// appropriate parser.

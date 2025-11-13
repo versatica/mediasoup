@@ -112,8 +112,8 @@ namespace Utils
 			return std::nullopt;
 		}
 
-		unsigned v = this->GetBits(w - 1);
-		unsigned m = (1u << w) - n;
+		const unsigned v = this->GetBits(w - 1);
+		const unsigned m = (1u << w) - n;
 
 		if (v < m)
 		{
@@ -125,7 +125,7 @@ namespace Utils
 			return std::nullopt;
 		}
 
-		unsigned extraBit = this->GetBit();
+		const unsigned extraBit = this->GetBit();
 
 		return (v << 1) - m + extraBit;
 	}
@@ -174,10 +174,10 @@ namespace Utils
 		MS_TRACE();
 
 		// Retrieve the current byte position.
-		size_t byteOffset = offset >> 0x3;
+		const size_t byteOffset = offset >> 0x3;
 
 		// Calculate the bitmask for the target bit within the current byte.
-		auto bitmask = (1u << (0x7 - (offset & 0x7)));
+		const auto bitmask = (1u << (0x7 - (offset & 0x7)));
 
 		if (bit)
 		{
@@ -200,8 +200,8 @@ namespace Utils
 
 		for (unsigned i = 0; i < count; ++i)
 		{
-			uint32_t shift = count - i - 1;
-			uint8_t bit    = (bits >> shift) & 0x1;
+			const uint32_t shift = count - i - 1;
+			const uint8_t bit    = (bits >> shift) & 0x1;
 
 			this->PutBit(offset++, bit);
 		}

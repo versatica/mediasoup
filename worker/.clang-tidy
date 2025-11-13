@@ -39,11 +39,12 @@ Checks: "*,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
   -fuchsia-statically-constructed-objects,\
+  -google-build-using-namespace,\
   -google-default-arguments,\
   -google-readability-*,\
   -google-runtime-references,\
+  -google-runtime-int,\
   -google-upgrade-googletest-case,\
-  -google-build-using-namespace,\
   -hicpp-avoid-c-arrays,\
   -hicpp-avoid-goto,\
   -hicpp-braces-around-statements,\
