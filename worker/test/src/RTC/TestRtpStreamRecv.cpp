@@ -22,7 +22,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		{
 		}
 
-		void OnRtpStreamSendRtcpPacket(RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
+		void OnRtpStreamSendRtcpPacket(RtpStreamRecv* /*rtpStream*/, RTCP::Packet* packet) override
 		{
 			switch (packet->GetType())
 			{
