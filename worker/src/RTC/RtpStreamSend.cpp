@@ -313,6 +313,7 @@ namespace RTC
 
 		this->packetsLost  = report->GetTotalLost();
 		this->fractionLost = report->GetFractionLost();
+		this->jitter       = static_cast<float>(report->GetJitter());
 
 		// Update the score with the received RR.
 		UpdateScore(report);
@@ -405,6 +406,9 @@ namespace RTC
 		{
 			this->retransmissionBuffer->Clear();
 		}
+
+		// Reset jitter.
+		this->jitter = 0;
 	}
 
 	void RtpStreamSend::Resume()

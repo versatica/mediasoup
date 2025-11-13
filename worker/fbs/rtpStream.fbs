@@ -50,6 +50,7 @@ table BaseStats {
     mime_type: string (required);
     packets_lost: int32;
     fraction_lost: uint8;
+    jitter: uint32;
     packets_discarded: uint64;
     packets_retransmitted: uint64;
     packets_repaired: uint64;
@@ -57,16 +58,15 @@ table BaseStats {
     nack_packet_count: uint64;
     pli_count: uint64;
     fir_count: uint64;
-    score: uint8;
     rid: string;
     rtx_ssrc: uint32 = null;
     rtx_packets_discarded: uint64;
     round_trip_time: float;
+    score: uint8;
 }
 
 table RecvStats {
     base: Stats (required);
-    jitter: uint32;
     packet_count: uint64;
     byte_count: uint64;
     bitrate: uint32;

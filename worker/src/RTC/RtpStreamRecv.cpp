@@ -252,7 +252,6 @@ namespace RTC
 		auto stats = FBS::RtpStream::CreateRecvStatsDirect(
 		  builder,
 		  baseStats,
-		  static_cast<uint32_t>(this->jitter),
 		  this->transmissionCounter.GetPacketCount(),
 		  this->transmissionCounter.GetBytes(),
 		  this->transmissionCounter.GetBitrate(nowMs),
