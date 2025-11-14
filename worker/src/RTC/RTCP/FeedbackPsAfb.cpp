@@ -52,7 +52,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = FeedbackPsPacket::Serialize(buffer);
+			const size_t offset = FeedbackPsPacket::Serialize(buffer);
 
 			// Copy the content.
 			std::memcpy(buffer + offset, this->data, this->size);

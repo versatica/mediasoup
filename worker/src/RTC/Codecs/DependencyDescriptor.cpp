@@ -371,7 +371,7 @@ namespace RTC
 						return false;
 					}
 
-					uint8_t fdiff = this->bitStream.GetBits(4) + 1;
+					const uint8_t fdiff = this->bitStream.GetBits(4) + 1;
 
 					this->templateDependencyStructure->templateLayers[templateIndex].frameDiffs.push_back(fdiff);
 
@@ -435,7 +435,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			uint8_t templateIndex =
+			const uint8_t templateIndex =
 			  (this->frameDependencyTemplateId + 64 - this->templateDependencyStructure->templateIdOffset) %
 			  64;
 

@@ -4,6 +4,7 @@ Checks: "*,\
   -android*,\
   -boost-use-to-string,\
   -boost-use-ranges,\
+  -bugprone-branch-clone,\
   -bugprone-easily-swappable-parameters,\
   -bugprone-implicit-widening-of-multiplication-result,\
   -bugprone-lambda-function-name,\
@@ -39,11 +40,12 @@ Checks: "*,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
   -fuchsia-statically-constructed-objects,\
+  -google-build-using-namespace,\
   -google-default-arguments,\
   -google-readability-*,\
   -google-runtime-references,\
+  -google-runtime-int,\
   -google-upgrade-googletest-case,\
-  -google-build-using-namespace,\
   -hicpp-avoid-c-arrays,\
   -hicpp-avoid-goto,\
   -hicpp-braces-around-statements,\
@@ -67,6 +69,7 @@ Checks: "*,\
   -modernize-use-nodiscard, \
   -modernize-use-trailing-return-type,\
   -performance-no-int-to-ptr,\
+  -portability-template-virtual-member-function,\
   -readability-convert-member-functions-to-static,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\

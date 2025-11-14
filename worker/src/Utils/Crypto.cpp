@@ -147,11 +147,11 @@ namespace Utils
 			crc32 = (crc32 >> 8) ^ Crypto::Crc32cTable[(crc32 ^ data[i]) & 0xFF];
 		}
 
-		uint32_t result = ~crc32;
-		uint32_t byte0  = result & 0xff;
-		uint32_t byte1  = (result >> 8) & 0xff;
-		uint32_t byte2  = (result >> 16) & 0xff;
-		uint32_t byte3  = (result >> 24) & 0xff;
+		const uint32_t result = ~crc32;
+		const uint32_t byte0  = result & 0xff;
+		const uint32_t byte1  = (result >> 8) & 0xff;
+		const uint32_t byte2  = (result >> 16) & 0xff;
+		const uint32_t byte3  = (result >> 24) & 0xff;
 
 		crc32 = ((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
 

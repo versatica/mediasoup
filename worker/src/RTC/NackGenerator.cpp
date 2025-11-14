@@ -4,7 +4,6 @@
 #include "RTC/NackGenerator.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
-#include <utility> // std::make_pair()
 
 namespace RTC
 {
@@ -212,13 +211,12 @@ namespace RTC
 			}
 
 			this->nackList.emplace(
-			  std::make_pair(
+			  seq,
+			  NackInfo{
+			    DepLibUV::GetTimeMs(),
 			    seq,
-			    NackInfo{
-			      DepLibUV::GetTimeMs(),
-			      seq,
-			      seq,
-			    }));
+			    seq,
+			  });
 		}
 	}
 

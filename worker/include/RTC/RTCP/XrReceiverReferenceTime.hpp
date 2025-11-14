@@ -51,19 +51,19 @@ namespace RTC
 		public:
 			uint32_t GetNtpSec() const
 			{
-				return uint32_t{ ntohl(this->body->ntpSec) };
+				return ntohl(this->body->ntpSec);
 			}
 			void SetNtpSec(uint32_t ntpSec)
 			{
-				this->body->ntpSec = uint32_t{ htonl(ntpSec) };
+				this->body->ntpSec = htonl(ntpSec);
 			}
 			uint32_t GetNtpFrac() const
 			{
-				return uint32_t{ ntohl(this->body->ntpFrac) };
+				return ntohl(this->body->ntpFrac);
 			}
 			void SetNtpFrac(uint32_t ntpFrac)
 			{
-				this->body->ntpFrac = uint32_t{ htonl(ntpFrac) };
+				this->body->ntpFrac = htonl(ntpFrac);
 			}
 
 			/* Pure virtual methods inherited from ExtendedReportBlock. */

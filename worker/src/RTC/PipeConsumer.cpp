@@ -469,7 +469,7 @@ namespace RTC
 
 						// Be sure that the target layer retransmission buffer has not been
 						// emptied as a result of sending this packet. If so, exit the loop.
-						if (targetLayerRetransmissionBuffer.size() == 0)
+						if (targetLayerRetransmissionBuffer.empty())
 						{
 							MS_DEBUG_DEV(
 							  "target layer retransmission buffer emptied while iterating it, exiting the loop");

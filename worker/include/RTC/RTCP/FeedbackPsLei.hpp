@@ -41,7 +41,7 @@ namespace RTC
 
 			uint32_t GetSsrc() const
 			{
-				return uint32_t{ ntohl(this->header->ssrc) };
+				return ntohl(this->header->ssrc);
 			}
 
 			/* Virtual methods inherited from FeedbackItem. */

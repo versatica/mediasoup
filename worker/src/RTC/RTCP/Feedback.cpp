@@ -57,8 +57,8 @@ namespace RTC
 		{
 			this->raw                = new uint8_t[HeaderSize];
 			this->header             = reinterpret_cast<Header*>(this->raw);
-			this->header->senderSsrc = uint32_t{ htonl(senderSsrc) };
-			this->header->mediaSsrc  = uint32_t{ htonl(mediaSsrc) };
+			this->header->senderSsrc = htonl(senderSsrc);
+			this->header->mediaSsrc  = htonl(mediaSsrc);
 		}
 
 		template<typename T>
@@ -74,7 +74,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			size_t offset = Packet::Serialize(buffer);
+			const size_t offset = Packet::Serialize(buffer);
 
 			// Copy the header.
 			std::memcpy(buffer + offset, this->header, HeaderSize);
@@ -250,7 +250,6 @@ namespace RTC
 					packet = FeedbackRtpEcnPacket::Parse(data, len);
 					break;
 
-				// NOLINTNEXTLINE (bugprone-branch-clone)
 				case FeedbackRtp::MessageType::PS:
 					break;
 				case FeedbackRtp::MessageType::EXT:

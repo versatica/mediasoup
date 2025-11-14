@@ -22,7 +22,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		{
 		}
 
-		void OnRtpStreamSendRtcpPacket(RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
+		void OnRtpStreamSendRtcpPacket(RtpStreamRecv* /*rtpStream*/, RTCP::Packet* packet) override
 		{
 			switch (packet->GetType())
 			{
@@ -164,12 +164,12 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		packet->SetSequenceNumber(2);
 		rtpStream.ReceivePacket(packet.get());
 
-		REQUIRE(listener.nackedSeqNumbers.size() == 0);
+		REQUIRE(listener.nackedSeqNumbers.empty());
 
 		packet->SetSequenceNumber(4);
 		rtpStream.ReceivePacket(packet.get());
 
-		REQUIRE(listener.nackedSeqNumbers.size() == 0);
+		REQUIRE(listener.nackedSeqNumbers.empty());
 	}
 
 	SECTION("wrapping sequence numbers")

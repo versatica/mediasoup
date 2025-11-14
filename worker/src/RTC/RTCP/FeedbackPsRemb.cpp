@@ -42,7 +42,7 @@ namespace RTC
 		FeedbackPsRembPacket::FeedbackPsRembPacket(CommonHeader* commonHeader, size_t availableLen)
 		  : FeedbackPsAfbPacket(commonHeader, FeedbackPsAfbPacket::Application::REMB)
 		{
-			size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
+			const size_t len = static_cast<size_t>(ntohs(commonHeader->length) + 1) * 4;
 
 			if (len > availableLen)
 			{
@@ -56,7 +56,7 @@ namespace RTC
 			// Make data point to the 4 bytes that must containt the "REMB" identifier.
 			auto* data = reinterpret_cast<uint8_t*>(commonHeader) + Packet::CommonHeaderSize +
 			             FeedbackPacket::HeaderSize;
-			size_t numSsrcs = data[4];
+			const size_t numSsrcs = data[4];
 
 			// Ensure there is space for the the announced number of SSRC feedbacks.
 			if (len != Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 8u + (numSsrcs * 4u))
@@ -79,8 +79,8 @@ namespace RTC
 				return;
 			}
 
-			uint8_t exponent = data[5] >> 2;
-			uint64_t mantissa =
+			const uint8_t exponent = data[5] >> 2;
+			const uint64_t mantissa =
 			  (static_cast<uint32_t>(data[5] & 0x03) << 16) | Utils::Byte::Get2Bytes(data, 6);
 
 			this->bitrate = (mantissa << exponent);

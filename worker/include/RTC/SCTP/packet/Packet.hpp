@@ -97,28 +97,28 @@ namespace RTC
 
 			uint16_t GetSourcePort() const
 			{
-				return uint16_t{ ntohs(GetHeaderPointer()->sourcePort) };
+				return ntohs(GetHeaderPointer()->sourcePort);
 			}
 
 			void SetSourcePort(uint16_t sourcePort);
 
 			uint16_t GetDestinationPort() const
 			{
-				return uint16_t{ ntohs(GetHeaderPointer()->destinationPort) };
+				return ntohs(GetHeaderPointer()->destinationPort);
 			}
 
 			void SetDestinationPort(uint16_t destinationPort);
 
 			uint32_t GetVerificationTag() const
 			{
-				return uint32_t{ ntohl(GetHeaderPointer()->verificationTag) };
+				return ntohl(GetHeaderPointer()->verificationTag);
 			}
 
 			void SetVerificationTag(uint32_t verificationTag);
 
 			uint32_t GetChecksum() const
 			{
-				return uint32_t{ ntohl(GetHeaderPointer()->checksum) };
+				return ntohl(GetHeaderPointer()->checksum);
 			}
 
 			void SetChecksum(uint32_t checksum);

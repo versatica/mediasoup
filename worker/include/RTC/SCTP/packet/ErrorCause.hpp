@@ -126,8 +126,7 @@ namespace RTC
 
 			virtual ErrorCauseCode GetCode() const final
 			{
-				return static_cast<ErrorCauseCode>(
-				  uint16_t{ ntohs(static_cast<uint16_t>(GetHeaderPointer()->code)) });
+				return static_cast<ErrorCauseCode>(ntohs(static_cast<uint16_t>(GetHeaderPointer()->code)));
 			}
 
 			/**
@@ -176,7 +175,7 @@ namespace RTC
 			virtual void SetCode(ErrorCauseCode causeCode) final
 			{
 				GetHeaderPointer()->code =
-				  static_cast<ErrorCauseCode>(uint16_t{ htons(static_cast<uint16_t>(causeCode)) });
+				  static_cast<ErrorCauseCode>(htons(static_cast<uint16_t>(causeCode)));
 			}
 		};
 	} // namespace SCTP

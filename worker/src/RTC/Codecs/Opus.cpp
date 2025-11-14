@@ -23,7 +23,7 @@ namespace RTC
 
 			std::unique_ptr<PayloadDescriptor> payloadDescriptor(new PayloadDescriptor());
 
-			uint8_t byte = data[0];
+			const uint8_t byte = data[0];
 
 			payloadDescriptor->stereo = (byte >> 2) & 0x01;
 			payloadDescriptor->code   = byte & 0x03;

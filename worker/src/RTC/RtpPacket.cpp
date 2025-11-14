@@ -525,11 +525,11 @@ namespace RTC
 		{
 			if (type == 1u)
 			{
-				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
+				this->headerExtension->id = htons(0xBEDE);
 			}
 			else if (type == 2u)
 			{
-				this->headerExtension->id = uint16_t{ htons(0b0001000000000000) };
+				this->headerExtension->id = htons(0b0001000000000000);
 			}
 		}
 
@@ -606,11 +606,11 @@ namespace RTC
 			// Set the header extension id.
 			if (type == 1u)
 			{
-				this->headerExtension->id = uint16_t{ htons(0xBEDE) };
+				this->headerExtension->id = htons(0xBEDE);
 			}
 			else if (type == 2u)
 			{
-				this->headerExtension->id = uint16_t{ htons(0b0001000000000000) };
+				this->headerExtension->id = htons(0b0001000000000000);
 			}
 
 			// Set the header extension length.

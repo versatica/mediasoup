@@ -55,7 +55,7 @@ namespace RTC
 
 			Utils::Byte::Set4Bytes(buffer, 0, this->ssrc);
 
-			uint32_t compact = (exponent << 26) | (mantissa << 9) | this->overhead;
+			const uint32_t compact = (exponent << 26) | (mantissa << 9) | this->overhead;
 
 			Utils::Byte::Set4Bytes(buffer, 4, compact);
 

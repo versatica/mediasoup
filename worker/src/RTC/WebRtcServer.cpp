@@ -81,7 +81,7 @@ namespace RTC
 					announcedAddress = listenInfo->announcedAddress()->str();
 				}
 
-				bool exposeInternalIp = listenInfo->exposeInternalIp();
+				const bool exposeInternalIp = listenInfo->exposeInternalIp();
 
 				RTC::Transport::SocketFlags flags;
 
