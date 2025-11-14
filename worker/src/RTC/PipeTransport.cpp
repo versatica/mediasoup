@@ -388,6 +388,7 @@ namespace RTC
 						MS_THROW_TYPE_ERROR("missing port");
 					}
 
+					// NOLINTNEXTLINE (bugprone-unchecked-optional-access)
 					port = body->port().value();
 
 					int err;

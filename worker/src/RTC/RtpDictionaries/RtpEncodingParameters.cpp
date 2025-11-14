@@ -16,9 +16,10 @@ namespace RTC
 		MS_TRACE();
 
 		// ssrc is optional.
-		if (data->ssrc().has_value())
+		auto ssrc = data->ssrc();
+		if (ssrc.has_value())
 		{
-			this->ssrc = data->ssrc().value();
+			this->ssrc = ssrc.value();
 		}
 
 		// rid is optional.
@@ -28,9 +29,10 @@ namespace RTC
 		}
 
 		// codecPayloadType is optional.
-		if (data->codecPayloadType().has_value())
+		auto codecPayloadType = data->codecPayloadType();
+		if (codecPayloadType.has_value())
 		{
-			this->codecPayloadType    = data->codecPayloadType().value();
+			this->codecPayloadType    = codecPayloadType.value();
 			this->hasCodecPayloadType = true;
 		}
 
