@@ -68,6 +68,7 @@ namespace RTC
 
 			if (this->xrPacket.Begin() != this->xrPacket.End())
 			{
+				// NOLINTNEXTLINE [clang-analyzer-deadcode.DeadStores]
 				offset += this->xrPacket.Serialize(this->header + offset);
 			}
 		}

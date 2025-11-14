@@ -297,8 +297,7 @@ namespace RTC
 
 			do
 			{
-				this->templateDependencyStructure->templateLayers.emplace_back(
-				  FameDependencyTemplate{ spatialId, temporalId });
+				this->templateDependencyStructure->templateLayers.emplace_back(spatialId, temporalId);
 
 				if (this->bitStream.GetLeftBits() < 2)
 				{

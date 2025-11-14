@@ -33,6 +33,11 @@ namespace RTC
 		private:
 			struct FameDependencyTemplate
 			{
+				FameDependencyTemplate(uint32_t spatialLayer, uint32_t temporalLayer)
+				  : spatialLayer(spatialLayer), temporalLayer(temporalLayer)
+				{
+				}
+
 				uint32_t spatialLayer;
 				uint32_t temporalLayer;
 				std::vector<DecodeTargetIndication> decodeTargetIndications;

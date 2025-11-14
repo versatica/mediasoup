@@ -13,6 +13,7 @@
 #include <cstring> // std::memcpy(), std::strcmp()
 
 // clang-format off
+// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define LOG_OPENSSL_ERROR(desc) \
 	do \
 	{ \
