@@ -59,7 +59,7 @@ namespace RTC
 					}
 				}
 
-				this->layerChanges.push_back({ pictureId, layer });
+				this->layerChanges.emplace_back(pictureId, layer);
 			}
 
 			int16_t GetLayer(uint16_t pictureId) const
