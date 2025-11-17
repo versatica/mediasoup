@@ -256,8 +256,9 @@ namespace RTC
 				}
 
 				// preferredTemporaLayer is optional.
-				if (auto preferredTemporalLayer = preferredLayers->temporalLayer();
-				    preferredTemporalLayer.has_value())
+				auto preferredTemporalLayer = preferredLayers->temporalLayer();
+
+				if (preferredTemporalLayer.has_value())
 				{
 					this->preferredLayers.temporal = preferredTemporalLayer.value();
 
@@ -279,8 +280,7 @@ namespace RTC
 				  this->preferredLayers.temporal,
 				  this->id.c_str());
 
-				const auto preferredTemporalLayer = this->preferredLayers.temporal;
-
+				preferredTemporalLayer     = this->preferredLayers.temporal;
 				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 				  request->GetBufferBuilder(), this->preferredLayers.spatial, preferredTemporalLayer);
 				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(
