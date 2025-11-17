@@ -57,7 +57,7 @@ jobs:
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
-            # Let's just compile with all Meson option flags enabled once with gcc.
+            # Compile with all Meson option flags enabled once with gcc in Release mode.
             meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
           - os: ubuntu-24.04
             cc: gcc
@@ -69,6 +69,8 @@ jobs:
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
+            # Compile with all Meson option flags enabled once with gcc in Debug mode.
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
