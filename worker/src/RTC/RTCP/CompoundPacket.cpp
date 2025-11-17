@@ -68,7 +68,7 @@ namespace RTC
 
 			if (this->xrPacket.Begin() != this->xrPacket.End())
 			{
-				offset += this->xrPacket.Serialize(this->header + offset);
+				this->xrPacket.Serialize(this->header + offset);
 			}
 		}
 

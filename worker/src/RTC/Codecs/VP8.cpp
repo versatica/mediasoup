@@ -200,6 +200,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (data == nullptr)
+			{
+				MS_ABORT("data is nullptr");
+			}
+
 			// Nothing to do.
 			if (!this->extended)
 			{

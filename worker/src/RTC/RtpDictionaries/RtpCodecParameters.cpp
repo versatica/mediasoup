@@ -24,9 +24,9 @@ namespace RTC
 		this->clockRate = data->clockRate();
 
 		// channels is optional.
-		if (data->channels().has_value())
+		if (auto channels = data->channels(); channels.has_value())
 		{
-			this->channels = data->channels().value();
+			this->channels = channels.value();
 		}
 
 		// parameters is optional.

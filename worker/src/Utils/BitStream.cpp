@@ -143,7 +143,7 @@ namespace Utils
 			++w;
 		}
 
-		unsigned m = (1 << w) - n;
+		const unsigned m = (1 << w) - n;
 
 		if (v < m)
 		{

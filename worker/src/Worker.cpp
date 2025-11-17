@@ -176,13 +176,13 @@ flatbuffers::Offset<FBS::Worker::ResourceUsageResponse> Worker::FillBufferResour
 	MS_TRACE();
 
 	int err;
-	uv_rusage_t uvRusage; // NOLINT(cppcoreguidelines-pro-type-member-init)
+	uv_rusage_t uvRusage{}; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
 	err = uv_getrusage(std::addressof(uvRusage));
 
 	if (err != 0)
 	{
-		MS_THROW_ERROR("uv_getrusagerequest() failed: %s", uv_strerror(err));
+		MS_THROW_ERROR("uv_getrusage() failed: %s", uv_strerror(err));
 	}
 
 	return FBS::Worker::CreateResourceUsageResponse(

@@ -23,22 +23,22 @@ namespace RTC
 		// ordered is optional.
 		bool orderedGiven = false;
 
-		if (data->ordered().has_value())
+		if (auto ordered = data->ordered(); ordered.has_value())
 		{
 			orderedGiven  = true;
-			this->ordered = data->ordered().value();
+			this->ordered = ordered.value();
 		}
 
 		// maxPacketLifeTime is optional.
-		if (data->maxPacketLifeTime().has_value())
+		if (auto maxPacketLifeTime = data->maxPacketLifeTime(); maxPacketLifeTime.has_value())
 		{
-			this->maxPacketLifeTime = data->maxPacketLifeTime().value();
+			this->maxPacketLifeTime = maxPacketLifeTime.value();
 		}
 
 		// maxRetransmits is optional.
-		if (data->maxRetransmits().has_value())
+		if (auto maxRetransmits = data->maxRetransmits(); maxRetransmits.has_value())
 		{
-			this->maxRetransmits = data->maxRetransmits().value();
+			this->maxRetransmits = maxRetransmits.value();
 		}
 
 		if (this->maxPacketLifeTime && this->maxRetransmits)

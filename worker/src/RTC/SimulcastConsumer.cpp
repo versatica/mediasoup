@@ -68,9 +68,10 @@ namespace RTC
 				this->preferredLayers.spatial = static_cast<int16_t>(encoding.spatialLayers - 1);
 			}
 
-			if (preferredLayers->temporalLayer().has_value())
+			if (auto preferredTemporalLayer = preferredLayers->temporalLayer();
+			    preferredTemporalLayer.has_value())
 			{
-				this->preferredLayers.temporal = preferredLayers->temporalLayer().value();
+				this->preferredLayers.temporal = preferredTemporalLayer.value();
 
 				if (this->preferredLayers.temporal > encoding.temporalLayers - 1)
 				{
@@ -255,9 +256,11 @@ namespace RTC
 				}
 
 				// preferredTemporaLayer is optional.
-				if (preferredLayers->temporalLayer().has_value())
+				auto preferredTemporalLayer = preferredLayers->temporalLayer();
+
+				if (preferredTemporalLayer.has_value())
 				{
-					this->preferredLayers.temporal = preferredLayers->temporalLayer().value();
+					this->preferredLayers.temporal = preferredTemporalLayer.value();
 
 					if (this->preferredLayers.temporal > this->rtpStream->GetTemporalLayers() - 1)
 					{
@@ -277,7 +280,7 @@ namespace RTC
 				  this->preferredLayers.temporal,
 				  this->id.c_str());
 
-				const flatbuffers::Optional<int16_t> preferredTemporalLayer{ this->preferredLayers.temporal };
+				preferredTemporalLayer     = this->preferredLayers.temporal;
 				auto preferredLayersOffset = FBS::Consumer::CreateConsumerLayers(
 				  request->GetBufferBuilder(), this->preferredLayers.spatial, preferredTemporalLayer);
 				auto responseOffset = FBS::Consumer::CreateSetPreferredLayersResponse(

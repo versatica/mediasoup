@@ -104,13 +104,15 @@ namespace RTC
 
 		if (options->enableSrtp())
 		{
-			if (!options->srtpCryptoSuite().has_value())
+			auto srtpCryptoSuite = options->srtpCryptoSuite();
+
+			if (!srtpCryptoSuite.has_value())
 			{
 				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite");
 			}
 
 			// NOTE: The SRTP crypto suite may change later on connect().
-			this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(options->srtpCryptoSuite().value());
+			this->srtpCryptoSuite = SrtpSession::CryptoSuiteFromFbs(srtpCryptoSuite.value());
 
 			switch (this->srtpCryptoSuite)
 			{
@@ -592,6 +594,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing port");
 						}
 
+						// NOLINTNEXTLINE (bugprone-unchecked-optional-access)
 						port = body->port().value();
 
 						if (body->rtcpPort().has_value())
@@ -601,6 +604,7 @@ namespace RTC
 								MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 							}
 
+							// NOLINTNEXTLINE (bugprone-unchecked-optional-access)
 							rtcpPort = body->rtcpPort().value();
 						}
 						else

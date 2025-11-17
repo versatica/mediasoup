@@ -22,6 +22,7 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
+            build-type: Release
             run-lint: false
             run-test: true
             run-test-asan-address: false
@@ -30,6 +31,7 @@ jobs:
           - os: ubuntu-22.04
             cc: clang
             cxx: clang++
+            build-type: Release
             run-lint: false
             run-test: true
             run-test-asan-address: false
@@ -38,6 +40,7 @@ jobs:
           - os: ubuntu-22.04-arm
             cc: gcc
             cxx: g++
+            build-type: Release
             # No clang-format for ARM.
             run-lint: false
             run-test: true
@@ -47,17 +50,31 @@ jobs:
           - os: ubuntu-24.04
             cc: gcc
             cxx: g++
+            build-type: Release
             pip-break-system-packages: true
             run-lint: false
             run-test: true
             run-test-asan-address: false
             run-test-asan-undefined: false
             run-test-asan-thread: false
-            # Let's just compile with all Meson option flags enabled once with gcc.
+            # Compile with all Meson option flags enabled once with gcc in Release mode.
+            meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
+          - os: ubuntu-24.04
+            cc: gcc
+            cxx: g++
+            build-type: Debug
+            pip-break-system-packages: true
+            run-lint: false
+            run-test: true
+            run-test-asan-address: false
+            run-test-asan-undefined: false
+            run-test-asan-thread: false
+            # Compile with all Meson option flags enabled once with gcc in Debug mode.
             meson_args: '-Dms_log_trace=true -Dms_log_file_line=true -Dms_rtc_logger_rtp=true -Dms_disable_liburing=true -Dms_sctp_stack=true'
           - os: ubuntu-24.04
             cc: clang
             cxx: clang++
+            build-type: Release
             pip-break-system-packages: true
             run-lint: false
             run-test: true
@@ -69,6 +86,7 @@ jobs:
           - os: ubuntu-24.04-arm
             cc: gcc
             cxx: g++
+            build-type: Release
             pip-break-system-packages: true
             # No clang-format for ARM.
             run-lint: false
@@ -79,6 +97,7 @@ jobs:
           - os: ubuntu-24.04-arm
             cc: clang
             cxx: clang++
+            build-type: Release
             pip-break-system-packages: true
             # No clang-format for ARM.
             run-lint: false
@@ -89,6 +108,7 @@ jobs:
           - os: macos-14
             cc: clang
             cxx: clang++
+            build-type: Release
             pip-break-system-packages: true
             run-lint: false
             run-test: true
@@ -98,6 +118,7 @@ jobs:
           - os: macos-15
             cc: clang
             cxx: clang++
+            build-type: Release
             pip-break-system-packages: true
             # Run lint for the latest macos.
             run-lint: true
@@ -108,6 +129,7 @@ jobs:
           - os: windows-2022
             cc: cl
             cxx: cl
+            build-type: Release
             # No clang-format for Windows.
             run-lint: false
             # Maybe some day we fix this.
@@ -119,6 +141,7 @@ jobs:
           - os: windows-2025
             cc: cl
             cxx: cl
+            build-type: Release
             # No clang-format for Windows.
             run-lint: false
             # Maybe some day we fix this.
@@ -130,9 +153,6 @@ jobs:
         # A single Node.js version should be fine for C++.
         node:
           - 24
-        build-type:
-          - Release
-          - Debug
 
     runs-on: ${{ matrix.build.os }}
 
@@ -141,7 +161,7 @@ jobs:
       CXX: ${{ matrix.build.cxx }}
       MEDIASOUP_SKIP_WORKER_PREBUILT_DOWNLOAD: 'true'
       MEDIASOUP_LOCAL_DEV: 'false'
-      MEDIASOUP_BUILDTYPE: ${{ matrix.build-type }}
+      MEDIASOUP_BUILDTYPE: ${{ matrix.build.build-type }}
       MESON_ARGS: ${{ matrix.build.meson_args }}
 
     steps:

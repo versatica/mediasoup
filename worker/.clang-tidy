@@ -36,6 +36,7 @@ Checks: "*,\
   -cppcoreguidelines-pro-type-vararg,\
   -cppcoreguidelines-special-member-functions,\
   -hicpp-exception-baseclass,\
+  -hicpp-no-malloc,\
   -fuchsia-default-arguments-calls,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
