@@ -31,9 +31,9 @@ namespace RTC
 			static std::unordered_map<DecodeTargetIndication, std::string> dtiToString;
 
 		private:
-			struct FameDependencyTemplate
+			struct FrameDependencyTemplate
 			{
-				FameDependencyTemplate(uint32_t spatialLayer, uint32_t temporalLayer)
+				FrameDependencyTemplate(uint32_t spatialLayer, uint32_t temporalLayer)
 				  : spatialLayer(spatialLayer), temporalLayer(temporalLayer)
 				{
 				}
@@ -52,7 +52,7 @@ namespace RTC
 				uint32_t temporalLayers{ 0 };
 				uint8_t templateIdOffset{ 0 };
 				uint8_t decodeTargetCount{ 0 };
-				std::vector<FameDependencyTemplate> templateLayers;
+				std::vector<FrameDependencyTemplate> templateLayers;
 			};
 
 		public:
