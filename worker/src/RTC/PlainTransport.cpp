@@ -105,6 +105,7 @@ namespace RTC
 		if (options->enableSrtp())
 		{
 			auto srtpCryptoSuite = options->srtpCryptoSuite();
+
 			if (!srtpCryptoSuite.has_value())
 			{
 				MS_THROW_TYPE_ERROR("missing srtpCryptoSuite");

@@ -81,9 +81,7 @@ namespace RTC
 
 			auto& encodingMapping = this->rtpMapping.encodings.back();
 
-			// ssrc is optional.
-			auto ssrc = encoding->ssrc();
-			if (ssrc.has_value())
+			if (auto ssrc = encoding->ssrc(); ssrc.has_value())
 			{
 				encodingMapping.ssrc = ssrc.value();
 			}

@@ -55,15 +55,14 @@ namespace RTC
 		{
 			this->direct = true;
 
-			auto maxMessageSize = options->maxMessageSize();
-			if (maxMessageSize.has_value())
+			if (auto maxMessageSize = options->maxMessageSize(); maxMessageSize.has_value())
 			{
 				this->maxMessageSize = maxMessageSize.value();
 			}
 		}
 
-		auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
-		if (initialAvailableOutgoingBitrate.has_value())
+		if (auto initialAvailableOutgoingBitrate = options->initialAvailableOutgoingBitrate();
+		    initialAvailableOutgoingBitrate.has_value())
 		{
 			this->initialAvailableOutgoingBitrate = initialAvailableOutgoingBitrate.value();
 		}

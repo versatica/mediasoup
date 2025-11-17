@@ -16,8 +16,7 @@ namespace RTC
 		MS_TRACE();
 
 		// ssrc is optional.
-		auto ssrc = data->ssrc();
-		if (ssrc.has_value())
+		if (auto ssrc = data->ssrc(); ssrc.has_value())
 		{
 			this->ssrc = ssrc.value();
 		}
@@ -29,8 +28,7 @@ namespace RTC
 		}
 
 		// codecPayloadType is optional.
-		auto codecPayloadType = data->codecPayloadType();
-		if (codecPayloadType.has_value())
+		if (auto codecPayloadType = data->codecPayloadType(); codecPayloadType.has_value())
 		{
 			this->codecPayloadType    = codecPayloadType.value();
 			this->hasCodecPayloadType = true;
@@ -44,8 +42,7 @@ namespace RTC
 		}
 
 		// maxBitrate is optional.
-		auto maxBitrate = data->maxBitrate();
-		if (maxBitrate.has_value())
+		if (auto maxBitrate = data->maxBitrate(); maxBitrate.has_value())
 		{
 			this->maxBitrate = maxBitrate.value();
 		}
