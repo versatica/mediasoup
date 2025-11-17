@@ -7,7 +7,7 @@ import type {
 	Index,
 } from './indexTypes';
 import type { Worker, WorkerSettings } from './WorkerTypes';
-import { WorkerImpl, workerBin } from './Worker';
+import { WorkerImpl, defaultWorkerBin as workerBin } from './Worker';
 import { supportedRtpCapabilities } from './supportedRtpCapabilities';
 import type { RouterRtpCapabilities } from './rtpParametersTypes';
 import { parseScalabilityMode } from './scalabilityModesUtils';
@@ -33,9 +33,9 @@ const observer: Observer = new EnhancedEventEmitter<ObserverEvents>();
 export { observer };
 
 /**
- * Full path of the mediasoup-worker binary.
+ * Absolute path of the mediasoup-worker binary.
  */
-export { workerBin } from './Worker';
+export { defaultWorkerBin as workerBin } from './Worker';
 
 const logger = new Logger();
 
@@ -98,6 +98,8 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 	rtcMaxPort = 59999,
 	dtlsCertificateFile,
 	dtlsPrivateKeyFile,
+	// eslint-disable-next-line no-shadow
+	workerBin,
 	libwebrtcFieldTrials,
 	disableLiburing,
 	appData,
@@ -115,6 +117,7 @@ export async function createWorker<WorkerAppData extends AppData = AppData>({
 		rtcMaxPort,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
+		workerBin,
 		libwebrtcFieldTrials,
 		disableLiburing,
 		appData,

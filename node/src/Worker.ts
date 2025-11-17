@@ -35,7 +35,7 @@ import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
 const logger = new Logger('Worker');
 const workerLogger = new Logger('Worker');
 
-export const workerBin: string = getWorkerBin();
+export const defaultWorkerBin: string = getDefaultWorkerBin();
 
 export class WorkerImpl<WorkerAppData extends AppData = AppData>
 	extends EnhancedEventEmitter<WorkerEvents>
@@ -79,6 +79,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		rtcMaxPort,
 		dtlsCertificateFile,
 		dtlsPrivateKeyFile,
+		workerBin,
 		libwebrtcFieldTrials,
 		disableLiburing,
 		appData,
@@ -86,6 +87,8 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		super();
 
 		logger.debug('constructor()');
+
+		workerBin = workerBin ?? defaultWorkerBin;
 
 		let spawnBin = workerBin;
 		let spawnArgs: string[] = [];
@@ -240,7 +243,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 				);
 
 				this.close();
-				this.emit('@failure', error);
+				this.emit('@failure', new Error(error.message));
 			} else {
 				logger.error(
 					`worker process error [pid:${this.#pid}]: ${error.message}`
@@ -623,11 +626,11 @@ function parseWorkerDumpResponse(binary: FbsWorker.DumpResponse): WorkerDump {
 	return dump;
 }
 
-function getWorkerBin(): string {
+function getDefaultWorkerBin(): string {
 	// If MEDIASOUP_WORKER_BIN env is given, use it as worker binary.
 	if (process.env['MEDIASOUP_WORKER_BIN']) {
 		logger.debug(
-			`getWorkerBin() | using MEDIASOUP_WORKER_BIN environment variable: ${process.env['MEDIASOUP_WORKER_BIN']}`
+			`getDefaultWorkerBin() | using MEDIASOUP_WORKER_BIN environment variable: ${process.env['MEDIASOUP_WORKER_BIN']}`
 		);
 
 		return process.env['MEDIASOUP_WORKER_BIN'];
@@ -650,7 +653,7 @@ function getWorkerBin(): string {
 		);
 	} catch (error) {
 		logger.warn(
-			`getWorkerBin() | require.resolve('mediasoup') failed, using __dirname: ${error}`
+			`getDefaultWorkerBin() | require.resolve('mediasoup') failed, using __dirname: ${error}`
 		);
 
 		// mediasoup module path is two folders above this file.
@@ -662,7 +665,7 @@ function getWorkerBin(): string {
 	const buildType: 'Release' | 'Debug' =
 		process.env['MEDIASOUP_BUILDTYPE'] === 'Debug' ? 'Debug' : 'Release';
 
-	const workerBinPath = path.join(
+	const defaultWorkerBinPath = path.join(
 		mediasoupModulePath,
 		'worker',
 		'out',
@@ -671,8 +674,8 @@ function getWorkerBin(): string {
 	);
 
 	logger.debug(
-		`getWorkerBin() | detected worker binary path: ${workerBinPath}`
+		`getDefaultWorkerBin() | detected worker binary path: ${defaultWorkerBinPath}`
 	);
 
-	return workerBinPath;
+	return defaultWorkerBinPath;
 }
