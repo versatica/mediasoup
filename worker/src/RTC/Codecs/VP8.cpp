@@ -202,8 +202,7 @@ namespace RTC
 
 			if (data == nullptr)
 			{
-				MS_ERROR("data is nullptr");
-				return;
+				MS_ABORT("data is nullptr");
 			}
 
 			// Nothing to do.
