@@ -1,6 +1,6 @@
 name: clang-tidy-review
 
-# You can be more specific, but it currently only works on pull requests
+# It currently only works on pull requests.
 on: [pull_request]
 
 jobs:
@@ -25,10 +25,10 @@ jobs:
           clang_tidy_version: '21'
           include: 'include/**/*.hpp,src/**/*.cpp'
 
-      # Uploads an artefact containing clang_fixes.json
+      # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
         id: upload-review
 
-      # If there are any comments, fail the check
+      # If there are any comments, fail the check.
       - if: steps.review.outputs.total_comments > 0
         run: exit 1
