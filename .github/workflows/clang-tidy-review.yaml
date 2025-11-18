@@ -10,13 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install invoke.
-      - name: pip3 install --break-system-packages invoke
-        run: pip3 install --break-system-packages invoke
-
-      - name: invoke -r worker mediasoup-worker
-        run: invoke -r worker mediasoup-worker
-
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
         with:
@@ -24,6 +17,7 @@ jobs:
           base_dir: '${{ github.workspace }}/worker'
           clang_tidy_version: '21'
           include: 'worker/include/**/*.hpp,worker/src/**/*.cpp'
+          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker mediasoup-worker'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
