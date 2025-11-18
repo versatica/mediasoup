@@ -78,7 +78,7 @@ namespace RTC
 		}
 
 		// Create the encoding context.
-		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
+		auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
 		if (!RTC::RTP::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{

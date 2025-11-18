@@ -19,6 +19,11 @@ jobs:
 
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
+        with:
+          build_dir: './worker/out/Release/build/'
+          base_dir: '${{ github.workspace }}/worker'
+          clang_tidy_version: '17'
+          include: '*.hpp,*.cpp'
 
       # Uploads an artefact containing clang_fixes.json
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
