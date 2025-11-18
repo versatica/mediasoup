@@ -10,7 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Optionally generate compile_commands.json
+      # Install pip..
+      # - if: ${{ matrix.build.pip-break-system-packages }}
+      #   name: pip3 install --break-system-packages invoke
+      #   run: pip3 install --break-system-packages invoke
+
+      - name: invoke -r worker mediasoup-worker
+        run: invoke -r worker mediasoup-worker
 
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
