@@ -474,6 +474,7 @@ function installNodeDeps() {
 
 	// Check vulnerabilities in deps (exclude dev deps).
 	executeCmd('npm audit --omit=dev');
+	executeCmd('npm audit --omit=dev --prefix worker/scripts');
 }
 
 function checkRelease() {
