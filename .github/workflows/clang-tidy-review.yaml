@@ -17,13 +17,35 @@ jobs:
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
 
+      - name: set mediasoup source files
+        run: |
+          # Define the depth.
+          DEPTH=5
+
+          # Initialize the variables.
+          HPP_FILES="include/*.hpp"
+          CPP_FILES="src/*.cpp"
+
+          # Generate the string for the given depth.
+          for ((i=1; i<=DEPTH; i++)); do
+            HPP_PATTERN="include/"$(printf "**/"%.0s $(seq 1 $i))"*.hpp"
+            HPP_FILES="$HPP_FILES,$HPP_PATTERN"
+
+            CPP_PATTERN="src/"$(printf "**/"%.0s $(seq 1 $i))"*.cpp"
+            CPP_FILES="$CPP_FILES,$CPP_PATTERN"
+          done
+
+          # Export the result as an environment variables.
+          echo "HPP_FILES=$HPP_FILES" >> $GITHUB_ENV
+          echo "CPP_FILES=$CPP_FILES" >> $GITHUB_ENV
+
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
         with:
           build_dir: 'worker/out/Release/build/'
           base_dir: '${{ github.workspace }}/worker'
           clang_tidy_version: '21'
-          include: 'include/**/*.hpp,src/**/*.cpp'
+          include: 'HPP_FILES,CPP_FILES'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
