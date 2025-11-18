@@ -21,7 +21,7 @@ jobs:
         id: review
         with:
           build_dir: 'worker/out/Release/build/'
-          base_dir: '${{ github.workspace }}/worker'
+          # base_dir: '${{ github.workspace }}/worker'
           clang_tidy_version: '17'
           include: '*.hpp,*.cpp'
 
