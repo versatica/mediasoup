@@ -10,10 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install pip..
-      # - if: ${{ matrix.build.pip-break-system-packages }}
-      #   name: pip3 install --break-system-packages invoke
-      #   run: pip3 install --break-system-packages invoke
+      # Install invoke.
+      - if: ${{ matrix.build.pip-break-system-packages }}
+        name: pip3 install --break-system-packages invoke
+        run: pip3 install --break-system-packages invoke
 
       - name: invoke -r worker mediasoup-worker
         run: invoke -r worker mediasoup-worker
