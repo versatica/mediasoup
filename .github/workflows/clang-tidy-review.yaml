@@ -23,15 +23,15 @@ jobs:
           DEPTH=5
 
           # Initialize the variables.
-          HPP_FILES="include/*.hpp"
-          CPP_FILES="src/*.cpp"
+          HPP_FILES="worker/include/*.hpp"
+          CPP_FILES="worker/src/*.cpp"
 
           # Generate the string for the given depth.
           for ((i=1; i<=DEPTH; i++)); do
-            HPP_PATTERN="include/"$(printf "**/"%.0s $(seq 1 $i))"*.hpp"
+            HPP_PATTERN="worker/include/"$(printf "**/"%.0s $(seq 1 $i))"*.hpp"
             HPP_FILES="$HPP_FILES,$HPP_PATTERN"
 
-            CPP_PATTERN="src/"$(printf "**/"%.0s $(seq 1 $i))"*.cpp"
+            CPP_PATTERN="worker/src/"$(printf "**/"%.0s $(seq 1 $i))"*.cpp"
             CPP_FILES="$CPP_FILES,$CPP_PATTERN"
           done
 
