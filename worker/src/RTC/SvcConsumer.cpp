@@ -694,7 +694,7 @@ namespace RTC
 		}
 
 		// Whether this is the first packet after re-sync.
-		const bool isSyncPacket = this->syncRequired;
+		bool isSyncPacket = this->syncRequired;
 
 		// Whether packets stored in the target layer retransmission buffer must be
 		// sent once this packet is sent.
