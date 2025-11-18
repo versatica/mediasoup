@@ -39,10 +39,13 @@ jobs:
           echo "HPP_FILES=$HPP_FILES" >> $GITHUB_ENV
           echo "CPP_FILES=$CPP_FILES" >> $GITHUB_ENV
 
+      - name: copy compile_commands.json
+        run: 'cp ${{ github.workspace }}/worker/out/Release/build/compile_commands.json ${{ github.workspace }}/worker'
+
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
         with:
-          build_dir: 'worker/out/Release/build/'
+          build_dir: '${{ github.workspace }}/worker'
           base_dir: '${{ github.workspace }}/worker'
           clang_tidy_version: '21'
           include: '${{ env.HPP_FILES }},${{ env.CPP_FILES }}'
