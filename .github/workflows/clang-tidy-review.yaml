@@ -45,7 +45,7 @@ jobs:
           build_dir: 'worker/out/Release/build/'
           base_dir: '${{ github.workspace }}/worker'
           clang_tidy_version: '21'
-          include: 'HPP_FILES,CPP_FILES'
+          include: '$HPP_FILES,$CPP_FILES'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
