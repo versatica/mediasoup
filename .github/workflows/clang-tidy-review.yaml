@@ -21,9 +21,9 @@ jobs:
         id: review
         with:
           build_dir: 'worker/out/Release/build/'
-          # base_dir: '${{ github.workspace }}/worker'
+          base_dir: '${{ github.workspace }}/worker'
           clang_tidy_version: '21'
-          include: '*.hpp,*.cpp'
+          include: 'include/**/*.hpp,src/**/*.cpp'
 
       # Uploads an artefact containing clang_fixes.json
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
