@@ -4,8 +4,8 @@ name: clang-tidy-review
 on:
   pull_request:
     paths:
-      - 'worker/include'
-      - 'worker/src'
+      - 'worker/include/**/*.hpp'
+      - 'worker/src/**/*.cpp'
       - '.github/workflows/clang_tidy-review.yml'
 
 jobs:
