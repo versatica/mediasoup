@@ -6,7 +6,7 @@ on:
     paths:
       - 'worker/include'
       - 'worker/src'
-      - '.github/workflows/clang_tidy.yml'
+      - '.github/workflows/clang_tidy-review.yml'
 
 jobs:
   build:
