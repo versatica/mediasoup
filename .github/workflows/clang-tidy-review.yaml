@@ -1,7 +1,12 @@
 name: clang-tidy-review
 
 # It currently only works on pull requests.
-on: [pull_request]
+on:
+  pull_request:
+    paths:
+      - 'worker/include'
+      - 'worker/src'
+      - '.github/workflows/clang_tidy.yml'
 
 jobs:
   build:
@@ -13,11 +18,11 @@ jobs:
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
         with:
-          build_dir: '${{ github.workspace }}/worker'
-          base_dir: '${{ github.workspace }}/worker'
+          build_dir: 'worker/out/Release/build'
+          config_file: 'worker/.clang-tidy'
           clang_tidy_version: '21'
           include: 'worker/include/**/*.hpp,worker/src/**/*.cpp'
-          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker mediasoup-worker && cp worker/out/Release/build/compile_commands.json worker/'
+          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker mediasoup-worker'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
