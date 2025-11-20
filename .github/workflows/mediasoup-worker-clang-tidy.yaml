@@ -18,11 +18,12 @@ jobs:
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
         with:
+          apt_packages: 'libclang-rt-21-dev'
           build_dir: 'worker/out/Release/build'
           config_file: 'worker/.clang-tidy'
-          clang_tidy_version: '17'
+          clang_tidy_version: '21'
           include: 'worker/include/**/*.hpp,worker/src/**/*.cpp'
-          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker mediasoup-worker'
+          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker setup'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
