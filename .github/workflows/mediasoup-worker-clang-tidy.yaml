@@ -6,7 +6,7 @@ on:
     paths:
       - 'worker/include/**/*.hpp'
       - 'worker/src/**/*.cpp'
-      - '.github/workflows/clang_tidy-review.yml'
+      - '.github/workflows/mediasoup-worker-clang-tidy.yaml'
 
 jobs:
   build:
