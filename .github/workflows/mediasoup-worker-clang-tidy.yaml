@@ -22,8 +22,10 @@ jobs:
           build_dir: 'worker/out/Release/build'
           config_file: 'worker/.clang-tidy'
           clang_tidy_version: '21'
+          # TMP until this bug is fixes https://github.com/ZedThree/clang-tidy-review/issues/157#issuecomment-3552341821.
+          extra_arguments: '--allow-no-checks'
           include: 'worker/include/**/*.hpp,worker/src/**/*.cpp'
-          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker setup'
+          install_commands: 'pip3 install --break-system-packages invoke && invoke -r worker flatc'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
