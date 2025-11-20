@@ -1,4 +1,4 @@
-name: clang-tidy-review
+name: mediasoup-worker-clang-tidy
 
 # It currently only works on pull requests.
 on:
