@@ -2,7 +2,7 @@
 
 ### NEXT
 
-- `RtxStream`: Don't check if RTP timestamp moved backwards ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX), credits to @Lynnworld).
+- `RtxStream`: Don't check if RTP timestamp moved backwards ([PR #1668](https://github.com/versatica/mediasoup/pull/1668), credits to @Lynnworld).
 
 ### 3.19.12
 
