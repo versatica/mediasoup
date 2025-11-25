@@ -186,23 +186,6 @@ namespace RTC
 			}
 
 			this->maxSeq = seq;
-
-			// Timestamp moved backwards despite in-order sequence number. Likely
-			// caused by prolonged Producer inactivity (e.g., overnight pause).
-			if (Utils::Number<uint32_t>::IsLowerThan(packet->GetTimestamp(), this->maxPacketTs))
-			{
-				MS_DEBUG_TAG(
-				  rtx,
-				  "timestamp moved backwards, updating [ssrc:%" PRIu32 ", seq:%" PRIu16
-				  ", old maxPacketTs:%" PRIu32 ", new maxPacketTs:%" PRIu32 "]",
-				  packet->GetSsrc(),
-				  packet->GetSequenceNumber(),
-				  this->maxPacketTs,
-				  packet->GetTimestamp());
-
-				this->maxPacketTs = packet->GetTimestamp();
-				this->maxPacketMs = DepLibUV::GetTimeMs();
-			}
 		}
 		// Too old packet received (older than the allowed misorder).
 		// Or to new packet (more than acceptable dropout).

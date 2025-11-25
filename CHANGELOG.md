@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `RtxStream`: Don't check if RTP timestamp moved backwards ([PR #XXXX](https://github.com/versatica/mediasoup/pull/XXXX), credits to @Lynnworld).
+
 ### 3.19.12
 
 - Only look up the RTP packet’s RID extension if the packet doesn’t have MID extension ([PR #1666](https://github.com/versatica/mediasoup/pull/1666)).
