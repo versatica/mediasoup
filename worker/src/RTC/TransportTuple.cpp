@@ -156,7 +156,9 @@ namespace RTC
 		// Maximum buffer length for two IPv6 addresses and ports plus protocol.
 		static constexpr size_t BufferSize = ((16 + 2) * 2) + 1;
 		std::array<uint8_t, BufferSize> buffer{};
-		auto* it = buffer.begin();
+		// NOTE: Windows cannot deduce the type if using 'auto'.
+		// NOLINTNEXTLINE (hicpp-use-auto)
+		std::array<uint8_t, BufferSize>::iterator it = buffer.begin();
 
 		auto appendSockAddr = [&](const sockaddr* addr)
 		{
@@ -166,9 +168,11 @@ namespace RTC
 				const auto* ip      = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
 				const uint16_t port = ntohs(in->sin_port);
 
-				it    = std::copy(ip, ip + 4, it);
-				*it++ = (port >> 8) & 0xFF;
-				*it++ = port & 0xFF;
+				it  = std::copy(ip, ip + 4, it);
+				*it = (port >> 8) & 0xFF;
+				it++;
+				*it = port & 0xFF;
+				it++;
 			}
 			else if (addr->sa_family == AF_INET6)
 			{
@@ -176,9 +180,11 @@ namespace RTC
 				const auto* ip      = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
 				const uint16_t port = ntohs(in6->sin6_port);
 
-				it    = std::copy(ip, ip + 16, it);
-				*it++ = (port >> 8) & 0xFF;
-				*it++ = port & 0xFF;
+				it  = std::copy(ip, ip + 16, it);
+				*it = (port >> 8) & 0xFF;
+				it++;
+				*it = port & 0xFF;
+				it++;
 			}
 		};
 
