@@ -3,6 +3,7 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
