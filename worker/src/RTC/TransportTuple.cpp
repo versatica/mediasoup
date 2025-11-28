@@ -3,7 +3,7 @@
 
 #include "RTC/TransportTuple.hpp"
 #include "Logger.hpp"
-#include <vector>
+#include <cstring> // std::memcpy()
 
 namespace RTC
 {
@@ -153,7 +153,10 @@ namespace RTC
 		const auto* localSockAddr  = GetLocalAddress();
 		const auto* remoteSockAddr = GetRemoteAddress();
 
-		std::vector<uint8_t> buffer;
+		// Maximum buffer length for two IPv6 addresses and ports plus protocol.
+		static constexpr size_t BufferSize = ((16 + 2) * 2) + 1;
+		uint8_t buffer[BufferSize]         = {};
+		size_t idx                         = 0;
 
 		auto appendSockAddr = [&](const sockaddr* addr)
 		{
@@ -163,9 +166,10 @@ namespace RTC
 				const auto* ip      = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
 				const uint16_t port = ntohs(in->sin_port);
 
-				buffer.insert(buffer.end(), ip, ip + 4);
-				buffer.push_back((port >> 8) & 0xFF);
-				buffer.push_back(port & 0xFF);
+				std::memcpy(buffer + idx, ip, 4);
+				idx += 4;
+				buffer[idx++] = (port >> 8) & 0xFF;
+				buffer[idx++] = port & 0xFF;
 			}
 			else if (addr->sa_family == AF_INET6)
 			{
@@ -173,17 +177,18 @@ namespace RTC
 				const auto* ip      = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
 				const uint16_t port = ntohs(in6->sin6_port);
 
-				buffer.insert(buffer.end(), ip, ip + 16);
-				buffer.push_back((port >> 8) & 0xFF);
-				buffer.push_back(port & 0xFF);
+				std::memcpy(buffer + idx, ip, 16);
+				idx += 16;
+				buffer[idx++] = (port >> 8) & 0xFF;
+				buffer[idx++] = port & 0xFF;
 			}
 		};
 
 		appendSockAddr(localSockAddr);
 		appendSockAddr(remoteSockAddr);
 
-		buffer.push_back(static_cast<uint8_t>(this->protocol));
+		buffer[idx] = static_cast<uint8_t>(this->protocol);
 
-		this->hash = TransportTuple::GenerateFnv1aHash(buffer.data(), buffer.size());
+		this->hash = TransportTuple::GenerateFnv1aHash(buffer, idx + 1);
 	}
 } // namespace RTC

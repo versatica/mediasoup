@@ -2,7 +2,12 @@
 
 ### NEXT
 
-- Fix RTX packets containing non yet seen RTP packets being discarded ([PR #1653](https://github.com/versatica/mediasoup/pull/1653), credits to @penguinol and @mengbieting).
+- `RtxStream`: Don't check if RTP timestamp moved backwards ([PR #1668](https://github.com/versatica/mediasoup/pull/1668), credits to @Lynnworld).
+- Fix RTX packets containing non yet seen RTP packets being discarded ([PR #1653](https://github.com/versatica/mediasoup/pull/1653), credits to @penguinol, @mengbieting and @Lynnworld).
+
+### 3.19.12
+
+- Only look up the RTP packet’s RID extension if the packet doesn’t have MID extension ([PR #1666](https://github.com/versatica/mediasoup/pull/1666)).
 
 ### 3.19.11
 

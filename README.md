@@ -27,7 +27,7 @@
 
 mediasoup and its client side libraries are designed to accomplish with the following goals:
 
-- Be a [SFU](https://webrtcglossary.com/sfu) (Selective Forwarding Unit).
+- Be a SFU (Selective Forwarding Unit).
 - Support both WebRTC and plain RTP input and output.
 - Be a Node.js module or Rust crate in server side.
 - Be a tiny TypeScript and C++ libraries in client side.

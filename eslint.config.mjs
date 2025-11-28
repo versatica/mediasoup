@@ -169,6 +169,7 @@ const config = tsEslint.config(
 				2,
 				{ ignoreUnions: true },
 			],
+			'@typescript-eslint/no-redundant-type-constituents': 0,
 		},
 	},
 	{

@@ -9,11 +9,7 @@ let clangFormatBinary = 'clang-format';
 void run();
 
 async function run() {
-	if (!process.env.MEDIASOUP_CLANG_FORMAT_BINARY) {
-		logInfo(
-			`MEDIASOUP_CLANG_FORMAT_BINARY not specified, using default "${clangFormatBinary}"`
-		);
-	} else {
+	if (process.env.MEDIASOUP_CLANG_FORMAT_BINARY) {
 		clangFormatBinary = process.env.MEDIASOUP_CLANG_FORMAT_BINARY;
 
 		logInfo(

@@ -290,12 +290,12 @@ namespace RTC
 
 		if (this->rridExtensionId != 0u)
 		{
-			std::string rid;
+			std::string rrid;
 
-			if (ReadRid(rid))
+			if (ReadRid(rrid))
 			{
 				MS_DUMP_CLEAN(
-				  indentation, "  rrid: extId:%" PRIu8 ", value:'%s'", this->rridExtensionId, rid.c_str());
+				  indentation, "  rrid: extId:%" PRIu8 ", value:'%s'", this->rridExtensionId, rrid.c_str());
 			}
 		}
 

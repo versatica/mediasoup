@@ -200,45 +200,78 @@ namespace RTC
 			}
 		}
 
+		bool hasMid{ false };
+		std::string mid;
+		std::string rid;
+
 		// Otherwise lookup into the MID table.
+		if (packet->ReadMid(mid))
 		{
-			std::string mid;
+			hasMid = true;
 
-			if (packet->ReadMid(mid))
+			auto it = this->midTable.find(mid);
+
+			if (it != this->midTable.end())
 			{
-				auto it = this->midTable.find(mid);
+				auto* producer = it->second;
 
-				if (it != this->midTable.end())
+				// Fill the ssrc table.
+
+				MS_DEBUG_DEV(
+				  "inserting entry in ssrcTable [mid:%s, ssrc:%" PRIu32 ", producerId:%s]",
+				  mid.c_str(),
+				  packet->GetSsrc(),
+				  producer->id.c_str());
+
+				// NOTE: Here we may override an existing key with same SSRC but it's ok.
+				if (this->ssrcTable.find(packet->GetSsrc()) != this->ssrcTable.end())
 				{
-					auto* producer = it->second;
-
-					// Fill the ssrc table.
-					// NOTE: We may be overriding an exiting SSRC here, but we don't care.
-					this->ssrcTable[packet->GetSsrc()] = producer;
-
-					return producer;
+					MS_WARN_TAG(
+					  rtp,
+					  "a Producer with ssrc %" PRIu32
+					  " already exists in the ssrcTable, overriding it anyway [mid:%s]",
+					  packet->GetSsrc(),
+					  mid.c_str());
 				}
+
+				this->ssrcTable[packet->GetSsrc()] = producer;
+
+				return producer;
 			}
 		}
 
-		// Otherwise lookup into the RID table.
+		// Otherwise lookup into the RID table but only do it if the packet doesn't
+		// have MID extension.
+		if (!hasMid && packet->ReadRid(rid))
 		{
-			std::string rid;
+			auto it = this->ridTable.find(rid);
 
-			if (packet->ReadRid(rid))
+			if (it != this->ridTable.end())
 			{
-				auto it = this->ridTable.find(rid);
+				auto* producer = it->second;
 
-				if (it != this->ridTable.end())
+				// Fill the ssrc table.
+
+				MS_DEBUG_DEV(
+				  "inserting entry in ssrcTable [rid:%s, ssrc:%" PRIu32 ", producerId:%s]",
+				  rid.c_str(),
+				  packet->GetSsrc(),
+				  producer->id.c_str());
+
+				// NOTE: Here we may override an existing key with same SSRC but it's ok.
+				if (this->ssrcTable.find(packet->GetSsrc()) != this->ssrcTable.end())
 				{
-					auto* producer = it->second;
-
-					// Fill the ssrc table.
-					// NOTE: We may be overriding an exiting SSRC here, but we don't care.
-					this->ssrcTable[packet->GetSsrc()] = producer;
-
-					return producer;
+					MS_WARN_TAG(
+					  rtp,
+					  "a Producer with ssrc %" PRIu32
+					  " already exists in the ssrcTable, overriding it anyway  [rid:%s]",
+					  packet->GetSsrc(),
+					  rid.c_str());
 				}
+
+				this->ssrcTable[packet->GetSsrc()] = producer;
+
+				return producer;
 			}
 		}
 
