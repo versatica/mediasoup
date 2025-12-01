@@ -194,6 +194,8 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		packet->SetSequenceNumber(5);
 		rtpStream.ReceivePacket(packet.get());
 
+		// Sequence number 6 arrives via RTX before the original RTP packet.
+
 		auto originalSsrc        = packet->GetSsrc();
 		auto originalPayloadType = packet->GetPayloadType();
 
