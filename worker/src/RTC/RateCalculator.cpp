@@ -199,12 +199,12 @@ namespace RTC
 
 	void RtpDataCounter::Update(RTC::RtpPacket* packet)
 	{
-		const uint64_t nowMs = DepLibUV::GetTimeMs();
-
 		this->packets++;
 
 		if (!this->ignorePaddingOnlyPackets || packet->GetPayloadLength() > 0)
 		{
+			const uint64_t nowMs = DepLibUV::GetTimeMs();
+
 			this->rate.Update(packet->GetSize(), nowMs);
 		}
 	}

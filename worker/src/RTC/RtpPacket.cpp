@@ -16,7 +16,8 @@ namespace RTC
 {
 	/* Class variables. */
 
-	thread_local uint32_t RtpPacket::nextMediasoupPacketId{ 0u };
+	thread_local uint32_t RtpPacket::nextMediasoupPacketId{ Utils::Crypto::GetRandomUInt(
+		0u, std::numeric_limits<uint32_t>::max() / 2) };
 
 	/* Class methods. */
 
@@ -24,24 +25,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Make RtpPacket::nextMediasoupPacketId first value be random and then
-		// increase it by one, and don't let it be 0.
-		if (RtpPacket::nextMediasoupPacketId == 0)
-		{
-			RtpPacket::nextMediasoupPacketId =
-			  Utils::Crypto::GetRandomUInt(1u, std::numeric_limits<uint32_t>::max() / 2);
-		}
-		else
-		{
-			RtpPacket::nextMediasoupPacketId++;
-
-			if (RtpPacket::nextMediasoupPacketId == 0)
-			{
-				RtpPacket::nextMediasoupPacketId = 1;
-			}
-		}
-
-		return RtpPacket::nextMediasoupPacketId;
+		return RtpPacket::nextMediasoupPacketId++;
 	}
 
 	/* Class methods. */

@@ -296,8 +296,6 @@ namespace Utils
 	{
 	private:
 		static constexpr T MaxValue = (N == 0) ? std::numeric_limits<T>::max() : ((1 << N) - 1);
-		static constexpr T Mask =
-		  (N == 0) ? std::numeric_limits<T>::max() : (static_cast<T>((T(1) << N) - 1));
 
 	public:
 		static bool IsEqualThan(T lhs, T rhs)
@@ -307,8 +305,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return (lhs == rhs);
 		}
@@ -320,8 +318,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
@@ -334,8 +332,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
@@ -348,8 +346,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return (lhs == rhs) || ((lhs > rhs) && (lhs - rhs <= MaxValue / 2)) ||
 			       ((rhs > lhs) && (rhs - lhs > MaxValue / 2));
@@ -362,8 +360,8 @@ namespace Utils
 			    std::is_same_v<T, uint64_t>,
 			  "T must be uint8_t, uint16_t, uint32_t or uint64_t");
 
-			lhs &= Mask;
-			rhs &= Mask;
+			lhs &= MaxValue;
+			rhs &= MaxValue;
 
 			return (lhs == rhs) || ((rhs > lhs) && (rhs - lhs <= MaxValue / 2)) ||
 			       ((lhs > rhs) && (lhs - rhs > MaxValue / 2));
