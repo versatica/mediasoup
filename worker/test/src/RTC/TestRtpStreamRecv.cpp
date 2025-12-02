@@ -174,7 +174,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 		REQUIRE(listener.nackedSeqNumbers.empty());
 	}
 
-	SECTION("Receive RTX before corresponding RTP")
+	SECTION("receive RTX before corresponding RTP")
 	{
 		RtpStreamRecvListener listener;
 		RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
