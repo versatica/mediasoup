@@ -124,11 +124,12 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	{
 		0x80, 0x01, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x04,
-		0x00, 0x00, 0x00, 0x05
+		0x00, 0x00, 0x00, 0x05,
+		0x00, 0x00, 0x00, 0x00 // Extra space for RTX encoding.
 	};
 	// clang-format on
 
-	std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, sizeof(buffer)) };
+	std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, 12) };
 
 	if (!packet)
 	{
