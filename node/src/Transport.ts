@@ -172,6 +172,9 @@ export abstract class TransportImpl<
 	// Next SCTP stream id.
 	#nextSctpStreamId = 0;
 
+	// Free SCTP stream id queue for O(1) allocation.
+	#sctpStreamIdFreeQueue: number[] = [];
+
 	// Observer instance.
 	readonly #observer: Observer;
 
@@ -863,7 +866,7 @@ export abstract class TransportImpl<
 						ordered: true,
 					};
 
-			this.#sctpStreamIds![sctpStreamId] = 1;
+			// Stream ID is already marked as used in getNextSctpStreamId().
 			sctpStreamParameters.streamId = sctpStreamId;
 
 			if (ordered !== undefined) {
@@ -942,16 +945,14 @@ export abstract class TransportImpl<
 		dataConsumer.on('@close', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds) {
-				this.#sctpStreamIds[sctpStreamId] = 0;
-			}
+			// Release SCTP stream ID back to the free queue.
+			this.releaseSctpStreamId(sctpStreamId);
 		});
 		dataConsumer.on('@dataproducerclose', () => {
 			this.dataConsumers.delete(dataConsumer.id);
 
-			if (this.#sctpStreamIds) {
-				this.#sctpStreamIds[sctpStreamId] = 0;
-			}
+			// Release SCTP stream ID back to the free queue.
+			this.releaseSctpStreamId(sctpStreamId);
 		});
 
 		// Emit observer event.
@@ -1003,24 +1004,44 @@ export abstract class TransportImpl<
 
 		const numStreams = this.#data.sctpParameters.MIS;
 
+		// Initialize on first use.
 		if (!this.#sctpStreamIds) {
 			this.#sctpStreamIds = Buffer.alloc(numStreams, 0);
-		}
 
-		let sctpStreamId;
-
-		for (let idx = 0; idx < this.#sctpStreamIds.length; ++idx) {
-			sctpStreamId =
-				(this.#nextSctpStreamId + idx) % this.#sctpStreamIds.length;
-
-			if (!this.#sctpStreamIds[sctpStreamId]) {
-				this.#nextSctpStreamId = sctpStreamId + 1;
-
-				return sctpStreamId;
+			// Populate free queue with all available stream IDs.
+			this.#sctpStreamIdFreeQueue = [];
+			for (let i = 0; i < numStreams; ++i) {
+				this.#sctpStreamIdFreeQueue.push(i);
 			}
 		}
 
-		throw new Error('no sctpStreamId available');
+		// O(1) allocation from free queue.
+		if (this.#sctpStreamIdFreeQueue.length === 0) {
+			throw new Error('no sctpStreamId available');
+		}
+
+		const sctpStreamId = this.#sctpStreamIdFreeQueue.shift()!;
+
+		// Mark as used in bitmap.
+		this.#sctpStreamIds[sctpStreamId] = 1;
+
+		return sctpStreamId;
+	}
+
+	/**
+	 * Release a SCTP stream ID back to the free queue for reuse.
+	 * Time complexity: O(1).
+	 */
+	private releaseSctpStreamId(sctpStreamId: number): void {
+		if (!this.#sctpStreamIds) {
+			return;
+		}
+
+		// Mark as free in bitmap.
+		this.#sctpStreamIds[sctpStreamId] = 0;
+
+		// Return to free queue for O(1) reallocation.
+		this.#sctpStreamIdFreeQueue.push(sctpStreamId);
 	}
 }
 
