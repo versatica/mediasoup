@@ -493,26 +493,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
 			});
 
-		this.#transports.set(transport.id, transport);
-		transport.on('@close', () => this.#transports.delete(transport.id));
-		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id)
-		);
-		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer)
-		);
-		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id)
-		);
-		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer)
-		);
-		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id)
-		);
-
-		// Emit observer event.
-		this.#observer.safeEmit('newtransport', transport);
+		this.registerTransportListeners(transport);
 
 		if (webRtcServer) {
 			webRtcServer.handleWebRtcTransport(transport);
@@ -664,26 +645,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
 			});
 
-		this.#transports.set(transport.id, transport);
-		transport.on('@close', () => this.#transports.delete(transport.id));
-		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id)
-		);
-		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer)
-		);
-		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id)
-		);
-		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer)
-		);
-		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id)
-		);
-
-		// Emit observer event.
-		this.#observer.safeEmit('newtransport', transport);
+		this.registerTransportListeners(transport);
 
 		return transport;
 	}
@@ -802,26 +764,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
 			});
 
-		this.#transports.set(transport.id, transport);
-		transport.on('@close', () => this.#transports.delete(transport.id));
-		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id)
-		);
-		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer)
-		);
-		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id)
-		);
-		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer)
-		);
-		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id)
-		);
-
-		// Emit observer event.
-		this.#observer.safeEmit('newtransport', transport);
+		this.registerTransportListeners(transport);
 
 		return transport;
 	}
@@ -896,26 +839,7 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 				): DataProducer | undefined => this.#dataProducers.get(dataProducerId),
 			});
 
-		this.#transports.set(transport.id, transport);
-		transport.on('@close', () => this.#transports.delete(transport.id));
-		transport.on('@listenserverclose', () =>
-			this.#transports.delete(transport.id)
-		);
-		transport.on('@newproducer', (producer: Producer) =>
-			this.#producers.set(producer.id, producer)
-		);
-		transport.on('@producerclose', (producer: Producer) =>
-			this.#producers.delete(producer.id)
-		);
-		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
-			this.#dataProducers.set(dataProducer.id, dataProducer)
-		);
-		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
-			this.#dataProducers.delete(dataProducer.id)
-		);
-
-		// Emit observer event.
-		this.#observer.safeEmit('newtransport', transport);
+		this.registerTransportListeners(transport);
 
 		return transport;
 	}
@@ -1392,6 +1316,33 @@ export class RouterImpl<RouterAppData extends AppData = AppData>
 			ortc.generateRouterRtpCapabilities(clonedMediaCodecs);
 
 		this.#data.rtpCapabilities = rtpCapabilities;
+	}
+
+	/**
+	 * Register common event listeners for a Transport instance.
+	 */
+	private registerTransportListeners(transport: Transport): void {
+		this.#transports.set(transport.id, transport);
+
+		transport.on('@close', () => this.#transports.delete(transport.id));
+		transport.on('@listenserverclose', () =>
+			this.#transports.delete(transport.id)
+		);
+		transport.on('@newproducer', (producer: Producer) =>
+			this.#producers.set(producer.id, producer)
+		);
+		transport.on('@producerclose', (producer: Producer) =>
+			this.#producers.delete(producer.id)
+		);
+		transport.on('@newdataproducer', (dataProducer: DataProducer) =>
+			this.#dataProducers.set(dataProducer.id, dataProducer)
+		);
+		transport.on('@dataproducerclose', (dataProducer: DataProducer) =>
+			this.#dataProducers.delete(dataProducer.id)
+		);
+
+		// Emit observer event.
+		this.#observer.safeEmit('newtransport', transport);
 	}
 
 	private handleListenerError(): void {
