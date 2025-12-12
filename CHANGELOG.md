@@ -6,6 +6,7 @@
 
 - `RtxStream`: Don't check if RTP timestamp moved backwards ([PR #1668](https://github.com/versatica/mediasoup/pull/1668), credits to @Lynnworld).
 - Fix RTX packets containing non yet seen RTP packets being discarded ([PR #1653](https://github.com/versatica/mediasoup/pull/1653), credits to @penguinol, @mengbieting and @Lynnworld).
+- Worker: Fix missing system header include, which fails in GCC 15.
 
 ### 3.19.12
 
