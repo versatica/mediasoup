@@ -544,7 +544,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		extensions.clear();
 
-		packet->SetExtensions(RtpPacket::ExtensionType::OneByteExtension, extensions);
+		packet->SetExtensions(RtpPacket::ExtensionsType::OneByte, extensions);
 
 		REQUIRE(packet->GetSize() == 32);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -605,7 +605,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		  value3 // value
 		);
 
-		packet->SetExtensions(RtpPacket::ExtensionType::OneByteExtension, extensions);
+		packet->SetExtensions(RtpPacket::ExtensionsType::OneByte, extensions);
 
 		REQUIRE(packet->GetSize() == 60); // Taking into account padding in header extension.
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -644,7 +644,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		  value4 // value
 		);
 
-		packet->SetExtensions(RtpPacket::ExtensionType::OneByteExtension, extensions);
+		packet->SetExtensions(RtpPacket::ExtensionsType::OneByte, extensions);
 
 		REQUIRE(packet->GetSize() == 40);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -732,7 +732,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 
 		extensions.clear();
 
-		packet->SetExtensions(RtpPacket::ExtensionType::TwoBytesExtension, extensions);
+		packet->SetExtensions(RtpPacket::ExtensionsType::TwoBytes, extensions);
 
 		REQUIRE(packet->GetSize() == 32);
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -780,7 +780,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		  value3 // value
 		);
 
-		packet->SetExtensions(RtpPacket::ExtensionType::TwoBytesExtension, extensions);
+		packet->SetExtensions(RtpPacket::ExtensionsType::TwoBytes, extensions);
 
 		REQUIRE(packet->GetSize() == 72); // Taking into account padding in header extension.
 		REQUIRE(packet->HasHeaderExtension() == true);
@@ -827,7 +827,7 @@ SCENARIO("parse RTP packets", "[parser][rtp]")
 		  value4 // value
 		);
 
-		packet->SetExtensions(RtpPacket::ExtensionType::TwoBytesExtension, extensions);
+		packet->SetExtensions(RtpPacket::ExtensionsType::TwoBytes, extensions);
 
 		REQUIRE(packet->GetSize() == 40);
 		REQUIRE(packet->HasHeaderExtension() == true);

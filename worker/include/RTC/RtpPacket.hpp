@@ -52,10 +52,10 @@ namespace RTC
 		};
 
 	public:
-		enum class ExtensionType : uint8_t
+		enum class ExtensionsType : uint8_t
 		{
-			OneByteExtension  = 1,
-			TwoBytesExtension = 2
+			OneByte  = 1,
+			TwoBytes = 2
 		};
 
 	private:
@@ -205,7 +205,7 @@ namespace RTC
 		}
 
 		// After calling this method, all the extension ids are reset to 0.
-		void SetExtensions(ExtensionType type, const std::vector<GenericExtension>& extensions);
+		void SetExtensions(ExtensionsType type, const std::vector<GenericExtension>& extensions);
 
 		uint16_t GetHeaderExtensionId() const
 		{
