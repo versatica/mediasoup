@@ -125,13 +125,13 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	  value2 // value
 	);
 
-	packet->SetExtensions(1, extensions);
-	packet->SetExtensions(2, extensions);
+	packet->SetExtensions(::RTC::RtpPacket::ExtensionType::OneByteExtension, extensions);
+	packet->SetExtensions(::RTC::RtpPacket::ExtensionType::TwoBytesExtension, extensions);
 
 	extensions.clear();
 
-	packet->SetExtensions(2, extensions);
-	packet->SetExtensions(1, extensions);
+	packet->SetExtensions(::RTC::RtpPacket::ExtensionType::TwoBytesExtension, extensions);
+	packet->SetExtensions(::RTC::RtpPacket::ExtensionType::OneByteExtension, extensions);
 
 	uint8_t value3[] = { 0x01, 0x02, 0x03 };
 
@@ -159,8 +159,8 @@ void Fuzzer::RTC::RtpPacket::Fuzz(const uint8_t* data, size_t len)
 	  value3 // value
 	);
 
-	packet->SetExtensions(2, extensions);
-	packet->SetExtensions(1, extensions);
+	packet->SetExtensions(::RTC::RtpPacket::ExtensionType::TwoBytesExtension, extensions);
+	packet->SetExtensions(::RTC::RtpPacket::ExtensionType::OneByteExtension, extensions);
 
 	packet->SetAbsSendTimeExtensionId(13);
 	packet->HasExtension(13);

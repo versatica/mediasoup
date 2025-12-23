@@ -51,6 +51,13 @@ namespace RTC
 			uint8_t value[1];
 		};
 
+	public:
+		enum class ExtensionType : uint8_t
+		{
+			OneByteExtension  = 1,
+			TwoBytesExtension = 2
+		};
+
 	private:
 		/* Struct for One-Byte extension. */
 		struct OneByteExtension
@@ -198,7 +205,7 @@ namespace RTC
 		}
 
 		// After calling this method, all the extension ids are reset to 0.
-		void SetExtensions(uint8_t type, const std::vector<GenericExtension>& extensions);
+		void SetExtensions(ExtensionType type, const std::vector<GenericExtension>& extensions);
 
 		uint16_t GetHeaderExtensionId() const
 		{

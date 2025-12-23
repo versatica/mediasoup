@@ -1,13 +1,14 @@
+#include "RTC/RtpPacket.hpp"
 #define MS_CLASS "RTC::Producer"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/Producer.hpp"
 #include "DepLibUV.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/Producer.hpp"
 #include "RTC/RTCP/Feedback.hpp"
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp"
 #ifdef MS_RTC_LOGGER_RTP
@@ -1433,7 +1434,9 @@ namespace RTC
 			// Set the new extensions into the packet.
 			// Use 1-byte or 2-bytes type depending on the highest extension id and
 			// length we are introducing in the packet.
-			const uint8_t type = highestExtenId <= 14 && highestExtenLen <= 16 ? 1 : 2;
+			const auto type = highestExtenId <= 14 && highestExtenLen <= 16
+			                    ? RTC::RtpPacket::ExtensionType::OneByteExtension
+			                    : RTC::RtpPacket::ExtensionType::TwoBytesExtension;
 
 			MS_DEBUG_DEV(
 			  "using %" PRIu8 " byte(s) header extensions [highestExtenId:%" PRIu8

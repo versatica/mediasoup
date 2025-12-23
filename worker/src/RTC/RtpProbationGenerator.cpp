@@ -106,7 +106,7 @@ namespace RTC
 		}
 
 		// Set the extensions into the packet using One-Byte format.
-		this->probationPacket->SetExtensions(1, extensions);
+		this->probationPacket->SetExtensions(RTC::RtpPacket::ExtensionType::OneByteExtension, extensions);
 
 		// Set our urn:ietf:params:rtp-hdrext:sdes:mid extension id.
 		this->probationPacket->SetMidExtensionId(
