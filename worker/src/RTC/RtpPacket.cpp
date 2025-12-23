@@ -473,10 +473,6 @@ namespace RTC
 
 	void RtpPacket::SetExtensions(ExtensionType type, const std::vector<GenericExtension>& extensions)
 	{
-		MS_ASSERT(
-		  type == ExtensionType::OneByteExtension || type == ExtensionType::TwoBytesExtension,
-		  "type must be 1 or 2");
-
 		// Reset extension ids.
 		this->midExtensionId                  = 0u;
 		this->ridExtensionId                  = 0u;
