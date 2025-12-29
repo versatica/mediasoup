@@ -33,7 +33,7 @@ namespace RTC
 
 // clang-format off
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_PACKET(                                                                              \
+#define CHECK_SCTP_PACKET(                                                                         \
   /*const Packet**/ packet,                                                                        \
   /*const uint8_t**/ buffer,                                                                       \
   /*size_t*/ bufferLength,                                                                         \
@@ -43,7 +43,7 @@ namespace RTC
   /*uint16_t*/ destinationPort,                                                                    \
   /*uint32_t*/ verificationTag,                                                                    \
   /*uint32_t*/ checksum,                                                                           \
-  /*bool*/ hasValidCrc32cChecksum,                                               \
+  /*bool*/ hasValidCrc32cChecksum,                                                                 \
   /*size_t*/ chunksCount)                                                                          \
 	do                                                                                               \
 	{                                                                                                \
@@ -69,10 +69,11 @@ namespace RTC
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
-	} while (false)
+	}                                                                                                \
+	while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_CHUNK(                                                                                 \
+#define CHECK_SCTP_CHUNK(                                                                            \
   /*const Chunk**/ chunk,                                                                            \
   /*uint8_t**/ buffer,                                                                               \
   /*size_t*/ bufferLength,                                                                           \
@@ -135,10 +136,11 @@ namespace RTC
 		  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))->Serialize(ThrowBuffer, length - 1), \
 		  MediaSoupError);                                                                               \
 		REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, length - 1), MediaSoupError);                        \
-	} while (false)
+	}                                                                                                  \
+	while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_PARAMETER(                                                                            \
+#define CHECK_SCTP_PARAMETER(                                                                       \
   /*const Parameter**/ parameter,                                                                   \
   /*const uint8_t**/ buffer,                                                                        \
   /*size_t*/ bufferLength,                                                                          \
@@ -179,7 +181,7 @@ namespace RTC
 	while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_ERROR_CAUSE(                                                                         \
+#define CHECK_SCTP_ERROR_CAUSE(                                                                    \
   /*const ErrorCause**/ errorCause,                                                                \
   /*const uint8_t**/ buffer,                                                                       \
   /*size_t*/ bufferLength,                                                                         \
