@@ -33,10 +33,7 @@ namespace RTC
 		 * - Always use `GetLength()` to obtain the exact length of the
 		 *   Serializable.
 		 */
-		Serializable(const uint8_t* buffer, size_t bufferLength)
-		  : buffer(const_cast<uint8_t*>(buffer)), bufferLength(bufferLength)
-		{
-		}
+		Serializable(const uint8_t* buffer, size_t bufferLength);
 
 		virtual ~Serializable() = default;
 

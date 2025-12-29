@@ -70,7 +70,7 @@ namespace RTC
 			static const size_t CommonHeaderLength{ 12 };
 
 			/**
-			 * Parse a SCTP packet.
+			 * Parse a SCTP Packet.
 			 *
 			 * @remarks
 			 * `bufferLength` must be the exact length of the Packet.

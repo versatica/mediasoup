@@ -1,5 +1,5 @@
-#ifndef MS_TEST_RTC_SCTP_CHUNKS_COMMON_HPP
-#define MS_TEST_RTC_SCTP_CHUNKS_COMMON_HPP
+#ifndef MS_TEST_RTC_SCTP_COMMON_HPP
+#define MS_TEST_RTC_SCTP_COMMON_HPP
 
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"            // IWYU pragma: export
