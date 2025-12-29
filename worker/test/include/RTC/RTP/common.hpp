@@ -7,8 +7,6 @@
 #include "RTC/RTP/Packet.hpp"           // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
 
-using namespace RTC::RTP;
-
 namespace RTC
 {
 	namespace RTP
