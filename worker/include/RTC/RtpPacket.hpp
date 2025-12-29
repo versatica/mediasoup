@@ -1,5 +1,5 @@
-#ifndef MS_RTC_RTP_PACKET_HPP
-#define MS_RTC_RTP_PACKET_HPP
+#ifndef MS_RTC_RTP_PACKET_HPP_OLD
+#define MS_RTC_RTP_PACKET_HPP_OLD
 
 #include "common.hpp"
 #include "Utils.hpp"
