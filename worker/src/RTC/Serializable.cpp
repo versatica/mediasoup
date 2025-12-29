@@ -8,6 +8,12 @@
 
 namespace RTC
 {
+	Serializable::Serializable(const uint8_t* buffer, size_t bufferLength)
+	  : buffer(const_cast<uint8_t*>(buffer)), bufferLength(bufferLength)
+	{
+		MS_TRACE();
+	}
+
 	void Serializable::Serialize(uint8_t* buffer, size_t bufferLength)
 	{
 		MS_TRACE();

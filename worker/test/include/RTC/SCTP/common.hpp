@@ -15,15 +15,21 @@
 
 using namespace RTC::SCTP;
 
-// NOTE: We need to declare them here with `extern` and then define them in
-// helpers.cpp.
-extern thread_local uint8_t FactoryBuffer[66661];
-extern thread_local uint8_t SerializeBuffer[66662];
-extern thread_local uint8_t CloneBuffer[66663];
-extern thread_local uint8_t DataBuffer[66664];
-extern thread_local uint8_t ThrowBuffer[66665];
+namespace RTC
+{
+	namespace SCTP
+	{
+		// NOTE: We need to declare them here with `extern` and then define them in
+		// common.cpp.
+		extern thread_local uint8_t FactoryBuffer[66661];
+		extern thread_local uint8_t SerializeBuffer[66662];
+		extern thread_local uint8_t CloneBuffer[66663];
+		extern thread_local uint8_t DataBuffer[66664];
+		extern thread_local uint8_t ThrowBuffer[66665];
 
-void ResetBuffers();
+		void ResetBuffers();
+	} // namespace SCTP
+} // namespace RTC
 
 // clang-format off
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
@@ -37,7 +43,7 @@ void ResetBuffers();
   /*uint16_t*/ destinationPort,                                                                    \
   /*uint32_t*/ verificationTag,                                                                    \
   /*uint32_t*/ checksum,                                                                           \
-  /*hasValidCrc32cChecksum*/ hasValidCrc32cChecksum,                                               \
+  /*bool*/ hasValidCrc32cChecksum,                                               \
   /*size_t*/ chunksCount)                                                                          \
 	do                                                                                               \
 	{                                                                                                \
