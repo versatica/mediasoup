@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"          // IWYU pragma: export
-#include "helpers.hpp"                  // IWYU pragma: export in worker/test/include/
+#include "testHelpers.hpp"              // IWYU pragma: export in worker/test/include/
 #include "RTC/RTP/Packet.hpp"           // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
 

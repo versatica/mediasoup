@@ -412,7 +412,7 @@ test_sources = [
   'test/src/RTC/Codecs/TestVP8.cpp',
   'test/src/RTC/Codecs/TestVP9.cpp',
   'test/src/RTC/Codecs/TestH264.cpp',
-  'test/src/RTC/RTP/common.cpp',
+  'test/src/RTC/RTP/rtpCommon.cpp',
   'test/src/RTC/RTP/TestPacket.cpp',
   'test/src/RTC/RTCP/TestFeedbackPsAfb.cpp',
   'test/src/RTC/RTCP/TestFeedbackPsFir.cpp',
