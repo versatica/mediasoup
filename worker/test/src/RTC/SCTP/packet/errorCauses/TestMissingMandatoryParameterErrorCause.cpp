@@ -33,7 +33,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 
 		auto* errorCause = MissingMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -62,7 +62,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -87,7 +87,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -166,7 +166,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		auto* errorCause =
 		  MissingMandatoryParameterErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -183,7 +183,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		errorCause->AddMissingParameterType(Parameter::ParameterType::IPV6_ADDRESS);
 		errorCause->AddMissingParameterType(Parameter::ParameterType::COOKIE_PRESERVATIVE);
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -207,7 +207,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16,

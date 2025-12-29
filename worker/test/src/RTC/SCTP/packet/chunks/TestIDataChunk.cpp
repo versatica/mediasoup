@@ -38,7 +38,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 
 		auto* chunk = IDataChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -86,7 +86,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -125,7 +125,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -163,7 +163,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 	{
 		auto* chunk = IDataChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -214,7 +214,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 		// 3 bytes + 1 byte of padding.
 		chunk->SetUserData(DataBuffer, 3);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -251,7 +251,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 20 + 3 + 1,
@@ -289,7 +289,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 	{
 		auto* chunk = IDataChunk::Factory(ThrowBuffer, sizeof(ThrowBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
@@ -306,7 +306,7 @@ SCENARIO("SCTP I-Data Chunk (64)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(chunk->SetUserData(DataBuffer, 65535), MediaSoupError);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),

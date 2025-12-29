@@ -30,7 +30,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		auto* errorCause =
 		  RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -61,7 +61,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -90,7 +90,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -148,7 +148,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		auto* errorCause = RestartOfAnAssociationWithNewAddressesErrorCause::Factory(
 		  FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -178,7 +178,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		// 6 bytes + 2 bytes of padding.
 		errorCause->SetNewAddressTlvs(DataBuffer, 6);
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -206,7 +206,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,

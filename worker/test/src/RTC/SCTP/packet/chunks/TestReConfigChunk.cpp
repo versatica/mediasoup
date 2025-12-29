@@ -48,7 +48,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 
 		auto* chunk = ReConfigChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -66,7 +66,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		auto* parameter1 =
 		  reinterpret_cast<const OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 24,
@@ -87,7 +87,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		auto* parameter2 =
 		  reinterpret_cast<const IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -113,7 +113,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -130,7 +130,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 
 		parameter1 = reinterpret_cast<const OutgoingSsnResetRequestParameter*>(chunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 24,
@@ -150,7 +150,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 
 		parameter2 = reinterpret_cast<const IncomingSsnResetRequestParameter*>(chunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -173,7 +173,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -191,7 +191,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		parameter1 =
 		  reinterpret_cast<const OutgoingSsnResetRequestParameter*>(clonedChunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 24,
@@ -212,7 +212,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		parameter2 =
 		  reinterpret_cast<const IncomingSsnResetRequestParameter*>(clonedChunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -234,7 +234,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 	{
 		auto* chunk = ReConfigChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -259,7 +259,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		parameter1->SetNextTsns(100000001, 200000002);
 		parameter1->Consolidate();
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -277,7 +277,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		const auto* addedParameter1 =
 		  reinterpret_cast<const ReconfigurationResponseParameter*>(chunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
@@ -299,7 +299,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4 + 20,
@@ -317,7 +317,7 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		const auto* parsedParameter1 =
 		  reinterpret_cast<const ReconfigurationResponseParameter*>(parsedChunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,

@@ -31,7 +31,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 
 		auto* parameter = IPv6AddressParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -57,7 +57,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -81,7 +81,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -172,7 +172,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 	{
 		auto* parameter = IPv6AddressParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -196,7 +196,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 
 		parameter->SetIPv6Address(ipBuffer);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -219,7 +219,7 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 20,

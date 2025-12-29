@@ -33,7 +33,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		auto* parameter = HeartbeatInfoParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -65,7 +65,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -95,7 +95,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -172,7 +172,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 	{
 		auto* parameter = HeartbeatInfoParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -215,7 +215,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		// Info length is 5 so 3 bytes of padding will be added.
 		parameter->SetInfo(DataBuffer, 5);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -244,7 +244,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
@@ -273,7 +273,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 	{
 		auto* parameter = HeartbeatInfoParameter::Factory(ThrowBuffer, sizeof(ThrowBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
@@ -285,7 +285,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(parameter->SetInfo(ThrowBuffer, 65535), MediaSoupError);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),

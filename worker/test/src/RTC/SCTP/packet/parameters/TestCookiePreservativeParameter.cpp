@@ -28,7 +28,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
 
 		auto* parameter = CookiePreservativeParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -50,7 +50,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -70,7 +70,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -145,7 +145,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
 	{
 		auto* parameter = CookiePreservativeParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -161,7 +161,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
 
 		parameter->SetLifeSpanIncrement(88776655);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -180,7 +180,7 @@ SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

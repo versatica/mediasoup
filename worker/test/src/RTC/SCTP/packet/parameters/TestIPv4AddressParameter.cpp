@@ -30,7 +30,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 
 		auto* parameter = IPv4AddressParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -55,7 +55,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -78,7 +78,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -156,7 +156,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 	{
 		auto* parameter = IPv4AddressParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -178,7 +178,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 
 		parameter->SetIPv4Address(ipBuffer);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -200,7 +200,7 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

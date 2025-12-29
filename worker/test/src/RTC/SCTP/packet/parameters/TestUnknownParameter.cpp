@@ -29,7 +29,7 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 
 		auto* parameter = UnknownParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -58,7 +58,7 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -88,7 +88,7 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),

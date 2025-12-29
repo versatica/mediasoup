@@ -33,7 +33,7 @@ namespace RTC
 
 // clang-format off
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_PACKET(                                                                              \
+#define CHECK_SCTP_PACKET(                                                                              \
   /*const Packet**/ packet,                                                                        \
   /*const uint8_t**/ buffer,                                                                       \
   /*size_t*/ bufferLength,                                                                         \
@@ -72,7 +72,7 @@ namespace RTC
 	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_CHUNK(                                                                                 \
+#define CHECK_SCTP_CHUNK(                                                                                 \
   /*const Chunk**/ chunk,                                                                            \
   /*uint8_t**/ buffer,                                                                               \
   /*size_t*/ bufferLength,                                                                           \
@@ -138,7 +138,7 @@ namespace RTC
 	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_PARAMETER(                                                                            \
+#define CHECK_SCTP_PARAMETER(                                                                            \
   /*const Parameter**/ parameter,                                                                   \
   /*const uint8_t**/ buffer,                                                                        \
   /*size_t*/ bufferLength,                                                                          \
@@ -179,7 +179,7 @@ namespace RTC
 	while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_ERROR_CAUSE(                                                                         \
+#define CHECK_SCTP_ERROR_CAUSE(                                                                         \
   /*const ErrorCause**/ errorCause,                                                                \
   /*const uint8_t**/ buffer,                                                                       \
   /*size_t*/ bufferLength,                                                                         \

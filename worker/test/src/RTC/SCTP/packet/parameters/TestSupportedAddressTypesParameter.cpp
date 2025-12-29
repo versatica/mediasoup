@@ -30,7 +30,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 
 		auto* parameter = SupportedAddressTypesParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -55,7 +55,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -78,7 +78,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -116,7 +116,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 	{
 		auto* parameter = SupportedAddressTypesParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -134,7 +134,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		parameter->AddAddressType(22222);
 		parameter->AddAddressType(33333);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -152,7 +152,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		parameter->AddAddressType(44444);
 		parameter->AddAddressType(55555);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -176,7 +176,7 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16,

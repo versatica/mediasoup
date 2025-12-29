@@ -30,7 +30,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		auto* errorCause = ProtocolViolationErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -61,7 +61,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -90,7 +90,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -147,7 +147,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 	{
 		auto* errorCause = ProtocolViolationErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -177,7 +177,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		// 6 bytes + 2 bytes of padding.
 		errorCause->SetAdditionalInformation(DataBuffer, 6);
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -205,7 +205,7 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,

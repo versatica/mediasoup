@@ -31,7 +31,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 
 		auto* parameter = AddOutgoingStreamsRequestParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -54,7 +54,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -75,7 +75,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -96,7 +96,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		auto* parameter =
 		  AddOutgoingStreamsRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -114,7 +114,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		parameter->SetReconfigurationRequestSequenceNumber(12345678);
 		parameter->SetNumberOfNewStreams(2048);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -134,7 +134,7 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,

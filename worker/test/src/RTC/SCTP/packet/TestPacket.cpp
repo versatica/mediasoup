@@ -41,7 +41,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		// NOTE: Obviously the Checksum CRC32C validation fails since Checksum is
 		// totally random.
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -71,7 +71,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -88,7 +88,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		/* Insert CRC32C checksum. */
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -109,7 +109,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		delete packet;
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ clonedPacket,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -164,7 +164,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		auto* packet = Packet::Parse(buffer, sizeof(buffer));
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -188,7 +188,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == chunk1);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
@@ -220,7 +220,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(packet->GetFirstChunkOfType<UnknownChunk>() == chunk2);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -247,7 +247,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(packet->GetFirstChunkOfType<HeartbeatAckChunk>() == chunk3);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk3,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -266,7 +266,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		const auto* parameter3_1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3_1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -303,7 +303,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -325,7 +325,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		chunk1 = reinterpret_cast<const DataChunk*>(packet->GetChunkAt(0));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
@@ -355,7 +355,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		chunk2 = reinterpret_cast<const UnknownChunk*>(packet->GetChunkAt(1));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -380,7 +380,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		chunk3 = reinterpret_cast<const HeartbeatAckChunk*>(packet->GetChunkAt(2));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk3,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -397,7 +397,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		parameter3_1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3_1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -423,7 +423,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		delete packet;
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ clonedPacket,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -447,7 +447,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(clonedPacket->GetFirstChunkOfType<DataChunk>() == chunk1);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
@@ -479,7 +479,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(clonedPacket->GetFirstChunkOfType<UnknownChunk>() == chunk2);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -506,7 +506,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(clonedPacket->GetFirstChunkOfType<HeartbeatAckChunk>() == chunk3);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk3,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -523,7 +523,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		parameter3_1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk3->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter3_1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -548,7 +548,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 	{
 		auto* packet = Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -644,7 +644,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// - Parameter 2.1: 4 + 3 + 1 = 8
 		// - Total: 60
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -663,7 +663,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		std::memset(FactoryBuffer, 0xAA, sizeof(FactoryBuffer));
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ 60,
@@ -704,7 +704,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		const auto* obtainedParameter2_1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(obtainedChunk2->GetParameterAt(0));
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ clonedPacket,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ 60,
@@ -720,7 +720,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(clonedPacket->GetFirstChunkOfType<InitChunk>() == obtainedChunk1);
 		REQUIRE(clonedPacket->GetFirstChunkOfType<HeartbeatRequestChunk>() == obtainedChunk2);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ obtainedChunk1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20 + 8 + 8,
@@ -741,7 +741,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(obtainedChunk1->GetNumberOfInboundStreams() == 22200);
 		REQUIRE(obtainedChunk1->GetInitialTsn() == 14141414);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter1_1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -756,7 +756,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(obtainedParameter1_1->GetIPv4Address()[2] == 0x00);
 		REQUIRE(obtainedParameter1_1->GetIPv4Address()[3] == 0x03);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter1_2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -768,7 +768,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(obtainedParameter1_2->GetLifeSpanIncrement() == 987654321);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ obtainedChunk2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4 + 8,
@@ -783,7 +783,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ obtainedParameter2_1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -831,7 +831,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// - Chunk 1: 4
 		// - Total: 16
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -849,7 +849,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 
 		REQUIRE(packet->GetFirstChunkOfType<ShutdownCompleteChunk>() == obtainedChunk1);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ obtainedChunk1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
@@ -873,7 +873,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 	{
 		auto* packet = Packet::Factory(FactoryBuffer, 28);
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 28,
@@ -897,7 +897,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		// Chunk 2: INIT, length: 20 bytes. Must throw.
 		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<InitChunk>(), MediaSoupError);
 
-		CHECK_PACKET(
+		CHECK_SCTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 28,

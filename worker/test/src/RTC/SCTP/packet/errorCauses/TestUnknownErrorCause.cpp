@@ -28,7 +28,7 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 
 		auto* errorCause = UnknownErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -56,7 +56,7 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -86,7 +86,7 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),

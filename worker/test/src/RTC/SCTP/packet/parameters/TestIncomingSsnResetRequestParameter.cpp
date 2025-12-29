@@ -32,7 +32,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 
 		auto* parameter = IncomingSsnResetRequestParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -59,7 +59,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -83,7 +83,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -106,7 +106,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 	{
 		auto* parameter = IncomingSsnResetRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -127,7 +127,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		parameter->AddStream(4446);
 		parameter->AddStream(4447);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -151,7 +151,7 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16,

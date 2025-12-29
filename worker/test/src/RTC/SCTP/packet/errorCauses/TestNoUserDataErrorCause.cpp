@@ -28,7 +28,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 
 		auto* errorCause = NoUserDataErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -49,7 +49,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -68,7 +68,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -142,7 +142,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 	{
 		auto* errorCause = NoUserDataErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -157,7 +157,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 
 		errorCause->SetTsn(666666);
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -175,7 +175,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

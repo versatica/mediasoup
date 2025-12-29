@@ -26,7 +26,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 
 		auto* chunk = ShutdownCompleteChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -53,7 +53,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -78,7 +78,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -102,7 +102,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 	{
 		auto* chunk = ShutdownCompleteChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -123,7 +123,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 
 		chunk->SetT(true);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -146,7 +146,7 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4,

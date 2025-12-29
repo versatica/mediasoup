@@ -41,7 +41,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		auto* chunk = HeartbeatAckChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -58,7 +58,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		auto* parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -82,7 +82,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		auto* parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -108,7 +108,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -125,7 +125,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -149,7 +149,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		parameter2 = reinterpret_cast<const UnknownParameter*>(chunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -173,7 +173,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -190,7 +190,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		parameter1 = reinterpret_cast<const HeartbeatInfoParameter*>(clonedChunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -214,7 +214,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		parameter2 = reinterpret_cast<const UnknownParameter*>(clonedChunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -237,7 +237,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 	{
 		auto* chunk = HeartbeatAckChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -268,7 +268,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		parameter2->SetInfo(DataBuffer, 2);
 		parameter2->Consolidate();
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -286,7 +286,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		const auto* addedParameter1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -310,7 +310,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		const auto* addedParameter2 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(chunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
@@ -334,7 +334,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
@@ -352,7 +352,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		const auto* parsedParameter1 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(parsedChunk->GetParameterAt(0));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
@@ -376,7 +376,7 @@ SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
 		const auto* parsedParameter2 =
 		  reinterpret_cast<const HeartbeatInfoParameter*>(parsedChunk->GetParameterAt(1));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter2,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,

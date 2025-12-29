@@ -29,7 +29,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 
 		auto* parameter = ZeroChecksumAcceptableParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -56,7 +56,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -78,7 +78,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -99,7 +99,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 	{
 		auto* parameter = ZeroChecksumAcceptableParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -118,7 +118,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		parameter->SetAlternateErrorDetectionMethod(
 		  ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -139,7 +139,7 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

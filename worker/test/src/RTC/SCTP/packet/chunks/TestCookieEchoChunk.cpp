@@ -34,7 +34,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		auto* chunk = CookieEchoChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -71,7 +71,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -106,7 +106,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -140,7 +140,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 	{
 		auto* chunk = CookieEchoChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -176,7 +176,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		// 3 bytes + 1 byte of padding.
 		chunk->SetCookie(DataBuffer, 3);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -205,7 +205,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
@@ -235,7 +235,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 	{
 		auto* chunk = CookieEchoChunk::Factory(ThrowBuffer, sizeof(ThrowBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
@@ -252,7 +252,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		REQUIRE_THROWS_AS(chunk->SetCookie(ThrowBuffer, 65535), MediaSoupError);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),

@@ -24,7 +24,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 
 		auto* errorCause = CookieReceivedWhileShuttingDownErrorCause::Parse(buffer, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -39,7 +39,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -56,7 +56,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -73,7 +73,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		auto* errorCause =
 		  CookieReceivedWhileShuttingDownErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -89,7 +89,7 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 
 		delete errorCause;
 
-		CHECK_ERROR_CAUSE(
+		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4,

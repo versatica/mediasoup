@@ -29,7 +29,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 
 		auto* parameter = SsnTsnResetRequestParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -51,7 +51,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -71,7 +71,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -90,7 +90,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 	{
 		auto* parameter = SsnTsnResetRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -106,7 +106,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 
 		parameter->SetReconfigurationRequestSequenceNumber(12345678);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -125,7 +125,7 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,

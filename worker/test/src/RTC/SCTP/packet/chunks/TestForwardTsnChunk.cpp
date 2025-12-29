@@ -31,7 +31,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		auto* chunk = ForwardTsnChunk::Parse(buffer, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -64,7 +64,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -94,7 +94,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -143,7 +143,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 	{
 		auto* chunk = ForwardTsnChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -168,7 +168,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		chunk->AddStream(2222, 22220);
 		chunk->AddStream(3333, 33330);
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -198,7 +198,7 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 
 		delete chunk;
 
-		CHECK_CHUNK(
+		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 20,

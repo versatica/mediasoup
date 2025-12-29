@@ -30,7 +30,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 		auto* parameter = SupportedExtensionsParameter::Parse(buffer, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
@@ -55,7 +55,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
@@ -78,7 +78,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
@@ -100,7 +100,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 	{
 		auto* parameter = SupportedExtensionsParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -117,7 +117,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		parameter->AddChunkType(Chunk::ChunkType::RE_CONFIG);
 		parameter->AddChunkType(Chunk::ChunkType::CWR);
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -135,7 +135,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		parameter->AddChunkType(Chunk::ChunkType::COOKIE_ACK);
 		parameter->AddChunkType(static_cast<Chunk::ChunkType>(99));
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -159,7 +159,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 		delete parameter;
 
-		CHECK_PARAMETER(
+		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
