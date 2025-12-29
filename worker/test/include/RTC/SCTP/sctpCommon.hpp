@@ -31,20 +31,18 @@ namespace RTC
 	} // namespace SCTP
 } // namespace RTC
 
-// clang-format off
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_PACKET(                                                                         \
-  /*const Packet**/ packet,                                                                        \
-  /*const uint8_t**/ buffer,                                                                       \
-  /*size_t*/ bufferLength,                                                                         \
-  /*size_t*/ length,                                                                               \
-  /*bool*/ frozen,                                                                                 \
-  /*uint16_t*/ sourcePort,                                                                         \
-  /*uint16_t*/ destinationPort,                                                                    \
-  /*uint32_t*/ verificationTag,                                                                    \
-  /*uint32_t*/ checksum,                                                                           \
-  /*bool*/ hasValidCrc32cChecksum,                                                                 \
-  /*size_t*/ chunksCount)                                                                          \
+#define CHECK_SCTP_PACKET(/*const Packet**/ packet,                                                \
+                          /*const uint8_t**/ buffer,                                               \
+                          /*size_t*/ bufferLength,                                                 \
+                          /*size_t*/ length,                                                       \
+                          /*bool*/ frozen,                                                         \
+                          /*uint16_t*/ sourcePort,                                                 \
+                          /*uint16_t*/ destinationPort,                                            \
+                          /*uint32_t*/ verificationTag,                                            \
+                          /*uint32_t*/ checksum,                                                   \
+                          /*bool*/ hasValidCrc32cChecksum,                                         \
+                          /*size_t*/ chunksCount)                                                  \
 	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(packet);                                                                               \
@@ -69,24 +67,22 @@ namespace RTC
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
-	}                                                                                                \
-	while (false)
+	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_CHUNK(                                                                            \
-  /*const Chunk**/ chunk,                                                                            \
-  /*uint8_t**/ buffer,                                                                               \
-  /*size_t*/ bufferLength,                                                                           \
-  /*size_t*/ length,                                                                                 \
-  /*bool*/ frozen,                                                                                   \
-  /*Chunk::ChunkType*/ chunkType,                                                                    \
-  /*bool*/ unknownType,                                                                              \
-  /*Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType,                                    \
-  /*uint8_t*/ flags,                                                                                 \
-  /*bool*/ canHaveParameters,                                                                        \
-  /*size_t*/ parametersCount,                                                                        \
-  /*bool*/ canHaveErrorCauses,                                                                       \
-  /*size_t*/ errorCausesCount)                                                                       \
+#define CHECK_SCTP_CHUNK(/*const Chunk**/ chunk,                                                     \
+                         /*uint8_t**/ buffer,                                                        \
+                         /*size_t*/ bufferLength,                                                    \
+                         /*size_t*/ length,                                                          \
+                         /*bool*/ frozen,                                                            \
+                         /*Chunk::ChunkType*/ chunkType,                                             \
+                         /*bool*/ unknownType,                                                       \
+                         /*Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType,             \
+                         /*uint8_t*/ flags,                                                          \
+                         /*bool*/ canHaveParameters,                                                 \
+                         /*size_t*/ parametersCount,                                                 \
+                         /*bool*/ canHaveErrorCauses,                                                \
+                         /*size_t*/ errorCausesCount)                                                \
 	do                                                                                                 \
 	{                                                                                                  \
 		REQUIRE(chunk);                                                                                  \
@@ -136,8 +132,7 @@ namespace RTC
 		  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))->Serialize(ThrowBuffer, length - 1), \
 		  MediaSoupError);                                                                               \
 		REQUIRE_THROWS_AS(chunk->Clone(ThrowBuffer, length - 1), MediaSoupError);                        \
-	}                                                                                                  \
-	while (false)
+	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_SCTP_PARAMETER(                                                                       \
@@ -177,18 +172,16 @@ namespace RTC
 		    ->Serialize(ThrowBuffer, length - 1),                                                       \
 		  MediaSoupError);                                                                              \
 		REQUIRE_THROWS_AS(parameter->Clone(ThrowBuffer, length - 1), MediaSoupError);                   \
-	}                                                                                                 \
-	while (false)
+	} while (false)
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_SCTP_ERROR_CAUSE(                                                                    \
-  /*const ErrorCause**/ errorCause,                                                                \
-  /*const uint8_t**/ buffer,                                                                       \
-  /*size_t*/ bufferLength,                                                                         \
-  /*size_t*/ length,                                                                               \
-  /*bool*/ frozen,                                                                                 \
-  /*ErrorCause::ErrorCauseCode*/ causeCode,                                                        \
-  /*bool*/ unknownCode)                                                                            \
+#define CHECK_SCTP_ERROR_CAUSE(/*const ErrorCause**/ errorCause,                                   \
+                               /*const uint8_t**/ buffer,                                          \
+                               /*size_t*/ bufferLength,                                            \
+                               /*size_t*/ length,                                                  \
+                               /*bool*/ frozen,                                                    \
+                               /*ErrorCause::ErrorCauseCode*/ causeCode,                           \
+                               /*bool*/ unknownCode)                                               \
 	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(errorCause);                                                                           \
@@ -216,8 +209,6 @@ namespace RTC
 		    ->Serialize(ThrowBuffer, length - 1),                                                      \
 		  MediaSoupError);                                                                             \
 		REQUIRE_THROWS_AS(errorCause->Clone(ThrowBuffer, length - 1), MediaSoupError);                 \
-	}                                                                                                \
-	while (false)
-// clang-format on
+	} while (false)
 
 #endif
