@@ -94,7 +94,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			const auto* previousBuffer = GetBuffer();
+			// const auto* previousBuffer = GetBuffer();
 
 			// Invoke the parent method to copy the whole buffer.
 			Serializable::Serialize(buffer, bufferLength);

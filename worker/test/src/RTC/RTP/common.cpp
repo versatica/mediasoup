@@ -1,8 +1,6 @@
 #include "RTC/RTP/common.hpp" // in worker/test/include/
 #include <cstring>            // std::memset
 
-using namespace RTC::RTP;
-
 namespace RTC
 {
 	namespace RTP

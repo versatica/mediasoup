@@ -7,7 +7,7 @@
 #include "RTC/RTP/Packet.hpp"           // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
 
-// using namespace RTC::RTP;
+using namespace RTC::RTP;
 
 namespace RTC
 {
@@ -27,7 +27,7 @@ namespace RTC
 
 // clang-format off
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_PACKET( \
+#define CHECK_RTP_PACKET( \
   /*const Packet**/ packet, \
   /*const uint8_t**/ buffer, \
   /*size_t*/ bufferLength, \

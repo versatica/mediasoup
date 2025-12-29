@@ -23,7 +23,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		auto* packet = Packet::Parse(buffer, sizeof(buffer));
 
-		CHECK_PACKET(
+		CHECK_RTP_PACKET(
 		  /*packet*/ packet,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
