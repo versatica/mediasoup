@@ -10,6 +10,8 @@ namespace helpers
 {
 	bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
+		MS_TRACE();
+
 		std::string filePath = "test/" + std::string(file);
 
 #ifdef _WIN32
@@ -34,6 +36,8 @@ namespace helpers
 
 	bool AddToBuffer(uint8_t* buf, size_t* size, const uint8_t* data, size_t len)
 	{
+		MS_TRACE();
+
 		static size_t bufferSize{ 65536 };
 
 		if (*size + len > bufferSize)
@@ -62,6 +66,8 @@ namespace helpers
 
 	bool ReadPayloadData(const char* file, int pos, int bytes, uint8_t* payload)
 	{
+		MS_TRACE();
+
 		std::string filePath = "test/" + std::string(file);
 
 #ifdef _WIN32
@@ -83,6 +89,18 @@ namespace helpers
 		return true;
 	}
 
+	bool AreBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
+	{
+		MS_TRACE();
+
+		if (size1 != size2)
+		{
+			return false;
+		}
+
+		return std::memcmp(data1, data2, size1) == 0;
+	}
+
 	bool WriteRtpPacket(
 	  const char* file,
 	  uint8_t /*nalType*/,
@@ -96,6 +114,8 @@ namespace helpers
 	  uint8_t* buf,
 	  size_t* len)
 	{
+		MS_TRACE();
+
 		std::string filePath = "test/" + std::string(file);
 
 #ifdef _WIN32
@@ -203,20 +223,12 @@ namespace helpers
 		return true;
 	}
 
-	bool AreBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
-	{
-		if (size1 != size2)
-		{
-			return false;
-		}
-
-		return std::memcmp(data1, data2, size1) == 0;
-	}
-
 	static uint8_t Buffer[65536] = { 0 };
 
 	std::unique_ptr<RTC::RtpPacket> CreateRtpPacket(uint8_t* payload, size_t len)
 	{
+		MS_TRACE();
+
 		// clang-format off
 		const uint8_t headers[] =
 		{
@@ -236,6 +248,5 @@ namespace helpers
 		rtpPacket.reset(rtpPacket->Clone());
 
 		return rtpPacket;
-}
-
+	}
 } // namespace helpers
