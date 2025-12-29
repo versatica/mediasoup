@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "helpers.hpp"
+#include "testHelpers.hpp"
 #include "RTC/Codecs/VP8.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp(), std::memcpy()

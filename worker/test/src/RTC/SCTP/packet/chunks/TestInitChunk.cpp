@@ -1,6 +1,5 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/chunks/InitChunk.hpp"
@@ -8,6 +7,7 @@
 #include "RTC/SCTP/packet/parameters/IPv4AddressParameter.hpp"
 #include "RTC/SCTP/packet/parameters/IPv6AddressParameter.hpp"
 #include "RTC/SCTP/packet/parameters/SupportedAddressTypesParameter.hpp"
+#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 

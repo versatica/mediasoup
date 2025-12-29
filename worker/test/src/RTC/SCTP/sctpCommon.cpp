@@ -1,5 +1,5 @@
-#include "RTC/SCTP/common.hpp" // in worker/test/include/
-#include <cstring>             // std::memset
+#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include <cstring>                 // std::memset
 
 namespace RTC
 {

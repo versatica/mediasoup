@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"            // IWYU pragma: export
 #include "Utils.hpp"                      // IWYU pragma: export
-#include "helpers.hpp"                    // IWYU pragma: export in worker/test/include/
+#include "testHelpers.hpp"                // IWYU pragma: export in worker/test/include/
 #include "RTC/SCTP/packet/Chunk.hpp"      // IWYU pragma: export
 #include "RTC/SCTP/packet/ErrorCause.hpp" // IWYU pragma: export
 #include "RTC/SCTP/packet/Packet.hpp"     // IWYU pragma: export
