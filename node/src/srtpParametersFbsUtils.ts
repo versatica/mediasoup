@@ -1,4 +1,4 @@
-import * as flatbuffers from 'flatbuffers';
+import type * as flatbuffers from 'flatbuffers';
 import type { SrtpParameters, SrtpCryptoSuite } from './srtpParametersTypes';
 import * as FbsSrtpParameters from './fbs/srtp-parameters';
 

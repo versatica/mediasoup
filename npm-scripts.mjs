@@ -5,7 +5,6 @@ import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import fetch from 'node-fetch';
 import * as tar from 'tar';
-import * as ini from 'ini';
 import pkg from './package.json' with { type: 'json' };
 
 const IS_WINDOWS = os.platform() === 'win32';
@@ -89,7 +88,7 @@ async function run() {
 		// So here we generate flatbuffers definitions for TypeScript and compile
 		// TypeScript to JavaScript.
 		case 'prepare': {
-			flatcNode();
+			await flatcNode();
 			buildTypescript({ force: false });
 
 			break;
@@ -194,7 +193,7 @@ async function run() {
 		}
 
 		case 'flatc:node': {
-			flatcNode();
+			await flatcNode();
 
 			break;
 		}
@@ -224,13 +223,13 @@ async function run() {
 		}
 
 		case 'release:check': {
-			checkRelease();
+			await checkRelease();
 
 			break;
 		}
 
 		case 'release': {
-			release();
+			await release();
 
 			break;
 		}
@@ -383,8 +382,11 @@ function formatWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 }
 
-function flatcNode() {
+async function flatcNode() {
 	logInfo('flatcNode()');
+
+	// NOTE: Load dep on demand since it's a devDependency.
+	const ini = await import('ini');
 
 	installInvoke();
 
@@ -477,11 +479,11 @@ function installNodeDeps() {
 	executeCmd('npm audit --omit=dev --prefix worker/scripts');
 }
 
-function checkRelease() {
+async function checkRelease() {
 	logInfo('checkRelease()');
 
 	installNodeDeps();
-	flatcNode();
+	await flatcNode();
 	buildTypescript({ force: true });
 	buildWorker();
 	lintNode();
@@ -505,7 +507,7 @@ async function release() {
 		exitWithError();
 	}
 
-	checkRelease();
+	await checkRelease();
 	executeCmd(`git commit -am '${pkg.version}'`);
 	executeCmd(`git tag -a ${pkg.version} -m '${pkg.version}'`);
 	executeCmd(`git push origin v${MAYOR_VERSION}`);
