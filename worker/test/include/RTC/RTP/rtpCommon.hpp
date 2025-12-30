@@ -88,6 +88,14 @@ namespace RTC
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
+		if (frozen)                                                                                    \
+		{                                                                                              \
+			REQUIRE_THROWS_AS(packet->SetPayloadType(123), MediaSoupError);                              \
+			REQUIRE_THROWS_AS(packet->SetMarker(true), MediaSoupError);                                  \
+			REQUIRE_THROWS_AS(packet->SetSequenceNumber(6666), MediaSoupError);                          \
+			REQUIRE_THROWS_AS(packet->SetTimestamp(12341234), MediaSoupError);                           \
+			REQUIRE_THROWS_AS(packet->SetSsrc(101010101), MediaSoupError);                               \
+		}                                                                                              \
 	} while (false)
 
 #endif

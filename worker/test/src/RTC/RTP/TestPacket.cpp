@@ -1,5 +1,4 @@
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
 #include "testHelpers.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
