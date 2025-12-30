@@ -24,10 +24,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 			FAIL("cannot open file");
 		}
 
-		auto* packet = Packet::Parse(buffer, bufferLength);
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, bufferLength) };
 
 		CHECK_RTP_PACKET(
-		  /*packet*/ packet,
+		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
@@ -58,10 +58,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 			FAIL("cannot open file");
 		}
 
-		auto* packet = Packet::Parse(buffer, bufferLength);
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, bufferLength) };
 
 		CHECK_RTP_PACKET(
-		  /*packet*/ packet,
+		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
@@ -92,10 +92,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 			FAIL("cannot open file");
 		}
 
-		auto* packet = Packet::Parse(buffer, bufferLength);
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, bufferLength) };
 
 		CHECK_RTP_PACKET(
-		  /*packet*/ packet,
+		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
@@ -127,10 +127,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		};
 		// clang-format on
 
-		auto* packet = Packet::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTP_PACKET(
-		  /*packet*/ packet,
+		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
@@ -166,10 +166,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		};
 		// clang-format on
 
-		auto* packet = Packet::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTP_PACKET(
-		  /*packet*/ packet,
+		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 28,
@@ -206,10 +206,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		};
 		// clang-format on
 
-		auto* packet = Packet::Parse(buffer, sizeof(buffer));
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
 
 		CHECK_RTP_PACKET(
-		  /*packet*/ packet,
+		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 32,
