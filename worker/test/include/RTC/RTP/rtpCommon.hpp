@@ -7,6 +7,8 @@
 #include "RTC/RTP/Packet.hpp"           // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
 
+using namespace RTC::RTP;
+
 namespace RTC
 {
 	namespace RTP
@@ -45,6 +47,7 @@ namespace RTC
                          /*uint8_t*/ paddingLengh)                                                 \
 	do                                                                                               \
 	{                                                                                                \
+		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                          \
 		REQUIRE(packet);                                                                               \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                       \
 		REQUIRE(packet->GetBuffer() == buffer);                                                        \
