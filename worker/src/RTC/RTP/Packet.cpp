@@ -214,9 +214,9 @@ namespace RTC
 					return false;
 				}
 
-				auto headerExtensionLength = GetHeaderExtensionLength();
+				auto headerExtensionTotalLength = GetHeaderExtensionTotalLength();
 
-				if (GetLength() < (ptr - GetBuffer()) + headerExtensionLength)
+				if (GetLength() < (ptr - GetBuffer()) + headerExtensionTotalLength)
 				{
 					MS_WARN_TAG(
 					  rtp, "invalid Packet, not enough space for the announced Header Extension value");
@@ -224,7 +224,7 @@ namespace RTC
 					return false;
 				}
 
-				ptr += headerExtensionLength;
+				ptr += headerExtensionTotalLength;
 			}
 
 			// Here we are at the beginning of the optional payload.

@@ -35,7 +35,14 @@ namespace RTC
                          /*uint32_t*/ timestamp,                                                   \
                          /*uint32_t*/ ssrc,                                                        \
                          /*bool*/ hasCsrcs,                                                        \
-                         /*bool*/ hasHeaderExtension)                                              \
+                         /*bool*/ hasHeaderExtension,                                              \
+                         /*size_t*/ headerExtensionValueLength,                                    \
+                         /*bool*/ hasOneByteExtensions,                                            \
+                         /*bool*/ hasTwoBytesExtensions,                                           \
+                         /*bool*/ hasPayload,                                                      \
+                         /*size_t*/ payloadLengh,                                                  \
+                         /*bool*/ hasPadding,                                                      \
+                         /*uint8_t*/ paddingLengh)                                                 \
 	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(packet);                                                                               \
@@ -46,14 +53,36 @@ namespace RTC
 		REQUIRE(packet->GetLength() != 0);                                                             \
 		REQUIRE(packet->GetLength() == length);                                                        \
 		REQUIRE(packet->IsFrozen() == frozen);                                                         \
-		REQUIRE(packet->GetVersion() == 2);                                                            \
-		REQUIRE(packet->GetPayloadType() == payloadType);                                              \
+		REQUIRE(static_cast<unsigned>(packet->GetVersion()) == 2);                                     \
+		REQUIRE(static_cast<unsigned>(packet->GetPayloadType()) == payloadType);                       \
 		REQUIRE(packet->HasMarker() == hasMarker);                                                     \
 		REQUIRE(packet->GetSequenceNumber() == seqNumber);                                             \
 		REQUIRE(packet->GetTimestamp() == timestamp);                                                  \
 		REQUIRE(packet->GetSsrc() == ssrc);                                                            \
 		REQUIRE(packet->HasCsrcs() == hasCsrcs);                                                       \
 		REQUIRE(packet->HasHeaderExtension() == hasHeaderExtension);                                   \
+		REQUIRE(packet->GetHeaderExtensionValueLength() == headerExtensionValueLength);                \
+		REQUIRE(packet->HasOneByteExtensions() == hasOneByteExtensions);                               \
+		REQUIRE(packet->HasTwoBytesExtensions() == hasTwoBytesExtensions);                             \
+		if (!packet->HasHeaderExtension())                                                             \
+		{                                                                                              \
+			REQUIRE(packet->GetHeaderExtensionValueLength() == 0);                                       \
+			REQUIRE(packet->HasOneByteExtensions() == false);                                            \
+			REQUIRE(packet->HasTwoBytesExtensions() == false);                                           \
+		}                                                                                              \
+		REQUIRE(packet->HasPayload() == hasPayload);                                                   \
+		REQUIRE(packet->GetPayloadLength() == payloadLengh);                                           \
+		if (!packet->HasPayload())                                                                     \
+		{                                                                                              \
+			REQUIRE(packet->GetPayload() == nullptr);                                                    \
+			REQUIRE(packet->GetPayloadLength() == 0);                                                    \
+		}                                                                                              \
+		REQUIRE(packet->HasPadding() == hasPadding);                                                   \
+		REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == paddingLengh);                    \
+		if (!packet->HasPadding())                                                                     \
+		{                                                                                              \
+			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                             \
+		}                                                                                              \
 		REQUIRE(                                                                                       \
 		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
 		REQUIRE_THROWS_AS(                                                                             \

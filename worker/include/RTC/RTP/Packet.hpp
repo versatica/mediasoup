@@ -91,7 +91,7 @@ namespace RTC
 			};
 
 			/**
-			 * One-Byte and Two-Bytes Header Extensions.
+			 * One-Byte and Two-Bytes Extensions.
 			 *
 			 * @see RFC 8285.
 			 */
@@ -235,9 +235,154 @@ namespace RTC
 				return (GetFixedHeaderPointer()->extension);
 			}
 
+			/**
+			 * Get the Extension Header id or 0 if there isn't.
+			 *
+			 * @remarks
+			 * - This method doesn't validate whether there is indeed space for the
+			 *   announced Header Extension.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
+			 */
+			uint16_t GetHeaderExtensionId() const
+			{
+				if (!HasHeaderExtension())
+				{
+					return 0;
+				}
+
+				return ntohs(GetHeaderExtensionPointer()->id);
+			}
+
+			/**
+			 * Pointer to the Header Extension value or `nullptr` if there is no
+			 * Header Extension or its has no value.
+			 *
+			 * @remarks
+			 * - This method doesn't validate whether there is indeed space for the
+			 *   announced Header Extension.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
+			 */
+			uint8_t* GetHeaderExtensionValue() const
+			{
+				auto headerExtensionValueLength = GetHeaderExtensionValueLength();
+
+				if (headerExtensionValueLength == 0)
+				{
+					return nullptr;
+				}
+
+				return GetHeaderExtensionPointer()->value;
+			}
+
+			/**
+			 * Length of the Header Extension value (excluding the id & length
+			 * four-octet).
+			 */
+			size_t GetHeaderExtensionValueLength() const
+			{
+				if (!HasHeaderExtension())
+				{
+					return 0;
+				}
+
+				return static_cast<size_t>(ntohs(GetHeaderExtensionPointer()->length) * 4);
+			}
+
+			/**
+			 * Whether the Packet has One-Byte Extensions.
+			 *
+			 * @see RFC 8285.
+			 */
+			bool HasOneByteExtensions() const
+			{
+				return GetHeaderExtensionId() == 0xBEDE;
+			}
+
+			/**
+			 * Whether the Packet has Two-Bytes Extensions.
+			 *
+			 * @see RFC 8285.
+			 */
+			bool HasTwoBytesExtensions() const
+			{
+				return (GetHeaderExtensionId() & 0b1111111111110000) == 0b0001000000000000;
+			}
+
+			/**
+			 * Whether this Packet has payload.
+			 */
+			bool HasPayload() const
+			{
+				return GetPayloadLength() > 0;
+			}
+
+			/**
+			 * Pointer to the beginning of the payload (if any).
+			 *
+			 * @remarks
+			 * - This method doens't take into account padding, so in a padding-only
+			 *   Packet this method returns `nullptr`.
+			 */
+			uint8_t* GetPayload() const
+			{
+				return HasPayload() ? GetPayloadPointer() : nullptr;
+			}
+
+			/**
+			 * Length of the payload excluding padding bytes.
+			 *
+			 * @remarks
+			 * - This method doesn't validate whether the padding length announced in
+			 *   the last byte of the Packet is valid.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
+			 */
+			size_t GetPayloadLength() const
+			{
+				size_t availablePayloadAndPaddingLength = GetLength() - (GetPayloadPointer() - GetBuffer());
+				auto paddingLength                      = GetPaddingLength();
+
+				// If there is announced padding, compute effective payload length
+				// without padding.
+				if (availablePayloadAndPaddingLength >= paddingLength)
+				{
+					return availablePayloadAndPaddingLength - paddingLength;
+				}
+				// If there are more announced padding bytes than the available length
+				// for payload and padding, return 0.
+				else
+				{
+					return 0;
+				}
+			}
+
+			/**
+			 * Whether this Packet has padding.
+			 */
 			bool HasPadding() const
 			{
 				return (GetFixedHeaderPointer()->padding);
+			}
+
+			/**
+			 * Length of the padding.
+			 *
+			 * @remarks
+			 * - This method doesn't validate whether the padding length announced in
+			 *   the last byte of the Packet is valid.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
+			 */
+			uint8_t GetPaddingLength() const
+			{
+				if (!HasPadding())
+				{
+					return 0;
+				}
+
+				return GetBuffer()[GetLength() - 1];
 			}
 
 		private:
@@ -290,7 +435,7 @@ namespace RTC
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
-			size_t GetHeaderExtensionLength() const
+			size_t GetHeaderExtensionTotalLength() const
 			{
 				if (!HasHeaderExtension())
 				{
@@ -305,57 +450,8 @@ namespace RTC
 			 */
 			uint8_t* GetPayloadPointer() const
 			{
-				return reinterpret_cast<uint8_t*>(GetHeaderExtensionPointer()) + GetHeaderExtensionLength();
-			}
-
-			/**
-			 * Length of the payload excluding padding bytes.
-			 *
-			 * @remarks
-			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
-			 * - This method is guaranteed to return valid value once @ref Validate()
-			 *   was succesfully called.
-			 */
-			size_t GetPayloadLength() const
-			{
-				size_t payloadAndPaddingLength = GetLength() - (GetPayloadPointer() - GetBuffer());
-				auto paddingLength             = GetPaddingLength();
-
-				// If there is announced padding, compute effective payload length
-				// without padding.
-				if (payloadAndPaddingLength >= paddingLength)
-				{
-					return payloadAndPaddingLength - paddingLength;
-				}
-				// If there are more announced padding bytes than the available length
-				// for payload and padding, return 0.
-				else
-				{
-					return 0;
-				}
-			}
-
-			/**
-			 * Pointer to the location where the padding byte is supposed to begin.
-			 */
-			uint8_t* GetPaddingPointer() const
-			{
-				return const_cast<uint8_t*>(GetBuffer()) + GetLength() - 1;
-			}
-
-			/**
-			 * Length of the padding.
-			 *
-			 * @remarks
-			 * - This method doesn't validate whether the padding length announced in
-			 *   the last byte of the Packet is valid.
-			 * - This method is guaranteed to return valid value once @ref Validate()
-			 *   was succesfully called.
-			 */
-			uint8_t GetPaddingLength() const
-			{
-				return HasPadding() ? GetPaddingPointer()[0] : 0;
+				return reinterpret_cast<uint8_t*>(GetHeaderExtensionPointer()) +
+				       GetHeaderExtensionTotalLength();
 			}
 
 			/**
