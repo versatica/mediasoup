@@ -341,8 +341,9 @@ namespace RTC
 			 */
 			size_t GetPayloadLength() const
 			{
-				size_t availablePayloadAndPaddingLength = GetLength() - (GetPayloadPointer() - GetBuffer());
-				auto paddingLength                      = GetPaddingLength();
+				const size_t availablePayloadAndPaddingLength =
+				  GetLength() - (GetPayloadPointer() - GetBuffer());
+				const auto paddingLength = GetPaddingLength();
 
 				// If there is announced padding, compute effective payload length
 				// without padding.

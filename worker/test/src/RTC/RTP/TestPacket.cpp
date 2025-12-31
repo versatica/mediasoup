@@ -3,11 +3,7 @@
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
-#include <cstddef>
-#include <cstdio>
 #include <cstring> // std::memset()
-#include <memory>
-#include <ostream>
 
 using namespace RTC::RTP;
 

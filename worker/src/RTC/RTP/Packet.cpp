@@ -14,7 +14,7 @@ namespace RTC
 
 		bool Packet::IsRtp(const uint8_t* buffer, size_t bufferLength)
 		{
-			auto* header = const_cast<FixedHeader*>(reinterpret_cast<const FixedHeader*>(buffer));
+			const auto* header = const_cast<FixedHeader*>(reinterpret_cast<const FixedHeader*>(buffer));
 
 			// clang-format off
 			return (
@@ -40,6 +40,7 @@ namespace RTC
 
 			auto* packet = new Packet(const_cast<uint8_t*>(buffer), bufferLength);
 
+			// Packet length must be the length of the given buffer.
 			packet->SetLength(bufferLength);
 
 			if (!packet->Validate())
@@ -48,7 +49,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			// Mark the Packet as frozen since we are parsing.
+			// Mark the Packet as frozen since we are parsing the given buffer.
 			packet->Freeze();
 
 			return packet;
@@ -177,7 +178,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Here we are at the beginning of the Packet.
-			auto* ptr = const_cast<uint8_t*>(GetBuffer());
+			const auto* ptr = const_cast<uint8_t*>(GetBuffer());
 
 			if (GetVersion() != 2)
 			{
@@ -214,7 +215,7 @@ namespace RTC
 					return false;
 				}
 
-				auto headerExtensionTotalLength = GetHeaderExtensionTotalLength();
+				const auto headerExtensionTotalLength = GetHeaderExtensionTotalLength();
 
 				if (GetLength() < (ptr - GetBuffer()) + headerExtensionTotalLength)
 				{
@@ -228,9 +229,9 @@ namespace RTC
 			}
 
 			// Here we are at the beginning of the optional payload.
-			auto payloadLength                    = GetPayloadLength();
-			auto paddingLength                    = GetPaddingLength();
-			auto availablePayloadAndPaddingLength = GetLength() - (GetPayloadPointer() - GetBuffer());
+			const auto payloadLength = GetPayloadLength();
+			const auto paddingLength = GetPaddingLength();
+			const auto availablePayloadAndPaddingLength = GetLength() - (GetPayloadPointer() - GetBuffer());
 
 			if (payloadLength + paddingLength != availablePayloadAndPaddingLength)
 			{

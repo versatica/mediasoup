@@ -19,3 +19,5 @@
 - DD stuff.
 
 - `GetNextMediasoupPacketId()` static method.
+
+- `MS_RTC_LOGGER_RTP` and `this->logger` stuff.
