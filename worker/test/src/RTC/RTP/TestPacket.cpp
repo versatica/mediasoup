@@ -46,6 +46,60 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLengh*/ 33,
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ bufferLength,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 23617,
+		  /*timestamp*/ 1660241882,
+		  /*ssrc*/ 2674985186,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 4,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLengh*/ 33,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ bufferLength,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 23617,
+		  /*timestamp*/ 1660241882,
+		  /*ssrc*/ 2674985186,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 4,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLengh*/ 33,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
 	}
 
 	SECTION("Packet::Parse() packet2.raw succeeds")
@@ -66,6 +120,60 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*bufferLength*/ bufferLength,
 		  /*length*/ bufferLength,
 		  /*frozen*/ true,
+		  /*payloadType*/ 100,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 28478,
+		  /*timestamp*/ 172320136,
+		  /*ssrc*/ 3316375386,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLengh*/ 78,
+		  /*hasPadding*/ true,
+		  /*paddingLengh*/ 149);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ bufferLength,
+		  /*frozen*/ false,
+		  /*payloadType*/ 100,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 28478,
+		  /*timestamp*/ 172320136,
+		  /*ssrc*/ 3316375386,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLengh*/ 78,
+		  /*hasPadding*/ true,
+		  /*paddingLengh*/ 149);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ bufferLength,
+		  /*frozen*/ false,
 		  /*payloadType*/ 100,
 		  /*hasMarker*/ false,
 		  /*seqNumber*/ 28478,
@@ -114,6 +222,60 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLengh*/ 77,
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ bufferLength,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 19354,
+		  /*timestamp*/ 863466045,
+		  /*ssrc*/ 235797202,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 8,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLengh*/ 77,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ bufferLength,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 19354,
+		  /*timestamp*/ 863466045,
+		  /*ssrc*/ 235797202,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 8,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLengh*/ 77,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
 	}
 
 	SECTION("Packet::Parse() without extensions or payload succeeds")
@@ -135,6 +297,60 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  /*frozen*/ true,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLengh*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLengh*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
 		  /*seqNumber*/ 8,
@@ -188,6 +404,60 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLengh*/ 0,
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 12,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLengh*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 12,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLengh*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
 	}
 
 	SECTION("Packet::Parse() with Two-Bytes extensions succeeds")
@@ -214,6 +484,60 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 32,
 		  /*frozen*/ true,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 16,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ true,
+		  /*hasPayload*/ false,
+		  /*payloadLengh*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 16,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ true,
+		  /*hasPayload*/ false,
+		  /*payloadLengh*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLengh*/ 0);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
 		  /*seqNumber*/ 8,

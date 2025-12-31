@@ -86,19 +86,27 @@ namespace RTC
 		{                                                                                              \
 			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                             \
 		}                                                                                              \
+		if (frozen)                                                                                    \
+		{                                                                                              \
+			REQUIRE_THROWS_AS(packet->SetPayloadType(packet->GetPayloadType()), MediaSoupError);         \
+			REQUIRE_THROWS_AS(packet->SetMarker(packet->HasMarker()), MediaSoupError);                   \
+			REQUIRE_THROWS_AS(packet->SetSequenceNumber(packet->GetSequenceNumber()), MediaSoupError);   \
+			REQUIRE_THROWS_AS(packet->SetTimestamp(packet->GetTimestamp()), MediaSoupError);             \
+			REQUIRE_THROWS_AS(packet->SetSsrc(packet->GetSsrc()), MediaSoupError);                       \
+		}                                                                                              \
+		else                                                                                           \
+		{                                                                                              \
+			REQUIRE_NOTHROW(packet->SetPayloadType(packet->GetPayloadType()));                           \
+			REQUIRE_NOTHROW(packet->SetMarker(packet->HasMarker()));                                     \
+			REQUIRE_NOTHROW(packet->SetSequenceNumber(packet->GetSequenceNumber()));                     \
+			REQUIRE_NOTHROW(packet->SetTimestamp(packet->GetTimestamp()));                               \
+			REQUIRE_NOTHROW(packet->SetSsrc(packet->GetSsrc()));                                         \
+		}                                                                                              \
 		REQUIRE(                                                                                       \
 		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
-		if (frozen)                                                                                    \
-		{                                                                                              \
-			REQUIRE_THROWS_AS(packet->SetPayloadType(123), MediaSoupError);                              \
-			REQUIRE_THROWS_AS(packet->SetMarker(true), MediaSoupError);                                  \
-			REQUIRE_THROWS_AS(packet->SetSequenceNumber(6666), MediaSoupError);                          \
-			REQUIRE_THROWS_AS(packet->SetTimestamp(12341234), MediaSoupError);                           \
-			REQUIRE_THROWS_AS(packet->SetSsrc(101010101), MediaSoupError);                               \
-		}                                                                                              \
 	} while (false)
 
 #endif
