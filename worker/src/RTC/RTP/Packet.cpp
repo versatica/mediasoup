@@ -1,10 +1,12 @@
+#include <cstdint>
+#include <memory>
 #define MS_CLASS "RTC::RTP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/RTP/Packet.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 namespace RTC
 {
@@ -173,7 +175,7 @@ namespace RTC
 			GetFixedHeaderPointer()->ssrc = htonl(ssrc);
 		}
 
-		bool Packet::Validate() const
+		bool Packet::Validate()
 		{
 			MS_TRACE();
 
@@ -225,6 +227,13 @@ namespace RTC
 					return false;
 				}
 
+				if (!ParseExtensions())
+				{
+					MS_WARN_TAG(rtp, "invalid Packet, invalid Extensions");
+
+					return false;
+				}
+
 				ptr += headerExtensionTotalLength;
 			}
 
@@ -255,6 +264,123 @@ namespace RTC
 			  "Packet computed length does not match its assigned length");
 
 			return true;
+		}
+
+		bool Packet::ParseExtensions()
+		{
+			MS_TRACE();
+
+			if (HasOneByteExtensions())
+			{
+				const uint8_t* extensionsStart = GetHeaderExtensionValue();
+				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
+				uint8_t* ptr                   = const_cast<uint8_t*>(extensionsStart);
+
+				// One-Byte Extensions cannot have length 0.
+				while (ptr < extensionsEnd)
+				{
+					const auto* extension = reinterpret_cast<Extension*>(ptr);
+					const uint8_t id      = extension->oneByte.id;
+					// NOTE: In Ont-Byte Extensions, announced value must be incremented
+					// by 1.
+					const size_t len = extension->oneByte.len + 1;
+
+					// id=0 means alignment.
+					if (id == 0)
+					{
+						++ptr;
+					}
+					// id=15 in One-Byte extensions means "stop parsing here".
+					else if (id == 15)
+					{
+						break;
+					}
+					// Valid Extension id.
+					else
+					{
+						if (ptr + 1 + len > extensionsEnd)
+						{
+							MS_WARN_TAG(
+							  rtp,
+							  "not enough space for the announced value of the One-Byte Extension with id %" PRIu8,
+							  id);
+
+							this->extensions.clear();
+
+							return false;
+						}
+
+						// Store the One-Byte Extension in an map.
+						this->extensions[id] = const_cast<Extension*>(extension);
+
+						ptr += (1 + len);
+					}
+
+					// Counting padding bytes.
+					while (ptr < extensionsEnd && *ptr == 0)
+					{
+						++ptr;
+					}
+				}
+
+				return true;
+			}
+			else if (HasTwoBytesExtensions())
+			{
+				const uint8_t* extensionsStart = GetHeaderExtensionValue();
+				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
+				// ptr points to the Extension id field (1 byte).
+				// ptr+1 points to the length field (1 byte, can have value 0).
+				uint8_t* ptr = const_cast<uint8_t*>(extensionsStart);
+
+				// Two-Byte Extensions can have length 0.
+				while (ptr + 1 < extensionsEnd)
+				{
+					const auto* extension = reinterpret_cast<Extension*>(ptr);
+					const uint8_t id      = extension->twoBytes.id;
+					const size_t len      = extension->twoBytes.len;
+
+					// id=0 means alignment.
+					if (id == 0)
+					{
+						++ptr;
+					}
+					// Valid Extension id.
+					else
+					{
+						if (ptr + 2 + len > extensionsEnd)
+						{
+							MS_WARN_TAG(
+							  rtp,
+							  "not enough space for the announced value of the Two-Bytes Extension with id %" PRIu8,
+							  id);
+
+							this->extensions.clear();
+
+							return false;
+						}
+
+						// Store the Two-Bytes Extension in the map.
+						this->extensions[id] = const_cast<Extension*>(extension);
+
+						ptr += (2 + len);
+					}
+
+					// Counting padding bytes.
+					while (ptr < extensionsEnd && *ptr == 0)
+					{
+						++ptr;
+					}
+				}
+
+				return true;
+			}
+			// If there is no Header Extension of if there is but it doesn't conform
+			// to RFC 8285 Extensions, then this is ok.
+			else
+			{
+				return true;
+			}
 		}
 	} // namespace RTP
 } // namespace RTC

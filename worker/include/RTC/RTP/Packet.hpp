@@ -5,6 +5,7 @@
 #include "FBS/rtpPacket.h"
 #include "RTC/Serializable.hpp"
 #include <flatbuffers/flatbuffers.h>
+#include <unordered_map>
 
 namespace RTC
 {
@@ -18,6 +19,7 @@ namespace RTC
 
 		class Packet : public Serializable
 		{
+		public:
 			/**
 			 * RTP Fixed Header.
 			 *
@@ -36,8 +38,6 @@ namespace RTC
 			 * |                             ....                              |
 			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 			 */
-
-		public:
 			struct FixedHeader
 			{
 #if defined(MS_LITTLE_ENDIAN)
@@ -60,6 +60,7 @@ namespace RTC
 				uint32_t ssrc;
 			};
 
+		private:
 			/**
 			 * RTP Header Extension.
 			 *
@@ -73,8 +74,6 @@ namespace RTC
 			 * |                        header extension                       |
 			 * |                             ....                              |
 			 */
-
-		private:
 			struct HeaderExtension
 			{
 				/**
@@ -86,16 +85,15 @@ namespace RTC
 				 * four-octet.
 				 */
 				uint16_t length;
-				uint8_t value[1];
+				uint8_t value[];
 			};
 
+		public:
 			/**
-			 * One-Byte and Two-Bytes Extensions.
+			 * One-Byte and Two-Bytes Extension types.
 			 *
 			 * @see RFC 8285.
 			 */
-
-		public:
 			enum class ExtensionsType : uint8_t
 			{
 				OneByte  = 1,
@@ -112,26 +110,33 @@ namespace RTC
 				uint8_t id : 4;
 				uint8_t len : 4;
 #endif
-				uint8_t value[1];
 			};
 
 		private:
-			/* Struct for Two-Bytes extension. */
 			struct TwoBytesExtension
 			{
 				uint8_t id;
 				uint8_t len;
-				uint8_t value[1];
+			};
+
+		private:
+			struct Extension
+			{
+				union
+				{
+					OneByteExtension oneByte;
+					TwoBytesExtension twoBytes;
+				};
+				uint8_t value[];
 			};
 
 		public:
 			/**
-			 * Struct for setting and replacing header extensions.
+			 * Struct for setting and replacing Extensions.
 			 */
-			struct GenericExtension
+			struct AddedExtension
 			{
-				GenericExtension(uint8_t id, uint8_t len, uint8_t* value)
-				  : id(id), len(len), value(value) {};
+				AddedExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value) {};
 
 				uint8_t id;
 				uint8_t len;
@@ -457,7 +462,17 @@ namespace RTC
 			/**
 			 * Validates whether the Packet is valid.
 			 */
-			bool Validate() const;
+			bool Validate();
+
+			/**
+			 * Parses Extensions. Returns `true` if they are valid.
+			 *
+			 * @see RFC 8285.
+			 */
+			bool ParseExtensions();
+
+		private:
+			std::unordered_map<uint8_t, Extension*> extensions;
 		};
 	} // namespace RTP
 } // namespace RTC

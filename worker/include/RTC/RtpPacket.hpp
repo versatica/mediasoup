@@ -48,7 +48,7 @@ namespace RTC
 		{
 			uint16_t id;
 			uint16_t length; // Size of value in multiples of 4 bytes.
-			uint8_t value[1];
+			uint8_t value[];
 		};
 
 	public:
@@ -69,7 +69,7 @@ namespace RTC
 			uint8_t id : 4;
 			uint8_t len : 4;
 #endif
-			uint8_t value[1];
+			uint8_t value[];
 		};
 
 	private:
@@ -78,7 +78,7 @@ namespace RTC
 		{
 			uint8_t id;
 			uint8_t len;
-			uint8_t value[1];
+			uint8_t value[];
 		};
 
 	public:
