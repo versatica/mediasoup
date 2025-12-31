@@ -5,7 +5,6 @@
 #include "FBS/rtpPacket.h"
 #include "RTC/Serializable.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <cstdint>
 
 namespace RTC
 {
