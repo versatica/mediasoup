@@ -90,7 +90,7 @@ namespace RTC
 		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
-		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
+		RTC::SeqManager<uint16_t> rtpSeqManager;
 		bool managingBitrate{ false };
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
 		// Buffer to store packets that arrive earlier than the first packet of the

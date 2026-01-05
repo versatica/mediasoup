@@ -102,7 +102,7 @@ namespace RTC
 		std::vector<RTC::RtpStreamSend*> rtpStreams;
 		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool syncRequired{ false };
-		std::unique_ptr<RTC::SeqManager<uint16_t>> rtpSeqManager;
+		RTC::SeqManager<uint16_t> rtpSeqManager;
 		VideoLayers preferredLayers;
 		VideoLayers provisionalTargetLayers;
 		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
