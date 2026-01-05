@@ -2,8 +2,8 @@
 
 ### NEXT
 
-- Worker: `RtpStreamSend` duplicated packets are discarded ([PR #1675](https://github.com/versatica/mediasoup/pull/1675).
-- Worker: `RtpStreamSend` packets larger than MTU size are discarded ([PR #1675](https://github.com/versatica/mediasoup/pull/1675).
+- Worker: `RtpStreamSend` duplicated packets are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683).
+- Worker: `RtpStreamSend` packets larger than MTU size are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683).
 
 ### 3.19.14
 
