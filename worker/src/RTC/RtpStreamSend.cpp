@@ -121,8 +121,6 @@ namespace RTC
 			  packet->GetSsrc(),
 			  packet->GetSequenceNumber(),
 			  packet->GetSize());
-
-			return ReceivePacketResult::DISCARDED;
 		}
 
 		bool stored{ false };
