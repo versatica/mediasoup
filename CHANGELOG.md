@@ -2,6 +2,9 @@
 
 ### NEXT
 
+- Worker: `RtpStreamSend` duplicated packets are discarded ([PR #1675](https://github.com/versatica/mediasoup/pull/1675).
+- Worker: `RtpStreamSend` packets larger than MTU size are discarded ([PR #1675](https://github.com/versatica/mediasoup/pull/1675).
+
 ### 3.19.14
 
 - Worker: Fix missing system header include, which fails in GCC 15 ([PR #1679](https://github.com/versatica/mediasoup/pull/1679), credits to @upisfree).

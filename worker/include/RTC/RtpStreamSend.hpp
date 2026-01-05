@@ -59,7 +59,6 @@ namespace RTC
 		uint32_t GetLayerBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer) override;
 
 	private:
-		bool StorePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
 		void FillRetransmissionContainer(uint16_t seq, uint16_t bitmask);
 		void UpdateScore(RTC::RTCP::ReceiverReport* report);
 
