@@ -111,7 +111,7 @@ namespace RTC
 		const uint16_t initialOutputSeq =
 		  Utils::Crypto::GetRandomUInt(1000u, std::numeric_limits<uint16_t>::max() / 2);
 
-		this->rtpSeqManager.reset(new RTC::SeqManager<uint16_t>(initialOutputSeq));
+		this->rtpSeqManager = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
 		RTC::Codecs::EncodingContext::Params params;
 
@@ -741,7 +741,7 @@ namespace RTC
 				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
 			return;
@@ -757,7 +757,7 @@ namespace RTC
 				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
 
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
 			return;
@@ -779,7 +779,7 @@ namespace RTC
 				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
 			return;
@@ -860,7 +860,7 @@ namespace RTC
 				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
 			return;
@@ -1022,7 +1022,7 @@ namespace RTC
 			// 'packet->GetSequenceNumber() -2' may increase SeqManager::base and
 			// increase the output sequence number.
 			// https://github.com/versatica/mediasoup/issues/408
-			this->rtpSeqManager->Sync(packet->GetSequenceNumber() - (this->lastSentPacketHasMarker ? 1 : 2));
+			this->rtpSeqManager.Sync(packet->GetSequenceNumber() - (this->lastSentPacketHasMarker ? 1 : 2));
 
 			this->encodingContext->SyncRequired();
 
@@ -1045,7 +1045,7 @@ namespace RTC
 				  RtcLogger::RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
 #endif
 
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 				return;
 			}
@@ -1095,7 +1095,7 @@ namespace RTC
 				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
 
-				this->rtpSeqManager->Drop(packet->GetSequenceNumber());
+				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 				return;
 			}
@@ -1110,7 +1110,7 @@ namespace RTC
 		uint16_t seq;
 		const uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
 
-		this->rtpSeqManager->Input(packet->GetSequenceNumber(), seq);
+		this->rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
 		auto origSsrc      = packet->GetSsrc();
@@ -1146,7 +1146,7 @@ namespace RTC
 
 		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
-			if (this->rtpSeqManager->GetMaxOutput() == packet->GetSequenceNumber())
+			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
 			{
 				this->lastSentPacketHasMarker = packet->HasMarker();
 			}

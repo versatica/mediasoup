@@ -286,7 +286,7 @@ namespace RTC
 			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
-			rtpSeqManager->Drop(packet->GetSequenceNumber());
+			rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -323,7 +323,7 @@ namespace RTC
 			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
-			rtpSeqManager->Drop(packet->GetSequenceNumber());
+			rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -335,7 +335,7 @@ namespace RTC
 			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
-			rtpSeqManager->Drop(packet->GetSequenceNumber());
+			rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 			return;
 		}
@@ -362,7 +362,7 @@ namespace RTC
 				sendPacketsInTargetLayerRetransmissionBuffer = true;
 			}
 
-			rtpSeqManager->Sync(packet->GetSequenceNumber() - 1);
+			rtpSeqManager.Sync(packet->GetSequenceNumber() - 1);
 
 			syncRequired = false;
 		}
@@ -370,7 +370,7 @@ namespace RTC
 		// Update RTP seq number and timestamp.
 		uint16_t seq;
 
-		rtpSeqManager->Input(packet->GetSequenceNumber(), seq);
+		rtpSeqManager.Input(packet->GetSequenceNumber(), seq);
 
 		// Save original packet fields.
 		auto origSsrc = packet->GetSsrc();
@@ -832,8 +832,7 @@ namespace RTC
 			const uint16_t initialOutputSeq =
 			  Utils::Crypto::GetRandomUInt(1000u, std::numeric_limits<uint16_t>::max() / 2);
 
-			this->mapRtpStreamRtpSeqManager[rtpStream].reset(
-			  new RTC::SeqManager<uint16_t>(initialOutputSeq));
+			this->mapRtpStreamRtpSeqManager[rtpStream] = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
 			this->mapRtpStreamTargetLayerRetransmissionBuffer[rtpStream];
 		}
