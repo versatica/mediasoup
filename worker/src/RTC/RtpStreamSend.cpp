@@ -117,10 +117,22 @@ namespace RTC
 		// If NACK is enabled, store the packet into the buffer.
 		if (this->retransmissionBuffer)
 		{
-			if (StorePacket(packet, sharedPacket))
+			// Check if the packet is already stored.
+			if (this->retransmissionBuffer->Get(packet->GetSequenceNumber()))
 			{
-				stored = true;
+				// Packet already stored, do not resend it since the receiver will
+				// fail decrypting it and this packet will be considered not received
+				// in the RTCP transport feedback affecting the bandwidth estimation.
+
+				MS_DEBUG_DEV(
+				  "packet already stored in retransmission buffer [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
+
+				return ReceivePacketResult::DISCARDED;
 			}
+
+			stored = this->retransmissionBuffer->Insert(packet, sharedPacket);
 		}
 
 		// Increase transmission counter.
@@ -437,25 +449,6 @@ namespace RTC
 		MS_TRACE();
 
 		MS_ABORT("invalid method call");
-	}
-
-	bool RtpStreamSend::StorePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
-	{
-		MS_TRACE();
-
-		if (packet->GetSize() > RTC::Consts::MtuSize)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetSize());
-
-			return false;
-		}
-
-		return this->retransmissionBuffer->Insert(packet, sharedPacket);
 	}
 
 	// This method looks for the requested RTP packets and inserts them into the

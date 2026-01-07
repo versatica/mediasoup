@@ -902,6 +902,34 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstreamsend
 		REQUIRE(testRtpStreamListener.retransmittedPackets.empty());
 	}
 
+	SECTION("duplicated packets are discarded")
+	{
+		auto packet(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 50001, 1000001));
+
+		// Create a RtpStreamSend instance.
+		TestRtpStreamListener testRtpStreamListener;
+
+		RtpStream::Params params;
+
+		params.ssrc          = packet->GetSsrc();
+		params.clockRate     = 90000;
+		params.useNack       = true;
+		params.mimeType.type = RTC::RtpCodecMimeType::Type::VIDEO;
+
+		std::string mid;
+		auto stream = std::make_unique<RtpStreamSend>(&testRtpStreamListener, params, mid);
+
+		RTC::SharedRtpPacket sharedPacket;
+
+		auto result = stream->ReceivePacket(packet.get(), sharedPacket);
+
+		REQUIRE(result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED);
+
+		result = stream->ReceivePacket(packet.get(), sharedPacket);
+
+		REQUIRE(result == RTC::RtpStreamSend::ReceivePacketResult::DISCARDED);
+	}
+
 #ifdef PERFORMANCE_TEST
 	SECTION("Performance")
 	{
