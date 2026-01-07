@@ -85,7 +85,7 @@ namespace RTC
 				 * Number of 32-bit words in the extension, excluding the id & length
 				 * four-octet.
 				 */
-				uint16_t length;
+				uint16_t len;
 				uint8_t value[];
 			};
 
@@ -281,7 +281,7 @@ namespace RTC
 					return 0;
 				}
 
-				return static_cast<size_t>(ntohs(GetHeaderExtensionPointer()->length) * 4);
+				return static_cast<size_t>(ntohs(GetHeaderExtensionPointer()->len) * 4);
 			}
 
 			/**
@@ -414,6 +414,12 @@ namespace RTC
 
 			/**
 			 * Whether this Packet has payload.
+			 *
+			 * @remarks
+			 * - This method doesn't validate whether the padding length announced in
+			 *   the last byte of the Packet is valid.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
 			 */
 			bool HasPayload() const
 			{
@@ -421,15 +427,58 @@ namespace RTC
 			}
 
 			/**
+			 * Pointer to the beginning of the payload (if any). Payload length is
+			 * set into given `length`.
+			 *
+			 * @remarks
+			 * - This method doesn't validate whether the padding length announced in
+			 *   the last byte of the Packet is valid.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
+			 * - This method doens't take into account padding, so in a padding-only
+			 *   Packet this method returns `nullptr` with `len` 0.
+			 */
+			uint8_t* GetPayload(size_t& len) const
+			{
+				auto* payloadPointer = GetPayloadPointer();
+				const size_t availablePayloadAndPaddingLength = GetLength() - (payloadPointer - GetBuffer());
+				const auto paddingLength = GetPaddingLength();
+
+				// If there is announced padding, compute effective payload length
+				// without padding.
+				if (availablePayloadAndPaddingLength > paddingLength)
+				{
+					len = availablePayloadAndPaddingLength - paddingLength;
+
+					return payloadPointer;
+				}
+				// If there are more announced padding bytes than the available length
+				// for payload and padding, assume payload length 0.
+				else
+				{
+					len = 0;
+
+					return nullptr;
+				}
+			}
+
+			/**
 			 * Pointer to the beginning of the payload (if any).
 			 *
 			 * @remarks
+			 * - This method doesn't validate whether the padding length announced in
+			 *   the last byte of the Packet is valid.
+			 * - This method is guaranteed to return valid value once @ref Validate()
+			 *   was succesfully called.
 			 * - This method doens't take into account padding, so in a padding-only
 			 *   Packet this method returns `nullptr`.
 			 */
 			uint8_t* GetPayload() const
 			{
-				return HasPayload() ? GetPayloadPointer() : nullptr;
+				size_t len;
+
+				// return HasPayload() ? GetPayloadPointer() : nullptr;
+				return GetPayload(len);
 			}
 
 			/**
@@ -545,7 +594,7 @@ namespace RTC
 					return 0;
 				}
 
-				return 4 + static_cast<size_t>(ntohs(GetHeaderExtensionPointer()->length) * 4);
+				return 4 + static_cast<size_t>(ntohs(GetHeaderExtensionPointer()->len) * 4);
 			}
 
 			/**

@@ -157,7 +157,7 @@ namespace RTC
 
 		private:
 			/**
-			 * @throw MediaSoupError - If given `length` is higher than maximmun
+			 * @throw MediaSoupError - If given `length` is higher than maximum
 			 *   allowed one (65535).
 			 */
 			virtual void SetLengthField(size_t lengthField) final;

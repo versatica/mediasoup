@@ -14,7 +14,7 @@
 
 - RTX stuff.
 
-- Spatial/temporal layers stuff.
+- Spatial/temporal layers and `IsKeyframe()` stuff.
 
 - DD stuff.
 

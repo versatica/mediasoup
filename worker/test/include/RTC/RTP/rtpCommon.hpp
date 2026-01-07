@@ -42,9 +42,9 @@ namespace RTC
                          /*bool*/ hasOneByteExtensions,                                            \
                          /*bool*/ hasTwoBytesExtensions,                                           \
                          /*bool*/ hasPayload,                                                      \
-                         /*size_t*/ payloadLengh,                                                  \
+                         /*size_t*/ payloadLength,                                                 \
                          /*bool*/ hasPadding,                                                      \
-                         /*uint8_t*/ paddingLengh)                                                 \
+                         /*uint8_t*/ paddingLength)                                                \
 	do                                                                                               \
 	{                                                                                                \
 		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                          \
@@ -76,14 +76,20 @@ namespace RTC
 			REQUIRE(packet->HasTwoBytesExtensions() == false);                                           \
 		}                                                                                              \
 		REQUIRE(packet->HasPayload() == hasPayload);                                                   \
-		REQUIRE(packet->GetPayloadLength() == payloadLengh);                                           \
+		REQUIRE(packet->GetPayloadLength() == payloadLength);                                          \
+		size_t realPayloadLength;                                                                      \
+		packet->GetPayload(realPayloadLength);                                                         \
+		REQUIRE(realPayloadLength == payloadLength);                                                   \
 		if (!packet->HasPayload())                                                                     \
 		{                                                                                              \
 			REQUIRE(packet->GetPayload() == nullptr);                                                    \
 			REQUIRE(packet->GetPayloadLength() == 0);                                                    \
+			size_t realPayloadLength;                                                                    \
+			REQUIRE(packet->GetPayload(realPayloadLength) == nullptr);                                   \
+			REQUIRE(realPayloadLength == 0);                                                             \
 		}                                                                                              \
 		REQUIRE(packet->HasPadding() == hasPadding);                                                   \
-		REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == paddingLengh);                    \
+		REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == paddingLength);                   \
 		if (!packet->HasPadding())                                                                     \
 		{                                                                                              \
 			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                             \

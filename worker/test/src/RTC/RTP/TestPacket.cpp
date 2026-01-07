@@ -39,9 +39,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 33,
+		  /*payloadLength*/ 33,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		/* Serialize it. */
 
@@ -66,9 +66,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 33,
+		  /*payloadLength*/ 33,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		/* Clone it. */
 
@@ -93,9 +93,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 33,
+		  /*payloadLength*/ 33,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 	}
 
 	SECTION("Packet::Parse() packet2.raw succeeds")
@@ -127,9 +127,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 78,
+		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
-		  /*paddingLengh*/ 149);
+		  /*paddingLength*/ 149);
 
 		/* Serialize it. */
 
@@ -154,9 +154,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 78,
+		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
-		  /*paddingLengh*/ 149);
+		  /*paddingLength*/ 149);
 
 		/* Clone it. */
 
@@ -181,9 +181,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 78,
+		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
-		  /*paddingLengh*/ 149);
+		  /*paddingLength*/ 149);
 	}
 
 	SECTION("Packet::Parse() packet3.raw succeeds")
@@ -215,9 +215,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 77,
+		  /*payloadLength*/ 77,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		/* Serialize it. */
 
@@ -242,9 +242,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 77,
+		  /*payloadLength*/ 77,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		/* Clone it. */
 
@@ -269,9 +269,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ true,
-		  /*payloadLengh*/ 77,
+		  /*payloadLength*/ 77,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 	}
 
 	SECTION("Packet::Parse() without extensions or payload succeeds")
@@ -304,9 +304,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		/* Serialize it. */
 
@@ -331,9 +331,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		/* Clone it. */
 
@@ -358,9 +358,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 	}
 
 	SECTION("Packet::Parse() with One-Byte extensions succeeds")
@@ -397,9 +397,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		uint8_t* extensionValue;
 		uint8_t extensionLen;
@@ -445,9 +445,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->HasExtension(1) == true);
 		extensionValue = packet->GetExtension(1, extensionLen);
@@ -490,9 +490,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		REQUIRE(clonedPacket->HasExtension(1) == true);
 		extensionValue = clonedPacket->GetExtension(1, extensionLen);
@@ -548,9 +548,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ true,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		uint8_t* extensionValue;
 		uint8_t extensionLen;
@@ -599,9 +599,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ true,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		REQUIRE(packet->HasExtension(1) == true);
 		extensionValue = packet->GetExtension(1, extensionLen);
@@ -647,9 +647,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ true,
 		  /*hasPayload*/ false,
-		  /*payloadLengh*/ 0,
+		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
-		  /*paddingLengh*/ 0);
+		  /*paddingLength*/ 0);
 
 		REQUIRE(clonedPacket->HasExtension(1) == true);
 		extensionValue = clonedPacket->GetExtension(1, extensionLen);
