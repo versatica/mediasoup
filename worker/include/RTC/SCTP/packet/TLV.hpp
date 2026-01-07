@@ -120,6 +120,9 @@ namespace RTC
 			 * the variable-length value of the item and updates both the length of
 			 * the Serializable and the Length field.
 			 *
+			 * @throw MediaSoupTypeError - If given `valueLength` is higher than
+			 *   available length.
+			 *
 			 * @see GetVariableLengthValue()
 			 */
 			virtual void SetVariableLengthValue(const uint8_t* value, size_t valueLength) final;
@@ -157,7 +160,7 @@ namespace RTC
 
 		private:
 			/**
-			 * @throw MediaSoupError - If given `length` is higher than maximum
+			 * @throw MediaSoupTypeError - If given `length` is higher than maximum
 			 *   allowed one (65535).
 			 */
 			virtual void SetLengthField(size_t lengthField) final;

@@ -5,6 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include <cstring>  // std::memmove()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
@@ -222,6 +223,28 @@ namespace RTC
 			AssertNotFrozen();
 
 			GetFixedHeaderPointer()->ssrc = htonl(ssrc);
+		}
+
+		void Packet::SetPayload(const uint8_t* value, size_t length)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength        = GetLength();
+			auto previousPayloadLength = GetPayloadLength();
+			auto previousPaddingLength = GetPaddingLength();
+			auto newNotPaddedLength =
+			  previousLength - previousPayloadLength - previousPaddingLength + length;
+
+			// Set the new Packet total length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(newNotPaddedLength);
+
+			// Unset padding flag.
+			GetFixedHeaderPointer()->padding = 0;
+
+			std::memmove(GetPayloadPointer(), value, length);
 		}
 
 		bool Packet::Validate()

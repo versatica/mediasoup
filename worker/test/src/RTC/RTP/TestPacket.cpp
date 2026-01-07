@@ -96,6 +96,35 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLength*/ 33,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ bufferLength - 33 + 16,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 23617,
+		  /*timestamp*/ 1660241882,
+		  /*ssrc*/ 2674985186,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 4,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 16,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
 	}
 
 	SECTION("Packet::Parse() packet2.raw succeeds")
@@ -184,6 +213,35 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLength*/ 78,
 		  /*hasPadding*/ true,
 		  /*paddingLength*/ 149);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ bufferLength - 78 + 16 - 149,
+		  /*frozen*/ false,
+		  /*payloadType*/ 100,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 28478,
+		  /*timestamp*/ 172320136,
+		  /*ssrc*/ 3316375386,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 16,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
 	}
 
 	SECTION("Packet::Parse() packet3.raw succeeds")
@@ -272,6 +330,35 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLength*/ 77,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ bufferLength - 77 + 16,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 19354,
+		  /*timestamp*/ 863466045,
+		  /*ssrc*/ 235797202,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 8,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 16,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
 	}
 
 	SECTION("Packet::Parse() without extensions or payload succeeds")
@@ -361,6 +448,35 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer) + 16,
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 16,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
 	}
 
 	SECTION("Packet::Parse() with One-Byte extensions succeeds")
@@ -511,6 +627,35 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		REQUIRE(clonedPacket->HasExtension(4) == false);
 		REQUIRE(clonedPacket->GetExtension(4, extensionLen) == nullptr);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer) + 16,
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 12,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 16,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
 	}
 
 	SECTION("Packet::Parse() with Two-Bytes extensions succeeds")
@@ -671,5 +816,34 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		REQUIRE(clonedPacket->HasExtension(5) == false);
 		REQUIRE(clonedPacket->GetExtension(5, extensionLen) == nullptr);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer) + 16,
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 8,
+		  /*timestamp*/ 4,
+		  /*ssrc*/ 5,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 16,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ true,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 16,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
 	}
 }

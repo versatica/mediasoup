@@ -511,6 +511,17 @@ namespace RTC
 			}
 
 			/**
+			 * Set the payload. It copies the given value into the Packet.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If given `length` is higher than available
+			 *   length for the payload in the buffer.
+			 */
+			void SetPayload(const uint8_t* value, size_t length);
+
+			/**
 			 * Whether this Packet has padding.
 			 */
 			bool HasPadding() const
