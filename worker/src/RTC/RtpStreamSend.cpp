@@ -112,17 +112,6 @@ namespace RTC
 			return ReceivePacketResult::DISCARDED;
 		}
 
-		// Check the packet size.
-		if (packet->GetSize() > RTC::Consts::MtuSize)
-		{
-			MS_WARN_TAG(
-			  rtp,
-			  "packet too big [ssrc:%" PRIu32 ", seq:%" PRIu16 ", size:%zu]",
-			  packet->GetSsrc(),
-			  packet->GetSequenceNumber(),
-			  packet->GetSize());
-		}
-
 		bool stored{ false };
 
 		// If NACK is enabled, store the packet into the buffer.
