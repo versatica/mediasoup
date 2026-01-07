@@ -243,7 +243,7 @@ namespace RTC
 			// Here we are at the beginning of the optional CCRS list.
 			if (HasCsrcs())
 			{
-				auto csrcsLength = GetCsrcsLength();
+				auto csrcsLength = GetCsrcCount();
 
 				if (GetLength() < (ptr - GetBuffer()) + csrcsLength)
 				{

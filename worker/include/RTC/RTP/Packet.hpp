@@ -508,7 +508,7 @@ namespace RTC
 			}
 
 			/**
-			 * Length of the CSRC list.
+			 * Number of entries in the CSRC list.
 			 *
 			 * @remarks
 			 * - This method doesn't validate whether there is indeed space for the
@@ -516,7 +516,7 @@ namespace RTC
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
-			size_t GetCsrcsLength() const
+			size_t GetCsrcCount() const
 			{
 				return GetFixedHeaderPointer()->csrcCount * sizeof(GetFixedHeaderPointer()->ssrc);
 			}
@@ -526,7 +526,7 @@ namespace RTC
 			 */
 			HeaderExtension* GetHeaderExtensionPointer() const
 			{
-				return reinterpret_cast<HeaderExtension*>(GetCsrcsPointer() + GetCsrcsLength());
+				return reinterpret_cast<HeaderExtension*>(GetCsrcsPointer() + GetCsrcCount());
 			}
 
 			/**
