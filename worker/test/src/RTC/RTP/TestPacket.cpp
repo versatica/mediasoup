@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "testHelpers.hpp"
+#include "testHelpers.hpp" // IWYU pragma: export in worker/test/include/
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include <catch2/catch_test_macros.hpp>
@@ -372,9 +372,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 			0x00, 0x00, 0x00, 0x04,
 			0x00, 0x00, 0x00, 0x05,
 			0xbe, 0xde, 0x00, 0x03, // Header Extension
-			0x10, 0xff, 0x21, 0xff,
-			0xff, 0x00, 0x00, 0x33,
-			0xff, 0xff, 0xff, 0xff
+			0x10, 0xaa, 0x21, 0xbb, // - id: 1, len: 1
+			0xff, 0x00, 0x00, 0x33, // - id: 2, len: 2
+			0xff, 0xff, 0xff, 0xff  // - id: 3, len: 4
 		};
 		// clang-format on
 
@@ -401,6 +401,27 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
 
+		uint8_t* extensionValue;
+		uint8_t extensionLen;
+
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(extensionLen == 1);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 1, buffer + 17, 1) == true);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(extensionLen == 2);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 2, buffer + 19, 2) == true);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(extensionLen == 4);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 4, buffer + 24, 4) == true);
+
+		REQUIRE(packet->HasExtension(4) == false);
+		REQUIRE(packet->GetExtension(4, extensionLen) == nullptr);
+
 		/* Serialize it. */
 
 		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -428,6 +449,24 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
 
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(extensionLen == 1);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 1, SerializeBuffer + 17, 1) == true);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(extensionLen == 2);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 2, SerializeBuffer + 19, 2) == true);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(extensionLen == 4);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 4, SerializeBuffer + 24, 4) == true);
+
+		REQUIRE(packet->HasExtension(4) == false);
+		REQUIRE(packet->GetExtension(4, extensionLen) == nullptr);
+
 		/* Clone it. */
 
 		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
@@ -454,6 +493,24 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLengh*/ 0,
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
+
+		REQUIRE(clonedPacket->HasExtension(1) == true);
+		extensionValue = clonedPacket->GetExtension(1, extensionLen);
+		REQUIRE(extensionLen == 1);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 1, CloneBuffer + 17, 1) == true);
+
+		REQUIRE(clonedPacket->HasExtension(2) == true);
+		extensionValue = clonedPacket->GetExtension(2, extensionLen);
+		REQUIRE(extensionLen == 2);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 2, CloneBuffer + 19, 2) == true);
+
+		REQUIRE(clonedPacket->HasExtension(3) == true);
+		extensionValue = clonedPacket->GetExtension(3, extensionLen);
+		REQUIRE(extensionLen == 4);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 4, CloneBuffer + 24, 4) == true);
+
+		REQUIRE(clonedPacket->HasExtension(4) == false);
+		REQUIRE(clonedPacket->GetExtension(4, extensionLen) == nullptr);
 	}
 
 	SECTION("Packet::Parse() with Two-Bytes extensions succeeds")
@@ -465,10 +522,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 			0x00, 0x00, 0x00, 0x04,
 			0x00, 0x00, 0x00, 0x05,
 			0x10, 0x00, 0x00, 0x04, // Header Extension
-			0x00, 0x00, 0x01, 0x00,
-			0x02, 0x01, 0x42, 0x00,
-			0x03, 0x02, 0x11, 0x22,
-			0x00, 0x00, 0x04, 0x00
+			0x00, 0x00, 0x01, 0x00, // - id: 1, len: 0
+			0x02, 0x01, 0x42, 0x00, // - id: 2, len: 1
+			0x03, 0x02, 0x11, 0x22, // - id: 3, len: 2
+			0x00, 0x00, 0x04, 0x00  // - id: 4, len: 0
 		};
 		// clang-format on
 
@@ -495,6 +552,30 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
 
+		uint8_t* extensionValue;
+		uint8_t extensionLen;
+
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(extensionLen == 0);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(extensionLen == 1);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 1, buffer + 22, 1) == true);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(extensionLen == 2);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 2, buffer + 26, 2) == true);
+
+		REQUIRE(packet->HasExtension(4) == true);
+		extensionValue = packet->GetExtension(4, extensionLen);
+		REQUIRE(extensionLen == 0);
+
+		REQUIRE(packet->HasExtension(5) == false);
+		REQUIRE(packet->GetExtension(5, extensionLen) == nullptr);
+
 		/* Serialize it. */
 
 		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -522,6 +603,27 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
 
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(extensionLen == 0);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(extensionLen == 1);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 1, SerializeBuffer + 22, 1) == true);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(extensionLen == 2);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 2, SerializeBuffer + 26, 2) == true);
+
+		REQUIRE(packet->HasExtension(4) == true);
+		extensionValue = packet->GetExtension(4, extensionLen);
+		REQUIRE(extensionLen == 0);
+
+		REQUIRE(packet->HasExtension(5) == false);
+		REQUIRE(packet->GetExtension(5, extensionLen) == nullptr);
+
 		/* Clone it. */
 
 		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
@@ -548,5 +650,26 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLengh*/ 0,
 		  /*hasPadding*/ false,
 		  /*paddingLengh*/ 0);
+
+		REQUIRE(clonedPacket->HasExtension(1) == true);
+		extensionValue = clonedPacket->GetExtension(1, extensionLen);
+		REQUIRE(extensionLen == 0);
+
+		REQUIRE(clonedPacket->HasExtension(2) == true);
+		extensionValue = clonedPacket->GetExtension(2, extensionLen);
+		REQUIRE(extensionLen == 1);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 1, CloneBuffer + 22, 1) == true);
+
+		REQUIRE(clonedPacket->HasExtension(3) == true);
+		extensionValue = clonedPacket->GetExtension(3, extensionLen);
+		REQUIRE(extensionLen == 2);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, 2, CloneBuffer + 26, 2) == true);
+
+		REQUIRE(clonedPacket->HasExtension(4) == true);
+		extensionValue = clonedPacket->GetExtension(4, extensionLen);
+		REQUIRE(extensionLen == 0);
+
+		REQUIRE(clonedPacket->HasExtension(5) == false);
+		REQUIRE(clonedPacket->GetExtension(5, extensionLen) == nullptr);
 	}
 }

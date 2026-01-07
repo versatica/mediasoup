@@ -1,16 +1,16 @@
 # TODO new RTP Packet class
 
-- When to call `Freeze()`?
-
 - Padding stuff. When writting a Packet we must write number of padding bytes in the last byte.
 
-- `Packet::GetPayloadLength()` doesn't include padding bytes.
+- `Packet::GetPayloadLength()` doesn't include padding bytes. It's ok.
 
-- Must override `Serialize()` to take care of extensions' and DD pointers, etc.
+- Must override `Serialize()` to take care of DD pointers (if any).
 
 - Same in `Clone()`.
 
-- Extensions stuff.
+- Specific Extensions getters/setters.
+
+- Specific Extensions in `Dump()`.
 
 - RTX stuff.
 

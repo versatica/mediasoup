@@ -65,11 +65,13 @@ namespace RTC
 		REQUIRE(packet->HasCsrcs() == hasCsrcs);                                                       \
 		REQUIRE(packet->HasHeaderExtension() == hasHeaderExtension);                                   \
 		REQUIRE(packet->GetHeaderExtensionValueLength() == headerExtensionValueLength);                \
+		REQUIRE(packet->HasExtensions() == (hasOneByteExtensions || hasTwoBytesExtensions));           \
 		REQUIRE(packet->HasOneByteExtensions() == hasOneByteExtensions);                               \
 		REQUIRE(packet->HasTwoBytesExtensions() == hasTwoBytesExtensions);                             \
 		if (!packet->HasHeaderExtension())                                                             \
 		{                                                                                              \
 			REQUIRE(packet->GetHeaderExtensionValueLength() == 0);                                       \
+			REQUIRE(packet->HasExtensions() == false);                                                   \
 			REQUIRE(packet->HasOneByteExtensions() == false);                                            \
 			REQUIRE(packet->HasTwoBytesExtensions() == false);                                           \
 		}                                                                                              \

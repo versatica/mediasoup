@@ -1,12 +1,12 @@
-#include <cstdint>
-#include <memory>
 #define MS_CLASS "RTC::RTP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/RTP/Packet.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/RTP/Packet.hpp"
+#include <iterator> // std::ostream_iterator
+#include <sstream>  // std::ostringstream
 
 namespace RTC
 {
@@ -80,29 +80,89 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "<RTP::Packet>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
-			// TODO
-			// MS_DUMP_CLEAN(indentation, "  source port: %" PRIu16, GetSourcePort());
-			// MS_DUMP_CLEAN(indentation, "  destination port: %" PRIu16, GetDestinationPort());
-			// MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());
-			// MS_DUMP_CLEAN(indentation, "  checksum: %" PRIu32, GetChecksum());
-			// MS_DUMP_CLEAN(indentation, "  chunks count: %zu", GetChunksCount());
-			// for (const auto* chunk : this->chunks)
-			// {
-			// 	chunk->Dump(indentation + 1);
-			// }
+
+			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu16, GetSequenceNumber());
+			MS_DUMP_CLEAN(indentation, "  timestamp: %" PRIu32, GetTimestamp());
+			MS_DUMP_CLEAN(indentation, "  marker: %s", HasMarker() ? "true" : "false");
+			MS_DUMP_CLEAN(indentation, "  payload type: %" PRIu8, GetPayloadType());
+			MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, GetSsrc());
+			MS_DUMP_CLEAN(indentation, "  csrcs: %s", HasCsrcs() ? "true" : "false");
+
+			if (HasHeaderExtension())
+			{
+				MS_DUMP_CLEAN(
+				  indentation,
+				  "  header extension: id:%" PRIu16 ", value length:%zu",
+				  GetHeaderExtensionId(),
+				  GetHeaderExtensionValueLength());
+			}
+
+			if (HasExtensions())
+			{
+				std::vector<std::string> extIds;
+				std::ostringstream extIdsStream;
+
+				if (HasOneByteExtensions())
+				{
+					for (const auto offset : this->oneByteExtensions)
+					{
+						if (offset == -1)
+						{
+							continue;
+						}
+
+						auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
+
+						extIds.push_back(
+						  "{id:" + std::to_string(extension->id) + ", len:" + std::to_string(extension->len) +
+						  "}");
+					}
+				}
+				else
+				{
+					extIds.reserve(this->twoBytesExtensions.size());
+
+					for (const auto& kv : this->twoBytesExtensions)
+					{
+						const auto offset = kv.second;
+
+						if (offset == -1)
+						{
+							continue;
+						}
+
+						auto* extension =
+						  reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+
+						extIds.push_back(
+						  "{id:" + std::to_string(extension->id) + ", len:" + std::to_string(extension->len) +
+						  "}");
+					}
+				}
+
+				if (!extIds.empty())
+				{
+					std::copy(
+					  extIds.begin(), extIds.end() - 1, std::ostream_iterator<std::string>(extIdsStream, ", "));
+					extIdsStream << extIds.back();
+
+					MS_DUMP_CLEAN(
+					  indentation,
+					  "  RFC5285 extensions (%s): %s",
+					  HasOneByteExtensions() ? "One-Byte" : "Two-Bytes",
+					  extIdsStream.str().c_str());
+				}
+			}
+
+			// TODO: Specific Extensions.
+
+			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
+
+			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
+
+			// TODO: Spatial/temporal layers and DD.
+
 			MS_DUMP_CLEAN(indentation, "</RTP::Packet>");
-		}
-
-		void Packet::Serialize(uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			// const auto* previousBuffer = GetBuffer();
-
-			// Invoke the parent method to copy the whole buffer.
-			Serializable::Serialize(buffer, bufferLength);
-
-			// TODO: Extensions pointers and DD and so on.
 		}
 
 		Packet* Packet::Clone(uint8_t* buffer, size_t bufferLength) const
@@ -113,19 +173,8 @@ namespace RTC
 
 			Serializable::CloneInto(clonedPacket);
 
-			// TODO
-			// Soft clone Packet Chunks into the given cloned Packet.
-			// for (auto* chunk : this->chunks)
-			// {
-			// 	const size_t offset = chunk->GetBuffer() - GetBuffer();
-
-			// 	auto* softClonedChunk = chunk->SoftClone(buffer + offset);
-
-			// 	// Chunk constructors don't freeze the Chunk so we must do it manually.
-			// 	softClonedChunk->Freeze();
-
-			// 	clonedPacket->chunks.push_back(softClonedChunk);
-			// }
+			clonedPacket->oneByteExtensions  = this->oneByteExtensions;
+			clonedPacket->twoBytesExtensions = this->twoBytesExtensions;
 
 			return clonedPacket;
 		}
@@ -279,11 +328,11 @@ namespace RTC
 				// One-Byte Extensions cannot have length 0.
 				while (ptr < extensionsEnd)
 				{
-					const auto* extension = reinterpret_cast<Extension*>(ptr);
-					const uint8_t id      = extension->oneByte.id;
+					const auto* extension = reinterpret_cast<OneByteExtension*>(ptr);
+					const uint8_t id      = extension->id;
 					// NOTE: In Ont-Byte Extensions, announced value must be incremented
 					// by 1.
-					const size_t len = extension->oneByte.len + 1;
+					const size_t len = extension->len + 1;
 
 					// id=0 means alignment.
 					if (id == 0)
@@ -305,13 +354,13 @@ namespace RTC
 							  "not enough space for the announced value of the One-Byte Extension with id %" PRIu8,
 							  id);
 
-							this->extensions.clear();
-
 							return false;
 						}
 
-						// Store the One-Byte Extension in an map.
-						this->extensions[id] = const_cast<Extension*>(extension);
+						// Store the One-Byte Extension offset in the array.
+						// `-1` because we have 14 elements total 0..13 and `id` is in the
+						// range 1..14.
+						this->oneByteExtensions[id - 1] = ptr - extensionsStart;
 
 						ptr += (1 + len);
 					}
@@ -336,9 +385,9 @@ namespace RTC
 				// Two-Byte Extensions can have length 0.
 				while (ptr + 1 < extensionsEnd)
 				{
-					const auto* extension = reinterpret_cast<Extension*>(ptr);
-					const uint8_t id      = extension->twoBytes.id;
-					const size_t len      = extension->twoBytes.len;
+					const auto* extension = reinterpret_cast<TwoBytesExtension*>(ptr);
+					const uint8_t id      = extension->id;
+					const size_t len      = extension->len;
 
 					// id=0 means alignment.
 					if (id == 0)
@@ -355,13 +404,11 @@ namespace RTC
 							  "not enough space for the announced value of the Two-Bytes Extension with id %" PRIu8,
 							  id);
 
-							this->extensions.clear();
-
 							return false;
 						}
 
-						// Store the Two-Bytes Extension in the map.
-						this->extensions[id] = const_cast<Extension*>(extension);
+						// Store the Two-Bytes Extension offset in the map.
+						this->twoBytesExtensions[id] = ptr - extensionsStart;
 
 						ptr += (2 + len);
 					}

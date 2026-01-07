@@ -5,7 +5,8 @@
 #include "FBS/rtpPacket.h"
 #include "RTC/Serializable.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <unordered_map>
+#include <array>
+#include <map>
 
 namespace RTC
 {
@@ -110,6 +111,7 @@ namespace RTC
 				uint8_t id : 4;
 				uint8_t len : 4;
 #endif
+				uint8_t value[];
 			};
 
 		private:
@@ -117,16 +119,6 @@ namespace RTC
 			{
 				uint8_t id;
 				uint8_t len;
-			};
-
-		private:
-			struct Extension
-			{
-				union
-				{
-					OneByteExtension oneByte;
-					TwoBytesExtension twoBytes;
-				};
 				uint8_t value[];
 			};
 
@@ -182,8 +174,6 @@ namespace RTC
 			~Packet() override;
 
 			void Dump(int indentation = 0) const final;
-
-			void Serialize(uint8_t* buffer, size_t bufferLength) final;
 
 			Packet* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
@@ -295,6 +285,16 @@ namespace RTC
 			}
 
 			/**
+			 * Whether the Packet has One-Byte or Two-Bytes Extensions.
+			 *
+			 * @see RFC 8285.
+			 */
+			bool HasExtensions() const
+			{
+				return HasOneByteExtensions() || HasTwoBytesExtensions();
+			}
+
+			/**
 			 * Whether the Packet has One-Byte Extensions.
 			 *
 			 * @see RFC 8285.
@@ -312,6 +312,104 @@ namespace RTC
 			bool HasTwoBytesExtensions() const
 			{
 				return (GetHeaderExtensionId() & 0b1111111111110000) == 0b0001000000000000;
+			}
+
+			/**
+			 * Whether the One-Byte or Two-Bytes Extension with given `id` exists in
+			 * the Packet.
+			 *
+			 * @see RFC 8285.
+			 *
+			 * @remarks
+			 * - If the length of the Extension value is 0 this method returns `true`.
+			 */
+			bool HasExtension(uint8_t id) const
+			{
+				if (id == 0)
+				{
+					return false;
+				}
+				else if (HasOneByteExtensions())
+				{
+					if (id > 14)
+					{
+						return false;
+					}
+
+					// `-1` because we have 14 elements total 0..13 and `id` is in the
+					// range 1..14.
+					auto offset = this->oneByteExtensions[id - 1];
+
+					return offset != -1;
+				}
+				else if (HasTwoBytesExtensions())
+				{
+					return this->twoBytesExtensions.find(id) != this->twoBytesExtensions.end();
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			/**
+			 * Get a pointer to the value of the the One-Byte or Two-Bytes Extension
+			 * with given `id` and set its value length into given `len`.
+			 *
+			 * @see RFC 8285.
+			 */
+			uint8_t* GetExtension(uint8_t id, uint8_t& len) const
+			{
+				len = 0;
+
+				if (id == 0)
+				{
+					return nullptr;
+				}
+				else if (HasOneByteExtensions())
+				{
+					if (id > 14)
+					{
+						return nullptr;
+					}
+
+					// `-1` because we have 14 elements total 0..13 and `id` is in the
+					// range 1..14.
+					auto offset = this->oneByteExtensions[id - 1];
+
+					if (offset == -1)
+					{
+						return nullptr;
+					}
+
+					auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
+
+					// In One-Byte Extensions value length 0 means 1.
+					len = extension->len + 1;
+
+					return extension->value;
+				}
+				else if (HasTwoBytesExtensions())
+				{
+					auto it = this->twoBytesExtensions.find(id);
+
+					if (it == this->twoBytesExtensions.end())
+					{
+						return nullptr;
+					}
+
+					auto offset = it->second;
+
+					auto* extension = reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+
+					len = extension->len;
+
+					return extension->value;
+				}
+				else
+				{
+					return nullptr;
+				}
 			}
 
 			/**
@@ -472,7 +570,15 @@ namespace RTC
 			bool ParseExtensions();
 
 		private:
-			std::unordered_map<uint8_t, Extension*> extensions;
+			// Array of One Byte Extensions. Index is the id - 1 of the Extension,
+			// each entry is the offset (in bytes) from the beginning of the Header
+			// Extension value to the beginning of the Extension.
+			std::array<ssize_t, 14> oneByteExtensions{ -1, -1, -1, -1, -1, -1, -1,
+				                                         -1, -1, -1, -1, -1, -1, -1 };
+			// Map of Two Bytes Extensions. Key is the id 1 of the Extension,
+			// each entry is the offset (in bytes) from the beginning of the Header
+			// Extension value to the beginning of the Extension.
+			std::map<uint8_t, ssize_t> twoBytesExtensions;
 		};
 	} // namespace RTP
 } // namespace RTC
