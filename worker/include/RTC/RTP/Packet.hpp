@@ -8,6 +8,7 @@
 #include <flatbuffers/flatbuffers.h>
 #include <array>
 #include <map>
+#include <vector>
 
 namespace RTC
 {
@@ -286,6 +287,11 @@ namespace RTC
 			}
 
 			/**
+			 * Remove the Header Extension.
+			 */
+			void RemoveHeaderExtension();
+
+			/**
 			 * Whether the Packet has One-Byte or Two-Bytes Extensions.
 			 *
 			 * @see RFC 8285.
@@ -365,12 +371,16 @@ namespace RTC
 
 				if (id == 0)
 				{
+					len = 0;
+
 					return nullptr;
 				}
 				else if (HasOneByteExtensions())
 				{
 					if (id > 14)
 					{
+						len = 0;
+
 						return nullptr;
 					}
 
@@ -380,6 +390,8 @@ namespace RTC
 
 					if (offset == -1)
 					{
+						len = 0;
+
 						return nullptr;
 					}
 
@@ -396,6 +408,8 @@ namespace RTC
 
 					if (it == this->twoBytesExtensions.end())
 					{
+						len = 0;
+
 						return nullptr;
 					}
 
@@ -409,9 +423,21 @@ namespace RTC
 				}
 				else
 				{
+					len = 0;
+
 					return nullptr;
 				}
 			}
+
+			/**
+			 * Add or replace Extensions.
+			 *
+			 * @see RFC 8285.
+			 *
+			 * @throw MediaSoupTypeError - If there is no space available for given
+			 *   Extensions or if given Extensions are invalid/wrong.
+			 */
+			void SetExtensions(ExtensionsType type, const std::vector<AddedExtension>& extensions);
 
 			/**
 			 * Whether this Packet has payload.
@@ -478,7 +504,6 @@ namespace RTC
 			{
 				size_t len;
 
-				// return HasPayload() ? GetPayloadPointer() : nullptr;
 				return GetPayload(len);
 			}
 
@@ -596,7 +621,7 @@ namespace RTC
 			 */
 			uint8_t* GetCsrcsPointer() const
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + Packet::FixedHeaderMinSize;
+				return const_cast<uint8_t*>(GetBuffer()) + FixedHeaderMinSize;
 			}
 
 			/**
@@ -630,7 +655,7 @@ namespace RTC
 			 * - This method is guaranteed to return valid value once @ref Validate()
 			 *   was succesfully called.
 			 */
-			size_t GetHeaderExtensionTotalLength() const
+			size_t GetHeaderExtensionLength() const
 			{
 				if (!HasHeaderExtension())
 				{
@@ -645,14 +670,20 @@ namespace RTC
 			 */
 			uint8_t* GetPayloadPointer() const
 			{
-				return reinterpret_cast<uint8_t*>(GetHeaderExtensionPointer()) +
-				       GetHeaderExtensionTotalLength();
+				return reinterpret_cast<uint8_t*>(GetHeaderExtensionPointer()) + GetHeaderExtensionLength();
 			}
 
 			/**
-			 * Validates whether the Packet is valid.
+			 * Validates whether the Packet is valid. It also sets internal
+			 * containers holding Extensions.
 			 */
+#ifdef MS_TEST
+		public:
+#endif
 			bool Validate();
+#ifdef MS_TEST
+		private:
+#endif
 
 			/**
 			 * Parses Extensions. Returns `true` if they are valid.

@@ -1,6 +1,6 @@
 # TODO new RTP Packet class
 
-- Padding stuff. When writting a Packet we must write number of padding bytes in the last byte.
+- Extensions: Make `SetExtensions()` accept a type "AUTO".
 
 - Must override `Serialize()` to take care of DD pointers (if any).
 
@@ -10,7 +10,7 @@
 
 - Specific Extensions in `Dump()`.
 
-- RTX stuff.
+- RTX and `ShiftPayload()` stuff.
 
 - Spatial/temporal layers and `IsKeyframe()` stuff.
 

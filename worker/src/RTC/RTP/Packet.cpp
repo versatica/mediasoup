@@ -57,20 +57,46 @@ namespace RTC
 			return packet;
 		}
 
+		Packet* Packet::Factory(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (bufferLength < FixedHeaderMinSize)
+			{
+				MS_THROW_TYPE_ERROR("no space for fixed header");
+			}
+
+			auto* packet      = new Packet(buffer, bufferLength);
+			auto* fixedHeader = packet->GetFixedHeaderPointer();
+
+			fixedHeader->version        = 2;
+			fixedHeader->padding        = 0;
+			fixedHeader->extension      = 0;
+			fixedHeader->csrcCount      = 0;
+			fixedHeader->marker         = 0;
+			fixedHeader->payloadType    = 0;
+			fixedHeader->sequenceNumber = 0;
+			fixedHeader->timestamp      = 0;
+			fixedHeader->ssrc           = 0;
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum Packet length.
+
+			return packet;
+		}
+
 		/* Instance methods. */
 
 		Packet::Packet(uint8_t* buffer, size_t bufferLength) : Serializable(buffer, bufferLength)
 		{
 			MS_TRACE();
 
-			SetLength(Packet::FixedHeaderMinSize);
+			SetLength(FixedHeaderMinSize);
 		}
 
 		Packet::~Packet()
 		{
 			MS_TRACE();
-
-			// TODO
 		}
 
 		void Packet::Dump(int indentation) const
@@ -224,6 +250,220 @@ namespace RTC
 			GetFixedHeaderPointer()->ssrc = htonl(ssrc);
 		}
 
+		void Packet::RemoveHeaderExtension()
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			if (!HasHeaderExtension())
+			{
+				return;
+			}
+
+			// Clear One-Byte and Two-Bytes Extensions.
+			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
+			this->twoBytesExtensions.clear();
+
+			const auto headerExtensionLength = GetHeaderExtensionLength();
+
+			auto* payload            = GetPayloadPointer();
+			const auto payloadLength = GetPayloadLength();
+			const auto paddingLength = GetPaddingLength();
+
+			// Shift the payload.
+			std::memmove(payload - headerExtensionLength, payload, payloadLength + paddingLength);
+
+			// Update Packet length.
+			SetLength(GetLength() - headerExtensionLength);
+
+			// Unset the Header Extension flag.
+			GetFixedHeaderPointer()->extension = 0;
+		}
+
+		void Packet::SetExtensions(ExtensionsType type, const std::vector<AddedExtension>& extensions)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			// Clear One-Byte and Two-Bytes Extensions.
+			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
+			this->twoBytesExtensions.clear();
+
+			const auto hadHeaderExtension                 = HasHeaderExtension();
+			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
+
+			// If One-Byte is requested and the Packet already has One-Byte Extensions,
+			// keep the Header Extension id.
+			if (type == ExtensionsType::OneByte && HasOneByteExtensions())
+			{
+				// Nothing to do.
+			}
+			// If Two-Bytes is requested and the Packet already has Two-Bytes Extensions,
+			// keep the Header Extension id.
+			else if (type == ExtensionsType::TwoBytes && HasTwoBytesExtensions())
+			{
+				// Nothing to do.
+			}
+			// Otherwise, if there is Header Extension of non matching type, modify its id.
+			else if (hadHeaderExtension)
+			{
+				if (type == ExtensionsType::OneByte)
+				{
+					GetHeaderExtensionPointer()->id = htons(0xBEDE);
+				}
+				else if (type == ExtensionsType::TwoBytes)
+				{
+					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
+				}
+			}
+
+			// Calculate total length required for all Extensions (with padding if needed).
+			size_t extensionsLength{ 0 };
+
+			if (type == ExtensionsType::OneByte)
+			{
+				for (const auto& extension : extensions)
+				{
+					if (extension.id == 0)
+					{
+						MS_THROW_TYPE_ERROR("invalid Extension with id 0");
+					}
+					else if (extension.id > 14)
+					{
+						MS_THROW_TYPE_ERROR(
+						  "invalid Extension with id %" PRIu8 " > 14 when using One-Byte Extensions",
+						  extension.id);
+					}
+					else if (extension.len == 0)
+					{
+						MS_THROW_TYPE_ERROR(
+						  "invalid Extension with id %" PRIu8 " and length 0 when using One-Byte Extensions",
+						  extension.id);
+					}
+					else if (extension.len > 16)
+					{
+						MS_THROW_TYPE_ERROR(
+						  "invalid Extension with id %" PRIu8 " and length %" PRIu8
+						  " when using One-Byte Extensions",
+						  extension.id,
+						  extension.len);
+					}
+
+					extensionsLength += (1 + extension.len);
+				}
+			}
+			else if (type == ExtensionsType::TwoBytes)
+			{
+				for (const auto& extension : extensions)
+				{
+					if (extension.id == 0)
+					{
+						MS_THROW_TYPE_ERROR("invalid Extension with id 0");
+					}
+
+					extensionsLength += (2 + extension.len);
+				}
+			}
+
+			auto paddedExtensionsLength          = Utils::Byte::PadTo4Bytes(extensionsLength);
+			const size_t extensionsPaddingLength = paddedExtensionsLength - extensionsLength;
+
+			// Calculate the number of bytes to shift (may be negative if the Packet
+			// already had Header Extension).
+			int16_t shift{ 0 };
+
+			if (hadHeaderExtension)
+			{
+				shift = static_cast<int16_t>(paddedExtensionsLength - previousHeaderExtensionValueLength);
+			}
+			else
+			{
+				shift = 4 + static_cast<int16_t>(paddedExtensionsLength);
+			}
+
+			auto* payload            = GetPayloadPointer();
+			const auto payloadLength = GetPayloadLength();
+			const auto paddingLength = GetPaddingLength();
+
+			if (hadHeaderExtension && shift != 0)
+			{
+				// Shift the payload.
+				std::memmove(payload + shift, payload, payloadLength + paddingLength);
+
+				// Update Packet length.
+				SetLength(GetLength() + shift);
+
+				// Update the Header Extension length.
+				GetHeaderExtensionPointer()->len = htons(paddedExtensionsLength / 4);
+			}
+			else if (!hadHeaderExtension)
+			{
+				// Set the Header Extension flag.
+				GetFixedHeaderPointer()->extension = 1;
+
+				// Shift the payload.
+				std::memmove(payload + shift, payload, payloadLength + paddingLength);
+
+				// Update Packet length.
+				SetLength(GetLength() + shift);
+
+				// Set the Header Extension id.
+				if (type == ExtensionsType::OneByte)
+				{
+					GetHeaderExtensionPointer()->id = htons(0xBEDE);
+				}
+				else if (type == ExtensionsType::TwoBytes)
+				{
+					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
+				}
+
+				// Set the Header Extension length.
+				GetHeaderExtensionPointer()->len = htons(paddedExtensionsLength / 4);
+			}
+
+			const uint8_t* extensionsStart = GetHeaderExtensionValue();
+			uint8_t* ptr                   = const_cast<uint8_t*>(extensionsStart);
+
+			if (type == ExtensionsType::OneByte)
+			{
+				for (const auto& extension : extensions)
+				{
+					// Store the One-Byte Extension offset in the array.
+					// `-1` because we have 14 elements total 0..13 and `id` is in the
+					// range 1..14.
+					this->oneByteExtensions[extension.id - 1] = ptr - extensionsStart;
+
+					*ptr = (extension.id << 4) | ((extension.len - 1) & 0x0F);
+					++ptr;
+					std::memmove(ptr, extension.value, extension.len);
+					ptr += extension.len;
+				}
+			}
+			else if (type == ExtensionsType::TwoBytes)
+			{
+				for (const auto& extension : extensions)
+				{
+					// Store the Two-Bytes Extension offset in the map.
+					this->twoBytesExtensions[extension.id] = ptr - extensionsStart;
+
+					*ptr = extension.id;
+					++ptr;
+					*ptr = extension.len;
+					++ptr;
+					std::memmove(ptr, extension.value, extension.len);
+					ptr += extension.len;
+				}
+			}
+
+			for (size_t i = 0; i < extensionsPaddingLength; ++i)
+			{
+				*ptr = 0u;
+				++ptr;
+			}
+		}
+
 		void Packet::SetPayload(const uint8_t* payload, size_t payloadLength)
 		{
 			MS_TRACE();
@@ -347,9 +587,9 @@ namespace RTC
 					return false;
 				}
 
-				const auto headerExtensionTotalLength = GetHeaderExtensionTotalLength();
+				const auto headerExtensionLength = GetHeaderExtensionLength();
 
-				if (GetLength() < (ptr - GetBuffer()) + headerExtensionTotalLength)
+				if (GetLength() < (ptr - GetBuffer()) + headerExtensionLength)
 				{
 					MS_WARN_TAG(
 					  rtp, "invalid Packet, not enough space for the announced Header Extension value");
@@ -364,7 +604,7 @@ namespace RTC
 					return false;
 				}
 
-				ptr += headerExtensionTotalLength;
+				ptr += headerExtensionLength;
 			}
 
 			// Here we are at the beginning of the optional payload.

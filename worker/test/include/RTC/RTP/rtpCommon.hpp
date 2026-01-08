@@ -49,6 +49,7 @@ namespace RTC
 	{                                                                                                 \
 		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                           \
 		REQUIRE(packet);                                                                                \
+		REQUIRE(packet->Validate() == true);                                                            \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                        \
 		REQUIRE(packet->GetBuffer() == buffer);                                                         \
 		REQUIRE(packet->GetBufferLength() != 0);                                                        \
@@ -101,6 +102,10 @@ namespace RTC
 			REQUIRE_THROWS_AS(packet->SetSequenceNumber(packet->GetSequenceNumber()), MediaSoupError);    \
 			REQUIRE_THROWS_AS(packet->SetTimestamp(packet->GetTimestamp()), MediaSoupError);              \
 			REQUIRE_THROWS_AS(packet->SetSsrc(packet->GetSsrc()), MediaSoupError);                        \
+			std::vector<Packet::AddedExtension> extensions;                                               \
+			REQUIRE_THROWS_AS(                                                                            \
+			  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupError);        \
+			REQUIRE_THROWS_AS(packet->RemoveHeaderExtension(), MediaSoupError);                           \
 			REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, 0), MediaSoupError);                         \
 			REQUIRE_THROWS_AS(packet->SetPaddingLength(0), MediaSoupError);                               \
 			REQUIRE_THROWS_AS(packet->PadTo4Bytes(), MediaSoupError);                                     \
@@ -112,6 +117,10 @@ namespace RTC
 			REQUIRE_NOTHROW(packet->SetSequenceNumber(packet->GetSequenceNumber()));                      \
 			REQUIRE_NOTHROW(packet->SetTimestamp(packet->GetTimestamp()));                                \
 			REQUIRE_NOTHROW(packet->SetSsrc(packet->GetSsrc()));                                          \
+			if (!packet->HasHeaderExtension())                                                            \
+			{                                                                                             \
+				REQUIRE_NOTHROW(packet->RemoveHeaderExtension());                                           \
+			}                                                                                             \
 			if (!hasPadding)                                                                              \
 			{                                                                                             \
 				REQUIRE_NOTHROW(packet->SetPayload(packet->GetPayload(), packet->GetPayloadLength()));      \
@@ -128,6 +137,7 @@ namespace RTC
 		REQUIRE_THROWS_AS(                                                                              \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);             \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                      \
+		REQUIRE(packet->Validate() == true);                                                            \
 	} while (false)
 
 #endif
