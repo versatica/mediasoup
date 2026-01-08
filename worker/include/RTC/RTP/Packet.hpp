@@ -2,6 +2,7 @@
 #define MS_RTC_RTP_PACKET_HPP
 
 #include "common.hpp"
+#include "Utils.hpp"
 #include "FBS/rtpPacket.h"
 #include "RTC/Serializable.hpp"
 #include <flatbuffers/flatbuffers.h>
@@ -511,15 +512,15 @@ namespace RTC
 			}
 
 			/**
-			 * Set the payload. It copies the given value into the Packet.
+			 * Set the payload. It copies the given `payload` into the Packet.
 			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
 			 *
-			 * @throw MediaSoupTypeError - If given `length` is higher than available
-			 *   length for the payload in the buffer.
+			 * @throw MediaSoupTypeError - If given `payloadLength` is higher than
+			 *   available length for the payload.
 			 */
-			void SetPayload(const uint8_t* value, size_t length);
+			void SetPayload(const uint8_t* payload, size_t payloadLength);
 
 			/**
 			 * Whether this Packet has padding.
@@ -545,8 +546,39 @@ namespace RTC
 					return 0;
 				}
 
-				return GetBuffer()[GetLength() - 1];
+				return Utils::Byte::Get1Byte(GetBuffer(), GetLength() - 1);
 			}
+
+			/**
+			 * Set padding length.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If given `paddingLength` is higher than
+			 *   available length for the padding.
+			 */
+			void SetPaddingLength(uint8_t paddingLength);
+
+			/**
+			 * Whether Packet length is padded to 4 bytes.
+			 */
+			bool IsPaddedTo4Bytes() const
+			{
+				return Utils::Byte::IsPaddedTo4Bytes(GetLength());
+			}
+
+			/**
+			 * Pad Packet length to 4 bytes by modifying padding bytes.
+			 *
+			 * @remarks
+			 * - This method removes existing padding and adds up to 3 bytes of
+			 *   padding bytes if needed.
+			 *
+			 * @throw MediaSoupTypeError - If needed padding length is higher than
+			 *   available length for the padding.
+			 */
+			void PadTo4Bytes();
 
 		private:
 			/**

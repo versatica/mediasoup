@@ -378,7 +378,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
-		  /*length*/ 12,
+		  /*length*/ sizeof(buffer),
 		  /*frozen*/ true,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
@@ -394,6 +394,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
 		/* Serialize it. */
 
@@ -422,6 +424,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
 		/* Clone it. */
 
 		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
@@ -448,6 +452,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*payloadLength*/ 0,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
 		/* Set payload. */
 
@@ -477,6 +483,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(
 		  helpers::AreBuffersEqual(
 		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == true);
 	}
 
 	SECTION("Packet::Parse() with One-Byte extensions succeeds")
@@ -490,7 +497,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 			0xbe, 0xde, 0x00, 0x03, // Header Extension
 			0x10, 0xaa, 0x21, 0xbb, // - id: 1, len: 1
 			0xff, 0x00, 0x00, 0x33, // - id: 2, len: 2
-			0xff, 0xff, 0xff, 0xff  // - id: 3, len: 4
+			0xff, 0xff, 0xff, 0xff, // - id: 3, len: 4
+			0x12, 0x23
 		};
 		// clang-format on
 
@@ -500,7 +508,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
-		  /*length*/ 28,
+		  /*length*/ sizeof(buffer),
 		  /*frozen*/ true,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
@@ -512,8 +520,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
-		  /*hasPayload*/ false,
-		  /*payloadLength*/ 0,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 2,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -538,6 +546,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->HasExtension(4) == false);
 		REQUIRE(packet->GetExtension(4, extensionLen) == nullptr);
 
+		REQUIRE(packet->IsPaddedTo4Bytes() == false);
+
 		/* Serialize it. */
 
 		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -560,8 +570,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
-		  /*hasPayload*/ false,
-		  /*payloadLength*/ 0,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 2,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -582,6 +592,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		REQUIRE(packet->HasExtension(4) == false);
 		REQUIRE(packet->GetExtension(4, extensionLen) == nullptr);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == false);
 
 		/* Clone it. */
 
@@ -605,8 +617,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*headerExtensionValueLength*/ 12,
 		  /*hasOneByteExtensions*/ true,
 		  /*hasTwoBytesExtensions*/ false,
-		  /*hasPayload*/ false,
-		  /*payloadLength*/ 0,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 2,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
@@ -628,6 +640,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(clonedPacket->HasExtension(4) == false);
 		REQUIRE(clonedPacket->GetExtension(4, extensionLen) == nullptr);
 
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == false);
+
 		/* Set payload. */
 
 		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
@@ -636,7 +650,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*packet*/ clonedPacket.get(),
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
-		  /*length*/ sizeof(buffer) + 16,
+		  /*length*/ sizeof(buffer) - 2 + 16,
 		  /*frozen*/ false,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
@@ -656,6 +670,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(
 		  helpers::AreBuffersEqual(
 		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == true);
 	}
 
 	SECTION("Packet::Parse() with Two-Bytes extensions succeeds")
@@ -680,7 +695,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*packet*/ packet.get(),
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
-		  /*length*/ 32,
+		  /*length*/ sizeof(buffer),
 		  /*frozen*/ true,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
@@ -720,6 +735,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		REQUIRE(packet->HasExtension(5) == false);
 		REQUIRE(packet->GetExtension(5, extensionLen) == nullptr);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 
 		/* Serialize it. */
 
@@ -769,6 +786,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->HasExtension(5) == false);
 		REQUIRE(packet->GetExtension(5, extensionLen) == nullptr);
 
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
 		/* Clone it. */
 
 		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
@@ -817,15 +836,17 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(clonedPacket->HasExtension(5) == false);
 		REQUIRE(clonedPacket->GetExtension(5, extensionLen) == nullptr);
 
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == true);
+
 		/* Set payload. */
 
-		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 16));
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 15));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ clonedPacket.get(),
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
-		  /*length*/ sizeof(buffer) + 16,
+		  /*length*/ sizeof(buffer) + 15,
 		  /*frozen*/ false,
 		  /*payloadType*/ 1,
 		  /*hasMarker*/ false,
@@ -838,12 +859,170 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  /*hasOneByteExtensions*/ false,
 		  /*hasTwoBytesExtensions*/ true,
 		  /*hasPayload*/ true,
-		  /*payloadLength*/ 16,
+		  /*payloadLength*/ 15,
 		  /*hasPadding*/ false,
 		  /*paddingLength*/ 0);
 
 		REQUIRE(
 		  helpers::AreBuffersEqual(
-		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 16) == true);
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 15) == true);
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == false);
+	}
+
+	SECTION("Packet::Parse() padding-only packet succeeds")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0xA0, 0x01, 0x00, 0x09,
+			0x00, 0x00, 0x00, 0x05,
+			0x00, 0x00, 0x00, 0x06,
+			0x00, 0x00, 0x00, 0x00, // Padding (8 bytes)
+			0x00, 0x00, 0x00, 0x08
+		};
+		// clang-format on
+
+		std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ buffer,
+		  /*bufferLength*/ sizeof(buffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ true,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 9,
+		  /*timestamp*/ 5,
+		  /*ssrc*/ 6,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLength*/ 0,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 8);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		/* Serialize it. */
+
+		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ SerializeBuffer,
+		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 9,
+		  /*timestamp*/ 5,
+		  /*ssrc*/ 6,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLength*/ 0,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 8);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		/* Clone it. */
+
+		std::unique_ptr<Packet> clonedPacket{ packet->Clone(CloneBuffer, sizeof(CloneBuffer)) };
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ sizeof(buffer),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 9,
+		  /*timestamp*/ 5,
+		  /*ssrc*/ 6,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLength*/ 0,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 8);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		/* Set payload. */
+
+		REQUIRE_NOTHROW(clonedPacket->SetPayload(DataBuffer, 1));
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ clonedPacket->GetLength(),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 9,
+		  /*timestamp*/ 5,
+		  /*ssrc*/ 6,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 1,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 1) == true);
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == false);
+
+		/* Pad to 4 bytes. */
+
+		REQUIRE_NOTHROW(clonedPacket->PadTo4Bytes());
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ clonedPacket.get(),
+		  /*buffer*/ CloneBuffer,
+		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*length*/ clonedPacket->GetLength(),
+		  /*frozen*/ false,
+		  /*payloadType*/ 1,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 9,
+		  /*timestamp*/ 5,
+		  /*ssrc*/ 6,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 1,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 3);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    clonedPacket->GetPayload(), clonedPacket->GetPayloadLength(), DataBuffer, 1) == true);
+		REQUIRE(clonedPacket->IsPaddedTo4Bytes() == true);
 	}
 }

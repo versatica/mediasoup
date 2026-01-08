@@ -102,6 +102,8 @@ namespace RTC
 			REQUIRE_THROWS_AS(packet->SetTimestamp(packet->GetTimestamp()), MediaSoupError);              \
 			REQUIRE_THROWS_AS(packet->SetSsrc(packet->GetSsrc()), MediaSoupError);                        \
 			REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, 0), MediaSoupError);                         \
+			REQUIRE_THROWS_AS(packet->SetPaddingLength(0), MediaSoupError);                               \
+			REQUIRE_THROWS_AS(packet->PadTo4Bytes(), MediaSoupError);                                     \
 		}                                                                                               \
 		else                                                                                            \
 		{                                                                                               \
@@ -115,6 +117,11 @@ namespace RTC
 				REQUIRE_NOTHROW(packet->SetPayload(packet->GetPayload(), packet->GetPayloadLength()));      \
 			}                                                                                             \
 			REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, packet->GetBufferLength()), MediaSoupError); \
+			REQUIRE_NOTHROW(packet->SetPaddingLength(packet->GetPaddingLength()));                        \
+			if (packet->IsPaddedTo4Bytes() && packet->GetPaddingLength() < 4)                             \
+			{                                                                                             \
+				REQUIRE_NOTHROW(packet->PadTo4Bytes());                                                     \
+			}                                                                                             \
 		}                                                                                               \
 		REQUIRE(                                                                                        \
 		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true);  \

@@ -4,7 +4,6 @@
 #include "RTC/RTP/Packet.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
 #include <cstring>  // std::memmove()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
@@ -225,7 +224,7 @@ namespace RTC
 			GetFixedHeaderPointer()->ssrc = htonl(ssrc);
 		}
 
-		void Packet::SetPayload(const uint8_t* value, size_t length)
+		void Packet::SetPayload(const uint8_t* payload, size_t payloadLength)
 		{
 			MS_TRACE();
 
@@ -234,17 +233,76 @@ namespace RTC
 			auto previousLength        = GetLength();
 			auto previousPayloadLength = GetPayloadLength();
 			auto previousPaddingLength = GetPaddingLength();
-			auto newNotPaddedLength =
-			  previousLength - previousPayloadLength - previousPaddingLength + length;
+			auto newLength = previousLength - previousPayloadLength - previousPaddingLength + payloadLength;
 
 			// Set the new Packet total length.
 			// NOTE: This throws if given length is higher than buffer length.
-			SetLength(newNotPaddedLength);
+			SetLength(newLength);
 
 			// Unset padding flag.
 			GetFixedHeaderPointer()->padding = 0;
 
-			std::memmove(GetPayloadPointer(), value, length);
+			std::memmove(GetPayloadPointer(), payload, payloadLength);
+		}
+
+		void Packet::SetPaddingLength(uint8_t paddingLength)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength        = GetLength();
+			auto previousPaddingLength = GetPaddingLength();
+			auto newLength             = previousLength - previousPaddingLength + paddingLength;
+
+			// Set the new Packet total length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(newLength);
+
+			if (paddingLength > 0)
+			{
+				GetFixedHeaderPointer()->padding = 1;
+
+				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, paddingLength);
+			}
+			else
+			{
+				GetFixedHeaderPointer()->padding = 0;
+			}
+		}
+
+		void Packet::PadTo4Bytes()
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength        = GetLength();
+			auto previousPaddingLength = GetPaddingLength();
+			auto newNotPaddedLength    = previousLength - previousPaddingLength;
+			auto newPaddedLength       = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+
+			if (newPaddedLength == previousLength)
+			{
+				return;
+			}
+
+			// Set the new Packet total length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(newPaddedLength);
+
+			auto newPaddingLength = newPaddedLength - newNotPaddedLength;
+
+			if (newPaddingLength > 0)
+			{
+				GetFixedHeaderPointer()->padding = 1;
+
+				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, newPaddingLength);
+			}
+			else
+			{
+				GetFixedHeaderPointer()->padding = 0;
+			}
 		}
 
 		bool Packet::Validate()
