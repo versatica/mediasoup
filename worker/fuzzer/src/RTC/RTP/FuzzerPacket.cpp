@@ -225,10 +225,10 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->RtxEncode(1, 2, 3);
 	packet->RtxDecode(4, 5);
 	packet->PadTo4Bytes();
-	packet->ShiftPayload(2, 4);
-	packet->UnshiftPayload(4, 2);
-	packet->ShiftPayload(3, 5);
-	packet->UnshiftPayload(5, 3);
+	packet->ShiftPayload(4, 2);
+	packet->ShiftPayload(4, -2);
+	packet->ShiftPayload(3, 4);
+	packet->ShiftPayload(3, -4);
 
 	// These cannot be tested this way.
 	// packet->SetPayloadDescriptorHandler();

@@ -558,6 +558,60 @@ namespace RTC
 			std::memmove(GetPayloadPointer(), payload, payloadLength);
 		}
 
+		void Packet::ShiftPayload(size_t payloadOffset, int32_t delta)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			if (delta == 0)
+			{
+				return;
+			}
+
+			auto* payload            = GetPayloadPointer();
+			const auto payloadLength = GetPayloadLength();
+			const auto absDelta =
+			  delta < 0 ? static_cast<uint32_t>(-(int64_t)delta) : static_cast<uint32_t>(delta);
+
+			if (payloadOffset >= payloadLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "payloadOffset (%zu) is bigger than payload length (%zu)", payloadOffset, payloadLength);
+			}
+			else if (delta < 0 && absDelta > (payloadLength - payloadOffset))
+			{
+				MS_THROW_TYPE_ERROR("negative delta (%" PRIi32 ") too big", delta);
+			}
+
+			// Remove padding (if any).
+			if (HasPadding())
+			{
+				SetPaddingLength(0);
+			}
+
+			if (delta > 0)
+			{
+				// Update Packet length.
+				// NOTE: This throws if given length is higher than buffer length.
+				SetLength(GetLength() + delta);
+
+				std::memmove(
+				  payload + payloadOffset + delta, payload + payloadOffset, payloadLength - payloadOffset);
+			}
+			else
+			{
+				// Update Packet length.
+				// NOTE: This throws if given length is higher than buffer length.
+				SetLength(GetLength() - absDelta);
+
+				std::memmove(
+				  payload + payloadOffset,
+				  payload + payloadOffset + absDelta,
+				  payloadLength - payloadOffset - absDelta);
+			}
+		}
+
 		void Packet::SetPaddingLength(uint8_t paddingLength)
 		{
 			MS_TRACE();
@@ -960,58 +1014,6 @@ namespace RTC
 			else
 			{
 				return true;
-			}
-		}
-
-		void Packet::ShiftPayload(size_t payloadOffset, size_t numBytes, bool expand)
-		{
-			MS_TRACE();
-
-			AssertNotFrozen();
-
-			if (numBytes == 0)
-			{
-				return;
-			}
-
-			auto* payload            = GetPayloadPointer();
-			const auto payloadLength = GetPayloadLength();
-
-			if (payloadOffset >= payloadLength)
-			{
-				MS_THROW_TYPE_ERROR(
-				  "payloadOffset (%zu) is bigger than payload length (%zu)", payloadOffset, payloadLength);
-			}
-			else if (!expand && numBytes > (payloadLength - payloadOffset))
-			{
-				MS_THROW_TYPE_ERROR("numBytes (%zu) too bigger", numBytes);
-			}
-
-			// Remove padding (if any).
-			if (HasPadding())
-			{
-				SetPaddingLength(0);
-			}
-
-			if (expand)
-			{
-				// Update Packet length.
-				// NOTE: This throws if given length is higher than buffer length.
-				SetLength(GetLength() + numBytes);
-
-				std::memmove(
-				  payload + payloadOffset + numBytes, payload + payloadOffset, payloadLength - payloadOffset);
-			}
-			else
-			{
-				// Update Packet length.
-				// NOTE: This throws if given length is higher than buffer length.
-				SetLength(GetLength() - numBytes);
-
-				std::memmove(
-				  payload + payloadOffset,
-				  payload + payloadOffset + numBytes,
-				  payloadLength - payloadOffset - numBytes);
 			}
 		}
 

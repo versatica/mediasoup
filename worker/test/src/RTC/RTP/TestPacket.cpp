@@ -1631,7 +1631,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
-	SECTION("packet::ShiftPayload() and packet::UnshiftPayload() succeed")
+	SECTION("packet::ShiftPayload() succeeds")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
 
@@ -1720,7 +1720,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		/* Shift payload. */
 
 		// This method removes padding.
-		packet->ShiftPayload(/*payloadOffset*/ 2, /*numBytes*/ 1);
+		packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ 1);
 
 		// Fill the new byte in the payload with 0XFF.
 		packet->GetPayload()[2] = 0xFF;
@@ -1784,7 +1784,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		/* Unshift payload. */
 
 		// This method removes padding.
-		packet->UnshiftPayload(/*payloadOffset*/ 4, /*numBytes*/ 2);
+		packet->ShiftPayload(/*payloadOffset*/ 4, /*delta*/ -2);
 
 		// clang-format off
 		uint8_t unshiftedPayload[] =
@@ -1836,6 +1836,17 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  helpers::AreBuffersEqual(
 		    packet->GetPayload(), packet->GetPayloadLength(), unshiftedPayload, 8) == true);
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		// Reset the payload and padding.
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		/* Shitf and unshift to undo. */
+
+		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ 5);
+		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ -5);
+		REQUIRE(
+		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), payload, 10) == true);
 	}
 
 	SECTION("packet::ShiftPayload() and packet::UnshiftPayload() fail if wrong values are given")
@@ -1854,14 +1865,14 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		packet->SetPayload(payload, 10);
 
 		// payloadOffset higger or equal than payload length.
-		REQUIRE_THROWS_AS(packet->ShiftPayload(/*payloadOffset*/ 10, /*numBytes*/ 2), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(packet->ShiftPayload(/*payloadOffset*/ 10, /*delta*/ 2), MediaSoupTypeError);
 
-		// numBytes too big.
-		REQUIRE_THROWS_AS(packet->UnshiftPayload(/*payloadOffset*/ 2, /*numBytes*/ 9), MediaSoupTypeError);
+		// delta too big.
+		REQUIRE_THROWS_AS(packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ -9), MediaSoupTypeError);
 
 		// New computed payload length too big.
 		REQUIRE_THROWS_AS(
-		  packet->ShiftPayload(/*payloadOffset*/ 2, /*numBytes*/ packet->GetBufferLength()),
+		  packet->ShiftPayload(/*payloadOffset*/ 2, /*delta*/ packet->GetBufferLength()),
 		  MediaSoupTypeError);
 	}
 

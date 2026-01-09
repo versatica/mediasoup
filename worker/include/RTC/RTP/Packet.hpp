@@ -578,30 +578,15 @@ namespace RTC
 			}
 
 			/**
-			 * Shift the content of the payload `numBytes` bytes after `payloadOffset`.
+			 * Shift or unshift the content of the payload `delta` bytes after
+			 * `payloadOffset`.
 			 *
 			 * @remarks
 			 * - This method removes existing padding (if any).
 			 *
 			 * @throw MediaSoupTypeError - If wrong values are given.
 			 */
-			void ShiftPayload(size_t payloadOffset, size_t numBytes)
-			{
-				ShiftPayload(payloadOffset, numBytes, /*expand*/ true);
-			}
-
-			/**
-			 * Unshift the content of the payload `numBytes` bytes after `payloadOffset`.
-			 *
-			 * @remarks
-			 * - This method removes existing padding (if any).
-			 *
-			 * @throw MediaSoupTypeError - If wrong values are given.
-			 */
-			void UnshiftPayload(size_t payloadOffset, size_t numBytes)
-			{
-				ShiftPayload(payloadOffset, numBytes, /*expand*/ false);
-			}
+			void ShiftPayload(size_t payloadOffset, int32_t delta);
 
 			/**
 			 * Whether this Packet has padding.
@@ -832,17 +817,6 @@ namespace RTC
 			 * @see RFC 8285.
 			 */
 			bool ParseExtensions();
-
-			/**
-			 * Shift or unshift the content of the payload `numBytes` bytes after
-			 * `payloadOffset`.
-			 *
-			 * @remarks
-			 * - This method removes existing padding (if any).
-			 *
-			 * @throw MediaSoupTypeError - If wrong values are given.
-			 */
-			void ShiftPayload(size_t payloadOffset, size_t numBytes, bool expand);
 
 			/* Pure virtual methods inherited from RTC::Codecs::DependencyDescriptor::Listener. */
 		public:
