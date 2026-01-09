@@ -708,7 +708,7 @@ namespace RTC
 
 		bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
 
-		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder();
+		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder() const;
 
 		void EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder);
 

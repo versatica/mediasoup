@@ -872,7 +872,7 @@ namespace RTC
 
 		if (this->payloadDescriptorHandler)
 		{
-			packet->payloadDescriptorHandler->RtpPacketCloned(packet);
+			packet->payloadDescriptorHandler->RtpPacketChanged(packet);
 		}
 
 		// Store allocated buffer.
@@ -976,7 +976,7 @@ namespace RTC
 		return this->payloadDescriptorHandler->Process(context, this, marker);
 	}
 
-	std::unique_ptr<Codecs::PayloadDescriptor::Encoder> RtpPacket::GetPayloadEncoder()
+	std::unique_ptr<Codecs::PayloadDescriptor::Encoder> RtpPacket::GetPayloadEncoder() const
 	{
 		MS_TRACE();
 

@@ -2,12 +2,10 @@
 
 - Specific Extensions getters/setters.
 
-- `payloadDescriptorHandler` stuff.
+- `Dump()`: Print specific Extensions.
 
-- Spatial/temporal layers and `IsKeyframe()` stuff.
+- Adapt `SharedRtpPacket` and move it and all `RtpXxxx` classes to `RTC/RTP/` folder.
 
-- Must override `Serialize()` to take care of `payloadDescriptorHandler` pointer and so on.
+- Test specific Extensions and payload descriptor stuff.
 
-- Same in `Clone()`.
-
-- `Dump()`: Print specific Extensions, spatial/temporal layers, `IsKeyframe()`, `payloadDescriptorHandler` stuff, etc.
+- Fuzzer.

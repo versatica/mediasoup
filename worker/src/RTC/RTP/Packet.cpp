@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::RTP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
+// #define DUMP_PAYLOAD_DESCRIPTOR 1
 
 #include "RTC/RTP/Packet.hpp"
 #ifdef MS_RTC_LOGGER_RTP
@@ -205,10 +206,17 @@ namespace RTC
 			// TODO: Specific Extensions.
 
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
-
 			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
 
-			// TODO: Spatial/temporal layers and DD.
+			if (this->payloadDescriptorHandler)
+			{
+				MS_DUMP_CLEAN(indentation, "  key frame: %s", IsKeyFrame() ? "true" : "false");
+				MS_DUMP_CLEAN(indentation, "  spatial layer: %" PRIu8, GetSpatialLayer());
+				MS_DUMP_CLEAN(indentation, "  temporal layer: %" PRIu8, GetTemporalLayer());
+#ifdef DUMP_PAYLOAD_DESCRIPTOR
+				this->payloadDescriptorHandler->Dump(indentation + 1);
+#endif
+			}
 
 			MS_DUMP_CLEAN(indentation, "</RTP::Packet>");
 		}
@@ -221,8 +229,16 @@ namespace RTC
 
 			Serializable::CloneInto(clonedPacket);
 
+			// Clone Extension containers.
 			clonedPacket->oneByteExtensions  = this->oneByteExtensions;
 			clonedPacket->twoBytesExtensions = this->twoBytesExtensions;
+			// Assign the payload descriptor handler.
+			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
+
+			if (this->payloadDescriptorHandler)
+			{
+				clonedPacket->payloadDescriptorHandler->RtpPacketChanged(clonedPacket);
+			}
 
 			return clonedPacket;
 		}
@@ -542,6 +558,66 @@ namespace RTC
 			std::memmove(GetPayloadPointer(), payload, payloadLength);
 		}
 
+		void Packet::SetPaddingLength(uint8_t paddingLength)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength        = GetLength();
+			auto previousPaddingLength = GetPaddingLength();
+			auto newLength             = previousLength - previousPaddingLength + paddingLength;
+
+			// Set the new Packet total length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(newLength);
+
+			if (paddingLength > 0)
+			{
+				GetFixedHeaderPointer()->padding = 1;
+
+				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, paddingLength);
+			}
+			else
+			{
+				GetFixedHeaderPointer()->padding = 0;
+			}
+		}
+
+		void Packet::PadTo4Bytes()
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto previousLength        = GetLength();
+			auto previousPaddingLength = GetPaddingLength();
+			auto newNotPaddedLength    = previousLength - previousPaddingLength;
+			auto newPaddedLength       = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+
+			if (newPaddedLength == previousLength)
+			{
+				return;
+			}
+
+			// Set the new Packet total length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(newPaddedLength);
+
+			auto newPaddingLength = newPaddedLength - newNotPaddedLength;
+
+			if (newPaddingLength > 0)
+			{
+				GetFixedHeaderPointer()->padding = 1;
+
+				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, newPaddingLength);
+			}
+			else
+			{
+				GetFixedHeaderPointer()->padding = 0;
+			}
+		}
+
 		void Packet::RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq)
 		{
 			MS_TRACE();
@@ -617,64 +693,68 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::SetPaddingLength(uint8_t paddingLength)
+		void Packet::SetPayloadDescriptorHandler(
+		  RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
 		{
 			MS_TRACE();
 
 			AssertNotFrozen();
 
-			auto previousLength        = GetLength();
-			auto previousPaddingLength = GetPaddingLength();
-			auto newLength             = previousLength - previousPaddingLength + paddingLength;
-
-			// Set the new Packet total length.
-			// NOTE: This throws if given length is higher than buffer length.
-			SetLength(newLength);
-
-			if (paddingLength > 0)
-			{
-				GetFixedHeaderPointer()->padding = 1;
-
-				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, paddingLength);
-			}
-			else
-			{
-				GetFixedHeaderPointer()->padding = 0;
-			}
+			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
-		void Packet::PadTo4Bytes()
+		bool Packet::ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker)
 		{
 			MS_TRACE();
 
 			AssertNotFrozen();
 
-			auto previousLength        = GetLength();
-			auto previousPaddingLength = GetPaddingLength();
-			auto newNotPaddedLength    = previousLength - previousPaddingLength;
-			auto newPaddedLength       = Utils::Byte::PadTo4Bytes(newNotPaddedLength);
+			if (!this->payloadDescriptorHandler)
+			{
+				return true;
+			}
 
-			if (newPaddedLength == previousLength)
+			return this->payloadDescriptorHandler->Process(context, this, marker);
+		}
+
+		std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> Packet::GetPayloadEncoder() const
+		{
+			MS_TRACE();
+
+			if (!this->payloadDescriptorHandler)
+			{
+				return nullptr;
+			}
+
+			return this->payloadDescriptorHandler->GetEncoder();
+		}
+
+		void Packet::EncodePayload(RTC::Codecs::PayloadDescriptor::Encoder* encoder)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			if (!this->payloadDescriptorHandler)
 			{
 				return;
 			}
 
-			// Set the new Packet total length.
-			// NOTE: This throws if given length is higher than buffer length.
-			SetLength(newPaddedLength);
+			this->payloadDescriptorHandler->Encode(this, encoder);
+		}
 
-			auto newPaddingLength = newPaddedLength - newNotPaddedLength;
+		void Packet::RestorePayload()
+		{
+			MS_TRACE();
 
-			if (newPaddingLength > 0)
+			AssertNotFrozen();
+
+			if (!this->payloadDescriptorHandler)
 			{
-				GetFixedHeaderPointer()->padding = 1;
+				return;
+			}
 
-				Utils::Byte::Set1Byte(const_cast<uint8_t*>(GetBuffer()), GetLength() - 1, newPaddingLength);
-			}
-			else
-			{
-				GetFixedHeaderPointer()->padding = 0;
-			}
+			this->payloadDescriptorHandler->Restore(this);
 		}
 
 		bool Packet::Validate()

@@ -190,5 +190,33 @@ namespace RTC
 
 			return true;
 		}
+
+		bool H264::PayloadDescriptorHandler::Process(
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RTP::Packet* /*packet*/, bool& /*marker*/)
+		{
+			MS_TRACE();
+
+			auto* context = static_cast<RTC::Codecs::H264::EncodingContext*>(encodingContext);
+
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+
+			if (this->payloadDescriptor->temporalLayer > context->GetTargetTemporalLayer())
+			{
+				return false;
+			}
+
+			// Update/fix current temporal layer.
+			if (this->payloadDescriptor->temporalLayer > context->GetCurrentTemporalLayer())
+			{
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->temporalLayer);
+			}
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+			{
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
+			}
+
+			return true;
+		}
 	} // namespace Codecs
 } // namespace RTC

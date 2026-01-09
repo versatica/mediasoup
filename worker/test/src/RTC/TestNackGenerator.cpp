@@ -2,6 +2,7 @@
 #include "DepLibUV.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/NackGenerator.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
@@ -45,7 +46,14 @@ public:
 	{
 		return true;
 	}
-	void RtpPacketCloned(RTC::RtpPacket* packet) override
+	bool Process(Codecs::EncodingContext* /*context*/, RTC::RTP::Packet* /*packet*/, bool& /*marker*/) override
+	{
+		return true;
+	}
+	void RtpPacketChanged(RTC::RtpPacket* packet) override
+	{
+	}
+	void RtpPacketChanged(RTC::RTP::Packet* packet) override
 	{
 	}
 	std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
@@ -55,7 +63,13 @@ public:
 	void Encode(RtpPacket* /*packet*/, RTC::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
 	{
 	}
+	void Encode(RTP::Packet* /*packet*/, RTC::Codecs::PayloadDescriptor::Encoder* /*encoder*/) override
+	{
+	}
 	void Restore(RtpPacket* /*packet*/) override
+	{
+	}
+	void Restore(RTP::Packet* /*packet*/) override
 	{
 	}
 	uint8_t GetSpatialLayer() const override

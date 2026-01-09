@@ -414,6 +414,138 @@ namespace RTC
 			return true;
 		};
 
+		bool VP8::PayloadDescriptorHandler::Process(
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RTP::Packet* packet, bool& /*marker*/)
+		{
+			MS_TRACE();
+
+			auto* context = static_cast<RTC::Codecs::VP8::EncodingContext*>(encodingContext);
+
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+
+			// Check if the payload should contain temporal layer info.
+			if (context->GetTemporalLayers() > 1 && !this->payloadDescriptor->hasTlIndex)
+			{
+				MS_WARN_DEV("stream is supposed to have >1 temporal layers but does not have TlIndex field");
+			}
+
+			// Check whether pictureId and tl0PictureIndex sync is required.
+			// clang-format off
+			if (
+				context->syncRequired &&
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTl0PictureIndex
+			)
+			// clang-format on
+			{
+				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
+				context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex - 1);
+
+				context->syncRequired = false;
+			}
+
+			// Incremental pictureId. Check the temporal layer.
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTlIndex &&
+				this->payloadDescriptor->hasTl0PictureIndex &&
+				!RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+					this->payloadDescriptor->pictureId,
+					context->pictureIdManager.GetMaxInput())
+			)
+			// clang-format on
+			{
+				// Drop if:
+				// - Temporal layer is higher than target.
+				// - Temporal layer is higher than current and sync flag is not set.
+				// clang-format off
+				if (
+				  this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer() ||
+				  (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
+				   !this->payloadDescriptor->y)
+				)
+				// clang-format on
+				{
+					context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
+
+					if (this->payloadDescriptor->tlIndex == 0)
+					{
+						context->tl0PictureIndexManager.Drop(this->payloadDescriptor->tl0PictureIndex);
+					}
+
+					return false;
+				}
+			}
+
+			// Update pictureId and tl0PictureIndex values.
+			uint16_t pictureId;
+			uint8_t tl0PictureIndex;
+
+			// Do not send a dropped pictureId.
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				!context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId)
+			)
+			// clang-format on
+			{
+				return false;
+			}
+
+			// Do not send a dropped tl0PictureIndex.
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasTl0PictureIndex &&
+				!context->tl0PictureIndexManager.Input(
+					this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex)
+			)
+			// clang-format on
+			{
+				return false;
+			}
+
+			// Update/fix current temporal layer.
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasTlIndex &&
+				this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer()
+			)
+			// clang-format on
+			{
+				context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
+			}
+			else if (!this->payloadDescriptor->hasTlIndex)
+			{
+				context->SetCurrentTemporalLayer(0);
+			}
+
+			if (context->GetCurrentTemporalLayer() > context->GetTargetTemporalLayer())
+			{
+				context->SetCurrentTemporalLayer(context->GetTargetTemporalLayer());
+			}
+
+			// Do not send tlIndex higher than current one.
+			if (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer())
+			{
+				return false;
+			}
+
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTl0PictureIndex
+			)
+			// clang-format on
+			{
+				// Store the encoding data for retransmissions.
+				this->payloadDescriptor->CreateEncoder({ pictureId, tl0PictureIndex });
+				this->payloadDescriptor->Encode(packet->GetPayload());
+			}
+
+			return true;
+		};
+
 		void VP8::PayloadDescriptorHandler::Encode(
 		  RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder)
 		{
@@ -424,7 +556,32 @@ namespace RTC
 			vp8Encoder->Encode(packet->GetPayload(), this->payloadDescriptor.get());
 		}
 
+		void VP8::PayloadDescriptorHandler::Encode(
+		  RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder)
+		{
+			MS_TRACE();
+
+			auto* vp8Encoder = static_cast<VP8::PayloadDescriptor::Encoder*>(encoder);
+
+			vp8Encoder->Encode(packet->GetPayload(), this->payloadDescriptor.get());
+		}
+
 		void VP8::PayloadDescriptorHandler::Restore(RtpPacket* packet)
+		{
+			MS_TRACE();
+
+			// clang-format off
+			if (
+				this->payloadDescriptor->hasPictureId &&
+				this->payloadDescriptor->hasTl0PictureIndex
+			)
+			// clang-format on
+			{
+				this->payloadDescriptor->Restore(packet->GetPayload());
+			}
+		}
+
+		void VP8::PayloadDescriptorHandler::Restore(RTP::Packet* packet)
 		{
 			MS_TRACE();
 

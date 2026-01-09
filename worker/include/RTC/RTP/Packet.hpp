@@ -24,7 +24,7 @@ namespace RTC
 		 * @see RFC 3550.
 		 */
 
-		class Packet : public Serializable, public Codecs::DependencyDescriptor::Listener
+		class Packet : public Serializable, public RTC::Codecs::DependencyDescriptor::Listener
 		{
 		public:
 			/**
@@ -604,27 +604,6 @@ namespace RTC
 			}
 
 			/**
-			 * Encode the Packet into a RTX Packet.
-			 *
-			 * @remarks
-			 * - This method removes existing padding (if any).
-			 *
-			 * @throw MediaSoupTypeError - If there is no space for the new computed
-			 *   payload.
-			 */
-			void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
-
-			/**
-			 * Decode the RTX Packet into a regular RTP Packet.
-			 *
-			 * @return `true` if RTX decoding iwas done.
-			 *
-			 * @remarks
-			 * - This method removes existing padding (if any).
-			 */
-			bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
-
-			/**
 			 * Whether this Packet has padding.
 			 */
 			bool HasPadding() const
@@ -681,6 +660,91 @@ namespace RTC
 			 *   available length for the padding.
 			 */
 			void PadTo4Bytes();
+
+			/**
+			 * Encode the Packet into a RTX Packet.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If there is no space for the new computed
+			 *   payload.
+			 */
+			void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
+
+			/**
+			 * Decode the RTX Packet into a regular RTP Packet.
+			 *
+			 * @return `true` if RTX decoding iwas done.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 */
+			bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
+
+			/**
+			 * Set payload descritor handler.
+			 */
+			void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+
+			/**
+			 * Process the payload.
+			 */
+			bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
+
+			/**
+			 * Get the payload encoder.
+			 */
+			std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder() const;
+
+			/**
+			 * Encode the payload.
+			 */
+			void EncodePayload(RTC::Codecs::PayloadDescriptor::Encoder* encoder);
+
+			/**
+			 * Restore the payload.
+			 */
+			void RestorePayload();
+
+			/**
+			 * Whether the payload contains a video keyframe.
+			 */
+			bool IsKeyFrame() const
+			{
+				if (!this->payloadDescriptorHandler)
+				{
+					return false;
+				}
+
+				return this->payloadDescriptorHandler->IsKeyFrame();
+			}
+
+			/**
+			 * Spatial layer of the video codec.
+			 */
+			uint8_t GetSpatialLayer() const
+			{
+				if (!this->payloadDescriptorHandler)
+				{
+					return 0u;
+				}
+
+				return this->payloadDescriptorHandler->GetSpatialLayer();
+			}
+
+			/**
+			 * Temporal layer of the video codec.
+			 */
+			uint8_t GetTemporalLayer() const
+			{
+				if (!this->payloadDescriptorHandler)
+				{
+					return 0u;
+				}
+
+				return this->payloadDescriptorHandler->GetTemporalLayer();
+			}
 
 		private:
 			/**
@@ -799,6 +863,8 @@ namespace RTC
 			// each entry is the offset (in bytes) from the beginning of the Header
 			// Extension value to the beginning of the Extension.
 			std::map<uint8_t, ssize_t> twoBytesExtensions;
+			// Codec related.
+			std::shared_ptr<RTC::Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 		};
 	} // namespace RTP
 } // namespace RTC

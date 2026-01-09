@@ -408,5 +408,230 @@ namespace RTC
 
 			return true;
 		}
+
+		bool VP9::PayloadDescriptorHandler::Process(
+		  RTC::Codecs::EncodingContext* encodingContext, RTC::RTP::Packet* /*packet*/, bool& marker)
+		{
+			MS_TRACE();
+
+			auto* context = static_cast<RTC::Codecs::VP9::EncodingContext*>(encodingContext);
+
+			MS_ASSERT(context->GetTargetSpatialLayer() >= 0, "target spatial layer cannot be -1");
+			MS_ASSERT(context->GetTargetTemporalLayer() >= 0, "target temporal layer cannot be -1");
+
+			auto packetSpatialLayer  = GetSpatialLayer();
+			auto packetTemporalLayer = GetTemporalLayer();
+			auto tmpSpatialLayer     = context->GetCurrentSpatialLayer();
+			auto tmpTemporalLayer    = context->GetCurrentTemporalLayer();
+
+			// If packet spatial or temporal layer is higher than maximum announced
+			// one, drop the packet.
+			// clang-format off
+			if (
+				packetSpatialLayer >= context->GetSpatialLayers() ||
+				packetTemporalLayer >= context->GetTemporalLayers()
+			)
+			// clang-format on
+			{
+				MS_WARN_TAG(
+				  rtp, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
+
+				return false;
+			}
+
+			// Check whether pictureId sync is required.
+			// clang-format off
+			if (
+				context->syncRequired &&
+				this->payloadDescriptor->hasPictureId
+			)
+			// clang-format on
+			{
+				context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
+
+				context->syncRequired = false;
+			}
+
+			// clang-format off
+			const bool isOldPacket = (
+				this->payloadDescriptor->hasPictureId &&
+				RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+					this->payloadDescriptor->pictureId,
+					context->pictureIdManager.GetMaxInput())
+			);
+			// clang-format on
+
+			if (!isOldPacket)
+			{
+				// Upgrade current spatial layer if needed.
+				if (context->GetTargetSpatialLayer() > context->GetCurrentSpatialLayer())
+				{
+					if (this->payloadDescriptor->isKeyFrame)
+					{
+						MS_DEBUG_DEV(
+						  "upgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8 ":%" PRIu8
+						  ")",
+						  context->GetCurrentSpatialLayer(),
+						  context->GetTargetSpatialLayer(),
+						  packetSpatialLayer,
+						  packetTemporalLayer);
+
+						tmpSpatialLayer  = context->GetTargetSpatialLayer();
+						tmpTemporalLayer = 0; // Just in case.
+					}
+				}
+				// Downgrade current spatial layer if needed.
+				else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
+				{
+					// In K-SVC we must wait for a keyframe.
+					if (context->IsKSvc())
+					{
+						if (this->payloadDescriptor->isKeyFrame)
+						// clang-format on
+						{
+							MS_DEBUG_DEV(
+							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+							  ":%" PRIu8 ") after keyframe (K-SVC)",
+							  context->GetCurrentSpatialLayer(),
+							  context->GetTargetSpatialLayer(),
+							  packetSpatialLayer,
+							  packetTemporalLayer);
+
+							tmpSpatialLayer  = context->GetTargetSpatialLayer();
+							tmpTemporalLayer = 0; // Just in case.
+						}
+					}
+					// In full SVC we do not need a keyframe.
+					else
+					{
+						// clang-format off
+						if (
+							packetSpatialLayer == context->GetTargetSpatialLayer() &&
+							this->payloadDescriptor->e
+						)
+						// clang-format on
+						{
+							MS_DEBUG_DEV(
+							  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+							  ":%" PRIu8 ") without keyframe (full SVC)",
+							  context->GetCurrentSpatialLayer(),
+							  context->GetTargetSpatialLayer(),
+							  packetSpatialLayer,
+							  packetTemporalLayer);
+
+							tmpSpatialLayer  = context->GetTargetSpatialLayer();
+							tmpTemporalLayer = 0; // Just in case.
+						}
+					}
+				}
+			}
+
+			// Filter spatial layers that are either
+			// * higher than current one
+			// * different than the current one when KSVC is enabled and this is not a keyframe
+			// (interframe p bit = 1)
+			const uint16_t spatialLayerForPictureId =
+			  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
+			              : tmpSpatialLayer;
+
+			// clang-format off
+			if (
+				packetSpatialLayer > spatialLayerForPictureId ||
+				(context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != spatialLayerForPictureId)
+			)
+			// clang-format on
+			{
+				return false;
+			}
+
+			// Check and handle temporal layer (unless old packet).
+			if (!isOldPacket)
+			{
+				// Upgrade current temporal layer if needed.
+				if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
+				{
+					// clang-format off
+					if (
+						packetTemporalLayer >= context->GetCurrentTemporalLayer() + 1 &&
+						(
+							context->GetCurrentTemporalLayer() == -1 ||
+							this->payloadDescriptor->switchingUpPoint
+						) &&
+						this->payloadDescriptor->b
+					)
+					// clang-format on
+					{
+						MS_DEBUG_DEV(
+						  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu8 " (packet:%" PRIu8 ":%" PRIu8
+						  ")",
+						  context->GetCurrentTemporalLayer(),
+						  packetTemporalLayer,
+						  packetSpatialLayer,
+						  packetTemporalLayer);
+
+						tmpTemporalLayer = packetTemporalLayer;
+					}
+				}
+				// Downgrade current temporal layer if needed.
+				else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
+				{
+					// clang-format off
+					if (
+						packetTemporalLayer == context->GetTargetTemporalLayer() &&
+						this->payloadDescriptor->e
+					)
+					// clang-format on
+					{
+						MS_DEBUG_DEV(
+						  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
+						  ":%" PRIu8 ")",
+						  context->GetCurrentTemporalLayer(),
+						  context->GetTargetTemporalLayer(),
+						  packetSpatialLayer,
+						  packetTemporalLayer);
+
+						tmpTemporalLayer = context->GetTargetTemporalLayer();
+					}
+				}
+			}
+
+			// Filter temporal layers higher than current one.
+			const uint16_t temporalLayerForPictureId =
+			  isOldPacket ? context->GetTemporalLayerForPictureId(this->payloadDescriptor->pictureId)
+			              : tmpTemporalLayer;
+
+			if (packetTemporalLayer > temporalLayerForPictureId)
+			{
+				return false;
+			}
+
+			// Set marker bit if needed.
+			if (packetSpatialLayer == tmpSpatialLayer && this->payloadDescriptor->e)
+			{
+				marker = true;
+			}
+
+			// Update the pictureId manager.
+			if (this->payloadDescriptor->hasPictureId)
+			{
+				uint16_t pictureId;
+
+				context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId);
+			}
+
+			// Update current spatial layer if needed.
+			if (tmpSpatialLayer != context->GetCurrentSpatialLayer())
+			{
+				context->SetCurrentSpatialLayer(tmpSpatialLayer, this->payloadDescriptor->pictureId);
+			}
+
+			// Update current temporal layer if needed.
+			if (tmpTemporalLayer != context->GetCurrentTemporalLayer())
+			{
+				context->SetCurrentTemporalLayer(tmpTemporalLayer, this->payloadDescriptor->pictureId);
+			}
+
+			return true;
+		}
 	} // namespace Codecs
 } // namespace RTC
