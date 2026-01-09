@@ -1421,6 +1421,8 @@ namespace RTC
 				}
 			}
 
+			// TODO: Remove this when using the new RTC::RTP::Packet class and instead
+			// call SetExtensions() with ExtensionsType::Auto.
 			uint8_t highestExtenId{ 0u };
 			uint8_t highestExtenLen{ 0u };
 

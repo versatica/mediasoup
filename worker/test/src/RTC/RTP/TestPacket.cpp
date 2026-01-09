@@ -1431,6 +1431,33 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
+	SECTION("packet::SetExtensions() with ExtensionsType::Auto selects best type")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		std::vector<Packet::AddedExtension> extensions;
+
+		// Can fit into One-Byte type Extensions.
+		extensions.assign({ { 1, 1, DataBuffer }, { 14, 16, DataBuffer } });
+		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->HasOneByteExtensions());
+
+		// Requires Two-Bytes type Extensions due to id > 14.
+		extensions.assign({ { 15, 2, DataBuffer } });
+		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->HasTwoBytesExtensions());
+
+		// Requires Two-Bytes type Extensions due to length 0.
+		extensions.assign({ { 1, 0, DataBuffer } });
+		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->HasTwoBytesExtensions());
+
+		// Requires Two-Bytes type Extensions due to length > 16.
+		extensions.assign({ { 1, 17, DataBuffer } });
+		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
+		REQUIRE(packet->HasTwoBytesExtensions());
+	}
+
 	SECTION("packet::SetExtensions() fails if wrong extensions are given")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };

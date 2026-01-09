@@ -271,14 +271,15 @@ namespace RTC
 			const auto payloadLength = GetPayloadLength();
 			const auto paddingLength = GetPaddingLength();
 
-			// Shift the payload.
-			std::memmove(payload - headerExtensionLength, payload, payloadLength + paddingLength);
-
 			// Update Packet length.
+			// NOTE: This throws if given length is higher than buffer length.
 			SetLength(GetLength() - headerExtensionLength);
 
 			// Unset the Header Extension flag.
 			GetFixedHeaderPointer()->extension = 0;
+
+			// Shift the payload.
+			std::memmove(payload - headerExtensionLength, payload, payloadLength + paddingLength);
 		}
 
 		void Packet::SetExtensions(ExtensionsType type, const std::vector<AddedExtension>& extensions)
@@ -293,6 +294,29 @@ namespace RTC
 
 			const auto hadHeaderExtension                 = HasHeaderExtension();
 			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
+
+			// If no explicit ExtensionType is given then select the best one based
+			// on given Extensions.
+			if (type == ExtensionsType::Auto)
+			{
+				uint8_t highestId{ 0u };
+				uint8_t highestLen{ 0u };
+
+				for (const auto& extension : extensions)
+				{
+					highestId  = std::max(extension.id, highestId);
+					highestLen = std::max(extension.len, highestLen);
+				}
+
+				type = highestId <= 14 && highestLen > 0 && highestLen <= 16 ? ExtensionsType::OneByte
+				                                                             : ExtensionsType::TwoBytes;
+
+				MS_DEBUG_DEV(
+				  "using %" PRIu8 " byte(s) extensions [highestId:%" PRIu8 ", highestLen:%" PRIu8 "]",
+				  type,
+				  highestId,
+				  highestLen);
+			}
 
 			// If One-Byte is requested and the Packet already has One-Byte Extensions,
 			// keep the Header Extension id.
@@ -389,38 +413,44 @@ namespace RTC
 
 			if (hadHeaderExtension && shift != 0)
 			{
-				// Shift the payload.
-				std::memmove(payload + shift, payload, payloadLength + paddingLength);
-
 				// Update Packet length.
+				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + shift);
 
 				// Update the Header Extension length.
 				GetHeaderExtensionPointer()->len = htons(paddedExtensionsLength / 4);
-			}
-			else if (!hadHeaderExtension)
-			{
-				// Set the Header Extension flag.
-				GetFixedHeaderPointer()->extension = 1;
 
 				// Shift the payload.
 				std::memmove(payload + shift, payload, payloadLength + paddingLength);
-
+			}
+			else if (!hadHeaderExtension)
+			{
 				// Update Packet length.
+				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + shift);
+
+				// Set the Header Extension flag.
+				GetFixedHeaderPointer()->extension = 1;
+
+				auto* headerExtension = GetHeaderExtensionPointer();
+
+				// Shift the payload.
+				// NOTE: We need to move payload before code below, otherwise we would
+				// override written bytes later.
+				std::memmove(payload + shift, payload, payloadLength + paddingLength);
 
 				// Set the Header Extension id.
 				if (type == ExtensionsType::OneByte)
 				{
-					GetHeaderExtensionPointer()->id = htons(0xBEDE);
+					headerExtension->id = htons(0xBEDE);
 				}
 				else if (type == ExtensionsType::TwoBytes)
 				{
-					GetHeaderExtensionPointer()->id = htons(0b0001000000000000);
+					headerExtension->id = htons(0b0001000000000000);
 				}
 
 				// Set the Header Extension length.
-				GetHeaderExtensionPointer()->len = htons(paddedExtensionsLength / 4);
+				headerExtension->len = htons(paddedExtensionsLength / 4);
 			}
 
 			const uint8_t* extensionsStart = GetHeaderExtensionValue();
@@ -781,6 +811,7 @@ namespace RTC
 			if (expand)
 			{
 				// Update Packet length.
+				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() + numBytes);
 
 				std::memmove(
@@ -789,6 +820,7 @@ namespace RTC
 			else
 			{
 				// Update Packet length.
+				// NOTE: This throws if given length is higher than buffer length.
 				SetLength(GetLength() - numBytes);
 
 				std::memmove(

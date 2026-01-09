@@ -99,6 +99,11 @@ namespace RTC
 			 */
 			enum class ExtensionsType : uint8_t
 			{
+				/**
+				 * Auto means that One-Byte or Two-Bytes is choosen based on given
+				 * Extensions.
+				 */
+				Auto     = 0,
 				OneByte  = 1,
 				TwoBytes = 2
 			};

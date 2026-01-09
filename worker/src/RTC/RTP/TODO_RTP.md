@@ -1,9 +1,5 @@
 # TODO new RTP Packet class
 
-- Before any `std::memmove()` check if there is space, otherwise throw.
-
-- Extensions: Make `SetExtensions()` accept a type "AUTO".
-
 - Must override `Serialize()` to take care of DD pointers (if any).
 
 - Same in `Clone()`.
