@@ -591,6 +591,27 @@ namespace RTC
 			}
 
 			/**
+			 * Encode the Packet into a RTX Packet.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If there is no space for the new computed
+			 *   payload.
+			 */
+			void RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq);
+
+			/**
+			 * Decode the RTX Packet into a regular RTP Packet.
+			 *
+			 * @return `true` if RTX decoding iwas done.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 */
+			bool RtxDecode(uint8_t payloadType, uint32_t ssrc);
+
+			/**
 			 * Whether this Packet has padding.
 			 */
 			bool HasPadding() const

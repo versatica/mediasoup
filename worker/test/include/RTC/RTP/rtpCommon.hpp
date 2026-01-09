@@ -53,7 +53,7 @@ namespace RTC
 		std::memcpy(originalBuffer, buffer, bufferLength);                                                                  \
 		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                                               \
 		REQUIRE(packet);                                                                                                    \
-		REQUIRE(packet->Validate() == true);                                                                                \
+		REQUIRE(packet->Validate());                                                                                        \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                                            \
 		REQUIRE(packet->GetBuffer() == buffer);                                                                             \
 		REQUIRE(packet->GetBufferLength() != 0);                                                                            \
@@ -111,8 +111,11 @@ namespace RTC
 			  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupError);                            \
 			REQUIRE_THROWS_AS(packet->RemoveHeaderExtension(), MediaSoupError);                                               \
 			REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, 0), MediaSoupError);                                             \
+			REQUIRE_THROWS_AS(packet->RemovePayload(), MediaSoupError);                                                       \
 			REQUIRE_THROWS_AS(packet->ShiftPayload(2, 1), MediaSoupError);                                                    \
 			REQUIRE_THROWS_AS(packet->UnshiftPayload(2, 1), MediaSoupError);                                                  \
+			REQUIRE_THROWS_AS(packet->RtxEncode(0, 0, 0), MediaSoupError);                                                    \
+			REQUIRE_THROWS_AS(packet->RtxDecode(0, 0), MediaSoupError);                                                       \
 			REQUIRE_THROWS_AS(packet->SetPaddingLength(0), MediaSoupError);                                                   \
 			REQUIRE_THROWS_AS(packet->PadTo4Bytes(), MediaSoupError);                                                         \
 		}                                                                                                                   \
@@ -153,7 +156,7 @@ namespace RTC
 		REQUIRE_THROWS_AS(                                                                                                  \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);                                 \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                                          \
-		REQUIRE(packet->Validate() == true);                                                                                \
+		REQUIRE(packet->Validate());                                                                                        \
 		std::free(originalBuffer);                                                                                          \
 	} while (false)
 

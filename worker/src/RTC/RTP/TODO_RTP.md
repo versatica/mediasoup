@@ -8,8 +8,6 @@
 
 - Specific Extensions in `Dump()`.
 
-- RTX and `ShiftPayload()` stuff.
-
 - Spatial/temporal layers and `IsKeyframe()` stuff.
 
 - DD stuff.

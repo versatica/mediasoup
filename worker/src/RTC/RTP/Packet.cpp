@@ -520,6 +520,81 @@ namespace RTC
 			std::memmove(GetPayloadPointer(), payload, payloadLength);
 		}
 
+		void Packet::RtxEncode(uint8_t payloadType, uint32_t ssrc, uint16_t seq)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			// Remove padding (if any).
+			if (HasPadding())
+			{
+				// NOTE: This must be called before SetLength() method below.
+				SetPaddingLength(0);
+			}
+
+			// Update Packet length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(GetLength() + 2);
+
+			// Rewrite the payload type.
+			SetPayloadType(payloadType);
+
+			// Rewrite the SSRC.
+			SetSsrc(ssrc);
+
+			auto* payload            = GetPayloadPointer();
+			const auto payloadLength = GetPayloadLength();
+
+			// Write the original sequence number at the begining of the payload.
+			std::memmove(payload + 2, payload, payloadLength);
+			Utils::Byte::Set2Bytes(payload, 0, GetSequenceNumber());
+
+			// Rewrite the sequence number.
+			SetSequenceNumber(seq);
+		}
+
+		bool Packet::RtxDecode(uint8_t payloadType, uint32_t ssrc)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			auto* payload            = GetPayloadPointer();
+			const auto payloadLength = GetPayloadLength();
+
+			// NOTE: libwebrtc sends some RTX packets with no payload when the stream
+			// is started. Just ignore them.
+			if (payloadLength < 2)
+			{
+				return false;
+			}
+
+			// Rewrite the payload type.
+			SetPayloadType(payloadType);
+
+			// Rewrite the sequence number.
+			SetSequenceNumber(Utils::Byte::Get2Bytes(payload, 0));
+
+			// Rewrite the SSRC.
+			SetSsrc(ssrc);
+
+			// Shift the payload to its original place.
+			std::memmove(payload, payload + 2, payloadLength - 2);
+
+			// Remove padding (if any).
+			if (HasPadding())
+			{
+				// NOTE: This must be called before SetLength() method below.
+				SetPaddingLength(0);
+			}
+
+			// Update Packet length.
+			SetLength(GetLength() - 2);
+
+			return true;
+		}
+
 		void Packet::SetPaddingLength(uint8_t paddingLength)
 		{
 			MS_TRACE();
@@ -811,7 +886,10 @@ namespace RTC
 			}
 
 			// Remove padding (if any).
-			SetPaddingLength(0);
+			if (HasPadding())
+			{
+				SetPaddingLength(0);
+			}
 
 			if (expand)
 			{

@@ -1734,6 +1734,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		};
 		// clang-format on
 
+		REQUIRE(packet->Validate());
+
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
 		  /*buffer*/ FactoryBuffer,
@@ -1792,6 +1794,8 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		};
 		// clang-format on
 
+		REQUIRE(packet->Validate());
+
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
 		  /*buffer*/ FactoryBuffer,
@@ -1832,10 +1836,6 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  helpers::AreBuffersEqual(
 		    packet->GetPayload(), packet->GetPayloadLength(), unshiftedPayload, 8) == true);
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
-
-		// Reset the payload and padding.
-		packet->SetPayload(payload, 10);
-		packet->PadTo4Bytes();
 	}
 
 	SECTION("packet::ShiftPayload() and packet::UnshiftPayload() fail if wrong values are given")
@@ -1863,5 +1863,110 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE_THROWS_AS(
 		  packet->ShiftPayload(/*payloadOffset*/ 2, /*numBytes*/ packet->GetBufferLength()),
 		  MediaSoupTypeError);
+	}
+
+	SECTION("packet::RtxEncode() and packet::RtxDecode() succeed")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		packet->SetPayloadType(100);
+		packet->SetSequenceNumber(12345);
+		packet->SetTimestamp(987654321);
+		packet->SetSsrc(1234567890);
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x55, 0x66, 0x77, 0x88,
+			0x99, 0xAA
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 10 + 2,
+		  /*frozen*/ false,
+		  /*payloadType*/ 100,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 12345,
+		  /*timestamp*/ 987654321,
+		  /*ssrc*/ 1234567890,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 10,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 2);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		/* RTX encode. */
+
+		// This method removes padding.
+		packet->RtxEncode(/*payloadType*/ 111, /*ssrc*/ 999999, /*seq*/ 666);
+
+		REQUIRE(packet->Validate());
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 10 + 2,
+		  /*frozen*/ false,
+		  /*payloadType*/ 111,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 666,
+		  /*timestamp*/ 987654321,
+		  /*ssrc*/ 999999,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 12,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		/* RTX decode. */
+
+		// This method removes padding.
+		packet->RtxDecode(/*payloadType*/ 100, /*ssrc*/ 1234567890);
+
+		REQUIRE(packet->Validate());
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 10,
+		  /*frozen*/ false,
+		  /*payloadType*/ 100,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 12345,
+		  /*timestamp*/ 987654321,
+		  /*ssrc*/ 1234567890,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 10,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->IsPaddedTo4Bytes() == false);
 	}
 }
