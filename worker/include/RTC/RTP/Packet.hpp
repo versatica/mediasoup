@@ -548,6 +548,32 @@ namespace RTC
 			void SetPayload(const uint8_t* payload, size_t payloadLength);
 
 			/**
+			 * Shift the content of the payload `numBytes` bytes after `payloadOffset`.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If wrong values are given.
+			 */
+			void ShiftPayload(size_t payloadOffset, size_t numBytes)
+			{
+				ShiftPayload(payloadOffset, numBytes, /*expand*/ true);
+			}
+
+			/**
+			 * Unshift the content of the payload `numBytes` bytes after `payloadOffset`.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If wrong values are given.
+			 */
+			void UnshiftPayload(size_t payloadOffset, size_t numBytes)
+			{
+				ShiftPayload(payloadOffset, numBytes, /*expand*/ false);
+			}
+
+			/**
 			 * Whether this Packet has padding.
 			 */
 			bool HasPadding() const
@@ -691,6 +717,17 @@ namespace RTC
 			 * @see RFC 8285.
 			 */
 			bool ParseExtensions();
+
+			/**
+			 * Shift or unshift the content of the payload `numBytes` bytes after
+			 * `payloadOffset`.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If wrong values are given.
+			 */
+			void ShiftPayload(size_t payloadOffset, size_t numBytes, bool expand);
 
 		private:
 			// Array of One Byte Extensions. Index is the id - 1 of the Extension,

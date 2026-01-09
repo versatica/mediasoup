@@ -10,6 +10,8 @@ using namespace RTC::RTP;
 // NOLINTNEXTLINE (clang-tidy readability-function-size)
 SCENARIO("RTP Packet", "[rtp][serializable]")
 {
+	ResetBuffers();
+
 	SECTION("Packet::Parse() packet1.raw succeeds")
 	{
 		uint8_t buffer[65536];
@@ -1531,5 +1533,239 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), DataBuffer, 10) ==
 		  true);
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+	}
+
+	SECTION("packet::ShiftPayload() and packet::UnshiftPayload() succeed")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		packet->SetSsrc(12344321);
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x55, 0x66, 0x77, 0x88,
+			0x99, 0xAA
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		std::vector<Packet::AddedExtension> extensions;
+
+		// One-Byte Extensions:
+		// - Header Extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
+		// - Header Extension length: 4 + 12 = 16
+		//
+		// clang-format off
+		uint8_t extension1[] =
+		{
+			0x12
+		};
+		uint8_t extension2[] =
+		{
+			0x34, 0x56
+		};
+		uint8_t extension3[] =
+		{
+			0x78, 0x9A, 0xBC
+		};
+		// clang-format on
+
+		extensions.assign({ { 1, 1, extension1 }, { 2, 2, extension2 }, { 3, 3, extension3 } });
+
+		packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions);
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 16 + 10 + 2,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 12344321,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 12,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 10,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 2);
+
+		const uint8_t* extensionValue;
+		uint8_t extensionLen;
+
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension1, 1) == true);
+		REQUIRE(extensionLen == 1);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension2, 2) == true);
+		REQUIRE(extensionLen == 2);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension3, 3) == true);
+		REQUIRE(extensionLen == 3);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), payload, 10) == true);
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		/* Shift payload. */
+
+		// This method removes padding.
+		packet->ShiftPayload(/*payloadOffset*/ 2, /*numBytes*/ 1);
+
+		// Fill the new byte in the payload with 0XFF.
+		packet->GetPayload()[2] = 0xFF;
+
+		// clang-format off
+		uint8_t shiftedPayload[] =
+		{
+			0x11, 0x22, 0xFF, 0x33,
+			0x44,	0x55, 0x66, 0x77,
+			0x88, 0x99, 0xAA
+		};
+		// clang-format on
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 16 + 10 + 1,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 12344321,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 12,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 11,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension1, 1) == true);
+		REQUIRE(extensionLen == 1);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension2, 2) == true);
+		REQUIRE(extensionLen == 2);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension3, 3) == true);
+		REQUIRE(extensionLen == 3);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    packet->GetPayload(), packet->GetPayloadLength(), shiftedPayload, 11) == true);
+		REQUIRE(packet->IsPaddedTo4Bytes() == false);
+
+		// Reset the payload and padding.
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		/* Unshift payload. */
+
+		// This method removes padding.
+		packet->UnshiftPayload(/*payloadOffset*/ 4, /*numBytes*/ 2);
+
+		// clang-format off
+		uint8_t unshiftedPayload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x77, 0x88, 0x99, 0xAA
+		};
+		// clang-format on
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 16 + 10 - 2,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 12344321,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ true,
+		  /*headerExtensionValueLength*/ 12,
+		  /*hasOneByteExtensions*/ true,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 8,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		REQUIRE(packet->HasExtension(1) == true);
+		extensionValue = packet->GetExtension(1, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension1, 1) == true);
+		REQUIRE(extensionLen == 1);
+
+		REQUIRE(packet->HasExtension(2) == true);
+		extensionValue = packet->GetExtension(2, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension2, 2) == true);
+		REQUIRE(extensionLen == 2);
+
+		REQUIRE(packet->HasExtension(3) == true);
+		extensionValue = packet->GetExtension(3, extensionLen);
+		REQUIRE(helpers::AreBuffersEqual(extensionValue, extensionLen, extension3, 3) == true);
+		REQUIRE(extensionLen == 3);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    packet->GetPayload(), packet->GetPayloadLength(), unshiftedPayload, 8) == true);
+		REQUIRE(packet->IsPaddedTo4Bytes() == true);
+
+		// Reset the payload and padding.
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+	}
+
+	SECTION("packet::ShiftPayload() and packet::UnshiftPayload() fail if wrong values are given")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x55, 0x66, 0x77, 0x88,
+			0x99, 0xAA
+		};
+		// clang-format on
+
+		packet->SetPayload(payload, 10);
+
+		// payloadOffset higger or equal than payload length.
+		REQUIRE_THROWS_AS(packet->ShiftPayload(/*payloadOffset*/ 10, /*numBytes*/ 2), MediaSoupTypeError);
+
+		// numBytes too big.
+		REQUIRE_THROWS_AS(packet->UnshiftPayload(/*payloadOffset*/ 2, /*numBytes*/ 9), MediaSoupTypeError);
+
+		// New computed payload length too big.
+		REQUIRE_THROWS_AS(
+		  packet->ShiftPayload(/*payloadOffset*/ 2, /*numBytes*/ packet->GetBufferLength()),
+		  MediaSoupTypeError);
 	}
 }

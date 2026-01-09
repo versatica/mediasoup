@@ -750,5 +750,52 @@ namespace RTC
 				return true;
 			}
 		}
+
+		void Packet::ShiftPayload(size_t payloadOffset, size_t numBytes, bool expand)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			if (numBytes == 0)
+			{
+				return;
+			}
+
+			auto* payload            = GetPayloadPointer();
+			const auto payloadLength = GetPayloadLength();
+
+			if (payloadOffset >= payloadLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "payloadOffset (%zu) is bigger than payload length (%zu)", payloadOffset, payloadLength);
+			}
+			else if (!expand && numBytes > (payloadLength - payloadOffset))
+			{
+				MS_THROW_TYPE_ERROR("numBytes (%zu) too bigger", numBytes);
+			}
+
+			// Remove padding (if any).
+			SetPaddingLength(0);
+
+			if (expand)
+			{
+				// Update Packet length.
+				SetLength(GetLength() + numBytes);
+
+				std::memmove(
+				  payload + payloadOffset + numBytes, payload + payloadOffset, payloadLength - payloadOffset);
+			}
+			else
+			{
+				// Update Packet length.
+				SetLength(GetLength() - numBytes);
+
+				std::memmove(
+				  payload + payloadOffset,
+				  payload + payloadOffset + numBytes,
+				  payloadLength - payloadOffset - numBytes);
+			}
+		}
 	} // namespace RTP
 } // namespace RTC
