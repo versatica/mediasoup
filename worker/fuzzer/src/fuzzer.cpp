@@ -24,6 +24,7 @@
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
+#include "RTC/RTP/FuzzerPacket.hpp"
 #include "RTC/SCTP/association/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
@@ -73,6 +74,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzRtp)
 	{
 		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Packet::Fuzz(data, len);
 		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
 		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
 		Fuzzer::RTC::SeqManager::Fuzz(data, len);

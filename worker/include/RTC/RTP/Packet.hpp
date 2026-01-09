@@ -520,7 +520,7 @@ namespace RTC
 			 */
 			uint8_t* GetPayload() const
 			{
-				size_t len;
+				thread_local size_t len;
 
 				return GetPayload(len);
 			}
