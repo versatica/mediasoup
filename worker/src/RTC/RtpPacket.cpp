@@ -169,8 +169,8 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 		// Initialize logger.
 		this->logger.timestamp        = DepLibUV::GetTimeMs();
-		this->logger.recvRtpTimestamp = this->GetTimestamp();
-		this->logger.recvSeqNumber    = this->GetSequenceNumber();
+		this->logger.recvRtpTimestamp = GetTimestamp();
+		this->logger.recvSeqNumber    = GetSequenceNumber();
 #endif
 	}
 

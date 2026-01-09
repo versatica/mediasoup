@@ -4,7 +4,11 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
+#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Serializable.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "RTC/RtcLogger.hpp"
+#endif
 #include <flatbuffers/flatbuffers.h>
 #include <array>
 #include <map>
@@ -20,7 +24,7 @@ namespace RTC
 		 * @see RFC 3550.
 		 */
 
-		class Packet : public Serializable
+		class Packet : public Serializable, public Codecs::DependencyDescriptor::Listener
 		{
 		public:
 			/**
@@ -766,6 +770,15 @@ namespace RTC
 			 * @throw MediaSoupTypeError - If wrong values are given.
 			 */
 			void ShiftPayload(size_t payloadOffset, size_t numBytes, bool expand);
+
+			/* Pure virtual methods inherited from RTC::Codecs::DependencyDescriptor::Listener. */
+		public:
+			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
+
+#ifdef MS_RTC_LOGGER_RTP
+		public:
+			RtcLogger::RtpPacket logger;
+#endif
 
 		private:
 			// Array of One Byte Extensions. Index is the id - 1 of the Extension,

@@ -716,17 +716,17 @@ namespace RTC
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
-#ifdef MS_RTC_LOGGER_RTP
-	public:
-		RtcLogger::RtpPacket logger;
-#endif
-
 	private:
 		void ParseExtensions();
 
 		/* Pure virtual methods inherited from RTC::Codecs::DependencyDescriptor::Listener. */
 	public:
 		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
+
+#ifdef MS_RTC_LOGGER_RTP
+	public:
+		RtcLogger::RtpPacket logger;
+#endif
 
 	private:
 		Header* header{ nullptr };

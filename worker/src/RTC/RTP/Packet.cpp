@@ -2,6 +2,9 @@
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/Packet.hpp"
+#ifdef MS_RTC_LOGGER_RTP
+#include "DepLibUV.hpp"
+#endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include <cstring>  // std::memmove()
@@ -92,6 +95,13 @@ namespace RTC
 			MS_TRACE();
 
 			SetLength(FixedHeaderMinSize);
+
+#ifdef MS_RTC_LOGGER_RTP
+			// Initialize logger.
+			this->logger.timestamp        = DepLibUV::GetTimeMs();
+			this->logger.recvRtpTimestamp = GetTimestamp();
+			this->logger.recvSeqNumber    = GetSequenceNumber();
+#endif
 		}
 
 		Packet::~Packet()
@@ -911,6 +921,16 @@ namespace RTC
 				  payload + payloadOffset + numBytes,
 				  payloadLength - payloadOffset - numBytes);
 			}
+		}
+
+		void Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			MS_DUMP("TODO");
+			// UpdateDependencyDescriptor(data, size_t len);
 		}
 	} // namespace RTP
 } // namespace RTC

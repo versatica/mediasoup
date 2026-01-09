@@ -1,17 +1,15 @@
 # TODO new RTP Packet class
 
-- Must override `Serialize()` to take care of DD pointers (if any).
-
-- Same in `Clone()`.
-
 - Specific Extensions getters/setters.
 
-- Specific Extensions in `Dump()`.
+- `payloadDescriptorHandler` stuff.
 
 - Spatial/temporal layers and `IsKeyframe()` stuff.
 
-- DD stuff.
+- Must override `Serialize()` to take care of `payloadDescriptorHandler` pointer and so on.
+
+- Same in `Clone()`.
+
+- `Dump()`: Print specific Extensions, spatial/temporal layers, `IsKeyframe()`, `payloadDescriptorHandler` stuff, etc.
 
 - `GetNextMediasoupPacketId()` static method.
-
-- `MS_RTC_LOGGER_RTP` and `this->logger` stuff.
