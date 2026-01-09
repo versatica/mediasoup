@@ -1841,7 +1841,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		packet->SetPayload(payload, 10);
 		packet->PadTo4Bytes();
 
-		/* Shitf and unshift to undo. */
+		/* Shitf and unshift (undo). */
 
 		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ 5);
 		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ -5);

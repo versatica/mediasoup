@@ -358,7 +358,7 @@ DepLibUring::LibUring::LibUring()
 			{
 				MS_WARN_TAG(
 				  info,
-				  "io_uring_register_buffers() failed due to low RLIMIT_MEMLOCK (soft:%llu, hard:%llu), disabling zero copy: %s",
+				  "io_uring_register_buffers() failed due to low RLIMIT_MEMLOCK (soft:%lu, hard:%lu), disabling zero copy: %s",
 				  l.rlim_cur,
 				  l.rlim_max,
 				  std::strerror(error));
