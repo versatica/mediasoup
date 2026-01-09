@@ -500,6 +500,11 @@ namespace RTC
 
 			AssertNotFrozen();
 
+			if (!payload && payloadLength > 0)
+			{
+				MS_THROW_TYPE_ERROR("invalid payloadLength %zu without payload", payloadLength);
+			}
+
 			auto previousLength        = GetLength();
 			auto previousPayloadLength = GetPayloadLength();
 			auto previousPaddingLength = GetPaddingLength();

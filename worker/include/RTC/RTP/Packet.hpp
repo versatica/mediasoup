@@ -548,9 +548,21 @@ namespace RTC
 			 * - This method removes existing padding (if any).
 			 *
 			 * @throw MediaSoupTypeError - If given `payloadLength` is higher than
-			 *   available length for the payload.
+			 *   available length for the payload of if `nullptr` is given as
+			 *   `payload` with `payloadLength` higher than 0.
 			 */
 			void SetPayload(const uint8_t* payload, size_t payloadLength);
+
+			/**
+			 * Remove the payload.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 */
+			void RemovePayload()
+			{
+				SetPayload(nullptr, 0);
+			}
 
 			/**
 			 * Shift the content of the payload `numBytes` bytes after `payloadOffset`.

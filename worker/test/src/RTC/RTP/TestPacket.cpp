@@ -1431,6 +1431,75 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
+	SECTION("packet::SetPayload() and packet::RemovePayload() succeed")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x55, 0x66, 0x77, 0x88,
+			0x99, 0xAA
+		};
+		// clang-format on
+
+		/* Set payload. */
+
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 10 + 2,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 0,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 10,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 2);
+
+		/* Remove payload. */
+
+		// This method removes padding.
+		packet->RemovePayload();
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 0,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLength*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		// Invalid arguments.
+		REQUIRE_THROWS_AS(packet->SetPayload(nullptr, 2), MediaSoupTypeError);
+	}
+
 	SECTION("packet::SetExtensions() with ExtensionsType::Auto selects best type")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
