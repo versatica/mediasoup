@@ -1845,6 +1845,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ 5);
 		packet->ShiftPayload(/*payloadOffset*/ 3, /*delta*/ -5);
+
 		REQUIRE(
 		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), payload, 10) == true);
 	}
