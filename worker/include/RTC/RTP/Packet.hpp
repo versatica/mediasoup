@@ -170,9 +170,18 @@ namespace RTC
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
-			 * Creates a RTP Packet.
+			 * Create a RTP Packet.
 			 */
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
+
+			/**
+			 * Generate value for "urn:mediasoup:params:rtp-hdrext:packet-id"
+			 * mediasoup custom Extension.
+			 */
+			static uint32_t GetNextMediasoupPacketId();
+
+		private:
+			thread_local static uint32_t nextMediasoupPacketId;
 
 		private:
 			/**

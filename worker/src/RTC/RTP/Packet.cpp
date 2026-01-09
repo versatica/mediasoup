@@ -15,6 +15,11 @@ namespace RTC
 {
 	namespace RTP
 	{
+		/* Class variables. */
+
+		thread_local uint32_t Packet::nextMediasoupPacketId{ Utils::Crypto::GetRandomUInt(
+			0u, std::numeric_limits<uint32_t>::max() / 2) };
+
 		/* Class methods. */
 
 		bool Packet::IsRtp(const uint8_t* buffer, size_t bufferLength)
@@ -86,6 +91,13 @@ namespace RTC
 			// minimum Packet length.
 
 			return packet;
+		}
+
+		uint32_t Packet::GetNextMediasoupPacketId()
+		{
+			MS_TRACE();
+
+			return Packet::nextMediasoupPacketId++;
 		}
 
 		/* Instance methods. */

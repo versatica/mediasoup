@@ -11,5 +11,3 @@
 - Same in `Clone()`.
 
 - `Dump()`: Print specific Extensions, spatial/temporal layers, `IsKeyframe()`, `payloadDescriptorHandler` stuff, etc.
-
-- `GetNextMediasoupPacketId()` static method.
