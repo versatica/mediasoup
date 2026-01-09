@@ -468,16 +468,27 @@ namespace RTC
 			switch (rotationValue)
 			{
 				case 3:
+				{
 					rotation = 270;
 					break;
+				}
+
 				case 2:
+				{
 					rotation = 180;
 					break;
+				}
+
 				case 1:
+				{
 					rotation = 90;
 					break;
+				}
+
 				default:
+				{
 					rotation = 0;
+				}
 			}
 
 			return true;
