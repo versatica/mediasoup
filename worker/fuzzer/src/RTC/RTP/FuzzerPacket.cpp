@@ -25,19 +25,19 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 
 	packet->Serialize(buffer.get(), len + 512);
 
-	uint8_t extenLen;
-	bool voice;
-	uint8_t volume;
-	bool camera;
-	bool flip;
-	uint16_t rotation;
-	uint32_t absSendTime;
-	uint16_t playoutDelayMinDelay;
-	uint16_t playoutDelayMaxDelay;
-	uint16_t wideSeqNumber;
-	std::string mid;
-	std::string rid;
 	std::vector<::RTC::RTP::Packet::AddedExtension> extensions;
+	uint8_t extenLen;
+	// bool voice;
+	// uint8_t volume;
+	// bool camera;
+	// bool flip;
+	// uint16_t rotation;
+	// uint32_t absSendTime;
+	// uint16_t playoutDelayMinDelay;
+	// uint16_t playoutDelayMaxDelay;
+	// uint16_t wideSeqNumber;
+	// std::string mid;
+	// std::string rid;
 
 	packet->GetBuffer();
 	packet->GetBufferLength();

@@ -631,6 +631,7 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/Codecs/FuzzerH264.cpp',
   'fuzzer/src/RTC/Codecs/FuzzerDependencyDescriptor.cpp',
   'fuzzer/src/RTC/Codecs/FuzzerAV1.cpp',
+  'fuzzer/src/RTC/RTP/FuzzerPacket.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerBye.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerFeedbackPs.cpp',
   'fuzzer/src/RTC/RTCP/FuzzerFeedbackPsAfb.cpp',
