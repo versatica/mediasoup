@@ -164,8 +164,8 @@ namespace RTC
 						auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
 
 						extIds.push_back(
-						  "{id:" + std::to_string(extension->id) + ", len:" + std::to_string(extension->len) +
-						  "}");
+						  "{id:" + std::to_string(extension->id) +
+						  ", len:" + std::to_string(extension->len + 1) + "}");
 					}
 				}
 				else
