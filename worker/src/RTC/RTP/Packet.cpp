@@ -212,7 +212,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  mid: extId:%" PRIu8 ", value:'%s'",
+						  "  mid: id:%" PRIu8 ", value:'%s'",
 						  this->headerExtensionIds.mid,
 						  mid.c_str());
 					}
@@ -225,7 +225,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  rid: extId:%" PRIu8 ", value:'%s'",
+						  "  rid: id:%" PRIu8 ", value:'%s'",
 						  this->headerExtensionIds.rid,
 						  rid.c_str());
 					}
@@ -238,7 +238,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  rrid: extId:%" PRIu8 ", value:'%s'",
+						  "  rrid: id:%" PRIu8 ", value:'%s'",
 						  this->headerExtensionIds.rrid,
 						  rrid.c_str());
 					}
@@ -246,7 +246,7 @@ namespace RTC
 
 				{
 					MS_DUMP_CLEAN(
-					  indentation + 1, "  absSendTime: extId:%" PRIu8, this->headerExtensionIds.absSendTime);
+					  indentation + 1, "  absSendTime: id:%" PRIu8, this->headerExtensionIds.absSendTime);
 				}
 
 				{
@@ -256,7 +256,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  transportWideCc01: extId:%" PRIu8 ", value:%" PRIu16,
+						  "  transportWideCc01: id:%" PRIu8 ", value:%" PRIu16,
 						  this->headerExtensionIds.transportWideCc01,
 						  wideSeqNumber);
 					}
@@ -270,7 +270,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  ssrcAudioLevel: extId:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
+						  "  ssrcAudioLevel: id:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
 						  this->headerExtensionIds.ssrcAudioLevel,
 						  volume,
 						  voice ? "true" : "false");
@@ -286,7 +286,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  dependencyDescriptor: extId:%" PRIu8 ", length:%" PRIu8,
+						  "  dependencyDescriptor: id:%" PRIu8 ", length:%" PRIu8,
 						  this->headerExtensionIds.dependencyDescriptor,
 						  extenLen);
 					}
@@ -301,7 +301,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  videoOrientation: extId:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
+						  "  videoOrientation: id:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
 						  this->headerExtensionIds.videoOrientation,
 						  camera ? "true" : "false",
 						  flip ? "true" : "false",
@@ -317,7 +317,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  absCaptureTime: extId:%" PRIu8 ", absCaptureTimestamp:%" PRIu64
+						  "  absCaptureTime: id:%" PRIu8 ", absCaptureTimestamp:%" PRIu64
 						  ", estimatedCaptureClockOffset:%" PRId64,
 						  this->headerExtensionIds.absCaptureTime,
 						  absCaptureTimestamp,
@@ -333,7 +333,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation + 1,
-						  "  playoutDelay: extId:%" PRIu8 ", minDelay:%" PRIu16 ", maxDelay:%" PRIu16,
+						  "  playoutDelay: id:%" PRIu8 ", minDelay:%" PRIu16 ", maxDelay:%" PRIu16,
 						  this->headerExtensionIds.playoutDelay,
 						  minDelay,
 						  maxDelay);
@@ -347,7 +347,7 @@ namespace RTC
 					{
 						MS_DUMP_CLEAN(
 						  indentation,
-						  "  mediasoupPacketId: extId:%" PRIu8 ", mediasoupPacketId:%" PRIu32,
+						  "  mediasoupPacketId: id:%" PRIu8 ", mediasoupPacketId:%" PRIu32,
 						  this->headerExtensionIds.mediasoupPacketId,
 						  mediasoupPacketId);
 					}
