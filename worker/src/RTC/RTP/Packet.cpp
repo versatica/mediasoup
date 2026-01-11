@@ -203,7 +203,7 @@ namespace RTC
 					  extIdsStream.str().c_str());
 				}
 
-				MS_DUMP_CLEAN(indentation, "<Extensions>");
+				MS_DUMP_CLEAN(indentation + 1, "<Extensions>");
 
 				{
 					std::string mid;
@@ -353,7 +353,7 @@ namespace RTC
 					}
 				}
 
-				MS_DUMP_CLEAN(indentation, "</Extensions>");
+				MS_DUMP_CLEAN(indentation + 1, "</Extensions>");
 			}
 
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
