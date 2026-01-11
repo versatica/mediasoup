@@ -5,6 +5,8 @@
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/Serializable.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -139,8 +141,10 @@ namespace RTC
 			 */
 			struct AddedExtension
 			{
-				AddedExtension(uint8_t id, uint8_t len, uint8_t* value) : id(id), len(len), value(value) {};
+				AddedExtension(RTC::RtpHeaderExtensionUri::Type type, uint8_t id, uint8_t len, uint8_t* value)
+				  : type(type), id(id), len(len), value(value) {};
 
+				RTC::RtpHeaderExtensionUri::Type type;
 				uint8_t id;
 				uint8_t len;
 				uint8_t* value;
@@ -837,6 +841,8 @@ namespace RTC
 			// each entry is the offset (in bytes) from the beginning of the Header
 			// Extension value to the beginning of the Extension.
 			std::map<uint8_t, ssize_t> twoBytesExtensions;
+			// Extension ids.
+			RtpHeaderExtensionIds rtpHeaderExtensionIds{};
 			// Codec related.
 			std::shared_ptr<RTC::Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 		};

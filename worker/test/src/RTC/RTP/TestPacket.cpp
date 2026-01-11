@@ -2,6 +2,7 @@
 #include "testHelpers.hpp" // IWYU pragma: export in worker/test/include/
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
+#include "RTC/RtpDictionaries.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
@@ -1084,16 +1085,19 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		DataBuffer[5] = 0xCC;
 
 		extensions.emplace_back(
+		  /*type*/ RTC::RtpHeaderExtensionUri::Type::MID,
 		  /*id*/ 1,
 		  /*len*/ 1,
 		  /*value*/ DataBuffer + 0);
 
 		extensions.emplace_back(
+		  /*type*/ RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID,
 		  /*id*/ 2,
 		  /*len*/ 2,
 		  /*value*/ DataBuffer + 1);
 
 		extensions.emplace_back(
+		  /*type*/ RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID,
 		  /*id*/ 14,
 		  /*len*/ 3,
 		  /*value*/ DataBuffer + 3);
@@ -1431,75 +1435,6 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
-	SECTION("packet::SetPayload() and packet::RemovePayload() succeed")
-	{
-		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
-
-		// clang-format off
-		uint8_t payload[] =
-		{
-			0x11, 0x22, 0x33, 0x44,
-			0x55, 0x66, 0x77, 0x88,
-			0x99, 0xAA
-		};
-		// clang-format on
-
-		/* Set payload. */
-
-		packet->SetPayload(payload, 10);
-		packet->PadTo4Bytes();
-
-		CHECK_RTP_PACKET(
-		  /*packet*/ packet.get(),
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
-		  /*length*/ Packet::FixedHeaderMinSize + 10 + 2,
-		  /*frozen*/ false,
-		  /*payloadType*/ 0,
-		  /*hasMarker*/ false,
-		  /*seqNumber*/ 0,
-		  /*timestamp*/ 0,
-		  /*ssrc*/ 0,
-		  /*hasCsrcs*/ false,
-		  /*hasHeaderExtension*/ false,
-		  /*headerExtensionValueLength*/ 0,
-		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
-		  /*hasPayload*/ true,
-		  /*payloadLength*/ 10,
-		  /*hasPadding*/ true,
-		  /*paddingLength*/ 2);
-
-		/* Remove payload. */
-
-		// This method removes padding.
-		packet->RemovePayload();
-
-		CHECK_RTP_PACKET(
-		  /*packet*/ packet.get(),
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
-		  /*length*/ Packet::FixedHeaderMinSize,
-		  /*frozen*/ false,
-		  /*payloadType*/ 0,
-		  /*hasMarker*/ false,
-		  /*seqNumber*/ 0,
-		  /*timestamp*/ 0,
-		  /*ssrc*/ 0,
-		  /*hasCsrcs*/ false,
-		  /*hasHeaderExtension*/ false,
-		  /*headerExtensionValueLength*/ 0,
-		  /*hasOneByteExtensions*/ false,
-		  /*hasTwoBytesExtensions*/ false,
-		  /*hasPayload*/ false,
-		  /*payloadLength*/ 0,
-		  /*hasPadding*/ false,
-		  /*paddingLength*/ 0);
-
-		// Invalid arguments.
-		REQUIRE_THROWS_AS(packet->SetPayload(nullptr, 2), MediaSoupTypeError);
-	}
-
 	SECTION("packet::SetExtensions() with ExtensionsType::Auto selects best type")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
@@ -1507,22 +1442,25 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		std::vector<Packet::AddedExtension> extensions;
 
 		// Can fit into One-Byte type Extensions.
-		extensions.assign({ { 1, 1, DataBuffer }, { 14, 16, DataBuffer } });
+		extensions.assign(
+		  { { RTC::RtpHeaderExtensionUri::Type::MID, 1, 1, DataBuffer },
+		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 14, 16, DataBuffer } });
 		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasOneByteExtensions());
 
 		// Requires Two-Bytes type Extensions due to id > 14.
-		extensions.assign({ { 15, 2, DataBuffer } });
+		extensions.assign({ { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 15, 2, DataBuffer } });
 		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		// Requires Two-Bytes type Extensions due to length 0.
-		extensions.assign({ { 1, 0, DataBuffer } });
+		extensions.assign(
+		  { { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 1, 0, DataBuffer } });
 		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 
 		// Requires Two-Bytes type Extensions due to length > 16.
-		extensions.assign({ { 1, 17, DataBuffer } });
+		extensions.assign({ { RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET, 1, 17, DataBuffer } });
 		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
 	}
@@ -1538,7 +1476,9 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		auto* d = DataBuffer;
 
 		// Invalid Extension id 0.
-		extensions.assign({ { 0, 4, d }, { 1, 1, d } });
+		extensions.assign(
+		  { { RTC::RtpHeaderExtensionUri::Type::MID, 0, 4, d },
+		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 1, 1, d } });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupTypeError);
@@ -1546,14 +1486,21 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  packet->SetExtensions(Packet::ExtensionsType::TwoBytes, extensions), MediaSoupTypeError);
 
 		// Invalid Extension id > 14 in One-Byte.
-		extensions.assign({ { 15, 2, d }, { 6, 6, d }, { 7, 7, d } });
+		extensions.assign(
+		  { { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, 15, 2, d },
+		    { RTC::RtpHeaderExtensionUri::Type::MID, 6, 6, d },
+		    { RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 7, 7, d } });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupTypeError);
 		REQUIRE_NOTHROW(packet->SetExtensions(Packet::ExtensionsType::TwoBytes, extensions));
 
 		// Invalid Extension length 0 in One-Byte.
-		extensions.assign({ { 3, 0, d }, { 6, 6, d }, { 7, 7, d }, { 8, 8, d } });
+		extensions.assign(
+		  { { RTC::RtpHeaderExtensionUri::Type::MID, 3, 0, d },
+		    { RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, 6, 6, d },
+		    { RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, 7, 7, d },
+		    { RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL, 8, 8, d } });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupTypeError);
@@ -1561,7 +1508,12 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 
 		// Invalid Extension length > 16 in One-Byte.
 		extensions.assign(
-		  { { 3, 17, d }, { 6, 6, d }, { 7, 7, d }, { 8, 8, d }, { 9, 9, d }, { 100, 10, d } });
+		  { { RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID, 3, 17, d },
+		    { RTC::RtpHeaderExtensionUri::Type::MID, 6, 6, d },
+		    { RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION, 7, 7, d },
+		    { RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, 8, 8, d },
+		    { RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY, 9, 9, d },
+		    { RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME, 100, 10, d } });
 
 		REQUIRE_THROWS_AS(
 		  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupTypeError);
@@ -1631,6 +1583,75 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
+	SECTION("packet::SetPayload() and packet::RemovePayload() succeed")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		// clang-format off
+		uint8_t payload[] =
+		{
+			0x11, 0x22, 0x33, 0x44,
+			0x55, 0x66, 0x77, 0x88,
+			0x99, 0xAA
+		};
+		// clang-format on
+
+		/* Set payload. */
+
+		packet->SetPayload(payload, 10);
+		packet->PadTo4Bytes();
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 10 + 2,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 0,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 10,
+		  /*hasPadding*/ true,
+		  /*paddingLength*/ 2);
+
+		/* Remove payload. */
+
+		// This method removes padding.
+		packet->RemovePayload();
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize,
+		  /*frozen*/ false,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 0,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ false,
+		  /*payloadLength*/ 0,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
+
+		// Invalid arguments.
+		REQUIRE_THROWS_AS(packet->SetPayload(nullptr, 2), MediaSoupTypeError);
+	}
+
 	SECTION("packet::ShiftPayload() succeeds")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
@@ -1670,7 +1691,10 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		};
 		// clang-format on
 
-		extensions.assign({ { 1, 1, extension1 }, { 2, 2, extension2 }, { 3, 3, extension3 } });
+		extensions.assign(
+		  { { RTC::RtpHeaderExtensionUri::Type::MID, 1, 1, extension1 },
+		    { RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME, 2, 2, extension2 },
+		    { RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01, 3, 3, extension3 } });
 
 		packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions);
 
@@ -1850,7 +1874,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		  helpers::AreBuffersEqual(packet->GetPayload(), packet->GetPayloadLength(), payload, 10) == true);
 	}
 
-	SECTION("packet::ShiftPayload() and packet::UnshiftPayload() fail if wrong values are given")
+	SECTION("packet::ShiftPayload() fails if wrong values are given")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
 

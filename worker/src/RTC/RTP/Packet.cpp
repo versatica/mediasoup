@@ -232,6 +232,10 @@ namespace RTC
 			// Clone Extension containers.
 			clonedPacket->oneByteExtensions  = this->oneByteExtensions;
 			clonedPacket->twoBytesExtensions = this->twoBytesExtensions;
+
+			// Clone Extension ids.
+			clonedPacket->rtpHeaderExtensionIds = this->rtpHeaderExtensionIds;
+
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
 
@@ -329,6 +333,9 @@ namespace RTC
 			// Clear One-Byte and Two-Bytes Extensions.
 			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
 			this->twoBytesExtensions.clear();
+
+			// Reset Extension ids.
+			this->rtpHeaderExtensionIds = {};
 
 			const auto hadHeaderExtension                 = HasHeaderExtension();
 			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
@@ -529,6 +536,85 @@ namespace RTC
 			{
 				*ptr = 0u;
 				++ptr;
+			}
+
+			// Assign Extension ids.
+			for (const auto& extension : extensions)
+			{
+				switch (extension.type)
+				{
+					case RTC::RtpHeaderExtensionUri::Type::MID:
+					{
+						this->rtpHeaderExtensionIds.mid = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID:
+					{
+						this->rtpHeaderExtensionIds.rid = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID:
+					{
+						this->rtpHeaderExtensionIds.rrid = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME:
+					{
+						this->rtpHeaderExtensionIds.absSendTime = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01:
+					{
+						this->rtpHeaderExtensionIds.transportWideCc01 = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL:
+					{
+						this->rtpHeaderExtensionIds.ssrcAudioLevel = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR:
+					{
+						this->rtpHeaderExtensionIds.dependencyDescriptor = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION:
+					{
+						this->rtpHeaderExtensionIds.videoOrientation = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET:
+					{
+						this->rtpHeaderExtensionIds.timeOffset = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
+					{
+						this->rtpHeaderExtensionIds.absCaptureTime = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
+					{
+						this->rtpHeaderExtensionIds.playoutDelay = extension.id;
+						break;
+					}
+
+					case RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID:
+					{
+						this->rtpHeaderExtensionIds.mediasoupPacketId = extension.id;
+						break;
+					}
+				}
 			}
 		}
 

@@ -1,5 +1,6 @@
 #include "RTC/RTP/FuzzerPacket.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RtpDictionaries.hpp"
 #include <string>
 #include <vector>
 
@@ -117,17 +118,19 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	uint8_t value1[] = { 0x01, 0x02, 0x03, 0x04 };
 
 	extensions.emplace_back(
-	  1,     // id
-	  4,     // len
-	  value1 // value
+	  ::RTC::RtpHeaderExtensionUri::Type::MID, // type
+	  1,                                       // id
+	  4,                                       // len
+	  value1                                   // value
 	);
 
 	uint8_t value2[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
 
 	extensions.emplace_back(
-	  2,     // id
-	  11,    // len
-	  value2 // value
+	  ::RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, // type
+	  2,                                                 // id
+	  11,                                                // len
+	  value2                                             // value
 	);
 
 	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
@@ -144,27 +147,31 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 		                   0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
 
 	extensions.emplace_back(
-	  14,    // id
-	  24,    // len
-	  value3 // value
+	  ::RTC::RtpHeaderExtensionUri::Type::MID, // type
+	  14,                                      // id
+	  24,                                      // len
+	  value3                                   // value
 	);
 
 	extensions.emplace_back(
-	  15,    // id
-	  24,    // len
-	  value3 // value
+	  ::RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, // type
+	  15,                                                // id
+	  24,                                                // len
+	  value3                                             // value
 	);
 
 	extensions.emplace_back(
-	  22,    // id
-	  24,    // len
-	  value3 // value
+	  ::RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, // type
+	  22,                                                         // id
+	  24,                                                         // len
+	  value3                                                      // value
 	);
 
 	extensions.emplace_back(
-	  100,   // id
-	  24,    // len
-	  value3 // value
+	  ::RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, // type
+	  100,                                                       // id
+	  24,                                                        // len
+	  value3                                                     // value
 	);
 
 	// NOTE: Cannot use One-Byte Extensions because we are using big ids and
