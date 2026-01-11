@@ -698,10 +698,10 @@ namespace RTC
 					  producerRtpHeaderExtensionIds.transportWideCc01;
 				}
 
-				if (producerRtpHeaderExtensionIds.absCaptureTime != 0u)
+				if (producerRtpHeaderExtensionIds.dependencyDescriptor != 0u)
 				{
-					this->recvRtpHeaderExtensionIds.absCaptureTime =
-					  producerRtpHeaderExtensionIds.absCaptureTime;
+					this->recvRtpHeaderExtensionIds.dependencyDescriptor =
+					  producerRtpHeaderExtensionIds.dependencyDescriptor;
 				}
 
 				// Create status response.
@@ -1563,13 +1563,14 @@ namespace RTC
 		packet->logger.recvTransportId = this->id;
 #endif
 
-		// Apply the Transport RTP header extension ids so the RTP listener can use them.
+		// Apply the Transport RTP header extension ids so the RTP listener can use
+		// them.
 		packet->SetMidExtensionId(this->recvRtpHeaderExtensionIds.mid);
 		packet->SetRidExtensionId(this->recvRtpHeaderExtensionIds.rid);
 		packet->SetRepairedRidExtensionId(this->recvRtpHeaderExtensionIds.rrid);
 		packet->SetAbsSendTimeExtensionId(this->recvRtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->recvRtpHeaderExtensionIds.transportWideCc01);
-		packet->SetAbsCaptureTimeExtensionId(this->recvRtpHeaderExtensionIds.absCaptureTime);
+		packet->SetDependencyDescriptorExtensionId(this->recvRtpHeaderExtensionIds.dependencyDescriptor);
 
 		auto nowMs = DepLibUV::GetTimeMs();
 

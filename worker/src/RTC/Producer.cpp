@@ -597,9 +597,6 @@ namespace RTC
 			return ReceiveRtpPacketResult::DISCARDED;
 		}
 
-		// Pre-process the packet.
-		PreProcessRtpPacket(packet);
-
 		ReceiveRtpPacketResult result;
 		bool isRtx{ false };
 
@@ -1192,16 +1189,6 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
-	}
-
-	inline void Producer::PreProcessRtpPacket(RTC::RtpPacket* packet)
-	{
-		MS_TRACE();
-
-		if (this->kind == RTC::Media::Kind::VIDEO)
-		{
-			packet->SetDependencyDescriptorExtensionId(this->rtpHeaderExtensionIds.dependencyDescriptor);
-		}
 	}
 
 	inline bool Producer::MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const
