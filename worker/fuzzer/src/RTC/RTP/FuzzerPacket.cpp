@@ -186,33 +186,27 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
 	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 
-	// packet->SetAbsSendTimeExtensionId(13);
 	packet->HasExtension(13);
 	packet->GetExtensionValue(13, extenLen);
-	// packet->ReadAbsSendTime(absSendTime);
-	// packet->UpdateAbsSendTime(12345678u);
+	packet->ReadAbsSendTime(absSendTime);
+	packet->UpdateAbsSendTime(12345678);
 
-	// packet->SetTransportWideCc01ExtensionId(14);
 	packet->HasExtension(14);
 	packet->GetExtensionValue(14, extenLen);
-	// packet->ReadTransportWideCc01(wideSeqNumber);
-	// packet->UpdateTransportWideCc01(12345u);
-	// packet->SetExtensionLength(14, 2);
+	packet->ReadTransportWideCc01(wideSeqNumber);
+	packet->UpdateTransportWideCc01(12345);
 
-	// packet->SetSsrcAudioLevelExtensionId(11);
 	packet->HasExtension(11);
 	packet->GetExtensionValue(11, extenLen);
-	// packet->ReadSsrcAudioLevel(volume, voice);
+	packet->ReadSsrcAudioLevel(volume, voice);
 
-	// packet->SetVideoOrientationExtensionId(12);
 	packet->HasExtension(12);
 	packet->GetExtensionValue(12, extenLen);
-	// packet->ReadVideoOrientation(camera, flip, rotation);
+	packet->ReadVideoOrientation(camera, flip, rotation);
 
-	// packet->SetPlayoutDelayExtensionId(15);
 	packet->HasExtension(15);
 	packet->GetExtensionValue(15, extenLen);
-	// packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
+	packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
 
 	packet->HasPayload();
 	packet->GetPayload();

@@ -1,10 +1,13 @@
 #include "common.hpp"
+#include "Utils.hpp"
 #include "testHelpers.hpp" // IWYU pragma: export in worker/test/include/
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <string>
 
 using namespace RTC::RTP;
 
@@ -1463,6 +1466,115 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		extensions.assign({ { RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET, 1, 17, DataBuffer } });
 		packet->SetExtensions(Packet::ExtensionsType::Auto, extensions);
 		REQUIRE(packet->HasTwoBytesExtensions());
+	}
+
+	SECTION("packet::SetExtensions() with supported extensions succeeds")
+	{
+		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		std::vector<Packet::AddedExtension> extensions;
+
+		std::string mid{ "mid-€1" };
+		std::string rid{ "r1-ß" };
+		uint32_t absSendtime{ 12345678 };
+		uint16_t wideSeqNumber{ 5555 };
+		uint8_t absSendtimeValue[100]{};
+		uint8_t wideSeqNumberValue[100]{};
+
+		Utils::Byte::Set3Bytes(absSendtimeValue, 0, absSendtime);
+		Utils::Byte::Set2Bytes(wideSeqNumberValue, 0, wideSeqNumber);
+
+		// clang-format off
+		extensions.assign(
+			{
+				{
+					RTC::RtpHeaderExtensionUri::Type::MID,
+					1,
+					static_cast<uint8_t>(mid.size()),
+					reinterpret_cast<uint8_t*>(mid.data())
+				},
+				{
+					RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID,
+					2,
+					static_cast<uint8_t>(rid.size()),
+					reinterpret_cast<uint8_t*>(rid.data())
+				},
+				{
+					RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME,
+					3,
+					3,
+					absSendtimeValue
+				},
+				{
+					RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01,
+					4,
+					2,
+					wideSeqNumberValue
+				}
+			}
+		);
+		// clang-format on
+
+		packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions);
+
+		REQUIRE(packet->HasOneByteExtensions());
+
+		std::string readMid;
+		std::string readRid;
+		uint32_t readAbsSendtime;
+		uint16_t readWideSeqNumber;
+
+		REQUIRE(packet->ReadMid(readMid));
+		REQUIRE(readMid == mid);
+		REQUIRE(packet->ReadRid(readRid));
+		REQUIRE(readRid == rid);
+		REQUIRE(packet->ReadAbsSendTime(readAbsSendtime));
+		REQUIRE(readAbsSendtime == absSendtime);
+		REQUIRE(packet->ReadTransportWideCc01(readWideSeqNumber));
+		REQUIRE(readWideSeqNumber == wideSeqNumber);
+
+		std::string newMid{ "mid-®2" };
+		uint64_t newAbsSendtimeMs{ 999999 };
+		uint16_t newWideSeqNumber{ 5556 };
+
+		REQUIRE(packet->UpdateMid(newMid));
+		REQUIRE(packet->UpdateAbsSendTime(newAbsSendtimeMs));
+		REQUIRE(packet->UpdateTransportWideCc01(newWideSeqNumber));
+
+		REQUIRE(packet->ReadMid(readMid));
+		REQUIRE(readMid == newMid);
+		REQUIRE(packet->ReadRid(readRid));
+		REQUIRE(readRid == rid);
+		REQUIRE(packet->ReadAbsSendTime(readAbsSendtime));
+		REQUIRE(readAbsSendtime == Utils::Time::TimeMsToAbsSendTime(newAbsSendtimeMs));
+		REQUIRE(packet->ReadTransportWideCc01(readWideSeqNumber));
+		REQUIRE(readWideSeqNumber == newWideSeqNumber);
+
+		std::unique_ptr<Packet> packet2{ Packet::Parse(packet->GetBuffer(), packet->GetLength()) };
+
+		REQUIRE(packet2);
+		REQUIRE(packet2->Validate());
+
+		packet2->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		RTC::RtpHeaderExtensionIds headerExtensionIds{};
+
+		headerExtensionIds.mid               = 1;
+		headerExtensionIds.rid               = 2;
+		headerExtensionIds.absSendTime       = 3;
+		headerExtensionIds.transportWideCc01 = 4;
+
+		packet2->AssignExtensionIds(headerExtensionIds);
+
+		REQUIRE(packet2->HasOneByteExtensions());
+		REQUIRE(packet2->ReadMid(readMid));
+		REQUIRE(readMid == newMid);
+		REQUIRE(packet2->ReadRid(readRid));
+		REQUIRE(readRid == rid);
+		REQUIRE(packet2->ReadAbsSendTime(readAbsSendtime));
+		REQUIRE(readAbsSendtime == Utils::Time::TimeMsToAbsSendTime(newAbsSendtimeMs));
+		REQUIRE(packet2->ReadTransportWideCc01(readWideSeqNumber));
+		REQUIRE(readWideSeqNumber == newWideSeqNumber);
 	}
 
 	SECTION("packet::SetExtensions() fails if wrong extensions are given")

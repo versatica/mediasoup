@@ -19,6 +19,7 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include "RTC/SimulcastConsumer.hpp"
@@ -1571,6 +1572,36 @@ namespace RTC
 		packet->SetAbsSendTimeExtensionId(this->recvRtpHeaderExtensionIds.absSendTime);
 		packet->SetTransportWideCc01ExtensionId(this->recvRtpHeaderExtensionIds.transportWideCc01);
 		packet->SetDependencyDescriptorExtensionId(this->recvRtpHeaderExtensionIds.dependencyDescriptor);
+
+		// TODO: REMOVE
+		{
+			MS_DUMP("----- OLD RtpPacket->Dump():");
+			packet->Dump();
+
+			RTC::RTP::Packet* packet2 = RTC::RTP::Packet::Parse(packet->GetData(), packet->GetSize());
+
+			if (packet2)
+			{
+				::RTC::RtpHeaderExtensionIds headerExtensionIds{};
+
+				headerExtensionIds.mid               = this->recvRtpHeaderExtensionIds.mid;
+				headerExtensionIds.rid               = this->recvRtpHeaderExtensionIds.rid;
+				headerExtensionIds.rrid              = this->recvRtpHeaderExtensionIds.rrid;
+				headerExtensionIds.absSendTime       = this->recvRtpHeaderExtensionIds.absSendTime;
+				headerExtensionIds.transportWideCc01 = this->recvRtpHeaderExtensionIds.transportWideCc01;
+				headerExtensionIds.mediasoupPacketId = this->recvRtpHeaderExtensionIds.mediasoupPacketId;
+
+				packet2->AssignExtensionIds(headerExtensionIds);
+
+				MS_DUMP("+++++ NEW RTP::Packet->Dump():");
+				packet2->Dump();
+				delete packet2;
+			}
+			else
+			{
+				MS_ABORT("OMG INVALID PACKET !!!");
+			}
+		}
 
 		auto nowMs = DepLibUV::GetTimeMs();
 

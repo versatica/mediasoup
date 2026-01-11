@@ -20,7 +20,7 @@ namespace RTC
 		/* Class variables. */
 
 		thread_local uint32_t Packet::nextMediasoupPacketId{ Utils::Crypto::GetRandomUInt(
-			0u, std::numeric_limits<uint32_t>::max() / 2) };
+			0, std::numeric_limits<uint32_t>::max() / 2) };
 
 		/* Class methods. */
 
@@ -245,8 +245,16 @@ namespace RTC
 				}
 
 				{
-					MS_DUMP_CLEAN(
-					  indentation + 1, "  absSendTime: id:%" PRIu8, this->headerExtensionIds.absSendTime);
+					uint32_t absSendtime;
+
+					if (ReadAbsSendTime(absSendtime))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  absSendTime: id:%" PRIu8 ", value:%" PRIu32,
+						  this->headerExtensionIds.absSendTime,
+						  absSendtime);
+					}
 				}
 
 				{
@@ -310,7 +318,7 @@ namespace RTC
 				}
 
 				{
-					uint64_t absCaptureTimestamp{ 0u };
+					uint64_t absCaptureTimestamp{ 0 };
 					int64_t estimatedCaptureClockOffset{ 0 };
 
 					if (ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset))
@@ -495,8 +503,8 @@ namespace RTC
 			// on given Extensions.
 			if (type == ExtensionsType::Auto)
 			{
-				uint8_t highestId{ 0u };
-				uint8_t highestLen{ 0u };
+				uint8_t highestId{ 0 };
+				uint8_t highestLen{ 0 };
 
 				for (const auto& extension : extensions)
 				{
@@ -685,7 +693,7 @@ namespace RTC
 
 			for (size_t i = 0; i < extensionsPaddingLength; ++i)
 			{
-				*ptr = 0u;
+				*ptr = 0;
 				++ptr;
 			}
 
@@ -784,7 +792,7 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
 
-			if (!extenValue || extenLen == 0u)
+			if (!extenValue || extenLen == 0)
 			{
 				return false;
 			}
@@ -794,7 +802,7 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::UpdateMid(const std::string& mid)
+		bool Packet::UpdateMid(const std::string& mid)
 		{
 			MS_TRACE();
 
@@ -805,7 +813,7 @@ namespace RTC
 
 			if (!extenValue)
 			{
-				return;
+				return false;
 			}
 
 			const size_t midLen = mid.length();
@@ -819,12 +827,14 @@ namespace RTC
 				  RTC::Consts::MidRtpExtensionMaxLength,
 				  mid.c_str());
 
-				return;
+				return false;
 			}
 
 			std::memcpy(extenValue, mid.c_str(), midLen);
 
 			SetExtensionLength(this->headerExtensionIds.mid, midLen);
+
+			return true;
 		}
 
 		bool Packet::ReadRid(std::string& rid) const
@@ -835,7 +845,7 @@ namespace RTC
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rid, extenLen);
 
-			if (extenValue && extenLen > 0u)
+			if (extenValue && extenLen > 0)
 			{
 				rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
 
@@ -844,7 +854,7 @@ namespace RTC
 
 			extenValue = GetExtensionValue(this->headerExtensionIds.rrid, extenLen);
 
-			if (extenValue && extenLen > 0u)
+			if (extenValue && extenLen > 0)
 			{
 				rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
 
@@ -971,7 +981,7 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::UpdateDependencyDescriptor(const uint8_t* data, size_t len)
+		bool Packet::UpdateDependencyDescriptor(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
@@ -985,12 +995,14 @@ namespace RTC
 			{
 				MS_WARN_TAG(rtp, "dependency description not found");
 
-				return;
+				return false;
 			}
 
 			std::memcpy(extenValue, data, len);
 
 			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, len);
+
+			return true;
 		}
 
 		bool Packet::ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const

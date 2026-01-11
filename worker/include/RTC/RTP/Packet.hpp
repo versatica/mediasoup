@@ -472,12 +472,22 @@ namespace RTC
 
 			bool ReadMid(std::string& mid) const;
 
-			void UpdateMid(const std::string& mid);
+			bool UpdateMid(const std::string& mid);
 
 			bool ReadRid(std::string& rid) const;
 
+			/**
+			 * @remarks
+			 * - `absSendTime` is set with the raw 3 bytes unsigned integer stored
+			 *   in the Extension value.
+			 */
 			bool ReadAbsSendTime(uint32_t& absSendtime) const;
 
+			/**
+			 * @remarks
+			 * - Contrary to `ReadAbsSendTime()` method, given `ms` is internally
+			 *   converted to ABS Send Time.
+			 */
 			bool UpdateAbsSendTime(uint64_t ms) const;
 
 			bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
@@ -491,7 +501,7 @@ namespace RTC
 			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 			    templateDependencyStructure) const;
 
-			void UpdateDependencyDescriptor(const uint8_t* data, size_t len);
+			bool UpdateDependencyDescriptor(const uint8_t* data, size_t len);
 
 			bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
 
