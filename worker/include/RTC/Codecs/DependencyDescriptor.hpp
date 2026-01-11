@@ -1,3 +1,6 @@
+#ifndef MS_RTC_CODECS_DEPENDENCY_DESCRIPTOR_HPP
+#define MS_RTC_CODECS_DEPENDENCY_DESCRIPTOR_HPP
+
 #include "common.hpp"
 #include "Utils.hpp" // BitStream.
 #include <cstdint>
@@ -113,3 +116,5 @@ namespace RTC
 
 	} // namespace Codecs
 } // namespace RTC
+
+#endif
