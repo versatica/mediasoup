@@ -77,6 +77,8 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	headerExtensionIds.videoOrientation  = 2;
 	headerExtensionIds.playoutDelay      = 8;
 
+	packet->AssignExtensionIds(headerExtensionIds);
+
 	packet->HasExtension(5);
 	packet->GetExtensionValue(5, extenLen);
 	packet->ReadMid(mid);
