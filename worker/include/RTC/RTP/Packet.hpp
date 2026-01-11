@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
+#include "RTC/Codecs/DependencyDescriptor.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
@@ -14,6 +15,7 @@
 #include <flatbuffers/flatbuffers.h>
 #include <array>
 #include <map>
+#include <string>
 #include <vector>
 
 namespace RTC
@@ -387,7 +389,7 @@ namespace RTC
 			 *
 			 * @see RFC 8285.
 			 */
-			uint8_t* GetExtension(uint8_t id, uint8_t& len) const
+			uint8_t* GetExtensionValue(uint8_t id, uint8_t& len) const
 			{
 				len = 0;
 
@@ -408,7 +410,7 @@ namespace RTC
 
 					// `-1` because we have 14 elements total 0..13 and `id` is in the
 					// range 1..14.
-					auto offset = this->oneByteExtensions[id - 1];
+					const auto offset = this->oneByteExtensions[id - 1];
 
 					if (offset == -1)
 					{
@@ -426,7 +428,7 @@ namespace RTC
 				}
 				else if (HasTwoBytesExtensions())
 				{
-					auto it = this->twoBytesExtensions.find(id);
+					const auto it = this->twoBytesExtensions.find(id);
 
 					if (it == this->twoBytesExtensions.end())
 					{
@@ -435,7 +437,7 @@ namespace RTC
 						return nullptr;
 					}
 
-					auto offset = it->second;
+					const auto offset = it->second;
 
 					auto* extension = reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
 
@@ -460,6 +462,44 @@ namespace RTC
 			 *   Extensions or if given Extensions are invalid/wrong.
 			 */
 			void SetExtensions(ExtensionsType type, const std::vector<AddedExtension>& extensions);
+
+			/**
+			 * Assign Extension ids.
+			 *
+			 * @see RFC 8285.
+			 */
+			void AssignExtensionIds(RTC::RtpHeaderExtensionIds headerExtensionIds);
+
+			bool ReadMid(std::string& mid) const;
+
+			void UpdateMid(const std::string& mid);
+
+			bool ReadRid(std::string& rid) const;
+
+			bool ReadAbsSendTime(uint32_t& absSendtime) const;
+
+			bool UpdateAbsSendTime(uint64_t ms) const;
+
+			bool ReadTransportWideCc01(uint16_t& wideSeqNumber) const;
+
+			bool UpdateTransportWideCc01(uint16_t wideSeqNumber) const;
+
+			bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
+
+			bool ReadDependencyDescriptor(
+			  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
+			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+			    templateDependencyStructure) const;
+
+			void UpdateDependencyDescriptor(const uint8_t* data, size_t len);
+
+			bool ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const;
+
+			bool ReadAbsCaptureTime(uint64_t& absCaptureTimestamp, int64_t& estimatedCaptureClockOffset) const;
+
+			bool ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const;
+
+			bool ReadMediasoupPacketId(uint32_t& mediasoupPacketId) const;
 
 			/**
 			 * Whether this Packet has payload.
@@ -822,6 +862,17 @@ namespace RTC
 			 */
 			bool ParseExtensions();
 
+			/**
+			 * Set the value length of the Extension with given `id`.
+			 *
+			 * @remarks
+			 * - The caller is responsible of not setting a length higher than the
+			 *   available one (taking into account existing padding bytes).
+			 * - If the Extension with `id` doesn't exist this methods terminates
+			 *   the process.
+			 */
+			void SetExtensionLength(uint8_t id, uint8_t len);
+
 			/* Pure virtual methods inherited from RTC::Codecs::DependencyDescriptor::Listener. */
 		public:
 			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
@@ -842,7 +893,7 @@ namespace RTC
 			// Extension value to the beginning of the Extension.
 			std::map<uint8_t, ssize_t> twoBytesExtensions;
 			// Extension ids.
-			RtpHeaderExtensionIds rtpHeaderExtensionIds{};
+			RTC::RtpHeaderExtensionIds headerExtensionIds{};
 			// Codec related.
 			std::shared_ptr<RTC::Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 		};

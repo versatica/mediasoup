@@ -8,7 +8,8 @@
 #endif
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include <cstring>  // std::memmove()
+#include "RTC/Consts.hpp"
+#include <cstring>  // std::memmove(), std::memset()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
@@ -201,9 +202,159 @@ namespace RTC
 					  HasOneByteExtensions() ? "One-Byte" : "Two-Bytes",
 					  extIdsStream.str().c_str());
 				}
-			}
 
-			// TODO: Specific Extensions.
+				MS_DUMP_CLEAN(indentation, "<Extensions>");
+
+				{
+					std::string mid;
+
+					if (ReadMid(mid))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  mid: extId:%" PRIu8 ", value:'%s'",
+						  this->headerExtensionIds.mid,
+						  mid.c_str());
+					}
+				}
+
+				{
+					std::string rid;
+
+					if (ReadRid(rid))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  rid: extId:%" PRIu8 ", value:'%s'",
+						  this->headerExtensionIds.rid,
+						  rid.c_str());
+					}
+				}
+
+				{
+					std::string rrid;
+
+					if (ReadRid(rrid))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  rrid: extId:%" PRIu8 ", value:'%s'",
+						  this->headerExtensionIds.rrid,
+						  rrid.c_str());
+					}
+				}
+
+				{
+					MS_DUMP_CLEAN(
+					  indentation + 1, "  absSendTime: extId:%" PRIu8, this->headerExtensionIds.absSendTime);
+				}
+
+				{
+					uint16_t wideSeqNumber{ 0 };
+
+					if (ReadTransportWideCc01(wideSeqNumber))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  transportWideCc01: extId:%" PRIu8 ", value:%" PRIu16,
+						  this->headerExtensionIds.transportWideCc01,
+						  wideSeqNumber);
+					}
+				}
+
+				{
+					uint8_t volume{ 0 };
+					bool voice{ false };
+
+					if (ReadSsrcAudioLevel(volume, voice))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  ssrcAudioLevel: extId:%" PRIu8 ", volume:%" PRIu8 ", voice:%s",
+						  this->headerExtensionIds.ssrcAudioLevel,
+						  volume,
+						  voice ? "true" : "false");
+					}
+				}
+
+				{
+					uint8_t extenLen;
+					const uint8_t* extenValue =
+					  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
+
+					if (extenValue)
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  dependencyDescriptor: extId:%" PRIu8 ", length:%" PRIu8,
+						  this->headerExtensionIds.dependencyDescriptor,
+						  extenLen);
+					}
+				}
+
+				{
+					bool camera{ false };
+					bool flip{ false };
+					uint16_t rotation{ 0 };
+
+					if (ReadVideoOrientation(camera, flip, rotation))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  videoOrientation: extId:%" PRIu8 ", camera:%s, flip:%s, rotation:%" PRIu16,
+						  this->headerExtensionIds.videoOrientation,
+						  camera ? "true" : "false",
+						  flip ? "true" : "false",
+						  rotation);
+					}
+				}
+
+				{
+					uint64_t absCaptureTimestamp{ 0u };
+					int64_t estimatedCaptureClockOffset{ 0 };
+
+					if (ReadAbsCaptureTime(absCaptureTimestamp, estimatedCaptureClockOffset))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  absCaptureTime: extId:%" PRIu8 ", absCaptureTimestamp:%" PRIu64
+						  ", estimatedCaptureClockOffset:%" PRId64,
+						  this->headerExtensionIds.absCaptureTime,
+						  absCaptureTimestamp,
+						  estimatedCaptureClockOffset);
+					}
+				}
+
+				{
+					uint16_t minDelay{ 0 };
+					uint16_t maxDelay{ 0 };
+
+					if (ReadPlayoutDelay(minDelay, maxDelay))
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1,
+						  "  playoutDelay: extId:%" PRIu8 ", minDelay:%" PRIu16 ", maxDelay:%" PRIu16,
+						  this->headerExtensionIds.playoutDelay,
+						  minDelay,
+						  maxDelay);
+					}
+				}
+
+				{
+					uint32_t mediasoupPacketId{ 0 };
+
+					if (ReadMediasoupPacketId(mediasoupPacketId))
+					{
+						MS_DUMP_CLEAN(
+						  indentation,
+						  "  mediasoupPacketId: extId:%" PRIu8 ", mediasoupPacketId:%" PRIu32,
+						  this->headerExtensionIds.mediasoupPacketId,
+						  mediasoupPacketId);
+					}
+				}
+
+				MS_DUMP_CLEAN(indentation, "</Extensions>");
+			}
 
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
 			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
@@ -234,7 +385,7 @@ namespace RTC
 			clonedPacket->twoBytesExtensions = this->twoBytesExtensions;
 
 			// Clone Extension ids.
-			clonedPacket->rtpHeaderExtensionIds = this->rtpHeaderExtensionIds;
+			clonedPacket->headerExtensionIds = this->headerExtensionIds;
 
 			// Assign the payload descriptor handler.
 			clonedPacket->payloadDescriptorHandler = this->payloadDescriptorHandler;
@@ -335,7 +486,7 @@ namespace RTC
 			this->twoBytesExtensions.clear();
 
 			// Reset Extension ids.
-			this->rtpHeaderExtensionIds = {};
+			this->headerExtensionIds = {};
 
 			const auto hadHeaderExtension                 = HasHeaderExtension();
 			const auto previousHeaderExtensionValueLength = GetHeaderExtensionValueLength();
@@ -545,77 +696,418 @@ namespace RTC
 				{
 					case RTC::RtpHeaderExtensionUri::Type::MID:
 					{
-						this->rtpHeaderExtensionIds.mid = extension.id;
+						this->headerExtensionIds.mid = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID:
 					{
-						this->rtpHeaderExtensionIds.rid = extension.id;
+						this->headerExtensionIds.rid = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID:
 					{
-						this->rtpHeaderExtensionIds.rrid = extension.id;
+						this->headerExtensionIds.rrid = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::ABS_SEND_TIME:
 					{
-						this->rtpHeaderExtensionIds.absSendTime = extension.id;
+						this->headerExtensionIds.absSendTime = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::TRANSPORT_WIDE_CC_01:
 					{
-						this->rtpHeaderExtensionIds.transportWideCc01 = extension.id;
+						this->headerExtensionIds.transportWideCc01 = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::SSRC_AUDIO_LEVEL:
 					{
-						this->rtpHeaderExtensionIds.ssrcAudioLevel = extension.id;
+						this->headerExtensionIds.ssrcAudioLevel = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR:
 					{
-						this->rtpHeaderExtensionIds.dependencyDescriptor = extension.id;
+						this->headerExtensionIds.dependencyDescriptor = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::VIDEO_ORIENTATION:
 					{
-						this->rtpHeaderExtensionIds.videoOrientation = extension.id;
+						this->headerExtensionIds.videoOrientation = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::TIME_OFFSET:
 					{
-						this->rtpHeaderExtensionIds.timeOffset = extension.id;
+						this->headerExtensionIds.timeOffset = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::ABS_CAPTURE_TIME:
 					{
-						this->rtpHeaderExtensionIds.absCaptureTime = extension.id;
+						this->headerExtensionIds.absCaptureTime = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::PLAYOUT_DELAY:
 					{
-						this->rtpHeaderExtensionIds.playoutDelay = extension.id;
+						this->headerExtensionIds.playoutDelay = extension.id;
 						break;
 					}
 
 					case RTC::RtpHeaderExtensionUri::Type::MEDIASOUP_PACKET_ID:
 					{
-						this->rtpHeaderExtensionIds.mediasoupPacketId = extension.id;
+						this->headerExtensionIds.mediasoupPacketId = extension.id;
 						break;
 					}
 				}
 			}
+		}
+
+		void Packet::AssignExtensionIds(RTC::RtpHeaderExtensionIds headerExtensionIds)
+		{
+			MS_TRACE();
+
+			// Reset Extension ids.
+			this->headerExtensionIds = headerExtensionIds;
+		}
+
+		bool Packet::ReadMid(std::string& mid) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
+
+			if (!extenValue || extenLen == 0u)
+			{
+				return false;
+			}
+
+			mid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+			return true;
+		}
+
+		void Packet::UpdateMid(const std::string& mid)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
+
+			if (!extenValue)
+			{
+				return;
+			}
+
+			const size_t midLen = mid.length();
+
+			// Here we assume that there is MidRtpExtensionMaxLength available bytes,
+			// even if now they are padding bytes.
+			if (midLen > RTC::Consts::MidRtpExtensionMaxLength)
+			{
+				MS_ERROR(
+				  "no enough space for MID value [MidMaxLength:%" PRIu8 ", mid:'%s']",
+				  RTC::Consts::MidRtpExtensionMaxLength,
+				  mid.c_str());
+
+				return;
+			}
+
+			std::memcpy(extenValue, mid.c_str(), midLen);
+
+			SetExtensionLength(this->headerExtensionIds.mid, midLen);
+		}
+
+		bool Packet::ReadRid(std::string& rid) const
+		{
+			MS_TRACE();
+
+			// First try with the RID id then with the Repaired RID id.
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rid, extenLen);
+
+			if (extenValue && extenLen > 0u)
+			{
+				rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+				return true;
+			}
+
+			extenValue = GetExtensionValue(this->headerExtensionIds.rrid, extenLen);
+
+			if (extenValue && extenLen > 0u)
+			{
+				rid.assign(reinterpret_cast<const char*>(extenValue), static_cast<size_t>(extenLen));
+
+				return true;
+			}
+
+			return false;
+		}
+
+		bool Packet::ReadAbsSendTime(uint32_t& absSendtime) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
+
+			if (!extenValue || extenLen != 3u)
+			{
+				return false;
+			}
+
+			absSendtime = Utils::Byte::Get3Bytes(extenValue, 0);
+
+			return true;
+		}
+
+		bool Packet::UpdateAbsSendTime(uint64_t ms) const
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
+
+			if (!extenValue || extenLen != 3u)
+			{
+				return false;
+			}
+
+			auto absSendTime = Utils::Time::TimeMsToAbsSendTime(ms);
+
+			Utils::Byte::Set3Bytes(extenValue, 0, absSendTime);
+
+			return true;
+		}
+
+		bool Packet::ReadTransportWideCc01(uint16_t& wideSeqNumber) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
+
+			if (!extenValue || extenLen != 2u)
+			{
+				return false;
+			}
+
+			wideSeqNumber = Utils::Byte::Get2Bytes(extenValue, 0);
+
+			return true;
+		}
+
+		bool Packet::UpdateTransportWideCc01(uint16_t wideSeqNumber) const
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
+
+			if (!extenValue || extenLen != 2u)
+			{
+				return false;
+			}
+
+			Utils::Byte::Set2Bytes(extenValue, 0, wideSeqNumber);
+
+			return true;
+		}
+
+		bool Packet::ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.ssrcAudioLevel, extenLen);
+
+			if (!extenValue || extenLen != 1u)
+			{
+				return false;
+			}
+
+			volume = Utils::Byte::Get1Byte(extenValue, 0);
+			voice  = (volume & (1 << 7)) != 0;
+			volume &= ~(1 << 7);
+
+			return true;
+		}
+
+		bool Packet::ReadDependencyDescriptor(
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
+		  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		    templateDependencyStructure) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue =
+			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
+
+			auto* value = Codecs::DependencyDescriptor::Parse(
+			  extenValue, extenLen, const_cast<Packet*>(this), templateDependencyStructure);
+
+			if (!value)
+			{
+				return false;
+			}
+
+			dependencyDescriptor.reset(value);
+
+			return true;
+		}
+
+		void Packet::UpdateDependencyDescriptor(const uint8_t* data, size_t len)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			uint8_t extenLen;
+			uint8_t* extenValue =
+			  GetExtensionValue(this->headerExtensionIds.dependencyDescriptor, extenLen);
+
+			if (!extenValue)
+			{
+				MS_WARN_TAG(rtp, "dependency description not found");
+
+				return;
+			}
+
+			std::memcpy(extenValue, data, len);
+
+			SetExtensionLength(this->headerExtensionIds.dependencyDescriptor, len);
+		}
+
+		bool Packet::ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.videoOrientation, extenLen);
+
+			if (!extenValue || extenLen != 1u)
+			{
+				return false;
+			}
+
+			const uint8_t cvoByte       = Utils::Byte::Get1Byte(extenValue, 0);
+			const uint8_t cameraValue   = ((cvoByte & 0b00001000) >> 3);
+			const uint8_t flipValue     = ((cvoByte & 0b00000100) >> 2);
+			const uint8_t rotationValue = (cvoByte & 0b00000011);
+
+			camera = cameraValue != 0;
+			flip   = flipValue != 0;
+
+			// Using counter clockwise values.
+			switch (rotationValue)
+			{
+				case 3:
+				{
+					rotation = 270;
+					break;
+				}
+
+				case 2:
+				{
+					rotation = 180;
+					break;
+				}
+
+				case 1:
+				{
+					rotation = 90;
+					break;
+				}
+
+				default:
+				{
+					rotation = 0;
+				}
+			}
+
+			return true;
+		}
+
+		bool Packet::ReadAbsCaptureTime(
+		  uint64_t& absCaptureTimestamp, int64_t& estimatedCaptureClockOffset) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
+
+			// Extension value can be 8 or 16 bytes depending on whether it contains
+			// estimated capture clock offset or not.
+			//
+			// https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/rtp-hdrext/abs-capture-time
+			if (!extenValue || (extenLen != 8u && extenLen != 16u))
+			{
+				return false;
+			}
+
+			absCaptureTimestamp = Utils::Byte::Get8Bytes(extenValue, 0);
+
+			if (extenLen == 16)
+			{
+				estimatedCaptureClockOffset = static_cast<int64_t>(Utils::Byte::Get8Bytes(extenValue, 8));
+			}
+			else
+			{
+				estimatedCaptureClockOffset = 0;
+			}
+
+			return true;
+		}
+
+		bool Packet::ReadPlayoutDelay(uint16_t& minDelay, uint16_t& maxDelay) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.playoutDelay, extenLen);
+
+			if (extenLen != 3)
+			{
+				return false;
+			}
+
+			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
+			minDelay   = v >> 12u;
+			maxDelay   = v & 0xFFFu;
+
+			return true;
+		}
+
+		bool Packet::ReadMediasoupPacketId(uint32_t& mediasoupPacketId) const
+		{
+			MS_TRACE();
+
+			uint8_t extenLen;
+			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mediasoupPacketId, extenLen);
+
+			if (extenLen != 4u)
+			{
+				return false;
+			}
+
+			mediasoupPacketId = Utils::Byte::Get4Bytes(extenValue, 0);
+
+			return true;
 		}
 
 		void Packet::SetPayload(const uint8_t* payload, size_t payloadLength)
@@ -1103,14 +1595,64 @@ namespace RTC
 			}
 		}
 
+		void Packet::SetExtensionLength(uint8_t id, uint8_t len)
+		{
+			MS_TRACE();
+
+			AssertNotFrozen();
+
+			MS_ASSERT(id > 0, "id cannot be 0");
+
+			if (HasOneByteExtensions())
+			{
+				// `-1` because we have 14 elements total 0..13 and `id` is in the
+				// range 1..14.
+				const auto offset = this->oneByteExtensions[id - 1];
+
+				MS_ASSERT(offset != -1, "extension with id %" PRIu8 " not found", id);
+
+				auto* extension = reinterpret_cast<OneByteExtension*>(GetHeaderExtensionValue() + offset);
+
+				// In One-Byte Extensions value length 0 means 1.
+				const auto currentLen = extension->len + 1;
+
+				// Fill with 0's if new length is minor.
+				if (len < currentLen)
+				{
+					std::memset(extension->value + len, 0, currentLen - len);
+				}
+
+				extension->len = len - 1;
+			}
+			else if (HasTwoBytesExtensions())
+			{
+				const auto it = this->twoBytesExtensions.find(id);
+
+				MS_ASSERT(it != this->twoBytesExtensions.end(), "extension with id %" PRIu8 " not found", id);
+
+				const auto offset = it->second;
+
+				auto* extension = reinterpret_cast<TwoBytesExtension*>(GetHeaderExtensionValue() + offset);
+
+				const auto currentLen = extension->len;
+
+				// Fill with 0's if new length is minor.
+				if (len < currentLen)
+				{
+					std::memset(extension->value + len, 0, currentLen - len);
+				}
+
+				extension->len = len;
+			}
+		}
+
 		void Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
 
 			AssertNotFrozen();
 
-			MS_DUMP("TODO");
-			// UpdateDependencyDescriptor(data, size_t len);
+			UpdateDependencyDescriptor(data, len);
 		}
 	} // namespace RTP
 } // namespace RTC

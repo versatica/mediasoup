@@ -1,6 +1,7 @@
 #include "RTC/RTP/FuzzerPacket.hpp"
 #include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include <string>
 #include <vector>
 
@@ -28,17 +29,17 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 
 	std::vector<::RTC::RTP::Packet::AddedExtension> extensions;
 	uint8_t extenLen;
-	// bool voice;
-	// uint8_t volume;
-	// bool camera;
-	// bool flip;
-	// uint16_t rotation;
-	// uint32_t absSendTime;
-	// uint16_t playoutDelayMinDelay;
-	// uint16_t playoutDelayMaxDelay;
-	// uint16_t wideSeqNumber;
-	// std::string mid;
-	// std::string rid;
+	bool voice;
+	uint8_t volume;
+	bool camera;
+	bool flip;
+	uint16_t rotation;
+	uint32_t absSendTime;
+	uint16_t playoutDelayMinDelay;
+	uint16_t playoutDelayMaxDelay;
+	uint16_t wideSeqNumber;
+	std::string mid;
+	std::string rid;
 
 	packet->GetBuffer();
 	packet->GetBufferLength();
@@ -66,43 +67,46 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->HasOneByteExtensions();
 	packet->HasTwoBytesExtensions();
 
-	// packet->SetMidExtensionId(5);
+	::RTC::RtpHeaderExtensionIds headerExtensionIds{};
+
+	headerExtensionIds.mid               = 5;
+	headerExtensionIds.rid               = 6;
+	headerExtensionIds.absSendTime       = 3;
+	headerExtensionIds.transportWideCc01 = 4;
+	headerExtensionIds.ssrcAudioLevel    = 1;
+	headerExtensionIds.videoOrientation  = 2;
+	headerExtensionIds.playoutDelay      = 8;
+
 	packet->HasExtension(5);
-	packet->GetExtension(5, extenLen);
-	// packet->ReadMid(mid);
-	// packet->UpdateMid(mid);
+	packet->GetExtensionValue(5, extenLen);
+	packet->ReadMid(mid);
+	packet->UpdateMid(mid);
 
-	// packet->SetRidExtensionId(6);
 	packet->HasExtension(6);
-	packet->GetExtension(6, extenLen);
-	// packet->ReadRid(rid);
+	packet->GetExtensionValue(6, extenLen);
+	packet->ReadRid(rid);
 
-	// packet->SetAbsSendTimeExtensionId(3);
 	packet->HasExtension(3);
-	packet->GetExtension(3, extenLen);
-	// packet->ReadAbsSendTime(absSendTime);
-	// packet->UpdateAbsSendTime(12345678u);
+	packet->GetExtensionValue(3, extenLen);
+	packet->ReadAbsSendTime(absSendTime);
+	packet->UpdateAbsSendTime(12345678u);
 
-	// packet->SetTransportWideCc01ExtensionId(4);
 	packet->HasExtension(4);
-	packet->GetExtension(4, extenLen);
-	// packet->ReadTransportWideCc01(wideSeqNumber);
-	// packet->UpdateTransportWideCc01(12345u);
+	packet->GetExtensionValue(4, extenLen);
+	packet->ReadTransportWideCc01(wideSeqNumber);
+	packet->UpdateTransportWideCc01(12345u);
 
-	// packet->SetSsrcAudioLevelExtensionId(1);
 	packet->HasExtension(1);
-	packet->GetExtension(1, extenLen);
-	// packet->ReadSsrcAudioLevel(volume, voice);
+	packet->GetExtensionValue(1, extenLen);
+	packet->ReadSsrcAudioLevel(volume, voice);
 
-	// packet->SetVideoOrientationExtensionId(2);
 	packet->HasExtension(2);
-	packet->GetExtension(2, extenLen);
-	// packet->ReadVideoOrientation(camera, flip, rotation);
+	packet->GetExtensionValue(2, extenLen);
+	packet->ReadVideoOrientation(camera, flip, rotation);
 
-	// packet->SetPlayoutDelayExtensionId(8);
 	packet->HasExtension(8);
-	packet->GetExtension(8, extenLen);
-	// packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
+	packet->GetExtensionValue(8, extenLen);
+	packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
 
 	packet->HasExtension(6);
 	packet->HasExtension(7);
@@ -182,30 +186,30 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 
 	// packet->SetAbsSendTimeExtensionId(13);
 	packet->HasExtension(13);
-	packet->GetExtension(13, extenLen);
+	packet->GetExtensionValue(13, extenLen);
 	// packet->ReadAbsSendTime(absSendTime);
 	// packet->UpdateAbsSendTime(12345678u);
 
 	// packet->SetTransportWideCc01ExtensionId(14);
 	packet->HasExtension(14);
-	packet->GetExtension(14, extenLen);
+	packet->GetExtensionValue(14, extenLen);
 	// packet->ReadTransportWideCc01(wideSeqNumber);
 	// packet->UpdateTransportWideCc01(12345u);
 	// packet->SetExtensionLength(14, 2);
 
 	// packet->SetSsrcAudioLevelExtensionId(11);
 	packet->HasExtension(11);
-	packet->GetExtension(11, extenLen);
+	packet->GetExtensionValue(11, extenLen);
 	// packet->ReadSsrcAudioLevel(volume, voice);
 
 	// packet->SetVideoOrientationExtensionId(12);
 	packet->HasExtension(12);
-	packet->GetExtension(12, extenLen);
+	packet->GetExtensionValue(12, extenLen);
 	// packet->ReadVideoOrientation(camera, flip, rotation);
 
 	// packet->SetPlayoutDelayExtensionId(15);
 	packet->HasExtension(15);
-	packet->GetExtension(15, extenLen);
+	packet->GetExtensionValue(15, extenLen);
 	// packet->ReadPlayoutDelay(playoutDelayMinDelay, playoutDelayMaxDelay);
 
 	packet->HasPayload();
