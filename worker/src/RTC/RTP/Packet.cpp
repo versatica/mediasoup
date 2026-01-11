@@ -406,6 +406,54 @@ namespace RTC
 			return clonedPacket;
 		}
 
+		flatbuffers::Offset<FBS::RtpPacket::Dump> Packet::FillBuffer(
+		  flatbuffers::FlatBufferBuilder& builder) const
+		{
+			MS_TRACE();
+
+			// Add mid.
+			std::string mid;
+
+			ReadMid(mid);
+
+			// Add rid.
+			std::string rid;
+
+			ReadRid(rid);
+
+			// Add rrid.
+			std::string rrid;
+
+			ReadRid(rrid);
+
+			// Add wideSequenceNumber.
+			uint16_t wideSequenceNumber{ 0 };
+			bool wideSequenceNumberSet{ false };
+
+			if (ReadTransportWideCc01(wideSequenceNumber))
+			{
+				wideSequenceNumberSet = true;
+			}
+
+			return FBS::RtpPacket::CreateDumpDirect(
+			  builder,
+			  this->GetPayloadType(),
+			  this->GetSequenceNumber(),
+			  this->GetTimestamp(),
+			  this->HasMarker(),
+			  this->GetSsrc(),
+			  this->IsKeyFrame(),
+			  this->GetLength(),
+			  this->GetPayloadLength(),
+			  this->GetSpatialLayer(),
+			  this->GetTemporalLayer(),
+			  mid.empty() ? nullptr : mid.c_str(),
+			  rid.empty() ? nullptr : rid.c_str(),
+			  rrid.empty() ? nullptr : rrid.c_str(),
+			  wideSequenceNumberSet ? flatbuffers::Optional<uint16_t>(wideSequenceNumber)
+			                        : flatbuffers::nullopt);
+		}
+
 		void Packet::SetPayloadType(uint8_t payloadType)
 		{
 			MS_TRACE();
@@ -789,6 +837,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->headerExtensionIds.mid == 0)
+			{
+				return false;
+			}
+
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
 
@@ -841,6 +894,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->headerExtensionIds.rid == 0 && this->headerExtensionIds.rrid == 0)
+			{
+				return false;
+			}
+
 			// First try with the RID id then with the Repaired RID id.
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.rid, extenLen);
@@ -867,6 +925,11 @@ namespace RTC
 		bool Packet::ReadAbsSendTime(uint32_t& absSendtime) const
 		{
 			MS_TRACE();
+
+			if (this->headerExtensionIds.absSendTime == 0)
+			{
+				return false;
+			}
 
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
@@ -906,6 +969,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->headerExtensionIds.transportWideCc01 == 0)
+			{
+				return false;
+			}
+
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
 
@@ -942,6 +1010,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->headerExtensionIds.ssrcAudioLevel == 0)
+			{
+				return false;
+			}
+
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.ssrcAudioLevel, extenLen);
 
@@ -963,6 +1036,11 @@ namespace RTC
 		    templateDependencyStructure) const
 		{
 			MS_TRACE();
+
+			if (this->headerExtensionIds.dependencyDescriptor == 0)
+			{
+				return false;
+			}
 
 			uint8_t extenLen;
 			uint8_t* extenValue =
@@ -1008,6 +1086,11 @@ namespace RTC
 		bool Packet::ReadVideoOrientation(bool& camera, bool& flip, uint16_t& rotation) const
 		{
 			MS_TRACE();
+
+			if (this->headerExtensionIds.videoOrientation == 0)
+			{
+				return false;
+			}
 
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.videoOrientation, extenLen);
@@ -1060,6 +1143,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->headerExtensionIds.absCaptureTime == 0)
+			{
+				return false;
+			}
+
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absCaptureTime, extenLen);
 
@@ -1090,6 +1178,11 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			if (this->headerExtensionIds.playoutDelay == 0)
+			{
+				return false;
+			}
+
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.playoutDelay, extenLen);
 
@@ -1108,6 +1201,11 @@ namespace RTC
 		bool Packet::ReadMediasoupPacketId(uint32_t& mediasoupPacketId) const
 		{
 			MS_TRACE();
+
+			if (this->headerExtensionIds.mediasoupPacketId == 0)
+			{
+				return false;
+			}
 
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mediasoupPacketId, extenLen);
