@@ -1065,7 +1065,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		packet->SetTimestamp(987654321);
 		packet->SetSsrc(1234567890);
 
-		std::vector<Packet::AddedExtension> extensions;
+		std::vector<Packet::Extension> extensions;
 
 		// Extensions:
 		//
@@ -1442,7 +1442,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
 
-		std::vector<Packet::AddedExtension> extensions;
+		std::vector<Packet::Extension> extensions;
 
 		// Can fit into One-Byte type Extensions.
 		extensions.assign(
@@ -1472,7 +1472,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
 
-		std::vector<Packet::AddedExtension> extensions;
+		std::vector<Packet::Extension> extensions;
 
 		std::string mid{ "mid-€1" };
 		std::string rid{ "r1-ß" };
@@ -1584,7 +1584,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		packet->SetPayload(DataBuffer, 10);
 		packet->PadTo4Bytes();
 
-		std::vector<Packet::AddedExtension> extensions;
+		std::vector<Packet::Extension> extensions;
 		auto* d = DataBuffer;
 
 		// Invalid Extension id 0.
@@ -1782,7 +1782,7 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		packet->SetPayload(payload, 10);
 		packet->PadTo4Bytes();
 
-		std::vector<Packet::AddedExtension> extensions;
+		std::vector<Packet::Extension> extensions;
 
 		// One-Byte Extensions:
 		// - Header Extension value length: 1 + 1 + 1 + 2 + 1 + 3 = 9 => 12 (padded)
