@@ -3,6 +3,9 @@
 ### NEXT
 
 - Worker: `RtpStreamSend` duplicated packets are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683).
+- Worker: Update Catch2 from 3.8.1-1 to 3.12.0-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686).
+- Worker: Update liburing from 2.5-2 to 2.12-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686).
+- Worker: Update abseil-cpp from 20240722.0-4 to 20250814.1-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686).
 
 ### 3.19.14
 
