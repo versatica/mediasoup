@@ -106,7 +106,7 @@ namespace RTC
 			REQUIRE_THROWS_AS(packet->SetSequenceNumber(packet->GetSequenceNumber()), MediaSoupError);    \
 			REQUIRE_THROWS_AS(packet->SetTimestamp(packet->GetTimestamp()), MediaSoupError);              \
 			REQUIRE_THROWS_AS(packet->SetSsrc(packet->GetSsrc()), MediaSoupError);                        \
-			std::vector<Packet::AddedExtension> extensions;                                               \
+			std::vector<Packet::Extension> extensions;                                                    \
 			REQUIRE_THROWS_AS(                                                                            \
 			  packet->SetExtensions(Packet::ExtensionsType::OneByte, extensions), MediaSoupError);        \
 			REQUIRE_THROWS_AS(packet->RemoveHeaderExtension(), MediaSoupError);                           \

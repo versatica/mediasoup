@@ -141,9 +141,9 @@ namespace RTC
 			/**
 			 * Struct for setting and replacing Extensions.
 			 */
-			struct AddedExtension
+			struct Extension
 			{
-				AddedExtension(RTC::RtpHeaderExtensionUri::Type type, uint8_t id, uint8_t len, uint8_t* value)
+				Extension(RTC::RtpHeaderExtensionUri::Type type, uint8_t id, uint8_t len, uint8_t* value)
 				  : type(type), id(id), len(len), value(value) {};
 
 				RTC::RtpHeaderExtensionUri::Type type;
@@ -461,7 +461,7 @@ namespace RTC
 			 * @throw MediaSoupTypeError - If there is no space available for given
 			 *   Extensions or if given Extensions are invalid/wrong.
 			 */
-			void SetExtensions(ExtensionsType type, const std::vector<AddedExtension>& extensions);
+			void SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions);
 
 			/**
 			 * Assign Extension ids.

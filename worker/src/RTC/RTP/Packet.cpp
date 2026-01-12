@@ -531,7 +531,7 @@ namespace RTC
 			std::memmove(payload - headerExtensionLength, payload, payloadLength + paddingLength);
 		}
 
-		void Packet::SetExtensions(ExtensionsType type, const std::vector<AddedExtension>& extensions)
+		void Packet::SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions)
 		{
 			MS_TRACE();
 

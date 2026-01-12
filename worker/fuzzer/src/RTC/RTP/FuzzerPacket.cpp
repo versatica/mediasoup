@@ -27,7 +27,7 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 
 	packet->Serialize(buffer.get(), len + 512);
 
-	std::vector<::RTC::RTP::Packet::AddedExtension> extensions;
+	std::vector<::RTC::RTP::Packet::Extension> extensions;
 	uint8_t extenLen;
 	bool voice;
 	uint8_t volume;
