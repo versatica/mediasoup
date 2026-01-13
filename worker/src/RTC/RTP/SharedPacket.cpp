@@ -58,10 +58,7 @@ namespace RTC
 			{
 				const auto* packet = GetPacket();
 
-				MS_DUMP_CLEAN(indentation, "  ssrc: %" PRIu32, packet->GetSsrc());
-				MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu16, packet->GetSequenceNumber());
-				MS_DUMP_CLEAN(indentation, "  timestamp: %" PRIu32, packet->GetTimestamp());
-				MS_DUMP_CLEAN(indentation, "  payload type: %" PRIu8, packet->GetPayloadType());
+				packet->Dump(indentation + 1);
 			}
 			MS_DUMP_CLEAN(indentation, "</SharedPacket>");
 		}
