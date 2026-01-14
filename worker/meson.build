@@ -162,7 +162,7 @@ common_sources = [
   'src/RTC/RTP/Codecs/H264.cpp',
   'src/RTC/RTP/Codecs/Opus.cpp'
   'src/RTC/RTP/Codecs/VP8.cpp',
-  'src/RTC/RTP/Codecs/VP9.cpp',,
+  'src/RTC/RTP/Codecs/VP9.cpp',
   'src/RTC/RTP/Codecs/DependencyDescriptor.cpp',
   'src/RTC/RTCP/Packet.cpp',
   'src/RTC/RTCP/CompoundPacket.cpp',
