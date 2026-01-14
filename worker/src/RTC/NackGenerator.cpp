@@ -163,6 +163,137 @@ namespace RTC
 		return isRecovered ? true : false;
 	}
 
+	/**
+	 * Returns true if this is a found nacked packet. False otherwise.
+	 *
+	 * NOTE: It also returns true if packet comes via RTX and contains a sequence
+	 * number higher than the highest seen.
+	 */
+	bool NackGenerator::ReceivePacket(RTC::RTP::Packet* packet, bool isRecovered)
+	{
+		MS_TRACE();
+
+		const uint16_t seq    = packet->GetSequenceNumber();
+		const bool isKeyFrame = packet->IsKeyFrame();
+
+		if (!this->started)
+		{
+			this->started = true;
+			this->lastSeq = seq;
+
+			if (isKeyFrame)
+			{
+				this->keyFrameList.insert(seq);
+			}
+
+			return false;
+		}
+
+		// Obviously never nacked, so ignore.
+		if (seq == this->lastSeq)
+		{
+			return false;
+		}
+
+		// May be an out of order packet, or already handled retransmitted packet,
+		// or a retransmitted packet.
+		if (SeqManager<uint16_t>::IsSeqLowerThan(seq, this->lastSeq))
+		{
+			// It was a nacked packet.
+			if (this->nackList.erase(seq) != 0u)
+			{
+				MS_DEBUG_DEV(
+				  "NACKed packet received [ssrc:%" PRIu32 ", seq:%" PRIu16 ", recovered:%s]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber(),
+				  isRecovered ? "true" : "false");
+
+				// NOTE: Accept the packet since it was in the `nackList`, regardless
+				// the NACK requesting this packet was not sent yet (this is, if
+				// nackInfo.retries == 0) because we would request it later anyway.
+
+				return true;
+			}
+
+			// Out of order packet or already handled NACKed packet.
+			if (!isRecovered)
+			{
+				MS_WARN_DEV(
+				  "ignoring older packet not present in the NACK list [ssrc:%" PRIu32 ", seq:%" PRIu16 "]",
+				  packet->GetSsrc(),
+				  packet->GetSequenceNumber());
+			}
+
+			return false;
+		}
+
+		// If we are here it means that we may have lost some packets so seq is
+		// newer than the latest seq seen.
+
+		if (isKeyFrame)
+		{
+			this->keyFrameList.insert(seq);
+		}
+
+		// Remove old keyframes.
+		{
+			auto it = this->keyFrameList.lower_bound(seq - MaxPacketAge);
+
+			if (it != this->keyFrameList.begin())
+			{
+				this->keyFrameList.erase(this->keyFrameList.begin(), it);
+			}
+		}
+
+		if (isRecovered)
+		{
+			const auto inserted = this->recoveredList.insert(seq).second;
+
+			// Packet already recovered, ignore it.
+			if (!inserted)
+			{
+				return false;
+			}
+
+			// Remove old ones so we don't accumulate recovered packets.
+			auto it = this->recoveredList.lower_bound(seq - MaxPacketAge);
+
+			if (it != this->recoveredList.begin())
+			{
+				this->recoveredList.erase(this->recoveredList.begin(), it);
+			}
+
+			// NOTE: It may happen that this packet received via RTX contains a real
+			// RTP packet that (with highest seq not seen yet) whose transmission
+			// failed so we didn't receive it. So do not return false here but let
+			// the packet go through.
+		}
+
+		AddPacketsToNackList(this->lastSeq + 1, seq);
+
+		this->lastSeq = seq;
+
+		// Check if there are any nacks that are waiting for this seq number.
+		const std::vector<uint16_t> nackBatch = GetNackBatch(NackFilter::SEQ);
+
+		if (!nackBatch.empty())
+		{
+			this->listener->OnNackGeneratorNackRequired(nackBatch);
+		}
+
+		// This is important. Otherwise the running timer (filter:TIME) would be
+		// interrupted and NACKs would never been sent more than once for each seq.
+		if (!this->timer->IsActive())
+		{
+			MayRunTimer();
+		}
+
+		// libwebrtc may use RTX for probation and such packets may contain
+		// RTX-encoded real RTP packets that were sent before but didn't arrive yet
+		// to us or they were lost. Let's deal with them as normal packets.
+		return isRecovered ? true : false;
+	}
+
 	void NackGenerator::AddPacketsToNackList(uint16_t seqStart, uint16_t seqEnd)
 	{
 		MS_TRACE();

@@ -2,6 +2,7 @@
 #define MS_RTC_NACK_GENERATOR_HPP
 
 #include "common.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/SeqManager.hpp"
 #include "handles/TimerHandle.hpp"
@@ -51,6 +52,7 @@ namespace RTC
 		~NackGenerator() override;
 
 		bool ReceivePacket(RTC::RtpPacket* packet, bool isRecovered);
+		bool ReceivePacket(RTC::RTP::Packet* packet, bool isRecovered);
 		size_t GetNackListLength() const
 		{
 			return this->nackList.size();

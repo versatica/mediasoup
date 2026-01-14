@@ -24,6 +24,12 @@
 #include "RTC/FuzzerStunPacket.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
+#include "RTC/RTP/Codecs/FuzzerAV1.hpp"
+#include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/FuzzerH264.hpp"
+#include "RTC/RTP/Codecs/FuzzerOpus.hpp"
+#include "RTC/RTP/Codecs/FuzzerVP8.hpp"
+#include "RTC/RTP/Codecs/FuzzerVP9.hpp"
 #include "RTC/RTP/FuzzerPacket.hpp"
 #include "RTC/SCTP/association/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
@@ -94,6 +100,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		Fuzzer::RTC::Codecs::H264::Fuzz(data, len);
 		Fuzzer::RTC::Codecs::AV1::Fuzz(data, len);
 		Fuzzer::RTC::Codecs::DependencyDescriptor::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Codecs::Opus::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Codecs::VP8::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Codecs::VP9::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Codecs::H264::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Codecs::AV1::Fuzz(data, len);
+		Fuzzer::RTC::RTP::Codecs::DependencyDescriptor::Fuzz(data, len);
 	}
 
 	if (fuzzUtils)

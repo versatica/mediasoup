@@ -133,15 +133,5 @@ namespace RTC
 
 			return !(this->payloadDescriptor->isDtx && context->GetIgnoreDtx());
 		};
-
-		bool Opus::PayloadDescriptorHandler::Process(
-		  RTC::Codecs::EncodingContext* encodingContext, RTC::RTP::Packet* /*packet*/, bool& /*marker*/)
-		{
-			MS_TRACE();
-
-			auto* context = static_cast<RTC::Codecs::Opus::EncodingContext*>(encodingContext);
-
-			return !(this->payloadDescriptor->isDtx && context->GetIgnoreDtx());
-		};
 	} // namespace Codecs
 } // namespace RTC

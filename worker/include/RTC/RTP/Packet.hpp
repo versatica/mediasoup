@@ -4,8 +4,8 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "FBS/rtpPacket.h"
-#include "RTC/Codecs/DependencyDescriptor.hpp"
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
+#include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/Serializable.hpp"
@@ -28,7 +28,7 @@ namespace RTC
 		 * @see RFC 3550.
 		 */
 
-		class Packet : public Serializable, public RTC::Codecs::DependencyDescriptor::Listener
+		class Packet : public Serializable, public Codecs::DependencyDescriptor::Listener
 		{
 		public:
 			/**
@@ -497,8 +497,8 @@ namespace RTC
 			bool ReadSsrcAudioLevel(uint8_t& volume, bool& voice) const;
 
 			bool ReadDependencyDescriptor(
-			  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
-			  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+			  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
+			  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 			    templateDependencyStructure) const;
 
 			bool UpdateDependencyDescriptor(const uint8_t* data, size_t len);
@@ -724,22 +724,22 @@ namespace RTC
 			/**
 			 * Set payload descritor handler.
 			 */
-			void SetPayloadDescriptorHandler(RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
+			void SetPayloadDescriptorHandler(Codecs::PayloadDescriptorHandler* payloadDescriptorHandler);
 
 			/**
 			 * Process the payload.
 			 */
-			bool ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker);
+			bool ProcessPayload(Codecs::EncodingContext* context, bool& marker);
 
 			/**
 			 * Get the payload encoder.
 			 */
-			std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder() const;
+			std::unique_ptr<Codecs::PayloadDescriptor::Encoder> GetPayloadEncoder() const;
 
 			/**
 			 * Encode the payload.
 			 */
-			void EncodePayload(RTC::Codecs::PayloadDescriptor::Encoder* encoder);
+			void EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder);
 
 			/**
 			 * Restore the payload.
@@ -883,7 +883,7 @@ namespace RTC
 			 */
 			void SetExtensionLength(uint8_t id, uint8_t len);
 
-			/* Pure virtual methods inherited from RTC::Codecs::DependencyDescriptor::Listener. */
+			/* Pure virtual methods inherited from Codecs::DependencyDescriptor::Listener. */
 		public:
 			void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override;
 
@@ -905,7 +905,7 @@ namespace RTC
 			// Extension ids.
 			RTC::RtpHeaderExtensionIds headerExtensionIds{};
 			// Codec related.
-			std::shared_ptr<RTC::Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+			std::shared_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
 		};
 	} // namespace RTP
 } // namespace RTC

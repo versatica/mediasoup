@@ -2,7 +2,7 @@
 #include "Utils.hpp"
 #include "testHelpers.hpp" // IWYU pragma: export in worker/test/include/
 #include "RTC/RTP/Packet.hpp"
-#include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
+#include "RTC/RTP/rtpCommon.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include <catch2/catch_test_macros.hpp>

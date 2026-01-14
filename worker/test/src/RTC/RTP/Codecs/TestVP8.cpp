@@ -1,6 +1,7 @@
 #include "common.hpp"
-#include "testHelpers.hpp"
-#include "RTC/Codecs/VP8.hpp"
+#include "RTC/RTP/Codecs/VP8.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/rtpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp(), std::memcpy()
 
@@ -8,7 +9,7 @@ using namespace RTC;
 
 constexpr uint16_t MaxPictureId = (1 << 15) - 1;
 
-SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
+SCENARIO("parse VP8 payload descriptor", "[rtp][codecs][vp8]")
 {
 	SECTION("parse payload descriptor")
 	{
@@ -40,7 +41,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+		std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{ RTP::Codecs::VP8::Parse(
 			buffer, sizeof(buffer)) };
 
 		REQUIRE(payloadDescriptor);
@@ -115,7 +116,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
 		// Parse the buffer.
-		std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+		std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{ RTP::Codecs::VP8::Parse(
 			buffer, sizeof(buffer)) };
 
 		REQUIRE(payloadDescriptor);
@@ -188,7 +189,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+		std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{ RTP::Codecs::VP8::Parse(
 			buffer, sizeof(buffer)) };
 
 		REQUIRE(payloadDescriptor);
@@ -200,7 +201,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 		{
 			payloadDescriptor->Encode(buffer, 20, 1);
 
-			std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+			std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{ RTP::Codecs::VP8::Parse(
 				buffer, sizeof(buffer)) };
 
 			REQUIRE(payloadDescriptor->pictureId == 20);
@@ -211,7 +212,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 		{
 			payloadDescriptor->Restore(buffer);
 
-			std::unique_ptr<Codecs::VP8::PayloadDescriptor> payloadDescriptor{ Codecs::VP8::Parse(
+			std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor> payloadDescriptor{ RTP::Codecs::VP8::Parse(
 				buffer, sizeof(buffer)) };
 
 			REQUIRE(payloadDescriptor->pictureId == 17);
@@ -243,7 +244,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 		};
 		// clang-format on
 
-		auto payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		auto payloadDescriptor = RTP::Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE_FALSE(payloadDescriptor);
 	}
@@ -269,7 +270,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 		};
 		// clang-format on
 
-		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		auto* payloadDescriptor = RTP::Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -322,7 +323,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 		};
 		// clang-format on
 
-		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		auto* payloadDescriptor = RTP::Codecs::VP8::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(payloadDescriptor);
 
@@ -355,7 +356,7 @@ SCENARIO("OLD parse VP8 payload descriptor", "[codecs][vp8]")
 	}
 }
 
-Codecs::VP8::PayloadDescriptor* OLD_CreateVP8PayloadDescriptor(
+RTP::Codecs::VP8::PayloadDescriptor* CreateVP8PayloadDescriptor(
   uint8_t* buffer,
   size_t bufferLen,
   uint16_t pictureId,
@@ -374,60 +375,60 @@ Codecs::VP8::PayloadDescriptor* OLD_CreateVP8PayloadDescriptor(
 		buffer[5] |= 0x20; // y bit
 	}
 
-	auto* payloadDescriptor = Codecs::VP8::Parse(buffer, bufferLen);
+	auto* payloadDescriptor = RTP::Codecs::VP8::Parse(buffer, bufferLen);
 
 	REQUIRE(payloadDescriptor);
 
 	return payloadDescriptor;
 }
 
-std::unique_ptr<Codecs::VP8::PayloadDescriptor> ProcessPacket(
-  Codecs::VP8::EncodingContext& context,
+std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor> ProcessVP8Packet(
+  RTP::Codecs::VP8::EncodingContext& context,
   uint16_t pictureId,
   uint8_t tl0PictureIndex,
   uint8_t tlIndex,
   bool layerSync = true)
 {
 	// clang-format off
-	uint8_t buffer[] =
+	uint8_t payload[] =
 	{
 		0x90, 0xe0, 0x80, 0x00, 0x00, 0x00
 	};
 	// clang-format on
 
-	auto packet = helpers::CreateOldRtpPacket(buffer, sizeof(buffer));
+	std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
 
-	REQUIRE(packet);
+	packet->SetPayload(payload, sizeof(payload));
 
 	bool marker;
-	auto* payloadDescriptor = OLD_CreateVP8PayloadDescriptor(
+	auto* payloadDescriptor = CreateVP8PayloadDescriptor(
 	  packet->GetPayload(), packet->GetPayloadLength(), pictureId, tl0PictureIndex, tlIndex, layerSync);
-	std::unique_ptr<Codecs::VP8::PayloadDescriptorHandler> payloadDescriptorHandler(
-	  new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor));
+	std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptorHandler> payloadDescriptorHandler(
+	  new RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor));
 
 	if (payloadDescriptorHandler->Process(&context, packet.get(), marker))
 	{
-		return std::unique_ptr<Codecs::VP8::PayloadDescriptor>(
-		  Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength()));
+		return std::unique_ptr<RTP::Codecs::VP8::PayloadDescriptor>(
+		  RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength()));
 	}
 
 	return nullptr;
 }
 
-SCENARIO("OLD process VP8 payload descriptor", "[codecs][vp8]")
+SCENARIO("process VP8 payload descriptor", "[rtp][codecs][vp8]")
 {
 	SECTION("do not drop TL0PICIDX from temporal layers higher than 0")
 	{
-		RTC::Codecs::EncodingContext::Params params;
+		RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 0;
 		params.temporalLayers = 2;
-		Codecs::VP8::EncodingContext context(params);
+		RTP::Codecs::VP8::EncodingContext context(params);
 
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
 
 		// Frame 1.
-		auto forwarded = ProcessPacket(context, 0, 0, 0);
+		auto forwarded = ProcessVP8Packet(context, 0, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 0);
 		REQUIRE(forwarded->tl0PictureIndex == 0);
@@ -435,11 +436,11 @@ SCENARIO("OLD process VP8 payload descriptor", "[codecs][vp8]")
 		// Frame 2 gets lost.
 
 		// Frame 3.
-		forwarded = ProcessPacket(context, 2, 1, 1);
+		forwarded = ProcessVP8Packet(context, 2, 1, 1);
 		REQUIRE_FALSE(forwarded);
 
 		// Frame 2 retransmitted.
-		forwarded = ProcessPacket(context, 1, 1, 0);
+		forwarded = ProcessVP8Packet(context, 1, 1, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 1);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
@@ -447,83 +448,83 @@ SCENARIO("OLD process VP8 payload descriptor", "[codecs][vp8]")
 
 	SECTION("drop packets that belong to other temporal layers after rolling over pictureID")
 	{
-		RTC::Codecs::EncodingContext::Params params;
+		RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 0;
 		params.temporalLayers = 2;
-		Codecs::VP8::EncodingContext context(params);
+		RTP::Codecs::VP8::EncodingContext context(params);
 		context.SyncRequired();
 
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
 
 		// Frame 1.
-		auto forwarded = ProcessPacket(context, MaxPictureId, 0, 0);
+		auto forwarded = ProcessVP8Packet(context, MaxPictureId, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 1);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
 
 		// Frame 2.
-		forwarded = ProcessPacket(context, 0, 0, 0);
+		forwarded = ProcessVP8Packet(context, 0, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 2);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
 
 		// Frame 3.
-		forwarded = ProcessPacket(context, 1, 0, 1);
+		forwarded = ProcessVP8Packet(context, 1, 0, 1);
 		REQUIRE_FALSE(forwarded);
 	}
 
 	SECTION("old packets with higher temporal layer than current are dropped")
 	{
-		RTC::Codecs::EncodingContext::Params params;
+		RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 0;
 		params.temporalLayers = 2;
-		Codecs::VP8::EncodingContext context(params);
+		RTP::Codecs::VP8::EncodingContext context(params);
 		context.SyncRequired();
 
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
 
 		// Frame 1.
-		auto forwarded = ProcessPacket(context, 1, 0, 0);
+		auto forwarded = ProcessVP8Packet(context, 1, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 1);
 		REQUIRE(forwarded->tlIndex == 0);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
 
 		// Frame 2.
-		forwarded = ProcessPacket(context, 2, 0, 0);
+		forwarded = ProcessVP8Packet(context, 2, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 2);
 		REQUIRE(forwarded->tlIndex == 0);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
 
 		// Frame 3. Old packet with higher temporal layer than current.
-		forwarded = ProcessPacket(context, 0, 0, 1);
+		forwarded = ProcessVP8Packet(context, 0, 0, 1);
 		REQUIRE_FALSE(forwarded);
 		REQUIRE(context.GetCurrentTemporalLayer() == 0);
 	}
 
 	SECTION("packets with higher temporal layer than current are dropped")
 	{
-		RTC::Codecs::EncodingContext::Params params;
+		RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 0;
 		params.temporalLayers = 2;
-		Codecs::VP8::EncodingContext context(params);
+		RTP::Codecs::VP8::EncodingContext context(params);
 		context.SyncRequired();
 
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
 
 		// Frame 1.
-		auto forwarded = ProcessPacket(context, 1, 0, 0);
+		auto forwarded = ProcessVP8Packet(context, 1, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 1);
 		REQUIRE(forwarded->tlIndex == 0);
 		REQUIRE(forwarded->tl0PictureIndex == 1);
 
 		// Frame 2.
-		forwarded = ProcessPacket(context, 2, 0, 0);
+		forwarded = ProcessVP8Packet(context, 2, 0, 0);
 		REQUIRE(forwarded);
 		REQUIRE(forwarded->pictureId == 2);
 		REQUIRE(forwarded->tlIndex == 0);
@@ -532,13 +533,13 @@ SCENARIO("OLD process VP8 payload descriptor", "[codecs][vp8]")
 		context.SetTargetTemporalLayer(2);
 
 		// Frame 3. Old packet with higher temporal layer than current.
-		forwarded = ProcessPacket(context, 3, 0, 1);
+		forwarded = ProcessVP8Packet(context, 3, 0, 1);
 		REQUIRE_FALSE(forwarded);
 		REQUIRE(context.GetCurrentTemporalLayer() == 0);
 	}
 }
 
-SCENARIO("OLD encode VP8 payload descriptor", "[codecs][vp8]")
+SCENARIO("encode VP8 payload descriptor", "[rtp][codecs][vp8]")
 {
 	/**
 	 * VP8 Payload Descriptor
@@ -557,7 +558,7 @@ SCENARIO("OLD encode VP8 payload descriptor", "[codecs][vp8]")
 	 */
 
 	// clang-format off
-	uint8_t buffer[] =
+	uint8_t payload[] =
 	{
 		0x80, 0xe0, 0x01, 0x01,
 		0xe8, 0x40, 0x7a, 0xd8
@@ -568,23 +569,27 @@ SCENARIO("OLD encode VP8 payload descriptor", "[codecs][vp8]")
 
 	SECTION("encode based on specific encoder")
 	{
-		auto* payloadDescriptor = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		auto* payloadDescriptor = RTP::Codecs::VP8::Parse(payload, sizeof(payload));
 
 		REQUIRE(payloadDescriptor);
 
-		RTC::Codecs::EncodingContext::Params params;
+		RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 0;
 		params.temporalLayers = 3;
-		Codecs::VP8::EncodingContext context(params);
+		RTP::Codecs::VP8::EncodingContext context(params);
 
 		context.SetCurrentTemporalLayer(3);
 		context.SetTargetTemporalLayer(3);
 
 		REQUIRE(payloadDescriptor->pictureId == 1);
 
-		auto* payloadDescriptorHandler = new Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor);
+		auto* payloadDescriptorHandler =
+		  new RTP::Codecs::VP8::PayloadDescriptorHandler(payloadDescriptor);
 
-		auto packet    = helpers::CreateOldRtpPacket(buffer, sizeof(buffer));
+		std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+
+		packet->SetPayload(payload, sizeof(payload));
+
 		auto forwarded = payloadDescriptorHandler->Process(&context, packet.get(), marker);
 		REQUIRE(forwarded);
 
@@ -594,7 +599,10 @@ SCENARIO("OLD encode VP8 payload descriptor", "[codecs][vp8]")
 		// Update pictureId.
 		payloadDescriptor->pictureId = 2;
 
-		packet    = helpers::CreateOldRtpPacket(buffer, sizeof(buffer));
+		packet.reset(RTP::Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)));
+
+		packet->SetPayload(payload, sizeof(payload));
+
 		forwarded = payloadDescriptorHandler->Process(&context, packet.get(), marker);
 		REQUIRE(forwarded);
 		REQUIRE(payloadDescriptor->pictureId == 2);
@@ -604,20 +612,27 @@ SCENARIO("OLD encode VP8 payload descriptor", "[codecs][vp8]")
 		REQUIRE(encoder2);
 
 		// Encode with encoder1.
-		packet = helpers::CreateOldRtpPacket(buffer, sizeof(buffer));
+		packet.reset(RTP::Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)));
+
+		packet->SetPayload(payload, sizeof(payload));
+
 		payloadDescriptorHandler->Encode(packet.get(), encoder1.get());
 
-		// Parse the buffer.
-		auto* payloadDescriptor2 = Codecs::VP8::Parse(buffer, sizeof(buffer));
+		// Parse the payload.
+		auto* payloadDescriptor2 = RTP::Codecs::VP8::Parse(payload, sizeof(payload));
 		REQUIRE(payloadDescriptor2);
 		REQUIRE(payloadDescriptor2->pictureId == 1);
 
 		// Encode with encoder2.
-		packet = helpers::CreateOldRtpPacket(buffer, sizeof(buffer));
+		packet.reset(RTP::Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)));
+
+		packet->SetPayload(payload, sizeof(payload));
+
 		payloadDescriptorHandler->Encode(packet.get(), encoder2.get());
 
-		// Parse the buffer.
-		auto* payloadDescriptor3 = Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
+		// Parse the payload.
+		auto* payloadDescriptor3 =
+		  RTP::Codecs::VP8::Parse(packet->GetPayload(), packet->GetPayloadLength());
 		REQUIRE(payloadDescriptor3);
 		REQUIRE(payloadDescriptor3->pictureId == 2);
 

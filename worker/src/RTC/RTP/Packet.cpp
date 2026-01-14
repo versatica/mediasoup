@@ -1031,8 +1031,8 @@ namespace RTC
 		}
 
 		bool Packet::ReadDependencyDescriptor(
-		  std::unique_ptr<RTC::Codecs::DependencyDescriptor>& dependencyDescriptor,
-		  std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+		  std::unique_ptr<Codecs::DependencyDescriptor>& dependencyDescriptor,
+		  std::unique_ptr<Codecs::DependencyDescriptor::TemplateDependencyStructure>&
 		    templateDependencyStructure) const
 		{
 			MS_TRACE();
@@ -1435,8 +1435,7 @@ namespace RTC
 			return true;
 		}
 
-		void Packet::SetPayloadDescriptorHandler(
-		  RTC::Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
+		void Packet::SetPayloadDescriptorHandler(Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
 		{
 			MS_TRACE();
 
@@ -1445,7 +1444,7 @@ namespace RTC
 			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}
 
-		bool Packet::ProcessPayload(RTC::Codecs::EncodingContext* context, bool& marker)
+		bool Packet::ProcessPayload(Codecs::EncodingContext* context, bool& marker)
 		{
 			MS_TRACE();
 
@@ -1459,7 +1458,7 @@ namespace RTC
 			return this->payloadDescriptorHandler->Process(context, this, marker);
 		}
 
-		std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> Packet::GetPayloadEncoder() const
+		std::unique_ptr<Codecs::PayloadDescriptor::Encoder> Packet::GetPayloadEncoder() const
 		{
 			MS_TRACE();
 
@@ -1471,7 +1470,7 @@ namespace RTC
 			return this->payloadDescriptorHandler->GetEncoder();
 		}
 
-		void Packet::EncodePayload(RTC::Codecs::PayloadDescriptor::Encoder* encoder)
+		void Packet::EncodePayload(Codecs::PayloadDescriptor::Encoder* encoder)
 		{
 			MS_TRACE();
 

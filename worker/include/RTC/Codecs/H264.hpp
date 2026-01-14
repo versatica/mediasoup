@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpPacket.hpp"
 
 namespace RTC
@@ -70,12 +69,7 @@ namespace RTC
 				}
 				bool Process(
 				  RTC::Codecs::EncodingContext* encodingContext, RTC::RtpPacket* packet, bool& marker) override;
-				bool Process(
-				  RTC::Codecs::EncodingContext* encodingContext,
-				  RTC::RTP::Packet* packet,
-				  bool& marker) override;
 				void RtpPacketChanged(RtpPacket* packet) override {};
-				void RtpPacketChanged(RTP::Packet* packet) override {};
 				std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> GetEncoder() const override
 				{
 					return nullptr;
@@ -83,13 +77,7 @@ namespace RTC
 				void Encode(RtpPacket* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
 				{
 				}
-				void Encode(RTP::Packet* packet, Codecs::PayloadDescriptor::Encoder* encoder) override
-				{
-				}
 				void Restore(RtpPacket* packet) override
-				{
-				}
-				void Restore(RTP::Packet* packet) override
 				{
 				}
 				uint8_t GetSpatialLayer() const override
