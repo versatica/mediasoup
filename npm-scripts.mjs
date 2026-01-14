@@ -248,6 +248,7 @@ function getPython() {
 	if (!python) {
 		try {
 			execSync('python3 --version', { stdio: ['ignore', 'ignore', 'ignore'] });
+
 			python = 'python3';
 		} catch (error) {
 			python = 'python';
