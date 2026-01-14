@@ -18,7 +18,7 @@
 
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 namespace webrtc {
 namespace rtcp {
@@ -65,7 +65,7 @@ class RemoteBitrateEstimator {
   virtual void IncomingPacket(
       int64_t arrival_time_ms,
       size_t payload_size,
-      const RTC::RtpPacket& packet,
+      const RTC::RTP::Packet& packet,
       uint32_t send_time_24bits) = 0;
 
   // Removes all data for |ssrc|.

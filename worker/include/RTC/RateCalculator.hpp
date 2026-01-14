@@ -2,7 +2,7 @@
 #define MS_RTC_RATE_CALCULATOR_HPP
 
 #include "common.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include <optional>
 #include <vector>
 
@@ -82,7 +82,7 @@ namespace RTC
 		}
 
 	public:
-		void Update(RTC::RtpPacket* packet);
+		void Update(RTC::RTP::Packet* packet);
 
 		uint32_t GetBitrate(uint64_t nowMs)
 		{

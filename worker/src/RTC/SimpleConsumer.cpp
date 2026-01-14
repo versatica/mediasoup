@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -40,7 +40,7 @@ namespace RTC
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::RTP::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Create RtpStreamSend instance for sending a single stream to the remote.
 		CreateRtpStream();
@@ -59,10 +59,10 @@ namespace RTC
 		  (mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::OPUS ||
 		   mediaCodec->mimeType.subtype == RTC::RtpCodecMimeType::Subtype::MULTIOPUS))
 		{
-			RTC::Codecs::EncodingContext::Params params;
+			RTC::RTP::Codecs::EncodingContext::Params params;
 
 			this->encodingContext.reset(
-			  RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
+			  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
 
 			// ignoreDtx is set to false by default.
 			this->encodingContext->SetIgnoreDtx(data->ignoreDtx());
@@ -313,7 +313,7 @@ namespace RTC
 	}
 
 	// NOLINTNEXTLINE (misc-no-recursion)
-	void SimpleConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	void SimpleConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -812,7 +812,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -870,7 +870,7 @@ namespace RTC
 	}
 
 	void SimpleConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
+	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

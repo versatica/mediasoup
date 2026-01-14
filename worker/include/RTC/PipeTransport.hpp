@@ -44,7 +44,7 @@ namespace RTC
 		bool HasSrtp() const;
 		void SendRtpPacket(
 		  RTC::Consumer* consumer,
-		  RTC::RtpPacket* packet,
+		  RTC::RTP::Packet* packet,
 		  RTC::Transport::onSendCallback* cb = nullptr) override;
 		void SendRtcpPacket(RTC::RTCP::Packet* packet) override;
 		void SendRtcpCompoundPacket(RTC::RTCP::CompoundPacket* packet) override;

@@ -197,7 +197,7 @@ namespace RTC
 		}
 	}
 
-	void RtpDataCounter::Update(RTC::RtpPacket* packet)
+	void RtpDataCounter::Update(RTC::RTP::Packet* packet)
 	{
 		this->packets++;
 
@@ -205,7 +205,7 @@ namespace RTC
 		{
 			const uint64_t nowMs = DepLibUV::GetTimeMs();
 
-			this->rate.Update(packet->GetSize(), nowMs);
+			this->rate.Update(packet->GetLength(), nowMs);
 		}
 	}
 } // namespace RTC

@@ -105,7 +105,7 @@ namespace RTC
 		return this->packetLoss;
 	}
 
-	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RtpPacket* packet)
+	void TransportCongestionControlServer::IncomingPacket(uint64_t nowMs, const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

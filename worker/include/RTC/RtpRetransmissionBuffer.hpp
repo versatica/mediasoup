@@ -2,9 +2,9 @@
 #define MS_RTC_RTP_RETRANSMISSION_BUFFER_HPP
 
 #include "common.hpp"
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
-#include "RTC/RtpPacket.hpp"
-#include "RTC/SharedRtpPacket.hpp"
+#include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include <deque>
 
 namespace RTC
@@ -21,9 +21,9 @@ namespace RTC
 			void Reset();
 
 			// Original packet.
-			RTC::SharedRtpPacket sharedPacket{ nullptr };
+			RTC::RTP::SharedPacket sharedPacket{ nullptr };
 			// Payload descriptor encoder.
-			std::unique_ptr<RTC::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
+			std::unique_ptr<RTC::RTP::Codecs::PayloadDescriptor::Encoder> encoder{ nullptr };
 			// Correct SSRC since original packet may not have the same.
 			uint32_t ssrc{ 0u };
 			// Correct sequence number since original packet may not have the same.
@@ -39,7 +39,8 @@ namespace RTC
 		};
 
 	private:
-		static Item* FillItem(Item* item, RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
+		static Item* FillItem(
+		  Item* item, RTC::RTP::Packet* packet, const RTC::RTP::SharedPacket& sharedPacket);
 
 	public:
 		RtpRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate);
@@ -47,7 +48,7 @@ namespace RTC
 
 		void Dump(int indentation = 0) const;
 		Item* Get(uint16_t seq) const;
-		bool Insert(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
+		bool Insert(RTC::RTP::Packet* packet, const RTC::RTP::SharedPacket& sharedPacket);
 		void Clear();
 
 	private:

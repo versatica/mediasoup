@@ -5,7 +5,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
@@ -20,10 +20,10 @@ namespace RTC
 	/* Class methods */
 
 	void PipeConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
+	  std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>&
 	    targetLayerRetransmissionBuffer,
-	  RTC::RtpPacket* packet,
-	  RTC::SharedRtpPacket& sharedPacket)
+	  RTC::RTP::Packet* packet,
+	  RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -76,7 +76,7 @@ namespace RTC
 		auto& encoding         = this->rtpParameters.encodings[0];
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		this->keyFrameSupported = RTC::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
+		this->keyFrameSupported = RTC::RTP::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Create RtpStreamSend instances.
 		CreateRtpStreams();
@@ -265,7 +265,7 @@ namespace RTC
 	}
 
 	// NOLINTNEXTLINE (misc-no-recursion)
-	void PipeConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	void PipeConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -863,7 +863,7 @@ namespace RTC
 		// Do nothing.
 	}
 
-	void PipeConsumer::OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet)
+	void PipeConsumer::OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

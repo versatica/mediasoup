@@ -20,7 +20,7 @@
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/rate_statistics.h"
 
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -75,7 +75,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
   ~RemoteBitrateEstimatorAbsSendTime();
 
   void IncomingPacket(
-      int64_t arrivalTimeMs, size_t payloadSize, const RTC::RtpPacket& packet, uint32_t absSendTime) override;
+      int64_t arrivalTimeMs, size_t payloadSize, const RTC::RTP::Packet& packet, uint32_t absSendTime) override;
   // This class relies on Process() being called periodically (at least once
   // every other second) for streams to be timed out properly. Therefore it
   // shouldn't be detached from the ProcessThread except if it's about to be

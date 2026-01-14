@@ -12,7 +12,7 @@
 #include "RTC/DirectTransport.hpp"
 #include "RTC/PipeTransport.hpp"
 #include "RTC/PlainTransport.hpp"
-#include "RTC/SharedRtpPacket.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
 namespace RTC
@@ -650,7 +650,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtpPacketReceived(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
+	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -665,7 +665,7 @@ namespace RTC
 			// Cloned ref-counted packet that will be filled for as long as needed
 			// avoiding multiple allocations unless absolutely necessary.
 			// Clone only happens if needed and only once.
-			RTC::SharedRtpPacket sharedPacket;
+			RTC::RTP::SharedPacket sharedPacket;
 
 #ifdef MS_LIBURING_SUPPORTED
 			if (DepLibUring::IsEnabled())

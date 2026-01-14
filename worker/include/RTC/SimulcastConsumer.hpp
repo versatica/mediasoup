@@ -2,8 +2,8 @@
 #define MS_RTC_SIMULCAST_CONSUMER_HPP
 
 #include "FBS/consumer.h"
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
+#include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 #include <map>
@@ -64,7 +64,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) override;
+		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) override;
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
@@ -97,7 +97,7 @@ namespace RTC
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
 		void StorePacketInTargetLayerRetransmissionBuffer(
-		  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket);
+		  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
 		void EmitLayersChange() const;
 		RTC::RtpStreamRecv* GetProducerCurrentRtpStream() const;
 		RTC::RtpStreamRecv* GetProducerTargetRtpStream() const;
@@ -106,7 +106,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
 
 	private:
 		// Allocated by this.
@@ -126,14 +126,14 @@ namespace RTC
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		uint16_t snReferenceSpatialLayer{ 0 };
 		bool checkingForOldPacketsInSpatialLayer{ false };
-		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
 		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
 		bool keyFrameForTsOffsetRequested{ false };
 		// Last time we moved to lower spatial layer due to BWE.
 		uint64_t lastBweDowngradeAtMs{ 0u };
 		// Buffer to store packets that arrive earlier than the first packet of the
 		// video key frame.
-		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC

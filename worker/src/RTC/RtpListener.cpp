@@ -184,7 +184,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Producer* RtpListener::GetProducer(const RTC::RtpPacket* packet)
+	RTC::Producer* RtpListener::GetProducer(const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

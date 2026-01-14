@@ -5,8 +5,8 @@
 #include "FBS/rtxStream.h"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpPacket.hpp"
 #include <string>
 
 namespace RTC
@@ -68,12 +68,12 @@ namespace RTC
 		{
 			return this->packetsDiscarded;
 		}
-		bool ReceivePacket(RTC::RtpPacket* packet);
+		bool ReceivePacket(RTC::RTP::Packet* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 
 	protected:
-		bool UpdateSeq(RTC::RtpPacket* packet);
+		bool UpdateSeq(RTC::RTP::Packet* packet);
 		uint32_t GetExpectedPackets() const
 		{
 			return (this->cycles + this->maxSeq) - this->baseSeq + 1;

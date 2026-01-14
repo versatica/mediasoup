@@ -9,9 +9,9 @@
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include <string>
@@ -31,10 +31,10 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len)                  = 0;
-			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnProducerPaused(RTC::Producer* producer)                                   = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer)                                  = 0;
+			virtual void OnProducerReceiveData(RTC::Producer* producer, size_t len) = 0;
+			virtual void OnProducerReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
+			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
+			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
 			virtual void OnProducerNewRtpStream(
 			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 			virtual void OnProducerRtpStreamScore(
@@ -43,8 +43,8 @@ namespace RTC
 			  uint8_t score,
 			  uint8_t previousScore) = 0;
 			virtual void OnProducerRtcpSenderReport(
-			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first)                     = 0;
-			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
+			  RTC::Producer* producer, RTC::RtpStreamRecv* rtpStream, bool first) = 0;
+			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnProducerNeedWorstRemoteFractionLost(
 			  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
@@ -133,7 +133,7 @@ namespace RTC
 		{
 			return std::addressof(this->rtpStreamScores);
 		}
-		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RTP::Packet* packet);
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
@@ -148,15 +148,15 @@ namespace RTC
 		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	private:
-		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
+		RTC::RtpStreamRecv* GetRtpStream(RTC::RTP::Packet* packet);
 		RTC::RtpStreamRecv* CreateRtpStream(
-		  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
+		  RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream);
-		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;
-		void PostProcessRtpPacket(RTC::RtpPacket* packet);
+		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RtpStreamRecv* rtpStream) const;
+		void PostProcessRtpPacket(RTC::RTP::Packet* packet);
 		void EmitScore() const;
-		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitTraceEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RTP::Packet* packet, bool isRtx = false) const;
+		void EmitTraceEventKeyFrameType(RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
@@ -198,7 +198,7 @@ namespace RTC
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		bool paused{ false };
 		bool enableMediasoupPacketIdHeaderExtension{ false };
-		RTC::RtpPacket* currentRtpPacket{ nullptr };
+		RTC::RTP::Packet* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0u };
 		uint16_t maxRtcpInterval{ 0u };

@@ -1,10 +1,10 @@
 #ifndef MS_RTC_RTP_STREAM_SEND_HPP
 #define MS_RTC_RTP_STREAM_SEND_HPP
 
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RateCalculator.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
 #include "RTC/RtpStream.hpp"
-#include "RTC/SharedRtpPacket.hpp"
 
 namespace RTC
 {
@@ -29,7 +29,7 @@ namespace RTC
 		{
 		public:
 			virtual void OnRtpStreamRetransmitRtpPacket(
-			  RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) = 0;
+			  RTC::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) = 0;
 		};
 
 	public:
@@ -40,7 +40,8 @@ namespace RTC
 		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		void SetRtx(uint8_t payloadType, uint32_t ssrc) override;
-		ReceivePacketResult ReceivePacket(RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket);
+		ReceivePacketResult ReceivePacket(
+		  RTC::RTP::Packet* packet, const RTC::RTP::SharedPacket& sharedPacket);
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket);
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType);
 		void ReceiveRtcpReceiverReport(RTC::RTCP::ReceiverReport* report);

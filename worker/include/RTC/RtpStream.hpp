@@ -13,8 +13,8 @@
 #include "RTC/RTCP/SenderReport.hpp"            // IWYU pragma: export
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"      // IWYU pragma: export
 #include "RTC/RTCP/XrReceiverReferenceTime.hpp" // IWYU pragma: export
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtxStream.hpp"
 #include <string>
 #include <vector>
@@ -117,7 +117,7 @@ namespace RTC
 		{
 			return this->params.temporalLayers;
 		}
-		virtual bool ReceiveStreamPacket(RTC::RtpPacket* packet);
+		virtual bool ReceiveStreamPacket(RTC::RTP::Packet* packet);
 		virtual void Pause()                                                                     = 0;
 		virtual void Resume()                                                                    = 0;
 		virtual uint32_t GetBitrate(uint64_t nowMs)                                              = 0;
@@ -163,10 +163,10 @@ namespace RTC
 		}
 
 	protected:
-		bool UpdateSeq(RTC::RtpPacket* packet);
+		bool UpdateSeq(RTC::RTP::Packet* packet);
 		void UpdateScore(uint8_t score);
-		void PacketRetransmitted(RTC::RtpPacket* packet);
-		void PacketRepaired(RTC::RtpPacket* packet);
+		void PacketRetransmitted(RTC::RTP::Packet* packet);
+		void PacketRepaired(RTC::RTP::Packet* packet);
 		uint32_t GetExpectedPackets() const
 		{
 			return (this->cycles + this->maxSeq) - this->baseSeq + 1;

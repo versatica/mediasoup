@@ -5,7 +5,7 @@
 #include "RTC/BweType.hpp"
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpProbationGenerator.hpp"
 #include "RTC/TrendCalculator.hpp"
 #include "handles/TimerHandle.hpp"
@@ -47,7 +47,7 @@ namespace RTC
 			  RTC::TransportCongestionControlClient::Bitrates& bitrates) = 0;
 			virtual void OnTransportCongestionControlClientSendRtpPacket(
 			  RTC::TransportCongestionControlClient* tccClient,
-			  RTC::RtpPacket* packet,
+			  RTC::RTP::Packet* packet,
 			  const webrtc::PacedPacketInfo& pacingInfo) = 0;
 		};
 
@@ -101,8 +101,8 @@ namespace RTC
 
 		/* Pure virtual methods inherited from webrtc::PacketRouter. */
 	public:
-		void SendPacket(RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
-		RTC::RtpPacket* GeneratePadding(size_t size) override;
+		void SendPacket(RTC::RTP::Packet* packet, const webrtc::PacedPacketInfo& pacingInfo) override;
+		RTC::RTP::Packet* GeneratePadding(size_t size) override;
 
 		/* Pure virtual methods inherited from RTC::TimerHandle. */
 	public:

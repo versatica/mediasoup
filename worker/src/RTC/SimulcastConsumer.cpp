@@ -6,7 +6,7 @@
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
 #endif
@@ -99,7 +99,7 @@ namespace RTC
 		// Create the encoding context.
 		const auto* mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-		if (!RTC::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
+		if (!RTC::RTP::Codecs::Tools::IsValidTypeForCodec(this->type, mediaCodec->mimeType))
 		{
 			MS_THROW_TYPE_ERROR(
 			  "%s codec not supported for simulcast", mediaCodec->mimeType.ToString().c_str());
@@ -113,12 +113,13 @@ namespace RTC
 
 		this->rtpSeqManager = RTC::SeqManager<uint16_t>(initialOutputSeq);
 
-		RTC::Codecs::EncodingContext::Params params;
+		RTC::RTP::Codecs::EncodingContext::Params params;
 
 		params.spatialLayers  = encoding.spatialLayers;
 		params.temporalLayers = encoding.temporalLayers;
 
-		this->encodingContext.reset(RTC::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
+		this->encodingContext.reset(
+		  RTC::RTP::Codecs::Tools::GetEncodingContext(mediaCodec->mimeType, params));
 
 		MS_ASSERT(this->encodingContext, "no encoding context for this codec");
 
@@ -721,7 +722,7 @@ namespace RTC
 	}
 
 	// NOLINTNEXTLINE (misc-no-recursion)
-	void SimulcastConsumer::SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	void SimulcastConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1776,7 +1777,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::StorePacketInTargetLayerRetransmissionBuffer(
-	  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket)
+	  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 
@@ -1914,7 +1915,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet)
+	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

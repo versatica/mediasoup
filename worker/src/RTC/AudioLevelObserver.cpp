@@ -80,7 +80,7 @@ namespace RTC
 		this->mapProducerDBovs.erase(producer);
 	}
 
-	void AudioLevelObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void AudioLevelObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

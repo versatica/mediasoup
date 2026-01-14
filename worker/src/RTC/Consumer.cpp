@@ -488,7 +488,7 @@ namespace RTC
 		this->listener->OnConsumerProducerClosed(this);
 	}
 
-	void Consumer::EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx) const
+	void Consumer::EmitTraceEventRtpAndKeyFrameTypes(RTC::RTP::Packet* packet, bool isRtx) const
 	{
 		MS_TRACE();
 

@@ -4,7 +4,7 @@
 #include "RTC/RtpStreamRecv.hpp"
 #include "Logger.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 
 namespace RTC
 {
@@ -32,7 +32,7 @@ namespace RTC
 		}
 	}
 
-	void RtpStreamRecv::TransmissionCounter::Update(RTC::RtpPacket* packet)
+	void RtpStreamRecv::TransmissionCounter::Update(RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -260,7 +260,7 @@ namespace RTC
 		return FBS::RtpStream::CreateStats(builder, FBS::RtpStream::StatsData::RecvStats, stats.Union());
 	}
 
-	bool RtpStreamRecv::ReceivePacket(RTC::RtpPacket* packet)
+	bool RtpStreamRecv::ReceivePacket(RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -275,7 +275,8 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
+			RTC::RTP::Codecs::Tools::ProcessRtpPacket(
+			  packet, GetMimeType(), this->templateDependencyStructure);
 		}
 
 		// Pass the packet to the NackGenerator.
@@ -328,7 +329,7 @@ namespace RTC
 		return true;
 	}
 
-	bool RtpStreamRecv::ReceiveRtxPacket(RTC::RtpPacket* packet)
+	bool RtpStreamRecv::ReceiveRtxPacket(RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -405,7 +406,8 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType(), this->templateDependencyStructure);
+			RTC::RTP::Codecs::Tools::ProcessRtpPacket(
+			  packet, GetMimeType(), this->templateDependencyStructure);
 		}
 
 		// Mark the packet as retransmitted.

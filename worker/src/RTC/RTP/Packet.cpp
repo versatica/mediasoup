@@ -67,6 +67,31 @@ namespace RTC
 			return packet;
 		}
 
+		Packet* Packet::ParseFromApplicationBuffer(uint8_t* buffer, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (!Packet::IsRtp(buffer, bufferLength))
+			{
+				MS_WARN_TAG(rtp, "not a RTP Packet");
+
+				return nullptr;
+			}
+
+			auto* packet = new Packet(buffer, bufferLength);
+
+			// Packet length must be the length of the given buffer.
+			packet->SetLength(bufferLength);
+
+			if (!packet->Validate())
+			{
+				delete packet;
+				return nullptr;
+			}
+
+			return packet;
+		}
+
 		Packet* Packet::Factory(uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -825,7 +850,7 @@ namespace RTC
 			}
 		}
 
-		void Packet::AssignExtensionIds(RTC::RtpHeaderExtensionIds headerExtensionIds)
+		void Packet::AssignExtensionIds(RTC::RtpHeaderExtensionIds& headerExtensionIds)
 		{
 			MS_TRACE();
 
@@ -1438,8 +1463,6 @@ namespace RTC
 		void Packet::SetPayloadDescriptorHandler(Codecs::PayloadDescriptorHandler* payloadDescriptorHandler)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			this->payloadDescriptorHandler.reset(payloadDescriptorHandler);
 		}

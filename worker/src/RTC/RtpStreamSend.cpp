@@ -99,7 +99,7 @@ namespace RTC
 	}
 
 	RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(
-	  RTC::RtpPacket* packet, const RTC::SharedRtpPacket& sharedPacket)
+	  RTC::RTP::Packet* packet, const RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
 

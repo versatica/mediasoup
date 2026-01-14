@@ -176,6 +176,16 @@ namespace RTC
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
 
 			/**
+			 * Parse a RTP Packet from an application allocated buffer.
+			 *
+			 * @remarks
+			 * - Difference ith Parse() is that this method doesn't freeze the
+			 *   generated Packet.
+			 * - `bufferLength` must be the exact length of the Packet.
+			 */
+			static Packet* ParseFromApplicationBuffer(uint8_t* buffer, size_t bufferLength);
+
+			/**
 			 * Create a RTP Packet.
 			 */
 			static Packet* Factory(uint8_t* buffer, size_t bufferLength);
@@ -468,7 +478,7 @@ namespace RTC
 			 *
 			 * @see RFC 8285.
 			 */
-			void AssignExtensionIds(RTC::RtpHeaderExtensionIds headerExtensionIds);
+			void AssignExtensionIds(RTC::RtpHeaderExtensionIds& headerExtensionIds);
 
 			bool ReadMid(std::string& mid) const;
 

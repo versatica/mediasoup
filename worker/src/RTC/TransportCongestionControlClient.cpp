@@ -541,7 +541,7 @@ namespace RTC
 
 	// Called from PacedSender in order to send probation packets.
 	void TransportCongestionControlClient::SendPacket(
-	  RTC::RtpPacket* packet, const webrtc::PacedPacketInfo& pacingInfo)
+	  RTC::RTP::Packet* packet, const webrtc::PacedPacketInfo& pacingInfo)
 	{
 		MS_TRACE();
 
@@ -549,7 +549,7 @@ namespace RTC
 		this->listener->OnTransportCongestionControlClientSendRtpPacket(this, packet, pacingInfo);
 	}
 
-	RTC::RtpPacket* TransportCongestionControlClient::GeneratePadding(size_t size)
+	RTC::RTP::Packet* TransportCongestionControlClient::GeneratePadding(size_t size)
 	{
 		MS_TRACE();
 		MS_ASSERT(this->probationGenerator, "probation generator not initialized")

@@ -3,7 +3,7 @@
 
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/Codecs/Tools.hpp"
+#include "RTC/RTP/Codecs/Tools.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include <absl/container/flat_hash_set.h>
 
@@ -35,11 +35,12 @@ namespace RTC
 
 			if (encoding.spatialLayers > 1 || encoding.temporalLayers > 1)
 			{
-				if (RTC::Codecs::Tools::IsValidTypeForCodec(RtpParameters::Type::SVC, mediaCodec->mimeType))
+				if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
+				      RtpParameters::Type::SVC, mediaCodec->mimeType))
 				{
 					type.emplace(RtpParameters::Type::SVC);
 				}
-				else if (RTC::Codecs::Tools::IsValidTypeForCodec(
+				else if (RTC::RTP::Codecs::Tools::IsValidTypeForCodec(
 				           RtpParameters::Type::SIMULCAST, mediaCodec->mimeType))
 				{
 					type.emplace(RtpParameters::Type::SIMULCAST);

@@ -7,8 +7,8 @@
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
 #include "RTC/Producer.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpObserver.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/Transport.hpp"
@@ -76,7 +76,7 @@ namespace RTC
 		  RTC::RtpStreamRecv* rtpStream,
 		  bool first) override;
 		void OnTransportProducerRtpPacketReceived(
-		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		  RTC::Transport* transport, RTC::Producer* producer, RTC::RTP::Packet* packet) override;
 		void OnTransportNeedWorstRemoteFractionLost(
 		  RTC::Transport* transport,
 		  RTC::Producer* producer,

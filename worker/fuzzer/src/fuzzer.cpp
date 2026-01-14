@@ -8,16 +8,9 @@
 #include "FuzzerUtils.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
-#include "RTC/Codecs/FuzzerAV1.hpp"
-#include "RTC/Codecs/FuzzerDependencyDescriptor.hpp"
-#include "RTC/Codecs/FuzzerH264.hpp"
-#include "RTC/Codecs/FuzzerOpus.hpp"
-#include "RTC/Codecs/FuzzerVP8.hpp"
-#include "RTC/Codecs/FuzzerVP9.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/FuzzerDtlsTransport.hpp"
 #include "RTC/FuzzerRateCalculator.hpp"
-#include "RTC/FuzzerRtpPacket.hpp"
 #include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
 #include "RTC/FuzzerRtpStreamSend.hpp"
 #include "RTC/FuzzerSeqManager.hpp"
@@ -79,7 +72,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 	if (fuzzRtp)
 	{
-		Fuzzer::RTC::RtpPacket::Fuzz(data, len);
 		Fuzzer::RTC::RTP::Packet::Fuzz(data, len);
 		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
 		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
@@ -94,12 +86,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 	if (fuzzCodecs)
 	{
-		Fuzzer::RTC::Codecs::Opus::Fuzz(data, len);
-		Fuzzer::RTC::Codecs::VP8::Fuzz(data, len);
-		Fuzzer::RTC::Codecs::VP9::Fuzz(data, len);
-		Fuzzer::RTC::Codecs::H264::Fuzz(data, len);
-		Fuzzer::RTC::Codecs::AV1::Fuzz(data, len);
-		Fuzzer::RTC::Codecs::DependencyDescriptor::Fuzz(data, len);
 		Fuzzer::RTC::RTP::Codecs::Opus::Fuzz(data, len);
 		Fuzzer::RTC::RTP::Codecs::VP8::Fuzz(data, len);
 		Fuzzer::RTC::RTP::Codecs::VP9::Fuzz(data, len);

@@ -631,7 +631,7 @@ namespace RTC
 			OnRtcpDataReceived(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RTC::RtpPacket::IsRtp(data, len))
+		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
 			OnRtpDataReceived(tuple, data, len);
 		}
@@ -749,7 +749,7 @@ namespace RTC
 	}
 
 	void WebRtcTransport::SendRtpPacket(
-	  RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet, const RTC::Transport::onSendCallback* cb)
+	  RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet, const RTC::Transport::onSendCallback* cb)
 	{
 		MS_TRACE();
 
@@ -778,8 +778,8 @@ namespace RTC
 			return;
 		}
 
-		const uint8_t* data = packet->GetData();
-		auto len            = packet->GetSize();
+		const uint8_t* data = packet->GetBuffer();
+		auto len            = packet->GetLength();
 
 		if (!this->srtpSendSession->EncryptRtp(&data, &len))
 		{
@@ -886,7 +886,7 @@ namespace RTC
 #ifdef MS_SCTP_STACK
 		MS_DUMP(">>> sending SCTP packet...");
 
-		auto* packet = RTC::SCTP::Packet::Parse(data, len);
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
 
 		if (!packet)
 		{
@@ -942,7 +942,7 @@ namespace RTC
 			OnRtcpDataReceived(tuple, data, len);
 		}
 		// Check if it's RTP.
-		else if (RTC::RtpPacket::IsRtp(data, len))
+		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
 			OnRtpDataReceived(tuple, data, len);
 		}
@@ -962,7 +962,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
+		auto* packet = RTC::StunPacket::Parse(data, len);
 
 		if (!packet)
 		{
@@ -1042,7 +1042,7 @@ namespace RTC
 		// Decrypt the SRTP packet.
 		if (!this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
 		{
-			RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+			const auto* packet = RTC::RTP::Packet::Parse(data, len);
 
 			if (!packet)
 			{
@@ -1063,7 +1063,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RtpPacket* packet = RTC::RtpPacket::Parse(data, len);
+		auto* packet = RTC::RTP::Packet::Parse(data, len);
 
 		if (!packet)
 		{
@@ -1114,7 +1114,7 @@ namespace RTC
 			return;
 		}
 
-		RTC::RTCP::Packet* packet = RTC::RTCP::Packet::Parse(data, len);
+		auto* packet = RTC::RTCP::Packet::Parse(data, len);
 
 		if (!packet)
 		{
@@ -1465,7 +1465,7 @@ namespace RTC
 #ifdef MS_SCTP_STACK
 		MS_DUMP("<<< receiving SCTP packet...");
 
-		auto* packet = RTC::SCTP::Packet::Parse(data, len);
+		const auto* packet = RTC::SCTP::Packet::Parse(data, len);
 
 		if (!packet)
 		{

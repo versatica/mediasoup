@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_PROBATION_GENERATOR_HPP
 
 #include "common.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 namespace RTC
 {
@@ -18,12 +18,12 @@ namespace RTC
 		~RtpProbationGenerator();
 
 	public:
-		RTC::RtpPacket* GetNextPacket(size_t size);
+		RTC::RTP::Packet* GetNextPacket(size_t len);
 
 	private:
 		// Allocated by this.
 		uint8_t* probationPacketBuffer{ nullptr };
-		RTC::RtpPacket* probationPacket{ nullptr };
+		RTC::RTP::Packet* probationPacket{ nullptr };
 	}; // namespace RTC
 
 } // namespace RTC

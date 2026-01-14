@@ -29,7 +29,7 @@ namespace RTC
 		{
 		public:
 			TransmissionCounter(uint8_t spatialLayers, uint8_t temporalLayers, size_t windowSize);
-			void Update(RTC::RtpPacket* packet);
+			void Update(RTC::RTP::Packet* packet);
 			uint32_t GetBitrate(uint64_t nowMs);
 			uint32_t GetBitrate(uint64_t nowMs, uint8_t spatialLayer, uint8_t temporalLayer);
 			uint32_t GetSpatialLayerBitrate(uint64_t nowMs, uint8_t spatialLayer);
@@ -51,8 +51,8 @@ namespace RTC
 
 		flatbuffers::Offset<FBS::RtpStream::Stats> FillBufferStats(
 		  flatbuffers::FlatBufferBuilder& builder) override;
-		bool ReceivePacket(RTC::RtpPacket* packet);
-		bool ReceiveRtxPacket(RTC::RtpPacket* packet);
+		bool ReceivePacket(RTC::RTP::Packet* packet);
+		bool ReceiveRtxPacket(RTC::RTP::Packet* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		RTC::RTCP::ReceiverReport* GetRtxRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
@@ -129,7 +129,8 @@ namespace RTC
 		// Just valid media.
 		RTC::RtpDataCounter mediaTransmissionCounter;
 		// Template dependency structure for Dependency Descriptor.
-		std::unique_ptr<RTC::Codecs::DependencyDescriptor::TemplateDependencyStructure> templateDependencyStructure;
+		std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+		  templateDependencyStructure;
 	};
 } // namespace RTC
 

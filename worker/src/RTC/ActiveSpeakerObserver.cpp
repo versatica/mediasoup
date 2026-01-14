@@ -205,7 +205,7 @@ namespace RTC
 		}
 	}
 
-	void ActiveSpeakerObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void ActiveSpeakerObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

@@ -1,8 +1,8 @@
 #ifndef MS_RTC_SVC_CONSUMER_HPP
 #define MS_RTC_SVC_CONSUMER_HPP
 
-#include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Consumer.hpp"
+#include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 #include <map>
@@ -57,7 +57,7 @@ namespace RTC
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
-		void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) override;
+		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) override;
 		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
 		{
@@ -87,13 +87,13 @@ namespace RTC
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		void EmitScore() const;
 		void StorePacketInTargetLayerRetransmissionBuffer(
-		  RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket);
+		  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
 		void EmitLayersChange() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
 		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RtpPacket* packet) override;
+		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
 
 	private:
 		// Allocated by this.
@@ -105,12 +105,12 @@ namespace RTC
 		RTC::SeqManager<uint16_t> rtpSeqManager;
 		VideoLayers preferredLayers;
 		VideoLayers provisionalTargetLayers;
-		std::unique_ptr<RTC::Codecs::EncodingContext> encodingContext;
+		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
 		// Last time we moved to lower spatial layer due to BWE.
 		uint64_t lastBweDowngradeAtMs{ 0u };
 		// Buffer to store packets that arrive earlier than the first packet of the
 		// video key frame.
-		std::map<uint16_t, RTC::SharedRtpPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
+		std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
 	};
 } // namespace RTC

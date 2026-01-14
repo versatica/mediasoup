@@ -9,13 +9,13 @@
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/RtpStreamSend.hpp"
 #include "RTC/Shared.hpp"
-#include "RTC/SharedRtpPacket.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
 #include <vector>
@@ -33,8 +33,8 @@ namespace RTC
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
-			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) = 0;
+			virtual void OnConsumerSendRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) = 0;
+			virtual void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) = 0;
 			virtual void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
 			virtual void OnConsumerNeedBitrateChange(RTC::Consumer* consumer)                      = 0;
 			virtual void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer)                        = 0;
@@ -138,13 +138,13 @@ namespace RTC
 		{
 			this->externallyManagedBitrate = true;
 		}
-		virtual uint8_t GetBitratePriority() const                                             = 0;
-		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss)                    = 0;
-		virtual void ApplyLayers()                                                             = 0;
-		virtual uint32_t GetDesiredBitrate() const                                             = 0;
-		virtual void SendRtpPacket(RTC::RtpPacket* packet, RTC::SharedRtpPacket& sharedPacket) = 0;
-		virtual bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)                = 0;
-		virtual const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const                  = 0;
+		virtual uint8_t GetBitratePriority() const                                                 = 0;
+		virtual uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss)                        = 0;
+		virtual void ApplyLayers()                                                                 = 0;
+		virtual uint32_t GetDesiredBitrate() const                                                 = 0;
+		virtual void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) = 0;
+		virtual bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)                    = 0;
+		virtual const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const                      = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
 		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
 		virtual void ReceiveKeyFrameRequest(
@@ -159,8 +159,8 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	protected:
-		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RtpPacket* packet, bool isRtx = false) const;
-		void EmitTraceEventKeyFrameType(RTC::RtpPacket* packet, bool isRtx = false) const;
+		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RTP::Packet* packet, bool isRtx = false) const;
+		void EmitTraceEventKeyFrameType(RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;

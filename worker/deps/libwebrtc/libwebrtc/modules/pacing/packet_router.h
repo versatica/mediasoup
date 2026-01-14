@@ -14,7 +14,7 @@
 #include "api/transport/network_types.h"
 #include "rtc_base/constructor_magic.h"
 
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -31,11 +31,11 @@ class PacketRouter {
   PacketRouter() = default;
   virtual ~PacketRouter() = default;
 
-  virtual void SendPacket(RTC::RtpPacket* packet,
+  virtual void SendPacket(RTC::RTP::Packet* packet,
                           const PacedPacketInfo& cluster_info) = 0;
 
-  // MS_NOTE: Changed to return a single RtpPacket pointer (maybe nullptr).
-  virtual RTC::RtpPacket* GeneratePadding(size_t target_size_bytes) = 0;
+  // MS_NOTE: Changed to return a single RTP::Packet pointer (maybe nullptr).
+  virtual RTC::RTP::Packet* GeneratePadding(size_t target_size_bytes) = 0;
 };
 }  // namespace webrtc
 #endif  // MODULES_PACING_PACKET_ROUTER_H_
