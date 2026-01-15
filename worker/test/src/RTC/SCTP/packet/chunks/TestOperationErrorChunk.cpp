@@ -46,7 +46,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::OPERATION_ERROR,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -66,7 +65,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownType*/ false);
 
@@ -82,7 +80,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
@@ -95,7 +92,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(49159),
 		  /*unknownCode*/ true);
 
@@ -106,10 +102,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		REQUIRE(errorCause3->GetUnknownValue()[1] == 0x00);
 		REQUIRE(errorCause3->GetUnknownValue()[2] == 0x00);
 		REQUIRE(errorCause3->GetUnknownValue()[3] == 0x00);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->BuildErrorCauseInPlace<OutOfResourceErrorCause>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -122,7 +114,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 24,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::OPERATION_ERROR,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -142,7 +133,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownType*/ false);
 
@@ -157,7 +147,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
@@ -170,7 +159,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(49159),
 		  /*unknownCode*/ true);
 
@@ -195,7 +183,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 24,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::OPERATION_ERROR,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -215,7 +202,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownType*/ false);
 
@@ -230,7 +216,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
@@ -243,7 +228,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(49159),
 		  /*unknownCode*/ true);
 
@@ -267,7 +251,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::OPERATION_ERROR,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -305,7 +288,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::OPERATION_ERROR,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -323,7 +305,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -346,7 +327,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -369,7 +349,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::OPERATION_ERROR,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -390,7 +369,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -413,7 +391,6 @@ SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 

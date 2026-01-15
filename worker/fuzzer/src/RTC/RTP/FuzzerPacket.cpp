@@ -12,7 +12,7 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	std::unique_ptr<::RTC::RTP::Packet> packet{ ::RTC::RTP::Packet::Parse(data, len) };
+	std::unique_ptr<::RTC::RTP::Packet> packet{ ::RTC::RTP::Packet::Parse(data, len, len) };
 
 	if (!packet)
 	{

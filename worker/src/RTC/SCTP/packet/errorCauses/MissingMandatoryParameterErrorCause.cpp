@@ -94,9 +94,6 @@ namespace RTC
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 
@@ -152,8 +149,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 2);
 
@@ -183,8 +178,6 @@ namespace RTC
 		void MissingMandatoryParameterErrorCause::SetNumberOfMissingParameters(uint32_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}

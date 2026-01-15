@@ -33,15 +33,10 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetTsn() == 987654321);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetTsn(44444), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -54,7 +49,6 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
@@ -73,7 +67,6 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
@@ -147,7 +140,6 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
@@ -162,7 +154,6 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
@@ -180,7 +171,6 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 

@@ -28,7 +28,6 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -43,7 +42,6 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -60,7 +58,6 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -77,7 +74,6 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -93,7 +89,6 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 

@@ -78,14 +78,11 @@ namespace RTC
 			  GetLengthField(),
 			  GetLength() - GetLengthField(),
 			  GetBufferLength());
-			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 		}
 
 		void TLV::InitializeTLVHeader(uint16_t lengthFieldValue)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetLengthField(lengthFieldValue);
 		}
@@ -106,8 +103,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			// NOTE: This can throw.
 			SetVariableLengthValueLength(valueLength);
 
@@ -118,8 +113,6 @@ namespace RTC
 		void TLV::SetVariableLengthValueLength(size_t valueLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousLength      = GetLength();
 			auto previousLengthField = GetLengthField();
@@ -154,8 +147,6 @@ namespace RTC
 		void TLV::AddItem(const TLV* item)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousLength      = GetLength();
 			auto previousLengthField = GetLengthField();

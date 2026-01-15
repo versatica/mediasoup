@@ -35,7 +35,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
@@ -51,10 +50,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		// This should be padding.
 		REQUIRE(errorCause->GetNewAddressTlvs()[7] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetNewAddressTlvs(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
 		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -66,7 +61,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
@@ -95,7 +89,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
@@ -153,7 +146,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
@@ -183,7 +175,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
@@ -211,7 +202,6 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 

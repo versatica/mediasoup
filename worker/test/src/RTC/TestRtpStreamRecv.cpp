@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "DepLibUV.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -13,7 +13,7 @@ static constexpr size_t MaxRequestedPackets{ 17 };
 static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
 static const bool UseRtpInactivityCheck{ false };
 
-SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
+SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream][rtpstreamrecv]")
 {
 	class RtpStreamRecvListener : public RtpStreamRecv::Listener
 	{
@@ -129,7 +129,7 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream]")
 	};
 	// clang-format on
 
-	std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(buffer, 12) };
+	std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(buffer, 12, 12 + 4) };
 
 	if (!packet)
 	{

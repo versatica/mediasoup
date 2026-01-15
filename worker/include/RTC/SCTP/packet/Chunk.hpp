@@ -299,7 +299,6 @@ namespace RTC
 			template<typename T>
 			T* BuildParameterInPlace()
 			{
-				AssertNotFrozen();
 				AssertCanHaveParameters();
 
 				// The new Parameter will be added after other Parameters in the Chunk,
@@ -414,7 +413,6 @@ namespace RTC
 			template<typename T>
 			T* BuildErrorCauseInPlace()
 			{
-				AssertNotFrozen();
 				AssertCanHaveErrorCauses();
 
 				// The new Error Cause will be added after other Error Causes in the

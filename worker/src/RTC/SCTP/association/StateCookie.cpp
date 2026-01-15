@@ -41,9 +41,6 @@ namespace RTC
 
 			auto* stateCookie = new StateCookie(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the state cookie as frozen since we are parsing.
-			stateCookie->Freeze();
-
 			return stateCookie;
 		}
 
@@ -114,7 +111,6 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::StateCookie>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  my verification tag: %" PRIu32, GetMyVerificationTag());
 			MS_DUMP_CLEAN(indentation, "  peer verification tag: %" PRIu32, GetPeerVerificationTag());
 			MS_DUMP_CLEAN(indentation, "  my initial tsn: %" PRIu32, GetMyInitialTsn());

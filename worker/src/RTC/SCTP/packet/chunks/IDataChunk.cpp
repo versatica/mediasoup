@@ -81,9 +81,6 @@ namespace RTC
 			// not fixed length.
 			chunk->SetLength(chunkLength + padding);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -142,16 +139,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			SetBit3(flag);
 		}
 
 		void IDataChunk::SetU(bool flag)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetBit2(flag);
 		}
@@ -160,16 +153,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			SetBit1(flag);
 		}
 
 		void IDataChunk::SetE(bool flag)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetBit0(flag);
 		}
@@ -178,16 +167,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
 		void IDataChunk::SetStreamIdentifier(uint16_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}
@@ -196,8 +181,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
@@ -205,16 +188,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 16, value);
 		}
 
 		void IDataChunk::SetUserData(const uint8_t* userData, uint16_t userDataLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(userData, userDataLength);
 		}

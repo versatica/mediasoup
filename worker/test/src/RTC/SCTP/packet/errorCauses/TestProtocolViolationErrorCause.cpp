@@ -35,7 +35,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
@@ -51,10 +50,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		REQUIRE(errorCause->GetAdditionalInformation()[6] == 0x00);
 		REQUIRE(errorCause->GetAdditionalInformation()[7] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetAdditionalInformation(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
 		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -66,7 +61,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
@@ -95,7 +89,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
@@ -152,7 +145,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
@@ -182,7 +174,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 
@@ -210,7 +201,6 @@ SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::PROTOCOL_VIOLATION,
 		  /*unknownCode*/ false);
 

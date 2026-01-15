@@ -102,30 +102,4 @@ namespace helpers
 	}
 
 	static uint8_t Buffer[65536] = { 0 };
-
-	// TODO: Remove.
-	std::unique_ptr<RTC::RtpPacket> CreateOldRtpPacket(uint8_t* payload, size_t len)
-	{
-		MS_TRACE();
-
-		// clang-format off
-		const uint8_t headers[] =
-		{
-			0x80, 0x01, 0x00, 0x08,
-			0x00, 0x00, 0x00, 0x04,
-			0x00, 0x00, 0x00, 0x05
-		};
-		// clang-format off
-
-		std::memcpy(Buffer, headers, sizeof(headers));
-		std::memcpy(Buffer + sizeof(headers), payload, len);
-
-		std::unique_ptr<RTC::RtpPacket> rtpPacket{ RTC::RtpPacket::Parse(Buffer, sizeof(headers)+len) };
-
-		MS_ASSERT(rtpPacket != nullptr, "invalid packet");
-
-		rtpPacket.reset(rtpPacket->Clone());
-
-		return rtpPacket;
-	}
 } // namespace helpers

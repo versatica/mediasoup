@@ -46,7 +46,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -72,16 +71,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(chunk->GetUserData()[3] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->SetI(true), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetE(true), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetTsn(12345678), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetStreamIdentifierS(9988), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetStreamSequenceNumberN(2211), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetPayloadProtocolIdentifier(987654321), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetUserData(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -93,7 +82,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -132,7 +120,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -170,7 +157,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -221,7 +207,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16 + 3 + 1,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -258,7 +243,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16 + 3 + 1,
 		  /*length*/ 16 + 3 + 1,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -296,7 +280,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -313,7 +296,6 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,

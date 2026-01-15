@@ -66,9 +66,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -121,8 +118,6 @@ namespace RTC
 		void SupportedExtensionsParameter::AddChunkType(Chunk::ChunkType chunkType)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// We must save previous count since SetVariableLengthValueLength() will
 			// make GetNumberOfChunkTypes() return a different value.

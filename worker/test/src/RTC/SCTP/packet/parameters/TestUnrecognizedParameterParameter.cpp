@@ -35,7 +35,6 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -48,10 +47,6 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter->GetUnrecognizedParameter()[3] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetUnrecognizedParameter(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -63,7 +58,6 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -89,7 +83,6 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -114,7 +107,6 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -150,7 +142,6 @@ SCENARIO("Unrecognized Parameter Parameter (7)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::UNRECOGNIZED_PARAMETER,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

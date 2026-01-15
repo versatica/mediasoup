@@ -3,12 +3,12 @@
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
-#include "RTC/SharedRtpPacket.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
@@ -39,11 +39,11 @@ public:
 
 class ConsumerListener : public Consumer::Listener
 {
-	void OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RtpPacket* packet) final
+	void OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet) final
 	{
 		this->sent.push_back(packet->GetSequenceNumber());
 	};
-	void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RtpPacket* packet) final
+	void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) final
 	{
 	}
 	void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final {};
@@ -185,9 +185,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		0x00, 0x00, 0x00, 0x05,
 		// Payload (4 bytes).
 		0xFF, 0xFF, 0xFF, 0xFF,
-		// From here this is just buffer enough for the fake
-		// packet->SetPayloadLength() calls below so when cloning the packet it
-		// doesn't read non allocated memory.
+		// From here this is just buffer enough for the variable length payload so
+		// when cloning the packet it doesn't read non allocated memory.
 		0xFF, 0xFF, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0xFF,
 		0xFF, 0xFF, 0xFF, 0xFF,
@@ -228,11 +227,10 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 	SECTION("RTP packets are not forwarded when the consumer is not active")
 	{
 		Fixture fixture;
-		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
-		RTC::SharedRtpPacket sharedPacket(packet);
+		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTP::SharedPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType);
-		packet->SetPayloadLength(64);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
@@ -248,11 +246,10 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		// Indicate that the transport is connected in order to activate the consumer.
 		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
 
-		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
-		RTC::SharedRtpPacket sharedPacket(packet);
+		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTP::SharedPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
-		packet->SetPayloadLength(64);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 		fixture.listener->Verify(0);
@@ -267,11 +264,10 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		// Indicate that the transport is connected in order to activate the consumer.
 		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
 
-		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
-		RTC::SharedRtpPacket sharedPacket(packet);
+		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 0);
+		RTP::SharedPacket sharedPacket(packet);
 
 		packet->SetPayloadType(PayloadType + 1);
-		packet->SetPayloadLength(0);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 		fixture.listener->Verify(0);
@@ -286,14 +282,13 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		// Indicate that the transport is connected in order to activate the consumer.
 		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
 
-		auto* packet = RtpPacket::Parse(buffer, originalPacketLength);
-		RTC::SharedRtpPacket sharedPacket(packet);
+		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTP::SharedPacket sharedPacket(packet);
 
 		uint16_t seq{ 1 };
 
 		packet->SetSequenceNumber(seq++);
 		packet->SetPayloadType(PayloadType);
-		packet->SetPayloadLength(64);
 		sharedPacket.Assign(packet);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
@@ -304,13 +299,13 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
-		packet->SetPayloadLength(0);
 		sharedPacket.Assign(packet);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
 		packet->SetSequenceNumber(seq++);
-		packet->SetPayloadLength(20);
+		// Remove the payload so it won't be sent.
+		packet->RemovePayload();
 		sharedPacket.Assign(packet);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);

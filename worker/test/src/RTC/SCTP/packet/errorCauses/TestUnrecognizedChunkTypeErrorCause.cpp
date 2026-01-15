@@ -34,7 +34,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -50,10 +49,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		REQUIRE(errorCause->GetUnrecognizedChunk()[6] == 0x00);
 		REQUIRE(errorCause->GetUnrecognizedChunk()[7] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetUnrecognizedChunk(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
 		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -65,7 +60,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -94,7 +88,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -151,7 +144,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -181,7 +173,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 
@@ -209,7 +200,6 @@ SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::UNRECOGNIZED_CHUNK_TYPE,
 		  /*unknownCode*/ false);
 

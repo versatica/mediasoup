@@ -33,7 +33,6 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 
@@ -61,7 +60,6 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 
@@ -91,7 +89,6 @@ SCENARIO("Unknown Error Cause", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*causeCode*/ static_cast<ErrorCause::ErrorCauseCode>(999),
 		  /*unknownCode*/ true);
 

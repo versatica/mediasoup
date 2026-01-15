@@ -942,7 +942,8 @@ namespace RTC
 		}
 	}
 
-	inline void PlainTransport::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void PlainTransport::OnPacketReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -957,7 +958,7 @@ namespace RTC
 		// Check if it's RTP.
 		else if (RTC::RTP::Packet::IsRtp(data, len))
 		{
-			OnRtpDataReceived(tuple, data, len);
+			OnRtpDataReceived(tuple, data, len, bufferLen);
 		}
 		// Check if it's SCTP.
 		else if (RTC::SctpAssociation::IsSctp(data, len))
@@ -971,7 +972,7 @@ namespace RTC
 	}
 
 	inline void PlainTransport::OnRtpDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -983,7 +984,7 @@ namespace RTC
 		// Decrypt the SRTP packet.
 		if (HasSrtp() && !this->srtpRecvSession->DecryptSrtp(const_cast<uint8_t*>(data), &len))
 		{
-			const auto* packet = RTC::RTP::Packet::Parse(data, len);
+			const auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
 
 			if (!packet)
 			{
@@ -1004,7 +1005,7 @@ namespace RTC
 			return;
 		}
 
-		auto* packet = RTC::RTP::Packet::Parse(data, len);
+		auto* packet = RTC::RTP::Packet::Parse(data, len, bufferLen);
 
 		if (!packet)
 		{
@@ -1239,12 +1240,16 @@ namespace RTC
 	}
 
 	inline void PlainTransport::OnUdpSocketPacketReceived(
-	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
+	  RTC::UdpSocket* socket,
+	  const uint8_t* data,
+	  size_t len,
+	  size_t bufferLen,
+	  const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len, bufferLen);
 	}
 } // namespace RTC

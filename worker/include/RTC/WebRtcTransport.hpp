@@ -64,7 +64,7 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) const;
 		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(
-		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void RemoveTuple(RTC::TransportTuple* tuple);
 
 		/* Methods inherited from Channel::ChannelSocket::RequestHandler. */
@@ -93,16 +93,20 @@ namespace RTC
 		void SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void OnStunDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnDtlsDataReceived(const RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnUdpSocketPacketReceived(
-		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
+		  RTC::UdpSocket* socket,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  const struct sockaddr* remoteAddr) override;
 
 		/* Pure virtual methods inherited from RTC::TcpServer::Listener. */
 	public:
@@ -111,7 +115,7 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::TcpConnection::Listener. */
 	public:
 		void OnTcpConnectionPacketReceived(
-		  RTC::TcpConnection* connection, const uint8_t* data, size_t len) override;
+		  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen) override;
 
 		/* Pure virtual methods inherited from RTC::IceServer::Listener. */
 	public:

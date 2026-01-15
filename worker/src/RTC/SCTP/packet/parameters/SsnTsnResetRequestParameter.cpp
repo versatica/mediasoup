@@ -75,9 +75,6 @@ namespace RTC
 
 			auto* parameter = new SsnTsnResetRequestParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -124,8 +121,6 @@ namespace RTC
 		void SsnTsnResetRequestParameter::SetReconfigurationRequestSequenceNumber(uint32_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}

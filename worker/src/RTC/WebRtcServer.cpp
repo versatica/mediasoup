@@ -420,7 +420,8 @@ namespace RTC
 		return iceCandidates;
 	}
 
-	inline void WebRtcServer::OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	inline void WebRtcServer::OnPacketReceived(
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -430,7 +431,7 @@ namespace RTC
 		}
 		else
 		{
-			OnNonStunDataReceived(tuple, data, len);
+			OnNonStunDataReceived(tuple, data, len, bufferLen);
 		}
 	}
 
@@ -482,7 +483,7 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnNonStunDataReceived(
-	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len)
+	  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
@@ -497,7 +498,7 @@ namespace RTC
 
 		auto* webRtcTransport = it->second;
 
-		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len);
+		webRtcTransport->ProcessNonStunPacketFromWebRtcServer(tuple, data, len, bufferLen);
 	}
 
 	inline void WebRtcServer::OnWebRtcTransportCreated(RTC::WebRtcTransport* webRtcTransport)
@@ -586,13 +587,17 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnUdpSocketPacketReceived(
-	  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr)
+	  RTC::UdpSocket* socket,
+	  const uint8_t* data,
+	  size_t len,
+	  size_t bufferLen,
+	  const struct sockaddr* remoteAddr)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(socket, remoteAddr);
 
-		OnPacketReceived(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len, bufferLen);
 	}
 
 	inline void WebRtcServer::OnRtcTcpConnectionClosed(
@@ -619,12 +624,12 @@ namespace RTC
 	}
 
 	inline void WebRtcServer::OnTcpConnectionPacketReceived(
-	  RTC::TcpConnection* connection, const uint8_t* data, size_t len)
+	  RTC::TcpConnection* connection, const uint8_t* data, size_t len, size_t bufferLen)
 	{
 		MS_TRACE();
 
 		RTC::TransportTuple tuple(connection);
 
-		OnPacketReceived(&tuple, data, len);
+		OnPacketReceived(&tuple, data, len, bufferLen);
 	}
 } // namespace RTC

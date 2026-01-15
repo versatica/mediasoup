@@ -36,7 +36,6 @@ namespace RTC
                           /*const uint8_t**/ buffer,                                               \
                           /*size_t*/ bufferLength,                                                 \
                           /*size_t*/ length,                                                       \
-                          /*bool*/ frozen,                                                         \
                           /*uint16_t*/ sourcePort,                                                 \
                           /*uint16_t*/ destinationPort,                                            \
                           /*uint32_t*/ verificationTag,                                            \
@@ -53,7 +52,6 @@ namespace RTC
 		REQUIRE(packet->GetLength() != 0);                                                             \
 		REQUIRE(packet->GetLength() == length);                                                        \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(packet->GetLength()) == true);                           \
-		REQUIRE(packet->IsFrozen() == frozen);                                                         \
 		REQUIRE(packet->GetSourcePort() == sourcePort);                                                \
 		REQUIRE(packet->GetDestinationPort() == destinationPort);                                      \
 		REQUIRE(packet->GetVerificationTag() == verificationTag);                                      \
@@ -74,7 +72,6 @@ namespace RTC
                          /*uint8_t**/ buffer,                                                        \
                          /*size_t*/ bufferLength,                                                    \
                          /*size_t*/ length,                                                          \
-                         /*bool*/ frozen,                                                            \
                          /*Chunk::ChunkType*/ chunkType,                                             \
                          /*bool*/ unknownType,                                                       \
                          /*Chunk::ActionForUnknownChunkType*/ actionForUnknownChunkType,             \
@@ -96,13 +93,12 @@ namespace RTC
 		REQUIRE(chunk->GetLength() != 0);                                                                \
 		REQUIRE(chunk->GetLength() == length);                                                           \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(chunk->GetLength()) == true);                              \
-		REQUIRE(chunk->IsFrozen() == frozen);                                                            \
 		REQUIRE(chunk->GetType() == chunkType);                                                          \
 		REQUIRE(chunk->HasUnknownType() == unknownType);                                                 \
 		REQUIRE(chunk->GetActionForUnknownChunkType() == actionForUnknownChunkType);                     \
 		REQUIRE(chunk->GetFlags() == flags);                                                             \
 		REQUIRE(chunk->CanHaveParameters() == canHaveParameters);                                        \
-		if (!canHaveParameters && !frozen)                                                               \
+		if (!canHaveParameters)                                                                          \
 		{                                                                                                \
 			REQUIRE_THROWS_AS(                                                                             \
 			  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))                                    \
@@ -113,7 +109,7 @@ namespace RTC
 		REQUIRE(chunk->HasParameters() == (parametersCount > 0));                                        \
 		REQUIRE(chunk->GetParameterAt(parametersCount) == nullptr);                                      \
 		REQUIRE(chunk->CanHaveErrorCauses() == canHaveErrorCauses);                                      \
-		if (!canHaveErrorCauses && !frozen)                                                              \
+		if (!canHaveErrorCauses)                                                                         \
 		{                                                                                                \
 			REQUIRE_THROWS_AS(                                                                             \
 			  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))                                    \
@@ -140,7 +136,6 @@ namespace RTC
   /*const uint8_t**/ buffer,                                                                        \
   /*size_t*/ bufferLength,                                                                          \
   /*size_t*/ length,                                                                                \
-  /*bool*/ frozen,                                                                                  \
   /*Parameter::ParameterType*/ parameterType,                                                       \
   /*bool*/ unknownType,                                                                             \
   /*Parameter::ActionForUnknownParameterType*/ actionForUnknownParameterType)                       \
@@ -157,7 +152,6 @@ namespace RTC
 		REQUIRE(parameter->GetLength() != 0);                                                           \
 		REQUIRE(parameter->GetLength() == length);                                                      \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(parameter->GetLength()) == true);                         \
-		REQUIRE(parameter->IsFrozen() == frozen);                                                       \
 		REQUIRE(parameter->GetType() == parameterType);                                                 \
 		REQUIRE(parameter->HasUnknownType() == unknownType);                                            \
 		REQUIRE(parameter->GetActionForUnknownParameterType() == actionForUnknownParameterType);        \
@@ -179,7 +173,6 @@ namespace RTC
                                /*const uint8_t**/ buffer,                                          \
                                /*size_t*/ bufferLength,                                            \
                                /*size_t*/ length,                                                  \
-                               /*bool*/ frozen,                                                    \
                                /*ErrorCause::ErrorCauseCode*/ causeCode,                           \
                                /*bool*/ unknownCode)                                               \
 	do                                                                                               \
@@ -195,7 +188,6 @@ namespace RTC
 		REQUIRE(errorCause->GetLength() != 0);                                                         \
 		REQUIRE(errorCause->GetLength() == length);                                                    \
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(errorCause->GetLength()) == true);                       \
-		REQUIRE(errorCause->IsFrozen() == frozen);                                                     \
 		REQUIRE(errorCause->GetCode() == causeCode);                                                   \
 		REQUIRE(errorCause->HasUnknownCode() == unknownCode);                                          \
 		if (buffer)                                                                                    \

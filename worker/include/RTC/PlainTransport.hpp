@@ -51,8 +51,8 @@ namespace RTC
 		void SendSctpData(const uint8_t* data, size_t len) override;
 		void RecvStreamClosed(uint32_t ssrc) override;
 		void SendStreamClosed(uint32_t ssrc) override;
-		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
-		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
+		void OnPacketReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
+		void OnRtpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void OnRtcpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void OnSctpDataReceived(RTC::TransportTuple* tuple, const uint8_t* data, size_t len);
 		void EmitTuple() const;
@@ -61,7 +61,11 @@ namespace RTC
 		/* Pure virtual methods inherited from RTC::UdpSocket::Listener. */
 	public:
 		void OnUdpSocketPacketReceived(
-		  RTC::UdpSocket* socket, const uint8_t* data, size_t len, const struct sockaddr* remoteAddr) override;
+		  RTC::UdpSocket* socket,
+		  const uint8_t* data,
+		  size_t len,
+		  size_t bufferLen,
+		  const struct sockaddr* remoteAddr) override;
 
 	private:
 		// Allocated by this.

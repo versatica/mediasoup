@@ -40,7 +40,7 @@ namespace RTC
 		return FBS::RtxStream::CreateRtxDump(builder, params);
 	}
 
-	bool RtxStream::ReceivePacket(RTC::RTP::Packet* packet)
+	bool RtxStream::ReceivePacket(const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -165,7 +165,7 @@ namespace RTC
 		this->lastSrTimestamp += report->GetNtpFrac() >> 16;
 	}
 
-	bool RtxStream::UpdateSeq(RTC::RTP::Packet* packet)
+	bool RtxStream::UpdateSeq(const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

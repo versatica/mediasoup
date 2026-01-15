@@ -410,7 +410,7 @@ inline void UdpSocketHandle::OnUvRecv(
 		this->recvBytes += nread;
 
 		// Notify the subclass.
-		UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, addr);
+		UserOnUdpDatagramReceived(reinterpret_cast<uint8_t*>(buf->base), nread, ReadBufferSize, addr);
 	}
 	// Some error.
 	else

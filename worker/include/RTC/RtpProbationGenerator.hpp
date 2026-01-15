@@ -6,13 +6,14 @@
 
 namespace RTC
 {
-	// SSRC of the probation RTP stream.
-	constexpr uint32_t RtpProbationSsrc{ 1234u };
-	// Codec payload type of the probation RTP stream.
-	constexpr uint8_t RtpProbationCodecPayloadType{ 127u };
-
 	class RtpProbationGenerator
 	{
+	public:
+		// SSRC of the probation RTP stream.
+		static const uint32_t Ssrc{ 1234 };
+		// Codec payload type of the probation RTP stream.
+		static const uint8_t PayloadType{ 127u };
+
 	public:
 		explicit RtpProbationGenerator();
 		~RtpProbationGenerator();
@@ -22,8 +23,10 @@ namespace RTC
 
 	private:
 		// Allocated by this.
-		uint8_t* probationPacketBuffer{ nullptr };
 		RTC::RTP::Packet* probationPacket{ nullptr };
+		// Others.
+		// The length of the probation RTP Packet without payload or padding.
+		size_t probationPacketMinLength{ 0 };
 	}; // namespace RTC
 
 } // namespace RTC

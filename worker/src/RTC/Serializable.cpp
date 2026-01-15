@@ -30,14 +30,11 @@ namespace RTC
 
 		this->buffer       = buffer;
 		this->bufferLength = bufferLength;
-		this->frozen       = false;
 	}
 
 	void Serializable::Consolidate()
 	{
 		MS_TRACE();
-
-		AssertNotFrozen();
 
 		if (!this->consolidatedListener)
 		{
@@ -50,8 +47,6 @@ namespace RTC
 	void Serializable::SetBufferLength(size_t bufferLength)
 	{
 		MS_TRACE();
-
-		AssertNotFrozen();
 
 		if (bufferLength < this->length)
 		{
@@ -72,8 +67,6 @@ namespace RTC
 	void Serializable::SetLength(size_t length)
 	{
 		MS_TRACE();
-
-		AssertNotFrozen();
 
 		if (length > this->bufferLength)
 		{
@@ -115,8 +108,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		AssertNotFrozen();
-
 		if (padding > this->length)
 		{
 			MS_THROW_TYPE_ERROR(
@@ -130,18 +121,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		AssertNotFrozen();
-
 		this->consolidatedListener = std::move(listener);
-	}
-
-	void Serializable::AssertNotFrozen() const
-	{
-		MS_TRACE();
-
-		if (this->frozen)
-		{
-			MS_THROW_ERROR("Serializable is frozen");
-		}
 	}
 } // namespace RTC

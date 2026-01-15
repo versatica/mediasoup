@@ -36,7 +36,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 16,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::FORWARD_TSN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -53,11 +52,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		REQUIRE(chunk->GetStreamAt(1) == 22136);
 		REQUIRE(chunk->GetStreamSequenceAt(1) == 34661);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->SetNewCumulativeTsn(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->AddStream(1111, 3333), MediaSoupError);
-
 		/* Serialize it. */
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -69,7 +63,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::FORWARD_TSN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -99,7 +92,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::FORWARD_TSN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -148,7 +140,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::FORWARD_TSN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -173,7 +164,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::FORWARD_TSN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -203,7 +193,6 @@ SCENARIO("Forward Cumulative TSN Chunk (192)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::FORWARD_TSN,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,

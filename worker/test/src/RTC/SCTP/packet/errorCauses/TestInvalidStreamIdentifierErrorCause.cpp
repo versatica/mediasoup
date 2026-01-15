@@ -33,7 +33,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
@@ -41,10 +40,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		// Reserved bytes must be 0.
 		REQUIRE(errorCause->GetBuffer()[6] == 0);
 		REQUIRE(errorCause->GetBuffer()[7] == 0);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(errorCause->SetStreamIdentifier(44444), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -57,7 +52,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
@@ -79,7 +73,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
@@ -157,7 +150,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
@@ -175,7 +167,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 
@@ -196,7 +187,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_STREAM_IDENTIFIER,
 		  /*unknownCode*/ false);
 

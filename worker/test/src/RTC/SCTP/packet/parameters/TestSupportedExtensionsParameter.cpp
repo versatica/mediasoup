@@ -35,7 +35,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -44,10 +43,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
 		REQUIRE(parameter->GetChunkTypeAt(1) == Chunk::ChunkType::ECNE);
 		REQUIRE(parameter->GetChunkTypeAt(2) == static_cast<Chunk::ChunkType>(0x42));
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->AddChunkType(Chunk::ChunkType::COOKIE_ACK), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -60,7 +55,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -83,7 +77,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -105,7 +98,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -122,7 +114,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -140,7 +131,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -164,7 +154,6 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_EXTENSIONS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);

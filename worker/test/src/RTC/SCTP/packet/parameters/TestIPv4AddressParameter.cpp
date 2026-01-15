@@ -35,7 +35,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -44,10 +43,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		REQUIRE(parameter->GetIPv4Address()[1] == 0x02);
 		REQUIRE(parameter->GetIPv4Address()[2] == 0x03);
 		REQUIRE(parameter->GetIPv4Address()[3] == 0x04);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetIPv4Address(ThrowBuffer), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -60,7 +55,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -83,7 +77,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -161,7 +154,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -183,7 +175,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -205,7 +196,6 @@ SCENARIO("IPv4 Adress Parameter (5)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

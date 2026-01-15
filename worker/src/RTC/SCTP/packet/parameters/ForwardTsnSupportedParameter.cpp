@@ -72,9 +72,6 @@ namespace RTC
 
 			auto* parameter = new ForwardTsnSupportedParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 

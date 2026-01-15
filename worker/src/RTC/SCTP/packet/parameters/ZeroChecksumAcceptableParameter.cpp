@@ -88,9 +88,6 @@ namespace RTC
 			auto* parameter =
 			  new ZeroChecksumAcceptableParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -159,8 +156,6 @@ namespace RTC
 		  AlternateErrorDetectionMethod alternateErrorDetectionMethod)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(
 			  const_cast<uint8_t*>(GetBuffer()), 4, static_cast<uint32_t>(alternateErrorDetectionMethod));

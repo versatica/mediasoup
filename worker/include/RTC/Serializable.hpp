@@ -72,39 +72,6 @@ namespace RTC
 		}
 
 		/**
-		 * Whether the Serializable is frozen, meaning that modifications are not
-		 * allowed.
-		 *
-		 * @remarks
-		 * - By design, all Parse() class methods return a frozen Serializable.
-		 *   This is because the buffer in which the packet exists is supposed to
-		 *   be read-only.
-		 * - By design, all Factory() class methods return a non frozen
-		 *   Serializable.
-		 * - When calling `Serialize()` on a Serializable, it becomes non frozen.
-		 * - When calling `Clone()` on a Serializable, the new created Serializable
-		 *   is not frozen.
-		 * - The internal Serializable items that the instance contains (for
-		 *   example, an SCTP Packet may contain SCTP Chunks and a SCTP Chunk may
-		 *   contain SCTP Parameters), will always be frozen. This is because the
-		 *   user is not able to modify those items because their length may change
-		 *   and corrupt other bytes of the main Serializable.
-		 */
-		virtual bool IsFrozen() const final
-		{
-			return this->frozen;
-		}
-
-		/**
-		 * Freeze the Serializable, meaning that modifications are not allowed on
-		 * it. If a modification is attempted it will throw MediasoupError.
-		 */
-		virtual void Freeze() final
-		{
-			this->frozen = true;
-		}
-
-		/**
 		 * Serialize the Serializable into a new buffer. This method copies the
 		 * bytes of the internal buffer into the new buffer and makes `GetBuffer()`
 		 * point to the new one.
@@ -143,9 +110,6 @@ namespace RTC
 		 * this Serializable is done to recompute its total length and internal
 		 * pointers.
 		 *
-		 * @remarks
-		 * Once the serialization completes, the Serializable is frozen.
-		 *
 		 * @throw MediaSoupError - If `SetConsolidatedListener()` was not called
 		 *   first.
 		 *
@@ -162,8 +126,6 @@ namespace RTC
 		 */
 		virtual void SetBuffer(uint8_t* buffer) final
 		{
-			// NOTE: We don't assert not frozen here on purpose.
-
 			this->buffer = buffer;
 		}
 
@@ -179,7 +141,6 @@ namespace RTC
 		 * - MediaSoupError - If given `bufferLength` is lower than the current
 		 *   exact length of the Serializable.
 		 * - MediaSoupError - If 0 is given.
-		 * - MediaSoupError - If the Serializable is frozen.
 		 */
 		virtual void SetBufferLength(size_t bufferLength) final;
 
@@ -196,7 +157,6 @@ namespace RTC
 		 * - MediaSoupError - If given `length` is larger than the buffer length of
 		 *   the Serializable.
 		 * - MediaSoupError - If 0 is given.
-		 * - MediaSoupError - If the Serializable is frozen.
 		 */
 		virtual void SetLength(size_t length) final;
 
@@ -229,12 +189,6 @@ namespace RTC
 		 */
 		virtual void SetConsolidatedListener(ConsolidatedListener&& listener) final;
 
-		/**
-		 * Assert that the Serializable is not frozen, otherwise it throws a
-		 * MediasoupError exception.
-		 */
-		virtual void AssertNotFrozen() const final;
-
 	private:
 		// Buffer holding the Serializable content.
 		uint8_t* buffer{ nullptr };
@@ -243,9 +197,6 @@ namespace RTC
 		size_t bufferLength{ 0u };
 		// Serializable exact length (includes padding bytes).
 		size_t length{ 0u };
-		// Whether the Serializable is frozen, meaning that modifications are not
-		// allowed.
-		bool frozen{ false };
 		// Event listener invoked when the Serializable is consolidated.
 		ConsolidatedListener consolidatedListener{ nullptr };
 	};

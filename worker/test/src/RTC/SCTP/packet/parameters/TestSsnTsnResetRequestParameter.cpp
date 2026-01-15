@@ -34,16 +34,11 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 666777888);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetReconfigurationRequestSequenceNumber(1234), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -56,7 +51,6 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -76,7 +70,6 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -95,7 +88,6 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -111,7 +103,6 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -130,7 +121,6 @@ SCENARIO("SSN/TSN Reset Request Parameter (15)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SSN_TSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

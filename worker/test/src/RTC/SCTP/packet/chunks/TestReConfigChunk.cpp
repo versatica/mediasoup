@@ -53,7 +53,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 40,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::RE_CONFIG,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP,
@@ -71,7 +70,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 24,
 		  /*length*/ 24,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -92,7 +90,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/
@@ -101,11 +98,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		REQUIRE(parameter2->GetReconfigurationRequestSequenceNumber() == 0x44332211);
 		REQUIRE(parameter2->GetNumberOfStreams() == 1);
 		REQUIRE(parameter2->GetStreamAt(0) == 0x6001);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(
-		  chunk->BuildParameterInPlace<ReconfigurationResponseParameter>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -118,7 +110,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 40,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::RE_CONFIG,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP,
@@ -135,7 +126,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 24,
 		  /*length*/ 24,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -155,7 +145,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/
@@ -178,7 +167,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 40,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::RE_CONFIG,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP,
@@ -196,7 +184,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 24,
 		  /*length*/ 24,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -217,7 +204,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/
@@ -239,7 +225,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::RE_CONFIG,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP,
@@ -264,7 +249,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4 + 20,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::RE_CONFIG,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP,
@@ -282,7 +266,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -304,7 +287,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4 + 20,
 		  /*length*/ 4 + 20,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::RE_CONFIG,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP,
@@ -322,7 +304,6 @@ SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

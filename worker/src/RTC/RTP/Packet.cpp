@@ -39,6 +39,41 @@ namespace RTC
 			// clang-format on
 		}
 
+		Packet* Packet::Parse(const uint8_t* buffer, size_t packetLength, size_t bufferLength)
+		{
+			MS_TRACE();
+
+			if (packetLength > bufferLength)
+			{
+				MS_WARN_TAG(
+				  rtp,
+				  "packetLength (%zu bytes) cannot be bigger than bufferLength (%zu bytes)",
+				  packetLength,
+				  bufferLength);
+
+				return nullptr;
+			}
+
+			if (!Packet::IsRtp(buffer, packetLength))
+			{
+				MS_WARN_TAG(rtp, "not a RTP Packet");
+
+				return nullptr;
+			}
+
+			auto* packet = new Packet(const_cast<uint8_t*>(buffer), bufferLength);
+
+			packet->SetLength(packetLength);
+
+			if (!packet->Validate())
+			{
+				delete packet;
+				return nullptr;
+			}
+
+			return packet;
+		}
+
 		Packet* Packet::Parse(const uint8_t* buffer, size_t bufferLength)
 		{
 			MS_TRACE();
@@ -52,35 +87,6 @@ namespace RTC
 
 			auto* packet = new Packet(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Packet length must be the length of the given buffer.
-			packet->SetLength(bufferLength);
-
-			if (!packet->Validate())
-			{
-				delete packet;
-				return nullptr;
-			}
-
-			// Mark the Packet as frozen since we are parsing the given buffer.
-			packet->Freeze();
-
-			return packet;
-		}
-
-		Packet* Packet::ParseFromApplicationBuffer(uint8_t* buffer, size_t bufferLength)
-		{
-			MS_TRACE();
-
-			if (!Packet::IsRtp(buffer, bufferLength))
-			{
-				MS_WARN_TAG(rtp, "not a RTP Packet");
-
-				return nullptr;
-			}
-
-			auto* packet = new Packet(buffer, bufferLength);
-
-			// Packet length must be the length of the given buffer.
 			packet->SetLength(bufferLength);
 
 			if (!packet->Validate())
@@ -154,7 +160,6 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<RTP::Packet>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 
 			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu16, GetSequenceNumber());
 			MS_DUMP_CLEAN(indentation, "  timestamp: %" PRIu32, GetTimestamp());
@@ -483,16 +488,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			GetFixedHeaderPointer()->payloadType = payloadType;
 		}
 
 		void Packet::SetMarker(bool marker)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			GetFixedHeaderPointer()->marker = marker;
 		}
@@ -501,16 +502,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			GetFixedHeaderPointer()->sequenceNumber = htons(seq);
 		}
 
 		void Packet::SetTimestamp(uint32_t timestamp)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			GetFixedHeaderPointer()->timestamp = htonl(timestamp);
 		}
@@ -519,16 +516,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			GetFixedHeaderPointer()->ssrc = htonl(ssrc);
 		}
 
 		void Packet::RemoveHeaderExtension()
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			if (!HasHeaderExtension())
 			{
@@ -559,8 +552,6 @@ namespace RTC
 		void Packet::SetExtensions(ExtensionsType type, const std::vector<Extension>& extensions)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// Clear One-Byte and Two-Bytes Extensions.
 			std::fill(std::begin(this->oneByteExtensions), std::end(this->oneByteExtensions), -1);
@@ -884,8 +875,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.mid, extenLen);
 
@@ -901,7 +890,7 @@ namespace RTC
 			if (midLen > RTC::Consts::MidRtpExtensionMaxLength)
 			{
 				MS_ERROR(
-				  "no enough space for MID value [MidMaxLength:%" PRIu8 ", mid:'%s']",
+				  "no enough space for MID value [MidRtpExtensionMaxLength:%" PRIu8 ", mid:'%s']",
 				  RTC::Consts::MidRtpExtensionMaxLength,
 				  mid.c_str());
 
@@ -973,8 +962,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.absSendTime, extenLen);
 
@@ -1015,8 +1002,6 @@ namespace RTC
 		bool Packet::UpdateTransportWideCc01(uint16_t wideSeqNumber) const
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			uint8_t extenLen;
 			uint8_t* extenValue = GetExtensionValue(this->headerExtensionIds.transportWideCc01, extenLen);
@@ -1087,8 +1072,6 @@ namespace RTC
 		bool Packet::UpdateDependencyDescriptor(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			uint8_t extenLen;
 			uint8_t* extenValue =
@@ -1249,8 +1232,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			if (!payload && payloadLength > 0)
 			{
 				MS_THROW_TYPE_ERROR("invalid payloadLength %zu without payload", payloadLength);
@@ -1274,8 +1255,6 @@ namespace RTC
 		void Packet::ShiftPayload(size_t payloadOffset, int32_t delta)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			if (delta == 0)
 			{
@@ -1329,8 +1308,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			auto previousLength        = GetLength();
 			auto previousPaddingLength = GetPaddingLength();
 			auto newLength             = previousLength - previousPaddingLength + paddingLength;
@@ -1354,8 +1331,6 @@ namespace RTC
 		void Packet::PadTo4Bytes()
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto previousLength        = GetLength();
 			auto previousPaddingLength = GetPaddingLength();
@@ -1389,8 +1364,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			// Remove padding (if any).
 			if (HasPadding())
 			{
@@ -1422,8 +1395,6 @@ namespace RTC
 		bool Packet::RtxDecode(uint8_t payloadType, uint32_t ssrc)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			auto* payload            = GetPayloadPointer();
 			const auto payloadLength = GetPayloadLength();
@@ -1471,8 +1442,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			if (!this->payloadDescriptorHandler)
 			{
 				return true;
@@ -1497,8 +1466,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			if (!this->payloadDescriptorHandler)
 			{
 				return;
@@ -1510,8 +1477,6 @@ namespace RTC
 		void Packet::RestorePayload()
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			if (!this->payloadDescriptorHandler)
 			{
@@ -1731,8 +1696,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			MS_ASSERT(id > 0, "id cannot be 0");
 
 			if (HasOneByteExtensions())
@@ -1781,8 +1744,6 @@ namespace RTC
 		void Packet::OnDependencyDescriptorUpdated(const uint8_t* data, size_t len)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			UpdateDependencyDescriptor(data, len);
 		}

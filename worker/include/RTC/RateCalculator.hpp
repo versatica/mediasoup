@@ -82,7 +82,7 @@ namespace RTC
 		}
 
 	public:
-		void Update(RTC::RTP::Packet* packet);
+		void Update(const RTC::RTP::Packet* packet);
 
 		uint32_t GetBitrate(uint64_t nowMs)
 		{

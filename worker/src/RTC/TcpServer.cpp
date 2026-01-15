@@ -8,6 +8,10 @@
 
 namespace RTC
 {
+	/* Static. */
+
+	static constexpr size_t TcpConnectionBufferSize{ 65536 };
+
 	/* Instance methods. */
 
 	TcpServer::TcpServer(
@@ -56,7 +60,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Allocate a new RTC::TcpConnection for the TcpServer to handle it.
-		auto* connection = new RTC::TcpConnection(this->connListener, 65536);
+		auto* connection = new RTC::TcpConnection(this->connListener, TcpConnectionBufferSize);
 
 		// Accept it.
 		AcceptTcpConnection(connection);

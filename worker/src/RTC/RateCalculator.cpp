@@ -197,7 +197,7 @@ namespace RTC
 		}
 	}
 
-	void RtpDataCounter::Update(RTC::RTP::Packet* packet)
+	void RtpDataCounter::Update(const RTC::RTP::Packet* packet)
 	{
 		this->packets++;
 

@@ -38,7 +38,7 @@ namespace RTC
 	 * NOTE: It also returns true if packet comes via RTX and contains a sequence
 	 * number higher than the highest seen.
 	 */
-	bool NackGenerator::ReceivePacket(RTC::RTP::Packet* packet, bool isRecovered)
+	bool NackGenerator::ReceivePacket(const RTC::RTP::Packet* packet, bool isRecovered)
 	{
 		MS_TRACE();
 

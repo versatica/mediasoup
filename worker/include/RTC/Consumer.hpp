@@ -159,8 +159,7 @@ namespace RTC
 		void HandleRequest(Channel::ChannelRequest* request) override;
 
 	protected:
-		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RTP::Packet* packet, bool isRtx = false) const;
-		void EmitTraceEventKeyFrameType(RTC::RTP::Packet* packet, bool isRtx = false) const;
+		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;

@@ -75,9 +75,6 @@ namespace RTC
 
 			auto* parameter = new CookiePreservativeParameter(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -122,8 +119,6 @@ namespace RTC
 		void CookiePreservativeParameter::SetLifeSpanIncrement(uint32_t increment)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, increment);
 		}

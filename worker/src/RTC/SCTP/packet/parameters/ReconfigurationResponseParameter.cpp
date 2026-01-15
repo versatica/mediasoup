@@ -120,9 +120,6 @@ namespace RTC
 			// not fixed length.
 			parameter->SetLength(parameterLength + padding);
 
-			// Mark the Parameter as frozen since we are parsing.
-			parameter->Freeze();
-
 			return parameter;
 		}
 
@@ -181,8 +178,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
@@ -190,16 +185,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, static_cast<uint32_t>(result));
 		}
 
 		void ReconfigurationResponseParameter::SetNextTsns(uint32_t senderNextTsn, uint32_t receiverNextTsn)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			if (!HasNextTsns())
 			{

@@ -165,7 +165,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
 			AssertCanHaveParameters();
 
 			const size_t previousLength = GetLength();
@@ -178,9 +177,6 @@ namespace RTC
 			auto* clonedParameter =
 			  parameter->Clone(const_cast<uint8_t*>(GetBuffer()) + previousLength, parameter->GetLength());
 
-			// Freeze the cloned Parameter.
-			clonedParameter->Freeze();
-
 			// Add the Parameter to the list.
 			this->parameters.push_back(clonedParameter);
 		}
@@ -189,7 +185,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
 			AssertCanHaveErrorCauses();
 
 			const size_t previousLength = GetLength();
@@ -201,9 +196,6 @@ namespace RTC
 			// Let's append the Error Cause at the end of existing Error Causes.
 			auto* clonedErrorCause = errorCause->Clone(
 			  const_cast<uint8_t*>(GetBuffer()) + previousLength, errorCause->GetLength());
-
-			// Freeze the cloned Error Cause.
-			clonedErrorCause->Freeze();
 
 			this->errorCauses.push_back(clonedErrorCause);
 		}
@@ -293,10 +285,6 @@ namespace RTC
 
 					auto* softClonedParameter = parameter->SoftClone(chunk->GetBuffer() + offset);
 
-					// Parameter constructors don't freeze the Parameter so we
-					// must do it manually.
-					softClonedParameter->Freeze();
-
 					chunk->parameters.push_back(softClonedParameter);
 				}
 			}
@@ -309,10 +297,6 @@ namespace RTC
 					const size_t offset = errorCause->GetBuffer() - GetBuffer();
 
 					auto* softClonedErrorCause = errorCause->SoftClone(chunk->GetBuffer() + offset);
-
-					// ErrorCause constructors don't freeze the ErrorCause so we must do
-					// it manually.
-					softClonedErrorCause->Freeze();
 
 					chunk->errorCauses.push_back(softClonedErrorCause);
 				}
@@ -736,9 +720,6 @@ namespace RTC
 				  // NOTE: It may throw.
 				  AddItem(parameter);
 
-				  // Freeze the Parameter.
-				  parameter->Freeze();
-
 				  // Add the Parameter to the list.
 				  this->parameters.push_back(parameter);
 			  });
@@ -759,9 +740,6 @@ namespace RTC
 				  // This will update the total length and Length field of the Chunk.
 				  // NOTE: It may throw.
 				  AddItem(errorCause);
-
-				  // Freeze the Error Cause.
-				  errorCause->Freeze();
 
 				  // Add the Error Cause to the list.
 				  this->errorCauses.push_back(errorCause);

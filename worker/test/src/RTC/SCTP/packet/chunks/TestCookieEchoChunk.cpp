@@ -39,7 +39,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -61,10 +60,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		REQUIRE(chunk->GetCookie()[6] == 0x00);
 		REQUIRE(chunk->GetCookie()[7] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->SetCookie(DataBuffer, 3), MediaSoupError);
-
 		/* Serialize it. */
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -76,7 +71,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -111,7 +105,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -145,7 +138,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -181,7 +173,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -210,7 +201,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -240,7 +230,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -257,7 +246,6 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,

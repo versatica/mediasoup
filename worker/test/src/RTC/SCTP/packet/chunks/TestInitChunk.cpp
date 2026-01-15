@@ -57,7 +57,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 56,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -80,7 +79,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -97,7 +95,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -115,21 +112,11 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter3->GetLifeSpanIncrement() == 556942164);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<IPv4AddressParameter>(), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetInitiateTag(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetAdvertisedReceiverWindowCredit(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetNumberOfOutboundStreams(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetNumberOfInboundStreams(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetInitialTsn(1234), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -142,7 +129,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 56,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -165,7 +151,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -182,7 +167,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -200,7 +184,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -220,7 +203,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 56,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -243,7 +225,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -260,7 +241,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -278,7 +258,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -297,7 +276,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -348,7 +326,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 56,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -372,7 +349,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -390,7 +366,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -409,7 +384,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -427,7 +401,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 56,
 		  /*length*/ 56,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -451,7 +424,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -469,7 +441,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -488,7 +459,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -529,7 +499,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 28,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -547,7 +516,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -579,7 +547,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 40,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -597,7 +564,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -618,7 +584,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 40,
 		  /*length*/ 40,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -642,7 +607,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -657,7 +621,6 @@ SCENARIO("SCTP Init Chunk (1)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

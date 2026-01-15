@@ -39,7 +39,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -49,14 +48,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		REQUIRE(parameter->HasNextTsns() == true);
 		REQUIRE(parameter->GetSenderNextTsn() == 1111111111);
 		REQUIRE(parameter->GetReceiverNextTsn() == 2222222222);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetReconfigurationResponseSequenceNumber(111), MediaSoupError);
-		REQUIRE_THROWS_AS(
-		  parameter->SetResult(ReconfigurationResponseParameter::Result::ERROR_WRONG_SSN),
-		  MediaSoupError);
-		REQUIRE_THROWS_AS(parameter->SetNextTsns(100000000, 200000000), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -69,7 +60,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -93,7 +83,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -133,7 +122,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -143,14 +131,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  parameter->GetResult() ==
 		  ReconfigurationResponseParameter::Result::ERROR_REQUEST_ALREADY_IN_PROGRESS);
 		REQUIRE(parameter->HasNextTsns() == false);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetReconfigurationResponseSequenceNumber(111), MediaSoupError);
-		REQUIRE_THROWS_AS(
-		  parameter->SetResult(ReconfigurationResponseParameter::Result::ERROR_BAD_SEQUENCE_NUMBER),
-		  MediaSoupError);
-		REQUIRE_THROWS_AS(parameter->SetNextTsns(100000000, 200000000), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -163,7 +143,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -187,7 +166,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -250,7 +228,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -270,7 +247,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -293,7 +269,6 @@ SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::RECONFIGURATION_RESPONSE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

@@ -69,9 +69,6 @@ namespace RTC
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 
@@ -122,8 +119,6 @@ namespace RTC
 		  const uint8_t* tlvs, uint16_t tlvsLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(tlvs, tlvsLength);
 		}

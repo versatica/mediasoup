@@ -34,7 +34,6 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -63,7 +62,6 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -93,7 +91,6 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);

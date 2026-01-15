@@ -13,27 +13,12 @@ namespace RTC
 {
 	/* Static. */
 
-	// clang-format off
-	// Probation RTP Fixed Header.
-	// Caution: This must have an exact size for the RTP extensions to be added
-	// and must align extensions to 4 bytes.
-	static const uint8_t ProbationPacketFixedHeader[] =
-	{
-		0b10010000, 0b01111111, 0, 0, // PayloadType: 127, Sequence Number: 0
-		0, 0, 0, 0,                   // Timestamp: 0
-		0, 0, 0, 0,                   // SSRC: 0
-		0xBE, 0xDE, 0, 4,             // Header Extension (One-Byte Extensions)
-		0, 0, 0, 0,                   // Space for MID extension
-		0, 0, 0, 0,
-		0,
-		0, 0, 0, 0,                   // Space for abs-send-time extension
-		0, 0, 0                       // Space for transport-wide-cc-01 extension
-	};
-	// clang-format on
-
-	static constexpr size_t ProbationPacketFixedHeaderSize{ 32 };
-	static constexpr size_t MaxProbationPacketSize{ 1400 };
-	static const std::string MidValue{ "probator" }; // 8 bytes, same as RTC::MidMaxLength.
+	static constexpr size_t ProbationPacketBufferSize{ 1400 };
+	thread_local static uint8_t ProbationPacketBuffer[ProbationPacketBufferSize];
+	static constexpr size_t ProbationPacketExtensionsBufferSize{ 200 };
+	thread_local static uint8_t ProbationPacketExtensionsBuffer[ProbationPacketExtensionsBufferSize];
+	// 8 bytes, same as RTC::Consts::MidRtpExtensionMaxLength.
+	static const std::string MidValue{ "probator" };
 
 	/* Instance methods. */
 
@@ -41,35 +26,27 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// Allocate the probation RTP packet buffer.
-		this->probationPacketBuffer = new uint8_t[MaxProbationPacketSize];
-
-		// Copy the generic probation RTP Packet Fixed Header into the buffer.
-		std::memcpy(this->probationPacketBuffer, ProbationPacketFixedHeader, ProbationPacketFixedHeaderSize);
-
 		// Create the probation RTP Packet.
-		// NOTE: Let's use Packet::ParseFromApplicationBuffer() since we own the
-		// buffer.
 		this->probationPacket =
-		  RTC::RTP::Packet::ParseFromApplicationBuffer(this->probationPacketBuffer, MaxProbationPacketSize);
+		  RTC::RTP::Packet::Factory(ProbationPacketBuffer, sizeof(ProbationPacketBufferSize));
 
 		// Sex fixed codec payload type.
-		this->probationPacket->SetPayloadType(RTC::RtpProbationCodecPayloadType);
+		this->probationPacket->SetPayloadType(RTC::RtpProbationGenerator::PayloadType);
 
 		// Set fixed SSRC.
-		this->probationPacket->SetSsrc(RTC::RtpProbationSsrc);
+		this->probationPacket->SetSsrc(RTC::RtpProbationGenerator::Ssrc);
 
-		// Set random initial RTP seq number and timestamp.
+		// Set random initial RTP seq number.
 		this->probationPacket->SetSequenceNumber(
 		  static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, 65535)));
+
+		// Set random initial RTP timestamp.
 		this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
 
 		// Add BWE related RTP header extensions.
-		thread_local static uint8_t buffer[4096];
-
 		std::vector<RTC::RTP::Packet::Extension> extensions;
 		uint8_t extenLen;
-		uint8_t* bufferPtr{ buffer };
+		uint8_t* bufferPtr{ ProbationPacketExtensionsBuffer };
 
 		// Add urn:ietf:params:rtp-hdrext:sdes:mid.
 		{
@@ -117,14 +94,13 @@ namespace RTC
 
 		// Set the extensions into the Packet using One-Byte format.
 		this->probationPacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+
+		this->probationPacketMinLength = this->probationPacket->GetLength();
 	}
 
 	RtpProbationGenerator::~RtpProbationGenerator()
 	{
 		MS_TRACE();
-
-		// Delete the probation Packet buffer.
-		delete[] this->probationPacketBuffer;
 
 		// Delete the probation RTP Packet.
 		delete this->probationPacket;
@@ -135,28 +111,33 @@ namespace RTC
 		MS_TRACE();
 
 		// Make the Packet length fit into our available limits.
-		if (len > MaxProbationPacketSize)
+		if (len > ProbationPacketBufferSize)
 		{
-			len = MaxProbationPacketSize;
+			MS_WARN_TAG(
+			  rtp, "cannot generate a probation packet bigger than %zu bytes", ProbationPacketBufferSize);
+
+			len = ProbationPacketBufferSize;
 		}
-		else if (len < ProbationPacketFixedHeaderSize)
+		else if (len < this->probationPacketMinLength)
 		{
-			len = ProbationPacketFixedHeaderSize;
+			MS_WARN_TAG(
+			  rtp,
+			  "cannot generate a probation packet smaller than %zu bytes",
+			  this->probationPacketMinLength);
+
+			len = this->probationPacketMinLength;
 		}
 
 		// Just send up to StepNumPackets per step.
 		// Increase RTP seq number and timestamp.
-		auto seq       = this->probationPacket->GetSequenceNumber();
-		auto timestamp = this->probationPacket->GetTimestamp();
-
-		++seq;
-		timestamp += 20u;
+		const auto seq       = this->probationPacket->GetSequenceNumber() + 1;
+		const auto timestamp = this->probationPacket->GetTimestamp() + 20;
 
 		this->probationPacket->SetSequenceNumber(seq);
 		this->probationPacket->SetTimestamp(timestamp);
 
 		// Set padding.
-		this->probationPacket->SetPaddingLength(len - ProbationPacketFixedHeaderSize);
+		this->probationPacket->SetPaddingLength(len - this->probationPacketMinLength);
 
 		MS_DUMP("TODO: (REMOVE) probation packet len should be %zu bytes", len);
 		this->probationPacket->Dump();

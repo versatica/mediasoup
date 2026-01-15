@@ -426,7 +426,8 @@ inline void TcpConnectionHandle::OnUvReadAlloc(size_t /*suggestedSize*/, uv_buf_
 {
 	MS_TRACE();
 
-	// If this is the first call to onUvReadAlloc() then allocate the receiving buffer now.
+	// If this is the first call to onUvReadAlloc() then allocate the receiving
+	// buffer now.
 	if (!this->buffer)
 	{
 		this->buffer = new uint8_t[this->bufferSize];

@@ -31,7 +31,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -42,10 +41,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*errorCausesCount*/ 0);
 
 		REQUIRE(chunk->GetT() == true);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->SetT(false), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -58,7 +53,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -83,7 +77,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -107,7 +100,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -128,7 +120,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -151,7 +142,6 @@ SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,

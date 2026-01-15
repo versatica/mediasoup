@@ -235,9 +235,6 @@ namespace RTC
 			// exact length of the Packet.
 			packet->SetLength(computedLength);
 
-			// Mark the packet as frozen since we are parsing.
-			packet->Freeze();
-
 			return packet;
 		}
 
@@ -292,7 +289,6 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::Packet>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-			MS_DUMP_CLEAN(indentation, "  frozen: %s", IsFrozen() ? "yes" : "no");
 			MS_DUMP_CLEAN(indentation, "  source port: %" PRIu16, GetSourcePort());
 			MS_DUMP_CLEAN(indentation, "  destination port: %" PRIu16, GetDestinationPort());
 			MS_DUMP_CLEAN(indentation, "  verification tag: %" PRIu32, GetVerificationTag());
@@ -337,9 +333,6 @@ namespace RTC
 
 				auto* softClonedChunk = chunk->SoftClone(buffer + offset);
 
-				// Chunk constructors don't freeze the Chunk so we must do it manually.
-				softClonedChunk->Freeze();
-
 				clonedPacket->chunks.push_back(softClonedChunk);
 			}
 
@@ -350,16 +343,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			GetHeaderPointer()->sourcePort = htons(sourcePort);
 		}
 
 		void Packet::SetDestinationPort(uint16_t destinationPort)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			GetHeaderPointer()->destinationPort = htons(destinationPort);
 		}
@@ -368,8 +357,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			GetHeaderPointer()->verificationTag = htonl(verificationTag);
 		}
 
@@ -377,16 +364,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			GetHeaderPointer()->checksum = htonl(checksum);
 		}
 
 		void Packet::AddChunk(const Chunk* chunk)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			const size_t length = GetLength() + chunk->GetLength();
 
@@ -406,17 +389,12 @@ namespace RTC
 				throw;
 			}
 
-			// Freeze the cloned Chunk.
-			clonedChunk->Freeze();
-
 			this->chunks.push_back(clonedChunk);
 		}
 
 		void Packet::SetCRC32cChecksum()
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetChecksum(0u);
 
@@ -431,7 +409,7 @@ namespace RTC
 
 			auto crc32c = GetChecksum();
 
-			// NOTE: Cannot use SetChecksum() because it throws if Packet is frozen.
+			// NOTE: Cannot use SetChecksum() because its a `const` method.
 			GetHeaderPointer()->checksum = 0;
 
 			auto computedCrc32c = Utils::Crypto::GetCRC32c(GetBuffer(), GetLength());
@@ -452,9 +430,6 @@ namespace RTC
 			  {
 				  // Fix buffer length assigned to the Chunk.
 				  chunk->SetBufferLength(chunk->GetLength());
-
-				  // Freeze the Chunk.
-				  chunk->Freeze();
 
 				  // Update Packet length.
 				  // NOTE: This will throw if there is no enough space in the Packet

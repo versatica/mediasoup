@@ -148,15 +148,14 @@ namespace RTC
 		void HandleNotification(Channel::ChannelNotification* notification) override;
 
 	private:
-		RTC::RtpStreamRecv* GetRtpStream(RTC::RTP::Packet* packet);
+		RTC::RtpStreamRecv* GetRtpStream(const RTC::RTP::Packet* packet);
 		RTC::RtpStreamRecv* CreateRtpStream(
-		  RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
+		  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream);
 		bool MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RtpStreamRecv* rtpStream) const;
 		void PostProcessRtpPacket(RTC::RTP::Packet* packet);
 		void EmitScore() const;
-		void EmitTraceEventRtpAndKeyFrameTypes(RTC::RTP::Packet* packet, bool isRtx = false) const;
-		void EmitTraceEventKeyFrameType(RTC::RTP::Packet* packet, bool isRtx = false) const;
+		void EmitTraceEventRtpAndKeyFrameTypes(const RTC::RTP::Packet* packet, bool isRtx = false) const;
 		void EmitTraceEventPliType(uint32_t ssrc) const;
 		void EmitTraceEventFirType(uint32_t ssrc) const;
 		void EmitTraceEventNackType() const;
@@ -206,8 +205,6 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
-		// Static buffer.
-		thread_local static uint8_t* buffer;
 	};
 } // namespace RTC
 

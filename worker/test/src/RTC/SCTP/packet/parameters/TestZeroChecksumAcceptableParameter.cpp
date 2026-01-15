@@ -34,7 +34,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -42,13 +41,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		REQUIRE(
 		  parameter->GetAlternateErrorDetectionMethod() ==
 		  static_cast<ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod>(666777888));
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(
-		  parameter->SetAlternateErrorDetectionMethod(
-		    ZeroChecksumAcceptableParameter::AlternateErrorDetectionMethod::SCTP_OVER_DTLS),
-		  MediaSoupError);
 
 		/* Serialize it. */
 
@@ -61,7 +53,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -83,7 +74,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -104,7 +94,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -123,7 +112,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);
@@ -144,7 +132,6 @@ SCENARIO("Zero Checksum Acceptable Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::ZERO_CHECKSUM_ACCEPTABLE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP);

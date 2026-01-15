@@ -74,9 +74,6 @@ namespace RTC
 
 			auto* errorCause = new NoUserDataErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 
@@ -119,8 +116,6 @@ namespace RTC
 		void NoUserDataErrorCause::SetTsn(uint32_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}

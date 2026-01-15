@@ -35,7 +35,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -44,10 +43,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		REQUIRE(parameter->GetAddressTypeAt(0) == 0x1001);
 		REQUIRE(parameter->GetAddressTypeAt(1) == 0x2002);
 		REQUIRE(parameter->GetAddressTypeAt(2) == 0x3003);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->AddAddressType(1234), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -60,7 +55,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -83,7 +77,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -121,7 +114,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -139,7 +131,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -157,7 +148,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -181,7 +171,6 @@ SCENARIO("Supported Address Types Parameter (12)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::SUPPORTED_ADDRESS_TYPES,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

@@ -46,7 +46,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -55,15 +54,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*chunksCount*/ 0);
 
 		REQUIRE(packet->GetFirstChunkOfType<DataChunk>() == nullptr);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<DataChunk>(), MediaSoupError);
-		REQUIRE_THROWS_AS(packet->SetSourcePort(10), MediaSoupError);
-		REQUIRE_THROWS_AS(packet->SetDestinationPort(9999), MediaSoupError);
-		REQUIRE_THROWS_AS(packet->SetVerificationTag(12345), MediaSoupError);
-		REQUIRE_THROWS_AS(packet->SetChecksum(6666), MediaSoupError);
-		REQUIRE_THROWS_AS(packet->SetCRC32cChecksum(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -76,7 +66,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -93,7 +82,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -114,7 +102,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -169,7 +156,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 52,
-		  /*frozen*/ true,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -193,7 +179,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -225,7 +210,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -252,7 +236,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -271,7 +254,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -284,19 +266,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(parameter3_1->GetInfo()[2] == 0x00);
 		REQUIRE(parameter3_1->GetInfo()[3] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(packet->BuildChunkInPlace<DataChunk>(), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetI(false), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetU(false), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetB(false), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetE(false), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetTsn(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetStreamIdentifierS(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(const_cast<DataChunk*>(chunk1)->SetStreamSequenceNumberN(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(
-		  const_cast<DataChunk*>(chunk1)->SetPayloadProtocolIdentifier(1234), MediaSoupError);
-
 		/* Serialize it. */
 
 		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -308,7 +277,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 52,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -330,7 +298,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -360,7 +327,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -385,7 +351,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -402,7 +367,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -428,7 +392,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 52,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 10000,
 		  /*destinationPort*/ 15999,
 		  /*verificationTag*/ 4294967285,
@@ -452,7 +415,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -484,7 +446,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
@@ -511,7 +472,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_ACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -528,7 +488,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -553,7 +512,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 0,
 		  /*destinationPort*/ 0,
 		  /*verificationTag*/ 0,
@@ -649,7 +607,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 60,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
@@ -668,7 +625,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ 60,
 		  /*length*/ 60,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
@@ -709,7 +665,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ 60,
 		  /*length*/ 60,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 1000,
 		  /*destinationPort*/ 6000,
 		  /*verificationTag*/ 12345678,
@@ -725,7 +680,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 20 + 8 + 8,
 		  /*length*/ 20 + 8 + 8,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::INIT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -746,7 +700,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -761,7 +714,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::COOKIE_PRESERVATIVE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -773,7 +725,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4 + 8,
 		  /*length*/ 4 + 8,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -788,7 +739,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -836,7 +786,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 1,
 		  /*destinationPort*/ 2,
 		  /*verificationTag*/ 3,
@@ -854,7 +803,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SHUTDOWN_COMPLETE,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -878,7 +826,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 28,
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 0,
 		  /*destinationPort*/ 0,
 		  /*verificationTag*/ 0,
@@ -902,7 +849,6 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 28,
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*sourcePort*/ 0,
 		  /*destinationPort*/ 0,
 		  /*verificationTag*/ 0,

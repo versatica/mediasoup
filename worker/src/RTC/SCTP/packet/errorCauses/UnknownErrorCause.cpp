@@ -37,9 +37,6 @@ namespace RTC
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 

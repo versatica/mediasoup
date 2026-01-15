@@ -38,7 +38,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 16,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -49,12 +48,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(
-		  errorCause->AddMissingParameterType(Parameter::ParameterType::COOKIE_PRESERVATIVE),
-		  MediaSoupError);
 
 		/* Serialize it. */
 
@@ -67,7 +60,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -92,7 +84,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -171,7 +162,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -188,7 +178,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
@@ -212,7 +201,6 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 

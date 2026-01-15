@@ -31,7 +31,6 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -47,7 +46,6 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -65,7 +63,6 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -82,7 +79,6 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -99,7 +95,6 @@ SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::FORWARD_TSN_SUPPORTED,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);

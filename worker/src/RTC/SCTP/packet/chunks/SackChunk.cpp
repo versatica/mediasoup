@@ -93,9 +93,6 @@ namespace RTC
 			// not fixed length.
 			chunk->SetLength(chunkLength + padding);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -158,8 +155,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}
 
@@ -167,16 +162,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 8, value);
 		}
 
 		void SackChunk::AddAckBlock(uint16_t start, uint16_t end)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 4);
@@ -197,8 +188,6 @@ namespace RTC
 		void SackChunk::AddDuplicateTsn(uint32_t tsn)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			// NOTE: This may throw.
 			SetVariableLengthValueLength(GetVariableLengthValueLength() + 4);
@@ -226,16 +215,12 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			AssertNotFrozen();
-
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 12, value);
 		}
 
 		void SackChunk::SetNumberOfDuplicateTsns(uint16_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set2Bytes(const_cast<uint8_t*>(GetBuffer()), 14, value);
 		}

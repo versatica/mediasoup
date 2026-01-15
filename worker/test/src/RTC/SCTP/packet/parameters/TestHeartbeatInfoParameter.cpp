@@ -38,7 +38,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -55,10 +54,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		// This should be padding.
 		REQUIRE(parameter->GetInfo()[7] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetInfo(DataBuffer, 5), MediaSoupError);
-
 		/* Serialize it. */
 
 		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -70,7 +65,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -100,7 +94,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -177,7 +170,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -220,7 +212,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -249,7 +240,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -278,7 +268,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -290,7 +279,6 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		  /*buffer*/ ThrowBuffer,
 		  /*bufferLength*/ sizeof(ThrowBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

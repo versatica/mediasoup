@@ -68,12 +68,12 @@ namespace RTC
 		{
 			return this->packetsDiscarded;
 		}
-		bool ReceivePacket(RTC::RTP::Packet* packet);
+		bool ReceivePacket(const RTC::RTP::Packet* packet);
 		RTC::RTCP::ReceiverReport* GetRtcpReceiverReport();
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 
 	protected:
-		bool UpdateSeq(RTC::RTP::Packet* packet);
+		bool UpdateSeq(const RTC::RTP::Packet* packet);
 		uint32_t GetExpectedPackets() const
 		{
 			return (this->cycles + this->maxSeq) - this->baseSeq + 1;

@@ -1,7 +1,7 @@
 #include "common.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
-#include "RTC/SharedRtpPacket.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -37,12 +37,12 @@ public:
 		};
 		// clang-format on
 
-		std::unique_ptr<RtpPacket> packet{ RtpPacket::Parse(rtpBuffer, sizeof(rtpBuffer)) };
+		std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(rtpBuffer, sizeof(rtpBuffer)) };
 
 		packet->SetSequenceNumber(seq);
 		packet->SetTimestamp(timestamp);
 
-		RTC::SharedRtpPacket sharedPacket;
+		RTP::SharedPacket sharedPacket;
 
 		RtpRetransmissionBuffer::Insert(packet.get(), sharedPacket);
 	}

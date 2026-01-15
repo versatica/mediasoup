@@ -65,9 +65,6 @@ namespace RTC
 			// not fixed length.
 			errorCause->SetLength(causeLength + padding);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 
@@ -115,8 +112,6 @@ namespace RTC
 		void ProtocolViolationErrorCause::SetAdditionalInformation(const uint8_t* info, uint16_t infoLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetVariableLengthValue(info, infoLength);
 		}

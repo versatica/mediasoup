@@ -171,19 +171,18 @@ namespace RTC
 			 * Parse a RTP Packet.
 			 *
 			 * @remarks
+			 * - `packetLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be >= `packetLen`.
+			 */
+			static Packet* Parse(const uint8_t* buffer, size_t packetLength, size_t bufferLength);
+
+			/**
+			 * Parse a RTP Packet.
+			 *
+			 * @remarks
 			 * - `bufferLength` must be the exact length of the Packet.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t bufferLength);
-
-			/**
-			 * Parse a RTP Packet from an application allocated buffer.
-			 *
-			 * @remarks
-			 * - Difference ith Parse() is that this method doesn't freeze the
-			 *   generated Packet.
-			 * - `bufferLength` must be the exact length of the Packet.
-			 */
-			static Packet* ParseFromApplicationBuffer(uint8_t* buffer, size_t bufferLength);
 
 			/**
 			 * Create a RTP Packet.

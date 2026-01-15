@@ -45,7 +45,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -63,7 +62,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -87,7 +85,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -100,10 +97,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		REQUIRE(parameter2->GetUnknownValue()[2] == 0x00);
 		REQUIRE(parameter2->GetUnknownValue()[3] == 0x00);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->BuildParameterInPlace<HeartbeatInfoParameter>(), MediaSoupError);
-
 		/* Serialize it. */
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -115,7 +108,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 24,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -132,7 +124,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -156,7 +147,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -182,7 +172,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 24,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -199,7 +188,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -223,7 +211,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -279,7 +266,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -297,7 +283,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -321,7 +306,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -347,7 +331,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 24,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -364,7 +347,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -388,7 +370,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
@@ -413,7 +394,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -444,7 +424,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -462,7 +441,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -486,7 +464,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -510,7 +487,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
 		  /*length*/ 4 + (4 + 5 + 3) + (4 + 2 + 2),
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::HEARTBEAT_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -528,7 +504,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -552,7 +527,6 @@ SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

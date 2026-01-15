@@ -75,9 +75,6 @@ namespace RTC
 			auto* errorCause =
 			  new CookieReceivedWhileShuttingDownErrorCause(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Error Cause as frozen since we are parsing.
-			errorCause->Freeze();
-
 			return errorCause;
 		}
 

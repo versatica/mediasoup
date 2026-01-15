@@ -36,7 +36,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -55,15 +54,10 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownType*/ false);
 
 		REQUIRE(errorCause1->GetMeasureOfStaleness() == 0x12345678);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->BuildErrorCauseInPlace<StaleCookieErrorCause>(), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -76,7 +70,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -93,7 +86,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownType*/ false);
 
@@ -112,7 +104,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -129,7 +120,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownType*/ false);
 
@@ -147,7 +137,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -173,7 +162,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4 + (4 + 4),
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -193,7 +181,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
@@ -210,7 +197,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4 + (4 + 4),
 		  /*length*/ 4 + (4 + 4),
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -230,7 +216,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
@@ -265,7 +250,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -285,7 +269,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
@@ -302,7 +285,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -322,7 +304,6 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 

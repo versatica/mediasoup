@@ -37,7 +37,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 16,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -47,11 +46,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		REQUIRE(parameter->GetStreamAt(0) == 0x5001);
 		REQUIRE(parameter->GetStreamAt(1) == 0x5002);
 		REQUIRE(parameter->GetStreamAt(2) == 0x5003);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetReconfigurationRequestSequenceNumber(111), MediaSoupError);
-		REQUIRE_THROWS_AS(parameter->AddStream(444), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -64,7 +58,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -88,7 +81,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -111,7 +103,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 8,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -132,7 +123,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -156,7 +146,6 @@ SCENARIO("Incoming SSN Reset Request Parameter (14)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::INCOMING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

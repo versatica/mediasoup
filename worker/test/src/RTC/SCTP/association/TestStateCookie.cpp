@@ -48,7 +48,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(stateCookie->GetBuffer() == buffer);
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->IsFrozen() == true);
 		REQUIRE(stateCookie->GetMyVerificationTag() == 11223344);
 		REQUIRE(stateCookie->GetPeerVerificationTag() == 55667788);
 		REQUIRE(stateCookie->GetMyInitialTsn() == 12345678);
@@ -75,7 +74,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(stateCookie->GetBuffer() == SerializeBuffer);
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetBufferLength() == sizeof(SerializeBuffer));
-		REQUIRE(stateCookie->IsFrozen() == false);
 		REQUIRE(stateCookie->GetMyVerificationTag() == 11223344);
 		REQUIRE(stateCookie->GetPeerVerificationTag() == 55667788);
 		REQUIRE(stateCookie->GetMyInitialTsn() == 12345678);
@@ -104,7 +102,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(clonedStateCookie->GetBuffer() == CloneBuffer);
 		REQUIRE(clonedStateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(CloneBuffer));
-		REQUIRE(clonedStateCookie->IsFrozen() == false);
 		REQUIRE(clonedStateCookie->GetMyVerificationTag() == 11223344);
 		REQUIRE(clonedStateCookie->GetPeerVerificationTag() == 55667788);
 		REQUIRE(clonedStateCookie->GetMyInitialTsn() == 12345678);
@@ -257,7 +254,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(stateCookie->GetBuffer() == FactoryBuffer);
 		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->IsFrozen() == false);
 		REQUIRE(stateCookie->GetMyVerificationTag() == 6660666);
 		REQUIRE(stateCookie->GetPeerVerificationTag() == 9990999);
 		REQUIRE(stateCookie->GetMyInitialTsn() == 1110111);
@@ -284,7 +280,6 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		REQUIRE(parsedStateCookie->GetBuffer() == FactoryBuffer);
 		REQUIRE(parsedStateCookie->GetLength() == StateCookie::StateCookieLength);
 		REQUIRE(parsedStateCookie->GetBufferLength() == StateCookie::StateCookieLength);
-		REQUIRE(parsedStateCookie->IsFrozen() == true);
 		REQUIRE(parsedStateCookie->GetMyVerificationTag() == 6660666);
 		REQUIRE(parsedStateCookie->GetPeerVerificationTag() == 9990999);
 		REQUIRE(parsedStateCookie->GetMyInitialTsn() == 1110111);

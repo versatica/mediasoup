@@ -36,17 +36,12 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 666777888);
 		REQUIRE(parameter->GetNumberOfNewStreams() == 1024);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetReconfigurationRequestSequenceNumber(1234), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -59,7 +54,6 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -80,7 +74,6 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -101,7 +94,6 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -119,7 +111,6 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 12,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -139,7 +130,6 @@ SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::ADD_INCOMING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

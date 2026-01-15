@@ -47,7 +47,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 36,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -69,11 +68,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		REQUIRE(chunk->GetDuplicateTsnAt(1) == 4278216311);
 		REQUIRE(chunk->GetDuplicateTsnAt(2) == 556942164);
 
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(chunk->SetCumulativeTsnAck(1234), MediaSoupError);
-		REQUIRE_THROWS_AS(chunk->SetAdvertisedReceiverWindowCredit(1234), MediaSoupError);
-
 		/* Serialize it. */
 
 		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -85,7 +79,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 36,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -120,7 +113,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 36,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -232,7 +224,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 16,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -264,7 +255,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 44,
-		  /*frozen*/ false,
 		  /*chunkType*/ Chunk::ChunkType::SACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
@@ -300,7 +290,6 @@ SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 44,
 		  /*length*/ 44,
-		  /*frozen*/ true,
 		  /*chunkType*/ Chunk::ChunkType::SACK,
 		  /*unknownType*/ false,
 		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,

@@ -29,7 +29,6 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
@@ -44,7 +43,6 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
@@ -61,7 +59,6 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
@@ -78,7 +75,6 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 4,
-		  /*frozen*/ false,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
@@ -94,7 +90,6 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*frozen*/ true,
 		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 

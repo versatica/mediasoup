@@ -71,9 +71,6 @@ namespace RTC
 
 			auto* chunk = new ShutdownChunk(const_cast<uint8_t*>(buffer), bufferLength);
 
-			// Mark the Chunk as frozen since we are parsing.
-			chunk->Freeze();
-
 			return chunk;
 		}
 
@@ -82,8 +79,6 @@ namespace RTC
 		ShutdownChunk::ShutdownChunk(uint8_t* buffer, size_t bufferLength) : Chunk(buffer, bufferLength)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			SetLength(ShutdownChunk::ShutdownChunkHeaderLength);
 		}
@@ -118,8 +113,6 @@ namespace RTC
 		void ShutdownChunk::SetCumulativeTsnAck(uint32_t value)
 		{
 			MS_TRACE();
-
-			AssertNotFrozen();
 
 			Utils::Byte::Set4Bytes(const_cast<uint8_t*>(GetBuffer()), 4, value);
 		}

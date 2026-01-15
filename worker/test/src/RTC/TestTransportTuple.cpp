@@ -14,6 +14,7 @@ public:
 	  UdpSocket* /*socket*/,
 	  const uint8_t* /*data*/,
 	  size_t /*len*/,
+	  size_t /*bufferLen*/,
 	  const struct sockaddr* /*remoteAddr*/) override
 	{
 	}

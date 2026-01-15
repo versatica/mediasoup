@@ -36,7 +36,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -46,10 +45,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		REQUIRE(parameter->GetIPv6Address()[2] == 0x0D);
 		REQUIRE(parameter->GetIPv6Address()[3] == 0xB8);
 		REQUIRE(parameter->GetIPv6Address()[15] == 0x34);
-
-		/* Should throw if modifications are attempted when it's frozen. */
-
-		REQUIRE_THROWS_AS(parameter->SetIPv6Address(ThrowBuffer), MediaSoupError);
 
 		/* Serialize it. */
 
@@ -62,7 +57,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		  /*buffer*/ SerializeBuffer,
 		  /*bufferLength*/ sizeof(SerializeBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -86,7 +80,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		  /*buffer*/ CloneBuffer,
 		  /*bufferLength*/ sizeof(CloneBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -177,7 +170,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -201,7 +193,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ sizeof(FactoryBuffer),
 		  /*length*/ 20,
-		  /*frozen*/ false,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
@@ -224,7 +215,6 @@ SCENARIO("IPv6 Adress Parameter (6)", "[sctp][serializable]")
 		  /*buffer*/ FactoryBuffer,
 		  /*bufferLength*/ 20,
 		  /*length*/ 20,
-		  /*frozen*/ true,
 		  /*parameterType*/ Parameter::ParameterType::IPV6_ADDRESS,
 		  /*unknownType*/ false,
 		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);

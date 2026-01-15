@@ -32,7 +32,7 @@ namespace RTC
 		}
 	}
 
-	void RtpStreamRecv::TransmissionCounter::Update(RTC::RTP::Packet* packet)
+	void RtpStreamRecv::TransmissionCounter::Update(const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
