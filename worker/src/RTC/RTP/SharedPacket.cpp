@@ -40,12 +40,13 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			MS_DUMP("TODO: This is not a solution because obviusly the cloned buffer is leaking");
 			// If we hold a Packet we must delete its internal buffer (the one we
 			// passed to it via Clone() method).
-			if (HasPacket())
-			{
-				delete[] GetPacket()->GetBuffer();
-			}
+			// if (HasPacket())
+			// {
+			// 	delete[] GetPacket()->GetBuffer();
+			// }
 		}
 
 		void SharedPacket::Dump(int indentation) const
