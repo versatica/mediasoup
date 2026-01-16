@@ -23,6 +23,7 @@ static std::unique_ptr<RTP::Packet> CreateRtpPacket(
 
 	REQUIRE(packet);
 
+	packet->SetPayloadType(123);
 	packet->SetSequenceNumber(seq);
 	packet->SetTimestamp(timestamp);
 
@@ -41,6 +42,7 @@ static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> strea
 
 		packet->SetSsrc(ssrc);
 
+		printf("------ orig packet->GetBuffer(): %p:\n",packet->GetBuffer());
 		auto result = stream->ReceivePacket(packet, sharedPacket);
 
 		packet->SetSsrc(origSsrc);
@@ -88,6 +90,7 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rt
 		void OnRtpStreamRetransmitRtpPacket(RtpStreamSend* /*rtpStream*/, RTP::Packet* packet) override
 		{
 			printf("------ OnRtpStreamRetransmitRtpPacket:\n");
+			printf("------ RTX packet->GetBuffer(): %p:\n",packet->GetBuffer());
 			packet->Dump();
 			this->retransmittedPackets.push_back(packet);
 		}
@@ -117,16 +120,16 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rt
 
 	SECTION("receive NACK and get retransmitted packets")
 	{
-		// packet1 [pt:123, seq:21006, timestamp:1533790901]
+		// packet1 [seq:21006, timestamp:1533790901]
 		auto packet1(CreateRtpPacket(rtpBuffer1, sizeof(rtpBuffer1), 21006, 1533790901));
-		// packet2 [pt:123, seq:21007, timestamp:1533790901]
+		// packet2 [seq:21007, timestamp:1533790901]
 		auto packet2(CreateRtpPacket(rtpBuffer2, sizeof(rtpBuffer2), 21007, 1533790901));
 		packet2->SetMarker(true);
-		// packet3 [pt:123, seq:21008, timestamp:1533793871]
+		// packet3 [seq:21008, timestamp:1533793871]
 		auto packet3(CreateRtpPacket(rtpBuffer3, sizeof(rtpBuffer3), 21008, 1533793871));
-		// packet4 [pt:123, seq:21009, timestamp:1533793871]
+		// packet4 [seq:21009, timestamp:1533793871]
 		auto packet4(CreateRtpPacket(rtpBuffer4, sizeof(rtpBuffer4), 21009, 1533793871));
-		// packet5 [pt:123, seq:21010, timestamp:1533796931]
+		// packet5 [seq:21010, timestamp:1533796931]
 		auto packet5(CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
 		packet5->SetMarker(true);
 
