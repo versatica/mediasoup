@@ -45,13 +45,10 @@ namespace RTC
 
 			if (packetLength > bufferLength)
 			{
-				MS_WARN_TAG(
-				  rtp,
+				MS_THROW_TYPE_ERROR(
 				  "packetLength (%zu bytes) cannot be bigger than bufferLength (%zu bytes)",
 				  packetLength,
 				  bufferLength);
-
-				return nullptr;
 			}
 
 			if (!Packet::IsRtp(buffer, packetLength))

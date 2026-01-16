@@ -1003,6 +1003,30 @@ SCENARIO("RTP Packet", "[rtp][serializable]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
+	SECTION("Packet::Parse() with wrong arguments fails")
+	{
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0x90, 0x01, 0x00, 0x08,
+			0x00, 0x00, 0x00, 0x04,
+			0x00, 0x00, 0x00, 0x05,
+			0xbe, 0xde, 0x00, 0x03, // Header Extension
+			0x10, 0xaa, 0x21, 0xbb, // - id: 1, len: 1
+			0xff, 0x00, 0x00, 0x33, // - id: 2, len: 2
+			0xff, 0xff, 0xff, 0xff, // - id: 3, len: 4
+			0x12, 0x23
+		};
+		// clang-format on
+
+		std::unique_ptr<Packet> packet{ nullptr };
+
+		// bufferLength is lower than packetLen.
+		REQUIRE_THROWS_AS(
+		  packet.reset(Packet::Parse(buffer, sizeof(buffer), sizeof(buffer) - 1)), MediaSoupTypeError);
+		REQUIRE(!packet);
+	}
+
 	SECTION("Packet::Factory() succeeds")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };

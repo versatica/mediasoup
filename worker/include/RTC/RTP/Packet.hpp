@@ -172,7 +172,10 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - `packetLength` must be the exact length of the Packet.
-			 * - `bufferLength` must be >= `packetLen`.
+			 * - `bufferLength` must be >= `packetLength`.
+			 *
+			 * @throw MediaSoupTypeError - If `bufferLength` is lower than
+			 *   `packetLength`.
 			 */
 			static Packet* Parse(const uint8_t* buffer, size_t packetLength, size_t bufferLength);
 
