@@ -42,7 +42,10 @@ static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> strea
 
 		packet->SetSsrc(ssrc);
 
-		printf("------ orig packet->GetBuffer(): %p:\n",packet->GetBuffer());
+		printf("------ stream->ReceivePacket() | packet->GetBuffer(): %p:\n",packet->GetBuffer());
+		packet->Dump();
+		printf("\n");
+
 		auto result = stream->ReceivePacket(packet, sharedPacket);
 
 		packet->SetSsrc(origSsrc);
@@ -89,9 +92,10 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rt
 
 		void OnRtpStreamRetransmitRtpPacket(RtpStreamSend* /*rtpStream*/, RTP::Packet* packet) override
 		{
-			printf("------ OnRtpStreamRetransmitRtpPacket:\n");
-			printf("------ RTX packet->GetBuffer(): %p:\n",packet->GetBuffer());
+			printf("++++++ OnRtpStreamRetransmitRtpPacket() | RTX packet->GetBuffer(): %p:\n",packet->GetBuffer());
 			packet->Dump();
+			printf("\n");
+
 			this->retransmittedPackets.push_back(packet);
 		}
 
@@ -132,9 +136,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rt
 		// packet5 [seq:21010, timestamp:1533796931]
 		auto packet5(CreateRtpPacket(rtpBuffer5, sizeof(rtpBuffer5), 21010, 1533796931));
 		packet5->SetMarker(true);
-
-		printf("--- packet1 orig:\n");
-		packet1.get()->Dump();
 
 		// Create a RtpStreamSend instance.
 		TestRtpStreamListener testRtpStreamListener;
@@ -178,12 +179,6 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rt
 		auto* rtxPacket5 = testRtpStreamListener.retransmittedPackets[4];
 
 		testRtpStreamListener.retransmittedPackets.clear();
-
-		printf("--- rtxPacket1:\n");
-		rtxPacket1->Dump();
-
-		printf("--- packet1:\n");
-		packet1.get()->Dump();
 
 		CheckRtxPacket(rtxPacket1, packet1.get());
 		CheckRtxPacket(rtxPacket2, packet2.get());
