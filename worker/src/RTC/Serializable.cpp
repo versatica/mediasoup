@@ -22,7 +22,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("deallocating buffer");
 
-			delete this->buffer;
+			delete[] this->buffer;
 		}
 	}
 
@@ -44,7 +44,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("deallocating buffer");
 
-			delete this->buffer;
+			delete[] this->buffer;
 
 			this->bufferOwned = false;
 		}
@@ -85,7 +85,7 @@ namespace RTC
 		{
 			MS_DEBUG_DEV("deallocating buffer");
 
-			delete this->buffer;
+			delete[] this->buffer;
 
 			this->bufferOwned = false;
 		}
@@ -139,7 +139,7 @@ namespace RTC
 
 		if (serializable->GetBufferLength() < this->length)
 		{
-			delete serializable;
+			delete[] serializable;
 
 			MS_THROW_TYPE_ERROR(
 			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
