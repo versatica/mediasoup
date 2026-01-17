@@ -20,6 +20,7 @@ namespace RTC
 
 		if (this->bufferOwned)
 		{
+			MS_DUMP("---- delete this->buffer");
 			delete this->buffer;
 		}
 	}
@@ -40,6 +41,7 @@ namespace RTC
 
 		if (this->bufferOwned && buffer != this->buffer)
 		{
+			MS_DUMP("---- delete this->buffer");
 			delete this->buffer;
 
 			this->bufferOwned = false;
@@ -79,6 +81,7 @@ namespace RTC
 
 		if (this->bufferOwned)
 		{
+			MS_DUMP("---- delete this->buffer");
 			delete this->buffer;
 
 			this->bufferOwned = false;

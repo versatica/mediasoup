@@ -1790,7 +1790,7 @@ namespace RTC
 					if (!consumer)
 					{
 						// Special case for the RTP probator.
-						if (report->GetSsrc() == RTC::RtpProbationGenerator::Ssrc)
+						if (report->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
 						{
 							continue;
 						}
@@ -1845,7 +1845,7 @@ namespace RTC
 					{
 						auto* consumer = GetConsumerByMediaSsrc(feedback->GetMediaSsrc());
 
-						if (feedback->GetMediaSsrc() == RTC::RtpProbationGenerator::Ssrc)
+						if (feedback->GetMediaSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
 						{
 							break;
 						}
@@ -1884,7 +1884,7 @@ namespace RTC
 							auto& item     = *it;
 							auto* consumer = GetConsumerByMediaSsrc(item->GetSsrc());
 
-							if (item->GetSsrc() == RTC::RtpProbationGenerator::Ssrc)
+							if (item->GetSsrc() == RTC::RTP::ProbationGenerator::Ssrc)
 							{
 								continue;
 							}
@@ -1979,7 +1979,7 @@ namespace RTC
 					!consumer &&
 					feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
 					(
-						feedback->GetMediaSsrc() != RTC::RtpProbationGenerator::Ssrc ||
+						feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
 						!GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
 					)
 				)

@@ -40,3 +40,5 @@
     padding length: 87
   </RTP::Packet>
   ```
+
+- When in the demo, I see tons of calls to `Packet::SetSequenceNumber()` with same seq value!

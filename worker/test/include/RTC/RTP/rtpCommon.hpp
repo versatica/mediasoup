@@ -110,8 +110,11 @@ namespace RTC
 		{                                                                                                \
 			REQUIRE_NOTHROW(packet->SetPayload(packet->GetPayload(), packet->GetPayloadLength()));         \
 			REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
+			REQUIRE_NOTHROW(packet->SetPayloadLength(packet->GetPayloadLength()));                         \
+			REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
 		}                                                                                                \
 		REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, packet->GetBufferLength()), MediaSoupError);    \
+		REQUIRE_THROWS_AS(packet->SetPayloadLength(packet->GetBufferLength()), MediaSoupError);          \
 		REQUIRE_NOTHROW(packet->SetPaddingLength(packet->GetPaddingLength()));                           \
 		if (packet->IsPaddedTo4Bytes() && packet->GetPaddingLength() < 4)                                \
 		{                                                                                                \

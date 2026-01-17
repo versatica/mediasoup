@@ -157,7 +157,6 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "<RTP::Packet>");
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
-
 			MS_DUMP_CLEAN(indentation, "  sequence number: %" PRIu16, GetSequenceNumber());
 			MS_DUMP_CLEAN(indentation, "  timestamp: %" PRIu32, GetTimestamp());
 			MS_DUMP_CLEAN(indentation, "  marker: %s", HasMarker() ? "true" : "false");
@@ -393,6 +392,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "  payload length: %zu", GetPayloadLength());
 			MS_DUMP_CLEAN(indentation, "  padding length: %" PRIu8, GetPaddingLength());
+			MS_DUMP_CLEAN(indentation, "  padded to 4 bytes: %s", IsPaddedTo4Bytes() ? "yes" : "no");
 
 			if (this->payloadDescriptorHandler)
 			{
@@ -1247,6 +1247,23 @@ namespace RTC
 			GetFixedHeaderPointer()->padding = 0;
 
 			std::memmove(GetPayloadPointer(), payload, payloadLength);
+		}
+
+		void Packet::SetPayloadLength(size_t payloadLength)
+		{
+			MS_TRACE();
+
+			auto previousLength        = GetLength();
+			auto previousPayloadLength = GetPayloadLength();
+			auto previousPaddingLength = GetPaddingLength();
+			auto newLength = previousLength - previousPayloadLength - previousPaddingLength + payloadLength;
+
+			// Set the new Packet total length.
+			// NOTE: This throws if given length is higher than buffer length.
+			SetLength(newLength);
+
+			// Unset padding flag.
+			GetFixedHeaderPointer()->padding = 0;
 		}
 
 		void Packet::ShiftPayload(size_t payloadOffset, int32_t delta)

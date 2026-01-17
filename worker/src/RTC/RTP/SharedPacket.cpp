@@ -17,35 +17,37 @@ namespace RTC
 		/* Instance methods. */
 
 		SharedPacket::SharedPacket()
+		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
 
-			this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
-			  new std::unique_ptr<RTC::RTP::Packet>(nullptr),
-			  [](std::unique_ptr<RTC::RTP::Packet>* uptr)
-			  {
-				  if (uptr && *uptr)
-				  {
-					  delete[] (*uptr)->GetBuffer(); // liberar buffer
-					  delete uptr->release();        // destruir Packet
-				  }
-			  });
+			// this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
+			//   new std::unique_ptr<RTC::RTP::Packet>(nullptr),
+			//   [](std::unique_ptr<RTC::RTP::Packet>* uptr)
+			//   {
+			// 	  if (uptr && *uptr)
+			// 	  {
+			// 		  delete[] (*uptr)->GetBuffer(); // liberar buffer
+			// 		  delete uptr->release();        // destruir Packet
+			// 	  }
+			//   });
 		}
 
 		SharedPacket::SharedPacket(const RTC::RTP::Packet* packet)
+		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
 
-			this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
-			  std::make_unique<std::unique_ptr<RTC::RTP::Packet>>(nullptr).release(),
-			  [](std::unique_ptr<RTC::RTP::Packet>* uniquePtr)
-			  {
-				  if (uniquePtr && *uniquePtr)
-				  {
-					  delete[] (*uniquePtr)->GetBuffer();
-					  *uniquePtr = nullptr;
-				  }
-			  });
+			// this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
+			//   std::make_unique<std::unique_ptr<RTC::RTP::Packet>>(nullptr).release(),
+			//   [](std::unique_ptr<RTC::RTP::Packet>* uniquePtr)
+			//   {
+			// 	  if (uniquePtr && *uniquePtr)
+			// 	  {
+			// 		  delete[] (*uniquePtr)->GetBuffer();
+			// 		  *uniquePtr = nullptr;
+			// 	  }
+			//   });
 
 			if (packet)
 			{
@@ -91,12 +93,12 @@ namespace RTC
 
 			// If we hold a Packet we must delete its internal buffer (the one we
 			// passed to it via Clone() method).
-			if (HasPacket())
-			{
-				delete[] GetPacket()->GetBuffer();
+			// if (HasPacket())
+			// {
+			// 	delete[] GetPacket()->GetBuffer();
 
-				// TODO: We should also free the buffer here!
-			}
+			// 	// TODO: We should also free the buffer here!
+			// }
 
 			if (packet)
 			{
@@ -114,10 +116,10 @@ namespace RTC
 
 			// If we hold a Packet we must delete its internal buffer (the one we
 			// passed to it via Clone() method).
-			if (HasPacket())
-			{
-				delete[] GetPacket()->GetBuffer();
-			}
+			// if (HasPacket())
+			// {
+			// 	delete[] GetPacket()->GetBuffer();
+			// }
 
 			this->sharedPtr->reset(nullptr);
 		}
@@ -175,6 +177,8 @@ namespace RTC
 			const size_t bufferLength = packet->GetLength() + PacketBufferLengthIncrement;
 			auto* buffer              = new uint8_t[bufferLength];
 			auto* clonedPacket        = packet->Clone(buffer, bufferLength);
+
+			clonedPacket->TakeBufferOwnership();
 
 			this->sharedPtr->reset(clonedPacket);
 		}

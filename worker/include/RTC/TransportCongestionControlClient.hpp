@@ -6,7 +6,7 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/Packet.hpp"
-#include "RTC/RtpProbationGenerator.hpp"
+#include "RTC/RTP/ProbationGenerator.hpp"
 #include "RTC/TrendCalculator.hpp"
 #include "handles/TimerHandle.hpp"
 #include <libwebrtc/api/transport/goog_cc_factory.h>
@@ -114,7 +114,7 @@ namespace RTC
 		// Allocated by this.
 		webrtc::NetworkControllerFactoryInterface* controllerFactory{ nullptr };
 		webrtc::RtpTransportControllerSend* rtpTransportControllerSend{ nullptr };
-		RTC::RtpProbationGenerator* probationGenerator{ nullptr };
+		RTC::RTP::ProbationGenerator* probationGenerator{ nullptr };
 		TimerHandle* processTimer{ nullptr };
 		// Others.
 		RTC::BweType bweType;

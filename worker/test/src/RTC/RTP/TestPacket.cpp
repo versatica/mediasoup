@@ -1681,7 +1681,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		REQUIRE(packet->IsPaddedTo4Bytes() == true);
 	}
 
-	SECTION("packet::SetPayload() and packet::RemovePayload() succeed")
+	SECTION("packet::SetPayload(), SetPayloadLength() and packet::RemovePayload() succeed")
 	{
 		std::unique_ptr<Packet> packet{ Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
 
@@ -1718,6 +1718,30 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		  /*payloadLength*/ 10,
 		  /*hasPadding*/ true,
 		  /*paddingLength*/ 2);
+
+		/* Set payload length. */
+
+		packet->SetPayloadLength(501);
+
+		CHECK_RTP_PACKET(
+		  /*packet*/ packet.get(),
+		  /*buffer*/ FactoryBuffer,
+		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*length*/ Packet::FixedHeaderMinSize + 501,
+		  /*payloadType*/ 0,
+		  /*hasMarker*/ false,
+		  /*seqNumber*/ 0,
+		  /*timestamp*/ 0,
+		  /*ssrc*/ 0,
+		  /*hasCsrcs*/ false,
+		  /*hasHeaderExtension*/ false,
+		  /*headerExtensionValueLength*/ 0,
+		  /*hasOneByteExtensions*/ false,
+		  /*hasTwoBytesExtensions*/ false,
+		  /*hasPayload*/ true,
+		  /*payloadLength*/ 501,
+		  /*hasPadding*/ false,
+		  /*paddingLength*/ 0);
 
 		/* Remove payload. */
 

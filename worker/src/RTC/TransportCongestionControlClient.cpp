@@ -66,7 +66,7 @@ namespace RTC
 
 		this->rtpTransportControllerSend->RegisterTargetTransferRateObserver(this);
 
-		this->probationGenerator = new RTC::RtpProbationGenerator();
+		this->probationGenerator = new RTC::RTP::ProbationGenerator();
 
 		// This makes sure that periodic probing is used when the application is send
 		// less bitrate than needed to measure the bandwidth estimation.  (f.e. when

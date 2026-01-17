@@ -633,6 +633,17 @@ namespace RTC
 			void SetPayload(const uint8_t* payload, size_t payloadLength);
 
 			/**
+			 * Set the payload length.
+			 *
+			 * @remarks
+			 * - This method removes existing padding (if any).
+			 *
+			 * @throw MediaSoupTypeError - If given `payloadLength` is higher than
+			 *   available length for the payload.
+			 */
+			void SetPayloadLength(size_t payloadLength);
+
+			/**
 			 * Remove the payload.
 			 *
 			 * @remarks
