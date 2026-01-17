@@ -77,8 +77,8 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// Re-throw so a proper core dump will be generated with full error trace.
-		throw;
+		// 40 is a custom exit code to notify "unknown error" to the higher layer.
+		return 40;
 	}
 #endif
 
