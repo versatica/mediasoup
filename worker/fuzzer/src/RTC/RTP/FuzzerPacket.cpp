@@ -252,5 +252,6 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet.reset(packet->Clone(buffer2.get(), len + 512));
 
 	packet->RemoveHeaderExtension();
+	packet->SetPayloadLength(sizeof(payload) - 2);
 	packet->RemovePayload();
 }
