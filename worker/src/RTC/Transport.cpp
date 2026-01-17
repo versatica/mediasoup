@@ -2997,9 +2997,6 @@ namespace RTC
 			packetInfo.length                    = packet->GetLength();
 			packetInfo.pacing_info               = pacingInfo;
 
-			MS_DUMP("TODO: (REMOVE) probation packet finally sent:");
-			packet->Dump();
-
 			// Indicate the pacer (and prober) that a packet is to be sent.
 			this->tccClient->InsertPacket(packetInfo);
 
