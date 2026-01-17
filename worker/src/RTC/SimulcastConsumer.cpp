@@ -739,7 +739,7 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -755,7 +755,7 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -777,7 +777,7 @@ namespace RTC
 				MS_WARN_DEV("payload type not supported [payloadType:%" PRIu8 "]", payloadType);
 
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -801,7 +801,7 @@ namespace RTC
 			if (!packet->IsKeyFrame())
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
 #endif
 
 				// NOTE: Don't drop the packet in the RTP sequence manager since this
@@ -836,7 +836,7 @@ namespace RTC
 		if (this->syncRequired && !packet->IsKeyFrame())
 		{
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
 #endif
 
 			// NOTE: No need to drop the packet in the RTP sequence manager since here
@@ -858,7 +858,7 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -992,7 +992,7 @@ namespace RTC
 
 #ifdef MS_RTC_LOGGER_RTP
 					packet->logger.Discarded(
-					  RtcLogger::RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED);
+					  RTC::RtcLogger::RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED);
 #endif
 
 					// NOTE: Don't drop the packet in the RTP sequence manager since this
@@ -1043,7 +1043,7 @@ namespace RTC
 			{
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(
-				  RtcLogger::RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
+				  RTC::RtcLogger::RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
 #endif
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -1093,7 +1093,7 @@ namespace RTC
 			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 			{
 #ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
@@ -1172,7 +1172,7 @@ namespace RTC
 			  origTimestamp);
 
 #ifdef MS_RTC_LOGGER_RTP
-			packet->logger.Discarded(RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
 #endif
 		}
 
