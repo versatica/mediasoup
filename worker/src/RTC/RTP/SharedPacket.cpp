@@ -20,17 +20,6 @@ namespace RTC
 		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
-
-			// this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
-			//   new std::unique_ptr<RTC::RTP::Packet>(nullptr),
-			//   [](std::unique_ptr<RTC::RTP::Packet>* uptr)
-			//   {
-			// 	  if (uptr && *uptr)
-			// 	  {
-			// 		  delete[] (*uptr)->GetBuffer(); // liberar buffer
-			// 		  delete uptr->release();        // destruir Packet
-			// 	  }
-			//   });
 		}
 
 		SharedPacket::SharedPacket(const RTC::RTP::Packet* packet)
@@ -38,38 +27,10 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
-			//   std::make_unique<std::unique_ptr<RTC::RTP::Packet>>(nullptr).release(),
-			//   [](std::unique_ptr<RTC::RTP::Packet>* uniquePtr)
-			//   {
-			// 	  if (uniquePtr && *uniquePtr)
-			// 	  {
-			// 		  delete[] (*uniquePtr)->GetBuffer();
-			// 		  *uniquePtr = nullptr;
-			// 	  }
-			//   });
-
 			if (packet)
 			{
 				StorePacket(packet);
 			}
-		}
-
-		SharedPacket::~SharedPacket()
-		{
-			MS_TRACE();
-
-			// MS_DUMP("TODO: This is not a solution because obviusly the cloned buffer is leaking");
-			// MS_DUMP("---- sharedPtr.use_count(): %zu", this->sharedPtr.use_count());
-
-			// // If we hold a Packet and this is the last reference to it, we must delete
-			// // its internal buffer (the one we passed to it via Clone() method).
-			// // NOTE: shared_ptr.use_count() is not safe in multithreading environments
-			// // but we are safe.
-			// if (HasPacket() && this->sharedPtr.use_count() == 1)
-			// {
-			// 	delete[] GetPacket()->GetBuffer();
-			// }
 		}
 
 		void SharedPacket::Dump(int indentation) const
@@ -91,15 +52,6 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			// If we hold a Packet we must delete its internal buffer (the one we
-			// passed to it via Clone() method).
-			// if (HasPacket())
-			// {
-			// 	delete[] GetPacket()->GetBuffer();
-
-			// 	// TODO: We should also free the buffer here!
-			// }
-
 			if (packet)
 			{
 				StorePacket(packet);
@@ -113,13 +65,6 @@ namespace RTC
 		void SharedPacket::Reset()
 		{
 			MS_TRACE();
-
-			// If we hold a Packet we must delete its internal buffer (the one we
-			// passed to it via Clone() method).
-			// if (HasPacket())
-			// {
-			// 	delete[] GetPacket()->GetBuffer();
-			// }
 
 			this->sharedPtr->reset(nullptr);
 		}

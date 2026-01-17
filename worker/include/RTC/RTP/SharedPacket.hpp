@@ -43,7 +43,7 @@ namespace RTC
 			/**
 			 * Destructor.
 			 */
-			~SharedPacket();
+			~SharedPacket() = default;
 
 		public:
 			void Dump(int indentation = 0) const;
