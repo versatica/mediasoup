@@ -30,10 +30,10 @@ static void ignoreSignals();
  *
  * @return
  * - 0 if the Worker terminated properly.
- * - 42 if settings error happened.
- * - 40 if an unknown error (an uncaught MediaSoupError) happened.
- * - 134 when any other uncaught C++ exception happened (only when in non
- *   executable mode).
+ * - 42 if given settings are wrong/invalid.
+ * - 40 if an uncaught MediasoupError happens (only in non executable mode).
+ * - 134 when any other uncaught C++ exception happens (only in non executable
+ *   mode).
  */
 // NOLINTNEXTLINE
 extern "C" int mediasoup_worker_run(
@@ -55,8 +55,10 @@ extern "C" int mediasoup_worker_run(
 	// deallocate its UV handles.
 	std::unique_ptr<Channel::ChannelSocket> channel{ nullptr };
 
+#ifndef MS_EXECUTABLE
 	try
 	{
+#endif
 		if (channelReadFn)
 		{
 			channel.reset(
@@ -66,6 +68,7 @@ extern "C" int mediasoup_worker_run(
 		{
 			channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
 		}
+#ifndef MS_EXECUTABLE
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -74,9 +77,10 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the higher layer.
-		return 40;
+		// Re-throw so a proper core dump will be generated with full error trace.
+		throw;
 	}
+#endif
 
 	// Initialize the Logger.
 	Logger::ClassInit(channel.get());
@@ -96,6 +100,7 @@ extern "C" int mediasoup_worker_run(
 		// 42 is a custom exit code to notify "settings error" to the higher layer.
 		return 42;
 	}
+#ifndef MS_EXECUTABLE
 	catch (const MediaSoupError& error)
 	{
 		MS_ERROR_STD("unexpected settings error: %s", error.what());
@@ -107,6 +112,12 @@ extern "C" int mediasoup_worker_run(
 		// 40 is a custom exit code to notify "unknown error" to the higher layer.
 		return 40;
 	}
+	catch (const std::runtime_error& error)
+	{
+		// 134 is the exit code for SIGABRT.
+		return 134;
+	}
+#endif
 
 	MS_DEBUG_TAG(info, "starting mediasoup-worker process [version:%s]", version);
 
@@ -129,8 +140,10 @@ extern "C" int mediasoup_worker_run(
 	Settings::PrintConfiguration();
 	DepLibUV::PrintVersion();
 
+#ifndef MS_EXECUTABLE
 	try
 	{
+#endif
 		// Initialize static stuff.
 		DepOpenSSL::ClassInit();
 		DepLibSRTP::ClassInit();
@@ -167,6 +180,7 @@ extern "C" int mediasoup_worker_run(
 #endif
 
 		return 0;
+#ifndef MS_EXECUTABLE
 	}
 	catch (const MediaSoupError& error)
 	{
@@ -175,10 +189,10 @@ extern "C" int mediasoup_worker_run(
 		// 40 is a custom exit code to notify "unknown error" to the higher layer.
 		return 40;
 	}
-#ifndef MS_EXECUTABLE
 	catch (const std::runtime_error& error)
 	{
-		return 134; // 134 is the exit code for SIGABRT.
+		// 134 is the exit code for SIGABRT.
+		return 134;
 	}
 #endif
 }
