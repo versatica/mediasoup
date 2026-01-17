@@ -118,6 +118,47 @@ namespace Utils
 		}
 	}
 
+	uint32_t Crypto::GetRandomUInt(uint32_t min, uint32_t max)
+	{
+		MS_TRACE();
+
+		// NOTE: This is the original, but produces very small values.
+		// Crypto::seed = (214013 * Crypto::seed) + 2531011;
+		// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
+
+		// This seems to produce better results.
+		Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
+
+		// Special case.
+		if (max == 4294967295)
+		{
+			--max;
+		}
+
+		min = std::min(min, max);
+
+		return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
+	}
+
+	std::string Crypto::GetRandomString(size_t len)
+	{
+		MS_TRACE();
+
+		char buffer[64];
+		static const char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+			                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+			                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+		len = std::min<size_t>(len, 64);
+
+		for (size_t i{ 0 }; i < len; ++i)
+		{
+			buffer[i] = Chars[GetRandomUInt(0, sizeof(Chars) - 1)];
+		}
+
+		return { buffer, len };
+	}
+
 	uint32_t Crypto::GetCRC32(const uint8_t* data, size_t size)
 	{
 		MS_TRACE();

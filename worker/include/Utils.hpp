@@ -220,42 +220,9 @@ namespace Utils
 		static void ClassInit();
 		static void ClassDestroy();
 
-		static uint32_t GetRandomUInt(uint32_t min, uint32_t max)
-		{
-			// NOTE: This is the original, but produces very small values.
-			// Crypto::seed = (214013 * Crypto::seed) + 2531011;
-			// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
+		static uint32_t GetRandomUInt(uint32_t min, uint32_t max);
 
-			// This seems to produce better results.
-			Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
-
-			// Special case.
-			if (max == 4294967295)
-			{
-				--max;
-			}
-
-			min = std::min(min, max);
-
-			return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
-		}
-
-		static std::string GetRandomString(size_t len)
-		{
-			char buffer[64];
-			static const char Chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
-				                            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-				                            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
-
-			len = std::min<size_t>(len, 64);
-
-			for (size_t i{ 0 }; i < len; ++i)
-			{
-				buffer[i] = Chars[GetRandomUInt(0, sizeof(Chars) - 1)];
-			}
-
-			return { buffer, len };
-		}
+		static std::string GetRandomString(size_t len);
 
 		static uint32_t GetCRC32(const uint8_t* data, size_t size);
 
