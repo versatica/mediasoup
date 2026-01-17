@@ -78,7 +78,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
 		Fuzzer::RTC::SeqManager::Fuzz(data, len);
 		Fuzzer::RTC::RateCalculator::Fuzz(data, len);
-		Fuzzer::RTC::RTP::FuzzerProbationGenerator::Fuzz(data, len);
+		Fuzzer::RTC::RTP::ProbationGenerator::Fuzz(data, len);
 	}
 
 	if (fuzzRtcp)
