@@ -1,17 +1,17 @@
 #include "RTC/FuzzerRtpStreamSend.hpp"
 #include "Utils.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpStreamSend.hpp"
-#include "RTC/SharedRtpPacket.hpp"
 
 class TestRtpStreamListener : public RTC::RtpStreamSend::Listener
 {
 public:
-	void OnRtpStreamScore(RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+	void OnRtpStreamScore(::RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 	{
 	}
 
-	void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* /*rtpStream*/, RTC::RtpPacket* packet) override
+	void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* /*rtpStream*/, ::RTC::RTP::Packet* packet) override
 	{
 	}
 };
@@ -28,7 +28,7 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	// clang-format on
 
 	// Create base RtpPacket instance.
-	auto* packet = ::RTC::RtpPacket::Parse(buffer, 12);
+	auto* packet = ::RTC::RTP::Packet::Parse(buffer, 12);
 
 	// Create a RtpStreamSend instance.
 	TestRtpStreamListener testRtpStreamListener;
@@ -49,7 +49,7 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 
 	while (len >= 4u)
 	{
-		::RTC::SharedRtpPacket sharedPacket;
+		::RTC::RTP::SharedPacket sharedPacket;
 
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));

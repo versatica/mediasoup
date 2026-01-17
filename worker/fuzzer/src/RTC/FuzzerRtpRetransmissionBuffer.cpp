@@ -1,8 +1,8 @@
 #include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
 #include "Utils.hpp"
-#include "RTC/RtpPacket.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpRetransmissionBuffer.hpp"
-#include "RTC/SharedRtpPacket.hpp"
 
 void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {
@@ -24,12 +24,12 @@ void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 	// clang-format on
 
 	// Create base RtpPacket instance.
-	auto* packet = ::RTC::RtpPacket::Parse(buffer, 12);
+	auto* packet = ::RTC::RTP::Packet::Parse(buffer, 12);
 	size_t offset{ 0u };
 
 	while (len >= 4u)
 	{
-		::RTC::SharedRtpPacket sharedPacket;
+		::RTC::RTP::SharedPacket sharedPacket;
 
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
