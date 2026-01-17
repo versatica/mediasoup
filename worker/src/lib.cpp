@@ -77,7 +77,7 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the higher layer.
+		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
 #endif
@@ -97,7 +97,7 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 42 is a custom exit code to notify "settings error" to the higher layer.
+		// 42 is a custom exit code to notify "settings error" caller.
 		return 42;
 	}
 #ifndef MS_EXECUTABLE
@@ -109,7 +109,7 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the higher layer.
+		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
 	catch (const std::runtime_error& error)
@@ -186,7 +186,7 @@ extern "C" int mediasoup_worker_run(
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
-		// 40 is a custom exit code to notify "unknown error" to the higher layer.
+		// 40 is a custom exit code to notify "unknown error" caller.
 		return 40;
 	}
 	catch (const std::runtime_error& error)
