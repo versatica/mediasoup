@@ -25,6 +25,16 @@
 
 static void ignoreSignals();
 
+/**
+ * Initializes everything and creates an instance of Worker class.
+ *
+ * @return
+ * - 0 if the Worker terminated properly.
+ * - 42 if settings error happened.
+ * - 40 if an unknown error (an uncaught MediaSoupError) happened.
+ * - 134 when any other uncaught C++ exception happened (only when in non
+ *   executable mode).
+ */
 // NOLINTNEXTLINE
 extern "C" int mediasoup_worker_run(
   int argc,
@@ -64,7 +74,7 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the Node library.
+		// 40 is a custom exit code to notify "unknown error" to the higher layer.
 		return 40;
 	}
 
@@ -83,7 +93,7 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 42 is a custom exit code to notify "settings error" to the Node library.
+		// 42 is a custom exit code to notify "settings error" to the higher layer.
 		return 42;
 	}
 	catch (const MediaSoupError& error)
@@ -94,7 +104,7 @@ extern "C" int mediasoup_worker_run(
 		DepLibUV::RunLoop();
 		DepLibUV::ClassDestroy();
 
-		// 40 is a custom exit code to notify "unknown error" to the Node library.
+		// 40 is a custom exit code to notify "unknown error" to the higher layer.
 		return 40;
 	}
 
@@ -162,7 +172,7 @@ extern "C" int mediasoup_worker_run(
 	{
 		MS_ERROR_STD("failure exit: %s", error.what());
 
-		// 40 is a custom exit code to notify "unknown error" to the Node library.
+		// 40 is a custom exit code to notify "unknown error" to the higher layer.
 		return 40;
 	}
 #ifndef MS_EXECUTABLE
