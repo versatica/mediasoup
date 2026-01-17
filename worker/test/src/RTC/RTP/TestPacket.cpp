@@ -12,7 +12,7 @@
 using namespace RTC::RTP;
 
 // NOLINTNEXTLINE (clang-tidy readability-function-size)
-SCENARIO("RTP Packet", "[rtp][serializable]")
+SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 {
 	ResetBuffers();
 

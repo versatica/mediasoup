@@ -14,6 +14,16 @@ namespace RTC
 		MS_TRACE();
 	}
 
+	Serializable::~Serializable()
+	{
+		MS_TRACE();
+
+		if (this->bufferOwned)
+		{
+			delete this->buffer;
+		}
+	}
+
 	void Serializable::Serialize(uint8_t* buffer, size_t bufferLength)
 	{
 		MS_TRACE();
@@ -28,8 +38,22 @@ namespace RTC
 
 		std::memmove(buffer, this->buffer, this->length);
 
+		if (this->bufferOwned && buffer != this->buffer)
+		{
+			delete this->buffer;
+
+			this->bufferOwned = false;
+		}
+
 		this->buffer       = buffer;
 		this->bufferLength = bufferLength;
+	}
+
+	void Serializable::TakeBufferOwnership()
+	{
+		MS_TRACE();
+
+		this->bufferOwned = true;
 	}
 
 	void Serializable::Consolidate()
@@ -42,6 +66,25 @@ namespace RTC
 		}
 
 		this->consolidatedListener();
+	}
+
+	void Serializable::SetBuffer(uint8_t* buffer)
+	{
+		MS_TRACE();
+
+		if (buffer == this->buffer)
+		{
+			return;
+		}
+
+		if (this->bufferOwned)
+		{
+			delete this->buffer;
+
+			this->bufferOwned = false;
+		}
+
+		this->buffer = buffer;
 	}
 
 	void Serializable::SetBufferLength(size_t bufferLength)

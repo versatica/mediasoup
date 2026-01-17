@@ -100,6 +100,4 @@ namespace helpers
 
 		return std::memcmp(data1, data2, size1) == 0;
 	}
-
-	static uint8_t Buffer[65536] = { 0 };
 } // namespace helpers

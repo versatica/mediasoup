@@ -82,6 +82,9 @@ namespace RTC
 			void AssertSamePacket(const RTC::RTP::Packet* otherPacket) const;
 
 		private:
+			void StorePacket(const RTC::RTP::Packet* packet);
+
+		private:
 			// NOTE: This needs to be a shared pointer that holds an unique pointer.
 			// Otherwise, when copying/storing the shared pointer in other locations
 			// (buffers, etc), reseting its internal value wouldn't affect other copies

@@ -17,22 +17,39 @@ namespace RTC
 		/* Instance methods. */
 
 		SharedPacket::SharedPacket()
-		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
+
+			this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
+			  new std::unique_ptr<RTC::RTP::Packet>(nullptr),
+			  [](std::unique_ptr<RTC::RTP::Packet>* uptr)
+			  {
+				  if (uptr && *uptr)
+				  {
+					  delete[] (*uptr)->GetBuffer(); // liberar buffer
+					  delete uptr->release();        // destruir Packet
+				  }
+			  });
 		}
 
 		SharedPacket::SharedPacket(const RTC::RTP::Packet* packet)
-		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
 
+			this->sharedPtr = std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>>(
+			  std::make_unique<std::unique_ptr<RTC::RTP::Packet>>(nullptr).release(),
+			  [](std::unique_ptr<RTC::RTP::Packet>* uniquePtr)
+			  {
+				  if (uniquePtr && *uniquePtr)
+				  {
+					  delete[] (*uniquePtr)->GetBuffer();
+					  *uniquePtr = nullptr;
+				  }
+			  });
+
 			if (packet)
 			{
-				const size_t bufferLength = packet->GetLength() + PacketBufferLengthIncrement;
-				auto* buffer              = new uint8_t[bufferLength];
-
-				this->sharedPtr->reset(packet->Clone(buffer, bufferLength));
+				StorePacket(packet);
 			}
 		}
 
@@ -40,10 +57,14 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP("TODO: This is not a solution because obviusly the cloned buffer is leaking");
-			// If we hold a Packet we must delete its internal buffer (the one we
-			// passed to it via Clone() method).
-			// if (HasPacket())
+			// MS_DUMP("TODO: This is not a solution because obviusly the cloned buffer is leaking");
+			// MS_DUMP("---- sharedPtr.use_count(): %zu", this->sharedPtr.use_count());
+
+			// // If we hold a Packet and this is the last reference to it, we must delete
+			// // its internal buffer (the one we passed to it via Clone() method).
+			// // NOTE: shared_ptr.use_count() is not safe in multithreading environments
+			// // but we are safe.
+			// if (HasPacket() && this->sharedPtr.use_count() == 1)
 			// {
 			// 	delete[] GetPacket()->GetBuffer();
 			// }
@@ -73,14 +94,13 @@ namespace RTC
 			if (HasPacket())
 			{
 				delete[] GetPacket()->GetBuffer();
+
+				// TODO: We should also free the buffer here!
 			}
 
 			if (packet)
 			{
-				const size_t bufferLength = packet->GetLength() + PacketBufferLengthIncrement;
-				auto* buffer              = new uint8_t[bufferLength];
-
-				this->sharedPtr->reset(packet->Clone(buffer, bufferLength));
+				StorePacket(packet);
 			}
 			else
 			{
@@ -146,6 +166,17 @@ namespace RTC
 				  packet->GetLength(),
 				  otherPacket->GetLength());
 			}
+		}
+
+		void SharedPacket::StorePacket(const RTC::RTP::Packet* packet)
+		{
+			MS_TRACE();
+
+			const size_t bufferLength = packet->GetLength() + PacketBufferLengthIncrement;
+			auto* buffer              = new uint8_t[bufferLength];
+			auto* clonedPacket        = packet->Clone(buffer, bufferLength);
+
+			this->sharedPtr->reset(clonedPacket);
 		}
 	} // namespace RTP
 } // namespace RTC

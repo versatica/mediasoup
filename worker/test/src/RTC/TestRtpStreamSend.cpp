@@ -42,7 +42,7 @@ static void SendRtpPacket(std::vector<std::pair<RtpStreamSend*, uint32_t>> strea
 
 		packet->SetSsrc(ssrc);
 
-		printf("------ stream->ReceivePacket() | packet->GetBuffer(): %p:\n",packet->GetBuffer());
+		printf("------ stream->ReceivePacket() | packet->GetBuffer(): %p:\n", packet->GetBuffer());
 		packet->Dump();
 		printf("\n");
 
@@ -92,7 +92,9 @@ SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rt
 
 		void OnRtpStreamRetransmitRtpPacket(RtpStreamSend* /*rtpStream*/, RTP::Packet* packet) override
 		{
-			printf("++++++ OnRtpStreamRetransmitRtpPacket() | RTX packet->GetBuffer(): %p:\n",packet->GetBuffer());
+			printf(
+			  "++++++ OnRtpStreamRetransmitRtpPacket() | RTX packet->GetBuffer(): %p:\n",
+			  packet->GetBuffer());
 			packet->Dump();
 			printf("\n");
 

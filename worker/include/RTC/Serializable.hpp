@@ -35,7 +35,7 @@ namespace RTC
 		 */
 		Serializable(const uint8_t* buffer, size_t bufferLength);
 
-		virtual ~Serializable() = default;
+		virtual ~Serializable();
 
 	public:
 		/**
@@ -105,6 +105,18 @@ namespace RTC
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
+		 * Make this Serializable owner of its buffer and deallocate it in the
+		 * destructor. This method is specially useful after calling `Serialize()`
+		 or `Clone()`.
+		 *
+		 * @remarks
+		 * - If `Serialize()` or `Clone()` is called after having called this method,
+		 *   the previous buffer is deallocated and the new buffer is NOT owned by
+		 *   this Serializable unless this method is later called again.
+		 */
+		virtual void TakeBufferOwnership() final;
+
+		/**
 		 * The application must call this method on a Serializable when it's been
 		 * constructed within a parent Serializable object that needs to know when
 		 * this Serializable is done to recompute its total length and internal
@@ -124,10 +136,7 @@ namespace RTC
 		/**
 		 * Change the buffer of the Serializable.
 		 */
-		virtual void SetBuffer(uint8_t* buffer) final
-		{
-			this->buffer = buffer;
-		}
+		virtual void SetBuffer(uint8_t* buffer) final;
 
 		/**
 		 * Update the buffer length of the Serializable.
@@ -197,6 +206,8 @@ namespace RTC
 		size_t bufferLength{ 0u };
 		// Serializable exact length (includes padding bytes).
 		size_t length{ 0u };
+		// Whether this Serializable owns its buffer.
+		bool bufferOwned{ false };
 		// Event listener invoked when the Serializable is consolidated.
 		ConsolidatedListener consolidatedListener{ nullptr };
 	};
