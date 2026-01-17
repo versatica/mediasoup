@@ -490,7 +490,7 @@ public:
 #define MS_ASSERT(condition, desc, ...) \
 	if (!(condition)) \
 	{ \
-		MS_ABORT("failed assertion `%s': " desc, #condition, ##__VA_ARGS__); \
+		MS_ABORT("failed assertion `%s`: " desc, #condition, ##__VA_ARGS__); \
 	}
 
 #ifdef MS_LOG_STD
