@@ -144,10 +144,7 @@ namespace RTC
 						{
 							dtis += dtiToString[dti];
 						}
-						MS_DUMP_CLEAN(
-						  indentation + 4,
-						  "<DecodeTargetIndications> %s </DecodeTargetIndications>",
-						  dtis.c_str());
+						MS_DUMP_CLEAN(indentation + 3, "  decodeTargetIndications: %s", dtis.c_str());
 						std::string fdiffs;
 						for (const auto& fdiff : layer.frameDiffs)
 						{
@@ -158,7 +155,7 @@ namespace RTC
 
 							fdiffs += std::to_string(fdiff);
 						}
-						MS_DUMP_CLEAN(indentation + 4, "<FrameDiffs> %s </FrameDiffs>", fdiffs.c_str());
+						MS_DUMP_CLEAN(indentation + 3, "  frameDiffs: %s", fdiffs.c_str());
 						std::string fdiffChains;
 						for (const auto& fdiffChain : layer.frameDiffChains)
 						{
@@ -169,8 +166,7 @@ namespace RTC
 
 							fdiffChains += std::to_string(fdiffChain);
 						}
-						MS_DUMP_CLEAN(
-						  indentation + 4, "<FrameDiffChains> %s </FrameDiffChains>", fdiffChains.c_str());
+						MS_DUMP_CLEAN(indentation + 3, "  frameDiffChains: %s", fdiffChains.c_str());
 						MS_DUMP_CLEAN(indentation + 3, "</FrameDependencyTemplate>");
 					}
 					MS_DUMP_CLEAN(indentation + 2, "</TemplateLayers>");
@@ -179,12 +175,10 @@ namespace RTC
 
 				if (this->activeDecodeTargetsBitmask.has_value())
 				{
-					MS_DUMP_CLEAN(indentation + 1, "<ActiveDecodeTargets>");
 					MS_DUMP_CLEAN(
 					  indentation + 1,
-					  "  %s",
+					  "activeDecodeTargetsBitmask: %s",
 					  std::bitset<32>(this->activeDecodeTargetsBitmask.value()).to_string().c_str());
-					MS_DUMP_CLEAN(indentation + 1, "</ActiveDecodeTargets>");
 				}
 				MS_DUMP_CLEAN(indentation, "</DependencyDescriptor>");
 			}
