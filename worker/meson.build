@@ -44,6 +44,12 @@ if get_option('ms_rtc_logger_rtp')
   ]
 endif
 
+if get_option('ms_dump_rtp_payload_descriptor')
+  cpp_args += [
+    '-DMS_DUMP_RTP_PAYLOAD_DESCRIPTOR',
+  ]
+endif
+
 if get_option('ms_sctp_stack')
   cpp_args += [
     '-DMS_SCTP_STACK',

@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::RTP::Packet"
 // #define MS_LOG_DEV_LEVEL 3
-// #define DUMP_PAYLOAD_DESCRIPTOR 1
 
 #include "RTC/RTP/Packet.hpp"
 #ifdef MS_RTC_LOGGER_RTP
@@ -399,7 +398,7 @@ namespace RTC
 				MS_DUMP_CLEAN(indentation, "  key frame: %s", IsKeyFrame() ? "true" : "false");
 				MS_DUMP_CLEAN(indentation, "  spatial layer: %" PRIu8, GetSpatialLayer());
 				MS_DUMP_CLEAN(indentation, "  temporal layer: %" PRIu8, GetTemporalLayer());
-#ifdef DUMP_PAYLOAD_DESCRIPTOR
+#ifdef MS_DUMP_RTP_PAYLOAD_DESCRIPTOR
 				this->payloadDescriptorHandler->Dump(indentation + 1);
 #endif
 			}
