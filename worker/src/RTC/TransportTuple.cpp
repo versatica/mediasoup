@@ -143,6 +143,8 @@ namespace RTC
 			}
 		}
 
+		MS_DUMP_CLEAN(indentation, "  hash: %" PRIu64, this->hash);
+
 		MS_DUMP_CLEAN(indentation, "</TransportTuple>");
 	}
 
