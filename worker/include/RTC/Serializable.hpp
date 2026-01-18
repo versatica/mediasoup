@@ -19,6 +19,10 @@ namespace RTC
 	 */
 	class Serializable
 	{
+	public:
+		using BufferReleasedListener = std::function<void(const Serializable*, uint8_t* buffer)>;
+
+	protected:
 		using ConsolidatedListener = std::function<void()>;
 
 	public:
@@ -105,16 +109,10 @@ namespace RTC
 		virtual Serializable* Clone(uint8_t* buffer, size_t bufferLength) const = 0;
 
 		/**
-		 * Make this Serializable owner of its buffer and deallocate it in the
-		 * destructor. This method is specially useful after calling `Serialize()`
-		 or `Clone()`.
-		 *
-		 * @remarks
-		 * - If `Serialize()` or `Clone()` is called after having called this method,
-		 *   the previous buffer is deallocated and the new buffer is NOT owned by
-		 *   this Serializable unless this method is later called again.
+		 * Set a listener that will be invoked when the current buffer is released,
+		 * meaning that this Serializable no longer uses it.
 		 */
-		virtual void TakeBufferOwnership() final;
+		virtual void SetBufferReleasedListener(BufferReleasedListener* listener) final;
 
 		/**
 		 * The application must call this method on a Serializable when it's been
@@ -206,8 +204,9 @@ namespace RTC
 		size_t bufferLength{ 0u };
 		// Serializable exact length (includes padding bytes).
 		size_t length{ 0u };
-		// Whether this Serializable owns its buffer.
-		bool bufferOwned{ false };
+		// Event listener invoked when the current buffer is released (no longer
+		// used by this Serializable)-
+		BufferReleasedListener* bufferReleasedListener{ nullptr };
 		// Event listener invoked when the Serializable is consolidated.
 		ConsolidatedListener consolidatedListener{ nullptr };
 	};

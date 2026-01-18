@@ -50,6 +50,12 @@ if get_option('ms_dump_rtp_payload_descriptor')
   ]
 endif
 
+if get_option('ms_dump_rtp_shared_packet_memory_usage')
+  cpp_args += [
+    '-DMS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE',
+  ]
+endif
+
 if get_option('ms_sctp_stack')
   cpp_args += [
     '-DMS_SCTP_STACK',

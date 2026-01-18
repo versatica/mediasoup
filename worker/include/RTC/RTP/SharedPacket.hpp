@@ -11,6 +11,11 @@ namespace RTC
 		class SharedPacket
 		{
 		public:
+#ifdef MS_DUMP_RTP_SHARED_PACKET_MEMORY_USAGE
+			thread_local static uint64_t allocatedMemory;
+#endif
+
+		public:
 			/**
 			 * Empty constructor.
 			 */
@@ -20,7 +25,7 @@ namespace RTC
 			 * Constructor with RTP Packet pointer. If a packet is given it's internally
 			 * cloned.
 			 */
-			explicit SharedPacket(const RTC::RTP::Packet* packet);
+			explicit SharedPacket(RTC::RTP::Packet* packet);
 
 			/**
 			 * Copy constructor.
@@ -64,7 +69,7 @@ namespace RTC
 			 *
 			 * @throws MediasoupError if the Packet is too big.
 			 */
-			void Assign(const RTC::RTP::Packet* packet);
+			void Assign(RTC::RTP::Packet* packet);
 
 			/**
 			 * Resets the internal packet to nullptr.
@@ -82,7 +87,7 @@ namespace RTC
 			void AssertSamePacket(const RTC::RTP::Packet* otherPacket) const;
 
 		private:
-			void StorePacket(const RTC::RTP::Packet* packet);
+			void StorePacket(RTC::RTP::Packet* packet);
 
 		private:
 			// NOTE: This needs to be a shared pointer that holds an unique pointer.

@@ -18,9 +18,9 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (this->bufferOwned)
+		if (this->bufferReleasedListener)
 		{
-			delete[] this->buffer;
+			(*this->bufferReleasedListener)(this, this->buffer);
 		}
 	}
 
@@ -38,24 +38,20 @@ namespace RTC
 
 		std::memmove(buffer, this->buffer, this->length);
 
-		if (this->bufferOwned && buffer != this->buffer)
+		if (buffer != this->buffer && this->bufferReleasedListener)
 		{
-			MS_DEBUG_DEV("deallocating buffer");
-
-			delete[] this->buffer;
-
-			this->bufferOwned = false;
+			(*this->bufferReleasedListener)(this, this->buffer);
 		}
 
 		this->buffer       = buffer;
 		this->bufferLength = bufferLength;
 	}
 
-	void Serializable::TakeBufferOwnership()
+	void Serializable::SetBufferReleasedListener(Serializable::BufferReleasedListener* listener)
 	{
 		MS_TRACE();
 
-		this->bufferOwned = true;
+		this->bufferReleasedListener = listener;
 	}
 
 	void Serializable::Consolidate()
@@ -79,13 +75,9 @@ namespace RTC
 			return;
 		}
 
-		if (this->bufferOwned)
+		if (this->bufferReleasedListener)
 		{
-			MS_DEBUG_DEV("deallocating buffer");
-
-			delete[] this->buffer;
-
-			this->bufferOwned = false;
+			(*this->bufferReleasedListener)(this, this->buffer);
 		}
 
 		this->buffer = buffer;
