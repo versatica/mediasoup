@@ -362,12 +362,8 @@ public:
 #define MS_DUMP_CLEAN(indentation, desc, ...) \
 	do \
 	{ \
-		const char* spaces = (indentation == 1) ? "  " : \
-			((indentation == 2) ? "    " : \
-			((indentation == 3) ? "      " : \
-			((indentation == 4) ? "        " :\
-			((indentation == 5) ? "          " : "")))); \
-		const int loggerWritten = std::snprintf(Logger::buffer, Logger::BufferSize, "X%s" desc, spaces, ##__VA_ARGS__); \
+		const int spaceCount = (indentation) * 2; \
+		const int loggerWritten = std::snprintf(Logger::buffer, Logger::BufferSize, "X%*s" desc, spaceCount, "", ##__VA_ARGS__); \
 		Logger::channel->SendLog(Logger::buffer, static_cast<uint32_t>(loggerWritten)); \
 	} \
 	while (false)
@@ -375,12 +371,8 @@ public:
 #define MS_DUMP_CLEAN_STD(indentation, desc, ...) \
 	do \
 	{ \
-		const char* spaces = (indentation == 1) ? "  " : \
-			((indentation == 2) ? "    " : \
-			((indentation == 3) ? "      " : \
-			((indentation == 4) ? "        " :\
-			((indentation == 5) ? "          " : "")))); \
-		std::fprintf(stdout, "%s" desc _MS_LOG_SEPARATOR_CHAR_STD, spaces, ##__VA_ARGS__); \
+		const int spaceCount = (indentation) * 2; \
+		std::fprintf(stdout, "%*s" desc _MS_LOG_SEPARATOR_CHAR_STD, spaceCount, "", ##__VA_ARGS__); \
 		std::fflush(stdout); \
 	} \
 	while (false)
