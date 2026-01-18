@@ -82,6 +82,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint16_t{ 9u }) == false);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint16_t{ 252u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint16_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint16_t{ 256u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint16_t{ 65532u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint16_t{ 65535u }) == false);
 
@@ -95,8 +96,10 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 9u }) == false);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 252u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 256u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 65532u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 65535u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 4294967288u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 4294967292u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint32_t{ 4294967295u }) == false);
 
@@ -110,10 +113,13 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 9u }) == false);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 252u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 256u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 65532u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 65535u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 4294967288u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 4294967292u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 4294967295u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551608u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551612u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint64_t{ 18446744073709551615u }) == false);
 
@@ -127,16 +133,109 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 9u }) == false);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 252u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 256u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 65532u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 65535u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 4294967288u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 4294967292u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 4294967295u }) == false);
 
 		// Check if size_t in current host is 64 bits. Otherwise the test would fail.
 		if (sizeof(size_t) == 8)
 		{
+			REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551608u }) == true);
 			REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551612u }) == true);
 			REQUIRE(Utils::Byte::IsPaddedTo4Bytes(size_t{ 18446744073709551615u }) == false);
+		}
+	}
+
+	SECTION("Utils::Byte::IsPaddedTo8Bytes()")
+	{
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 0u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 1u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 2u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 3u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 4u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 5u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 8u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 9u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 252u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 255u }) == false);
+
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 0u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 1u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 2u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 3u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 4u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 5u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 8u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 9u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 252u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 256u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 65532u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint16_t{ 65535u }) == false);
+
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 0u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 1u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 2u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 3u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 4u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 5u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 8u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 9u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 252u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 256u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 65532u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 65535u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 4294967288u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 4294967292u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint32_t{ 4294967295u }) == false);
+
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 0u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 1u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 2u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 3u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 5u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 8u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 9u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 252u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 256u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 65532u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 65535u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4294967288u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4294967292u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 4294967295u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551608u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551612u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint64_t{ 18446744073709551615u }) == false);
+
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 0u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 1u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 2u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 3u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 4u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 5u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 8u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 9u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 252u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 255u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 256u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 65532u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 65535u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 4294967288u }) == true);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 4294967292u }) == false);
+		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 4294967295u }) == false);
+
+		// Check if size_t in current host is 64 bits. Otherwise the test would fail.
+		if (sizeof(size_t) == 8)
+		{
+			REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551608u }) == true);
+			REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551612u }) == false);
+			REQUIRE(Utils::Byte::IsPaddedTo8Bytes(size_t{ 18446744073709551615u }) == false);
 		}
 	}
 
@@ -150,7 +249,9 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 5u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 8u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 9u }) == 12u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 15u }) == 16u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 254u }) == 0u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 255u }) == 0u);
 
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 0u }) == 0u);
@@ -161,8 +262,11 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 5u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 8u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 9u }) == 12u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 15u }) == 16u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 254u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 256u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 65532u }) == 65532u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint16_t{ 65535u }) == 0u);
 
@@ -174,10 +278,14 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 5u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 8u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 9u }) == 12u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 15u }) == 16u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 254u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 256u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 65532u }) == 65532u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 65535u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 4294967288u }) == 4294967288u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 4294967292u }) == 4294967292u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint32_t{ 4294967295u }) == 0u);
 
@@ -189,12 +297,17 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 5u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 8u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 9u }) == 12u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 15u }) == 16u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 254u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 256u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 65532u }) == 65532u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 65535u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 4294967288u }) == 4294967288u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 4294967292u }) == 4294967292u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 4294967295u }) == 4294967296u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551608u }) == 18446744073709551608u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551612u }) == 18446744073709551612u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint64_t{ 18446744073709551615u }) == 0u);
 
@@ -206,17 +319,135 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 5u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 8u }) == 8u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 9u }) == 12u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 15u }) == 16u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 252u }) == 252u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 254u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 256u }) == 256u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 65532u }) == 65532u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 65535u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 4294967288u }) == 4294967288u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 4294967292u }) == 4294967292u);
 
 		// Check if size_t in current host is 64 bits. Otherwise the test would fail.
 		if (sizeof(size_t) == 8)
 		{
+			REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551608u }) == 18446744073709551608u);
 			REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551612u }) == 18446744073709551612u);
 			REQUIRE(Utils::Byte::PadTo4Bytes(size_t{ 18446744073709551615u }) == 0u);
+		}
+	}
+
+	SECTION("Utils::Byte::PadTo8Bytes()")
+	{
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 1u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 2u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 3u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 4u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 5u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 6u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 7u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 9u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 15u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 16u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 17u }) == 24u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 252u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 254u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 255u }) == 0u);
+
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 1u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 2u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 3u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 4u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 5u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 6u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 7u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 9u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 15u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 16u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 17u }) == 24u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 252u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 254u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 65532u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint16_t{ 65535u }) == 0u);
+
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 1u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 2u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 3u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 4u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 5u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 6u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 7u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 9u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 16u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 252u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 254u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 65532u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 65535u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 4294967288u }) == 4294967288u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 4294967292u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint32_t{ 4294967295u }) == 0u);
+
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 1u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 2u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 3u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 5u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 6u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 7u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 9u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 16u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 252u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 254u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 65532u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 65535u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4294967288u }) == 4294967288u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4294967292u }) == 4294967296u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 4294967295u }) == 4294967296u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551608u }) == 18446744073709551608u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551612u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(uint64_t{ 18446744073709551615u }) == 0u);
+
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 0u }) == 0u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 1u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 2u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 3u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 4u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 5u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 6u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 7u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 8u }) == 8u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 9u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 15u }) == 16u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 252u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 254u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 255u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 256u }) == 256u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 65532u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 65535u }) == 65536u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 4294967288u }) == 4294967288u);
+		REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 4294967292u }) == 4294967296u);
+
+		// Check if size_t in current host is 64 bits. Otherwise the test would fail.
+		if (sizeof(size_t) == 8)
+		{
+			REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551608u }) == 18446744073709551608u);
+			REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551612u }) == 0u);
+			REQUIRE(Utils::Byte::PadTo8Bytes(size_t{ 18446744073709551615u }) == 0u);
 		}
 	}
 }
