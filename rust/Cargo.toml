@@ -70,7 +70,7 @@ features = ["serde", "v4"]
 version = "1.2.1"
 
 [dev-dependencies]
-actix = "0.13.0"
+actix = "0.13.5"
 actix-web-actors = "4.1.0"
 async-io = "1.10.0"
 criterion = "0.4.0"

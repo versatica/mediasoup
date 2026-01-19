@@ -935,7 +935,7 @@ impl<'de> Deserialize<'de> for RtcpFeedback {
                             r#type = Some(map.next_value()?);
                         }
                         Field::Parameter => {
-                            if parameter != "" {
+                            if !parameter.is_empty() {
                                 return Err(de::Error::duplicate_field("parameter"));
                             }
                             parameter = map.next_value()?;
