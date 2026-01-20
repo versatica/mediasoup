@@ -36,6 +36,40 @@ namespace RTC
 			 */
 
 			/**
+			 * The STUN Message Type field is decomposed further into the following
+			 * structure:
+			 *
+			 *  0                 1
+			 *  2  3  4 5 6 7 8 9 0 1 2 3 4 5
+			 * +--+--+-+-+-+-+-+-+-+-+-+-+-+-+
+			 * |M |M |M|M|M|C|M|M|M|C|M|M|M|M|
+			 * |11|10|9|8|7|1|6|5|4|0|3|2|1|0|
+			 * +--+--+-+-+-+-+-+-+-+-+-+-+-+-+
+			 *
+			 * Here the bits in the message type field are shown as most significant
+			 * (M11) through least significant (M0).  M11 through M0 represent a
+			 * 12-bit encoding of the method.  C1 and C0 represent a 2-bit encoding
+			 * of the class.
+			 */
+
+			/**
+			 * STUN Attributes.
+			 *
+			 * After the STUN Message Header are zero or more attributes. Each
+			 * attribute MUST be TLV encoded, with a 16-bit type, 16-bit length, and
+			 * value. Each STUN attribute MUST end on a 32-bit boundary.  All fields
+			 * in an attribute are transmitted most significant bit first.
+			 *
+			 *  0                   1                   2                   3
+			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			 * |         Type                  |            Length             |
+			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			 * |                         Value (variable)                ....
+			 * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+			 */
+
+			/**
 			 * STUN message class.
 			 */
 			enum class Class : uint8_t
@@ -115,6 +149,25 @@ namespace RTC
 			void Dump(int indentation = 0) const final;
 
 			StunPacket* Clone(uint8_t* buffer, size_t bufferLength) const final;
+
+			StunPacket::Class GetClass() const
+			{
+				return this->klass;
+			}
+
+			StunPacket::Method GetMethod() const
+			{
+				return this->method;
+			}
+
+		private:
+			void SetClass(StunPacket::Class klass);
+
+			void SetMethod(StunPacket::Method method);
+
+		private:
+			StunPacket::Class klass;
+			StunPacket::Method method;
 		};
 	} // namespace ICE
 } // namespace RTC

@@ -1,10 +1,11 @@
+#include "api/network_state_predictor.h"
 #define MS_CLASS "RTC::ICE::StunPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/ICE/StunPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
 #include "Utils.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include <cstdio> // std::snprintf()
 
 namespace RTC
@@ -43,11 +44,39 @@ namespace RTC
 				return nullptr;
 			}
 
+			// Get STUN Message Type field.
+			const uint16_t msgType = Utils::Byte::Get2Bytes(buffer, 0);
+
+			// Get Message Length field.
+			const uint16_t msgLength = Utils::Byte::Get2Bytes(buffer, 2);
+
+			// Message Length field must be total length minus header's 20 bytes, and
+			// must be multiple of 4 Bytes.
+			if (static_cast<size_t>(msgLength) != bufferLength - 20 || !Utils::Byte::IsPaddedTo4Bytes(msgLength))
+			{
+				MS_WARN_TAG(
+				  ice,
+				  "Message Length field + 20 does not match given buffer length or it's not multiple of 4 bytes, packet discarded");
+
+				return nullptr;
+			}
+
+			// Get STUN class.
+			const auto msgClass =
+			  static_cast<StunPacket::Class>(((buffer[0] & 0x01) << 1) | ((buffer[1] & 0x10) >> 4));
+
+			// Get STUN method.
+			const auto msgMethod = static_cast<StunPacket::Method>(
+			  (msgType & 0x000f) | ((msgType & 0x00e0) >> 1) | ((msgType & 0x3E00) >> 2));
+
 			auto* packet = new StunPacket(const_cast<uint8_t*>(buffer), bufferLength);
 
 			// `bufferLength` must be the exact length of the Packet, so let's assign
 			// it immediately.
 			packet->SetLength(bufferLength);
+
+			packet->SetClass(msgClass);
+			packet->SetMethod(msgMethod);
 
 			// TODO
 		}
@@ -89,6 +118,20 @@ namespace RTC
 			// TODO: Copy pointers and so on.
 
 			return clonedPacket;
+		}
+
+		void StunPacket::SetClass(StunPacket::Class klass)
+		{
+			MS_TRACE();
+
+			this->klass = klass;
+		}
+
+		void StunPacket::SetMethod(StunPacket::Method method)
+		{
+			MS_TRACE();
+
+			this->method = method;
 		}
 	} // namespace ICE
 } // namespace RTC
