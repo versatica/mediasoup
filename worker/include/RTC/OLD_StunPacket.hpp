@@ -1,5 +1,5 @@
-#ifndef MS_RTC_STUN_PACKET_HPP
-#define MS_RTC_STUN_PACKET_HPP
+#ifndef MS_OLD_RTC_STUN_PACKET_HPP
+#define MS_OLD_RTC_STUN_PACKET_HPP
 
 #include "common.hpp"
 #include <string>

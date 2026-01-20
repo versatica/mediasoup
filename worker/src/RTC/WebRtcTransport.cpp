@@ -229,7 +229,7 @@ namespace RTC
 			auto iceConsentTimeout = options->iceConsentTimeout();
 
 			// Create a ICE server.
-			this->iceServer = new RTC::IceServer(
+			this->iceServer = new RTC::ICE::IceServer(
 			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
 
 			// Create a DTLS transport.
@@ -281,7 +281,7 @@ namespace RTC
 	  const std::string& id,
 	  RTC::Transport::Listener* listener,
 	  WebRtcTransportListener* webRtcTransportListener,
-	  const std::vector<RTC::IceCandidate>& iceCandidates,
+	  const std::vector<RTC::ICE::IceCandidate>& iceCandidates,
 	  const FBS::WebRtcTransport::WebRtcTransportOptions* options)
 	  : RTC::Transport::Transport(shared, id, listener, options->base()),
 	    webRtcTransportListener(webRtcTransportListener), iceCandidates(iceCandidates)
@@ -298,7 +298,7 @@ namespace RTC
 			auto iceConsentTimeout = options->iceConsentTimeout();
 
 			// Create a ICE server.
-			this->iceServer = new RTC::IceServer(
+			this->iceServer = new RTC::ICE::IceServer(
 			  this, Utils::Crypto::GetRandomString(32), Utils::Crypto::GetRandomString(32), iceConsentTimeout);
 
 			// Create a DTLS transport.
@@ -398,7 +398,7 @@ namespace RTC
 		}
 
 		// Add iceState.
-		auto iceState = RTC::IceServer::IceStateToFbs(this->iceServer->GetState());
+		auto iceState = RTC::ICE::IceServer::IceStateToFbs(this->iceServer->GetState());
 
 		// Add iceSelectedTuple.
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
@@ -448,7 +448,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Add iceState.
-		auto iceState = RTC::IceServer::IceStateToFbs(this->iceServer->GetState());
+		auto iceState = RTC::ICE::IceServer::IceStateToFbs(this->iceServer->GetState());
 
 		// Add iceSelectedTuple.
 		flatbuffers::Offset<FBS::Transport::Tuple> iceSelectedTuple;
@@ -660,8 +660,8 @@ namespace RTC
 		// clang-format off
 		return (
 			(
-				this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-				this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+				this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+				this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
 			) &&
 			this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED
 		);
@@ -688,8 +688,8 @@ namespace RTC
 			{
 				// clang-format off
 				if (
-					this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-					this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
 				)
 				// clang-format on
 				{
@@ -714,8 +714,8 @@ namespace RTC
 			{
 				// clang-format off
 				if (
-					this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-					this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
 				)
 				// clang-format on
 				{
@@ -733,8 +733,8 @@ namespace RTC
 			{
 				// clang-format off
 				if (
-					this->iceServer->GetState() == RTC::IceServer::IceState::CONNECTED ||
-					this->iceServer->GetState() == RTC::IceServer::IceState::COMPLETED
+					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
 				)
 				// clang-format on
 				{
@@ -1162,7 +1162,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerSendStunPacket(
-	  const RTC::IceServer* /*iceServer*/, const RTC::StunPacket* packet, RTC::TransportTuple* tuple)
+	  const RTC::ICE::IceServer* /*iceServer*/, const RTC::StunPacket* packet, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1174,7 +1174,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentAdded(
-	  const RTC::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	  const RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment)
 	{
 		MS_TRACE();
 
@@ -1186,7 +1186,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentRemoved(
-	  const RTC::IceServer* /*iceServer*/, const std::string& usernameFragment)
+	  const RTC::ICE::IceServer* /*iceServer*/, const std::string& usernameFragment)
 	{
 		MS_TRACE();
 
@@ -1198,7 +1198,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerTupleAdded(
-	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1209,7 +1209,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerTupleRemoved(
-	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
+	  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
@@ -1226,7 +1226,7 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerSelectedTuple(
-	  const RTC::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/)
+	  const RTC::ICE::IceServer* /*iceServer*/, RTC::TransportTuple* /*tuple*/)
 	{
 		MS_TRACE();
 
@@ -1253,7 +1253,7 @@ namespace RTC
 		  notification);
 	}
 
-	inline void WebRtcTransport::OnIceServerConnected(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceServerConnected(const RTC::ICE::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1279,7 +1279,7 @@ namespace RTC
 		}
 	}
 
-	inline void WebRtcTransport::OnIceServerCompleted(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceServerCompleted(const RTC::ICE::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 
@@ -1305,7 +1305,7 @@ namespace RTC
 		}
 	}
 
-	inline void WebRtcTransport::OnIceServerDisconnected(const RTC::IceServer* /*iceServer*/)
+	inline void WebRtcTransport::OnIceServerDisconnected(const RTC::ICE::IceServer* /*iceServer*/)
 	{
 		MS_TRACE();
 

@@ -1,5 +1,5 @@
-#include "RTC/FuzzerStunPacket.hpp"
-#include "RTC/StunPacket.hpp"
+#include "RTC/OLD_FuzzerStunPacket.hpp"
+#include "RTC/OLD_StunPacket.hpp"
 
 static constexpr size_t StunSerializeBufferSize{ 65536 };
 thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];

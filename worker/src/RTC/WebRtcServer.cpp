@@ -346,12 +346,12 @@ namespace RTC
 		}
 	}
 
-	std::vector<RTC::IceCandidate> WebRtcServer::GetIceCandidates(
+	std::vector<RTC::ICE::IceCandidate> WebRtcServer::GetIceCandidates(
 	  bool enableUdp, bool enableTcp, bool preferUdp, bool preferTcp) const
 	{
 		MS_TRACE();
 
-		std::vector<RTC::IceCandidate> iceCandidates;
+		std::vector<RTC::ICE::IceCandidate> iceCandidates;
 		uint16_t iceLocalPreferenceDecrement{ 0 };
 
 		// Optimistic preallocation which takes into account worst case (each
