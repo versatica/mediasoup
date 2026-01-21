@@ -78,11 +78,125 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "<ICE::StunPacket>");
+			MS_DUMP_CLEAN(indentation, "<RTC::ICE::StunPacket>");
 
-			// TODO
+			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 
-			MS_DUMP_CLEAN(indentation, "<ICE::StunPacket>");
+			std::string klass;
+
+			switch (this->klass)
+			{
+				case Class::REQUEST:
+				{
+					klass = "request";
+					break;
+				}
+				case Class::INDICATION:
+				{
+					klass = "indication";
+					break;
+				}
+				case Class::SUCCESS_RESPONSE:
+				{
+					klass = "success response";
+					break;
+				}
+				case Class::ERROR_RESPONSE:
+				{
+					klass = "error response";
+					break;
+				}
+			}
+
+			if (this->method == Method::BINDING)
+			{
+				MS_DUMP_CLEAN(indentation, "  method & class: binding %s", klass.c_str());
+			}
+			else
+			{
+				// This prints the unknown method number. Example: TURN Allocate => 0x003.
+				MS_DUMP_CLEAN(
+				  indentation,
+				  "  method & class: %s with unknown method %#.3x",
+				  klass.c_str(),
+				  static_cast<uint16_t>(this->method));
+			}
+
+			auto transactionId1 = Utils::Byte::Get4Bytes(GetTransactionId(), 0);
+			auto transactionId2 = Utils::Byte::Get8Bytes(GetTransactionId(), 4);
+
+			MS_DUMP_CLEAN(indentation, "  transaction id (first 4 bytes): %" PRIu32, transactionId1);
+			MS_DUMP_CLEAN(indentation, "  transaction id (last 8 bytes): %" PRIu64, transactionId2);
+
+			if (HasUsername())
+			{
+				MS_DUMP_CLEAN(indentation, "  username: %s", GetUsername().c_str());
+			}
+
+			if (HasPriority())
+			{
+				MS_DUMP_CLEAN(indentation, "  priority: %" PRIu32, GetPriority());
+			}
+
+			if (HasIceControlling())
+			{
+				MS_DUMP_CLEAN(indentation, "  ice controlling: %" PRIu64, GetIceControlling());
+			}
+
+			if (HasIceControlled())
+			{
+				MS_DUMP_CLEAN(indentation, "  ice controlled: %" PRIu64, GetIceControlled());
+			}
+
+			if (HasUseCandidate())
+			{
+				MS_DUMP_CLEAN(indentation, "  use candidate: yes");
+			}
+
+			if (HasNomination())
+			{
+				MS_DUMP_CLEAN(indentation, "  nomination: %" PRIu32, GetNomination());
+			}
+
+			if (HasSoftware())
+			{
+				MS_DUMP_CLEAN(indentation, "  software: %s", GetSoftware().c_str());
+			}
+
+			if (HasXorMappedAddress())
+			{
+				int family;
+				uint16_t port;
+				std::string ip;
+
+				Utils::IP::GetAddressInfo(this->xorMappedAddress, family, ip, port);
+
+				MS_DUMP_CLEAN(indentation, "  xor mapped address: %s : %" PRIu16, ip.c_str(), port);
+			}
+
+			if (HasErrorCode())
+			{
+				MS_DUMP_CLEAN(indentation, "  error code: %" PRIu16, GetErrorCode());
+			}
+
+			if (HasMessageIntegrity())
+			{
+				char messageIntegrity[41];
+
+				for (int i{ 0 }; i < 20; ++i)
+				{
+					std::snprintf(messageIntegrity + (i * 2), 3, "%.2x", this->messageIntegrity[i]);
+				}
+
+				MS_DUMP_CLEAN(indentation, "  message integrity: %s", messageIntegrity);
+			}
+
+			if (HasFingerprint())
+			{
+				MS_DUMP_CLEAN(indentation, "  fingerprint: yes");
+			}
+
+			MS_DUMP_CLEAN(indentation, "<RTC::ICE::StunPacket>");
 		}
 
 		StunPacket* StunPacket::Clone(uint8_t* buffer, size_t bufferLength) const
@@ -103,11 +217,11 @@ namespace RTC
 			clonedPacket->hasUseCandidate  = this->hasUseCandidate;
 			clonedPacket->nomination       = this->nomination;
 			clonedPacket->software         = this->software;
+			clonedPacket->xorMappedAddress = this->xorMappedAddress;
 			clonedPacket->errorCode        = this->errorCode;
 			clonedPacket->messageIntegrity = this->messageIntegrity;
 			clonedPacket->hasFingerprint   = this->hasFingerprint;
 			clonedPacket->password         = this->password;
-			clonedPacket->xorMappedAddress = this->xorMappedAddress;
 
 			return clonedPacket;
 		}
@@ -491,6 +605,13 @@ namespace RTC
 			this->hasFingerprint = true;
 		}
 
+		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+		{
+			MS_TRACE();
+
+			this->xorMappedAddress = xorMappedAddress;
+		}
+
 		void StunPacket::SetPassword(const std::string& password)
 		{
 			MS_TRACE();
@@ -502,13 +623,6 @@ namespace RTC
 			}
 
 			this->password = password;
-		}
-
-		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
-		{
-			MS_TRACE();
-
-			this->xorMappedAddress = xorMappedAddress;
 		}
 	} // namespace ICE
 } // namespace RTC

@@ -242,6 +242,11 @@ namespace RTC
 				return this->software;
 			}
 
+			bool HasXorMappedAddress() const
+			{
+				return this->xorMappedAddress != nullptr;
+			}
+
 			bool HasErrorCode() const
 			{
 				return this->errorCode.has_value();
@@ -310,9 +315,9 @@ namespace RTC
 
 			void SetSoftware(const char* software, size_t len);
 
-			void SetErrorCode(uint16_t errorCode);
-
 			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
+
+			void SetErrorCode(uint16_t errorCode);
 
 			/**
 			 * @remarks
@@ -336,12 +341,12 @@ namespace RTC
 			bool hasUseCandidate{ false };
 			std::optional<uint32_t> nomination;
 			std::string software; // Less than 763 bytes.
+			const struct sockaddr* xorMappedAddress{ nullptr };
 			std::optional<uint16_t> errorCode;
 			const uint8_t* messageIntegrity{ nullptr };
 			bool hasFingerprint{ false };
 			// Others.
 			std::string password;
-			const struct sockaddr* xorMappedAddress{ nullptr };
 		};
 	} // namespace ICE
 } // namespace RTC
