@@ -23,7 +23,7 @@ namespace RTC
 			// clang-format off
 			return (
 				// STUN headers are 20 bytes.
-				(bufferLength >= 20) &&
+				(bufferLength >= StunPacket::FixedHeaderLength) &&
 				// @see RFC 7983.
 				(buffer[0] < 3) &&
 				// Magic cookie must match.
@@ -52,11 +52,14 @@ namespace RTC
 
 			// Message Length field must be total length minus header's 20 bytes, and
 			// must be multiple of 4 Bytes.
-			if (static_cast<size_t>(msgLength) != bufferLength - 20 || !Utils::Byte::IsPaddedTo4Bytes(msgLength))
+			if (
+			  static_cast<size_t>(msgLength) != bufferLength - StunPacket::FixedHeaderLength ||
+			  !Utils::Byte::IsPaddedTo4Bytes(msgLength))
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "Message Length field + 20 does not match given buffer length or it's not multiple of 4 bytes, packet discarded");
+				  "Message Length field + %zu does not match given buffer length or it's not multiple of 4 bytes, packet discarded",
+				  StunPacket::FixedHeaderLength);
 
 				return nullptr;
 			}

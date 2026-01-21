@@ -121,6 +121,11 @@ namespace RTC
 
 		public:
 			/**
+			 * Message Header fixed length.
+			 */
+			static const size_t FixedHeaderLength{ 20 };
+
+			/**
 			 * Whether given buffer could be a valid STUN Packet.
 			 */
 			static bool IsStun(const uint8_t* buffer, size_t bufferLength);
