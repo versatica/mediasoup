@@ -1,4 +1,4 @@
-#define MS_CLASS "RTC::StunPacket"
+#define MS_CLASS "RTC::OLD_StunPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/OLD_StunPacket.hpp"
