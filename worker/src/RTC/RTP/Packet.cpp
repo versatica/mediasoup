@@ -31,7 +31,7 @@ namespace RTC
 
 			// clang-format off
 			return (
-				(bufferLength >= FixedHeaderMinSize) &&
+				(bufferLength >= Packet::FixedHeaderMinLength) &&
 				// @see RFC 7983.
 				(buffer[0] > 127 && buffer[0] < 192) &&
 				// RTP Version must be 2.
@@ -100,7 +100,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (bufferLength < FixedHeaderMinSize)
+			if (bufferLength < Packet::FixedHeaderMinLength)
 			{
 				MS_THROW_TYPE_ERROR("no space for fixed header");
 			}
@@ -137,7 +137,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			SetLength(FixedHeaderMinSize);
+			SetLength(Packet::FixedHeaderMinLength);
 
 #ifdef MS_RTC_LOGGER_RTP
 			// Initialize logger.
@@ -1518,7 +1518,7 @@ namespace RTC
 				return false;
 			}
 
-			ptr += FixedHeaderMinSize;
+			ptr += Packet::FixedHeaderMinLength;
 
 			// Here we are at the beginning of the optional CCRS list.
 			if (HasCsrcs())

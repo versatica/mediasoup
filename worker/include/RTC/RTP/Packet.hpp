@@ -155,7 +155,7 @@ namespace RTC
 			/**
 			 * Minimum size (in bytes) of the RTP Fixed Header (without CSRC fields).
 			 */
-			static const size_t FixedHeaderMinSize{ 12 };
+			static const size_t FixedHeaderMinLength{ 12 };
 
 			/**
 			 * Whether given buffer could be a valid RTP Packet.
@@ -823,7 +823,7 @@ namespace RTC
 			 */
 			uint8_t* GetCsrcsPointer() const
 			{
-				return const_cast<uint8_t*>(GetBuffer()) + FixedHeaderMinSize;
+				return const_cast<uint8_t*>(GetBuffer()) + Packet::FixedHeaderMinLength;
 			}
 
 			/**
