@@ -876,23 +876,24 @@ namespace RTC
 			}
 
 			/**
-			 * Validates whether the Packet is valid. It also sets internal
-			 * containers holding Extensions.
+			 * Validates whether the Packet is valid. It also stores internal
+			 * containers holding Extensions if `storeExtensions` is `true`.
 			 */
 #ifdef MS_TEST
 		public:
 #endif
-			bool Validate();
+			bool Validate(bool storeExtensions);
 #ifdef MS_TEST
 		private:
 #endif
 
 			/**
-			 * Parses Extensions. Returns `true` if they are valid.
+			 * Parses Extensions. Returns `true` if they are valid. It also stores
+			 * internal containers holding Extensions if `storeExtensions` is `true`.
 			 *
 			 * @see RFC 8285.
 			 */
-			bool ParseExtensions();
+			bool ParseExtensions(bool storeExtensions);
 
 			/**
 			 * Set the value length of the Extension with given `id`.

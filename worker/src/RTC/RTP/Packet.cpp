@@ -63,7 +63,7 @@ namespace RTC
 
 			packet->SetLength(packetLength);
 
-			if (!packet->Validate())
+			if (!packet->Validate(/*storeExtensions*/ true))
 			{
 				delete packet;
 				return nullptr;
@@ -87,7 +87,7 @@ namespace RTC
 
 			packet->SetLength(bufferLength);
 
-			if (!packet->Validate())
+			if (!packet->Validate(/*storeExtensions*/ true))
 			{
 				delete packet;
 				return nullptr;
@@ -1504,7 +1504,7 @@ namespace RTC
 			this->payloadDescriptorHandler->Restore(this);
 		}
 
-		bool Packet::Validate()
+		bool Packet::Validate(bool storeExtensions)
 		{
 			MS_TRACE();
 
@@ -1556,7 +1556,7 @@ namespace RTC
 					return false;
 				}
 
-				if (!ParseExtensions())
+				if (!ParseExtensions(storeExtensions))
 				{
 					MS_WARN_TAG(rtp, "invalid Packet, invalid Extensions");
 
@@ -1595,7 +1595,7 @@ namespace RTC
 			return true;
 		}
 
-		bool Packet::ParseExtensions()
+		bool Packet::ParseExtensions(bool storeExtensions)
 		{
 			MS_TRACE();
 
@@ -1637,10 +1637,13 @@ namespace RTC
 							return false;
 						}
 
-						// Store the One-Byte Extension offset in the array.
-						// `-1` because we have 14 elements total 0..13 and `id` is in the
-						// range 1..14.
-						this->oneByteExtensions[id - 1] = ptr - extensionsStart;
+						if (storeExtensions)
+						{
+							// Store the One-Byte Extension offset in the array.
+							// `-1` because we have 14 elements total 0..13 and `id` is in the
+							// range 1..14.
+							this->oneByteExtensions[id - 1] = ptr - extensionsStart;
+						}
 
 						ptr += (1 + len);
 					}
@@ -1687,8 +1690,11 @@ namespace RTC
 							return false;
 						}
 
-						// Store the Two-Bytes Extension offset in the map.
-						this->twoBytesExtensions[id] = ptr - extensionsStart;
+						if (storeExtensions)
+						{
+							// Store the Two-Bytes Extension offset in the map.
+							this->twoBytesExtensions[id] = ptr - extensionsStart;
+						}
 
 						ptr += (2 + len);
 					}

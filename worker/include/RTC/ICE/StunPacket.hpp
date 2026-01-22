@@ -2,8 +2,13 @@
 #define MS_RTC_ICE_STUN_PACKET_HPP
 
 #include "common.hpp"
+#include "Utils.hpp"
 #include "RTC/Serializable.hpp"
+#include <cstdint>
+#include <memory>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 
 namespace RTC
 {
@@ -56,10 +61,10 @@ namespace RTC
 			/**
 			 * STUN Attributes.
 			 *
-			 * After the STUN Message Header are zero or more attributes. Each
-			 * attribute MUST be TLV encoded, with a 16-bit type, 16-bit length, and
-			 * value. Each STUN attribute MUST end on a 32-bit boundary.  All fields
-			 * in an attribute are transmitted most significant bit first.
+			 * After the STUN Message Header are zero or more Attributes. Each
+			 * Attribute MUST be TLV encoded, with a 16-bit type, 16-bit length, and
+			 * value. Each STUN Attribute MUST end on a 32-bit boundary.  All fields
+			 * in an Attribute are transmitted most significant bit first.
 			 *
 			 *  0                   1                   2                   3
 			 *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -90,7 +95,7 @@ namespace RTC
 			};
 
 			/**
-			 * STUN attribute type.
+			 * STUN Attribute type.
 			 */
 			enum class AttributeType : uint16_t
 			{
@@ -123,9 +128,21 @@ namespace RTC
 		private:
 			struct Attribute
 			{
+				Attribute(AttributeType type, uint16_t len, size_t offset)
+				  : type(type), len(len), offset(offset) {};
+
+				/**
+				 * Attribute type.
+				 */
 				AttributeType type;
+				/**
+				 * Length of the value (not padded).
+				 */
 				uint16_t len;
-				uint8_t value[];
+				/**
+				 * Offset of the Attribute from the start of the Attributes.
+				 */
+				size_t offset;
 			};
 
 		public:
@@ -167,105 +184,139 @@ namespace RTC
 				return this->klass;
 			}
 
+			void SetClass(StunPacket::Class klass);
+
 			StunPacket::Method GetMethod() const
 			{
 				return this->method;
 			}
+
+			void SetMethod(StunPacket::Method method);
 
 			const uint8_t* GetTransactionId() const
 			{
 				return GetTransactionIdPointer();
 			}
 
-			bool HasUsername() const
+			void SetTransactionId(const uint8_t* transactionId);
+
+			bool HasAttribute(StunPacket::AttributeType type) const
 			{
-				return !this->username.empty();
+				return this->attributes.find(type) != this->attributes.end();
 			}
 
-			const std::string& GetUsername() const
+			const std::string_view GetUsername() const
 			{
-				return this->username;
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::USERNAME);
+
+				if (!attribute)
+				{
+					return {};
+				}
+
+				return std::string_view(
+				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			bool HasPriority() const
-			{
-				return this->priority.has_value();
-			}
+			void SetUsername(const char* username, size_t len);
 
 			uint32_t GetPriority() const
 			{
-				return this->priority.value_or(0);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::PRIORITY);
+
+				if (!attribute)
+				{
+					return 0;
+				}
+
+				return Utils::Byte::Get4Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			bool HasIceControlling() const
-			{
-				return this->iceControlling.has_value();
-			}
+			void SetPriority(uint32_t priority);
 
 			uint64_t GetIceControlling() const
 			{
-				return this->iceControlling.value_or(0);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLING);
+
+				if (!attribute)
+				{
+					return 0;
+				}
+
+				return Utils::Byte::Get8Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			bool HasIceControlled() const
-			{
-				return this->iceControlled.has_value();
-			}
+			void SetIceControlling(uint64_t iceControlling);
 
 			uint64_t GetIceControlled() const
 			{
-				return this->iceControlled.value_or(0);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLED);
+
+				if (!attribute)
+				{
+					return 0;
+				}
+
+				return Utils::Byte::Get8Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			bool HasNomination() const
-			{
-				return this->nomination.has_value();
-			}
+			void SetIceControlled(uint64_t iceControlled);
 
-			bool HasUseCandidate() const
-			{
-				return this->hasUseCandidate;
-			}
+			void EnableUseCandidate();
 
 			uint32_t GetNomination() const
 			{
-				return this->nomination.value_or(0);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLED);
+
+				if (!attribute)
+				{
+					return 0;
+				}
+
+				return Utils::Byte::Get4Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			bool HasSoftware() const
+			void SetNomination(uint32_t nomination);
+
+			const std::string_view GetSoftware() const
 			{
-				return !this->software.empty();
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::SOFTWARE);
+
+				if (!attribute)
+				{
+					return {};
+				}
+
+				return std::string_view(
+				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			const std::string& GetSoftware() const
-			{
-				return this->software;
-			}
-
-			bool HasXorMappedAddress() const
-			{
-				return this->xorMappedAddress != nullptr;
-			}
-
-			bool HasErrorCode() const
-			{
-				return this->errorCode.has_value();
-			}
+			void SetSoftware(const char* software, size_t len);
 
 			uint16_t GetErrorCode() const
 			{
-				return this->errorCode.value_or(0);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::ERROR_CODE);
+
+				if (!attribute)
+				{
+					return 0;
+				}
+
+				const auto* attributeValue = GetAttributeValue(attribute);
+				const uint8_t errorClass   = Utils::Byte::Get1Byte(attributeValue, 2);
+				const uint8_t errorNumber  = Utils::Byte::Get1Byte(attributeValue, 3);
+				auto errorCode             = static_cast<uint16_t>((errorClass * 100) + errorNumber);
+
+				return errorCode;
 			}
 
-			bool HasMessageIntegrity() const
-			{
-				return this->messageIntegrity != nullptr;
-			}
+			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
 
-			bool HasFingerprint() const
-			{
-				return this->hasFingerprint;
-			}
+			void SetErrorCode(uint16_t errorCode);
+
+			void EnableFingerprint();
+
+			void SetPassword(const std::string& password);
 
 		private:
 			uint8_t* GetFixedHeaderPointer() const
@@ -283,69 +334,93 @@ namespace RTC
 				return GetFixedHeaderPointer() + StunPacket::FixedHeaderLength;
 			}
 
+			size_t GetAttributesLength() const
+			{
+				return GetLength() - StunPacket::FixedHeaderLength;
+			}
+
 			/**
-			 * Validates whether the STUN Packet is valid. It also sets internal
-			 * offsets pointing to relevant STUN attributes.
+			 * Validates whether the STUN Packet is valid. It also stores internal
+			 * offsets pointing to relevant STUN Attributes if `storeAttributes` is
+			 * `true`.
 			 */
 #ifdef MS_TEST
 		public:
 #endif
-			bool Validate();
+			bool Validate(bool storeAttributes);
 #ifdef MS_TEST
 		private:
 #endif
 
-			void SetClass(StunPacket::Class klass);
-
-			void SetMethod(StunPacket::Method method);
-
-			void SetTransactionId(const uint8_t* transactionId);
-
-			void SetUsername(const char* username, size_t len);
-
-			void SetPriority(uint32_t priority);
-
-			void SetIceControlling(uint64_t iceControlling);
-
-			void SetIceControlled(uint64_t iceControlled);
-
-			void EnableUseCandidate();
-
-			void SetNomination(uint32_t nomination);
-
-			void SetSoftware(const char* software, size_t len);
-
-			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
-
-			void SetErrorCode(uint16_t errorCode);
-
 			/**
-			 * @remarks
-			 * - The given pointer and memory must remain accesible during the
-			 *   lifetime of the Packet.
+			 * Parses Attributes. Returns `true` if they are valid. It also stores
+			 * internal containers holding Attributes if `storeAttributes` is `true`.
 			 */
+			bool ParseAttributes(bool storeAttributes);
+
+			bool StoreAttribute(StunPacket::AttributeType type, uint16_t len, size_t offset);
+
+			const StunPacket::Attribute* GetAttribute(StunPacket::AttributeType type) const
+			{
+				auto it = this->attributes.find(type);
+
+				if (it != this->attributes.end())
+				{
+					return std::addressof(it->second);
+				}
+
+				return nullptr;
+			}
+
+			uint8_t* GetAttributeValue(const StunPacket::Attribute* attribute) const
+			{
+				return GetAttributesPointer() + attribute->offset + 4;
+			}
+
+#ifdef MS_TEST
+		public:
+#endif
+			const uint8_t* GetMessageIntegrity() const
+			{
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY);
+
+				if (!attribute)
+				{
+					return nullptr;
+				}
+
+				return GetAttributeValue(attribute);
+			}
+#ifdef MS_TEST
+		private:
+#endif
+
 			void SetMessageIntegrity(const uint8_t* messageIntegrity);
 
-			void EnableFingerprint();
+#ifdef MS_TEST
+		public:
+#endif
+			uint32_t GetFingerprint() const
+			{
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
 
-			void SetPassword(const std::string& password);
+				if (!attribute)
+				{
+					return 0;
+				}
+
+				return Utils::Byte::Get4Bytes(GetAttributeValue(attribute), 0);
+			}
+#ifdef MS_TEST
+		private:
+#endif
 
 		private:
 			StunPacket::Class klass;
 			StunPacket::Method method;
-			// STUN attributes.
-			std::string username; // Less than 513 bytes.
-			std::optional<uint32_t> priority;
-			std::optional<uint64_t> iceControlling;
-			std::optional<uint64_t> iceControlled;
-			bool hasUseCandidate{ false };
-			std::optional<uint32_t> nomination;
-			std::string software; // Less than 763 bytes.
+			// Map of STUN Attributes indexed by Attribute type.
+			std::unordered_map<StunPacket::AttributeType, StunPacket::Attribute> attributes;
 			const struct sockaddr* xorMappedAddress{ nullptr };
-			std::optional<uint16_t> errorCode;
-			const uint8_t* messageIntegrity{ nullptr };
-			bool hasFingerprint{ false };
-			// Others.
 			std::string password;
 		};
 	} // namespace ICE

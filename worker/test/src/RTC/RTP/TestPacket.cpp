@@ -1540,7 +1540,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		std::unique_ptr<Packet> packet2{ Packet::Parse(packet->GetBuffer(), packet->GetLength()) };
 
 		REQUIRE(packet2);
-		REQUIRE(packet2->Validate());
+		REQUIRE(packet2->Validate(/*storeExtensions*/ false));
 
 		packet2->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
@@ -1877,7 +1877,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		};
 		// clang-format on
 
-		REQUIRE(packet->Validate());
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -1936,7 +1936,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		};
 		// clang-format on
 
-		REQUIRE(packet->Validate());
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -2066,7 +2066,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// This method removes padding.
 		packet->RtxEncode(/*payloadType*/ 111, /*ssrc*/ 999999, /*seq*/ 666);
 
-		REQUIRE(packet->Validate());
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),
@@ -2095,7 +2095,7 @@ SCENARIO("RTP Packet", "[serializable][rtp][packet]")
 		// This method removes padding.
 		packet->RtxDecode(/*payloadType*/ 100, /*ssrc*/ 1234567890);
 
-		REQUIRE(packet->Validate());
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));
 
 		CHECK_RTP_PACKET(
 		  /*packet*/ packet.get(),

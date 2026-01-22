@@ -419,6 +419,8 @@ test_sources = [
   'test/src/RTC/TestTransportCongestionControlServer.cpp',
   'test/src/RTC/TestTransportTuple.cpp',
   'test/src/RTC/TestTrendCalculator.cpp',
+  'test/src/RTC/ICE/iceCommon.cpp',
+  'test/src/RTC/ICE/TestStunPacket.cpp',
   'test/src/RTC/RTP/rtpCommon.cpp',
   'test/src/RTC/RTP/TestPacket.cpp',
   'test/src/RTC/RTP/TestProbationGenerator.cpp',

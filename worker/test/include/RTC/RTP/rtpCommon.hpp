@@ -52,7 +52,7 @@ namespace RTC
 		std::memcpy(originalBuffer, buffer, bufferLength);                                               \
 		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                            \
 		REQUIRE(packet);                                                                                 \
-		REQUIRE(packet->Validate());                                                                     \
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));                                            \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                         \
 		REQUIRE(packet->GetBuffer() == buffer);                                                          \
 		REQUIRE(packet->GetBufferLength() != 0);                                                         \
@@ -125,7 +125,7 @@ namespace RTC
 		REQUIRE_THROWS_AS(                                                                               \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);              \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                       \
-		REQUIRE(packet->Validate());                                                                     \
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));                                            \
 		std::free(originalBuffer);                                                                       \
 	} while (false)
 

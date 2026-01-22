@@ -450,6 +450,8 @@ namespace RTC
 			return;
 		}
 
+		MS_DUMP_DATA(data, len);
+
 		// TODO: REMOVE
 		RTC::ICE::StunPacket* newPacket = RTC::ICE::StunPacket::Parse(data, len);
 		MS_ASSERT(newPacket, "new STUN parser failed!!!");
