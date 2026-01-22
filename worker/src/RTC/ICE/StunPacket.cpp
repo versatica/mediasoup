@@ -496,9 +496,12 @@ namespace RTC
 					case StunPacket::AttributeType::MESSAGE_INTEGRITY:
 					{
 						// Ensure Attribute length is 20 bytes.
-						if (attrLen != 20)
+						if (attrLen != StunPacket::MessageIntegrityAttributeLength)
 						{
-							MS_WARN_TAG(ice, "invalid Packet, Attribute MESSAGE-INTEGRITY must be 20 bytes length");
+							MS_WARN_TAG(
+							  ice,
+							  "invalid Packet, Attribute MESSAGE-INTEGRITY must be %zu bytes length",
+							  StunPacket::MessageIntegrityAttributeLength);
 
 							return false;
 						}
