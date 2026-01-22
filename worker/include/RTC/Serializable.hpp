@@ -85,10 +85,10 @@ namespace RTC
 		 * @param bufferLength - New buffer length.
 		 *
 		 * @remarks
-		 * In addition to call this method in Serializable parent class, the
-		 * `Serialize()` implementation in the subclass must also reassign any
-		 * pointers it holds and make them point to the proper position in the new
-		 * buffer.
+		 * - In addition to call this method in Serializable parent class, the
+		 *   `Serialize()` implementation in the subclass must also reassign any
+		 *   pointers it holds and make them point to the proper position in the
+		 *   new buffer.
 		 *
 		 * @throw MediaSoupError - If given `bufferLength` is lower than the
 		 *   current exact length of the Serializable.
@@ -146,9 +146,9 @@ namespace RTC
 		 * Update the buffer length of the Serializable.
 		 **
 		 * @remarks
-		 * The child class must invoke this method after parsing completes in case
-		 * it couldn't anticipate its expected exact length. Specially useful when
-		 * parsing variable-length items within a packet.
+		 * - The child class must invoke this method after parsing completes in
+		 *   case it couldn't anticipate its expected exact length. Specially
+		 *   useful when parsing variable-length items within a packet.
 		 *
 		 * @throw
 		 * - MediaSoupError - If given `bufferLength` is lower than the current
@@ -162,9 +162,9 @@ namespace RTC
 		 * length of the Serializable.
 		 *
 		 * @remarks
-		 * The child class must invoke this method after parsing completes and
-		 * after every change in the Serializable content that affects its current
-		 * length.
+		 * - The child class must invoke this method after parsing completes and
+		 *   after every change in the Serializable content that affects its
+		 *   current length.
 		 *
 		 * @throw
 		 * - MediaSoupError - If given `length` is larger than the buffer length of
@@ -177,10 +177,10 @@ namespace RTC
 		 * Clone the Serializable into the given Serializable.
 		 *
 		 * @remarks
-		 * If this method throws (due to the buffer length of the given Serializable
-		 * being too small), then this method deletes the given `serializable`
-		 * pointer and throws, meaning that the subclass must not delete it in case
-		 * it captured the error.
+		 * - If this method throws (due to the buffer length of the given
+		 *   Serializable being too small), then this method deletes the given
+		 *   `serializable` pointer and throws, meaning that the subclass must not
+		 *   delete it in case it captured the error.
 		 *
 		 * @throw MediaSoupError - If the buffer length of the given `serializable`
 		 *   is too small.
@@ -190,7 +190,8 @@ namespace RTC
 		/**
 		 * Fill the last given `padding` number of bytes of the buffer with zeros.
 		 *
-		 * @remarks This method does NOT add bytes to the buffer.
+		 * @remarks
+		 * - This method does NOT add bytes to the buffer.
 		 */
 		virtual void FillPadding(uint8_t padding) final;
 
