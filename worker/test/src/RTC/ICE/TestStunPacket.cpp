@@ -1,6 +1,4 @@
 #include "common.hpp"
-#include "Utils.hpp"
-#include "testHelpers.hpp" // IWYU pragma: export in worker/test/include/
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/ICE/iceCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
