@@ -6,6 +6,8 @@
 #include "MediaSoupErrors.hpp"
 #include "Settings.hpp"
 #include "Utils.hpp"
+// TODO: REMOVE
+#include "RTC/ICE/StunPacket.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -447,6 +449,17 @@ namespace RTC
 
 			return;
 		}
+
+		// TODO: REMOVE
+		RTC::ICE::StunPacket* newPacket = RTC::ICE::StunPacket::Parse(data, len);
+		MS_ASSERT(newPacket, "new STUN parser failed!!!");
+		MS_DUMP_CLEAN(0, "");
+		MS_DUMP_CLEAN(0, "------- OLD STUN PACKET:");
+		packet->Dump();
+		MS_DUMP_CLEAN(0, "");
+		MS_DUMP_CLEAN(0, "------- NEW STUN PACKET:");
+		newPacket->Dump();
+		delete newPacket;
 
 		// First try doing lookup in the tuples table.
 		auto it1 = this->mapTupleWebRtcTransport.find(tuple->hash);
