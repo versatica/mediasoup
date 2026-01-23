@@ -101,29 +101,29 @@ namespace RTC
 			{
 				case Class::REQUEST:
 				{
-					klass = "request";
+					klass = "Request";
 					break;
 				}
 				case Class::INDICATION:
 				{
-					klass = "indication";
+					klass = "Indication";
 					break;
 				}
 				case Class::SUCCESS_RESPONSE:
 				{
-					klass = "success response";
+					klass = "Success Response";
 					break;
 				}
 				case Class::ERROR_RESPONSE:
 				{
-					klass = "error response";
+					klass = "Error Response";
 					break;
 				}
 			}
 
 			if (this->method == Method::BINDING)
 			{
-				MS_DUMP_CLEAN(indentation, "  method & class: binding %s", klass.c_str());
+				MS_DUMP_CLEAN(indentation, "  method & class: Binding %s", klass.c_str());
 			}
 			else
 			{

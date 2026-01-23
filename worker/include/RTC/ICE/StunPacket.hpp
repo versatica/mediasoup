@@ -305,11 +305,26 @@ namespace RTC
 				}
 
 				const auto* attributeValue = GetAttributeValue(attribute);
-				const uint8_t errorClass   = Utils::Byte::Get1Byte(attributeValue, 2);
+				const uint8_t errorClass   = Utils::Byte::Get1Byte(attributeValue, 2) & 0b00000111;
 				const uint8_t errorNumber  = Utils::Byte::Get1Byte(attributeValue, 3);
 				auto errorCode             = static_cast<uint16_t>((errorClass * 100) + errorNumber);
 
 				return errorCode;
+			}
+
+			const std::string_view GetErrorReason() const
+			{
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::ERROR_CODE);
+
+				// Reason Phrase comes after the first 4 bytes (it could be zero
+				// length).
+				if (!attribute || attribute->len == 4)
+				{
+					return {};
+				}
+
+				return std::string_view(
+				  reinterpret_cast<const char*>(GetAttributeValue(attribute) + 4), attribute->len - 4);
 			}
 
 			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);

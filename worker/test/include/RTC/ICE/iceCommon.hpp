@@ -29,29 +29,30 @@ namespace RTC
 } // namespace RTC
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_ICE_PACKET(/*const StunPacket**/ packet,                                              \
-                         /*const uint8_t**/ buffer,                                                 \
-                         /*size_t*/ bufferLength,                                                   \
-                         /*size_t*/ length,                                                         \
-                         /*StunPacket::Class*/ klass,                                               \
-                         /*StunPacket::Method*/ method,                                             \
-                         /*bool*/ hasUsername,                                                      \
-                         /*std::string*/ username,                                                  \
-                         /*bool*/ hasPriority,                                                      \
-                         /*uint32_t*/ priority,                                                     \
-                         /*bool*/ hasIceControlling,                                                \
-                         /*uint64_t*/ iceControlling,                                               \
-                         /*bool*/ hasIceControlled,                                                 \
-                         /*uint64_t*/ iceControlled,                                                \
-                         /*bool*/ hasUseCandidate,                                                  \
-                         /*bool*/ hasNomination,                                                    \
-                         /*uint32_t*/ nomination,                                                   \
-                         /*bool*/ hasSoftware,                                                      \
-                         /*std::string*/ software,                                                  \
-                         /*bool*/ hasErrorCode,                                                     \
-                         /*uint16_t*/ errorCode,                                                    \
-                         /*bool*/ hasMessageIntegrity,                                              \
-                         /*bool*/ hasFingerprint)                                                   \
+#define CHECK_STUN_PACKET(/*const StunPacket**/ packet,                                             \
+                          /*const uint8_t**/ buffer,                                                \
+                          /*size_t*/ bufferLength,                                                  \
+                          /*size_t*/ length,                                                        \
+                          /*StunPacket::Class*/ klass,                                              \
+                          /*StunPacket::Method*/ method,                                            \
+                          /*bool*/ hasUsername,                                                     \
+                          /*std::string*/ username,                                                 \
+                          /*bool*/ hasPriority,                                                     \
+                          /*uint32_t*/ priority,                                                    \
+                          /*bool*/ hasIceControlling,                                               \
+                          /*uint64_t*/ iceControlling,                                              \
+                          /*bool*/ hasIceControlled,                                                \
+                          /*uint64_t*/ iceControlled,                                               \
+                          /*bool*/ hasUseCandidate,                                                 \
+                          /*bool*/ hasNomination,                                                   \
+                          /*uint32_t*/ nomination,                                                  \
+                          /*bool*/ hasSoftware,                                                     \
+                          /*std::string*/ software,                                                 \
+                          /*bool*/ hasErrorCode,                                                    \
+                          /*uint16_t*/ errorCode,                                                   \
+                          /*std::string*/ errorReason,                                              \
+                          /*bool*/ hasMessageIntegrity,                                             \
+                          /*bool*/ hasFingerprint)                                                  \
 	do                                                                                                \
 	{                                                                                                 \
 		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                     \
@@ -82,6 +83,7 @@ namespace RTC
 		REQUIRE(packet->GetSoftware() == software);                                                     \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::ERROR_CODE) == hasErrorCode);           \
 		REQUIRE(packet->GetErrorCode() == errorCode);                                                   \
+		REQUIRE(packet->GetErrorReason() == errorReason);                                               \
 		REQUIRE(                                                                                        \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) == hasMessageIntegrity);   \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);        \

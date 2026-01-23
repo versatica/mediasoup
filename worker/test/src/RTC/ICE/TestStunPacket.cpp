@@ -10,8 +10,19 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 {
 	ResetBuffers();
 
-	SECTION("StunPacket::Parse() succeeds")
+	SECTION("StunPacket::Parse() a STUN request with message integrity and fingerprint succeeds")
 	{
+		// Binding Request
+		// - buffer length: 128 bytes
+		// - transaction id (first 4 bytes): 880244530
+		// - transaction id (last 8 bytes): 8607627212352477006
+		// - username: "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ"
+		// - priority: 1853824767
+		// - ice controlling: 13586427987236599887
+		// - use candidate: yes
+		// - message integrity: e6fe326fb74ec7c6005f182549e99ef73d4f8983
+		// - fingerprint: yes
+		//
 		// clang-format off
 		uint8_t buffer[] =
 		{
@@ -50,90 +61,342 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<StunPacket> packet{ StunPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<StunPacket> request{ StunPacket::Parse(buffer, sizeof(buffer)) };
 
-		CHECK_ICE_PACKET(/*packet*/ packet.get(),
-		                 /*buffert*/ buffer,
-		                 /*bufferLength*/ sizeof(buffer),
-		                 /*length*/ sizeof(buffer),
-		                 /*klass*/ StunPacket::Class::REQUEST,
-		                 /*method*/ StunPacket::Method::BINDING,
-		                 /*hasUsername*/ true,
-		                 /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
-		                 /*hasPriority*/ true,
-		                 /*priority*/ 1853824767,
-		                 /*hasIceControlling*/ true,
-		                 /*iceControlling*/ 13586427987236599887u,
-		                 /*hasIceControlled*/ false,
-		                 /*iceControlledg*/ 0,
-		                 /*hasUseCandidate*/ true,
-		                 /*hasNomination*/ false,
-		                 /*nomination*/ 0,
-		                 /*hasSoftware*/ false,
-		                 /*software*/ "",
-		                 /*hasErrorCode*/ false,
-		                 /*errorCode*/ 0,
-		                 /*hasMessageIntegrity*/ true,
-		                 /*hasFingerprint*/ true);
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffert*/ buffer,
+		                  /*bufferLength*/ sizeof(buffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
+		                  /*hasPriority*/ true,
+		                  /*priority*/ 1853824767,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ 13586427987236599887u,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
 
 		/* Serialize it. */
 
-		packet->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		request->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
-		CHECK_ICE_PACKET(/*packet*/ packet.get(),
-		                 /*buffer*/ SerializeBuffer,
-		                 /*bufferLength*/ sizeof(SerializeBuffer),
-		                 /*length*/ sizeof(buffer),
-		                 /*klass*/ StunPacket::Class::REQUEST,
-		                 /*method*/ StunPacket::Method::BINDING,
-		                 /*hasUsername*/ true,
-		                 /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
-		                 /*hasPriority*/ true,
-		                 /*priority*/ 1853824767,
-		                 /*hasIceControlling*/ true,
-		                 /*iceControlling*/ 13586427987236599887u,
-		                 /*hasIceControlled*/ false,
-		                 /*iceControlledg*/ 0,
-		                 /*hasUseCandidate*/ true,
-		                 /*hasNomination*/ false,
-		                 /*nomination*/ 0,
-		                 /*hasSoftware*/ false,
-		                 /*software*/ "",
-		                 /*hasErrorCode*/ false,
-		                 /*errorCode*/ 0,
-		                 /*hasMessageIntegrity*/ true,
-		                 /*hasFingerprint*/ true);
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ SerializeBuffer,
+		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
+		                  /*hasPriority*/ true,
+		                  /*priority*/ 1853824767,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ 13586427987236599887u,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
 
 		/* Clone it. */
 
-		packet.reset(packet->Clone(CloneBuffer, sizeof(CloneBuffer)));
+		request.reset(request->Clone(CloneBuffer, sizeof(CloneBuffer)));
 
 		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
 
-		CHECK_ICE_PACKET(/*packet*/ packet.get(),
-		                 /*buffer*/ CloneBuffer,
-		                 /*bufferLength*/ sizeof(CloneBuffer),
-		                 /*length*/ sizeof(buffer),
-		                 /*klass*/ StunPacket::Class::REQUEST,
-		                 /*method*/ StunPacket::Method::BINDING,
-		                 /*hasUsername*/ true,
-		                 /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
-		                 /*hasPriority*/ true,
-		                 /*priority*/ 1853824767,
-		                 /*hasIceControlling*/ true,
-		                 /*iceControlling*/ 13586427987236599887u,
-		                 /*hasIceControlled*/ false,
-		                 /*iceControlledg*/ 0,
-		                 /*hasUseCandidate*/ true,
-		                 /*hasNomination*/ false,
-		                 /*nomination*/ 0,
-		                 /*hasSoftware*/ false,
-		                 /*software*/ "",
-		                 /*hasErrorCode*/ false,
-		                 /*errorCode*/ 0,
-		                 /*hasMessageIntegrity*/ true,
-		                 /*hasFingerprint*/ true);
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ CloneBuffer,
+		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
+		                  /*hasPriority*/ true,
+		                  /*priority*/ 1853824767,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ 13586427987236599887u,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
+	}
+
+	SECTION(
+	  "StunPacket::Parse() a STUN success response without message integrity or fingerprint succeeds")
+	{
+		// Binding Success Response
+		// - buffer length: 44 bytes
+		// - transaction id: 0x0102030405060708090A0B0C
+		// - xor-mapped-address: ip 2001:db8:85a3:0:0:8a2e:370:7334, port 1234
+		//
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0x01, 0x01, 0x00, 0x18,
+			0x21, 0x12, 0xA4, 0x42,
+			0x01, 0x02, 0x03, 0x04,
+			0x05, 0x06, 0x07, 0x08,
+			0x09, 0x0A, 0x0B, 0x0C,
+			0x00, 0x20, 0x00, 0x14,
+			0x00, 0x02, 0x25, 0xC0,
+			0x01, 0x13, 0xA9, 0xFA,
+			0x84, 0xA1, 0x03, 0x04,
+			0x05, 0x06, 0x8D, 0x26,
+			0x0A, 0x7A, 0x78, 0x38
+		};
+		// clang-format on
+
+		std::unique_ptr<StunPacket> successResponse{ StunPacket::Parse(buffer, sizeof(buffer)) };
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffert*/ buffer,
+		                  /*bufferLength*/ sizeof(buffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		/* Serialize it. */
+
+		successResponse->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ SerializeBuffer,
+		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		/* Clone it. */
+
+		successResponse.reset(successResponse->Clone(CloneBuffer, sizeof(CloneBuffer)));
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ CloneBuffer,
+		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+	}
+
+	SECTION("StunPacket::Parse() a STUN error response without message integrity or fingerprint succeeds")
+	{
+		// Binding Error Response
+		// - buffer length: 108 bytes
+		// - transaction id: 0x0102030405060708090A0B0C
+		// - username: "œæ€å∫∂"
+		// - ice controlled: 12345678
+		// - software: "mediasoup test"
+		// - error code: 456
+		// - error reason phrase: "Something failed Ω∑© :)"
+		//
+		// clang-format off
+		uint8_t buffer[] =
+		{
+			0x01, 0x11, 0x00, 0x58,
+	  	0x21, 0x12, 0xA4, 0x42,
+	  	0x01, 0x02, 0x03, 0x04,
+	  	0x05, 0x06, 0x07, 0x08,
+	  	0x09, 0x0A, 0x0B, 0x0C,
+	  	0x00, 0x06, 0x00, 0x0F,
+	  	0xC5, 0x93, 0xC3, 0xA6,
+	  	0xE2, 0x82, 0xAC, 0xC3,
+	  	0xA5, 0xE2, 0x88, 0xAB,
+	  	0xE2, 0x88, 0x82, 0x00,
+	  	0x80, 0x29, 0x00, 0x08,
+	  	0x00, 0x00, 0x00, 0x00,
+	  	0x00, 0xBC, 0x61, 0x4E,
+	  	0x80, 0x22, 0x00, 0x0E,
+	  	0x6D, 0x65, 0x64, 0x69,
+	  	0x61, 0x73, 0x6F, 0x75,
+	  	0x70, 0x20, 0x74, 0x65,
+	  	0x73, 0x74, 0x00, 0x00,
+	  	0x00, 0x09, 0x00, 0x1F,
+	  	0x00, 0x00, 0x04, 0x38,
+	  	0x53, 0x6F, 0x6D, 0x65,
+	  	0x74, 0x68, 0x69, 0x6E,
+	  	0x67, 0x20, 0x66, 0x61,
+	  	0x69, 0x6C, 0x65, 0x64,
+	  	0x20, 0xCE, 0xA9, 0xE2,
+	  	0x88, 0x91, 0xC2, 0xA9,
+	  	0x20, 0x3A, 0x29, 0x00
+		};
+		// clang-format on
+
+		std::unique_ptr<StunPacket> errorResponse{ StunPacket::Parse(buffer, sizeof(buffer)) };
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffert*/ buffer,
+		                  /*bufferLength*/ sizeof(buffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ "œæ€å∫∂",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ true,
+		                  /*iceControlled*/ 12345678,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ true,
+		                  /*software*/ "mediasoup test",
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ 456,
+		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		/* Serialize it. */
+
+		errorResponse->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		std::memset(buffer, 0x00, sizeof(buffer));
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ SerializeBuffer,
+		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ "œæ€å∫∂",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ true,
+		                  /*iceControlled*/ 12345678,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ true,
+		                  /*software*/ "mediasoup test",
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ 456,
+		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		/* Clone it. */
+
+		errorResponse.reset(errorResponse->Clone(CloneBuffer, sizeof(CloneBuffer)));
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ CloneBuffer,
+		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*length*/ sizeof(buffer),
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ "œæ€å∫∂",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ true,
+		                  /*iceControlled*/ 12345678,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ true,
+		                  /*software*/ "mediasoup test",
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ 456,
+		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
 	}
 }
