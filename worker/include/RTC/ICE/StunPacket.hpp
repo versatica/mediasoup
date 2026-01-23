@@ -143,6 +143,12 @@ namespace RTC
 			};
 
 		public:
+			static const size_t FixedHeaderLength{ 20 };
+			static const size_t TransactionIdLength{ 12 };
+			static const size_t UsernameAttributeMaxLength{ 513 };
+			static const size_t SoftwareAttributeMaxLength{ 763 };
+			static const size_t MessageIntegrityAttributeLength{ 20 };
+
 			/**
 			 * Whether given buffer could be a valid STUN Packet.
 			 */
@@ -156,13 +162,17 @@ namespace RTC
 			 */
 			static StunPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
+			/**
+			 * Create a STUN Packet.
+			 *
+			 * @remarks
+			 * - `bufferLength` must be the exact length of the Packet.
+			 */
+			static StunPacket* Factory(
+			  uint8_t* buffer, size_t bufferLength, StunPacket::Class klass, StunPacket::Method method);
+
 		private:
-			static const size_t FixedHeaderLength{ 20 };
 			static const uint8_t MagicCookie[];
-			static const size_t TransactionIdLength{ 12 };
-			static const size_t UsernameAttributeMaxLength{ 513 };
-			static const size_t SoftwareAttributeMaxLength{ 763 };
-			static const size_t MessageIntegrityAttributeLength{ 20 };
 
 		private:
 			/**
@@ -183,14 +193,10 @@ namespace RTC
 				return this->klass;
 			}
 
-			void SetClass(StunPacket::Class klass);
-
 			StunPacket::Method GetMethod() const
 			{
 				return this->method;
 			}
-
-			void SetMethod(StunPacket::Method method);
 
 			const uint8_t* GetTransactionId() const
 			{

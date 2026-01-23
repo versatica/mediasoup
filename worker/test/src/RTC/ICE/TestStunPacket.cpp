@@ -14,8 +14,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 	{
 		// Binding Request
 		// - buffer length: 128 bytes
-		// - transaction id (first 4 bytes): 880244530
-		// - transaction id (last 8 bytes): 8607627212352477006
+		// - transaction id: 0x3477773277746F582F41574E
 		// - username: "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ"
 		// - priority: 1853824767
 		// - ice controlling: 13586427987236599887
@@ -396,6 +395,40 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
 		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+	}
+
+	SECTION("StunPacket::Factory() succeeds")
+	{
+		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
+			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
+
+		// TODO
+		request->Dump();
+
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength,
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 	}

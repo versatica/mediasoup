@@ -133,7 +133,7 @@ namespace RTC
 
 			MS_THROW_TYPE_ERROR(
 			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-			  bufferLength,
+			  serializable->GetBufferLength(),
 			  this->length);
 		}
 

@@ -3,6 +3,7 @@
 
 #include "Logger.hpp"
 #include "Utils.hpp"
+#include <openssl/rand.h>
 #include <openssl/sha.h>
 
 namespace Utils
@@ -230,5 +231,15 @@ namespace Utils
 		  resultLen == SHA_DIGEST_LENGTH, "OpenSSL HMAC_Final() resultLen is %zu instead of 20", resultLen);
 
 		return Crypto::hmacSha1Buffer;
+	}
+
+	void Crypto::WriteRandomBytes(uint8_t* buffer, size_t len)
+	{
+		MS_TRACE();
+
+		if (RAND_bytes(buffer, len) != 1)
+		{
+			MS_ABORT("OpenSSL RAND_bytes() failed");
+		}
 	}
 } // namespace Utils

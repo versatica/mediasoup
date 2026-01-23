@@ -1,11 +1,14 @@
+#include "Utils.hpp"
+#include <cstdint>
 #define MS_CLASS "RTC::ICE::StunPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
-#include "RTC/ICE/StunPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include <cstdio>  // std::snprintf()
-#include <cstring> // std::memcmp(), std::memcpy()
+#include <cstring> // std::memcmp(), std::memcpy(), std::memset()
+#include <string>
 
 namespace RTC
 {
@@ -50,24 +53,66 @@ namespace RTC
 			packet->SetLength(bufferLength);
 
 			// Get STUN Message Type field.
-			const uint16_t msgType = Utils::Byte::Get2Bytes(buffer, 0);
+			const uint16_t typeField = Utils::Byte::Get2Bytes(buffer, 0);
 
 			// Get STUN class.
-			const auto msgClass =
+			const auto klass =
 			  static_cast<StunPacket::Class>(((buffer[0] & 0x01) << 1) | ((buffer[1] & 0x10) >> 4));
 
 			// Get STUN method.
-			const auto msgMethod = static_cast<StunPacket::Method>(
-			  (msgType & 0x000f) | ((msgType & 0x00e0) >> 1) | ((msgType & 0x3E00) >> 2));
+			const auto method = static_cast<StunPacket::Method>(
+			  (typeField & 0x000f) | ((typeField & 0x00e0) >> 1) | ((typeField & 0x3E00) >> 2));
 
-			packet->SetClass(msgClass);
-			packet->SetMethod(msgMethod);
+			packet->klass  = klass;
+			packet->method = method;
 
 			if (!packet->Validate(/*storeAttributes*/ true))
 			{
 				delete packet;
 				return nullptr;
 			}
+
+			return packet;
+		}
+
+		StunPacket* StunPacket::Factory(
+		  uint8_t* buffer, size_t bufferLength, StunPacket::Class klass, StunPacket::Method method)
+		{
+			MS_TRACE();
+
+			if (bufferLength < StunPacket::FixedHeaderLength)
+			{
+				MS_THROW_TYPE_ERROR("no space for fixed header");
+			}
+
+			auto* packet = new StunPacket(buffer, bufferLength);
+
+			std::memset(buffer, 0x00, packet->GetLength());
+
+			packet->klass  = klass;
+			packet->method = method;
+
+			// Merge class and method fields into type.
+			auto typeField = (static_cast<uint16_t>(method) & 0x0f80) << 2;
+
+			typeField |= (static_cast<uint16_t>(method) & 0x0070) << 1;
+			typeField |= (static_cast<uint16_t>(method) & 0x000f);
+			typeField |= (static_cast<uint16_t>(klass) & 0x02) << 7;
+			typeField |= (static_cast<uint16_t>(klass) & 0x01) << 4;
+
+			// Set type field.
+			Utils::Byte::Set2Bytes(buffer, 0, typeField);
+
+			// NOTE: No need to write message length since it's already 0.
+
+			// Set magic cookie.
+			std::memcpy(buffer + 4, StunPacket::MagicCookie, 4);
+
+			// Write a random TransactionId.
+			Utils::Crypto::WriteRandomBytes(buffer + 8, StunPacket::TransactionIdLength);
+
+			// No need to invoke SetLength() since constructor invoked it with
+			// minimum Packet length.
 
 			return packet;
 		}
@@ -135,43 +180,50 @@ namespace RTC
 				  static_cast<uint16_t>(this->method));
 			}
 
-			auto transactionId1 = Utils::Byte::Get4Bytes(GetTransactionId(), 0);
-			auto transactionId2 = Utils::Byte::Get8Bytes(GetTransactionId(), 4);
+			char transactionId[12 * 2 + 1]; // 12 bytes × 2 hex chars + null terminator.
 
-			MS_DUMP_CLEAN(indentation, "  transaction id (first 4 bytes): %" PRIu32, transactionId1);
-			MS_DUMP_CLEAN(indentation, "  transaction id (last 8 bytes): %" PRIu64, transactionId2);
+			for (uint8_t i{ 0 }; i < 12; ++i)
+			{
+				std::snprintf(transactionId + (i * 2), 3, "%02X", GetTransactionId()[i]);
+			}
+
+			MS_DUMP_CLEAN(indentation, "  transaction id: 0x%s", transactionId);
+
+			MS_DUMP_CLEAN(indentation, "  attributes length: %zu", GetAttributesLength());
+
+			MS_DUMP_CLEAN(indentation, "  <Attributes>");
 
 			if (HasAttribute(StunPacket::AttributeType::USERNAME))
 			{
 				const auto username = GetUsername();
 
 				MS_DUMP_CLEAN(
-				  indentation, "  username: %.*s", static_cast<int>(username.size()), username.data());
+				  indentation + 1, "  username: %.*s", static_cast<int>(username.size()), username.data());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::PRIORITY))
 			{
-				MS_DUMP_CLEAN(indentation, "  priority: %" PRIu32, GetPriority());
+				MS_DUMP_CLEAN(indentation + 1, "  priority: %" PRIu32, GetPriority());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::ICE_CONTROLLING))
 			{
-				MS_DUMP_CLEAN(indentation, "  ice controlling: %" PRIu64, GetIceControlling());
+				MS_DUMP_CLEAN(indentation + 1, "  ice controlling: %" PRIu64, GetIceControlling());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::ICE_CONTROLLED))
 			{
-				MS_DUMP_CLEAN(indentation, "  ice controlled: %" PRIu64, GetIceControlled());
+				MS_DUMP_CLEAN(indentation + 1, "  ice controlled: %" PRIu64, GetIceControlled());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::USE_CANDIDATE))
 			{
-				MS_DUMP_CLEAN(indentation, "  use candidate: yes");
+				MS_DUMP_CLEAN(indentation + 1, "  use candidate: yes");
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::NOMINATION))
 			{
-				MS_DUMP_CLEAN(indentation, "  nomination: %" PRIu32, GetNomination());
+				MS_DUMP_CLEAN(indentation + 1, "  nomination: %" PRIu32, GetNomination());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::SOFTWARE))
@@ -179,7 +231,7 @@ namespace RTC
 				const auto software = GetSoftware();
 
 				MS_DUMP_CLEAN(
-				  indentation, "  software: %.*s", static_cast<int>(software.size()), software.data());
+				  indentation + 1, "  software: %.*s", static_cast<int>(software.size()), software.data());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS))
@@ -189,7 +241,7 @@ namespace RTC
 
 			if (HasAttribute(StunPacket::AttributeType::ERROR_CODE))
 			{
-				MS_DUMP_CLEAN(indentation, "  error code: %" PRIu16, GetErrorCode());
+				MS_DUMP_CLEAN(indentation + 1, "  error code: %" PRIu16, GetErrorCode());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY))
@@ -201,13 +253,15 @@ namespace RTC
 					std::snprintf(messageIntegrity + (i * 2), 3, "%.2x", GetMessageIntegrity()[i]);
 				}
 
-				MS_DUMP_CLEAN(indentation, "  message integrity: %s", messageIntegrity);
+				MS_DUMP_CLEAN(indentation + 1, "  message integrity: %s", messageIntegrity);
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::FINGERPRINT))
 			{
-				MS_DUMP_CLEAN(indentation, "  fingerprint: %" PRIu32, GetFingerprint());
+				MS_DUMP_CLEAN(indentation + 1, "  fingerprint: %" PRIu32, GetFingerprint());
 			}
+
+			MS_DUMP_CLEAN(indentation, "  </Attributes>");
 
 			MS_DUMP_CLEAN(indentation, "<RTC::ICE::StunPacket>");
 		}
@@ -234,18 +288,18 @@ namespace RTC
 
 			const auto* fixedHeader = GetFixedHeaderPointer();
 
-			// Get Message Length field.
+			// Get message length field.
 			const uint16_t msgLength = Utils::Byte::Get2Bytes(fixedHeader, 2);
 
-			// Message Length field must be total length minus header's 20 bytes, and
+			// Message length field must be total length minus header's 20 bytes, and
 			// must be multiple of 4 Bytes.
-			// NOTE: Message Length is effectively the total length of the Attributes
+			// NOTE: Message length is effectively the total length of the Attributes
 			// (with all paddings).
 			if (static_cast<size_t>(msgLength) != GetAttributesLength() || !Utils::Byte::IsPaddedTo4Bytes(msgLength))
 			{
 				MS_WARN_TAG(
 				  ice,
-				  "invalid Packet, Message Length field (%" PRIu16
+				  "invalid Packet, message length field (%" PRIu16
 				  ") does not match given buffer length or it's not multiple of 4 bytes",
 				  msgLength);
 
@@ -559,25 +613,10 @@ namespace RTC
 			return true;
 		}
 
-		void StunPacket::SetClass(StunPacket::Class klass)
-		{
-			MS_TRACE();
-
-			this->klass = klass;
-		}
-
-		void StunPacket::SetMethod(StunPacket::Method method)
-		{
-			MS_TRACE();
-
-			this->method = method;
-		}
-
 		void StunPacket::SetTransactionId(const uint8_t* transactionId)
 		{
 			MS_TRACE();
 
-			// Set TransactionId field.
 			std::memcpy(GetTransactionIdPointer(), transactionId, StunPacket::TransactionIdLength);
 		}
 
