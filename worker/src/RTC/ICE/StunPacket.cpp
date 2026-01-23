@@ -184,13 +184,7 @@ namespace RTC
 
 			if (HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS))
 			{
-				int family;
-				uint16_t port;
-				std::string ip;
-
-				Utils::IP::GetAddressInfo(this->xorMappedAddress, family, ip, port);
-
-				MS_DUMP_CLEAN(indentation, "  xor mapped address: %s : %" PRIu16, ip.c_str(), port);
+				// TODO
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::ERROR_CODE))
@@ -227,11 +221,9 @@ namespace RTC
 			Serializable::CloneInto(clonedPacket);
 
 			// Clone private members.
-			clonedPacket->klass            = this->klass;
-			clonedPacket->method           = this->method;
-			clonedPacket->attributes       = this->attributes;
-			clonedPacket->xorMappedAddress = this->xorMappedAddress;
-			clonedPacket->password         = this->password;
+			clonedPacket->klass      = this->klass;
+			clonedPacket->method     = this->method;
+			clonedPacket->attributes = this->attributes;
 
 			return clonedPacket;
 		}
@@ -645,38 +637,11 @@ namespace RTC
 			// TODO
 		}
 
-		void StunPacket::SetMessageIntegrity(const uint8_t* messageIntegrity)
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
-		void StunPacket::EnableFingerprint()
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
 		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
 		{
 			MS_TRACE();
 
-			this->xorMappedAddress = xorMappedAddress;
-		}
-
-		void StunPacket::SetPassword(const std::string& password)
-		{
-			MS_TRACE();
-
-			// Just for request, indication and success response messages.
-			if (this->klass == Class::ERROR_RESPONSE)
-			{
-				MS_THROW_ERROR("cannot set password in an STUN error response");
-			}
-
-			this->password = password;
+			// TODO
 		}
 	} // namespace ICE
 } // namespace RTC

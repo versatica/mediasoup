@@ -4,9 +4,6 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Serializable.hpp"
-#include <cstdint>
-#include <memory>
-#include <string>
 #include <string_view>
 #include <unordered_map>
 
@@ -331,10 +328,6 @@ namespace RTC
 
 			void SetErrorCode(uint16_t errorCode);
 
-			void EnableFingerprint();
-
-			void SetPassword(const std::string& password);
-
 		private:
 			uint8_t* GetFixedHeaderPointer() const
 			{
@@ -408,15 +401,7 @@ namespace RTC
 
 				return GetAttributeValue(attribute);
 			}
-#ifdef MS_TEST
-		private:
-#endif
 
-			void SetMessageIntegrity(const uint8_t* messageIntegrity);
-
-#ifdef MS_TEST
-		public:
-#endif
 			uint32_t GetFingerprint() const
 			{
 				const auto* attribute = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
@@ -437,8 +422,6 @@ namespace RTC
 			StunPacket::Method method;
 			// Map of STUN Attributes indexed by Attribute type.
 			std::unordered_map<StunPacket::AttributeType, StunPacket::Attribute> attributes;
-			const struct sockaddr* xorMappedAddress{ nullptr };
-			std::string password;
 		};
 	} // namespace ICE
 } // namespace RTC
