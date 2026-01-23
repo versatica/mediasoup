@@ -163,6 +163,8 @@ namespace RTC
 			static const size_t FixedHeaderLength{ 20 };
 			static const uint8_t MagicCookie[];
 			static const size_t TransactionIdLength{ 12 };
+			static const size_t UsernameAttributeMaxLength{ 513 };
+			static const size_t SoftwareAttributeMaxLength{ 763 };
 			static const size_t MessageIntegrityAttributeLength{ 20 };
 
 		private:
@@ -372,7 +374,7 @@ namespace RTC
 				return nullptr;
 			}
 
-			uint8_t* GetAttributeValue(const StunPacket::Attribute* attribute) const
+			const uint8_t* GetAttributeValue(const StunPacket::Attribute* attribute) const
 			{
 				return GetAttributesPointer() + attribute->offset + 4;
 			}

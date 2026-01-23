@@ -268,15 +268,15 @@ namespace RTC
 			}
 
 			// If it has FINGERPRINT Attribute then verify it.
-			const auto* attrFingerprint = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
+			const auto* fingerprintAttr = GetAttribute(StunPacket::AttributeType::FINGERPRINT);
 
-			if (attrFingerprint)
+			if (fingerprintAttr)
 			{
 				// Compute the CRC32 of the received packet up to (but excluding) the
 				// FINGERPRINT Attribute and XOR it with 0x5354554e.
 				const auto computedFingerprint =
 				  Utils::Crypto::GetCRC32(
-				    fixedHeader, StunPacket::FixedHeaderLength + attrFingerprint->offset) ^
+				    fixedHeader, StunPacket::FixedHeaderLength + fingerprintAttr->offset) ^
 				  0x5354554e;
 
 				// Compare with the FINGERPRINT value in the packet.
@@ -335,7 +335,7 @@ namespace RTC
 					return false;
 				}
 
-				// After a MESSAGE-INTEGRITY Attribute just FINGERPRINT is allowed.
+				// After a MESSAGE-INTEGRITY Attribute only FINGERPRINT is allowed.
 				if (
 				  storeAttributes && HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) &&
 				  attrType != StunPacket::AttributeType::FINGERPRINT)
@@ -351,10 +351,12 @@ namespace RTC
 				{
 					case StunPacket::AttributeType::USERNAME:
 					{
-						// Ensure Attribute length is up to 513 bytes.
-						if (attrLen > 513)
+						if (attrLen > StunPacket::UsernameAttributeMaxLength)
 						{
-							MS_WARN_TAG(ice, "invalid Packet, Attribute USERNAME must be at most 513 bytes");
+							MS_WARN_TAG(
+							  ice,
+							  "invalid Packet, Attribute USERNAME must be at most %zu bytes",
+							  StunPacket::UsernameAttributeMaxLength);
 
 							return false;
 						}
@@ -369,7 +371,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::PRIORITY:
 					{
-						// Ensure Attribute length is 4 bytes.
 						if (attrLen != 4)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute PRIORITY must be 4 bytes length");
@@ -387,7 +388,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::ICE_CONTROLLING:
 					{
-						// Ensure Attribute length is 8 bytes.
 						if (attrLen != 8)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute ICE-CONTROLLING must be 8 bytes length");
@@ -405,7 +405,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::ICE_CONTROLLED:
 					{
-						// Ensure Attribute length is 8 bytes.
 						if (attrLen != 8)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute ICE-CONTROLLED must be 8 bytes length");
@@ -423,7 +422,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::USE_CANDIDATE:
 					{
-						// Ensure Attribute length is 0 bytes.
 						if (attrLen != 0)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute USE-CANDIDATE must be 0 bytes length");
@@ -441,7 +439,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::NOMINATION:
 					{
-						// Ensure Attribute length is 4 bytes.
 						if (attrLen != 4)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute NOMINATION must be 4 bytes length");
@@ -459,10 +456,12 @@ namespace RTC
 
 					case StunPacket::AttributeType::SOFTWARE:
 					{
-						// Ensure Attribute length is less than 763 bytes.
-						if (attrLen > 763)
+						if (attrLen > StunPacket::SoftwareAttributeMaxLength)
 						{
-							MS_WARN_TAG(ice, "invalid Packet, Attribute SOFTWARE must be at most 763 bytes length");
+							MS_WARN_TAG(
+							  ice,
+							  "invalid Packet, Attribute SOFTWARE must be at most %zu bytes length",
+							  StunPacket::SoftwareAttributeMaxLength);
 
 							return false;
 						}
@@ -477,7 +476,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::ERROR_CODE:
 					{
-						// Ensure Attribute length >= 4bytes.
 						if (attrLen < 4)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute ERROR-CODE must be >= 4 bytes length");
@@ -495,7 +493,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::MESSAGE_INTEGRITY:
 					{
-						// Ensure Attribute length is 20 bytes.
 						if (attrLen != StunPacket::MessageIntegrityAttributeLength)
 						{
 							MS_WARN_TAG(
@@ -516,7 +513,6 @@ namespace RTC
 
 					case StunPacket::AttributeType::FINGERPRINT:
 					{
-						// Ensure Attribute length is 4 bytes.
 						if (attrLen != 4)
 						{
 							MS_WARN_TAG(ice, "invalid Packet, Attribute FINGERPRINT must be 4 bytes length");
@@ -528,10 +524,6 @@ namespace RTC
 						{
 							return false;
 						}
-
-						// fingerprintAttrOffset = ptr - fixedHeader;
-						// fingerprint           = Utils::Byte::Get4Bytes(attrValue, 0);
-						// EnableFingerprint();
 
 						break;
 					}
@@ -546,7 +538,7 @@ namespace RTC
 				ptr += Utils::Byte::PadTo4Bytes(static_cast<size_t>(4 + attrLen));
 			}
 
-			// Ensure we read the entire Packet length.
+			// Ensure we read the Attributes length entirely.
 			if (ptr - attributesStart != GetAttributesLength())
 			{
 				MS_WARN_TAG(
