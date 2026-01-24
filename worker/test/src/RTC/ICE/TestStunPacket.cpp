@@ -221,8 +221,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		successResponse->Dump();
-
 		/* Serialize it. */
 
 		successResponse->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -425,9 +423,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
 			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
 
-		// TODO
-		request->Dump();
-
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
 		                  /*buffer*/ FactoryBuffer,
 		                  /*bufferLength*/ sizeof(FactoryBuffer),
@@ -498,9 +493,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE_THROWS_AS(request->SetNomination(nomination), MediaSoupError);
 		REQUIRE_THROWS_AS(request->SetSoftware(software), MediaSoupError);
 		REQUIRE_THROWS_AS(request->SetErrorCode(errorCode, errorReasonPhrase), MediaSoupError);
-
-		// TODO
-		request->Dump();
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -607,9 +599,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		    StunPacket::TransactionIdLength,
 		    transactionId,
 		    StunPacket::TransactionIdLength));
-
-		// TODO
-		request->Dump();
 	}
 
 	SECTION("StunPacket::Factory() to create a success response succeeds")
@@ -619,9 +608,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 			sizeof(FactoryBuffer),
 			StunPacket::Class::SUCCESS_RESPONSE,
 			StunPacket::Method::BINDING) };
-
-		// TODO
-		successResponse->Dump();
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -657,9 +643,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		size_t attributesLen = (4 + 8);
 
 		successResponse->SetXorMappedAddress(std::addressof(xorMappedAddress));
-
-		// TODO
-		successResponse->Dump();
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -718,9 +701,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		attributesLen = (4 + 20);
 
 		successResponse->SetXorMappedAddress(std::addressof(xorMappedAddress6));
-
-		// TODO
-		successResponse->Dump();
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
