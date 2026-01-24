@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Serializable.hpp"
+#include <string>
 #include <string_view>
 #include <unordered_map>
 
@@ -177,7 +178,7 @@ namespace RTC
 		private:
 			/**
 			 * Constructor is private because we only want to create Packet instances
-			 * via Parse().
+			 * via Parse() and Factory().
 			 */
 			StunPacket(uint8_t* buffer, size_t bufferLength);
 
@@ -188,29 +189,29 @@ namespace RTC
 
 			StunPacket* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			StunPacket::Class GetClass() const
+			virtual StunPacket::Class GetClass() const final
 			{
 				return this->klass;
 			}
 
-			StunPacket::Method GetMethod() const
+			virtual StunPacket::Method GetMethod() const final
 			{
 				return this->method;
 			}
 
-			const uint8_t* GetTransactionId() const
+			virtual const uint8_t* GetTransactionId() const final
 			{
 				return GetTransactionIdPointer();
 			}
 
-			void SetTransactionId(const uint8_t* transactionId);
+			virtual void SetTransactionId(const uint8_t* transactionId) final;
 
-			bool HasAttribute(StunPacket::AttributeType type) const
+			virtual bool HasAttribute(StunPacket::AttributeType type) const final
 			{
 				return this->attributes.find(type) != this->attributes.end();
 			}
 
-			const std::string_view GetUsername() const
+			virtual const std::string_view GetUsername() const final
 			{
 				const auto* attribute = GetAttribute(StunPacket::AttributeType::USERNAME);
 
@@ -223,7 +224,7 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			void SetUsername(const char* username, size_t len);
+			virtual void SetUsername(std::string& username) final;
 
 			uint32_t GetPriority() const
 			{
@@ -271,7 +272,7 @@ namespace RTC
 
 			uint32_t GetNomination() const
 			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::ICE_CONTROLLED);
+				const auto* attribute = GetAttribute(StunPacket::AttributeType::NOMINATION);
 
 				if (!attribute)
 				{
@@ -330,9 +331,12 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute) + 4), attribute->len - 4);
 			}
 
+			void SetErrorCode(uint16_t errorCode);
+
 			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
 
-			void SetErrorCode(uint16_t errorCode);
+			StunPacket::AuthenticationResult CheckAuthentication(
+			  const std::string& usernameFragment1, const std::string& password) const;
 
 		private:
 			uint8_t* GetFixedHeaderPointer() const
@@ -374,7 +378,23 @@ namespace RTC
 			 */
 			bool ParseAttributes(bool storeAttributes);
 
-			bool StoreAttribute(StunPacket::AttributeType type, uint16_t len, size_t offset);
+			/**
+			 * Stores the parsed Attribute data into the map of Attributes.
+			 *
+			 * @return `true` if the Attribute was stored and `false` if it couldn't
+			 *   be stored because there was already an Attribute with same type in
+			 *   the map.
+			 */
+			bool StoreParsedAttribute(StunPacket::AttributeType type, uint16_t len, size_t offset);
+
+			/**
+			 * Stores a new Attribute data into the map of Attributes.
+			 *
+			 * @throw MediaSoupError - If there is not enough space in the buffer for
+			 *   the new Attribute or if the Attribute couldn't be stored because
+			 *   there was already an Attribute with same type in the map.
+			 */
+			void StoreNewAttribute(StunPacket::AttributeType type, const void* data, uint16_t len);
 
 			const StunPacket::Attribute* GetAttribute(StunPacket::AttributeType type) const
 			{

@@ -3,6 +3,7 @@
 #include "RTC/ICE/iceCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+#include <string>
 
 using namespace RTC::ICE;
 
@@ -14,49 +15,49 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 	{
 		// Binding Request
 		// - buffer length: 128 bytes
-		// - transaction id: 0x3477773277746F582F41574E
-		// - username: "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ"
-		// - priority: 1853824767
-		// - ice controlling: 13586427987236599887
+		// - transaction id: 0x4A31775941764E5470644B33
+		// - username: "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg"
+		// - priority: 1853693695
+		// - ice controlling: 15897499370457501716
 		// - use candidate: yes
-		// - message integrity: e6fe326fb74ec7c6005f182549e99ef73d4f8983
-		// - fingerprint: yes
+		// - message integrity: f39a23b3a6054e75b39df2177100182da76834f8
+		// - fingerprint: 1782005644
 		//
 		// clang-format off
 		uint8_t buffer[] =
 		{
 			0x00, 0x01, 0x00, 0x6C,
 			0x21, 0x12, 0xA4, 0x42,
-			0x34, 0x77, 0x77, 0x32,
-			0x77, 0x74, 0x6F, 0x58,
-			0x2F, 0x41, 0x57, 0x4E,
+			0x4A, 0x31, 0x77, 0x59,
+			0x41, 0x76, 0x4E, 0x54,
+			0x70, 0x64, 0x4B, 0x33,
 			0x00, 0x06, 0x00, 0x25,
-			0x7A, 0x67, 0x70, 0x6D,
-			0x6C, 0x6C, 0x74, 0x77,
-			0x79, 0x6C, 0x67, 0x61,
-			0x76, 0x68, 0x76, 0x39,
-			0x38, 0x64, 0x32, 0x37,
-			0x75, 0x71, 0x6D, 0x70,
-			0x62, 0x6D, 0x78, 0x66,
-			0x63, 0x75, 0x6B, 0x36,
-			0x3A, 0x46, 0x35, 0x42,
-			0x5A, 0x00, 0x00, 0x00,
+			0x37, 0x38, 0x74, 0x61,
+			0x6C, 0x35, 0x70, 0x63,
+			0x36, 0x64, 0x6B, 0x79,
+			0x76, 0x31, 0x72, 0x70,
+			0x67, 0x35, 0x36, 0x76,
+			0x75, 0x61, 0x79, 0x35,
+			0x6A, 0x65, 0x31, 0x33,
+			0x63, 0x65, 0x77, 0x6D,
+			0x3A, 0x73, 0x33, 0x4A,
+			0x67, 0x00, 0x00, 0x00,
 			0xC0, 0x57, 0x00, 0x04,
-			0x00, 0x01, 0x00, 0x0A,
+			0x00, 0x03, 0x00, 0x0A,
 			0x80, 0x2A, 0x00, 0x08,
-			0xBC, 0x8C, 0xB0, 0x45,
-			0x39, 0xA9, 0xB8, 0x4F,
+			0xDC, 0x9F, 0x43, 0x72,
+			0xE9, 0x1D, 0x90, 0x14,
 			0x00, 0x25, 0x00, 0x00,
 			0x00, 0x24, 0x00, 0x04,
-			0x6E, 0x7F, 0x1E, 0xFF,
+			0x6E, 0x7D, 0x1E, 0xFF,
 			0x00, 0x08, 0x00, 0x14,
-			0xE6, 0xFE, 0x32, 0x6F,
-			0xB7, 0x4E, 0xC7, 0xC6,
-			0x00, 0x5F, 0x18, 0x25,
-			0x49, 0xE9, 0x9E, 0xF7,
-			0x3D, 0x4F, 0x89, 0x83,
+			0xF3, 0x9A, 0x23, 0xB3,
+			0xA6, 0x05, 0x4E, 0x75,
+			0xB3, 0x9D, 0xF2, 0x17,
+			0x71, 0x00, 0x18, 0x2D,
+			0xA7, 0x68, 0x34, 0xF8,
 			0x80, 0x28, 0x00, 0x04,
-			0x93, 0x39, 0xAF, 0x64
+			0x6A, 0x37, 0x3F, 0x8C
 		};
 		// clang-format on
 
@@ -69,11 +70,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*klass*/ StunPacket::Class::REQUEST,
 		                  /*method*/ StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
-		                  /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
+		                  /*username*/ "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg",
 		                  /*hasPriority*/ true,
-		                  /*priority*/ 1853824767,
+		                  /*priority*/ 1853693695,
 		                  /*hasIceControlling*/ true,
-		                  /*iceControlling*/ 13586427987236599887u,
+		                  /*iceControlling*/ 15897499370457501716u,
 		                  /*hasIceControlled*/ false,
 		                  /*iceControlled*/ 0,
 		                  /*hasUseCandidate*/ true,
@@ -86,6 +87,13 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*errorReason*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
+
+		const std::string usernameFragment1{ "78tal5pc6dkyv1rpg56vuay5je13cewm" };
+		const std::string password{ "1ezk7fni4jeo5bt7ibcdk4wjl8712suw" };
+
+		REQUIRE(
+		  request->CheckAuthentication(usernameFragment1, password) ==
+		  StunPacket::AuthenticationResult::OK);
 
 		/* Serialize it. */
 
@@ -100,11 +108,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*klass*/ StunPacket::Class::REQUEST,
 		                  /*method*/ StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
-		                  /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
+		                  /*username*/ "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg",
 		                  /*hasPriority*/ true,
-		                  /*priority*/ 1853824767,
+		                  /*priority*/ 1853693695,
 		                  /*hasIceControlling*/ true,
-		                  /*iceControlling*/ 13586427987236599887u,
+		                  /*iceControlling*/ 15897499370457501716u,
 		                  /*hasIceControlled*/ false,
 		                  /*iceControlled*/ 0,
 		                  /*hasUseCandidate*/ true,
@@ -117,6 +125,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*errorReason*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
+
+		REQUIRE(
+		  request->CheckAuthentication(usernameFragment1, password) ==
+		  StunPacket::AuthenticationResult::OK);
 
 		/* Clone it. */
 
@@ -131,11 +143,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*klass*/ StunPacket::Class::REQUEST,
 		                  /*method*/ StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
-		                  /*username*/ "zgpmlltwylgavhv98d27uqmpbmxfcuk6:F5BZ",
+		                  /*username*/ "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg",
 		                  /*hasPriority*/ true,
-		                  /*priority*/ 1853824767,
+		                  /*priority*/ 1853693695,
 		                  /*hasIceControlling*/ true,
-		                  /*iceControlling*/ 13586427987236599887u,
+		                  /*iceControlling*/ 15897499370457501716u,
 		                  /*hasIceControlled*/ false,
 		                  /*iceControlled*/ 0,
 		                  /*hasUseCandidate*/ true,
@@ -148,6 +160,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*errorReason*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
+
+		REQUIRE(
+		  request->CheckAuthentication(usernameFragment1, password) ==
+		  StunPacket::AuthenticationResult::OK);
 	}
 
 	SECTION(
@@ -424,6 +440,52 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasUseCandidate*/ false,
 		                  /*hasNomination*/ false,
 		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReason*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		// Byte length: 27 (1 byte of padding needed).
+		std::string username = "œæ€å∫∂¢∞¬÷123";
+		// Byte length: 4.
+		uint32_t priority = 999888777u;
+		// Byte length: 8.
+		uint64_t iceControlling = 15697499370457501716u;
+		// Byte length of USE_CANDIDATE: 0.
+		// // Byte length: 4.
+		uint32_t nomination = 12345678u;
+		// Total length of the Attributes.
+		size_t attributesLen = (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + (4 + 4);
+
+		request->SetUsername(username);
+		request->SetPriority(priority);
+		request->SetIceControlling(iceControlling);
+		request->EnableUseCandidate();
+		request->SetNomination(nomination);
+
+		// TODO
+		request->Dump();
+
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ username,
+		                  /*hasPriority*/ true,
+		                  /*priority*/ priority,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ iceControlling,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ true,
+		                  /*nomination*/ nomination,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,

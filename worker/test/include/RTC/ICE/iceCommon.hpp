@@ -87,6 +87,11 @@ namespace RTC
 		REQUIRE(                                                                                        \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) == hasMessageIntegrity);   \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);        \
+		const std::string usernameFragment1{ "lalala-fooo-œæ€œæ€" };                                    \
+		const std::string password{ "∫∂ƒ3487345345Ω∑©™ƒ™œ" };                                           \
+		REQUIRE(                                                                                        \
+		  packet->CheckAuthentication(usernameFragment1, password) !=                                   \
+		  StunPacket::AuthenticationResult::OK);                                                        \
 		REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);  \
 		REQUIRE_THROWS_AS(                                                                              \
 		  const_cast<StunPacket*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);         \

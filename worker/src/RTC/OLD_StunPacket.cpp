@@ -470,6 +470,9 @@ namespace RTC
 			return;
 		}
 
+		// TODO: REMOVE
+		MS_DUMP("---- password: %s", password.c_str());
+
 		this->password = password;
 	}
 
@@ -569,6 +572,9 @@ namespace RTC
 		if (std::memcmp(this->messageIntegrity, computedMessageIntegrity, 20) == 0)
 		{
 			result = Authentication::OK;
+
+			// TODO: REMOVE
+			MS_DUMP("---- usernameFragment1: %s, password: %s", usernameFragment1.c_str(), password.c_str());
 		}
 		else
 		{

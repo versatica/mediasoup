@@ -8,12 +8,16 @@
 #include "RTC/ICE/StunPacket.hpp"
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy(), std::memset()
-#include <string>
 
 namespace RTC
 {
 	namespace ICE
 	{
+		/* Static. */
+
+		static constexpr size_t AttributeToNetworkOrderBufferLength{ 65536 };
+		thread_local static uint8_t AttributeToNetworkOrderBuffer[AttributeToNetworkOrderBufferLength];
+
 		/* Class variables. */
 
 		const uint8_t StunPacket::MagicCookie[] = { 0x21, 0x12, 0xA4, 0x42 };
@@ -282,6 +286,218 @@ namespace RTC
 			return clonedPacket;
 		}
 
+		void StunPacket::SetTransactionId(const uint8_t* transactionId)
+		{
+			MS_TRACE();
+
+			std::memcpy(GetTransactionIdPointer(), transactionId, StunPacket::TransactionIdLength);
+		}
+
+		void StunPacket::SetUsername(std::string& username)
+		{
+			MS_TRACE();
+
+			if (username.length() > StunPacket::UsernameAttributeMaxLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "Attribute USERNAME must be at most %zu bytes", StunPacket::UsernameAttributeMaxLength);
+			}
+
+			StoreNewAttribute(StunPacket::AttributeType::USERNAME, username.c_str(), username.length());
+		}
+
+		void StunPacket::SetPriority(uint32_t priority)
+		{
+			MS_TRACE();
+
+			Utils::Byte::Set4Bytes(AttributeToNetworkOrderBuffer, 0, priority);
+
+			StoreNewAttribute(
+			  StunPacket::AttributeType::PRIORITY, AttributeToNetworkOrderBuffer, sizeof(priority));
+		}
+
+		void StunPacket::SetIceControlling(uint64_t iceControlling)
+		{
+			MS_TRACE();
+
+			Utils::Byte::Set8Bytes(AttributeToNetworkOrderBuffer, 0, iceControlling);
+
+			StoreNewAttribute(
+			  StunPacket::AttributeType::ICE_CONTROLLING,
+			  AttributeToNetworkOrderBuffer,
+			  sizeof(iceControlling));
+		}
+
+		void StunPacket::SetIceControlled(uint64_t iceControlled)
+		{
+			MS_TRACE();
+
+			Utils::Byte::Set8Bytes(AttributeToNetworkOrderBuffer, 0, iceControlled);
+
+			StoreNewAttribute(
+			  StunPacket::AttributeType::ICE_CONTROLLED,
+			  AttributeToNetworkOrderBuffer,
+			  sizeof(iceControlled));
+		}
+
+		void StunPacket::EnableUseCandidate()
+		{
+			MS_TRACE();
+
+			StoreNewAttribute(StunPacket::AttributeType::USE_CANDIDATE, nullptr, 0);
+		}
+
+		void StunPacket::SetNomination(uint32_t nomination)
+		{
+			MS_TRACE();
+
+			Utils::Byte::Set4Bytes(AttributeToNetworkOrderBuffer, 0, nomination);
+
+			StoreNewAttribute(
+			  StunPacket::AttributeType::NOMINATION, AttributeToNetworkOrderBuffer, sizeof(nomination));
+		}
+
+		void StunPacket::SetSoftware(const char* software, size_t len)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void StunPacket::SetErrorCode(uint16_t errorCode)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+		{
+			MS_TRACE();
+
+			// TODO
+		}
+
+		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(
+		  const std::string& usernameFragment1, const std::string& password) const
+		{
+			MS_TRACE();
+
+			const auto* messageIntegrity = GetMessageIntegrity();
+			const auto hasFingerprint    = HasAttribute(StunPacket::AttributeType::FINGERPRINT);
+
+			switch (this->klass)
+			{
+				case StunPacket::Class::REQUEST:
+				case StunPacket::Class::INDICATION:
+				{
+					// usernameFragment1 must not be empty.
+					if (usernameFragment1.empty())
+					{
+						MS_WARN_TAG(
+						  ice, "cannot authenticate request or indication, empty usernameFragment1 given");
+
+						return StunPacket::AuthenticationResult::BAD_MESSAGE;
+					}
+
+					// USERNAME Attribute must be present.
+					if (!HasAttribute(StunPacket::AttributeType::USERNAME))
+					{
+						MS_WARN_TAG(ice, "cannot authenticate request or indication, missing USERNAME Attribute");
+
+						return StunPacket::AuthenticationResult::BAD_MESSAGE;
+					}
+
+					// MESSAGE-INTEGRITY Attribute must be present.
+					if (!messageIntegrity)
+					{
+						MS_WARN_TAG(
+						  ice, "cannot authenticate request or indication, missing MESSAGE-INTEGRITY Attribute");
+
+						return StunPacket::AuthenticationResult::BAD_MESSAGE;
+					}
+
+					// Check that the USERNAME Attribute begins with the first username
+					// fragment plus ":".
+					const size_t usernameFragment1Len = usernameFragment1.length();
+					const auto username               = GetUsername();
+
+					if (
+					  username.length() <= usernameFragment1Len || username.at(usernameFragment1Len) != ':' ||
+					  username.compare(0, usernameFragment1Len, usernameFragment1) != 0)
+					{
+						return StunPacket::AuthenticationResult::UNAUTHORIZED;
+					}
+
+					break;
+				}
+
+				case StunPacket::Class::SUCCESS_RESPONSE:
+				case StunPacket::Class::ERROR_RESPONSE:
+				{
+					// MESSAGE-INTEGRITY Attribute must be present.
+					if (!messageIntegrity)
+					{
+						MS_WARN_TAG(
+						  ice, "cannot authenticate request or indication, missing MESSAGE-INTEGRITY Attribute");
+
+						return StunPacket::AuthenticationResult::BAD_MESSAGE;
+					}
+
+					break;
+				}
+
+				default:
+				{
+					MS_WARN_TAG(
+					  ice,
+					  "cannot authenticate packet, unknown STUN class %" PRIu16,
+					  static_cast<uint16_t>(this->klass));
+
+					return StunPacket::AuthenticationResult::BAD_MESSAGE;
+				}
+			}
+
+			auto* fixedHeader = GetFixedHeaderPointer();
+
+			// If there is FINGERPRINT it must be discarded for MESSAGE-INTEGRITY
+			// calculation, so the header length field must be modified (and later
+			// restored).
+			if (hasFingerprint)
+			{
+				// Set the header length field: full size - header length - FINGERPRINT
+				// Attribute total length (8 bytes).
+				Utils::Byte::Set2Bytes(
+				  fixedHeader, 2, static_cast<uint16_t>(GetLength() - StunPacket::FixedHeaderLength - 8));
+			}
+
+			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
+			// rules.
+			const uint8_t* computedMessageIntegrity =
+			  Utils::Crypto::GetHmacSha1(password, fixedHeader, (messageIntegrity - 4) - fixedHeader);
+
+			StunPacket::AuthenticationResult result;
+
+			// Compare the computed HMAC-SHA1 with the MESSAGE-INTEGRITY in the packet.
+			if (std::memcmp(messageIntegrity, computedMessageIntegrity, StunPacket::FixedHeaderLength) == 0)
+			{
+				result = StunPacket::AuthenticationResult::OK;
+			}
+			else
+			{
+				result = StunPacket::AuthenticationResult::UNAUTHORIZED;
+			}
+
+			// Restore the header length field.
+			if (hasFingerprint)
+			{
+				Utils::Byte::Set2Bytes(
+				  fixedHeader, 2, static_cast<uint16_t>(GetLength() - StunPacket::FixedHeaderLength));
+			}
+
+			return result;
+		}
+
 		bool StunPacket::Validate(bool storeAttributes)
 		{
 			MS_TRACE();
@@ -407,7 +623,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -424,7 +640,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -441,7 +657,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -458,7 +674,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -475,7 +691,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -492,7 +708,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -512,7 +728,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -529,7 +745,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -549,7 +765,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -566,7 +782,7 @@ namespace RTC
 							return false;
 						}
 
-						if (storeAttributes && !StoreAttribute(attrType, attrLen, attrOffset))
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
 						{
 							return false;
 						}
@@ -599,13 +815,17 @@ namespace RTC
 			return true;
 		}
 
-		bool StunPacket::StoreAttribute(AttributeType type, uint16_t len, size_t offset)
+		bool StunPacket::StoreParsedAttribute(AttributeType type, uint16_t len, size_t offset)
 		{
 			MS_TRACE();
 
 			if (!this->attributes.try_emplace(type, type, len, offset).second)
 			{
-				MS_WARN_TAG(ice, "invalid Packet, duplicated %" PRIu16 " Attribute", type);
+				MS_WARN_TAG(
+				  ice,
+				  "cannot store parsed Attribute with type %" PRIu16
+				  ", there is an Attribute with same type already in the map",
+				  type);
 
 				return false;
 			}
@@ -613,74 +833,53 @@ namespace RTC
 			return true;
 		}
 
-		void StunPacket::SetTransactionId(const uint8_t* transactionId)
+		void StunPacket::StoreNewAttribute(AttributeType type, const void* data, uint16_t len)
 		{
 			MS_TRACE();
 
-			std::memcpy(GetTransactionIdPointer(), transactionId, StunPacket::TransactionIdLength);
-		}
+			MS_ASSERT(
+			  (data && len) || (!data && !len),
+			  "data and len must either both have a value or both be empty/zero");
 
-		void StunPacket::SetUsername(const char* username, size_t len)
-		{
-			MS_TRACE();
+			if (this->attributes.find(type) != this->attributes.end())
+			{
+				MS_THROW_ERROR(
+				  "cannot store new Attribute with type %" PRIu16
+				  ", there is an Attribute with same type already in the map",
+				  type);
+			}
 
-			// TODO
-		}
+			// Add the Attribute at the end of the STUN Packet.
 
-		void StunPacket::SetPriority(uint32_t priority)
-		{
-			MS_TRACE();
+			const auto attrTotalPaddedLength = Utils::Byte::PadTo4Bytes(static_cast<size_t>(4 + len));
 
-			// TODO
-		}
+			// Get the pointer in which the new Attribute must be written.
+			// NOTE: Do this before updating lengths.
+			auto* attrPtr = GetAttributesPointer() + GetAttributesLength();
 
-		void StunPacket::SetIceControlling(uint64_t iceControlling)
-		{
-			MS_TRACE();
+			// First update Packet length (it may throw).
+			SetLength(GetLength() + attrTotalPaddedLength);
 
-			// TODO
-		}
+			// Also update the Packet message length field.
+			Utils::Byte::Set2Bytes(GetFixedHeaderPointer(), 2, GetAttributesLength());
 
-		void StunPacket::SetIceControlled(uint64_t iceControlled)
-		{
-			MS_TRACE();
+			Utils::Byte::Set2Bytes(attrPtr, 0, static_cast<uint16_t>(type));
+			Utils::Byte::Set2Bytes(attrPtr, 2, len);
 
-			// TODO
-		}
+			if (data)
+			{
+				std::memcpy(attrPtr + 4, data, len);
+				// Fill padding bytes with zeroes.
+				std::memset(attrPtr + 4 + len, 0x00, attrTotalPaddedLength - len);
+			}
 
-		void StunPacket::EnableUseCandidate()
-		{
-			MS_TRACE();
+			const auto [it, inserted] = this->attributes.try_emplace(type, type, len, 0);
+			auto& attribute           = it->second;
 
-			// TODO
-		}
+			// Update stored Attribute's offset.
+			attribute.offset = attrPtr - GetAttributesPointer();
 
-		void StunPacket::SetNomination(uint32_t nomination)
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
-		void StunPacket::SetSoftware(const char* software, size_t len)
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
-		void StunPacket::SetErrorCode(uint16_t errorCode)
-		{
-			MS_TRACE();
-
-			// TODO
-		}
-
-		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
-		{
-			MS_TRACE();
-
-			// TODO
+			MS_ASSERT(inserted, "Attribute not inserted in the map (this shouldn't happen)");
 		}
 	} // namespace ICE
 } // namespace RTC
