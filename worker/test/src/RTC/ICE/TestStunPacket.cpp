@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "testHelpers.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/ICE/iceCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -84,7 +85,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
 
@@ -122,7 +123,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
 
@@ -157,7 +158,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
 
@@ -214,9 +215,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
+
+		successResponse->Dump();
 
 		/* Serialize it. */
 
@@ -245,7 +248,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
@@ -276,7 +279,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 	}
@@ -348,7 +351,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "mediasoup test",
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
-		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*errorReasonPhrase*/ "Something failed Ω∑© :)",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
@@ -379,7 +382,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "mediasoup test",
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
-		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*errorReasonPhrase*/ "Something failed Ω∑© :)",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
@@ -410,7 +413,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "mediasoup test",
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
-		                  /*errorReason*/ "Something failed Ω∑© :)",
+		                  /*errorReasonPhrase*/ "Something failed Ω∑© :)",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 	}
@@ -444,9 +447,19 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*software*/ "",
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
+
+		// clang-format off
+		uint8_t transactionId[StunPacket::TransactionIdLength] =
+		{
+			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
+		request->SetTransactionId(transactionId);
 
 		// Byte length: 27 (1 byte of padding needed).
 		std::string username = "œæ€å∫∂¢∞¬÷123";
@@ -457,14 +470,23 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Byte length of USE_CANDIDATE: 0.
 		// // Byte length: 4.
 		uint32_t nomination = 12345678u;
+		// Byte length: 18 (2 byte of padding needed).
+		std::string software = "mediasoup x.y.z :)";
+		// Byte length: 4 + 23 (1 byte of padding needed).
+		uint16_t errorCode            = 666;
+		std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
+
 		// Total length of the Attributes.
-		size_t attributesLen = (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + (4 + 4);
+		size_t attributesLen =
+		  (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + (4 + 4) + (4 + 18 + 2) + (4 + 4 + 23 + 1);
 
 		request->SetUsername(username);
 		request->SetPriority(priority);
 		request->SetIceControlling(iceControlling);
 		request->EnableUseCandidate();
 		request->SetNomination(nomination);
+		request->SetSoftware(software);
+		request->SetErrorCode(errorCode, errorReasonPhrase);
 
 		// TODO
 		request->Dump();
@@ -486,12 +508,96 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasUseCandidate*/ true,
 		                  /*hasNomination*/ true,
 		                  /*nomination*/ nomination,
-		                  /*hasSoftware*/ false,
-		                  /*software*/ "",
-		                  /*hasErrorCode*/ false,
-		                  /*errorCode*/ 0,
-		                  /*errorReason*/ "",
+		                  /*hasSoftware*/ true,
+		                  /*software*/ software,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    request->GetTransactionId(),
+		    StunPacket::TransactionIdLength,
+		    transactionId,
+		    StunPacket::TransactionIdLength));
+
+		/* Serialize it. */
+
+		request->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ SerializeBuffer,
+		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ username,
+		                  /*hasPriority*/ true,
+		                  /*priority*/ priority,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ iceControlling,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ true,
+		                  /*nomination*/ nomination,
+		                  /*hasSoftware*/ true,
+		                  /*software*/ software,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    request->GetTransactionId(),
+		    StunPacket::TransactionIdLength,
+		    transactionId,
+		    StunPacket::TransactionIdLength));
+
+		/* Clone it. */
+
+		request.reset(request->Clone(CloneBuffer, sizeof(CloneBuffer)));
+
+		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ CloneBuffer,
+		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ username,
+		                  /*hasPriority*/ true,
+		                  /*priority*/ priority,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ iceControlling,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ true,
+		                  /*nomination*/ nomination,
+		                  /*hasSoftware*/ true,
+		                  /*software*/ software,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    request->GetTransactionId(),
+		    StunPacket::TransactionIdLength,
+		    transactionId,
+		    StunPacket::TransactionIdLength));
+
+		// TODO
+		request->Dump();
 	}
 }

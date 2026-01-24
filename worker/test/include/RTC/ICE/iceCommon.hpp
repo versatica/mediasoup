@@ -9,6 +9,7 @@
 #include <cstdlib>                      // std::malloc(), std::free()
 #include <cstring>                      // std::memcpy()
 #include <string>
+#include <string_view>
 
 using namespace RTC::ICE;
 
@@ -50,7 +51,7 @@ namespace RTC
                           /*std::string*/ software,                                                 \
                           /*bool*/ hasErrorCode,                                                    \
                           /*uint16_t*/ errorCode,                                                   \
-                          /*std::string*/ errorReason,                                              \
+                          /*std::string*/ errorReasonPhrase,                                        \
                           /*bool*/ hasMessageIntegrity,                                             \
                           /*bool*/ hasFingerprint)                                                  \
 	do                                                                                                \
@@ -82,8 +83,9 @@ namespace RTC
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::SOFTWARE) == hasSoftware);              \
 		REQUIRE(packet->GetSoftware() == software);                                                     \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::ERROR_CODE) == hasErrorCode);           \
-		REQUIRE(packet->GetErrorCode() == errorCode);                                                   \
-		REQUIRE(packet->GetErrorReason() == errorReason);                                               \
+		std::string_view obtainedErrorReasonPhrase;                                                     \
+		REQUIRE(packet->GetErrorCode(obtainedErrorReasonPhrase) == errorCode);                          \
+		REQUIRE(obtainedErrorReasonPhrase == errorReasonPhrase);                                        \
 		REQUIRE(                                                                                        \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) == hasMessageIntegrity);   \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);        \

@@ -147,6 +147,8 @@ namespace RTC
 			static const size_t FixedHeaderLength{ 20 };
 			static const size_t TransactionIdLength{ 12 };
 			static const size_t UsernameAttributeMaxLength{ 513 };
+			static const size_t XorMappedAddressIPv4Length{ 8 };
+			static const size_t XorMappedAddressIPv6Length{ 20 };
 			static const size_t SoftwareAttributeMaxLength{ 763 };
 			static const size_t MessageIntegrityAttributeLength{ 20 };
 
@@ -297,9 +299,9 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			void SetSoftware(const char* software, size_t len);
+			void SetSoftware(std::string& software);
 
-			uint16_t GetErrorCode() const
+			uint16_t GetErrorCode(std::string_view& reasonPhrase) const
 			{
 				const auto* attribute = GetAttribute(StunPacket::AttributeType::ERROR_CODE);
 
@@ -309,31 +311,31 @@ namespace RTC
 				}
 
 				const auto* attributeValue = GetAttributeValue(attribute);
-				const uint8_t errorClass   = Utils::Byte::Get1Byte(attributeValue, 2) & 0b00000111;
-				const uint8_t errorNumber  = Utils::Byte::Get1Byte(attributeValue, 3);
-				auto errorCode             = static_cast<uint16_t>((errorClass * 100) + errorNumber);
+
+				const uint8_t errorClass  = Utils::Byte::Get1Byte(attributeValue, 2) & 0b00000111;
+				const uint8_t errorNumber = Utils::Byte::Get1Byte(attributeValue, 3);
+				auto errorCode            = static_cast<uint16_t>((errorClass * 100) + errorNumber);
+
+				// Reason Phrase comes after the first 4 bytes (it could be zero
+				// length).
+				if (attribute->len > 4)
+				{
+					reasonPhrase = std::string_view(
+					  reinterpret_cast<const char*>(GetAttributeValue(attribute) + 4), attribute->len - 4);
+				}
+				else
+				{
+					reasonPhrase = {};
+				}
 
 				return errorCode;
 			}
 
-			const std::string_view GetErrorReason() const
-			{
-				const auto* attribute = GetAttribute(StunPacket::AttributeType::ERROR_CODE);
+			void SetErrorCode(uint16_t errorCode, std::string& reasonPhrase);
 
-				// Reason Phrase comes after the first 4 bytes (it could be zero
-				// length).
-				if (!attribute || attribute->len == 4)
-				{
-					return {};
-				}
+			bool GetXorMappedAddress(struct sockaddr& address) const;
 
-				return std::string_view(
-				  reinterpret_cast<const char*>(GetAttributeValue(attribute) + 4), attribute->len - 4);
-			}
-
-			void SetErrorCode(uint16_t errorCode);
-
-			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
+			void SetXorMappedAddress(const struct sockaddr* address);
 
 			StunPacket::AuthenticationResult CheckAuthentication(
 			  const std::string& usernameFragment1, const std::string& password) const;

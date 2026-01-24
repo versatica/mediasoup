@@ -1,11 +1,9 @@
-#include "Utils.hpp"
-#include <cstdint>
 #define MS_CLASS "RTC::ICE::StunPacket"
 // #define MS_LOG_DEV_LEVEL 3
 
+#include "RTC/ICE/StunPacket.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/ICE/StunPacket.hpp"
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy(), std::memset()
 
@@ -15,8 +13,8 @@ namespace RTC
 	{
 		/* Static. */
 
-		static constexpr size_t AttributeToNetworkOrderBufferLength{ 65536 };
-		thread_local static uint8_t AttributeToNetworkOrderBuffer[AttributeToNetworkOrderBufferLength];
+		static constexpr size_t AttributeFactoryBufferLength{ 65536 };
+		thread_local static uint8_t AttributeFactoryBuffer[AttributeFactoryBufferLength];
 
 		/* Class variables. */
 
@@ -32,7 +30,7 @@ namespace RTC
 				(bufferLength >= StunPacket::FixedHeaderLength) &&
 				// @see RFC 7983.
 				(buffer[0] < 3) &&
-				// Magic cookie must match.
+				// Magic Cookie must match.
 				(buffer[4] == StunPacket::MagicCookie[0]) && (buffer[5] == StunPacket::MagicCookie[1]) &&
 				(buffer[6] == StunPacket::MagicCookie[2]) && (buffer[7] == StunPacket::MagicCookie[3])
 			);
@@ -109,7 +107,7 @@ namespace RTC
 
 			// NOTE: No need to write message length since it's already 0.
 
-			// Set magic cookie.
+			// Set magic Cookie.
 			std::memcpy(buffer + 4, StunPacket::MagicCookie, 4);
 
 			// Write a random TransactionId.
@@ -202,7 +200,7 @@ namespace RTC
 				const auto username = GetUsername();
 
 				MS_DUMP_CLEAN(
-				  indentation + 1, "  username: %.*s", static_cast<int>(username.size()), username.data());
+				  indentation + 1, "  username: \"%.*s\"", static_cast<int>(username.size()), username.data());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::PRIORITY))
@@ -235,17 +233,37 @@ namespace RTC
 				const auto software = GetSoftware();
 
 				MS_DUMP_CLEAN(
-				  indentation + 1, "  software: %.*s", static_cast<int>(software.size()), software.data());
+				  indentation + 1, "  software: \"%.*s\"", static_cast<int>(software.size()), software.data());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS))
 			{
-				// TODO
+				struct sockaddr address;
+
+				if (GetXorMappedAddress(address))
+				{
+					int family;
+					uint16_t port;
+					std::string ip;
+
+					Utils::IP::GetAddressInfo(std::addressof(address), family, ip, port);
+
+					MS_DUMP_CLEAN(indentation + 1, "  xor mapped address: [%s]:%" PRIu16, ip.c_str(), port);
+				}
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::ERROR_CODE))
 			{
-				MS_DUMP_CLEAN(indentation + 1, "  error code: %" PRIu16, GetErrorCode());
+				std::string_view reasonPhrase{};
+
+				const auto errorCode = GetErrorCode(reasonPhrase);
+
+				MS_DUMP_CLEAN(
+				  indentation + 1,
+				  "  error code: %" PRIu16 " (reason phrase: \"%.*s\")",
+				  errorCode,
+				  static_cast<int>(reasonPhrase.size()),
+				  reasonPhrase.data());
 			}
 
 			if (HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY))
@@ -310,34 +328,29 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(AttributeToNetworkOrderBuffer, 0, priority);
+			Utils::Byte::Set4Bytes(AttributeFactoryBuffer, 0, priority);
 
-			StoreNewAttribute(
-			  StunPacket::AttributeType::PRIORITY, AttributeToNetworkOrderBuffer, sizeof(priority));
+			StoreNewAttribute(StunPacket::AttributeType::PRIORITY, AttributeFactoryBuffer, sizeof(priority));
 		}
 
 		void StunPacket::SetIceControlling(uint64_t iceControlling)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set8Bytes(AttributeToNetworkOrderBuffer, 0, iceControlling);
+			Utils::Byte::Set8Bytes(AttributeFactoryBuffer, 0, iceControlling);
 
 			StoreNewAttribute(
-			  StunPacket::AttributeType::ICE_CONTROLLING,
-			  AttributeToNetworkOrderBuffer,
-			  sizeof(iceControlling));
+			  StunPacket::AttributeType::ICE_CONTROLLING, AttributeFactoryBuffer, sizeof(iceControlling));
 		}
 
 		void StunPacket::SetIceControlled(uint64_t iceControlled)
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set8Bytes(AttributeToNetworkOrderBuffer, 0, iceControlled);
+			Utils::Byte::Set8Bytes(AttributeFactoryBuffer, 0, iceControlled);
 
 			StoreNewAttribute(
-			  StunPacket::AttributeType::ICE_CONTROLLED,
-			  AttributeToNetworkOrderBuffer,
-			  sizeof(iceControlled));
+			  StunPacket::AttributeType::ICE_CONTROLLED, AttributeFactoryBuffer, sizeof(iceControlled));
 		}
 
 		void StunPacket::EnableUseCandidate()
@@ -351,31 +364,222 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			Utils::Byte::Set4Bytes(AttributeToNetworkOrderBuffer, 0, nomination);
+			Utils::Byte::Set4Bytes(AttributeFactoryBuffer, 0, nomination);
 
 			StoreNewAttribute(
-			  StunPacket::AttributeType::NOMINATION, AttributeToNetworkOrderBuffer, sizeof(nomination));
+			  StunPacket::AttributeType::NOMINATION, AttributeFactoryBuffer, sizeof(nomination));
 		}
 
-		void StunPacket::SetSoftware(const char* software, size_t len)
+		void StunPacket::SetSoftware(std::string& software)
 		{
 			MS_TRACE();
 
-			// TODO
+			if (software.length() > StunPacket::SoftwareAttributeMaxLength)
+			{
+				MS_THROW_TYPE_ERROR(
+				  "Attribute SOFTWARE must be at most %zu bytes", StunPacket::SoftwareAttributeMaxLength);
+			}
+
+			StoreNewAttribute(StunPacket::AttributeType::SOFTWARE, software.c_str(), software.length());
 		}
 
-		void StunPacket::SetErrorCode(uint16_t errorCode)
+		void StunPacket::SetErrorCode(uint16_t errorCode, std::string& reasonPhrase)
 		{
 			MS_TRACE();
 
-			// TODO
+			const auto codeClass  = static_cast<uint8_t>(errorCode / 100);
+			const auto codeNumber = static_cast<uint8_t>(errorCode) - (codeClass * 100);
+
+			Utils::Byte::Set2Bytes(AttributeFactoryBuffer, 0, 0);
+			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 2, codeClass);
+			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 3, codeNumber);
+
+			std::memcpy(AttributeFactoryBuffer + 4, reasonPhrase.c_str(), reasonPhrase.length());
+
+			StoreNewAttribute(
+			  StunPacket::AttributeType::ERROR_CODE, AttributeFactoryBuffer, 4 + reasonPhrase.length());
 		}
 
-		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+		bool StunPacket::GetXorMappedAddress(struct sockaddr& address) const
 		{
 			MS_TRACE();
 
-			// TODO
+			std::memset(std::addressof(address), 0x00, sizeof(address));
+
+			const auto* attribute = GetAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS);
+
+			if (!attribute)
+			{
+				return false;
+			}
+
+			const auto* attributeValue = GetAttributeValue(attribute);
+			uint8_t family             = attributeValue[1];
+			uint16_t port;
+
+			std::memcpy(std::addressof(port), attributeValue + 2, 2);
+
+			// XOR with the first 2 bytes of the Magic Cookie.
+			port = ntohs(port) ^ (StunPacket::MagicCookie[0] << 8 | StunPacket::MagicCookie[1]);
+
+			// IPv4.
+			if (family == 0x01)
+			{
+				if (attribute->len != StunPacket::XorMappedAddressIPv4Length)
+				{
+					// TODO: Warning log.
+
+					return false;
+				}
+
+				auto* addr4 = reinterpret_cast<struct sockaddr_in*>(std::addressof(address));
+
+				addr4->sin_family = AF_INET;
+				addr4->sin_port   = htons(port);
+
+				uint32_t addr;
+				std::memcpy(std::addressof(addr), attributeValue + 4, 4);
+
+				// XOR with each byte of the Magic Cookie.
+				uint8_t* addrBytes = reinterpret_cast<uint8_t*>(&addr);
+
+				for (uint8_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
+				{
+					addrBytes[i] ^= StunPacket::MagicCookie[i];
+				}
+
+				addr4->sin_addr.s_addr = addr;
+
+				return true;
+			}
+			// IPv6.
+			else if (family == 0x02)
+			{
+				if (attribute->len != StunPacket::XorMappedAddressIPv6Length)
+				{
+					// TODO: Warning log.
+
+					return false;
+				}
+
+				auto* addr6 = reinterpret_cast<struct sockaddr_in6*>(std::addressof(address));
+
+				addr6->sin6_family = AF_INET6;
+				addr6->sin6_port   = htons(port);
+
+				const auto transactionId = GetTransactionId();
+
+				// XOR with first 4 bytes with each byte of the Magic Cookie.
+				for (uint8_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
+				{
+					addr6->sin6_addr.s6_addr[i] =
+					  attributeValue[sizeof(StunPacket::MagicCookie) + i] ^ StunPacket::MagicCookie[i];
+				}
+
+				// XOR other bytes with each byte of the Transaction id.
+				for (uint8_t i{ 0 }; i < sizeof(StunPacket::MagicCookie) + StunPacket::TransactionIdLength;
+				     ++i)
+				{
+					addr6->sin6_addr.s6_addr[i] = attributeValue[sizeof(StunPacket::MagicCookie) + i] ^
+					                              transactionId[i - sizeof(StunPacket::MagicCookie)];
+				}
+
+				return true;
+			}
+			// Unknown family.
+			else
+			{
+				// TODO: Warning log.
+
+				return false;
+			}
+		}
+
+		void StunPacket::SetXorMappedAddress(const struct sockaddr* address)
+		{
+			MS_TRACE();
+
+			switch (address->sa_family)
+			{
+				case AF_INET:
+				{
+					// Set first byte to 0.
+					AttributeFactoryBuffer[0] = 0;
+					// Set inet family.
+					AttributeFactoryBuffer[1] = 0x01;
+					// Set port and XOR it.
+					std::memcpy(
+					  AttributeFactoryBuffer + 2, &(reinterpret_cast<const sockaddr_in*>(address))->sin_port, 2);
+					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
+					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
+					// Set address and XOR it.
+					std::memcpy(
+					  AttributeFactoryBuffer + 4,
+					  &(reinterpret_cast<const sockaddr_in*>(address))->sin_addr.s_addr,
+					  4);
+					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
+					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
+					AttributeFactoryBuffer[6] ^= StunPacket::MagicCookie[2];
+					AttributeFactoryBuffer[7] ^= StunPacket::MagicCookie[3];
+
+					StoreNewAttribute(
+					  StunPacket::AttributeType::XOR_MAPPED_ADDRESS,
+					  AttributeFactoryBuffer,
+					  StunPacket::XorMappedAddressIPv4Length);
+
+					break;
+				}
+
+				case AF_INET6:
+				{
+					// Set first byte to 0.
+					AttributeFactoryBuffer[0] = 0;
+					// Set inet family.
+					AttributeFactoryBuffer[1] = 0x02;
+					// Set port and XOR it.
+					std::memcpy(
+					  AttributeFactoryBuffer + 2,
+					  &(reinterpret_cast<const sockaddr_in6*>(address))->sin6_port,
+					  2);
+					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
+					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
+					// Set address and XOR it.
+					std::memcpy(
+					  AttributeFactoryBuffer + 4,
+					  &(reinterpret_cast<const sockaddr_in6*>(address))->sin6_addr.s6_addr,
+					  16);
+					const auto* transactionId = GetTransactionId();
+
+					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
+					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
+					AttributeFactoryBuffer[6] ^= StunPacket::MagicCookie[2];
+					AttributeFactoryBuffer[7] ^= StunPacket::MagicCookie[3];
+					AttributeFactoryBuffer[8] ^= transactionId[0];
+					AttributeFactoryBuffer[9] ^= transactionId[1];
+					AttributeFactoryBuffer[10] ^= transactionId[2];
+					AttributeFactoryBuffer[11] ^= transactionId[3];
+					AttributeFactoryBuffer[12] ^= transactionId[4];
+					AttributeFactoryBuffer[13] ^= transactionId[5];
+					AttributeFactoryBuffer[14] ^= transactionId[6];
+					AttributeFactoryBuffer[15] ^= transactionId[7];
+					AttributeFactoryBuffer[16] ^= transactionId[8];
+					AttributeFactoryBuffer[17] ^= transactionId[9];
+					AttributeFactoryBuffer[18] ^= transactionId[10];
+					AttributeFactoryBuffer[19] ^= transactionId[11];
+
+					StoreNewAttribute(
+					  StunPacket::AttributeType::XOR_MAPPED_ADDRESS,
+					  AttributeFactoryBuffer,
+					  StunPacket::XorMappedAddressIPv6Length);
+
+					break;
+				}
+
+				default:
+				{
+					MS_THROW_TYPE_ERROR("unknown IP family");
+				}
+			}
 		}
 
 		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(
@@ -724,6 +928,27 @@ namespace RTC
 							  ice,
 							  "invalid Packet, Attribute SOFTWARE must be at most %zu bytes length",
 							  StunPacket::SoftwareAttributeMaxLength);
+
+							return false;
+						}
+
+						if (storeAttributes && !StoreParsedAttribute(attrType, attrLen, attrOffset))
+						{
+							return false;
+						}
+
+						break;
+					}
+
+					case StunPacket::AttributeType::XOR_MAPPED_ADDRESS:
+					{
+						if (attrLen != StunPacket::XorMappedAddressIPv4Length && attrLen != StunPacket::XorMappedAddressIPv6Length)
+						{
+							MS_WARN_TAG(
+							  ice,
+							  "invalid Packet, Attribute XOR_MAPPED_ADDRESS-CODE must be %zu or %zu bytes length",
+							  StunPacket::XorMappedAddressIPv4Length,
+							  StunPacket::XorMappedAddressIPv6Length);
 
 							return false;
 						}
