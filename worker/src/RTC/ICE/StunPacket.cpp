@@ -238,17 +238,25 @@ namespace RTC
 
 			if (HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS))
 			{
-				struct sockaddr address;
+				struct sockaddr xorMappedAddress;
 
-				if (GetXorMappedAddress(address))
+				if (GetXorMappedAddress(xorMappedAddress))
 				{
 					int family;
 					uint16_t port;
 					std::string ip;
 
-					Utils::IP::GetAddressInfo(std::addressof(address), family, ip, port);
+					Utils::IP::GetAddressInfo(std::addressof(xorMappedAddress), family, ip, port);
 
-					MS_DUMP_CLEAN(indentation + 1, "  xor mapped address: [%s]:%" PRIu16, ip.c_str(), port);
+					if (family == AF_INET)
+					{
+						MS_DUMP_CLEAN(indentation + 1, "  xor mapped address: IPv4 %s:%" PRIu16, ip.c_str(), port);
+					}
+					else if (family == AF_INET6)
+					{
+						MS_DUMP_CLEAN(
+						  indentation + 1, "  xor mapped address: IPv6 [%s]:%" PRIu16, ip.c_str(), port);
+					}
 				}
 			}
 
@@ -400,11 +408,11 @@ namespace RTC
 			  StunPacket::AttributeType::ERROR_CODE, AttributeFactoryBuffer, 4 + reasonPhrase.length());
 		}
 
-		bool StunPacket::GetXorMappedAddress(struct sockaddr& address) const
+		bool StunPacket::GetXorMappedAddress(struct sockaddr& xorMappedAddress) const
 		{
 			MS_TRACE();
 
-			std::memset(std::addressof(address), 0x00, sizeof(address));
+			std::memset(std::addressof(xorMappedAddress), 0x00, sizeof(xorMappedAddress));
 
 			const auto* attribute = GetAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS);
 
@@ -427,12 +435,15 @@ namespace RTC
 			{
 				if (attribute->len != StunPacket::XorMappedAddressIPv4Length)
 				{
-					// TODO: Warning log.
+					MS_WARN_TAG(
+					  ice,
+					  "cannot get XOR_MAPPED_ADDRESS Attribute value, length of the Attribute is not %zu",
+					  StunPacket::XorMappedAddressIPv4Length);
 
 					return false;
 				}
 
-				auto* addr4 = reinterpret_cast<struct sockaddr_in*>(std::addressof(address));
+				auto* addr4 = reinterpret_cast<struct sockaddr_in*>(std::addressof(xorMappedAddress));
 
 				addr4->sin_family = AF_INET;
 				addr4->sin_port   = htons(port);
@@ -457,12 +468,15 @@ namespace RTC
 			{
 				if (attribute->len != StunPacket::XorMappedAddressIPv6Length)
 				{
-					// TODO: Warning log.
+					MS_WARN_TAG(
+					  ice,
+					  "cannot get XOR_MAPPED_ADDRESS Attribute value, length of the Attribute is not %zu",
+					  StunPacket::XorMappedAddressIPv6Length);
 
 					return false;
 				}
 
-				auto* addr6 = reinterpret_cast<struct sockaddr_in6*>(std::addressof(address));
+				auto* addr6 = reinterpret_cast<struct sockaddr_in6*>(std::addressof(xorMappedAddress));
 
 				addr6->sin6_family = AF_INET6;
 				addr6->sin6_port   = htons(port);
@@ -489,17 +503,17 @@ namespace RTC
 			// Unknown family.
 			else
 			{
-				// TODO: Warning log.
+				MS_WARN_TAG(ice, "cannot get XOR_MAPPED_ADDRESS Attribute value, unknown family");
 
 				return false;
 			}
 		}
 
-		void StunPacket::SetXorMappedAddress(const struct sockaddr* address)
+		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
 		{
 			MS_TRACE();
 
-			switch (address->sa_family)
+			switch (xorMappedAddress->sa_family)
 			{
 				case AF_INET:
 				{
@@ -509,13 +523,15 @@ namespace RTC
 					AttributeFactoryBuffer[1] = 0x01;
 					// Set port and XOR it.
 					std::memcpy(
-					  AttributeFactoryBuffer + 2, &(reinterpret_cast<const sockaddr_in*>(address))->sin_port, 2);
+					  AttributeFactoryBuffer + 2,
+					  &(reinterpret_cast<const sockaddr_in*>(xorMappedAddress))->sin_port,
+					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  &(reinterpret_cast<const sockaddr_in*>(address))->sin_addr.s_addr,
+					  &(reinterpret_cast<const sockaddr_in*>(xorMappedAddress))->sin_addr.s_addr,
 					  4);
 					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
@@ -539,14 +555,14 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  &(reinterpret_cast<const sockaddr_in6*>(address))->sin6_port,
+					  &(reinterpret_cast<const sockaddr_in6*>(xorMappedAddress))->sin6_port,
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  &(reinterpret_cast<const sockaddr_in6*>(address))->sin6_addr.s6_addr,
+					  &(reinterpret_cast<const sockaddr_in6*>(xorMappedAddress))->sin6_addr.s6_addr,
 					  16);
 					const auto* transactionId = GetTransactionId();
 

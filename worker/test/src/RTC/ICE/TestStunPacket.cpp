@@ -1,7 +1,9 @@
 #include "common.hpp"
+#include "Utils.hpp"
 #include "testHelpers.hpp"
 #include "RTC/ICE/StunPacket.hpp"
 #include "RTC/ICE/iceCommon.hpp"
+#include <uv.h>
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 #include <string>
@@ -418,7 +420,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 	}
 
-	SECTION("StunPacket::Factory() succeeds")
+	SECTION("StunPacket::Factory() to create a request succeeds")
 	{
 		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
 			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
@@ -487,6 +489,15 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		request->SetNomination(nomination);
 		request->SetSoftware(software);
 		request->SetErrorCode(errorCode, errorReasonPhrase);
+
+		// It should fail if we try to add a duplicated Attribute.
+		REQUIRE_THROWS_AS(request->SetUsername(username), MediaSoupError);
+		REQUIRE_THROWS_AS(request->SetPriority(priority), MediaSoupError);
+		REQUIRE_THROWS_AS(request->SetIceControlling(iceControlling), MediaSoupError);
+		REQUIRE_THROWS_AS(request->EnableUseCandidate(), MediaSoupError);
+		REQUIRE_THROWS_AS(request->SetNomination(nomination), MediaSoupError);
+		REQUIRE_THROWS_AS(request->SetSoftware(software), MediaSoupError);
+		REQUIRE_THROWS_AS(request->SetErrorCode(errorCode, errorReasonPhrase), MediaSoupError);
 
 		// TODO
 		request->Dump();
@@ -599,5 +610,151 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		// TODO
 		request->Dump();
+	}
+
+	SECTION("StunPacket::Factory() to create a success response succeeds")
+	{
+		std::unique_ptr<StunPacket> successResponse{ StunPacket::Factory(
+			FactoryBuffer,
+			sizeof(FactoryBuffer),
+			StunPacket::Class::SUCCESS_RESPONSE,
+			StunPacket::Method::BINDING) };
+
+		// TODO
+		successResponse->Dump();
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength,
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		// Byte length: 8.
+		sockaddr_in xorMappedAddressIn{};
+		uv_ip4_addr("22.33.0.125", 5678, std::addressof(xorMappedAddressIn));
+		sockaddr& xorMappedAddress = reinterpret_cast<sockaddr&>(xorMappedAddressIn);
+
+		// Total length of the Attributes.
+		size_t attributesLen = (4 + 8);
+
+		successResponse->SetXorMappedAddress(std::addressof(xorMappedAddress));
+
+		// TODO
+		successResponse->Dump();
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		sockaddr obtainedXorMappedAddress{};
+
+		REQUIRE(successResponse->GetXorMappedAddress(obtainedXorMappedAddress));
+
+		int family;
+		uint16_t port;
+		std::string ip;
+
+		Utils::IP::GetAddressInfo(std::addressof(obtainedXorMappedAddress), family, ip, port);
+
+		REQUIRE(family == AF_INET);
+		REQUIRE(ip == "22.33.0.125");
+		REQUIRE(port == 5678);
+
+		std::memset(FactoryBuffer, 0x00, sizeof(FactoryBuffer));
+
+		successResponse.reset(
+		  StunPacket::Factory(
+		    FactoryBuffer,
+		    sizeof(FactoryBuffer),
+		    StunPacket::Class::SUCCESS_RESPONSE,
+		    StunPacket::Method::BINDING));
+
+		// Byte length: 20.
+		sockaddr_in6 xorMappedAddress6In{};
+		uv_ip6_addr("2001:db8::1234", 20002, std::addressof(xorMappedAddress6In));
+		sockaddr& xorMappedAddress6 = reinterpret_cast<sockaddr&>(xorMappedAddress6In);
+
+		// Total length of the Attributes.
+		attributesLen = (4 + 20);
+
+		successResponse->SetXorMappedAddress(std::addressof(xorMappedAddress6));
+
+		// TODO
+		successResponse->Dump();
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		sockaddr obtainedXorMappedAddress6{};
+
+		REQUIRE(successResponse->GetXorMappedAddress(obtainedXorMappedAddress6));
+
+		Utils::IP::GetAddressInfo(std::addressof(obtainedXorMappedAddress6), family, ip, port);
+
+		REQUIRE(family == AF_INET6);
+		REQUIRE(ip == "2001:db8::1234");
+		REQUIRE(port == 20002);
 	}
 }

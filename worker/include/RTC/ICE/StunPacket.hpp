@@ -333,9 +333,9 @@ namespace RTC
 
 			void SetErrorCode(uint16_t errorCode, std::string& reasonPhrase);
 
-			bool GetXorMappedAddress(struct sockaddr& address) const;
+			bool GetXorMappedAddress(struct sockaddr& xorMappedAddress) const;
 
-			void SetXorMappedAddress(const struct sockaddr* address);
+			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
 
 			StunPacket::AuthenticationResult CheckAuthentication(
 			  const std::string& usernameFragment1, const std::string& password) const;
