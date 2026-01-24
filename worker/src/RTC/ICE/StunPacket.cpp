@@ -170,7 +170,7 @@ namespace RTC
 
 			if (this->method == Method::BINDING)
 			{
-				MS_DUMP_CLEAN(indentation, "  method & class: Binding %s", klass.c_str());
+				MS_DUMP_CLEAN(indentation, "  method and class: Binding %s", klass.c_str());
 			}
 			else
 			{
