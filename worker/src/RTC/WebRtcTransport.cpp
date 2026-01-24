@@ -616,7 +616,6 @@ namespace RTC
 		MS_TRACE();
 
 		// TODO: REMOVE
-		MS_DUMP_DATA(packet->GetData(), packet->GetSize());
 		RTC::ICE::StunPacket* newPacket =
 		  RTC::ICE::StunPacket::Parse(packet->GetData(), packet->GetSize());
 		MS_ASSERT(newPacket, "new STUN parser failed!!!");
