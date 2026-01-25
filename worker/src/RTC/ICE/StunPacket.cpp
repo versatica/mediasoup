@@ -804,7 +804,7 @@ namespace RTC
 					MS_WARN_TAG(
 					  ice,
 					  "invalid Packet, not enough space for the announced value of the Attribute with type %" PRIu16,
-					  attrType);
+					  static_cast<uint16_t>(attrType));
 
 					return false;
 				}
@@ -1066,7 +1066,7 @@ namespace RTC
 				  ice,
 				  "cannot store parsed Attribute with type %" PRIu16
 				  ", there is an Attribute with same type already in the map",
-				  type);
+				  static_cast<uint16_t>(attrType));
 
 				return false;
 			}
@@ -1087,7 +1087,7 @@ namespace RTC
 				MS_THROW_ERROR(
 				  "cannot store new Attribute with type %" PRIu16
 				  ", there is an Attribute with same type already in the map",
-				  type);
+				  static_cast<uint16_t>(attrType));
 			}
 
 			// Add the Attribute at the end of the STUN Packet.
