@@ -112,7 +112,7 @@ namespace Utils
 		}
 	}
 
-	void IP::NormalizeIp(std::string& ip)
+	std::string IP::NormalizeIp(std::string& ip)
 	{
 		MS_TRACE();
 
@@ -143,7 +143,7 @@ namespace Utils
 
 				ip.assign(ipBuffer);
 
-				break;
+				return ip;
 			}
 
 			case AF_INET6:
@@ -167,7 +167,7 @@ namespace Utils
 
 				ip.assign(ipBuffer);
 
-				break;
+				return ip;
 			}
 
 			default:

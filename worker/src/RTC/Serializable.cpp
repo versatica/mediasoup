@@ -129,11 +129,13 @@ namespace RTC
 
 		if (serializable->GetBufferLength() < this->length)
 		{
+			const auto bufferLength = serializable->GetBufferLength();
+
 			delete serializable;
 
 			MS_THROW_TYPE_ERROR(
 			  "bufferLength (%zu bytes) is lower than current length (%zu bytes)",
-			  serializable->GetBufferLength(),
+			  bufferLength,
 			  this->length);
 		}
 

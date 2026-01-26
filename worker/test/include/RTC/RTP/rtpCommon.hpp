@@ -52,7 +52,6 @@ namespace RTC
 		std::memcpy(originalBuffer, buffer, bufferLength);                                               \
 		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                            \
 		REQUIRE(packet);                                                                                 \
-		REQUIRE(packet->Validate(/*storeExtensions*/ false));                                            \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                         \
 		REQUIRE(packet->GetBuffer() == buffer);                                                          \
 		REQUIRE(packet->GetBufferLength() != 0);                                                         \
@@ -97,6 +96,7 @@ namespace RTC
 		{                                                                                                \
 			REQUIRE(static_cast<unsigned>(packet->GetPaddingLength()) == 0);                               \
 		}                                                                                                \
+		REQUIRE(packet->Validate(/*storeExtensions*/ false));                                            \
 		REQUIRE_NOTHROW(packet->SetPayloadType(packet->GetPayloadType()));                               \
 		REQUIRE_NOTHROW(packet->SetMarker(packet->HasMarker()));                                         \
 		REQUIRE_NOTHROW(packet->SetSequenceNumber(packet->GetSequenceNumber()));                         \

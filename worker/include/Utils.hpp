@@ -93,7 +93,7 @@ namespace Utils
 			return copiedAddr;
 		}
 
-		static void NormalizeIp(std::string& ip);
+		static std::string NormalizeIp(std::string& ip);
 	};
 
 	class File

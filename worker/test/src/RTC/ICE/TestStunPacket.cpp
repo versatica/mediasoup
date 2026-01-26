@@ -85,6 +85,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
@@ -123,6 +124,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
@@ -158,6 +160,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
@@ -215,11 +218,28 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ true,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
+
+		struct sockaddr_storage obtainedXorMappedAddressStorage{};
+
+		REQUIRE(successResponse->GetXorMappedAddress(std::addressof(obtainedXorMappedAddressStorage)));
+
+		int family;
+		uint16_t port;
+		std::string ip;
+
+		Utils::IP::GetAddressInfo(
+		  reinterpret_cast<sockaddr*>(std::addressof(obtainedXorMappedAddressStorage)), family, ip, port);
+
+		REQUIRE(family == AF_INET6);
+		std::string expectedIp = "2001:db8:85a3:0:0:8a2e:370:7334";
+		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
+		REQUIRE(port == 1234);
 
 		/* Serialize it. */
 
@@ -246,6 +266,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ true,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
@@ -277,6 +298,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ true,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
@@ -349,6 +371,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ true,
 		                  /*software*/ "mediasoup test",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
 		                  /*errorReasonPhrase*/ "Something failed Ω∑© :)",
@@ -380,6 +403,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ true,
 		                  /*software*/ "mediasoup test",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
 		                  /*errorReasonPhrase*/ "Something failed Ω∑© :)",
@@ -411,6 +435,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ true,
 		                  /*software*/ "mediasoup test",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ 456,
 		                  /*errorReasonPhrase*/ "Something failed Ω∑© :)",
@@ -418,7 +443,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 	}
 
-	SECTION("StunPacket::Factory() to create a request succeeds")
+	SECTION("StunPacket::Factory() creating a request succeeds")
 	{
 		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
 			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
@@ -442,6 +467,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
@@ -459,7 +485,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		request->SetTransactionId(transactionId);
 
 		// Byte length: 27 (1 byte of padding needed).
-		std::string username = "œæ€å∫∂¢∞¬÷123";
+		std::string username          = "œæ€å∫∂:¢∞¬÷12";
+		std::string usernameFragment1 = "œæ€å∫∂";
 		// Byte length: 4.
 		uint32_t priority = 999888777u;
 		// Byte length: 8.
@@ -513,6 +540,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ nomination,
 		                  /*hasSoftware*/ true,
 		                  /*software*/ software,
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ errorCode,
 		                  /*errorReasonPhrase*/ errorReasonPhrase,
@@ -549,6 +577,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ nomination,
 		                  /*hasSoftware*/ true,
 		                  /*software*/ software,
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ errorCode,
 		                  /*errorReasonPhrase*/ errorReasonPhrase,
@@ -587,6 +616,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ nomination,
 		                  /*hasSoftware*/ true,
 		                  /*software*/ software,
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ true,
 		                  /*errorCode*/ errorCode,
 		                  /*errorReasonPhrase*/ errorReasonPhrase,
@@ -599,9 +629,46 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		    StunPacket::TransactionIdLength,
 		    transactionId,
 		    StunPacket::TransactionIdLength));
+
+		/* Protect the Packet. */
+
+		std::string password = "asjhdkjhkasd";
+
+		request->Protect(password);
+
+		CHECK_STUN_PACKET(/*packet*/ request.get(),
+		                  /*buffer*/ CloneBuffer,
+		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ StunPacket::Class::REQUEST,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ true,
+		                  /*username*/ username,
+		                  /*hasPriority*/ true,
+		                  /*priority*/ priority,
+		                  /*hasIceControlling*/ true,
+		                  /*iceControlling*/ iceControlling,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ true,
+		                  /*hasNomination*/ true,
+		                  /*nomination*/ nomination,
+		                  /*hasSoftware*/ true,
+		                  /*software*/ software,
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
+
+		REQUIRE(
+		  request->CheckAuthentication(usernameFragment1, password) ==
+		  StunPacket::AuthenticationResult::OK);
 	}
 
-	SECTION("StunPacket::Factory() to create a success response succeeds")
+	SECTION("StunPacket::Factory() creating a success response succeeds")
 	{
 		std::unique_ptr<StunPacket> successResponse{ StunPacket::Factory(
 			FactoryBuffer,
@@ -628,21 +695,27 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
+		struct sockaddr_storage xorMappedAddressStorage{};
+
 		// Byte length: 8.
-		sockaddr_in xorMappedAddressIn{};
-		uv_ip4_addr("22.33.0.125", 5678, std::addressof(xorMappedAddressIn));
-		sockaddr& xorMappedAddress = reinterpret_cast<sockaddr&>(xorMappedAddressIn);
+		auto* xorMappedAddressIn =
+		  reinterpret_cast<struct sockaddr_in*>(std::addressof(xorMappedAddressStorage));
+		auto* xorMappedAddress =
+		  reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage));
+
+		uv_ip4_addr("22.33.0.125", 5678, xorMappedAddressIn);
 
 		// Total length of the Attributes.
 		size_t attributesLen = (4 + 8);
 
-		successResponse->SetXorMappedAddress(std::addressof(xorMappedAddress));
+		successResponse->SetXorMappedAddress(xorMappedAddress);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -663,27 +736,32 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ true,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		sockaddr obtainedXorMappedAddress{};
+		struct sockaddr_storage obtainedXorMappedAddressStorage{};
 
-		REQUIRE(successResponse->GetXorMappedAddress(obtainedXorMappedAddress));
+		REQUIRE(successResponse->GetXorMappedAddress(std::addressof(obtainedXorMappedAddressStorage)));
 
 		int family;
 		uint16_t port;
 		std::string ip;
 
-		Utils::IP::GetAddressInfo(std::addressof(obtainedXorMappedAddress), family, ip, port);
+		Utils::IP::GetAddressInfo(
+		  reinterpret_cast<sockaddr*>(std::addressof(obtainedXorMappedAddressStorage)), family, ip, port);
 
 		REQUIRE(family == AF_INET);
-		REQUIRE(ip == "22.33.0.125");
+		std::string expectedIp = "22.33.0.125";
+		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 5678);
 
 		std::memset(FactoryBuffer, 0x00, sizeof(FactoryBuffer));
+
+		/* Create a new fresh success response. */
 
 		successResponse.reset(
 		  StunPacket::Factory(
@@ -693,14 +771,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		    StunPacket::Method::BINDING));
 
 		// Byte length: 20.
-		sockaddr_in6 xorMappedAddress6In{};
-		uv_ip6_addr("2001:db8::1234", 20002, std::addressof(xorMappedAddress6In));
-		sockaddr& xorMappedAddress6 = reinterpret_cast<sockaddr&>(xorMappedAddress6In);
+		auto* xorMappedAddressIn6 =
+		  reinterpret_cast<struct sockaddr_in6*>(std::addressof(xorMappedAddressStorage));
+		xorMappedAddress = reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage));
+
+		uv_ip6_addr("2001:db8::1234", 20002, xorMappedAddressIn6);
 
 		// Total length of the Attributes.
 		attributesLen = (4 + 20);
 
-		successResponse->SetXorMappedAddress(std::addressof(xorMappedAddress6));
+		successResponse->SetXorMappedAddress(xorMappedAddress);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -721,20 +801,240 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*nomination*/ 0,
 		                  /*hasSoftware*/ false,
 		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ true,
 		                  /*hasErrorCode*/ false,
 		                  /*errorCode*/ 0,
 		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		sockaddr obtainedXorMappedAddress6{};
+		REQUIRE(successResponse->GetXorMappedAddress(std::addressof(obtainedXorMappedAddressStorage)));
 
-		REQUIRE(successResponse->GetXorMappedAddress(obtainedXorMappedAddress6));
-
-		Utils::IP::GetAddressInfo(std::addressof(obtainedXorMappedAddress6), family, ip, port);
+		Utils::IP::GetAddressInfo(
+		  reinterpret_cast<sockaddr*>(std::addressof(obtainedXorMappedAddressStorage)), family, ip, port);
 
 		REQUIRE(family == AF_INET6);
-		REQUIRE(ip == "2001:db8::1234");
+		expectedIp = "2001:db8::1234";
+		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 20002);
+
+		/* Protect the Packet. */
+
+		std::string password = "asjhdkjhkasd";
+
+		successResponse->Protect(password);
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ true,
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
+
+		REQUIRE(successResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::OK);
+	}
+
+	SECTION("StunPacket::Factory() creating an error response succeeds")
+	{
+		std::unique_ptr<StunPacket> errorResponse{ StunPacket::Factory(
+			FactoryBuffer,
+			sizeof(FactoryBuffer),
+			StunPacket::Class::ERROR_RESPONSE,
+			StunPacket::Method::BINDING) };
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		// Byte length: 4 + 23 (1 byte of padding needed).
+		uint16_t errorCode            = 666;
+		std::string errorReasonPhrase = "UPPS UNKNOWN ERROR 😊";
+
+		// Total length of the Attributes.
+		size_t attributesLen = (4 + 4 + 23 + 1);
+
+		errorResponse->SetErrorCode(errorCode, errorReasonPhrase);
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		/* Protect the Packet. */
+
+		std::string password = "23786asdas123";
+
+		errorResponse->Protect(password);
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
+
+		REQUIRE(errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::OK);
+
+		/* Create a new fresh error response. */
+
+		errorResponse.reset(
+		  StunPacket::Factory(
+		    FactoryBuffer,
+		    sizeof(FactoryBuffer),
+		    StunPacket::Class::ERROR_RESPONSE,
+		    StunPacket::Method::BINDING));
+
+		// Byte length: 4 + 11 (1 byte of padding needed).
+		errorCode         = 400;
+		errorReasonPhrase = "Bad Request";
+
+		// Total length of the Attributes.
+		attributesLen = (4 + 4 + 11 + 1);
+
+		errorResponse->SetErrorCode(errorCode, errorReasonPhrase);
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		/* Protect the Packet (without password). */
+
+		// Protect() without password only adds FINGERPRINT Attribute.
+		errorResponse->Protect();
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ FactoryBuffer,
+		                  /*bufferLength*/ sizeof(FactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 + 4,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ errorCode,
+		                  /*errorReasonPhrase*/ errorReasonPhrase,
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ true);
+
+		// Cannot check authentication in a Packet without MESSAGE-INTEGRITY.
+		REQUIRE(
+		  errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::BAD_MESSAGE);
 	}
 }

@@ -7,6 +7,7 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>
+#include <memory>
 #include <string>
 
 namespace RTC
@@ -64,7 +65,8 @@ namespace RTC
 			// Clone the given address into our address storage and make the sockaddr
 			// pointer point to it.
 			this->udpRemoteAddrStorage = Utils::IP::CopyAddress(this->udpRemoteAddr);
-			this->udpRemoteAddr        = reinterpret_cast<struct sockaddr*>(&this->udpRemoteAddrStorage);
+			this->udpRemoteAddr =
+			  reinterpret_cast<struct sockaddr*>(std::addressof(this->udpRemoteAddrStorage));
 		}
 
 		bool Compare(const TransportTuple* tuple) const

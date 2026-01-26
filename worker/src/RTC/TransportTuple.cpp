@@ -160,11 +160,11 @@ namespace RTC
 		uint8_t buffer[BufferSize]         = {};
 		size_t idx                         = 0;
 
-		auto appendSockAddr = [&](const sockaddr* addr)
+		auto appendSockAddr = [&](const struct sockaddr* addr)
 		{
 			if (addr->sa_family == AF_INET)
 			{
-				const auto* in      = reinterpret_cast<const sockaddr_in*>(addr);
+				const auto* in      = reinterpret_cast<const struct sockaddr_in*>(addr);
 				const auto* ip      = reinterpret_cast<const uint8_t*>(&in->sin_addr.s_addr);
 				const uint16_t port = ntohs(in->sin_port);
 
@@ -175,7 +175,7 @@ namespace RTC
 			}
 			else if (addr->sa_family == AF_INET6)
 			{
-				const auto* in6     = reinterpret_cast<const sockaddr_in6*>(addr);
+				const auto* in6     = reinterpret_cast<const struct sockaddr_in6*>(addr);
 				const auto* ip      = reinterpret_cast<const uint8_t*>(&in6->sin6_addr);
 				const uint16_t port = ntohs(in6->sin6_port);
 

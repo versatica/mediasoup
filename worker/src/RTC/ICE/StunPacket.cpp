@@ -238,15 +238,16 @@ namespace RTC
 
 			if (HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS))
 			{
-				struct sockaddr xorMappedAddress;
+				struct sockaddr_storage xorMappedAddressStorage{};
 
-				if (GetXorMappedAddress(xorMappedAddress))
+				if (GetXorMappedAddress(std::addressof(xorMappedAddressStorage)))
 				{
 					int family;
 					uint16_t port;
 					std::string ip;
 
-					Utils::IP::GetAddressInfo(std::addressof(xorMappedAddress), family, ip, port);
+					Utils::IP::GetAddressInfo(
+					  reinterpret_cast<sockaddr*>(std::addressof(xorMappedAddressStorage)), family, ip, port);
 
 					if (family == AF_INET)
 					{
@@ -319,7 +320,7 @@ namespace RTC
 			std::memcpy(GetTransactionIdPointer(), transactionId, StunPacket::TransactionIdLength);
 		}
 
-		void StunPacket::SetUsername(std::string& username)
+		void StunPacket::SetUsername(const std::string& username)
 		{
 			MS_TRACE();
 
@@ -378,7 +379,7 @@ namespace RTC
 			  StunPacket::AttributeType::NOMINATION, AttributeFactoryBuffer, sizeof(nomination));
 		}
 
-		void StunPacket::SetSoftware(std::string& software)
+		void StunPacket::SetSoftware(const std::string& software)
 		{
 			MS_TRACE();
 
@@ -391,28 +392,11 @@ namespace RTC
 			StoreNewAttribute(StunPacket::AttributeType::SOFTWARE, software.c_str(), software.length());
 		}
 
-		void StunPacket::SetErrorCode(uint16_t errorCode, std::string& reasonPhrase)
+		bool StunPacket::GetXorMappedAddress(struct sockaddr_storage* xorMappedAddressStorage) const
 		{
 			MS_TRACE();
 
-			const auto codeClass  = static_cast<uint8_t>(errorCode / 100);
-			const auto codeNumber = static_cast<uint8_t>(errorCode) - (codeClass * 100);
-
-			Utils::Byte::Set2Bytes(AttributeFactoryBuffer, 0, 0);
-			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 2, codeClass);
-			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 3, codeNumber);
-
-			std::memcpy(AttributeFactoryBuffer + 4, reasonPhrase.c_str(), reasonPhrase.length());
-
-			StoreNewAttribute(
-			  StunPacket::AttributeType::ERROR_CODE, AttributeFactoryBuffer, 4 + reasonPhrase.length());
-		}
-
-		bool StunPacket::GetXorMappedAddress(struct sockaddr& xorMappedAddress) const
-		{
-			MS_TRACE();
-
-			std::memset(std::addressof(xorMappedAddress), 0x00, sizeof(xorMappedAddress));
+			std::memset(xorMappedAddressStorage, 0x00, sizeof(struct sockaddr_storage));
 
 			const auto* attribute = GetAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS);
 
@@ -443,7 +427,7 @@ namespace RTC
 					return false;
 				}
 
-				auto* addr4 = reinterpret_cast<struct sockaddr_in*>(std::addressof(xorMappedAddress));
+				auto* addr4 = reinterpret_cast<struct sockaddr_in*>(xorMappedAddressStorage);
 
 				addr4->sin_family = AF_INET;
 				addr4->sin_port   = htons(port);
@@ -476,7 +460,7 @@ namespace RTC
 					return false;
 				}
 
-				auto* addr6 = reinterpret_cast<struct sockaddr_in6*>(std::addressof(xorMappedAddress));
+				auto* addr6 = reinterpret_cast<struct sockaddr_in6*>(xorMappedAddressStorage);
 
 				addr6->sin6_family = AF_INET6;
 				addr6->sin6_port   = htons(port);
@@ -524,14 +508,14 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  &(reinterpret_cast<const sockaddr_in*>(xorMappedAddress))->sin_port,
+					  &(reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress))->sin_port,
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  &(reinterpret_cast<const sockaddr_in*>(xorMappedAddress))->sin_addr.s_addr,
+					  &(reinterpret_cast<const struct sockaddr_in*>(xorMappedAddress))->sin_addr.s_addr,
 					  4);
 					AttributeFactoryBuffer[4] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[5] ^= StunPacket::MagicCookie[1];
@@ -555,14 +539,14 @@ namespace RTC
 					// Set port and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 2,
-					  &(reinterpret_cast<const sockaddr_in6*>(xorMappedAddress))->sin6_port,
+					  &(reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress))->sin6_port,
 					  2);
 					AttributeFactoryBuffer[2] ^= StunPacket::MagicCookie[0];
 					AttributeFactoryBuffer[3] ^= StunPacket::MagicCookie[1];
 					// Set address and XOR it.
 					std::memcpy(
 					  AttributeFactoryBuffer + 4,
-					  &(reinterpret_cast<const sockaddr_in6*>(xorMappedAddress))->sin6_addr.s6_addr,
+					  &(reinterpret_cast<const struct sockaddr_in6*>(xorMappedAddress))->sin6_addr.s6_addr,
 					  16);
 					const auto* transactionId = GetTransactionId();
 
@@ -596,6 +580,23 @@ namespace RTC
 					MS_THROW_TYPE_ERROR("unknown IP family");
 				}
 			}
+		}
+
+		void StunPacket::SetErrorCode(uint16_t errorCode, const std::string& reasonPhrase)
+		{
+			MS_TRACE();
+
+			const auto codeClass  = static_cast<uint8_t>(errorCode / 100);
+			const auto codeNumber = static_cast<uint8_t>(errorCode) - (codeClass * 100);
+
+			Utils::Byte::Set2Bytes(AttributeFactoryBuffer, 0, 0);
+			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 2, codeClass);
+			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 3, codeNumber);
+
+			std::memcpy(AttributeFactoryBuffer + 4, reasonPhrase.c_str(), reasonPhrase.length());
+
+			StoreNewAttribute(
+			  StunPacket::AttributeType::ERROR_CODE, AttributeFactoryBuffer, 4 + reasonPhrase.length());
 		}
 
 		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(
@@ -639,8 +640,8 @@ namespace RTC
 
 					// Check that the USERNAME Attribute begins with the first username
 					// fragment plus ":".
-					const size_t usernameFragment1Len = usernameFragment1.length();
-					const auto username               = GetUsername();
+					const auto usernameFragment1Len = usernameFragment1.length();
+					const auto username             = GetUsername();
 
 					if (
 					  username.length() <= usernameFragment1Len || username.at(usernameFragment1Len) != ':' ||
@@ -659,7 +660,8 @@ namespace RTC
 					if (!messageIntegrity)
 					{
 						MS_WARN_TAG(
-						  ice, "cannot authenticate request or indication, missing MESSAGE-INTEGRITY Attribute");
+						  ice,
+						  "cannot authenticate success response or error response, missing MESSAGE-INTEGRITY Attribute");
 
 						return StunPacket::AuthenticationResult::BAD_MESSAGE;
 					}
@@ -689,8 +691,7 @@ namespace RTC
 				// FINGERPRINT Attribute (4 + 4).
 				// NOTE: We cannot use SetMessageLength() because CheckAuthentication()
 				// is marked as a `const` method.
-				Utils::Byte::Set2Bytes(
-				  fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength() - 4 - 4));
+				Utils::Byte::Set2Bytes(fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength() - 4 - 4));
 			}
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
@@ -716,41 +717,86 @@ namespace RTC
 			// is marked as a `const` method.
 			if (hasFingerprint)
 			{
-				Utils::Byte::Set2Bytes(
-				  fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength()));
+				Utils::Byte::Set2Bytes(fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength()));
 			}
 
 			return result;
 		}
 
-		void StunPacket::Protect(std::string& password)
+		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(const std::string& password) const
 		{
 			MS_TRACE();
 
-			if (this->klass == StunPacket::Class::SUCCESS_RESPONSE)
-			{
-				MS_THROW_ERROR("cannot protect a STUN success response");
-			}
-			else if (this->klass == StunPacket::Class::ERROR_RESPONSE)
-			{
-				MS_THROW_ERROR("cannot protect a STUN error response");
-			}
-			else if (HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY))
+			static const std::string usernameFragment1{ "" };
+
+			return CheckAuthentication(usernameFragment1, password);
+		}
+
+		void StunPacket::Protect(const std::string& password)
+		{
+			MS_TRACE();
+
+			if (HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY))
 			{
 				MS_THROW_ERROR("cannot protect Packet, it already has MESSAGE-INTEGRITY Attribute");
-			} else if (HasAttribute(StunPacket::AttributeType::FINGERPRINT))
+			}
+			else if (HasAttribute(StunPacket::AttributeType::FINGERPRINT))
 			{
 				MS_THROW_ERROR("cannot protect Packet, it already has FINGERPRINT Attribute");
 			}
 
-			// We need to add MESSAGE-INTEGRITY and FINGERPRINT Attributes so must
-			// increase the length of the Packet.
+			const auto currentLength = GetLength();
+			const size_t addedLength = 4 + StunPacket::MessageIntegrityAttributeLength + 4 + 4;
+
+			// We need to add Attribute(s) so we must increase the length of the
+			// Packet.
 			// NOTE: This may throw.
-			SetLength(GetLength() + 4 + StunPacket::MessageIntegrityAttributeLength + 4 + 4);
+			SetLength(GetLength() + addedLength);
+			// Once we know it doesn't throw (so there is space in the buffer), let's
+			// revert it because code below will do it when needed.
+			SetLength(currentLength);
 
+			// Add MESSAGE-INTEGRITY Attribute (only if password was given).
+			if (!password.empty())
+			{
+				// When must include the length of MESSAGE-INTEGRITY Attribute in
+				// message length field of the Packet.
+				SetMessageLength(GetMessageLength() + 4 + StunPacket::MessageIntegrityAttributeLength);
 
+				// Calculate the HMAC-SHA1 of the packet according to MESSAGE-INTEGRITY
+				// rules.
+				const uint8_t* computedMessageIntegrity =
+				  Utils::Crypto::GetHmacSha1(password, GetBuffer(), currentLength);
 
-			// TODO: Use SetMessageLength()
+				StoreNewAttribute(
+				  StunPacket::AttributeType::MESSAGE_INTEGRITY,
+				  computedMessageIntegrity,
+				  StunPacket::MessageIntegrityAttributeLength);
+			}
+
+			// Add FINGERPRINT Attribute.
+
+			// When must include the length of FINGERPRINT Attribute in
+			// message length field of the Packet.
+			SetMessageLength(GetMessageLength() + 4 + 4);
+
+			// Compute the CRC32 of the Packet up to (but excluding) the FINGERPRINT
+			// attribute and XOR it with 0x5354554e.
+			const uint32_t computedFingerprint =
+			  Utils::Crypto::GetCRC32(GetBuffer(), GetLength()) ^ 0x5354554e;
+
+			Utils::Byte::Set4Bytes(AttributeFactoryBuffer, 0, computedFingerprint);
+
+			StoreNewAttribute(StunPacket::AttributeType::FINGERPRINT, AttributeFactoryBuffer, 4);
+		}
+
+		void StunPacket::Protect()
+		{
+			MS_TRACE();
+
+			static std::string password{ "" };
+
+			Protect(password);
 		}
 
 		bool StunPacket::Validate(bool storeAttributes)

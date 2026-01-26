@@ -227,7 +227,7 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			virtual void SetUsername(std::string& username) final;
+			virtual void SetUsername(const std::string& username) final;
 
 			uint32_t GetPriority() const
 			{
@@ -300,7 +300,11 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			void SetSoftware(std::string& software);
+			void SetSoftware(const std::string& software);
+
+			bool GetXorMappedAddress(struct sockaddr_storage* xorMappedAddressStorage) const;
+
+			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
 
 			uint16_t GetErrorCode(std::string_view& reasonPhrase) const
 			{
@@ -332,23 +336,32 @@ namespace RTC
 				return errorCode;
 			}
 
-			void SetErrorCode(uint16_t errorCode, std::string& reasonPhrase);
+			void SetErrorCode(uint16_t errorCode, const std::string& reasonPhrase);
 
-			bool GetXorMappedAddress(struct sockaddr& xorMappedAddress) const;
-
-			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
-
+			/**
+			 * Check authentication of the STUN request or notification.
+			 */
 			StunPacket::AuthenticationResult CheckAuthentication(
 			  const std::string& usernameFragment1, const std::string& password) const;
 
 			/**
-			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN request or
-			 * notification.
+			 * Check authentication of the STUN success response or error response.
+			 */
+			StunPacket::AuthenticationResult CheckAuthentication(const std::string& password) const;
+
+			/**
+			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN Packet.
+			 *
+			 * @remarks
+			 * - MESSAGE-INTEGRITY is only added if given `password` is not empty.
 			 *
 			 * @throw MediaSoupTypeError - If there is no enough space in the buffer.
-			 * @throw MediaSoupError - If the Packet is a success or error response.
+			 * @throw MediaSoupTypeError - If the Packet already has MESSAGE-INTEGRITY
+			 *   or FINGERPRINT Attributes.
 			 */
-			void Protect(std::string& password);
+			void Protect(const std::string& password);
+
+			void Protect();
 
 		private:
 			uint8_t* GetFixedHeaderPointer() const

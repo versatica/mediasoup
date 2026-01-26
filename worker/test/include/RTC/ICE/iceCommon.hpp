@@ -49,6 +49,7 @@ namespace RTC
                           /*uint32_t*/ nomination,                                                  \
                           /*bool*/ hasSoftware,                                                     \
                           /*std::string*/ software,                                                 \
+                          /*bool*/ hasXorMappedAddress,                                             \
                           /*bool*/ hasErrorCode,                                                    \
                           /*uint16_t*/ errorCode,                                                   \
                           /*std::string*/ errorReasonPhrase,                                        \
@@ -60,7 +61,6 @@ namespace RTC
 		std::memcpy(originalBuffer, buffer, bufferLength);                                              \
 		REQUIRE(StunPacket::IsStun(buffer, bufferLength) == true);                                      \
 		REQUIRE(packet);                                                                                \
-		REQUIRE(packet->Validate(/*storeAttributes*/ false));                                           \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                        \
 		REQUIRE(packet->GetBuffer() == buffer);                                                         \
 		REQUIRE(packet->GetBufferLength() != 0);                                                        \
@@ -82,6 +82,8 @@ namespace RTC
 		REQUIRE(packet->GetNomination() == nomination);                                                 \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::SOFTWARE) == hasSoftware);              \
 		REQUIRE(packet->GetSoftware() == software);                                                     \
+		REQUIRE(                                                                                        \
+		  packet->HasAttribute(StunPacket::AttributeType::XOR_MAPPED_ADDRESS) == hasXorMappedAddress);  \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::ERROR_CODE) == hasErrorCode);           \
 		std::string_view obtainedErrorReasonPhrase;                                                     \
 		REQUIRE(packet->GetErrorCode(obtainedErrorReasonPhrase) == errorCode);                          \
@@ -89,11 +91,20 @@ namespace RTC
 		REQUIRE(                                                                                        \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) == hasMessageIntegrity);   \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);        \
+		REQUIRE(packet->Validate(/*storeAttributes*/ false));                                           \
 		const std::string usernameFragment1{ "lalala-fooo-œæ€œæ€" };                                    \
 		const std::string password{ "∫∂ƒ3487345345Ω∑©™ƒ™œ" };                                           \
 		REQUIRE(                                                                                        \
 		  packet->CheckAuthentication(usernameFragment1, password) !=                                   \
 		  StunPacket::AuthenticationResult::OK);                                                        \
+		REQUIRE(packet->CheckAuthentication(password) != StunPacket::AuthenticationResult::OK);         \
+		if (                                                                                            \
+		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) ||                         \
+		  packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT))                                 \
+		{                                                                                               \
+			REQUIRE_THROWS_AS(packet->Protect(password), MediaSoupError);                                 \
+			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                         \
+		}                                                                                               \
 		REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);  \
 		REQUIRE_THROWS_AS(                                                                              \
 		  const_cast<StunPacket*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);         \
