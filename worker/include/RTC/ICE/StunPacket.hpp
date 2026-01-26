@@ -151,6 +151,7 @@ namespace RTC
 			static const size_t XorMappedAddressIPv6Length{ 20 };
 			static const size_t SoftwareAttributeMaxLength{ 763 };
 			static const size_t MessageIntegrityAttributeLength{ 20 };
+			static const size_t FingerprintAttributeLength{ 4 };
 
 			/**
 			 * Whether given buffer could be a valid STUN Packet.
@@ -340,10 +341,29 @@ namespace RTC
 			StunPacket::AuthenticationResult CheckAuthentication(
 			  const std::string& usernameFragment1, const std::string& password) const;
 
+			/**
+			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN request or
+			 * notification.
+			 *
+			 * @throw MediaSoupTypeError - If there is no enough space in the buffer.
+			 * @throw MediaSoupError - If the Packet is a success or error response.
+			 */
+			void Protect(std::string& password);
+
 		private:
 			uint8_t* GetFixedHeaderPointer() const
 			{
 				return const_cast<uint8_t*>(GetBuffer());
+			}
+
+			uint16_t GetMessageLength() const
+			{
+				return Utils::Byte::Get2Bytes(GetFixedHeaderPointer(), 2);
+			}
+
+			void SetMessageLength(uint16_t msgLength)
+			{
+				Utils::Byte::Set2Bytes(GetFixedHeaderPointer(), 2, msgLength);
 			}
 
 			uint8_t* GetTransactionIdPointer() const

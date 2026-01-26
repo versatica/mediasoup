@@ -681,18 +681,21 @@ namespace RTC
 			auto* fixedHeader = GetFixedHeaderPointer();
 
 			// If there is FINGERPRINT it must be discarded for MESSAGE-INTEGRITY
-			// calculation, so the header length field must be modified (and later
+			// calculation, so the message length field must be modified (and later
 			// restored).
 			if (hasFingerprint)
 			{
-				// Set the header length field: full size - header length - FINGERPRINT
-				// Attribute total length (8 bytes).
+				// Set the message length field by removing the length of the
+				// FINGERPRINT Attribute (4 + 4).
+				// NOTE: We cannot use SetMessageLength() because CheckAuthentication()
+				// is marked as a `const` method.
 				Utils::Byte::Set2Bytes(
-				  fixedHeader, 2, static_cast<uint16_t>(GetLength() - StunPacket::FixedHeaderLength - 8));
+				  fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength() - 4 - 4));
 			}
 
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
-			// rules.
+			// rules, this is, by checking the bytes from 0 to the beginning of the
+			// MESSAGE-INTEGRITY Attribute.
 			const uint8_t* computedMessageIntegrity =
 			  Utils::Crypto::GetHmacSha1(password, fixedHeader, (messageIntegrity - 4) - fixedHeader);
 
@@ -708,14 +711,46 @@ namespace RTC
 				result = StunPacket::AuthenticationResult::UNAUTHORIZED;
 			}
 
-			// Restore the header length field.
+			// Restore the message length field.
+			// NOTE: We cannot use SetMessageLength() because CheckAuthentication()
+			// is marked as a `const` method.
 			if (hasFingerprint)
 			{
 				Utils::Byte::Set2Bytes(
-				  fixedHeader, 2, static_cast<uint16_t>(GetLength() - StunPacket::FixedHeaderLength));
+				  fixedHeader, 2, static_cast<uint16_t>(GetAttributesLength()));
 			}
 
 			return result;
+		}
+
+		void StunPacket::Protect(std::string& password)
+		{
+			MS_TRACE();
+
+			if (this->klass == StunPacket::Class::SUCCESS_RESPONSE)
+			{
+				MS_THROW_ERROR("cannot protect a STUN success response");
+			}
+			else if (this->klass == StunPacket::Class::ERROR_RESPONSE)
+			{
+				MS_THROW_ERROR("cannot protect a STUN error response");
+			}
+			else if (HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY))
+			{
+				MS_THROW_ERROR("cannot protect Packet, it already has MESSAGE-INTEGRITY Attribute");
+			} else if (HasAttribute(StunPacket::AttributeType::FINGERPRINT))
+			{
+				MS_THROW_ERROR("cannot protect Packet, it already has FINGERPRINT Attribute");
+			}
+
+			// We need to add MESSAGE-INTEGRITY and FINGERPRINT Attributes so must
+			// increase the length of the Packet.
+			// NOTE: This may throw.
+			SetLength(GetLength() + 4 + StunPacket::MessageIntegrityAttributeLength + 4 + 4);
+
+
+
+			// TODO: Use SetMessageLength()
 		}
 
 		bool StunPacket::Validate(bool storeAttributes)
@@ -725,7 +760,7 @@ namespace RTC
 			const auto* fixedHeader = GetFixedHeaderPointer();
 
 			// Get message length field.
-			const uint16_t msgLength = Utils::Byte::Get2Bytes(fixedHeader, 2);
+			const auto msgLength = GetMessageLength();
 
 			// Message length field must be total length minus header's 20 bytes, and
 			// must be multiple of 4 Bytes.
@@ -1066,7 +1101,7 @@ namespace RTC
 				  ice,
 				  "cannot store parsed Attribute with type %" PRIu16
 				  ", there is an Attribute with same type already in the map",
-				  static_cast<uint16_t>(attrType));
+				  static_cast<uint16_t>(type));
 
 				return false;
 			}
@@ -1087,7 +1122,7 @@ namespace RTC
 				MS_THROW_ERROR(
 				  "cannot store new Attribute with type %" PRIu16
 				  ", there is an Attribute with same type already in the map",
-				  static_cast<uint16_t>(attrType));
+				  static_cast<uint16_t>(type));
 			}
 
 			// Add the Attribute at the end of the STUN Packet.
@@ -1101,8 +1136,8 @@ namespace RTC
 			// First update Packet length (it may throw).
 			SetLength(GetLength() + attrTotalPaddedLength);
 
-			// Also update the Packet message length field.
-			Utils::Byte::Set2Bytes(GetFixedHeaderPointer(), 2, GetAttributesLength());
+			// Also update the message length field.
+			SetMessageLength(GetAttributesLength());
 
 			Utils::Byte::Set2Bytes(attrPtr, 0, static_cast<uint16_t>(type));
 			Utils::Byte::Set2Bytes(attrPtr, 2, len);
