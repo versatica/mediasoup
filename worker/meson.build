@@ -640,6 +640,7 @@ fuzzer_sources = common_sources + [
   # TODO: REMOVE when new StunPacket is done.
   'fuzzer/src/RTC/OLD_FuzzerStunPacket.cpp',
   'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
+  'fuzzer/src/RTC/ICE/FuzzerStunPacket.cpp',
   'fuzzer/src/RTC/RTP/FuzzerPacket.cpp',
   'fuzzer/src/RTC/RTP/FuzzerProbationGenerator.cpp',
   'fuzzer/src/RTC/RTP/Codecs/FuzzerOpus.cpp',
