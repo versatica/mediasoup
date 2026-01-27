@@ -158,7 +158,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			MS_DUMP_CLEAN(indentation, "<RTC::ICE::StunPacket>");
+			MS_DUMP_CLEAN(indentation, "<ICE::StunPacket>");
 
 			MS_DUMP_CLEAN(indentation, "  length: %zu (buffer length: %zu)", GetLength(), GetBufferLength());
 
@@ -314,7 +314,7 @@ namespace RTC
 
 			MS_DUMP_CLEAN(indentation, "  </Attributes>");
 
-			MS_DUMP_CLEAN(indentation, "<RTC::ICE::StunPacket>");
+			MS_DUMP_CLEAN(indentation, "<ICE::StunPacket>");
 		}
 
 		StunPacket* StunPacket::Clone(uint8_t* buffer, size_t bufferLength) const
