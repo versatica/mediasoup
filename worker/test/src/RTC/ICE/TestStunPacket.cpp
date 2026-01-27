@@ -632,7 +632,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		    transactionId,
 		    StunPacket::TransactionIdLength));
 
-		/* Protect the Packet. */
+		/* Protect the STUN Packet. */
 
 		std::string password = "asjhdkjhkasd";
 
@@ -820,7 +820,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 20002);
 
-		/* Protect the Packet. */
+		/* Protect the STUN Packet. */
 
 		std::string password = "asjhdkjhkasd";
 
@@ -925,7 +925,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		/* Protect the Packet. */
+		/* Protect the STUN Packet. */
 
 		std::string password = "23786asdas123";
 
@@ -1004,7 +1004,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		/* Protect the Packet (without password). */
+		/* Protect the STUN Packet (without password). */
 
 		// Protect() without password only adds FINGERPRINT Attribute.
 		errorResponse->Protect();
@@ -1035,7 +1035,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ true);
 
-		// Cannot check authentication in a Packet without MESSAGE-INTEGRITY.
+		// Cannot check authentication in a STUN Packet without MESSAGE-INTEGRITY.
 		REQUIRE(
 		  errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::BAD_MESSAGE);
 	}

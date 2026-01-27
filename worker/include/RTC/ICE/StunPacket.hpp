@@ -162,7 +162,7 @@ namespace RTC
 			 * Parse a STUN Packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the STUN Packet.
 			 */
 			static StunPacket* Parse(const uint8_t* buffer, size_t bufferLength);
 
@@ -170,7 +170,7 @@ namespace RTC
 			 * Create a STUN Packet.
 			 *
 			 * @remarks
-			 * - `bufferLength` must be the exact length of the Packet.
+			 * - `bufferLength` must be the exact length of the STUN Packet.
 			 * - If `transactionId` is not given then a random Transaction ID is
 			 *   generated.
 			 */
@@ -189,8 +189,8 @@ namespace RTC
 
 		private:
 			/**
-			 * Constructor is private because we only want to create Packet instances
-			 * via Parse() and Factory().
+			 * Constructor is private because we only want to create STUN Packet
+			 * instances via Parse() and Factory().
 			 */
 			StunPacket(uint8_t* buffer, size_t bufferLength);
 
@@ -363,9 +363,12 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - MESSAGE-INTEGRITY is only added if given `password` is not empty.
+			 * - The application MUST NOT add more Attributes into the STUN Packet
+			 *   and MUST NOT modify any field of the STUN Packet after calling
+			 *   this method.
 			 *
 			 * @throw MediaSoupTypeError - If there is no enough space in the buffer.
-			 * @throw MediaSoupError - If the Packet already has MESSAGE-INTEGRITY
+			 * @throw MediaSoupError - If the STUN Packet already has MESSAGE-INTEGRITY
 			 *   or FINGERPRINT Attributes.
 			 */
 			void Protect(const std::string_view password);
@@ -375,7 +378,7 @@ namespace RTC
 			/**
 			 * Creates a STUN success response for the current STUN request.
 			 *
-			 * @throw MediaSoupError - If the Packet is not a STUN request.
+			 * @throw MediaSoupError - If the STUN Packet is not a STUN request.
 			 */
 			StunPacket* CreateSuccessResponse(uint8_t* buffer, size_t bufferLength) const;
 
@@ -383,7 +386,7 @@ namespace RTC
 			 * Creates a STUN error response for the current STUN request. It uses
 			 * given `errorCode` and `reasonPhrase` to add a ERROR-CODE Attribute.
 			 *
-			 * @throw MediaSoupError - If the Packet is not a STUN request.
+			 * @throw MediaSoupError - If the STUN Packet is not a STUN request.
 			 */
 			StunPacket* CreateErrorResponse(
 			  uint8_t* buffer,
