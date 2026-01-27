@@ -99,6 +99,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  StunPacket::AuthenticationResult::OK);
 
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
+
 		/* Serialize it. */
 
 		request->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
@@ -135,6 +139,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  StunPacket::AuthenticationResult::OK);
 
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
+
 		/* Clone it. */
 
 		request.reset(request->Clone(CloneBuffer, sizeof(CloneBuffer)));
@@ -170,6 +178,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  StunPacket::AuthenticationResult::OK);
+
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
 	}
 
 	SECTION(
@@ -668,6 +680,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
 		  StunPacket::AuthenticationResult::OK);
+
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(request->Protect(), MediaSoupError);
 	}
 
 	SECTION("StunPacket::Factory() creating a success response succeeds")
@@ -854,6 +870,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ true);
 
 		REQUIRE(successResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::OK);
+
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(successResponse->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(successResponse->Protect(), MediaSoupError);
 	}
 
 	SECTION("StunPacket::Factory() creating an error response succeeds")
@@ -960,6 +980,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		REQUIRE(errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::OK);
 
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
+
 		/* Create a new fresh error response. */
 
 		errorResponse.reset(
@@ -1038,6 +1062,10 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Cannot check authentication in a STUN Packet without MESSAGE-INTEGRITY.
 		REQUIRE(
 		  errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::BAD_MESSAGE);
+
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
 	}
 
 	SECTION("StunPacket::CreateSuccessResponse() succeeds")
@@ -1083,9 +1111,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		successResponse->Protect("qwekqjhwekjahsd");
 
-		REQUIRE(
-		  successResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
-
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ ResponseFactoryBuffer,
 		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
@@ -1112,6 +1137,13 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*errorReasonPhrase*/ "",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
+
+		REQUIRE(
+		  successResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
+
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(successResponse->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(successResponse->Protect(), MediaSoupError);
 	}
 
 	SECTION("StunPacket::CreateErrorResponse() succeeds")
@@ -1160,9 +1192,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		errorResponse->Protect("qwekqjhwekjahsd");
 
-		REQUIRE(
-		  errorResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
-
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
 		                  /*buffer*/ ResponseFactoryBuffer,
 		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
@@ -1189,5 +1218,12 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*errorReasonPhrase*/ "BAD STUFF",
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
+
+		REQUIRE(
+		  errorResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
+
+		// Trying to modify a STUN Packet once protected must throw.
+		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
+		REQUIRE_THROWS_AS(errorResponse->Protect(), MediaSoupError);
 	}
 }

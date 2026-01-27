@@ -337,6 +337,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotProtected();
+
 			if (username.length() > StunPacket::UsernameAttributeMaxLength)
 			{
 				MS_THROW_TYPE_ERROR(
@@ -350,6 +352,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotProtected();
+
 			Utils::Byte::Set4Bytes(AttributeFactoryBuffer, 0, priority);
 
 			StoreNewAttribute(StunPacket::AttributeType::PRIORITY, AttributeFactoryBuffer, sizeof(priority));
@@ -358,6 +362,8 @@ namespace RTC
 		void StunPacket::AddIceControlling(uint64_t iceControlling)
 		{
 			MS_TRACE();
+
+			AssertNotProtected();
 
 			Utils::Byte::Set8Bytes(AttributeFactoryBuffer, 0, iceControlling);
 
@@ -369,6 +375,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotProtected();
+
 			Utils::Byte::Set8Bytes(AttributeFactoryBuffer, 0, iceControlled);
 
 			StoreNewAttribute(
@@ -379,12 +387,16 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotProtected();
+
 			StoreNewAttribute(StunPacket::AttributeType::USE_CANDIDATE, nullptr, 0);
 		}
 
 		void StunPacket::AddNomination(uint32_t nomination)
 		{
 			MS_TRACE();
+
+			AssertNotProtected();
 
 			Utils::Byte::Set4Bytes(AttributeFactoryBuffer, 0, nomination);
 
@@ -395,6 +407,8 @@ namespace RTC
 		void StunPacket::AddSoftware(const std::string_view software)
 		{
 			MS_TRACE();
+
+			AssertNotProtected();
 
 			if (software.length() > StunPacket::SoftwareAttributeMaxLength)
 			{
@@ -510,6 +524,8 @@ namespace RTC
 		{
 			MS_TRACE();
 
+			AssertNotProtected();
+
 			switch (xorMappedAddress->sa_family)
 			{
 				case AF_INET:
@@ -598,6 +614,8 @@ namespace RTC
 		void StunPacket::AddErrorCode(uint16_t errorCode, const std::string_view reasonPhrase)
 		{
 			MS_TRACE();
+
+			AssertNotProtected();
 
 			const auto codeClass  = static_cast<uint8_t>(errorCode / 100);
 			const auto codeNumber = static_cast<uint8_t>(errorCode) - (codeClass * 100);
@@ -748,14 +766,7 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			if (HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY))
-			{
-				MS_THROW_ERROR("cannot protect STUN Packet, it already has MESSAGE-INTEGRITY Attribute");
-			}
-			else if (HasAttribute(StunPacket::AttributeType::FINGERPRINT))
-			{
-				MS_THROW_ERROR("cannot protect STUN Packet, it already has FINGERPRINT Attribute");
-			}
+			AssertNotProtected();
 
 			const auto currentLength = GetLength();
 			const size_t addedLength = 4 + StunPacket::MessageIntegrityAttributeLength + 4 + 4;
@@ -1246,6 +1257,16 @@ namespace RTC
 			attribute.offset = attrPtr - GetAttributesPointer();
 
 			MS_ASSERT(inserted, "Attribute not inserted in the map (this shouldn't happen)");
+		}
+
+		void StunPacket::AssertNotProtected() const
+		{
+			MS_TRACE();
+
+			if (IsProtected())
+			{
+				MS_THROW_ERROR("STUN Packet is protected");
+			}
 		}
 	} // namespace ICE
 } // namespace RTC

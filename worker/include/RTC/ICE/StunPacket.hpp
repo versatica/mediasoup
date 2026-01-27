@@ -359,6 +359,17 @@ namespace RTC
 			StunPacket::AuthenticationResult CheckAuthentication(std::string_view password) const;
 
 			/**
+			 * Whether the STUN Packet is protected, meaning that it has
+			 * MESSAGE-INTEGRITY and/or FINGERPRINT Attributes.
+			 */
+			bool IsProtected() const
+			{
+				return (
+				  HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) ||
+				  HasAttribute(StunPacket::AttributeType::FINGERPRINT));
+			}
+
+			/**
 			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN Packet.
 			 *
 			 * @remarks
@@ -508,6 +519,8 @@ namespace RTC
 #ifdef MS_TEST
 		private:
 #endif
+
+			void AssertNotProtected() const;
 
 		private:
 			StunPacket::Class klass;

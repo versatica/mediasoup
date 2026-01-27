@@ -92,6 +92,11 @@ namespace RTC
 		REQUIRE(                                                                                        \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) == hasMessageIntegrity);   \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);        \
+		if (hasMessageIntegrity || hasFingerprint)                                                      \
+		{                                                                                               \
+			REQUIRE(packet->IsProtected());                                                               \
+			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                         \
+		}                                                                                               \
 		REQUIRE(                                                                                        \
 		  std::any_of(                                                                                  \
 		    packet->GetTransactionId(),                                                                 \
