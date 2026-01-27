@@ -6,6 +6,7 @@
 #include "MediaSoupErrors.hpp"
 #include <cstdio>  // std::snprintf()
 #include <cstring> // std::memcmp(), std::memcpy(), std::memset()
+#include <string>
 
 namespace RTC
 {
@@ -78,7 +79,11 @@ namespace RTC
 		}
 
 		StunPacket* StunPacket::Factory(
-		  uint8_t* buffer, size_t bufferLength, StunPacket::Class klass, StunPacket::Method method)
+		  uint8_t* buffer,
+		  size_t bufferLength,
+		  StunPacket::Class klass,
+		  StunPacket::Method method,
+		  const uint8_t* transactionId)
 		{
 			MS_TRACE();
 
@@ -89,7 +94,7 @@ namespace RTC
 
 			auto* packet = new StunPacket(buffer, bufferLength);
 
-			std::memset(buffer, 0x00, packet->GetLength());
+			std::memset(packet->GetFixedHeaderPointer(), 0x00, packet->GetLength());
 
 			packet->klass  = klass;
 			packet->method = method;
@@ -103,20 +108,35 @@ namespace RTC
 			typeField |= (static_cast<uint16_t>(klass) & 0x01) << 4;
 
 			// Set type field.
-			Utils::Byte::Set2Bytes(buffer, 0, typeField);
+			Utils::Byte::Set2Bytes(packet->GetFixedHeaderPointer(), 0, typeField);
 
 			// NOTE: No need to write message length since it's already 0.
 
 			// Set magic Cookie.
-			std::memcpy(buffer + 4, StunPacket::MagicCookie, 4);
+			std::memcpy(packet->GetFixedHeaderPointer() + 4, StunPacket::MagicCookie, 4);
 
-			// Write a random TransactionId.
-			Utils::Crypto::WriteRandomBytes(buffer + 8, StunPacket::TransactionIdLength);
+			if (transactionId)
+			{
+				std::memcpy(packet->GetTransactionIdPointer(), transactionId, StunPacket::TransactionIdLength);
+			}
+			else
+			{
+				Utils::Crypto::WriteRandomBytes(
+				  packet->GetTransactionIdPointer(), StunPacket::TransactionIdLength);
+			}
 
 			// No need to invoke SetLength() since constructor invoked it with
 			// minimum Packet length.
 
 			return packet;
+		}
+
+		StunPacket* StunPacket::Factory(
+		  uint8_t* buffer, size_t bufferLength, StunPacket::Class klass, StunPacket::Method method)
+		{
+			MS_TRACE();
+
+			return Factory(buffer, bufferLength, klass, method, nullptr);
 		}
 
 		/* Instance methods. */
@@ -313,14 +333,7 @@ namespace RTC
 			return clonedPacket;
 		}
 
-		void StunPacket::SetTransactionId(const uint8_t* transactionId)
-		{
-			MS_TRACE();
-
-			std::memcpy(GetTransactionIdPointer(), transactionId, StunPacket::TransactionIdLength);
-		}
-
-		void StunPacket::SetUsername(const std::string& username)
+		void StunPacket::AddUsername(const std::string_view username)
 		{
 			MS_TRACE();
 
@@ -330,10 +343,10 @@ namespace RTC
 				  "Attribute USERNAME must be at most %zu bytes", StunPacket::UsernameAttributeMaxLength);
 			}
 
-			StoreNewAttribute(StunPacket::AttributeType::USERNAME, username.c_str(), username.length());
+			StoreNewAttribute(StunPacket::AttributeType::USERNAME, username.data(), username.length());
 		}
 
-		void StunPacket::SetPriority(uint32_t priority)
+		void StunPacket::AddPriority(uint32_t priority)
 		{
 			MS_TRACE();
 
@@ -342,7 +355,7 @@ namespace RTC
 			StoreNewAttribute(StunPacket::AttributeType::PRIORITY, AttributeFactoryBuffer, sizeof(priority));
 		}
 
-		void StunPacket::SetIceControlling(uint64_t iceControlling)
+		void StunPacket::AddIceControlling(uint64_t iceControlling)
 		{
 			MS_TRACE();
 
@@ -352,7 +365,7 @@ namespace RTC
 			  StunPacket::AttributeType::ICE_CONTROLLING, AttributeFactoryBuffer, sizeof(iceControlling));
 		}
 
-		void StunPacket::SetIceControlled(uint64_t iceControlled)
+		void StunPacket::AddIceControlled(uint64_t iceControlled)
 		{
 			MS_TRACE();
 
@@ -362,14 +375,14 @@ namespace RTC
 			  StunPacket::AttributeType::ICE_CONTROLLED, AttributeFactoryBuffer, sizeof(iceControlled));
 		}
 
-		void StunPacket::EnableUseCandidate()
+		void StunPacket::AddUseCandidate()
 		{
 			MS_TRACE();
 
 			StoreNewAttribute(StunPacket::AttributeType::USE_CANDIDATE, nullptr, 0);
 		}
 
-		void StunPacket::SetNomination(uint32_t nomination)
+		void StunPacket::AddNomination(uint32_t nomination)
 		{
 			MS_TRACE();
 
@@ -379,7 +392,7 @@ namespace RTC
 			  StunPacket::AttributeType::NOMINATION, AttributeFactoryBuffer, sizeof(nomination));
 		}
 
-		void StunPacket::SetSoftware(const std::string& software)
+		void StunPacket::AddSoftware(const std::string_view software)
 		{
 			MS_TRACE();
 
@@ -389,7 +402,7 @@ namespace RTC
 				  "Attribute SOFTWARE must be at most %zu bytes", StunPacket::SoftwareAttributeMaxLength);
 			}
 
-			StoreNewAttribute(StunPacket::AttributeType::SOFTWARE, software.c_str(), software.length());
+			StoreNewAttribute(StunPacket::AttributeType::SOFTWARE, software.data(), software.length());
 		}
 
 		bool StunPacket::GetXorMappedAddress(struct sockaddr_storage* xorMappedAddressStorage) const
@@ -493,7 +506,7 @@ namespace RTC
 			}
 		}
 
-		void StunPacket::SetXorMappedAddress(const struct sockaddr* xorMappedAddress)
+		void StunPacket::AddXorMappedAddress(const struct sockaddr* xorMappedAddress)
 		{
 			MS_TRACE();
 
@@ -582,7 +595,7 @@ namespace RTC
 			}
 		}
 
-		void StunPacket::SetErrorCode(uint16_t errorCode, const std::string& reasonPhrase)
+		void StunPacket::AddErrorCode(uint16_t errorCode, const std::string_view reasonPhrase)
 		{
 			MS_TRACE();
 
@@ -593,14 +606,14 @@ namespace RTC
 			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 2, codeClass);
 			Utils::Byte::Set1Byte(AttributeFactoryBuffer, 3, codeNumber);
 
-			std::memcpy(AttributeFactoryBuffer + 4, reasonPhrase.c_str(), reasonPhrase.length());
+			std::memcpy(AttributeFactoryBuffer + 4, reasonPhrase.data(), reasonPhrase.length());
 
 			StoreNewAttribute(
 			  StunPacket::AttributeType::ERROR_CODE, AttributeFactoryBuffer, 4 + reasonPhrase.length());
 		}
 
 		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(
-		  const std::string& usernameFragment1, const std::string& password) const
+		  const std::string_view usernameFragment1, const std::string_view& password) const
 		{
 			MS_TRACE();
 
@@ -613,7 +626,7 @@ namespace RTC
 				case StunPacket::Class::INDICATION:
 				{
 					// usernameFragment1 must not be empty.
-					if (usernameFragment1.empty())
+					if (usernameFragment1.length() == 0)
 					{
 						MS_WARN_TAG(
 						  ice, "cannot authenticate request or indication, empty usernameFragment1 given");
@@ -640,12 +653,12 @@ namespace RTC
 
 					// Check that the USERNAME Attribute begins with the first username
 					// fragment plus ":".
-					const auto usernameFragment1Len = usernameFragment1.length();
-					const auto username             = GetUsername();
+					const auto username = GetUsername();
 
 					if (
-					  username.length() <= usernameFragment1Len || username.at(usernameFragment1Len) != ':' ||
-					  username.compare(0, usernameFragment1Len, usernameFragment1) != 0)
+					  username.length() <= usernameFragment1.length() ||
+					  username.at(usernameFragment1.length()) != ':' ||
+					  username.compare(0, usernameFragment1.length(), usernameFragment1.data()) != 0)
 					{
 						return StunPacket::AuthenticationResult::UNAUTHORIZED;
 					}
@@ -697,8 +710,8 @@ namespace RTC
 			// Calculate the HMAC-SHA1 of the message according to MESSAGE-INTEGRITY
 			// rules, this is, by checking the bytes from 0 to the beginning of the
 			// MESSAGE-INTEGRITY Attribute.
-			const uint8_t* computedMessageIntegrity =
-			  Utils::Crypto::GetHmacSha1(password, fixedHeader, (messageIntegrity - 4) - fixedHeader);
+			const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
+			  password.data(), fixedHeader, (messageIntegrity - 4) - fixedHeader);
 
 			StunPacket::AuthenticationResult result;
 
@@ -723,16 +736,14 @@ namespace RTC
 			return result;
 		}
 
-		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(const std::string& password) const
+		StunPacket::AuthenticationResult StunPacket::CheckAuthentication(std::string_view password) const
 		{
 			MS_TRACE();
 
-			static const std::string usernameFragment1{ "" };
-
-			return CheckAuthentication(usernameFragment1, password);
+			return CheckAuthentication({}, password);
 		}
 
-		void StunPacket::Protect(const std::string& password)
+		void StunPacket::Protect(const std::string_view password)
 		{
 			MS_TRACE();
 
@@ -766,7 +777,7 @@ namespace RTC
 				// Calculate the HMAC-SHA1 of the packet according to MESSAGE-INTEGRITY
 				// rules.
 				const uint8_t* computedMessageIntegrity =
-				  Utils::Crypto::GetHmacSha1(password, GetBuffer(), currentLength);
+				  Utils::Crypto::GetHmacSha1(password.data(), GetBuffer(), currentLength);
 
 				StoreNewAttribute(
 				  StunPacket::AttributeType::MESSAGE_INTEGRITY,
@@ -794,9 +805,40 @@ namespace RTC
 		{
 			MS_TRACE();
 
-			static std::string password{ "" };
+			Protect({});
+		}
 
-			Protect(password);
+		StunPacket* StunPacket::CreateSuccessResponse(uint8_t* buffer, size_t bufferLength) const
+		{
+			MS_TRACE();
+
+			if (this->klass != StunPacket::Class::REQUEST)
+			{
+				MS_THROW_ERROR("cannot create a success response, original Packet is not a request");
+			}
+
+			auto* successResponse = Factory(
+			  buffer, bufferLength, StunPacket::Class::SUCCESS_RESPONSE, this->method, GetTransactionId());
+
+			return successResponse;
+		}
+
+		StunPacket* StunPacket::CreateErrorResponse(
+		  uint8_t* buffer, size_t bufferLength, uint16_t errorCode, const std::string_view& reasonPhrase) const
+		{
+			MS_TRACE();
+
+			if (this->klass != StunPacket::Class::REQUEST)
+			{
+				MS_THROW_ERROR("cannot create an error response, original Packet is not a request");
+			}
+
+			auto* errorResponse = Factory(
+			  buffer, bufferLength, StunPacket::Class::ERROR_RESPONSE, this->method, GetTransactionId());
+
+			errorResponse->AddErrorCode(errorCode, reasonPhrase);
+
+			return errorResponse;
 		}
 
 		bool StunPacket::Validate(bool storeAttributes)

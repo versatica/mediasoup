@@ -92,8 +92,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
 
-		const std::string usernameFragment1{ "78tal5pc6dkyv1rpg56vuay5je13cewm" };
-		const std::string password{ "1ezk7fni4jeo5bt7ibcdk4wjl8712suw" };
+		const std::string usernameFragment1 = "78tal5pc6dkyv1rpg56vuay5je13cewm";
+		const std::string password          = "1ezk7fni4jeo5bt7ibcdk4wjl8712suw";
 
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
@@ -445,8 +445,20 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::Factory() creating a request succeeds")
 	{
+		// clang-format off
+		uint8_t transactionId[StunPacket::TransactionIdLength] =
+		{
+			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC
+		};
+		// clang-format on
+
 		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
-			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
+			FactoryBuffer,
+			sizeof(FactoryBuffer),
+			StunPacket::Class::REQUEST,
+			StunPacket::Method::BINDING,
+			transactionId) };
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -474,16 +486,6 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ false,
 		                  /*hasFingerprint*/ false);
 
-		// clang-format off
-		uint8_t transactionId[StunPacket::TransactionIdLength] =
-		{
-			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
-			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC
-		};
-		// clang-format on
-
-		request->SetTransactionId(transactionId);
-
 		// Byte length: 27 (1 byte of padding needed).
 		std::string username          = "œæ€å∫∂:¢∞¬÷12";
 		std::string usernameFragment1 = "œæ€å∫∂";
@@ -504,22 +506,22 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		size_t attributesLen =
 		  (4 + 27 + 1) + (4 + 4) + (4 + 8) + (4) + (4 + 4) + (4 + 18 + 2) + (4 + 4 + 23 + 1);
 
-		request->SetUsername(username);
-		request->SetPriority(priority);
-		request->SetIceControlling(iceControlling);
-		request->EnableUseCandidate();
-		request->SetNomination(nomination);
-		request->SetSoftware(software);
-		request->SetErrorCode(errorCode, errorReasonPhrase);
+		request->AddUsername(username);
+		request->AddPriority(priority);
+		request->AddIceControlling(iceControlling);
+		request->AddUseCandidate();
+		request->AddNomination(nomination);
+		request->AddSoftware(software);
+		request->AddErrorCode(errorCode, errorReasonPhrase);
 
 		// It should fail if we try to add a duplicated Attribute.
-		REQUIRE_THROWS_AS(request->SetUsername(username), MediaSoupError);
-		REQUIRE_THROWS_AS(request->SetPriority(priority), MediaSoupError);
-		REQUIRE_THROWS_AS(request->SetIceControlling(iceControlling), MediaSoupError);
-		REQUIRE_THROWS_AS(request->EnableUseCandidate(), MediaSoupError);
-		REQUIRE_THROWS_AS(request->SetNomination(nomination), MediaSoupError);
-		REQUIRE_THROWS_AS(request->SetSoftware(software), MediaSoupError);
-		REQUIRE_THROWS_AS(request->SetErrorCode(errorCode, errorReasonPhrase), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddUsername(username), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddPriority(priority), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddIceControlling(iceControlling), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddUseCandidate(), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddNomination(nomination), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddSoftware(software), MediaSoupError);
+		REQUIRE_THROWS_AS(request->AddErrorCode(errorCode, errorReasonPhrase), MediaSoupError);
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -715,7 +717,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Total length of the Attributes.
 		size_t attributesLen = (4 + 8);
 
-		successResponse->SetXorMappedAddress(xorMappedAddress);
+		successResponse->AddXorMappedAddress(xorMappedAddress);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -780,7 +782,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Total length of the Attributes.
 		attributesLen = (4 + 20);
 
-		successResponse->SetXorMappedAddress(xorMappedAddress);
+		successResponse->AddXorMappedAddress(xorMappedAddress);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -895,7 +897,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Total length of the Attributes.
 		size_t attributesLen = (4 + 4 + 23 + 1);
 
-		errorResponse->SetErrorCode(errorCode, errorReasonPhrase);
+		errorResponse->AddErrorCode(errorCode, errorReasonPhrase);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -974,7 +976,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Total length of the Attributes.
 		attributesLen = (4 + 4 + 11 + 1);
 
-		errorResponse->SetErrorCode(errorCode, errorReasonPhrase);
+		errorResponse->AddErrorCode(errorCode, errorReasonPhrase);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
 		                  /*buffer*/ FactoryBuffer,
@@ -1036,5 +1038,156 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		// Cannot check authentication in a Packet without MESSAGE-INTEGRITY.
 		REQUIRE(
 		  errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::BAD_MESSAGE);
+	}
+
+	SECTION("StunPacket::CreateSuccessResponse() succeeds")
+	{
+		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
+			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
+
+		std::unique_ptr<StunPacket> successResponse{ request->CreateSuccessResponse(
+			ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer)) };
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength,
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    successResponse->GetTransactionId(),
+		    StunPacket::TransactionIdLength,
+		    request->GetTransactionId(),
+		    StunPacket::TransactionIdLength) == true);
+
+		successResponse->Protect("qwekqjhwekjahsd");
+
+		REQUIRE(
+		  successResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
+
+		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
+		                  /*buffer*/ ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + 4 +
+		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ false,
+		                  /*errorCode*/ 0,
+		                  /*errorReasonPhrase*/ "",
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
+	}
+
+	SECTION("StunPacket::CreateErrorResponse() succeeds")
+	{
+		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
+			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
+
+		std::unique_ptr<StunPacket> errorResponse{ request->CreateErrorResponse(
+			ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer), 666, "BAD STUFF") };
+
+		// Total length of the Attributes (ERROR-CODE).
+		const size_t attributesLen = (4 + 4 + 9 + 3);
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ 666,
+		                  /*errorReasonPhrase*/ "BAD STUFF",
+		                  /*hasMessageIntegrity*/ false,
+		                  /*hasFingerprint*/ false);
+
+		REQUIRE(
+		  helpers::AreBuffersEqual(
+		    errorResponse->GetTransactionId(),
+		    StunPacket::TransactionIdLength,
+		    request->GetTransactionId(),
+		    StunPacket::TransactionIdLength) == true);
+
+		errorResponse->Protect("qwekqjhwekjahsd");
+
+		REQUIRE(
+		  errorResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
+
+		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
+		                  /*buffer*/ ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
+		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*hasUsername*/ false,
+		                  /*username*/ "",
+		                  /*hasPriority*/ false,
+		                  /*priority*/ 0,
+		                  /*hasIceControlling*/ false,
+		                  /*iceControlling*/ 0,
+		                  /*hasIceControlled*/ false,
+		                  /*iceControlled*/ 0,
+		                  /*hasUseCandidate*/ false,
+		                  /*hasNomination*/ false,
+		                  /*nomination*/ 0,
+		                  /*hasSoftware*/ false,
+		                  /*software*/ "",
+		                  /*hasXorMappedAddress*/ false,
+		                  /*hasErrorCode*/ true,
+		                  /*errorCode*/ 666,
+		                  /*errorReasonPhrase*/ "BAD STUFF",
+		                  /*hasMessageIntegrity*/ true,
+		                  /*hasFingerprint*/ true);
 	}
 }

@@ -6,6 +6,7 @@ namespace RTC
 	namespace ICE
 	{
 		thread_local uint8_t FactoryBuffer[];
+		thread_local uint8_t ResponseFactoryBuffer[];
 		thread_local uint8_t SerializeBuffer[];
 		thread_local uint8_t CloneBuffer[];
 		thread_local uint8_t DataBuffer[];
@@ -14,6 +15,7 @@ namespace RTC
 		void ResetBuffers()
 		{
 			std::memset(FactoryBuffer, 0xAA, sizeof(FactoryBuffer));
+			std::memset(ResponseFactoryBuffer, 0xAA, sizeof(ResponseFactoryBuffer));
 			std::memset(SerializeBuffer, 0xBB, sizeof(SerializeBuffer));
 			std::memset(CloneBuffer, 0xCC, sizeof(CloneBuffer));
 			std::memset(DataBuffer, 0xDD, sizeof(DataBuffer));

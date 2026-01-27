@@ -2,13 +2,13 @@
 #define MS_TEST_RTC_ICE_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"          // IWYU pragma: export
-#include "testHelpers.hpp"              // IWYU pragma: export in worker/test/include/
-#include "RTC/ICE/StunPacket.hpp"       // IWYU pragma: export
-#include <catch2/catch_test_macros.hpp> // IWYU pragma: export
-#include <cstdlib>                      // std::malloc(), std::free()
-#include <cstring>                      // std::memcpy()
-#include <string>
+#include "MediaSoupErrors.hpp"
+#include "Utils.hpp"
+#include "testHelpers.hpp"
+#include "RTC/ICE/StunPacket.hpp"
+#include <catch2/catch_test_macros.hpp>
+#include <cstdlib> // std::malloc(), std::free()
+#include <cstring> // std::memcpy()
 #include <string_view>
 
 using namespace RTC::ICE;
@@ -20,6 +20,7 @@ namespace RTC
 		// NOTE: We need to declare them here with `extern` and then define them in
 		// common.cpp.
 		extern thread_local uint8_t FactoryBuffer[66661];
+		extern thread_local uint8_t ResponseFactoryBuffer[66661];
 		extern thread_local uint8_t SerializeBuffer[66662];
 		extern thread_local uint8_t CloneBuffer[66663];
 		extern thread_local uint8_t DataBuffer[66664];
@@ -37,7 +38,7 @@ namespace RTC
                           /*StunPacket::Class*/ klass,                                              \
                           /*StunPacket::Method*/ method,                                            \
                           /*bool*/ hasUsername,                                                     \
-                          /*std::string*/ username,                                                 \
+                          /*std::string_view*/ username,                                            \
                           /*bool*/ hasPriority,                                                     \
                           /*uint32_t*/ priority,                                                    \
                           /*bool*/ hasIceControlling,                                               \
@@ -48,11 +49,11 @@ namespace RTC
                           /*bool*/ hasNomination,                                                   \
                           /*uint32_t*/ nomination,                                                  \
                           /*bool*/ hasSoftware,                                                     \
-                          /*std::string*/ software,                                                 \
+                          /*std::string_view*/ software,                                            \
                           /*bool*/ hasXorMappedAddress,                                             \
                           /*bool*/ hasErrorCode,                                                    \
                           /*uint16_t*/ errorCode,                                                   \
-                          /*std::string*/ errorReasonPhrase,                                        \
+                          /*std::string_view*/ errorReasonPhrase,                                   \
                           /*bool*/ hasMessageIntegrity,                                             \
                           /*bool*/ hasFingerprint)                                                  \
 	do                                                                                                \
@@ -91,18 +92,21 @@ namespace RTC
 		REQUIRE(                                                                                        \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) == hasMessageIntegrity);   \
 		REQUIRE(packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT) == hasFingerprint);        \
-		REQUIRE(packet->Validate(/*storeAttributes*/ false));                                           \
-		const std::string usernameFragment1{ "lalala-fooo-œæ€œæ€" };                                    \
-		const std::string password{ "∫∂ƒ3487345345Ω∑©™ƒ™œ" };                                           \
 		REQUIRE(                                                                                        \
-		  packet->CheckAuthentication(usernameFragment1, password) !=                                   \
+		  std::any_of(                                                                                  \
+		    packet->GetTransactionId(),                                                                 \
+		    packet->GetTransactionId() + StunPacket::TransactionIdLength,                               \
+		    [](uint8_t b) { return b != 0; }));                                                         \
+		REQUIRE(packet->Validate(/*storeAttributes*/ false));                                           \
+		REQUIRE(                                                                                        \
+		  packet->CheckAuthentication("lalala-fooo-œæ€œæ€", "∫∂ƒ3487345345Ω∑©™ƒ™œ") !=                  \
 		  StunPacket::AuthenticationResult::OK);                                                        \
-		REQUIRE(packet->CheckAuthentication(password) != StunPacket::AuthenticationResult::OK);         \
+		REQUIRE(packet->CheckAuthentication("kasjdhaksjhd") != StunPacket::AuthenticationResult::OK);   \
 		if (                                                                                            \
 		  packet->HasAttribute(StunPacket::AttributeType::MESSAGE_INTEGRITY) ||                         \
 		  packet->HasAttribute(StunPacket::AttributeType::FINGERPRINT))                                 \
 		{                                                                                               \
-			REQUIRE_THROWS_AS(packet->Protect(password), MediaSoupError);                                 \
+			REQUIRE_THROWS_AS(packet->Protect("isoiulkajdlkja"), MediaSoupError);                         \
 			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                         \
 		}                                                                                               \
 		REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);  \

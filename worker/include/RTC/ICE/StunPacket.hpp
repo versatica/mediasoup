@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "Utils.hpp"
 #include "RTC/Serializable.hpp"
-#include <string>
+#include <cstdint>
 #include <string_view>
 #include <unordered_map>
 
@@ -171,7 +171,16 @@ namespace RTC
 			 *
 			 * @remarks
 			 * - `bufferLength` must be the exact length of the Packet.
+			 * - If `transactionId` is not given then a random Transaction ID is
+			 *   generated.
 			 */
+			static StunPacket* Factory(
+			  uint8_t* buffer,
+			  size_t bufferLength,
+			  StunPacket::Class klass,
+			  StunPacket::Method method,
+			  const uint8_t* transactionId);
+
 			static StunPacket* Factory(
 			  uint8_t* buffer, size_t bufferLength, StunPacket::Class klass, StunPacket::Method method);
 
@@ -192,29 +201,29 @@ namespace RTC
 
 			StunPacket* Clone(uint8_t* buffer, size_t bufferLength) const final;
 
-			virtual StunPacket::Class GetClass() const final
+			StunPacket::Class GetClass() const
 			{
 				return this->klass;
 			}
 
-			virtual StunPacket::Method GetMethod() const final
+			StunPacket::Method GetMethod() const
 			{
 				return this->method;
 			}
 
-			virtual const uint8_t* GetTransactionId() const final
+			const uint8_t* GetTransactionId() const
 			{
 				return GetTransactionIdPointer();
 			}
 
-			virtual void SetTransactionId(const uint8_t* transactionId) final;
+			void SetTransactionId(const uint8_t* transactionId);
 
-			virtual bool HasAttribute(StunPacket::AttributeType type) const final
+			bool HasAttribute(StunPacket::AttributeType type) const
 			{
 				return this->attributes.find(type) != this->attributes.end();
 			}
 
-			virtual const std::string_view GetUsername() const final
+			const std::string_view GetUsername() const
 			{
 				const auto* attribute = GetAttribute(StunPacket::AttributeType::USERNAME);
 
@@ -227,7 +236,7 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			virtual void SetUsername(const std::string& username) final;
+			void AddUsername(const std::string_view username);
 
 			uint32_t GetPriority() const
 			{
@@ -241,7 +250,7 @@ namespace RTC
 				return Utils::Byte::Get4Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			void SetPriority(uint32_t priority);
+			void AddPriority(uint32_t priority);
 
 			uint64_t GetIceControlling() const
 			{
@@ -255,7 +264,7 @@ namespace RTC
 				return Utils::Byte::Get8Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			void SetIceControlling(uint64_t iceControlling);
+			void AddIceControlling(uint64_t iceControlling);
 
 			uint64_t GetIceControlled() const
 			{
@@ -269,9 +278,9 @@ namespace RTC
 				return Utils::Byte::Get8Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			void SetIceControlled(uint64_t iceControlled);
+			void AddIceControlled(uint64_t iceControlled);
 
-			void EnableUseCandidate();
+			void AddUseCandidate();
 
 			uint32_t GetNomination() const
 			{
@@ -285,7 +294,7 @@ namespace RTC
 				return Utils::Byte::Get4Bytes(GetAttributeValue(attribute), 0);
 			}
 
-			void SetNomination(uint32_t nomination);
+			void AddNomination(uint32_t nomination);
 
 			const std::string_view GetSoftware() const
 			{
@@ -300,11 +309,11 @@ namespace RTC
 				  reinterpret_cast<const char*>(GetAttributeValue(attribute)), attribute->len);
 			}
 
-			void SetSoftware(const std::string& software);
+			void AddSoftware(const std::string_view software);
 
 			bool GetXorMappedAddress(struct sockaddr_storage* xorMappedAddressStorage) const;
 
-			void SetXorMappedAddress(const struct sockaddr* xorMappedAddress);
+			void AddXorMappedAddress(const struct sockaddr* xorMappedAddress);
 
 			uint16_t GetErrorCode(std::string_view& reasonPhrase) const
 			{
@@ -336,18 +345,18 @@ namespace RTC
 				return errorCode;
 			}
 
-			void SetErrorCode(uint16_t errorCode, const std::string& reasonPhrase);
+			void AddErrorCode(uint16_t errorCode, const std::string_view reasonPhrase);
 
 			/**
 			 * Check authentication of the STUN request or notification.
 			 */
 			StunPacket::AuthenticationResult CheckAuthentication(
-			  const std::string& usernameFragment1, const std::string& password) const;
+			  const std::string_view usernameFragment1, const std::string_view& password) const;
 
 			/**
 			 * Check authentication of the STUN success response or error response.
 			 */
-			StunPacket::AuthenticationResult CheckAuthentication(const std::string& password) const;
+			StunPacket::AuthenticationResult CheckAuthentication(std::string_view password) const;
 
 			/**
 			 * Adds MESSAGE-INTEGRITY and FINGERPRINT to the STUN Packet.
@@ -356,12 +365,31 @@ namespace RTC
 			 * - MESSAGE-INTEGRITY is only added if given `password` is not empty.
 			 *
 			 * @throw MediaSoupTypeError - If there is no enough space in the buffer.
-			 * @throw MediaSoupTypeError - If the Packet already has MESSAGE-INTEGRITY
+			 * @throw MediaSoupError - If the Packet already has MESSAGE-INTEGRITY
 			 *   or FINGERPRINT Attributes.
 			 */
-			void Protect(const std::string& password);
+			void Protect(const std::string_view password);
 
 			void Protect();
+
+			/**
+			 * Creates a STUN success response for the current STUN request.
+			 *
+			 * @throw MediaSoupError - If the Packet is not a STUN request.
+			 */
+			StunPacket* CreateSuccessResponse(uint8_t* buffer, size_t bufferLength) const;
+
+			/**
+			 * Creates a STUN error response for the current STUN request. It uses
+			 * given `errorCode` and `reasonPhrase` to add a ERROR-CODE Attribute.
+			 *
+			 * @throw MediaSoupError - If the Packet is not a STUN request.
+			 */
+			StunPacket* CreateErrorResponse(
+			  uint8_t* buffer,
+			  size_t bufferLength,
+			  uint16_t errorCode,
+			  const std::string_view& reasonPhrase) const;
 
 		private:
 			uint8_t* GetFixedHeaderPointer() const
