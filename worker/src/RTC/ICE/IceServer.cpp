@@ -3,6 +3,7 @@
 
 #include "RTC/ICE/IceServer.hpp"
 #include "Logger.hpp"
+#include <string_view>
 
 namespace RTC
 {
@@ -10,8 +11,8 @@ namespace RTC
 	{
 		/* Static. */
 
-		static constexpr size_t StunSerializeBufferSize{ 65536 };
-		thread_local static uint8_t StunSerializeBuffer[StunSerializeBufferSize];
+		static constexpr size_t StunResponseFactoryBufferLength{ 65536 };
+		thread_local static uint8_t StunResponseFactoryBuffer[StunResponseFactoryBufferLength];
 		static constexpr size_t MaxTuples{ 8 };
 		static constexpr uint8_t ConsentCheckMinTimeoutSec{ 10u };
 		static constexpr uint8_t ConsentCheckMaxTimeoutSec{ 60u };
@@ -168,28 +169,28 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</IceServer>");
 		}
 
-		void IceServer::ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple)
+		void IceServer::ProcessStunPacket(const RTC::ICE::StunPacket* packet, RTC::TransportTuple* tuple)
 		{
 			MS_TRACE();
 
 			switch (packet->GetClass())
 			{
-				case RTC::StunPacket::Class::REQUEST:
+				case RTC::ICE::StunPacket::Class::REQUEST:
 				{
 					ProcessStunRequest(packet, tuple);
 
 					break;
 				}
 
-				case RTC::StunPacket::Class::INDICATION:
+				case RTC::ICE::StunPacket::Class::INDICATION:
 				{
 					ProcessStunIndication(packet);
 
 					break;
 				}
 
-				case RTC::StunPacket::Class::SUCCESS_RESPONSE:
-				case RTC::StunPacket::Class::ERROR_RESPONSE:
+				case RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE:
+				case RTC::ICE::StunPacket::Class::ERROR_RESPONSE:
 				{
 					ProcessStunResponse(packet);
 
@@ -330,14 +331,14 @@ namespace RTC
 			}
 		}
 
-		void IceServer::ProcessStunRequest(RTC::StunPacket* request, RTC::TransportTuple* tuple)
+		void IceServer::ProcessStunRequest(const RTC::ICE::StunPacket* request, RTC::TransportTuple* tuple)
 		{
 			MS_TRACE();
 
 			MS_DEBUG_DEV("processing STUN request");
 
 			// Must be a Binding method.
-			if (request->GetMethod() != RTC::StunPacket::Method::BINDING)
+			if (request->GetMethod() != RTC::ICE::StunPacket::Method::BINDING)
 			{
 				MS_WARN_TAG(
 				  ice,
@@ -345,9 +346,11 @@ namespace RTC
 				  static_cast<unsigned int>(request->GetMethod()));
 
 				// Reply 400.
-				RTC::StunPacket* response = request->CreateErrorResponse(400);
+				auto* response = request->CreateErrorResponse(
+				  StunResponseFactoryBuffer, sizeof(StunResponseFactoryBuffer), 400, "unknown method");
 
-				response->Serialize(StunSerializeBuffer);
+				response->Protect();
+
 				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 				delete response;
@@ -356,14 +359,19 @@ namespace RTC
 			}
 
 			// Must have FINGERPRINT attribute.
-			if (!request->HasFingerprint())
+			if (!request->HasAttribute(StunPacket::AttributeType::FINGERPRINT))
 			{
 				MS_WARN_TAG(ice, "STUN Binding request without FINGERPRINT attribute => 400");
 
 				// Reply 400.
-				RTC::StunPacket* response = request->CreateErrorResponse(400);
+				auto* response = request->CreateErrorResponse(
+				  StunResponseFactoryBuffer,
+				  sizeof(StunResponseFactoryBuffer),
+				  400,
+				  "missing FINGERPRINT attribute in STUN Binding request");
 
-				response->Serialize(StunSerializeBuffer);
+				response->Protect();
+
 				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 				delete response;
@@ -372,14 +380,19 @@ namespace RTC
 			}
 
 			// PRIORITY attribute is required.
-			if (request->GetPriority() == 0u)
+			if (!request->HasAttribute(StunPacket::AttributeType::PRIORITY))
 			{
 				MS_WARN_TAG(ice, "STUN Binding request without PRIORITY attribute => 400");
 
 				// Reply 400.
-				RTC::StunPacket* response = request->CreateErrorResponse(400);
+				auto* response = request->CreateErrorResponse(
+				  StunResponseFactoryBuffer,
+				  sizeof(StunResponseFactoryBuffer),
+				  400,
+				  "missing PRIORITY attribute in STUN Binding request");
 
-				response->Serialize(StunSerializeBuffer);
+				response->Protect();
+
 				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 				delete response;
@@ -390,7 +403,7 @@ namespace RTC
 			// Check authentication.
 			switch (request->CheckAuthentication(this->usernameFragment, this->password))
 			{
-				case RTC::StunPacket::Authentication::OK:
+				case RTC::ICE::StunPacket::AuthenticationResult::OK:
 				{
 					if (!this->oldUsernameFragment.empty() && !this->oldPassword.empty())
 					{
@@ -406,7 +419,7 @@ namespace RTC
 					break;
 				}
 
-				case RTC::StunPacket::Authentication::UNAUTHORIZED:
+				case RTC::ICE::StunPacket::AuthenticationResult::UNAUTHORIZED:
 				{
 					// We may have changed our usernameFragment and password, so check the
 					// old ones.
@@ -416,7 +429,7 @@ namespace RTC
 				  !this->oldPassword.empty() &&
 				  request->CheckAuthentication(
 				    this->oldUsernameFragment, this->oldPassword
-				  ) == RTC::StunPacket::Authentication::OK
+				  ) == RTC::ICE::StunPacket::AuthenticationResult::OK
 				)
 					// clang-format on
 					{
@@ -428,9 +441,14 @@ namespace RTC
 					MS_WARN_TAG(ice, "wrong authentication in STUN Binding request => 401");
 
 					// Reply 401.
-					RTC::StunPacket* response = request->CreateErrorResponse(401);
+					auto* response = request->CreateErrorResponse(
+					  StunResponseFactoryBuffer,
+					  sizeof(StunResponseFactoryBuffer),
+					  401,
+					  "wrong authentication in STUN Binding request");
 
-					response->Serialize(StunSerializeBuffer);
+					response->Protect();
+
 					this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 					delete response;
@@ -438,14 +456,19 @@ namespace RTC
 					return;
 				}
 
-				case RTC::StunPacket::Authentication::BAD_MESSAGE:
+				case RTC::ICE::StunPacket::AuthenticationResult::BAD_MESSAGE:
 				{
 					MS_WARN_TAG(ice, "cannot check authentication in STUN Binding request => 400");
 
 					// Reply 400.
-					RTC::StunPacket* response = request->CreateErrorResponse(400);
+					auto* response = request->CreateErrorResponse(
+					  StunResponseFactoryBuffer,
+					  sizeof(StunResponseFactoryBuffer),
+					  400,
+					  "cannot check authentication in STUN Binding request");
 
-					response->Serialize(StunSerializeBuffer);
+					response->Protect();
+
 					this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 					delete response;
@@ -460,9 +483,14 @@ namespace RTC
 				MS_WARN_TAG(ice, "peer indicates ICE-CONTROLLED in STUN Binding request => 487");
 
 				// Reply 487 (Role Conflict).
-				RTC::StunPacket* response = request->CreateErrorResponse(487);
+				auto* response = request->CreateErrorResponse(
+				  StunResponseFactoryBuffer,
+				  sizeof(StunResponseFactoryBuffer),
+				  487,
+				  "invalid ICE-CONTROLLED attribute in STUN Binding request");
 
-				response->Serialize(StunSerializeBuffer);
+				response->Protect();
+
 				this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 				delete response;
@@ -473,39 +501,34 @@ namespace RTC
 			MS_DEBUG_DEV(
 			  "valid STUN Binding request [priority:%" PRIu32 ", useCandidate:%s]",
 			  static_cast<uint32_t>(request->GetPriority()),
-			  request->HasUseCandidate() ? "true" : "false");
+			  request->HasAttribute(RTC::ICE::StunPacket::AttributeType::USE_CANDIDATE) ? "true" : "false");
 
 			// Create a success response.
-			RTC::StunPacket* response = request->CreateSuccessResponse();
+			auto* response =
+			  request->CreateSuccessResponse(StunResponseFactoryBuffer, sizeof(StunResponseFactoryBuffer));
 
 			// Add XOR-MAPPED-ADDRESS.
-			response->SetXorMappedAddress(tuple->GetRemoteAddress());
+			response->AddXorMappedAddress(tuple->GetRemoteAddress());
 
-			// Authenticate the response.
 			if (this->oldPassword.empty())
 			{
-				response->SetPassword(this->password);
+				response->Protect(this->password);
 			}
 			else
 			{
-				response->SetPassword(this->oldPassword);
+				response->Protect(this->oldPassword);
 			}
 
-			// Send back.
-			response->Serialize(StunSerializeBuffer);
 			this->listener->OnIceServerSendStunPacket(this, response, tuple);
 
 			delete response;
 
-			uint32_t nomination{ 0u };
-
-			if (request->HasNomination())
-			{
-				nomination = request->GetNomination();
-			}
-
 			// Handle the tuple.
-			HandleTuple(tuple, request->HasUseCandidate(), request->HasNomination(), nomination);
+			HandleTuple(
+			  tuple,
+			  request->HasAttribute(StunPacket::AttributeType::USE_CANDIDATE),
+			  request->HasAttribute(StunPacket::AttributeType::NOMINATION),
+			  request->GetNomination());
 
 			// If state is 'connected' or 'completed' after handling the tuple, then
 			// start or restart ICE consent check (if supported).
@@ -522,27 +545,33 @@ namespace RTC
 			}
 		}
 
-		void IceServer::ProcessStunIndication(RTC::StunPacket* /*indication*/)
+		void IceServer::ProcessStunIndication(const RTC::ICE::StunPacket* /*indication*/)
 		{
 			MS_TRACE();
 
-			MS_DEBUG_DEV("STUN indication received, discarded");
+			MS_DEBUG_DEV("STUN indication received, ignored");
 
-			// Nothig else to do. We just discard STUN indications.
+			// Nothig else to do. We just ignore STUN indications.
 		}
 
-		void IceServer::ProcessStunResponse(RTC::StunPacket* response)
+		void IceServer::ProcessStunResponse(const RTC::ICE::StunPacket* response)
 		{
 			MS_TRACE();
 
-			// NOLINTNEXTLINE (bugprone-unused-local-non-trivial-variable)
-			const std::string responseType = response->GetClass() == RTC::StunPacket::Class::SUCCESS_RESPONSE
-			                                   ? "success"
-			                                   : std::to_string(response->GetErrorCode()) + " error";
+			if (response->GetClass() == RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE)
+			{
+				MS_DEBUG_DEV("ignoring received STUN successs response", responseType.c_str());
+			}
+			else
+			{
+				thread_local static std::string_view errorReasonPhrase;
 
-			MS_DEBUG_DEV("processing STUN %s response received, discarded", responseType.c_str());
+				response->GetErrorCode(errorReasonPhrase);
 
-			// Nothig else to do. We just discard STUN responses because we do not
+				MS_DEBUG_DEV("ignoring received STUN error response [errorCode:%" PRIu16 ", reasonPhrase:\"%.*s\""], static_cast<int>(errorReasonPhrase.size()), errorReasonPhrase.data());
+			}
+
+			// Nothig else to do. We just ignore STUN responses because we do not
 			// generate STUN requests.
 		}
 

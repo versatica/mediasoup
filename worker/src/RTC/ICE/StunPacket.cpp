@@ -168,22 +168,22 @@ namespace RTC
 			{
 				case Class::REQUEST:
 				{
-					klass = "Request";
+					klass = "request";
 					break;
 				}
 				case Class::INDICATION:
 				{
-					klass = "Indication";
+					klass = "indication";
 					break;
 				}
 				case Class::SUCCESS_RESPONSE:
 				{
-					klass = "Success Response";
+					klass = "success response";
 					break;
 				}
 				case Class::ERROR_RESPONSE:
 				{
-					klass = "Error Response";
+					klass = "error response";
 					break;
 				}
 			}

@@ -134,8 +134,6 @@ common_sources = [
   'src/RTC/SimpleConsumer.cpp',
   'src/RTC/SimulcastConsumer.cpp',
   'src/RTC/SrtpSession.cpp',
-  # TODO: REMOVE when new StunPacket is done.
-  'src/RTC/OLD_StunPacket.cpp',
   'src/RTC/SvcConsumer.cpp',
   'src/RTC/TcpConnection.cpp',
   'src/RTC/TcpServer.cpp',
@@ -637,8 +635,6 @@ fuzzer_sources = common_sources + [
   'fuzzer/src/RTC/FuzzerRtpRetransmissionBuffer.cpp',
   'fuzzer/src/RTC/FuzzerRtpStreamSend.cpp',
   'fuzzer/src/RTC/FuzzerSeqManager.cpp',
-  # TODO: REMOVE when new StunPacket is done.
-  'fuzzer/src/RTC/OLD_FuzzerStunPacket.cpp',
   'fuzzer/src/RTC/FuzzerTrendCalculator.cpp',
   'fuzzer/src/RTC/ICE/FuzzerStunPacket.cpp',
   'fuzzer/src/RTC/RTP/FuzzerPacket.cpp',

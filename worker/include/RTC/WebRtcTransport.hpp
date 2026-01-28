@@ -4,7 +4,7 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
 #include "RTC/ICE/IceServer.hpp"
-#include "RTC/OLD_StunPacket.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/SrtpSession.hpp"
 #include "RTC/TcpConnection.hpp"
@@ -62,7 +62,8 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder);
 		flatbuffers::Offset<FBS::WebRtcTransport::DumpResponse> FillBuffer(
 		  flatbuffers::FlatBufferBuilder& builder) const;
-		void ProcessStunPacketFromWebRtcServer(RTC::TransportTuple* tuple, RTC::StunPacket* packet);
+		void ProcessStunPacketFromWebRtcServer(
+		  RTC::TransportTuple* tuple, const RTC::ICE::StunPacket* packet);
 		void ProcessNonStunPacketFromWebRtcServer(
 		  RTC::TransportTuple* tuple, const uint8_t* data, size_t len, size_t bufferLen);
 		void RemoveTuple(RTC::TransportTuple* tuple);
@@ -121,7 +122,7 @@ namespace RTC
 	public:
 		void OnIceServerSendStunPacket(
 		  const RTC::ICE::IceServer* iceServer,
-		  const RTC::StunPacket* packet,
+		  const RTC::ICE::StunPacket* packet,
 		  RTC::TransportTuple* tuple) override;
 		void OnIceServerLocalUsernameFragmentAdded(
 		  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) override;

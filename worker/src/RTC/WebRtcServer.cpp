@@ -29,7 +29,7 @@ namespace RTC
 	/* Class methods. */
 
 	inline std::string WebRtcServer::GetLocalIceUsernameFragmentFromReceivedStunPacket(
-	  RTC::StunPacket* packet)
+	  const RTC::ICE::StunPacket* packet)
 	{
 		MS_TRACE();
 
@@ -38,7 +38,7 @@ namespace RTC
 		// local usernameFragment) which is the first value in the attribute value
 		// before the ":" symbol.
 
-		const auto& username  = packet->GetUsername();
+		std::string username{ packet->GetUsername() };
 		const size_t colonPos = username.find(':');
 
 		// If no colon is found just return the whole USERNAME attribute anyway.
@@ -425,7 +425,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		if (RTC::StunPacket::IsStun(data, len))
+		if (RTC::ICE::StunPacket::IsStun(data, len))
 		{
 			OnStunDataReceived(tuple, data, len);
 		}
@@ -439,7 +439,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		RTC::StunPacket* packet = RTC::StunPacket::Parse(data, len);
+		const auto* packet = RTC::ICE::StunPacket::Parse(data, len);
 
 		if (!packet)
 		{

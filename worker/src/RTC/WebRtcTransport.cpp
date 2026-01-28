@@ -11,8 +11,6 @@
 #ifdef MS_SCTP_STACK
 #include "RTC/SCTP/packet/Packet.hpp"
 #endif
-// TODO: REMOVE
-#include "RTC/ICE/StunPacket.hpp"
 #include <cmath> // std::pow()
 
 namespace RTC
@@ -611,21 +609,9 @@ namespace RTC
 	}
 
 	void WebRtcTransport::ProcessStunPacketFromWebRtcServer(
-	  RTC::TransportTuple* tuple, RTC::StunPacket* packet)
+	  RTC::TransportTuple* tuple, const RTC::ICE::StunPacket* packet)
 	{
 		MS_TRACE();
-
-		// TODO: REMOVE
-		RTC::ICE::StunPacket* newPacket =
-		  RTC::ICE::StunPacket::Parse(packet->GetData(), packet->GetSize());
-		MS_ASSERT(newPacket, "new STUN parser failed!!!");
-		MS_DUMP_CLEAN(0, "");
-		MS_DUMP_CLEAN(0, "<<<< OLD STUN REQUEST:");
-		packet->Dump();
-		MS_DUMP_CLEAN(0, "");
-		MS_DUMP_CLEAN(0, "<<<< NEW STUN REQUEST:");
-		newPacket->Dump();
-		delete newPacket;
 
 		// Pass it to the IceServer.
 		this->iceServer->ProcessStunPacket(packet, tuple);
@@ -946,7 +932,7 @@ namespace RTC
 		RTC::Transport::DataReceived(len);
 
 		// Check if it's STUN.
-		if (RTC::StunPacket::IsStun(data, len))
+		if (RTC::ICE::StunPacket::IsStun(data, len))
 		{
 			OnStunDataReceived(tuple, data, len);
 		}
@@ -976,7 +962,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		auto* packet = RTC::StunPacket::Parse(data, len);
+		const auto* packet = RTC::ICE::StunPacket::Parse(data, len);
 
 		if (!packet)
 		{
@@ -1176,27 +1162,17 @@ namespace RTC
 	}
 
 	inline void WebRtcTransport::OnIceServerSendStunPacket(
-	  const RTC::ICE::IceServer* /*iceServer*/, const RTC::StunPacket* packet, RTC::TransportTuple* tuple)
+	  const RTC::ICE::IceServer* /*iceServer*/,
+	  const RTC::ICE::StunPacket* packet,
+	  RTC::TransportTuple* tuple)
 	{
 		MS_TRACE();
 
 		// Send the STUN response over the same transport tuple.
-		tuple->Send(packet->GetData(), packet->GetSize());
+		tuple->Send(packet->GetBuffer(), packet->GetLength());
 
 		// Increase send transmission.
-		RTC::Transport::DataSent(packet->GetSize());
-
-		// TODO: REMOVE
-		RTC::ICE::StunPacket* newPacket =
-		  RTC::ICE::StunPacket::Parse(packet->GetData(), packet->GetSize());
-		MS_ASSERT(newPacket, "new STUN parser failed!!!");
-		MS_DUMP_CLEAN(0, "");
-		MS_DUMP_CLEAN(0, ">>>> OLD STUN RESPONSE:");
-		packet->Dump();
-		MS_DUMP_CLEAN(0, "");
-		MS_DUMP_CLEAN(0, ">>>> NEW STUN RESPONSE:");
-		newPacket->Dump();
-		delete newPacket;
+		RTC::Transport::DataSent(packet->GetLength());
 	}
 
 	inline void WebRtcTransport::OnIceServerLocalUsernameFragmentAdded(

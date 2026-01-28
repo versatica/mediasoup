@@ -15,9 +15,7 @@
 #include "RTC/FuzzerRtpStreamSend.hpp"
 #include "RTC/FuzzerSeqManager.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
-// TODO: REMOVE when new StunPacket is done.
 #include "RTC/ICE/FuzzerStunPacket.hpp"
-#include "RTC/OLD_FuzzerStunPacket.hpp"
 #include "RTC/RTCP/FuzzerPacket.hpp"
 #include "RTC/RTP/Codecs/FuzzerAV1.hpp"
 #include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
@@ -59,8 +57,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 
 	if (fuzzStun)
 	{
-		// TODO: REMOVE when new StunPacket is done.
-		Fuzzer::RTC::StunPacket::Fuzz(data, len);
 		Fuzzer::RTC::ICE::StunPacket::Fuzz(data, len);
 	}
 

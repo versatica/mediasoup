@@ -3,7 +3,7 @@
 
 #include "Channel/ChannelRequest.hpp"
 #include "RTC/ICE/IceCandidate.hpp"
-#include "RTC/OLD_StunPacket.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/TcpConnection.hpp"
 #include "RTC/TcpServer.hpp"
@@ -45,7 +45,8 @@ namespace RTC
 		};
 
 	private:
-		static std::string GetLocalIceUsernameFragmentFromReceivedStunPacket(RTC::StunPacket* packet);
+		static std::string GetLocalIceUsernameFragmentFromReceivedStunPacket(
+		  const RTC::ICE::StunPacket* packet);
 
 	public:
 		WebRtcServer(

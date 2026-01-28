@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "FBS/webRtcTransport.h"
-#include "RTC/OLD_StunPacket.hpp"
+#include "RTC/ICE/StunPacket.hpp"
 #include "RTC/TransportTuple.hpp"
 #include "handles/TimerHandle.hpp"
 #include <list>
@@ -38,7 +38,7 @@ namespace RTC
 				 */
 				virtual void OnIceServerSendStunPacket(
 				  const RTC::ICE::IceServer* iceServer,
-				  const RTC::StunPacket* packet,
+				  const RTC::ICE::StunPacket* packet,
 				  RTC::TransportTuple* tuple) = 0;
 				virtual void OnIceServerLocalUsernameFragmentAdded(
 				  const RTC::ICE::IceServer* iceServer, const std::string& usernameFragment) = 0;
@@ -72,7 +72,7 @@ namespace RTC
 
 		public:
 			void Dump(int indentation = 0) const;
-			void ProcessStunPacket(RTC::StunPacket* packet, RTC::TransportTuple* tuple);
+			void ProcessStunPacket(const RTC::ICE::StunPacket* packet, RTC::TransportTuple* tuple);
 			const std::string& GetUsernameFragment() const
 			{
 				return this->usernameFragment;
@@ -99,9 +99,9 @@ namespace RTC
 			void MayForceSelectedTuple(const RTC::TransportTuple* tuple);
 
 		private:
-			void ProcessStunRequest(RTC::StunPacket* request, RTC::TransportTuple* tuple);
-			void ProcessStunIndication(RTC::StunPacket* indication);
-			void ProcessStunResponse(RTC::StunPacket* response);
+			void ProcessStunRequest(const RTC::ICE::StunPacket* request, RTC::TransportTuple* tuple);
+			void ProcessStunIndication(const RTC::ICE::StunPacket* indication);
+			void ProcessStunResponse(const RTC::ICE::StunPacket* response);
 			void HandleTuple(
 			  RTC::TransportTuple* tuple, bool hasUseCandidate, bool hasNomination, uint32_t nomination);
 			/**
