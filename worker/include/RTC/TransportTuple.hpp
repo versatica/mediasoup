@@ -7,7 +7,6 @@
 #include "RTC/TcpConnection.hpp"
 #include "RTC/UdpSocket.hpp"
 #include <flatbuffers/flatbuffers.h>
-#include <memory>
 #include <string>
 
 namespace RTC
