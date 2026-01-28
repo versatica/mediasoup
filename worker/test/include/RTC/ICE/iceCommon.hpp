@@ -96,6 +96,7 @@ namespace RTC
 		{                                                                                               \
 			REQUIRE(packet->IsProtected());                                                               \
 			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                         \
+			REQUIRE_THROWS_AS(packet->AddUsername("foo"), MediaSoupError);                                \
 		}                                                                                               \
 		REQUIRE(                                                                                        \
 		  std::any_of(                                                                                  \
