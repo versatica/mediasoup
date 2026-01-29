@@ -16,7 +16,8 @@ namespace RTC
 	namespace RTP
 	{
 		// NOTE: We need to declare them here with `extern` and then define them in
-		// common.cpp.
+		// rtpCommon.cpp.
+		// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
 		extern thread_local uint8_t FactoryBuffer[66661];
 		extern thread_local uint8_t SerializeBuffer[66662];
 		extern thread_local uint8_t CloneBuffer[66663];

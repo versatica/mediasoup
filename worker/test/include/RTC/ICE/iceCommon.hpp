@@ -18,7 +18,8 @@ namespace RTC
 	namespace ICE
 	{
 		// NOTE: We need to declare them here with `extern` and then define them in
-		// common.cpp.
+		// iceCommon.cpp.
+		// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
 		extern thread_local uint8_t FactoryBuffer[66661];
 		extern thread_local uint8_t ResponseFactoryBuffer[66661];
 		extern thread_local uint8_t SerializeBuffer[66662];
