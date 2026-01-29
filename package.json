@@ -28,6 +28,10 @@
 			"types": "./node/lib/types.d.ts",
 			"default": "./node/lib/types.js"
 		},
+		"./ortc": {
+			"types": "./node/lib/ortc.d.ts",
+			"default": "./node/lib/ortc.js"
+		},
 		"./extras": {
 			"types": "./node/lib/extras.d.ts",
 			"default": "./node/lib/extras.js"

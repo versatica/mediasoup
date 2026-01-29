@@ -148,6 +148,11 @@ export function getSupportedRtpCapabilities(): RouterRtpCapabilities {
 export { parseScalabilityMode } from './scalabilityModesUtils';
 
 /**
+ * Expose all ORTC functions.
+ */
+export * as ortc from './ortc';
+
+/**
  * Expose extras module.
  */
 export * as extras from './extras';

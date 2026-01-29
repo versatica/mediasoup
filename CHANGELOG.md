@@ -6,6 +6,7 @@
 - Worker: Update liburing from 2.5-2 to 2.12-1 ([PR #1686](https://github.com/versatica/mediasoup/pull/1686).
 - Worker: Use the new `RTP::Packet` class ([PR #1689](https://github.com/versatica/mediasoup/pull/1689).
 - Worker: Use the new `ICE::StunPacket` class ([PR #1697](https://github.com/versatica/mediasoup/pull/1697).
+- Node: Expose `ortc` functions in `exports` in `package.json` and main module ([PR #1698](https://github.com/versatica/mediasoup/pull/1698).
 
 ### 3.19.14
 
