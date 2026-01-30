@@ -30,10 +30,6 @@ function run() {
 	try {
 		const commands = JSON.parse(fs.readFileSync(compileCommandsFile, 'utf8'));
 
-		// Convert file paths to be relative to the repo root (cwd).
-		// clang-tidy reports warnings using the path from compile_commands.json,
-		// and clang-tidy-review's line filter uses paths relative to repo root.
-		// These must match for the line filter to work correctly.
 		for (const entry of commands) {
 			if (entry.file && entry.directory) {
 				// Resolve to absolute path first.
