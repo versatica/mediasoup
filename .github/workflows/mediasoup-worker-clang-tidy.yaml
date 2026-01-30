@@ -22,7 +22,7 @@ jobs:
         working-directory: worker
         run: invoke setup
 
-      - name: compile flatbuffers FBS files
+      - name: Compile flatbuffers FBS files
         working-directory: worker
         run: invoke flatc
 
