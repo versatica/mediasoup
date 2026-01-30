@@ -88,7 +88,7 @@ namespace RTC
 		// Let's chosee an initial output seq number between 1000 and 32768 to avoid
 		// libsrtp bug:
 		// https://github.com/versatica/mediasoup/issues/1437
-		uint16_t initialOutputSeq =
+		const uint16_t initialOutputSeq =
 		  Utils::Crypto::GetRandomUInt(1000u, std::numeric_limits<uint16_t>::max() / 2);
 
 		this->rtpSeqManager = RTC::SeqManager<uint16_t>(initialOutputSeq);
@@ -694,7 +694,7 @@ namespace RTC
 		}
 
 		// Whether this is the first packet after re-sync.
-		bool isSyncPacket = this->syncRequired;
+		const bool isSyncPacket = this->syncRequired;
 
 		// Whether packets stored in the target layer retransmission buffer must be
 		// sent once this packet is sent.
