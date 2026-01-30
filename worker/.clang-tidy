@@ -82,7 +82,7 @@ Checks: "*,\
   -readability-simplify-boolean-expr,\
   -readability-uppercase-literal-suffix,\
   "
-FormatStyle: file
+FormatStyle: 'file'
 User: mediasoup
 CheckOptions:
   - key: cppcoreguidelines-pro-bounds-constant-array-index.GslHeader

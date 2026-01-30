@@ -517,7 +517,7 @@ def tidy(ctx):
 
     with cd_worker():
         ctx.run(
-            f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p="{BUILD_DIR}" -j={NUM_CORES} -fix -checks={mediasoup_tidy_checks} {mediasoup_tidy_files}',
+            f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p="{BUILD_DIR}" -j={NUM_CORES} -fix -format -checks={mediasoup_tidy_checks} {mediasoup_tidy_files}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL
