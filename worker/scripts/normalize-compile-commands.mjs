@@ -1,3 +1,12 @@
+/**
+ * Normalize compile_commands.json paths.
+ *
+ * Converts file paths to be relative to the repo root (cwd).
+ * clang-tidy reports warnings using the path from compile_commands.json,
+ * and clang-tidy-review's line filter uses paths relative to repo root.
+ * These must match for the line filter to work correctly.
+ */
+
 import fs from 'node:fs';
 import path from 'node:path';
 
