@@ -1,31 +1,45 @@
 name: mediasoup-worker-clang-tidy
 
-# It currently only works on pull requests.
 on:
   pull_request:
     paths:
       - 'worker/include/**/*.hpp'
       - 'worker/src/**/*.cpp'
+      - 'worker/.clang-tidy'
       - '.github/workflows/mediasoup-worker-clang-tidy.yaml'
 
 jobs:
-  build:
+  clang-tidy:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: pip3 install --break-system-packages invoke
+
+      - name: Setup Meson build (generates compile_commands.json)
+        working-directory: worker
+        run: invoke setup
+
+      - name: compile flatbuffers FBS files
+        working-directory: worker
+        run: invoke flatc
+
+      - name: Normalize compile_commands.json paths
+        run: node worker/scripts/clean-compile-commands.mjs worker/out/Release/build/compile_commands.json
+
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
         with:
           apt_packages: 'libclang-rt-21-dev'
-          build_dir: 'worker/build'
+          build_dir: 'worker/out/Release/build'
           config_file: 'worker/.clang-tidy'
           clang_tidy_version: '21'
           # TMP until this bug is fixes https://github.com/ZedThree/clang-tidy-review/issues/157#issuecomment-3552341821.
           extra_arguments: '--allow-no-checks'
+          # pr: 1661
           include: 'worker/include/**/*.hpp,worker/src/**/*.cpp'
-          install_commands: 'pip3 install --break-system-packages invoke && BUILD_DIR=$PWD/worker/build invoke -r worker flatc'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1
