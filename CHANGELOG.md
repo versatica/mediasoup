@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- `RTP::ProbationGenerator`: Remove wrong warning log ([PR #1703](https://github.com/versatica/mediasoup/pull/1703).
+
 ### 3.19.15
 
 - `RtpStreamSend`: duplicated packets are discarded ([PR #1683](https://github.com/versatica/mediasoup/pull/1683).
