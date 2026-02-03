@@ -31,11 +31,11 @@ endif
 	xcode \
 	lint \
 	format \
+	tidy \
 	test \
 	test-asan-address \
 	test-asan-undefined \
 	test-asan-thread \
-	tidy \
 	fuzzer \
 	fuzzer-run-all \
 	docker \
@@ -95,6 +95,9 @@ lint: invoke
 format: invoke
 	"$(PYTHON)" -m invoke format
 
+tidy: invoke
+	"$(PYTHON)" -m invoke tidy
+
 test: invoke
 	"$(PYTHON)" -m invoke test
 
@@ -106,9 +109,6 @@ test-asan-undefined: invoke
 
 test-asan-thread: invoke
 	"$(PYTHON)" -m invoke test-asan-thread
-
-tidy: invoke
-	"$(PYTHON)" -m invoke tidy
 
 fuzzer: invoke
 	"$(PYTHON)" -m invoke fuzzer

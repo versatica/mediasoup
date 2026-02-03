@@ -22,7 +22,6 @@ import sys;
 import os;
 import inspect;
 import shutil;
-import glob;
 from contextlib import contextmanager;
 # We import this from a custom location and pylint doesn't know.
 from invoke import task, call; # pylint: disable=import-error
@@ -370,6 +369,20 @@ def format(ctx):
         );
 
 
+@task
+def tidy(ctx):
+    """
+    Performs C++ code checks according to `worker/.clang-tidy` rules
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run tidy --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+
 @task(pre=[setup, flatc])
 def test(ctx):
     """
@@ -489,36 +502,6 @@ def test_asan_thread(ctx):
     with cd_worker():
         ctx.run(
             f'ASAN_OPTIONS=detect_leaks=1 "{BUILD_DIR}/mediasoup-worker-test-asan-thread" --invisibles {mediasoup_test_tags}',
-            echo=True,
-            pty=PTY_SUPPORTED,
-            shell=SHELL
-        );
-
-
-@task
-def tidy(ctx):
-    """
-    Perform C++ checks with clang-tidy
-    """
-    mediasoup_tidy_checks = os.getenv('MEDIASOUP_TIDY_CHECKS') or '';
-    mediasoup_tidy_files = os.getenv('MEDIASOUP_TIDY_FILES') or '';
-    mediasoup_clang_tidy_dir = os.getenv('MEDIASOUP_CLANG_TIDY_DIR');
-
-    # MEDIASOUP_CLANG_TIDY_DIR env variable is mandatory. It must point to the
-    # bin/ folder containinig `run-clang-tidy` executable.
-    # NOTE: sys.exit(text) exits the program with status code 1.
-    if not mediasoup_clang_tidy_dir:
-        sys.exit('missing MEDIASOUP_CLANG_TIDY_DIR env variable');
-
-    if mediasoup_tidy_checks:
-        mediasoup_tidy_checks = '-*,' + mediasoup_tidy_checks;
-
-    if not mediasoup_tidy_files:
-        mediasoup_tidy_files = " ".join(glob.glob("src/**/*.cpp", recursive=True))
-
-    with cd_worker():
-        ctx.run(
-            f'"{PYTHON}" "{mediasoup_clang_tidy_dir}/run-clang-tidy" -clang-tidy-binary="{mediasoup_clang_tidy_dir}/clang-tidy" -clang-apply-replacements-binary="{mediasoup_clang_tidy_dir}/clang-apply-replacements" -p="{BUILD_DIR}" -j={NUM_CORES} -fix -format -checks={mediasoup_tidy_checks} {mediasoup_tidy_files}',
             echo=True,
             pty=PTY_SUPPORTED,
             shell=SHELL

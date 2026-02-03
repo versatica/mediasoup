@@ -83,6 +83,7 @@
 		"format": "node npm-scripts.mjs format:node && node npm-scripts.mjs format:worker",
 		"format:node": "node npm-scripts.mjs format:node",
 		"format:worker": "node npm-scripts.mjs format:worker",
+		"tidy:worker": "node npm-scripts.mjs tidy:worker",
 		"flatc": "node npm-scripts.mjs flatc:node && node npm-scripts.mjs flatc:worker",
 		"flatc:node": "node npm-scripts.mjs flatc:node",
 		"flatc:worker": "node npm-scripts.mjs flatc:worker",

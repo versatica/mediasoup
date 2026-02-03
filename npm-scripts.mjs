@@ -192,6 +192,12 @@ async function run() {
 			break;
 		}
 
+		case 'tidy:worker': {
+			tidyWorker();
+
+			break;
+		}
+
 		case 'flatc:node': {
 			await flatcNode();
 
@@ -381,6 +387,14 @@ function formatWorker() {
 	installInvoke();
 
 	executeCmd(`"${PYTHON}" -m invoke -r worker format`);
+}
+
+function tidyWorker() {
+	logInfo('tidyWorker()');
+
+	installInvoke();
+
+	executeCmd(`"${PYTHON}" -m invoke -r worker tidy`);
 }
 
 async function flatcNode() {
