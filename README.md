@@ -105,10 +105,10 @@ You can support mediasoup by [sponsoring][sponsor] it. Thanks!
 [github-actions-mediasoup-worker-fuzzer]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-fuzzer.yaml
 [github-actions-shield-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml/badge.svg
 [github-actions-mediasoup-worker-prebuild]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-prebuild.yaml
-[github-actions-shield-mediasoup-worker-clang-tidy]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-clang-tidy.yml/badge.svg
+[github-actions-shield-mediasoup-worker-clang-tidy]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-clang-tidy.yaml/badge.svg
 [github-actions-mediasoup-worker-clang-tidy]: https://github.com/versatica/mediasoup/actions/workflows/mediasoup-worker-clang-tidy.yaml
-[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml/badge.svg
-[codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yml
+[codeql-shield-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yaml/badge.svg
+[codeql-mediasoup]: https://github.com/versatica/mediasoup/actions/workflows/codeql.yaml
 [sponsor]: https://mediasoup.org/sponsor
 [mediasoup-architecture]: /art/mediasoup-v3-architecture-01.svg
 [mediasoup-demo-screenshot]: /art/mediasoup-v3.png
