@@ -442,7 +442,7 @@ namespace RTC
 
 			default:
 			{
-				MS_THROW_ERROR("unknown method '%s'", Channel::ChannelRequest::method2String[request->method]);
+				MS_THROW_ERROR("unknown method");
 			}
 		}
 	}

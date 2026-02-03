@@ -11,17 +11,17 @@ namespace RTC
 	/* Class variables. */
 
 	// clang-format off
-	absl::flat_hash_map<std::string, RtpCodecMimeType::Type> RtpCodecMimeType::string2Type =
+	const absl::flat_hash_map<std::string, RtpCodecMimeType::Type> RtpCodecMimeType::String2Type =
 	{
 		{ "audio", RtpCodecMimeType::Type::AUDIO },
 		{ "video", RtpCodecMimeType::Type::VIDEO }
 	};
-	absl::flat_hash_map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::type2String =
+	const absl::flat_hash_map<RtpCodecMimeType::Type, std::string> RtpCodecMimeType::Type2String =
 	{
 		{ RtpCodecMimeType::Type::AUDIO, "audio" },
 		{ RtpCodecMimeType::Type::VIDEO, "video" }
 	};
-	absl::flat_hash_map<std::string, RtpCodecMimeType::Subtype> RtpCodecMimeType::string2Subtype =
+	const absl::flat_hash_map<std::string, RtpCodecMimeType::Subtype> RtpCodecMimeType::String2Subtype =
 	{
 		// Audio codecs:
 		{ "opus",            RtpCodecMimeType::Subtype::OPUS            },
@@ -47,7 +47,7 @@ namespace RTC
 		{ "x-ulpfecuc",      RtpCodecMimeType::Subtype::X_ULPFECUC      },
 		{ "red",             RtpCodecMimeType::Subtype::RED             }
 	};
-	absl::flat_hash_map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::subtype2String =
+	const absl::flat_hash_map<RtpCodecMimeType::Subtype, std::string> RtpCodecMimeType::Subtype2String =
 	{
 		// Audio codecs:
 		{ RtpCodecMimeType::Subtype::OPUS,            "opus"            },
@@ -97,9 +97,9 @@ namespace RTC
 
 		// Set MIME type.
 		{
-			auto it = RtpCodecMimeType::string2Type.find(type);
+			auto it = RtpCodecMimeType::String2Type.find(type);
 
-			if (it == RtpCodecMimeType::string2Type.end())
+			if (it == RtpCodecMimeType::String2Type.end())
 			{
 				MS_THROW_TYPE_ERROR("unknown codec MIME type '%s'", type.c_str());
 			}
@@ -109,9 +109,9 @@ namespace RTC
 
 		// Set MIME subtype.
 		{
-			auto it = RtpCodecMimeType::string2Subtype.find(subtype);
+			auto it = RtpCodecMimeType::String2Subtype.find(subtype);
 
-			if (it == RtpCodecMimeType::string2Subtype.end())
+			if (it == RtpCodecMimeType::String2Subtype.end())
 			{
 				MS_THROW_TYPE_ERROR("unknown codec MIME subtype '%s'", subtype.c_str());
 			}
@@ -120,8 +120,8 @@ namespace RTC
 		}
 
 		// Set mimeType.
-		this->mimeType = RtpCodecMimeType::type2String[this->type] + "/" +
-		                 RtpCodecMimeType::subtype2String[this->subtype];
+		this->mimeType = RtpCodecMimeType::Type2String.at(this->type) + "/" +
+		                 RtpCodecMimeType::Subtype2String.at(this->subtype);
 	}
 
 	void RtpCodecMimeType::UpdateMimeType()
@@ -129,7 +129,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Set mimeType.
-		this->mimeType = RtpCodecMimeType::type2String[this->type] + "/" +
-		                 RtpCodecMimeType::subtype2String[this->subtype];
+		this->mimeType = RtpCodecMimeType::Type2String.at(this->type) + "/" +
+		                 RtpCodecMimeType::Subtype2String.at(this->subtype);
 	}
 } // namespace RTC

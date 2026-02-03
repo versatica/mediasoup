@@ -10,7 +10,7 @@ namespace Channel
 	/* Class variables. */
 
 	// clang-format off
-	absl::flat_hash_map<FBS::Notification::Event, const char*> ChannelNotification::event2String =
+	const absl::flat_hash_map<FBS::Notification::Event, const char*> ChannelNotification::Event2String =
 	{
 		{ FBS::Notification::Event::TRANSPORT_SEND_RTCP, "transport.sendRtcp" },
 		{ FBS::Notification::Event::PRODUCER_SEND,       "producer.send"      },
@@ -27,9 +27,9 @@ namespace Channel
 		this->data  = notification;
 		this->event = notification->event();
 
-		auto eventCStrIt = ChannelNotification::event2String.find(this->event);
+		auto eventCStrIt = ChannelNotification::Event2String.find(this->event);
 
-		if (eventCStrIt == ChannelNotification::event2String.end())
+		if (eventCStrIt == ChannelNotification::Event2String.end())
 		{
 			MS_THROW_ERROR("unknown event '%" PRIu8 "'", static_cast<uint8_t>(this->event));
 		}

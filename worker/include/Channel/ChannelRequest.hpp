@@ -21,7 +21,7 @@ namespace Channel
 		using Method = FBS::Request::Method;
 
 	public:
-		static absl::flat_hash_map<FBS::Request::Method, const char*> method2String;
+		static const absl::flat_hash_map<FBS::Request::Method, const char*> Method2String;
 		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
 
 	public:
@@ -54,7 +54,7 @@ namespace Channel
 		void TypeError(const char* reason = nullptr);
 
 	private:
-		void Send(uint8_t* buffer, size_t size) const;
+		void Send(const uint8_t* buffer, size_t size) const;
 		void SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response);
 
 	public:

@@ -125,7 +125,7 @@ namespace RTC
 	thread_local SSL_CTX* DtlsTransport::sslCtx{ nullptr };
 	thread_local uint8_t DtlsTransport::sslReadBuffer[SslReadBufferSize];
 	// clang-format off
-	absl::flat_hash_map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::string2FingerprintAlgorithm =
+	const absl::flat_hash_map<std::string, DtlsTransport::FingerprintAlgorithm> DtlsTransport::String2FingerprintAlgorithm =
 	{
 		{ "sha-1",   DtlsTransport::FingerprintAlgorithm::SHA1   },
 		{ "sha-224", DtlsTransport::FingerprintAlgorithm::SHA224 },
@@ -133,7 +133,7 @@ namespace RTC
 		{ "sha-384", DtlsTransport::FingerprintAlgorithm::SHA384 },
 		{ "sha-512", DtlsTransport::FingerprintAlgorithm::SHA512 }
 	};
-	absl::flat_hash_map<DtlsTransport::FingerprintAlgorithm, std::string> DtlsTransport::fingerprintAlgorithm2String =
+	const absl::flat_hash_map<DtlsTransport::FingerprintAlgorithm, std::string> DtlsTransport::FingerprintAlgorithm2String =
 	{
 		{ DtlsTransport::FingerprintAlgorithm::SHA1,   "sha-1"   },
 		{ DtlsTransport::FingerprintAlgorithm::SHA224, "sha-224" },
@@ -141,14 +141,14 @@ namespace RTC
 		{ DtlsTransport::FingerprintAlgorithm::SHA384, "sha-384" },
 		{ DtlsTransport::FingerprintAlgorithm::SHA512, "sha-512" }
 	};
-	absl::flat_hash_map<std::string, DtlsTransport::Role> DtlsTransport::string2Role =
+	const absl::flat_hash_map<std::string, DtlsTransport::Role> DtlsTransport::String2Role =
 	{
 		{ "auto",   DtlsTransport::Role::AUTO   },
 		{ "client", DtlsTransport::Role::CLIENT },
 		{ "server", DtlsTransport::Role::SERVER }
 	};
 	thread_local std::vector<DtlsTransport::Fingerprint> DtlsTransport::localFingerprints;
-	std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::srtpCryptoSuites =
+	const std::vector<DtlsTransport::SrtpCryptoSuiteMapEntry> DtlsTransport::SrtpCryptoSuites =
 	{
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_256_GCM,        "SRTP_AEAD_AES_256_GCM"  },
 		{ RTC::SrtpSession::CryptoSuite::AEAD_AES_128_GCM,        "SRTP_AEAD_AES_128_GCM"  },
@@ -588,20 +588,22 @@ namespace RTC
 		// not call SSL_CTX_set_ecdh_auto() or similar APIs anymore."
 
 		// Set the "use_srtp" DTLS extension.
-		for (auto it = DtlsTransport::srtpCryptoSuites.begin();
-		     it != DtlsTransport::srtpCryptoSuites.end();
+		for (auto it = DtlsTransport::SrtpCryptoSuites.begin();
+		     it != DtlsTransport::SrtpCryptoSuites.end();
 		     ++it)
 		{
-			if (it != DtlsTransport::srtpCryptoSuites.begin())
+			if (it != DtlsTransport::SrtpCryptoSuites.begin())
 			{
 				dtlsSrtpCryptoSuites += ":";
 			}
 
-			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(*it);
+			const SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(*it);
+
 			dtlsSrtpCryptoSuites += cryptoSuiteEntry->name;
 		}
 
-		MS_DEBUG_2TAGS(dtls, srtp, "setting SRTP cryptoSuites for DTLS: %s", dtlsSrtpCryptoSuites.c_str());
+		MS_DEBUG_2TAGS(
+		  dtls, srtp, "setting SRTP crypto suites for DTLS: %s", dtlsSrtpCryptoSuites.c_str());
 
 		// NOTE: This function returns 0 on success.
 		ret = SSL_CTX_set_tlsext_use_srtp(DtlsTransport::sslCtx, dtlsSrtpCryptoSuites.c_str());
@@ -632,7 +634,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		for (auto& kv : DtlsTransport::string2FingerprintAlgorithm)
+		for (const auto& kv : DtlsTransport::String2FingerprintAlgorithm)
 		{
 			const std::string& algorithmString   = kv.first;
 			const FingerprintAlgorithm algorithm = kv.second;
@@ -680,7 +682,8 @@ namespace RTC
 				}
 			}
 
-			ret = X509_digest(DtlsTransport::certificate, hashFunction, binaryFingerprint, &size);
+			ret = X509_digest(
+			  DtlsTransport::certificate, hashFunction, binaryFingerprint, std::addressof(size));
 
 			if (ret == 0 || size == 0)
 			{
@@ -1131,8 +1134,7 @@ namespace RTC
 		MS_TRACE();
 
 		const bool wasHandshakeDone = this->handshakeDone;
-
-		const int err = SSL_get_error(this->ssl, returnCode);
+		const int err               = SSL_get_error(this->ssl, returnCode);
 
 		switch (err)
 		{
@@ -1258,7 +1260,7 @@ namespace RTC
 		// DTLSv1_get_timeout queries the next DTLS handshake timeout. If there is
 		// a timeout in progress, it sets *out to the time remaining and returns
 		// one. Otherwise, it returns zero.
-		DTLSv1_get_timeout(this->ssl, static_cast<void*>(&dtlsTimeout)); // NOLINT
+		DTLSv1_get_timeout(this->ssl, static_cast<void*>(std::addressof(dtlsTimeout))); // NOLINT
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 
@@ -1394,7 +1396,7 @@ namespace RTC
 		}
 
 		// Compare the remote fingerprint with the value given via signaling.
-		ret = X509_digest(certificate, hashFunction, binaryFingerprint, &size);
+		ret = X509_digest(certificate, hashFunction, binaryFingerprint, std::addressof(size));
 
 		if (ret == 0 || size == 0)
 		{
@@ -1450,7 +1452,7 @@ namespace RTC
 
 		BUF_MEM* mem;
 
-		BIO_get_mem_ptr(bio, &mem); // NOLINT[cppcoreguidelines-pro-type-cstyle-cast]
+		BIO_get_mem_ptr(bio, std::addressof(mem)); // NOLINT[cppcoreguidelines-pro-type-cstyle-cast]
 
 		if (!mem || !mem->data || mem->length == 0u)
 		{
@@ -1591,9 +1593,9 @@ namespace RTC
 		}
 
 		// Get the negotiated SRTP crypto suite.
-		for (auto& srtpCryptoSuite : DtlsTransport::srtpCryptoSuites)
+		for (const auto& srtpCryptoSuite : DtlsTransport::SrtpCryptoSuites)
 		{
-			SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(srtpCryptoSuite);
+			const SrtpCryptoSuiteMapEntry* cryptoSuiteEntry = std::addressof(srtpCryptoSuite);
 
 			if (std::strcmp(sslSrtpCryptoSuite->name, cryptoSuiteEntry->name) == 0)
 			{

@@ -13,7 +13,7 @@ namespace Channel
 		using Event = FBS::Notification::Event;
 
 	private:
-		static absl::flat_hash_map<FBS::Notification::Event, const char*> event2String;
+		static const absl::flat_hash_map<FBS::Notification::Event, const char*> Event2String;
 
 	public:
 		explicit ChannelNotification(const FBS::Notification::Notification* notification);

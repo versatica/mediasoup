@@ -56,8 +56,8 @@ public:
 	thread_local static struct Configuration configuration;
 
 private:
-	static absl::flat_hash_map<std::string, LogLevel> String2LogLevel; // NOLINT(readability-identifier-naming)
-	static absl::flat_hash_map<LogLevel, std::string> LogLevel2String; // NOLINT(readability-identifier-naming)
+	static const absl::flat_hash_map<std::string, LogLevel> String2LogLevel;
+	static const absl::flat_hash_map<LogLevel, std::string> LogLevel2String;
 };
 
 #endif

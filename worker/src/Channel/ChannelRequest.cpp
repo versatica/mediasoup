@@ -14,7 +14,7 @@ namespace Channel
 	/* Class variables. */
 
 	// clang-format off
-	absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::method2String =
+	const absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::Method2String =
 	{
 		{ FBS::Request::Method::WORKER_CLOSE,                                   "worker.close"                               },
 		{ FBS::Request::Method::WORKER_DUMP,                                    "worker.dump"                                },
@@ -102,9 +102,9 @@ namespace Channel
 		this->id     = request->id();
 		this->method = request->method();
 
-		auto methodCStrIt = ChannelRequest::method2String.find(this->method);
+		auto methodCStrIt = ChannelRequest::Method2String.find(this->method);
 
-		if (methodCStrIt == ChannelRequest::method2String.end())
+		if (methodCStrIt == ChannelRequest::Method2String.end())
 		{
 			Error("unknown method");
 
@@ -127,7 +127,7 @@ namespace Channel
 		auto response =
 		  FBS::Response::CreateResponse(builder, this->id, true, FBS::Response::Body::NONE, 0);
 
-		this->SendResponse(response);
+		SendResponse(response);
 	}
 
 	void ChannelRequest::Error(const char* reason)
@@ -142,7 +142,7 @@ namespace Channel
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
 
-		this->SendResponse(response);
+		SendResponse(response);
 	}
 
 	void ChannelRequest::TypeError(const char* reason)
@@ -157,10 +157,10 @@ namespace Channel
 		auto response = FBS::Response::CreateResponseDirect(
 		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
 
-		this->SendResponse(response);
+		SendResponse(response);
 	}
 
-	void ChannelRequest::Send(uint8_t* buffer, size_t size) const
+	void ChannelRequest::Send(const uint8_t* buffer, size_t size) const
 	{
 		this->channel->Send(buffer, size);
 	}
@@ -172,7 +172,7 @@ namespace Channel
 		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());
 
 		builder.FinishSizePrefixed(message);
-		this->Send(builder.GetBufferPointer(), builder.GetSize());
+		Send(builder.GetBufferPointer(), builder.GetSize());
 		builder.Clear();
 	}
 } // namespace Channel

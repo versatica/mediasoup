@@ -11,7 +11,7 @@ namespace RTC
 {
 	/* Class variables. */
 
-	absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::type2String = {
+	const absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::Type2String = {
 		{ RtpParameters::Type::SIMPLE, "simple" },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },
 		{ RtpParameters::Type::SVC, "svc" },
@@ -59,11 +59,11 @@ namespace RTC
 		return type;
 	}
 
-	std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
+	const std::string& RtpParameters::GetTypeString(RtpParameters::Type type)
 	{
 		MS_TRACE();
 
-		return RtpParameters::type2String.at(type);
+		return RtpParameters::Type2String.at(type);
 	}
 
 	FBS::RtpParameters::Type RtpParameters::TypeToFbs(RtpParameters::Type type)

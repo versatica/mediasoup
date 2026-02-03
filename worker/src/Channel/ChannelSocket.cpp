@@ -270,7 +270,7 @@ namespace Channel
 	}
 
 	void ChannelSocket::OnConsumerSocketMessage(
-	  ConsumerSocket* /*consumerSocket*/, char* msg, size_t /*msgLen*/)
+	  const ConsumerSocket* /*consumerSocket*/, char* msg, size_t /*msgLen*/)
 	{
 		MS_TRACE();
 
@@ -328,7 +328,7 @@ namespace Channel
 		}
 	}
 
-	void ChannelSocket::OnConsumerSocketClosed(ConsumerSocket* /*consumerSocket*/)
+	void ChannelSocket::OnConsumerSocketClosed(const ConsumerSocket* /*consumerSocket*/)
 	{
 		MS_TRACE_STD();
 

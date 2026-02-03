@@ -30,7 +30,7 @@ namespace RTC
 				SEND_RTP_STREAM_DISCARDED
 			};
 
-			static absl::flat_hash_map<DiscardReason, std::string> discardReason2String;
+			static const absl::flat_hash_map<DiscardReason, std::string> DiscardReason2String;
 
 			RtpPacket()  = default;
 			~RtpPacket() = default;

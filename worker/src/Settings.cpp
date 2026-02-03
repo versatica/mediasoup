@@ -23,14 +23,14 @@ static std::mutex GlobalSyncMutex;
 
 thread_local struct Settings::Configuration Settings::configuration;
 // clang-format off
-absl::flat_hash_map<std::string, LogLevel> Settings::String2LogLevel =
+const absl::flat_hash_map<std::string, LogLevel> Settings::String2LogLevel =
 {
 	{ "debug", LogLevel::LOG_DEBUG },
 	{ "warn",  LogLevel::LOG_WARN  },
 	{ "error", LogLevel::LOG_ERROR },
 	{ "none",  LogLevel::LOG_NONE  }
 };
-absl::flat_hash_map<LogLevel, std::string> Settings::LogLevel2String =
+const absl::flat_hash_map<LogLevel, std::string> Settings::LogLevel2String =
 {
 	{ LogLevel::LOG_DEBUG, "debug" },
 	{ LogLevel::LOG_WARN,  "warn"  },
@@ -74,7 +74,7 @@ void Settings::SetConfiguration(int argc, char* argv[])
 	optind = 1; // Set explicitly, otherwise subsequent runs will fail.
 	opterr = 0; // Don't allow getopt to print error messages.
 
-	while ((c = getopt_long_only(argc, argv, "", options, &optionIdx)) != -1)
+	while ((c = getopt_long_only(argc, argv, "", options, std::addressof(optionIdx))) != -1)
 	{
 		if (!optarg)
 		{
@@ -228,7 +228,7 @@ void Settings::SetLogLevel(std::string& level)
 		MS_THROW_TYPE_ERROR("invalid value '%s' for logLevel", level.c_str());
 	}
 
-	Settings::configuration.logLevel = Settings::String2LogLevel[level];
+	Settings::configuration.logLevel = Settings::String2LogLevel.at(level);
 }
 
 void Settings::SetLogTags(const std::vector<std::string>& tags)
@@ -367,7 +367,7 @@ void Settings::PrintConfiguration()
 	MS_DEBUG_TAG(info, "<configuration>");
 
 	MS_DEBUG_TAG(
-	  info, "  logLevel: %s", Settings::LogLevel2String[Settings::configuration.logLevel].c_str());
+	  info, "  logLevel: %s", Settings::LogLevel2String.at(Settings::configuration.logLevel).c_str());
 	MS_DEBUG_TAG(info, "  logTags: %s", logTagsStream.str().c_str());
 	MS_DEBUG_TAG(info, "  rtcMinPort: %" PRIu16, Settings::configuration.rtcMinPort);
 	MS_DEBUG_TAG(info, "  rtcMaxPort: %" PRIu16, Settings::configuration.rtcMaxPort);
