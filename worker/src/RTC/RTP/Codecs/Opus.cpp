@@ -127,7 +127,7 @@ namespace RTC
 			}
 
 			bool Opus::PayloadDescriptorHandler::Process(
-			  Codecs::EncodingContext* encodingContext, RTC::RTP::Packet* /*packet*/, bool& /*marker*/)
+			  Codecs::EncodingContext* encodingContext, RTP::Packet* /*packet*/, bool& /*marker*/)
 			{
 				MS_TRACE();
 

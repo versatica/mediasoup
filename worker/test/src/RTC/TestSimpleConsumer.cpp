@@ -4,10 +4,10 @@
 #include "FBS/rtpParameters.h"
 #include "FBS/transport.h"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStream.hpp"
+#include "RTC/RTP/RtpStreamRecv.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/RtpStream.hpp"
-#include "RTC/RtpStreamRecv.hpp"
 #include "RTC/Shared.hpp"
 #include "RTC/SimpleConsumer.hpp"
 #include <catch2/catch_test_macros.hpp>
@@ -20,19 +20,19 @@ auto* channelSocket             = new Channel::ChannelSocket();
 auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
 auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
 
-class RtpStreamRecvListener : public RtpStreamRecv::Listener
+class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
 {
 public:
-	void OnRtpStreamScore(RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+	void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 	{
 	}
 
-	void OnRtpStreamSendRtcpPacket(RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
+	void OnRtpStreamSendRtcpPacket(RTP::RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
 	{
 	}
 
 	void OnRtpStreamNeedWorstRemoteFractionLost(
-	  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
+	  RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
 	{
 	}
 };
@@ -146,12 +146,12 @@ static std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* lis
 	  consumeRequest);
 }
 
-static std::unique_ptr<RtpStreamRecv> createRtpStreamRecv()
+static std::unique_ptr<RTP::RtpStreamRecv> createRtpStreamRecv()
 {
 	RtpStreamRecvListener streamRecvListener;
-	RtpStream::Params params;
+	RTP::RtpStream::Params params;
 
-	return std::make_unique<RtpStreamRecv>(&streamRecvListener, params, 0u, false);
+	return std::make_unique<RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
 }
 
 /**
@@ -172,7 +172,7 @@ public:
 
 	std::unique_ptr<ConsumerListener> listener;
 	std::unique_ptr<SimpleConsumer> consumer;
-	std::unique_ptr<RtpStreamRecv> rtpStream;
+	std::unique_ptr<RTP::RtpStreamRecv> rtpStream;
 };
 
 SCENARIO("SimpleConsumer", "[rtp][consumer]")

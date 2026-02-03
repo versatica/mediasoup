@@ -1,22 +1,24 @@
-#include "RTC/FuzzerRtpStreamSend.hpp"
+#include "RTC/RTP/FuzzerRtpStreamSend.hpp"
 #include "Utils.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStreamSend.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
-#include "RTC/RtpStreamSend.hpp"
 
-class TestRtpStreamListener : public RTC::RtpStreamSend::Listener
+class TestRtpStreamListener : public RTC::RTP::RtpStreamSend::Listener
 {
 public:
-	void OnRtpStreamScore(::RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+	void OnRtpStreamScore(
+	  ::RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 	{
 	}
 
-	void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* /*rtpStream*/, ::RTC::RTP::Packet* packet) override
+	void OnRtpStreamRetransmitRtpPacket(
+	  RTC::RTP::RtpStreamSend* /*rtpStream*/, ::RTC::RTP::Packet* packet) override
 	{
 	}
 };
 
-void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
+void Fuzzer::RTC::RTP::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -34,7 +36,7 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	TestRtpStreamListener testRtpStreamListener;
 
 	// Create RtpStreamSend instance.
-	::RTC::RtpStream::Params params;
+	::RTC::RTP::RtpStream::Params params;
 
 	params.ssrc          = 1111;
 	params.clockRate     = 90000;
@@ -44,7 +46,7 @@ void Fuzzer::RTC::RtpStreamSend::Fuzz(const uint8_t* data, size_t len)
 	packet->SetSsrc(params.ssrc);
 
 	std::string mid;
-	auto* stream = new ::RTC::RtpStreamSend(&testRtpStreamListener, params, mid);
+	auto* stream = new ::RTC::RTP::RtpStreamSend(&testRtpStreamListener, params, mid);
 	size_t offset{ 0u };
 
 	while (len >= 4u)

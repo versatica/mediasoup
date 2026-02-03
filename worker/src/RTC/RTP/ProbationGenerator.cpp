@@ -1,4 +1,4 @@
-#define MS_CLASS "ProbationGenerator"
+#define MS_CLASS "RTC::RTP::ProbationGenerator"
 // #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/RTP/ProbationGenerator.hpp"
@@ -28,7 +28,7 @@ namespace RTC
 			MS_TRACE();
 
 			// Trick to only fill the padding with zeroes once.
-			static bool mustInitializePayload{ true };
+			thread_local static bool mustInitializePayload{ true };
 
 			if (mustInitializePayload)
 			{
@@ -38,8 +38,8 @@ namespace RTC
 			}
 
 			// Create the probation RTP Packet.
-			this->probationPacket =
-			  RTC::RTP::Packet::Factory(ProbationPacketBuffer, sizeof(ProbationPacketBuffer));
+			this->probationPacket.reset(
+			  RTP::Packet::Factory(ProbationPacketBuffer, sizeof(ProbationPacketBuffer)));
 
 			// Sex fixed codec payload type.
 			this->probationPacket->SetPayloadType(ProbationGenerator::PayloadType);
@@ -55,7 +55,7 @@ namespace RTC
 			this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
 
 			// Add BWE related RTP header extensions.
-			std::vector<RTC::RTP::Packet::Extension> extensions;
+			std::vector<RTP::Packet::Extension> extensions;
 			uint8_t extenLen;
 			uint8_t* bufferPtr{ ProbationPacketExtensionsBuffer };
 
@@ -104,7 +104,7 @@ namespace RTC
 			}
 
 			// Set the extensions into the Packet using One-Byte format.
-			this->probationPacket->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+			this->probationPacket->SetExtensions(RTP::Packet::ExtensionsType::OneByte, extensions);
 
 			this->probationPacketMinLength = this->probationPacket->GetLength();
 		}
@@ -112,9 +112,6 @@ namespace RTC
 		ProbationGenerator::~ProbationGenerator()
 		{
 			MS_TRACE();
-
-			// Delete the probation RTP Packet.
-			delete this->probationPacket;
 		}
 
 		/**
@@ -122,7 +119,7 @@ namespace RTC
 		 * packet mas length. That's ok since the caller will iterate and call
 		 * this method again until it satisfies the total desired `len`.
 		 */
-		RTC::RTP::Packet* ProbationGenerator::GetNextPacket(size_t len)
+		RTP::Packet* ProbationGenerator::GetNextPacket(size_t len)
 		{
 			MS_TRACE();
 
@@ -151,7 +148,7 @@ namespace RTC
 			// Set payload length.
 			this->probationPacket->SetPayloadLength(payloadLength);
 
-			return this->probationPacket;
+			return this->probationPacket.get();
 		}
 	} // namespace RTP
 } // namespace RTC

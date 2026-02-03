@@ -1,17 +1,17 @@
-#include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
+#include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
 #include "Utils.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
-#include "RTC/RtpRetransmissionBuffer.hpp"
 
-void Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
+void Fuzzer::RTC::RTP::RetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {
 	uint16_t maxItems{ 2500u };
 	uint32_t maxRetransmissionDelayMs{ 2000u };
 	uint32_t clockRate{ 90000 };
 
 	// Trick to initialize our stuff just once (use static).
-	static ::RTC::RtpRetransmissionBuffer retransmissionBuffer(
+	static ::RTC::RTP::RetransmissionBuffer retransmissionBuffer(
 	  maxItems, maxRetransmissionDelayMs, clockRate);
 
 	// clang-format off

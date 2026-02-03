@@ -7,10 +7,13 @@ namespace Fuzzer
 {
 	namespace RTC
 	{
-		namespace RtpStreamSend
+		namespace RTP
 		{
-			void Fuzz(const uint8_t* data, size_t len);
-		}
+			namespace RtpStreamSend
+			{
+				void Fuzz(const uint8_t* data, size_t len);
+			}
+		} // namespace RTP
 	} // namespace RTC
 } // namespace Fuzzer
 

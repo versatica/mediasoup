@@ -204,14 +204,14 @@ namespace RTC
 		}
 	}
 
-	void PipeConsumer::ProducerRtpStream(RTC::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	void PipeConsumer::ProducerRtpStream(RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PipeConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
+	void PipeConsumer::ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint32_t /*mappedSsrc*/)
 	{
 		MS_TRACE();
 
@@ -219,14 +219,14 @@ namespace RTC
 	}
 
 	void PipeConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PipeConsumer::ProducerRtcpSenderReport(RTC::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
+	void PipeConsumer::ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* /*rtpStream*/, bool /*first*/)
 	{
 		MS_TRACE();
 
@@ -398,10 +398,10 @@ namespace RTC
 			  origSeq);
 		}
 
-		const RTC::RtpStreamSend::ReceivePacketResult result =
+		const RTC::RTP::RtpStreamSend::ReceivePacketResult result =
 		  rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
@@ -432,7 +432,7 @@ namespace RTC
 
 		// If sharedPacket doesn't have a packet inside and it has been stored we
 		// need to clone the packet into it.
-		if (!sharedPacket.HasPacket() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		if (!sharedPacket.HasPacket() && result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
 		{
 			sharedPacket.Assign(packet);
 		}
@@ -444,7 +444,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the
 			// key frame was sent.
-			if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : targetLayerRetransmissionBuffer)
 				{
@@ -749,7 +749,7 @@ namespace RTC
 			  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 			// Set stream params.
-			RTC::RtpStream::Params params;
+			RTC::RTP::RtpStream::Params params;
 
 			params.encodingIdx    = idx;
 			params.ssrc           = encoding.ssrc;
@@ -806,7 +806,7 @@ namespace RTC
 				}
 			}
 
-			auto* rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
+			auto* rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
 
 			// If the Consumer is paused, tell the RtpStreamSend.
 			if (IsPaused() || IsProducerPaused())
@@ -856,14 +856,15 @@ namespace RTC
 	}
 
 	void PipeConsumer::OnRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
 		// Do nothing.
 	}
 
-	void PipeConsumer::OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet)
+	void PipeConsumer::OnRtpStreamRetransmitRtpPacket(
+	  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

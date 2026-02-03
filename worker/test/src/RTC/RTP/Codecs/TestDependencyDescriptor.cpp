@@ -12,7 +12,7 @@ public:
 	}
 };
 
-SCENARIO("parse Dependency Descriptor", "[codecs][DD]")
+SCENARIO("parse Dependency Descriptor", "[rtp][codecs][DD]")
 {
 	SECTION("parse Dependency Descriptor")
 	{

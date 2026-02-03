@@ -10,11 +10,11 @@
 #include "RTC/RTCP/FeedbackRtpNack.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStreamRecv.hpp"
+#include "RTC/RTP/RtpStreamSend.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
-#include "RTC/RtpStreamRecv.hpp"
-#include "RTC/RtpStreamSend.hpp"
 #include "RTC/Shared.hpp"
 #include <absl/container/flat_hash_set.h>
 #include <string>
@@ -127,12 +127,12 @@ namespace RTC
 		}
 		void ProducerPaused();
 		void ProducerResumed();
-		virtual void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
-		virtual void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
+		virtual void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)    = 0;
+		virtual void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) = 0;
 		void ProducerRtpStreamScores(const std::vector<uint8_t>* scores);
 		virtual void ProducerRtpStreamScore(
-		  RTC::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
-		virtual void ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first) = 0;
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
+		virtual void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
 		void ProducerClosed();
 		void SetExternallyManagedBitrate()
 		{
@@ -144,7 +144,7 @@ namespace RTC
 		virtual uint32_t GetDesiredBitrate() const                                                 = 0;
 		virtual void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) = 0;
 		virtual bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)                    = 0;
-		virtual const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const                      = 0;
+		virtual const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const                 = 0;
 		virtual void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
 		virtual void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) = 0;
 		virtual void ReceiveKeyFrameRequest(

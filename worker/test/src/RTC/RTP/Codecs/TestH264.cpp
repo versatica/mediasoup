@@ -4,7 +4,7 @@
 
 using namespace RTC;
 
-SCENARIO("parse H264 payload descriptor", "[codecs][h264]")
+SCENARIO("parse H264 payload descriptor", "[rtp][codecs][h264]")
 {
 	SECTION("parse payload descriptor")
 	{

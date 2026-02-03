@@ -835,7 +835,7 @@ namespace RTC
 		this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
 	}
 
-	RTC::RtpStreamRecv* Producer::GetRtpStream(const RTC::RTP::Packet* packet)
+	RTC::RTP::RtpStreamRecv* Producer::GetRtpStream(const RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 
@@ -1061,7 +1061,7 @@ namespace RTC
 		return nullptr;
 	}
 
-	RTC::RtpStreamRecv* Producer::CreateRtpStream(
+	RTC::RTP::RtpStreamRecv* Producer::CreateRtpStream(
 	  const RTC::RTP::Packet* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
 	{
 		MS_TRACE();
@@ -1087,7 +1087,7 @@ namespace RTC
 		  mediaCodec.payloadType);
 
 		// Set stream params.
-		RTC::RtpStream::Params params;
+		RTC::RTP::RtpStream::Params params;
 
 		params.encodingIdx    = encodingIdx;
 		params.ssrc           = ssrc;
@@ -1151,7 +1151,7 @@ namespace RTC
 		  this->type == RtpParameters::Type::SIMULCAST && this->rtpMapping.encodings.size() > 1;
 
 		// Create a RtpStreamRecv for receiving a media stream.
-		auto* rtpStream = new RTC::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
+		auto* rtpStream = new RTC::RTP::RtpStreamRecv(this, params, SendNackDelay, useRtpInactivityCheck);
 
 		// Insert into the maps.
 		this->mapSsrcRtpStream[ssrc]              = rtpStream;
@@ -1174,7 +1174,7 @@ namespace RTC
 		return rtpStream;
 	}
 
-	void Producer::NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream)
+	void Producer::NotifyNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream)
 	{
 		MS_TRACE();
 
@@ -1184,7 +1184,7 @@ namespace RTC
 		this->listener->OnProducerNewRtpStream(this, rtpStream, mappedSsrc);
 	}
 
-	inline bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RtpStreamRecv* rtpStream) const
+	inline bool Producer::MangleRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::RtpStreamRecv* rtpStream) const
 	{
 		MS_TRACE();
 
@@ -1648,7 +1648,8 @@ namespace RTC
 		  notification);
 	}
 
-	inline void Producer::OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
+	inline void Producer::OnRtpStreamScore(
+	  RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -1657,14 +1658,14 @@ namespace RTC
 
 		// Notify the listener.
 		this->listener->OnProducerRtpStreamScore(
-		  this, static_cast<RTC::RtpStreamRecv*>(rtpStream), score, previousScore);
+		  this, static_cast<RTC::RTP::RtpStreamRecv*>(rtpStream), score, previousScore);
 
 		// Emit the score event.
 		EmitScore();
 	}
 
 	inline void Producer::OnRtpStreamSendRtcpPacket(
-	  RTC::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet)
 	{
 		switch (packet->GetType())
 		{
@@ -1720,7 +1721,7 @@ namespace RTC
 	}
 
 	inline void Producer::OnRtpStreamNeedWorstRemoteFractionLost(
-	  RTC::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
+	  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost)
 	{
 		auto mappedSsrc = this->mapRtpStreamMappedSsrc.at(rtpStream);
 

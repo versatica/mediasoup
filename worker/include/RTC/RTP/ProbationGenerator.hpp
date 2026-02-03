@@ -29,7 +29,7 @@ namespace RTC
 			~ProbationGenerator();
 
 		public:
-			RTC::RTP::Packet* GetNextPacket(size_t len);
+			RTP::Packet* GetNextPacket(size_t len);
 
 			size_t GetProbationPacketMinLength() const
 			{
@@ -38,7 +38,7 @@ namespace RTC
 
 		private:
 			// Allocated by this.
-			RTC::RTP::Packet* probationPacket{ nullptr };
+			std::unique_ptr<RTP::Packet> probationPacket;
 			// Others.
 			// The length of the probation RTP Packet without payload or padding.
 			size_t probationPacketMinLength{ 0 };

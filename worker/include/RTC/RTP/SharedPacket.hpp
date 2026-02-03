@@ -25,7 +25,7 @@ namespace RTC
 			 * Constructor with RTP Packet pointer. If a packet is given it's internally
 			 * cloned.
 			 */
-			explicit SharedPacket(RTC::RTP::Packet* packet);
+			explicit SharedPacket(RTP::Packet* packet);
 
 			/**
 			 * Copy constructor.
@@ -58,7 +58,7 @@ namespace RTC
 				return this->sharedPtr->get() != nullptr;
 			}
 
-			RTC::RTP::Packet* GetPacket() const
+			RTP::Packet* GetPacket() const
 			{
 				return this->sharedPtr->get();
 			}
@@ -69,7 +69,7 @@ namespace RTC
 			 *
 			 * @throws MediasoupError if the Packet is too big.
 			 */
-			void Assign(RTC::RTP::Packet* packet);
+			void Assign(RTP::Packet* packet);
 
 			/**
 			 * Resets the internal packet to nullptr.
@@ -84,17 +84,17 @@ namespace RTC
 			 * given other packet (or there is no packet inside and no other packet has
 			 * been given).
 			 */
-			void AssertSamePacket(const RTC::RTP::Packet* otherPacket) const;
+			void AssertSamePacket(const RTP::Packet* otherPacket) const;
 
 		private:
-			void StorePacket(RTC::RTP::Packet* packet);
+			void StorePacket(RTP::Packet* packet);
 
 		private:
 			// NOTE: This needs to be a shared pointer that holds an unique pointer.
 			// Otherwise, when copying/storing the shared pointer in other locations
 			// (buffers, etc), reseting its internal value wouldn't affect other copies
 			// of the shared pointer.
-			std::shared_ptr<std::unique_ptr<RTC::RTP::Packet>> sharedPtr;
+			std::shared_ptr<std::unique_ptr<RTP::Packet>> sharedPtr;
 		};
 	} // namespace RTP
 } // namespace RTC

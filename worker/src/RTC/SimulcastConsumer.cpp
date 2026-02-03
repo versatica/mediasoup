@@ -305,7 +305,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -318,7 +318,7 @@ namespace RTC
 		this->producerRtpStreams[spatialLayer] = rtpStream;
 	}
 
-	void SimulcastConsumer::ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
+	void SimulcastConsumer::ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -340,7 +340,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::ProducerRtpStreamScore(
-	  RTC::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
+	  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -367,7 +367,7 @@ namespace RTC
 		}
 	}
 
-	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first)
+	void SimulcastConsumer::ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -1142,10 +1142,10 @@ namespace RTC
 			  origTimestamp);
 		}
 
-		const RTC::RtpStreamSend::ReceivePacketResult result =
+		const RTC::RTP::RtpStreamSend::ReceivePacketResult result =
 		  this->rtpStream->ReceivePacket(packet, sharedPacket);
 
-		if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+		if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
 		{
 			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
 			{
@@ -1186,7 +1186,7 @@ namespace RTC
 
 		// If sharedPacket doesn't have a packet inside and it has been stored we
 		// need to clone the packet into it.
-		if (!sharedPacket.HasPacket() && result == RTC::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
+		if (!sharedPacket.HasPacket() && result == RTC::RTP::RtpStreamSend::ReceivePacketResult::ACCEPTED_AND_STORED)
 		{
 			sharedPacket.Assign(packet);
 		}
@@ -1198,7 +1198,7 @@ namespace RTC
 		{
 			// NOTE: Only send buffered packets if the first packet containing the key
 			// frame was sent.
-			if (result != RTC::RtpStreamSend::ReceivePacketResult::DISCARDED)
+			if (result != RTC::RTP::RtpStreamSend::ReceivePacketResult::DISCARDED)
 			{
 				for (auto& kv : this->targetLayerRetransmissionBuffer)
 				{
@@ -1435,7 +1435,7 @@ namespace RTC
 		  rtp, "[ssrc:%" PRIu32 ", payloadType:%" PRIu8 "]", encoding.ssrc, mediaCodec->payloadType);
 
 		// Set stream params.
-		RTC::RtpStream::Params params;
+		RTC::RTP::RtpStream::Params params;
 
 		params.ssrc           = encoding.ssrc;
 		params.payloadType    = mediaCodec->payloadType;
@@ -1491,7 +1491,7 @@ namespace RTC
 			}
 		}
 
-		this->rtpStream = new RTC::RtpStreamSend(this, params, this->rtpParameters.mid);
+		this->rtpStream = new RTC::RTP::RtpStreamSend(this, params, this->rtpParameters.mid);
 		this->rtpStreams.push_back(this->rtpStream);
 
 		// If the Consumer is paused, tell the RtpStreamSend.
@@ -1855,7 +1855,7 @@ namespace RTC
 		  notificationOffset);
 	}
 
-	RTC::RtpStreamRecv* SimulcastConsumer::GetProducerCurrentRtpStream() const
+	RTC::RTP::RtpStreamRecv* SimulcastConsumer::GetProducerCurrentRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1868,7 +1868,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->currentSpatialLayer);
 	}
 
-	RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTargetRtpStream() const
+	RTC::RTP::RtpStreamRecv* SimulcastConsumer::GetProducerTargetRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1881,7 +1881,7 @@ namespace RTC
 		return this->producerRtpStreams.at(this->targetLayers.spatial);
 	}
 
-	RTC::RtpStreamRecv* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
+	RTC::RTP::RtpStreamRecv* SimulcastConsumer::GetProducerTsReferenceRtpStream() const
 	{
 		MS_TRACE();
 
@@ -1895,7 +1895,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::OnRtpStreamScore(
-	  RTC::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
+	  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/)
 	{
 		MS_TRACE();
 
@@ -1915,7 +1915,7 @@ namespace RTC
 	}
 
 	void SimulcastConsumer::OnRtpStreamRetransmitRtpPacket(
-	  RTC::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet)
+	  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet)
 	{
 		MS_TRACE();
 

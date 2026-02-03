@@ -9,7 +9,7 @@
 
 namespace RTC
 {
-	class SimpleConsumer : public RTC::Consumer, public RTC::RtpStreamSend::Listener
+	class SimpleConsumer : public RTC::Consumer, public RTC::RTP::RtpStreamSend::Listener
 	{
 	public:
 		SimpleConsumer(
@@ -39,17 +39,17 @@ namespace RTC
 			);
 			// clang-format on
 		}
-		void ProducerRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
-		void ProducerNewRtpStream(RTC::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
+		void ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc) override;
 		void ProducerRtpStreamScore(
-		  RTC::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void ProducerRtcpSenderReport(RTC::RtpStreamRecv* rtpStream, bool first) override;
+		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
 		uint8_t GetBitratePriority() const override;
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) override;
-		const std::vector<RTC::RtpStreamSend*>& GetRtpStreams() const override
+		const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const override
 		{
 			return this->rtpStreams;
 		}
@@ -79,15 +79,16 @@ namespace RTC
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
-		void OnRtpStreamScore(RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
-		void OnRtpStreamRetransmitRtpPacket(RTC::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
+		void OnRtpStreamScore(RTC::RTP::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		void OnRtpStreamRetransmitRtpPacket(
+		  RTC::RTP::RtpStreamSend* rtpStream, RTC::RTP::Packet* packet) override;
 
 	private:
 		// Allocated by this.
-		RTC::RtpStreamSend* rtpStream{ nullptr };
+		RTC::RTP::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
-		std::vector<RTC::RtpStreamSend*> rtpStreams;
-		RTC::RtpStreamRecv* producerRtpStream{ nullptr };
+		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
+		RTC::RTP::RtpStreamRecv* producerRtpStream{ nullptr };
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;

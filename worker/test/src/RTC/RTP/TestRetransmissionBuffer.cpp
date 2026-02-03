@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
-#include "RTC/RtpRetransmissionBuffer.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
@@ -9,7 +9,7 @@ using namespace RTC;
 
 // Class inheriting from RtpRetransmissionBuffer so we can access its protected
 // buffer member.
-class RtpMyRetransmissionBuffer : public RtpRetransmissionBuffer
+class RtpMyRetransmissionBuffer : public RTP::RetransmissionBuffer
 {
 public:
 	struct VerificationItem
@@ -21,7 +21,7 @@ public:
 
 public:
 	RtpMyRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate)
-	  : RtpRetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
+	  : RTP::RetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
 	{
 	}
 
@@ -44,7 +44,7 @@ public:
 
 		RTP::SharedPacket sharedPacket;
 
-		RtpRetransmissionBuffer::Insert(packet.get(), sharedPacket);
+		RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket);
 	}
 
 	void AssertBuffer(std::vector<VerificationItem> verificationBuffer)
@@ -67,7 +67,7 @@ public:
 	}
 };
 
-SCENARIO("RtpRetransmissionBuffer", "[rtp][rtx]")
+SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 {
 	SECTION("proper packets received in order")
 	{

@@ -44,13 +44,13 @@ namespace RTC
 		/* Instance methods. */
 
 		SharedPacket::SharedPacket()
-		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
+		  : sharedPtr(std::make_shared<std::unique_ptr<RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
 		}
 
-		SharedPacket::SharedPacket(RTC::RTP::Packet* packet)
-		  : sharedPtr(std::make_shared<std::unique_ptr<RTC::RTP::Packet>>(nullptr))
+		SharedPacket::SharedPacket(RTP::Packet* packet)
+		  : sharedPtr(std::make_shared<std::unique_ptr<RTP::Packet>>(nullptr))
 		{
 			MS_TRACE();
 
@@ -75,7 +75,7 @@ namespace RTC
 			MS_DUMP_CLEAN(indentation, "</SharedPacket>");
 		}
 
-		void SharedPacket::Assign(RTC::RTP::Packet* packet)
+		void SharedPacket::Assign(RTP::Packet* packet)
 		{
 			MS_TRACE();
 
@@ -96,7 +96,7 @@ namespace RTC
 			this->sharedPtr->reset(nullptr);
 		}
 
-		void SharedPacket::AssertSamePacket(const RTC::RTP::Packet* otherPacket) const
+		void SharedPacket::AssertSamePacket(const RTP::Packet* otherPacket) const
 		{
 			MS_TRACE();
 
@@ -142,7 +142,7 @@ namespace RTC
 			}
 		}
 
-		void SharedPacket::StorePacket(RTC::RTP::Packet* packet)
+		void SharedPacket::StorePacket(RTP::Packet* packet)
 		{
 			MS_TRACE();
 

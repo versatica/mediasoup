@@ -11,8 +11,6 @@
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/FuzzerDtlsTransport.hpp"
 #include "RTC/FuzzerRateCalculator.hpp"
-#include "RTC/FuzzerRtpRetransmissionBuffer.hpp"
-#include "RTC/FuzzerRtpStreamSend.hpp"
 #include "RTC/FuzzerSeqManager.hpp"
 #include "RTC/FuzzerTrendCalculator.hpp"
 #include "RTC/ICE/FuzzerStunPacket.hpp"
@@ -25,6 +23,8 @@
 #include "RTC/RTP/Codecs/FuzzerVP9.hpp"
 #include "RTC/RTP/FuzzerPacket.hpp"
 #include "RTC/RTP/FuzzerProbationGenerator.hpp"
+#include "RTC/RTP/FuzzerRetransmissionBuffer.hpp"
+#include "RTC/RTP/FuzzerRtpStreamSend.hpp"
 #include "RTC/SCTP/association/FuzzerStateCookie.hpp"
 #include "RTC/SCTP/packet/FuzzerPacket.hpp"
 #include <cstdlib> // std::getenv()
@@ -74,11 +74,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len)
 	if (fuzzRtp)
 	{
 		Fuzzer::RTC::RTP::Packet::Fuzz(data, len);
-		Fuzzer::RTC::RtpStreamSend::Fuzz(data, len);
-		Fuzzer::RTC::RtpRetransmissionBuffer::Fuzz(data, len);
+		Fuzzer::RTC::RTP::RtpStreamSend::Fuzz(data, len);
+		Fuzzer::RTC::RTP::RetransmissionBuffer::Fuzz(data, len);
+		Fuzzer::RTC::RTP::ProbationGenerator::Fuzz(data, len);
 		Fuzzer::RTC::SeqManager::Fuzz(data, len);
 		Fuzzer::RTC::RateCalculator::Fuzz(data, len);
-		Fuzzer::RTC::RTP::ProbationGenerator::Fuzz(data, len);
 	}
 
 	if (fuzzRtcp)
