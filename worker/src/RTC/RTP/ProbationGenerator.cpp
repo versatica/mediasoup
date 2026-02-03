@@ -117,6 +117,11 @@ namespace RTC
 			delete this->probationPacket;
 		}
 
+		/**
+		 * This method maybe called with desired `len` higher than typical RTP
+		 * packet mas length. That's ok since the caller will iterate and call
+		 * this method again until it satisfies the total desired `len`.
+		 */
 		RTC::RTP::Packet* ProbationGenerator::GetNextPacket(size_t len)
 		{
 			MS_TRACE();
@@ -127,20 +132,10 @@ namespace RTC
 			// Make the Packet length fit into our available limits.
 			if (len > ProbationGenerator::ProbationPacketMaxLength)
 			{
-				MS_WARN_TAG(
-				  rtp,
-				  "cannot generate a probation packet bigger than %zu bytes",
-				  ProbationGenerator::ProbationPacketMaxLength);
-
 				len = ProbationGenerator::ProbationPacketMaxLength;
 			}
 			else if (len < this->probationPacketMinLength)
 			{
-				MS_WARN_TAG(
-				  rtp,
-				  "cannot generate a probation packet smaller than %zu bytes",
-				  this->probationPacketMinLength);
-
 				len = this->probationPacketMinLength;
 			}
 
