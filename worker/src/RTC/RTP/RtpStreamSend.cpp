@@ -160,7 +160,7 @@ namespace RTC
 
 			for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 			{
-				RTC::RTCP::FeedbackRtpNackItem* item = *it;
+				const RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
 				this->nackPacketCount += item->CountRequestedPackets();
 
@@ -507,12 +507,7 @@ namespace RTC
 						// Do nothing.
 					}
 					// Don't resent the packet if it was resent in the last RTT ms.
-					// clang-format off
-				else if (
-					item->resentAtMs != 0u &&
-					nowMs - item->resentAtMs <= static_cast<uint64_t>(rtt)
-				)
-					// clang-format on
+					else if (item->resentAtMs != 0u && nowMs - item->resentAtMs <= static_cast<uint64_t>(rtt))
 					{
 						MS_DEBUG_TAG(
 						  rtx,
