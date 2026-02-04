@@ -46,13 +46,7 @@ namespace RTC
 			MS_THROW_TYPE_ERROR("cannot provide both maxPacketLifeTime and maxRetransmits");
 		}
 
-		// clang-format off
-		if (
-			orderedGiven &&
-			this->ordered &&
-			(this->maxPacketLifeTime || this->maxRetransmits)
-		)
-		// clang-format on
+		if (orderedGiven && this->ordered && (this->maxPacketLifeTime || this->maxRetransmits))
 		{
 			MS_THROW_TYPE_ERROR("cannot be ordered with maxPacketLifeTime or maxRetransmits");
 		}

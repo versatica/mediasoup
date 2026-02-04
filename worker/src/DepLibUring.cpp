@@ -16,7 +16,7 @@ thread_local bool DepLibUring::enabled{ false };
 // liburing instance per thread.
 thread_local DepLibUring::LibUring* DepLibUring::liburing{ nullptr };
 // Completion queue entry array used to retrieve processes tasks.
-thread_local struct io_uring_cqe* cqes[DepLibUring::QueueDepth];
+thread_local struct io_uring_cqe* Cqes[DepLibUring::QueueDepth];
 
 /* Static methods for UV callbacks. */
 
@@ -25,27 +25,27 @@ inline static void onCloseFd(uv_handle_t* handle)
 	delete reinterpret_cast<uv_poll_t*>(handle);
 }
 
-inline static void onFdEvent(uv_poll_t* handle, int status, int events)
+inline static void onFdEvent(uv_poll_t* handle, int /*status*/, int /*events*/)
 {
 	auto* liburing = static_cast<DepLibUring::LibUring*>(handle->data);
-	auto count     = io_uring_peek_batch_cqe(liburing->GetRing(), cqes, DepLibUring::QueueDepth);
+	auto count     = io_uring_peek_batch_cqe(liburing->GetRing(), Cqes, DepLibUring::QueueDepth);
 
 	// libuv uses level triggering, so we need to read from the socket to reset
 	// the counter in order to avoid libuv calling this callback indefinitely.
 	eventfd_t v;
-	int err = eventfd_read(liburing->GetEventFd(), std::addressof(v));
+	const int err = eventfd_read(liburing->GetEventFd(), std::addressof(v));
 
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -err;
+		const int error = -err;
 
 		MS_ABORT("eventfd_read() failed: %s", std::strerror(error));
 	};
 
 	for (unsigned int i{ 0 }; i < count; ++i)
 	{
-		struct io_uring_cqe* cqe = cqes[i];
+		struct io_uring_cqe* cqe = Cqes[i];
 		auto* userData           = static_cast<DepLibUring::UserData*>(io_uring_cqe_get_data(cqe));
 
 		if (liburing->IsZeroCopyEnabled())
@@ -161,11 +161,9 @@ void DepLibUring::ClassDestroy()
 
 bool DepLibUring::CheckRuntimeSupport()
 {
-	// clang-format off
 	struct utsname buffer{};
-	// clang-format on
 
-	auto err = uname(std::addressof(buffer));
+	const auto err = uname(std::addressof(buffer));
 
 	if (err != 0)
 	{
@@ -288,7 +286,7 @@ DepLibUring::LibUring::LibUring()
 	 * (or thread) will submit requests, which is used for internal optimisations.
 	 */
 
-	unsigned int flags = IORING_SETUP_SINGLE_ISSUER;
+	const unsigned int flags = IORING_SETUP_SINGLE_ISSUER;
 
 	// Initialize io_uring.
 	auto err = io_uring_queue_init(DepLibUring::QueueDepth, std::addressof(this->ring), flags);
@@ -296,7 +294,7 @@ DepLibUring::LibUring::LibUring()
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -err;
+		const int error = -err;
 
 		MS_THROW_ERROR("io_uring_queue_init() failed: %s", std::strerror(error));
 	}
@@ -314,7 +312,7 @@ DepLibUring::LibUring::LibUring()
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -err;
+		const int error = -err;
 
 		MS_THROW_ERROR("io_uring_register_eventfd() failed: %s", std::strerror(error));
 	}
@@ -338,7 +336,7 @@ DepLibUring::LibUring::LibUring()
 	if (err < 0)
 	{
 		// Get positive errno.
-		int error = -err;
+		const int error = -err;
 
 		if (error == ENOMEM)
 		{
@@ -381,13 +379,13 @@ DepLibUring::LibUring::~LibUring()
 	if (err != 0)
 	{
 		// Get positive errno.
-		int error = -err;
+		const int error = -err;
 
 		try
 		{
 			MS_ABORT("close() failed: %s", std::strerror(error));
 		}
-		catch (const std::exception& error)
+		catch (const std::exception& error) // NOLINT(bugprone-empty-catch)
 		{
 			// NOTE: This is to avoid a warning:
 			// warning: ‘throw’ will always call ‘terminate’ [-Wterminate]
@@ -440,7 +438,7 @@ void DepLibUring::LibUring::StopPollingCQEs()
 	this->uvHandle->data = nullptr;
 
 	// Stop polling the event file descriptor.
-	auto err = uv_poll_stop(this->uvHandle);
+	const auto err = uv_poll_stop(this->uvHandle);
 
 	if (err != 0)
 	{
@@ -508,7 +506,7 @@ bool DepLibUring::LibUring::PrepareSend(
 
 	io_uring_sqe_set_data(sqe, userData);
 
-	socklen_t addrlen = Utils::IP::GetAddressLen(addr);
+	const socklen_t addrlen = Utils::IP::GetAddressLen(addr);
 
 	if (this->zeroCopyEnabled)
 	{
@@ -603,7 +601,7 @@ void DepLibUring::LibUring::Submit()
 	// Unset active flag.
 	SetInactive();
 
-	auto err = io_uring_submit(std::addressof(this->ring));
+	const auto err = io_uring_submit(std::addressof(this->ring));
 
 	if (err >= 0)
 	{
@@ -612,7 +610,7 @@ void DepLibUring::LibUring::Submit()
 	else
 	{
 		// Get positive errno.
-		int error = -err;
+		const int error = -err;
 
 		MS_ERROR("io_uring_submit() failed: %s", std::strerror(error));
 	}

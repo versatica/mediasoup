@@ -13,7 +13,7 @@
 #include <cstring> // std::memcpy(), std::strcmp()
 
 // clang-format off
-// NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define LOG_OPENSSL_ERROR(desc) \
 	do \
 	{ \
@@ -102,7 +102,6 @@ namespace RTC
 {
 	/* Static. */
 
-	// clang-format off
 	static constexpr int DtlsMtu{ 1350 };
 	static constexpr int SslReadBufferSize{ 65536 };
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
@@ -112,11 +111,12 @@ namespace RTC
 	// AES-GCM: http://tools.ietf.org/html/rfc7714
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32u };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12u };
-	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength };
+	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
+		                                                 SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16u };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12u };
-	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength };
-	// clang-format on
+	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
+		                                                 SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 
@@ -359,7 +359,7 @@ namespace RTC
 		  std::string("mediasoup") + std::to_string(Utils::Crypto::GetRandomUInt(100000, 999999));
 
 		// Create key with curve.
-		// NOLINTNEXTLINE (cppcoreguidelines-pro-type-cstyle-cast)
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
 		DtlsTransport::privateKey = EVP_EC_gen(SN_X9_62_prime256v1);
 
 		if (!DtlsTransport::privateKey)
@@ -1244,7 +1244,7 @@ namespace RTC
 		}
 	}
 
-	// NOLINTNEXTLINE (misc-no-recursion)
+	// NOLINTNEXTLINE(misc-no-recursion)
 	bool DtlsTransport::SetTimeout()
 	{
 		MS_TRACE();
@@ -1260,7 +1260,7 @@ namespace RTC
 		// DTLSv1_get_timeout queries the next DTLS handshake timeout. If there is
 		// a timeout in progress, it sets *out to the time remaining and returns
 		// one. Otherwise, it returns zero.
-		DTLSv1_get_timeout(this->ssl, static_cast<void*>(std::addressof(dtlsTimeout))); // NOLINT
+		DTLSv1_get_timeout(this->ssl, static_cast<void*>(std::addressof(dtlsTimeout)));
 
 		timeoutMs = (dtlsTimeout.tv_sec * static_cast<uint64_t>(1000)) + (dtlsTimeout.tv_usec / 1000);
 
@@ -1452,7 +1452,7 @@ namespace RTC
 
 		BUF_MEM* mem;
 
-		BIO_get_mem_ptr(bio, std::addressof(mem)); // NOLINT[cppcoreguidelines-pro-type-cstyle-cast]
+		BIO_get_mem_ptr(bio, std::addressof(mem));
 
 		if (!mem || !mem->data || mem->length == 0u)
 		{
@@ -1699,7 +1699,7 @@ namespace RTC
 		// callback).
 	}
 
-	// NOLINTNEXTLINE (misc-no-recursion)
+	// NOLINTNEXTLINE(misc-no-recursion)
 	void DtlsTransport::OnTimer(TimerHandle* /*timer*/)
 	{
 		MS_TRACE();

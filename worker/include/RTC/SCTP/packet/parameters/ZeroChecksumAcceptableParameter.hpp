@@ -38,7 +38,7 @@ namespace RTC
 			/**
 			 * Zero Checksum Alternate Error Detection Method.
 			 */
-			// NOLINTNEXTLINE (performance-enum-size)
+			// NOLINTNEXTLINE(performance-enum-size)
 			enum class AlternateErrorDetectionMethod : uint32_t
 			{
 				NONE           = 0x0000,

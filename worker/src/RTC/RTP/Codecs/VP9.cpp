@@ -102,13 +102,7 @@ namespace RTC
 					}
 				}
 
-				// clang-format off
-			if (
-				!payloadDescriptor->p &&
-				payloadDescriptor->b &&
-				payloadDescriptor->slIndex == 0
-			)
-				// clang-format on
+				if (!payloadDescriptor->p && payloadDescriptor->b && payloadDescriptor->slIndex == 0)
 				{
 					payloadDescriptor->isKeyFrame = true;
 				}
@@ -203,12 +197,7 @@ namespace RTC
 
 				// If packet spatial or temporal layer is higher than maximum announced
 				// one, drop the packet.
-				// clang-format off
-			if (
-				packetSpatialLayer >= context->GetSpatialLayers() ||
-				packetTemporalLayer >= context->GetTemporalLayers()
-			)
-				// clang-format on
+				if (packetSpatialLayer >= context->GetSpatialLayers() || packetTemporalLayer >= context->GetTemporalLayers())
 				{
 					MS_WARN_TAG(
 					  rtp, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
@@ -217,26 +206,17 @@ namespace RTC
 				}
 
 				// Check whether pictureId sync is required.
-				// clang-format off
-			if (
-				context->syncRequired &&
-				this->payloadDescriptor->hasPictureId
-			)
-				// clang-format on
+				if (context->syncRequired && this->payloadDescriptor->hasPictureId)
 				{
 					context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
 
 					context->syncRequired = false;
 				}
 
-				// clang-format off
-			const bool isOldPacket = (
-				this->payloadDescriptor->hasPictureId &&
-				RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
-					this->payloadDescriptor->pictureId,
-					context->pictureIdManager.GetMaxInput())
-			);
-				// clang-format on
+				const bool isOldPacket =
+				  (this->payloadDescriptor->hasPictureId &&
+				   RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+				     this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()));
 
 				if (!isOldPacket)
 				{
@@ -264,7 +244,6 @@ namespace RTC
 						if (context->IsKSvc())
 						{
 							if (this->payloadDescriptor->isKeyFrame)
-							// clang-format on
 							{
 								MS_DEBUG_DEV(
 								  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -281,12 +260,7 @@ namespace RTC
 						// In full SVC we do not need a keyframe.
 						else
 						{
-							// clang-format off
-						if (
-							packetSpatialLayer == context->GetTargetSpatialLayer() &&
-							this->payloadDescriptor->e
-						)
-							// clang-format on
+							if (packetSpatialLayer == context->GetTargetSpatialLayer() && this->payloadDescriptor->e)
 							{
 								MS_DEBUG_DEV(
 								  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -311,12 +285,10 @@ namespace RTC
 				  isOldPacket ? context->GetSpatialLayerForPictureId(this->payloadDescriptor->pictureId)
 				              : tmpSpatialLayer;
 
-				// clang-format off
-			if (
-				packetSpatialLayer > spatialLayerForPictureId ||
-				(context->IsKSvc() && this->payloadDescriptor->p && packetSpatialLayer != spatialLayerForPictureId)
-			)
-				// clang-format on
+				if (
+				  packetSpatialLayer > spatialLayerForPictureId ||
+				  (context->IsKSvc() && this->payloadDescriptor->p &&
+				   packetSpatialLayer != spatialLayerForPictureId))
 				{
 					return false;
 				}
@@ -327,16 +299,10 @@ namespace RTC
 					// Upgrade current temporal layer if needed.
 					if (context->GetTargetTemporalLayer() > context->GetCurrentTemporalLayer())
 					{
-						// clang-format off
-					if (
-						packetTemporalLayer >= context->GetCurrentTemporalLayer() + 1 &&
-						(
-							context->GetCurrentTemporalLayer() == -1 ||
-							this->payloadDescriptor->switchingUpPoint
-						) &&
-						this->payloadDescriptor->b
-					)
-						// clang-format on
+						if (
+						  packetTemporalLayer >= context->GetCurrentTemporalLayer() + 1 &&
+						  (context->GetCurrentTemporalLayer() == -1 || this->payloadDescriptor->switchingUpPoint) &&
+						  this->payloadDescriptor->b)
 						{
 							MS_DEBUG_DEV(
 							  "upgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu8 " (packet:%" PRIu8
@@ -352,12 +318,7 @@ namespace RTC
 					// Downgrade current temporal layer if needed.
 					else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 					{
-						// clang-format off
-					if (
-						packetTemporalLayer == context->GetTargetTemporalLayer() &&
-						this->payloadDescriptor->e
-					)
-						// clang-format on
+						if (packetTemporalLayer == context->GetTargetTemporalLayer() && this->payloadDescriptor->e)
 						{
 							MS_DEBUG_DEV(
 							  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8

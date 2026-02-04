@@ -75,7 +75,7 @@ namespace RTC
 			size_t Serialize(uint8_t* buffer) override;
 			size_t GetSize() const override
 			{
-				// NOLINTNEXTLINE (bugprone-parent-virtual-call)
+				// NOLINTNEXTLINE(bugprone-parent-virtual-call)
 				return FeedbackPsPacket::GetSize() + 8 + (4u * this->ssrcs.size());
 			}
 

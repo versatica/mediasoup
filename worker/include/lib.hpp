@@ -1,6 +1,6 @@
 #include "common.hpp"
 
-// NOLINTNEXTLINE (readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming)
 extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],

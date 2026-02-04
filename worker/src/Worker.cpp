@@ -356,7 +356,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_WEBRTCSERVER_CLOSE:
 		{
-			RTC::WebRtcServer* webRtcServer{ nullptr };
+			const RTC::WebRtcServer* webRtcServer{ nullptr };
 
 			const auto* body = request->data->body_as<FBS::Worker::CloseWebRtcServerRequest>();
 
@@ -411,7 +411,7 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 		case Channel::ChannelRequest::Method::WORKER_CLOSE_ROUTER:
 		{
-			RTC::Router* router{ nullptr };
+			const RTC::Router* router{ nullptr };
 
 			const auto* body = request->data->body_as<FBS::Worker::CloseRouterRequest>();
 
@@ -547,9 +547,9 @@ RTC::WebRtcServer* Worker::OnRouterNeedWebRtcServer(RTC::Router* /*router*/, std
 {
 	MS_TRACE();
 
-	RTC::WebRtcServer* webRtcServer{ nullptr };
+	RTC::WebRtcServer* webRtcServer{ nullptr }; // NOLINT(misc-const-correctness)
 
-	auto it = this->mapWebRtcServers.find(webRtcServerId);
+	const auto it = this->mapWebRtcServers.find(webRtcServerId);
 
 	if (it != this->mapWebRtcServers.end())
 	{

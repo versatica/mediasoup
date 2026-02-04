@@ -70,7 +70,7 @@ namespace RTC
 					return nullptr;
 				}
 
-				Chunk* chunk{ nullptr };
+				Chunk* chunk{ nullptr }; // NOLINT(misc-const-correctness)
 
 				MS_DEBUG_DEV("parsing SCTP Chunk [ptr:%zu, type:%" PRIu8 "]", ptr - buffer, chunkType);
 

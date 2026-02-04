@@ -20,7 +20,7 @@ public:
 	static const std::string& GetErrorString(srtp_err_status_t code);
 
 private:
-	static std::unordered_map<srtp_err_status_t, std::string> mapErrorCodeString;
+	static const std::unordered_map<srtp_err_status_t, std::string> ErrorCode2String;
 };
 
 #endif

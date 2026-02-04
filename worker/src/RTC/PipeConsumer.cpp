@@ -264,7 +264,7 @@ namespace RTC
 		return 0u;
 	}
 
-	// NOLINTNEXTLINE (misc-no-recursion)
+	// NOLINTNEXTLINE(misc-no-recursion)
 	void PipeConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
@@ -490,12 +490,9 @@ namespace RTC
 
 		// Special condition for PipeConsumer since this method will be called in a
 		// loop for each stream in this PipeConsumer.
-		// clang-format off
 		if (
-			nowMs != this->lastRtcpSentTime &&
-			static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval
-		)
-		// clang-format on
+		  nowMs != this->lastRtcpSentTime &&
+		  static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
 		{
 			return true;
 		}

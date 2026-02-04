@@ -29,15 +29,12 @@ namespace RTC
 
 			const auto* header = const_cast<FixedHeader*>(reinterpret_cast<const FixedHeader*>(buffer));
 
-			// clang-format off
 			return (
-				(bufferLength >= Packet::FixedHeaderMinLength) &&
-				// @see RFC 7983.
-				(buffer[0] > 127 && buffer[0] < 192) &&
-				// RTP Version must be 2.
-				(header->version == 2)
-			);
-			// clang-format on
+			  (bufferLength >= Packet::FixedHeaderMinLength) &&
+			  // @see RFC 7983.
+			  (buffer[0] > 127 && buffer[0] < 192) &&
+			  // RTP Version must be 2.
+			  (header->version == 2));
 		}
 
 		Packet* Packet::Parse(const uint8_t* buffer, size_t packetLength, size_t bufferLength)
@@ -723,7 +720,7 @@ namespace RTC
 			}
 
 			const uint8_t* extensionsStart = GetHeaderExtensionValue();
-			uint8_t* ptr                   = const_cast<uint8_t*>(extensionsStart);
+			auto* ptr                      = const_cast<uint8_t*>(extensionsStart);
 
 			if (type == ExtensionsType::OneByte)
 			{
@@ -1204,9 +1201,9 @@ namespace RTC
 				return false;
 			}
 
-			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
-			minDelay   = v >> 12u;
-			maxDelay   = v & 0xFFFu;
+			const uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
+			minDelay         = v >> 12u;
+			maxDelay         = v & 0xFFFu;
 
 			return true;
 		}
@@ -1256,7 +1253,10 @@ namespace RTC
 			// Unset padding flag.
 			GetFixedHeaderPointer()->padding = 0;
 
-			std::memmove(GetPayloadPointer(), payload, payloadLength);
+			if (payload)
+			{
+				std::memmove(GetPayloadPointer(), payload, payloadLength);
+			}
 		}
 
 		void Packet::SetPayloadLength(size_t payloadLength)
@@ -1610,7 +1610,7 @@ namespace RTC
 			{
 				const uint8_t* extensionsStart = GetHeaderExtensionValue();
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
-				uint8_t* ptr                   = const_cast<uint8_t*>(extensionsStart);
+				auto* ptr                      = const_cast<uint8_t*>(extensionsStart);
 
 				// One-Byte Extensions cannot have length 0.
 				while (ptr < extensionsEnd)
@@ -1670,7 +1670,7 @@ namespace RTC
 				const uint8_t* extensionsEnd   = extensionsStart + GetHeaderExtensionValueLength();
 				// ptr points to the Extension id field (1 byte).
 				// ptr+1 points to the length field (1 byte, can have value 0).
-				uint8_t* ptr = const_cast<uint8_t*>(extensionsStart);
+				auto* ptr = const_cast<uint8_t*>(extensionsStart);
 
 				// Two-Byte Extensions can have length 0.
 				while (ptr + 1 < extensionsEnd)

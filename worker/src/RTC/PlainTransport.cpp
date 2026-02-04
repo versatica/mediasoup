@@ -11,7 +11,6 @@ namespace RTC
 {
 	/* Static. */
 
-	// clang-format off
 	// AES-HMAC: http://tools.ietf.org/html/rfc3711
 	static constexpr size_t SrtpMasterKeyLength{ 16 };
 	static constexpr size_t SrtpMasterSaltLength{ 14 };
@@ -19,11 +18,12 @@ namespace RTC
 	// AES-GCM: http://tools.ietf.org/html/rfc7714
 	static constexpr size_t SrtpAesGcm256MasterKeyLength{ 32 };
 	static constexpr size_t SrtpAesGcm256MasterSaltLength{ 12 };
-	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength + SrtpAesGcm256MasterSaltLength };
+	static constexpr size_t SrtpAesGcm256MasterLength{ SrtpAesGcm256MasterKeyLength +
+		                                                 SrtpAesGcm256MasterSaltLength };
 	static constexpr size_t SrtpAesGcm128MasterKeyLength{ 16 };
 	static constexpr size_t SrtpAesGcm128MasterSaltLength{ 12 };
-	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength + SrtpAesGcm128MasterSaltLength };
-	// clang-format on
+	static constexpr size_t SrtpAesGcm128MasterLength{ SrtpAesGcm128MasterKeyLength +
+		                                                 SrtpAesGcm128MasterSaltLength };
 
 	/* Class variables. */
 
@@ -594,7 +594,7 @@ namespace RTC
 							MS_THROW_TYPE_ERROR("missing port");
 						}
 
-						// NOLINTNEXTLINE (bugprone-unchecked-optional-access)
+						// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 						port = body->port().value();
 
 						if (body->rtcpPort().has_value())
@@ -604,7 +604,7 @@ namespace RTC
 								MS_THROW_TYPE_ERROR("cannot set rtcpPort with rtcpMux enabled");
 							}
 
-							// NOLINTNEXTLINE (bugprone-unchecked-optional-access)
+							// NOLINTNEXTLINE(bugprone-unchecked-optional-access)
 							rtcpPort = body->rtcpPort().value();
 						}
 						else

@@ -115,7 +115,7 @@ function tidy() {
 	const files = process.env.MEDIASOUP_TIDY_FILES ?? CLANG_TIDY_PATHS.join(' ');
 
 	executeCmd(
-		`"${PYTHON}" "${runClangTidy}" -clang-tidy-binary="${clangTidy}" -clang-apply-replacements-binary="${clangApplyReplacements}" -p="${BUILD_DIR}" -j=${NUM_CORES} -fix -format -checks=${tidyChecks} ${files}`
+		`"${PYTHON}" "${runClangTidy}" -clang-tidy-binary="${clangTidy}" -clang-apply-replacements-binary="${clangApplyReplacements}" -p="${BUILD_DIR}" -j=${NUM_CORES} -quiet -fix -format -checks=${tidyChecks} ${files}`
 	);
 }
 

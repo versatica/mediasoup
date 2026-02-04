@@ -11,6 +11,7 @@ namespace RTC
 {
 	/* Class variables. */
 
+	// clang-format off
 	const absl::flat_hash_map<RtpParameters::Type, std::string> RtpParameters::Type2String = {
 		{ RtpParameters::Type::SIMPLE, "simple" },
 		{ RtpParameters::Type::SIMULCAST, "simulcast" },

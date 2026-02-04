@@ -41,7 +41,7 @@ namespace RTC
 			MS_TRACE();
 
 			// First, Currently parsing and Last RTCP packets in the compound packet.
-			Packet* first{ nullptr };
+			Packet* first{ nullptr }; // NOLINT(misc-const-correctness)
 			Packet* current{ nullptr };
 			Packet* last{ nullptr };
 

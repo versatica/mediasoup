@@ -200,7 +200,7 @@ namespace Utils
 		return crc32;
 	}
 
-	const uint8_t* Crypto::GetHmacSha1(const std::string& key, const uint8_t* data, size_t len)
+	const uint8_t* Crypto::GetHmacSha1(const char* key, size_t keyLen, const uint8_t* data, size_t len)
 	{
 		MS_TRACE();
 
@@ -208,25 +208,22 @@ namespace Utils
 
 		OSSL_PARAM sha1[] = { { "digest", OSSL_PARAM_UTF8_STRING, (void*)"sha1", 4, 0 }, OSSL_PARAM_END };
 
-		ret = EVP_MAC_init(
-		  Crypto::hmacSha1Ctx, reinterpret_cast<const unsigned char*>(key.c_str()), key.length(), sha1);
+		ret =
+		  EVP_MAC_init(Crypto::hmacSha1Ctx, reinterpret_cast<const unsigned char*>(key), keyLen, sha1);
 
-		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_init() failed with key '%s'", key.c_str());
+		MS_ASSERT(ret == 1, "OpenSSL EVP_MAC_init() failed with key '%s'", key);
 
 		ret = EVP_MAC_update(Crypto::hmacSha1Ctx, data, len);
 
 		MS_ASSERT(
-		  ret == 1,
-		  "OpenSSL EVP_MAC_update() failed with key '%s' and data length %zu bytes",
-		  key.c_str(),
-		  len);
+		  ret == 1, "OpenSSL EVP_MAC_update() failed with key '%s' and data length %zu bytes", key, len);
 
 		size_t resultLen;
 
 		ret = EVP_MAC_final(Crypto::hmacSha1Ctx, Crypto::hmacSha1Buffer, &resultLen, SHA_DIGEST_LENGTH);
 
 		MS_ASSERT(
-		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key.c_str(), len);
+		  ret == 1, "OpenSSL HMAC_Final() failed with key '%s' and data length %zu bytes", key, len);
 		MS_ASSERT(
 		  resultLen == SHA_DIGEST_LENGTH, "OpenSSL HMAC_Final() resultLen is %zu instead of 20", resultLen);
 

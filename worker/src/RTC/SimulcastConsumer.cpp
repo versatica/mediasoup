@@ -355,12 +355,7 @@ namespace RTC
 				UpdateTargetLayers(-1, -1);
 			}
 			// Just check target layers if the stream has died or reborned.
-			// clang-format off
-			else if (
-				!this->externallyManagedBitrate ||
-				(score == 0u || previousScore == 0u)
-			)
-			// clang-format on
+			else if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
 			{
 				MayChangeLayers();
 			}
@@ -504,13 +499,10 @@ namespace RTC
 
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
-			// clang-format off
 			if (
-				spatialLayer != this->provisionalTargetLayers.spatial &&
-				this->provisionalTargetLayers.spatial != -1 &&
-				producerRtpStream->GetActiveMs() < StreamMinActiveMs
-			)
-			// clang-format on
+			  spatialLayer != this->provisionalTargetLayers.spatial &&
+			  this->provisionalTargetLayers.spatial != -1 &&
+			  producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 			{
 				const auto* provisionalProducerRtpStream =
 				  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
@@ -536,12 +528,9 @@ namespace RTC
 			{
 				// Ignore temporal layers lower than the one we already have (taking
 				// into account the spatial layer too).
-				// clang-format off
 				if (
-					spatialLayer == this->provisionalTargetLayers.spatial &&
-					temporalLayer <= this->provisionalTargetLayers.temporal
-				)
-				// clang-format on
+				  spatialLayer == this->provisionalTargetLayers.spatial &&
+				  temporalLayer <= this->provisionalTargetLayers.temporal)
 				{
 					continue;
 				}
@@ -551,15 +540,9 @@ namespace RTC
 				// This is simulcast so we must substract the bitrate of the current
 				// temporal spatial layer if this is the temporal layer 0 of a higher
 				// spatial layer.
-				//
-				// clang-format off
 				if (
-					requiredBitrate &&
-					temporalLayer == 0 &&
-					this->provisionalTargetLayers.spatial > -1 &&
-					spatialLayer > this->provisionalTargetLayers.spatial
-				)
-				// clang-format on
+				  requiredBitrate && temporalLayer == 0 && this->provisionalTargetLayers.spatial > -1 &&
+				  spatialLayer > this->provisionalTargetLayers.spatial)
 				{
 					auto* provisionalProducerRtpStream =
 					  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
@@ -659,14 +642,12 @@ namespace RTC
 		{
 			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
 
-			// If this looks like a spatial layer downgrade due to BWE limitations, set member.
-			// clang-format off
+			// If this looks like a spatial layer downgrade due to BWE limitations, set
+			// member.
 			if (
-				this->rtpStream->GetActiveMs() > BweDowngradeMinActiveMs &&
-				this->targetLayers.spatial < this->currentSpatialLayer &&
-				this->currentSpatialLayer <= this->preferredLayers.spatial
-			)
-			// clang-format on
+			  this->rtpStream->GetActiveMs() > BweDowngradeMinActiveMs &&
+			  this->targetLayers.spatial < this->currentSpatialLayer &&
+			  this->currentSpatialLayer <= this->preferredLayers.spatial)
 			{
 				MS_DEBUG_DEV(
 				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
@@ -721,7 +702,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	// NOLINTNEXTLINE (misc-no-recursion)
+	// NOLINTNEXTLINE(misc-no-recursion)
 	void SimulcastConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
@@ -790,12 +771,9 @@ namespace RTC
 
 		// Check whether this is the packet we are waiting for in order to update
 		// the current spatial layer.
-		// clang-format off
 		if (
 		  this->currentSpatialLayer != this->targetLayers.spatial &&
-		  spatialLayer == this->targetLayers.spatial
-		)
-		// clang-format on
+		  spatialLayer == this->targetLayers.spatial)
 		{
 			// Ignore if not a key frame.
 			if (!packet->IsKeyFrame())
@@ -937,15 +915,9 @@ namespace RTC
 
 			// When switching to a new stream it may happen that the timestamp of this
 			// key frame is lower than the highest timestamp sent to the remote endpoint.
-			// If so, apply an extra offset to "fix" it for the whole live of this selected
-			// Producer stream.
-			//
-			// clang-format off
-			if (
-				shouldSwitchCurrentSpatialLayer &&
-				(packet->GetTimestamp() - tsOffset <= this->rtpStream->GetMaxPacketTs())
-			)
-			// clang-format on
+			// If so, apply an extra offset to "fix" it for the whole live of this
+			// selected Producer stream.
+			if (shouldSwitchCurrentSpatialLayer && (packet->GetTimestamp() - tsOffset <= this->rtpStream->GetMaxPacketTs()))
 			{
 				// Max delay in ms we allow for the stream when switching.
 				// https://en.wikipedia.org/wiki/Audio-to-video_synchronization#Recommendations
@@ -1639,13 +1611,7 @@ namespace RTC
 			// If the stream has not been active time enough and we have an active one
 			// already, move to the next spatial layer.
 			// NOTE: Require bitrate externally managed for this.
-			// clang-format off
-			if (
-				this->externallyManagedBitrate &&
-				newTargetLayers.spatial != -1 &&
-				producerRtpStream->GetActiveMs() < StreamMinActiveMs
-			)
-			// clang-format on
+			if (this->externallyManagedBitrate && newTargetLayers.spatial != -1 && producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 			{
 				continue;
 			}
@@ -1766,14 +1732,9 @@ namespace RTC
 		// - the given spatial layer matches the TS reference spatial layer, or
 		// - both , the RTP streams of our TS reference spatial layer and the given
 		//   spatial layer, have Sender Report.
-		//
-		// clang-format off
 		return (
-			this->tsReferenceSpatialLayer == -1 ||
-			spatialLayer == this->tsReferenceSpatialLayer ||
-			this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs()
-		);
-		// clang-format on
+		  this->tsReferenceSpatialLayer == -1 || spatialLayer == this->tsReferenceSpatialLayer ||
+		  this->producerRtpStreams.at(spatialLayer)->GetSenderReportNtpMs());
 	}
 
 	void SimulcastConsumer::StorePacketInTargetLayerRetransmissionBuffer(

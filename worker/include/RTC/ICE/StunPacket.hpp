@@ -81,7 +81,8 @@ namespace RTC
 				REQUEST          = 0,
 				INDICATION       = 1,
 				SUCCESS_RESPONSE = 2,
-				ERROR_RESPONSE   = 3
+				ERROR_RESPONSE   = 3,
+				UNSET            = 255
 			};
 
 			/**
@@ -89,7 +90,8 @@ namespace RTC
 			 */
 			enum class Method : uint16_t
 			{
-				BINDING = 1
+				BINDING = 1,
+				UNSET   = 255
 			};
 
 			/**
@@ -523,8 +525,8 @@ namespace RTC
 			void AssertNotProtected() const;
 
 		private:
-			StunPacket::Class klass;
-			StunPacket::Method method;
+			StunPacket::Class klass{ StunPacket::Class::UNSET };
+			StunPacket::Method method{ StunPacket::Method::UNSET };
 			// Map of STUN Attributes indexed by Attribute type.
 			std::unordered_map<StunPacket::AttributeType, StunPacket::Attribute> attributes;
 		};

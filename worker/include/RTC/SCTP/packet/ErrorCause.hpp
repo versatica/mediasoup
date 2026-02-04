@@ -47,7 +47,7 @@ namespace RTC
 			 * Error Cause Code.
 			 * NOTE: This field MUST be 2 bytes long.
 			 */
-			// NOLINTNEXTLINE (performance-enum-size)
+			// NOLINTNEXTLINE(performance-enum-size)
 			enum class ErrorCauseCode : uint16_t
 			{
 				INVALID_STREAM_IDENTIFIER                    = 0x0001,

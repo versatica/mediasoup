@@ -657,15 +657,10 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// clang-format off
 		return (
-			(
-				this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
-				this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
-			) &&
-			this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED
-		);
-		// clang-format on
+		  (this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+		   this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED) &&
+		  this->dtlsTransport->GetState() == RTC::DtlsTransport::DtlsState::CONNECTED);
 	}
 
 	void WebRtcTransport::MayRunDtlsTransport()
@@ -686,12 +681,9 @@ namespace RTC
 			// 'completed'.
 			case RTC::DtlsTransport::Role::AUTO:
 			{
-				// clang-format off
 				if (
-					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
-					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
-				)
-				// clang-format on
+				  this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(
 					  dtls, "transition from DTLS local role 'auto' to 'server' and running DTLS transport");
@@ -712,12 +704,9 @@ namespace RTC
 			//   https://bugs.chromium.org/p/webrtc/issues/detail?id=3661
 			case RTC::DtlsTransport::Role::CLIENT:
 			{
-				// clang-format off
 				if (
-					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
-					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
-				)
-				// clang-format on
+				  this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'client'");
 
@@ -731,12 +720,9 @@ namespace RTC
 			// USE-CANDIDATE) or 'completed'.
 			case RTC::DtlsTransport::Role::SERVER:
 			{
-				// clang-format off
 				if (
-					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
-					this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED
-				)
-				// clang-format on
+				  this->iceServer->GetState() == RTC::ICE::IceServer::IceState::CONNECTED ||
+				  this->iceServer->GetState() == RTC::ICE::IceServer::IceState::COMPLETED)
 				{
 					MS_DEBUG_TAG(dtls, "running DTLS transport in local role 'server'");
 
@@ -874,7 +860,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// clang-format on
 		if (!IsConnected())
 		{
 			MS_WARN_TAG(sctp, "DTLS not connected, cannot send SCTP data");

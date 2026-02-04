@@ -11,8 +11,10 @@ static constexpr int ProducerChannelFd{ 4 };
 
 int main(int argc, char* argv[])
 {
+	const char* envVersion = std::getenv("MEDIASOUP_VERSION");
+
 	// Ensure we are called by our Node library.
-	if (!std::getenv("MEDIASOUP_VERSION"))
+	if (!envVersion)
 	{
 		MS_ERROR_STD("you don't seem to be my real father!");
 
@@ -20,7 +22,7 @@ int main(int argc, char* argv[])
 		std::_Exit(41);
 	}
 
-	const std::string version = std::getenv("MEDIASOUP_VERSION");
+	const std::string version{ envVersion };
 
 	const auto statusCode = mediasoup_worker_run(
 	  /*argc*/ argc,

@@ -41,7 +41,7 @@ namespace RTC
 			friend class Chunk;
 
 		public:
-			// NOLINTNEXTLINE (performance-enum-siz)
+			// NOLINTNEXTLINE(performance-enum-siz)
 			enum class Result : uint32_t
 			{
 				SUCCESS_NOTHING_TO_DO             = 0x00000000,

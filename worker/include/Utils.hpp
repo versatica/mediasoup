@@ -241,7 +241,7 @@ namespace Utils
 
 		static uint32_t GetCRC32c(const uint8_t* data, size_t size);
 
-		static const uint8_t* GetHmacSha1(const std::string& key, const uint8_t* data, size_t len);
+		static const uint8_t* GetHmacSha1(const char* key, size_t keyLen, const uint8_t* data, size_t len);
 
 		static void WriteRandomBytes(uint8_t* buffer, size_t len);
 

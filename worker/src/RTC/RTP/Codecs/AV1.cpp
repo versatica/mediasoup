@@ -100,7 +100,7 @@ namespace RTC
 				// the active decode targets mask.
 			}
 
-			// NOLINTNEXTLINE (readability-make-member-function-const)
+			// NOLINTNEXTLINE(readability-make-member-function-const)
 			void AV1::PayloadDescriptor::UpdateActiveDecodeTargets(uint16_t spatialLayer, uint16_t temporalLayer)
 			{
 				MS_TRACE();
@@ -138,12 +138,7 @@ namespace RTC
 
 				// If packet spatial or temporal layer is higher than maximum announced
 				// one, drop the packet.
-				// clang-format off
-			if (
-				packetSpatialLayer >= context->GetSpatialLayers() ||
-				packetTemporalLayer >= context->GetTemporalLayers()
-			)
-				// clang-format on
+				if (packetSpatialLayer >= context->GetSpatialLayers() || packetTemporalLayer >= context->GetTemporalLayers())
 				{
 					MS_WARN_TAG(
 					  rtp, "too high packet layers %" PRIu8 ":%" PRIu8, packetSpatialLayer, packetTemporalLayer);
@@ -171,12 +166,7 @@ namespace RTC
 				// Downgrade current spatial layer if needed.
 				else if (context->GetTargetSpatialLayer() < context->GetCurrentSpatialLayer())
 				{
-					// clang-format off
-				if (
-					packetSpatialLayer == context->GetTargetSpatialLayer() &&
-					this->payloadDescriptor->endOfFrame
-				)
-					// clang-format on
+					if (packetSpatialLayer == context->GetTargetSpatialLayer() && this->payloadDescriptor->endOfFrame)
 					{
 						MS_DEBUG_DEV(
 						  "downgrading tmpSpatialLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -216,12 +206,7 @@ namespace RTC
 				// Downgrade current temporal layer if needed.
 				else if (context->GetTargetTemporalLayer() < context->GetCurrentTemporalLayer())
 				{
-					// clang-format off
-				if (
-					packetTemporalLayer == context->GetTargetTemporalLayer() &&
-					this->payloadDescriptor->endOfFrame
-				)
-					// clang-format on
+					if (packetTemporalLayer == context->GetTargetTemporalLayer() && this->payloadDescriptor->endOfFrame)
 					{
 						MS_DEBUG_DEV(
 						  "downgrading tmpTemporalLayer from %" PRIu16 " to %" PRIu16 " (packet:%" PRIu8
@@ -261,12 +246,10 @@ namespace RTC
 
 				// TODO: Enable once we rewrite the Dependency Descriptor header extension.
 				// // Store the encoding data for retransmissions.
-				// // clang-format off
 				// this->payloadDescriptor->CreateEncoder({
 				//   static_cast<uint32_t>(context->GetCurrentSpatialLayer()),
 				//   static_cast<uint32_t>(context->GetCurrentTemporalLayer())
 				// });
-				// // clang-format on
 				// this->payloadDescriptor->Encode();
 
 				return true;

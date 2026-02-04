@@ -15,7 +15,7 @@ static const uint32_t SendBufferThreshold{ 256u };
 
 /* SCTP events to which we are subscribing. */
 
-/* clang-format off */
+// clang-format off
 const uint16_t EventTypes[] =
 {
 	SCTP_ADAPTATION_INDICATION,
@@ -27,7 +27,7 @@ const uint16_t EventTypes[] =
 	SCTP_STREAM_RESET_EVENT,
 	SCTP_STREAM_CHANGE_EVENT
 };
-/* clang-format on */
+// clang-format on
 
 /* Static methods for usrsctp callbacks. */
 

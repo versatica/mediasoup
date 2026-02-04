@@ -25,17 +25,14 @@ namespace RTC
 
 		bool StunPacket::IsStun(const uint8_t* buffer, size_t bufferLength)
 		{
-			// clang-format off
 			return (
-				// STUN headers are 20 bytes.
-				(bufferLength >= StunPacket::FixedHeaderLength) &&
-				// @see RFC 7983.
-				(buffer[0] < 3) &&
-				// Magic Cookie must match.
-				(buffer[4] == StunPacket::MagicCookie[0]) && (buffer[5] == StunPacket::MagicCookie[1]) &&
-				(buffer[6] == StunPacket::MagicCookie[2]) && (buffer[7] == StunPacket::MagicCookie[3])
-			);
-			// clang-format on
+			  // STUN headers are 20 bytes.
+			  (bufferLength >= StunPacket::FixedHeaderLength) &&
+			  // @see RFC 7983.
+			  (buffer[0] < 3) &&
+			  // Magic Cookie must match.
+			  (buffer[4] == StunPacket::MagicCookie[0]) && (buffer[5] == StunPacket::MagicCookie[1]) &&
+			  (buffer[6] == StunPacket::MagicCookie[2]) && (buffer[7] == StunPacket::MagicCookie[3]));
 		}
 
 		StunPacket* StunPacket::Parse(const uint8_t* buffer, size_t bufferLength)
@@ -186,6 +183,11 @@ namespace RTC
 					klass = "error response";
 					break;
 				}
+				case Class::UNSET:
+				{
+					klass = "(unset)";
+					break;
+				}
 			}
 
 			if (this->method == Method::BINDING)
@@ -202,7 +204,7 @@ namespace RTC
 				  static_cast<uint16_t>(this->method));
 			}
 
-			char transactionId[12 * 2 + 1]; // 12 bytes × 2 hex chars + null terminator.
+			char transactionId[(12 * 2) + 1]; // 12 bytes × 2 hex chars + null terminator.
 
 			for (uint8_t i{ 0 }; i < 12; ++i)
 			{
@@ -299,7 +301,7 @@ namespace RTC
 			{
 				char messageIntegrity[41];
 
-				for (uint8_t i{ 0 }; i < StunPacket::MessageIntegrityAttributeLength; ++i)
+				for (size_t i{ 0 }; i < StunPacket::MessageIntegrityAttributeLength; ++i)
 				{
 					std::snprintf(messageIntegrity + (i * 2), 3, "%.2x", GetMessageIntegrity()[i]);
 				}
@@ -463,9 +465,9 @@ namespace RTC
 				std::memcpy(std::addressof(addr), attributeValue + 4, 4);
 
 				// XOR with each byte of the Magic Cookie.
-				uint8_t* addrBytes = reinterpret_cast<uint8_t*>(&addr);
+				auto* addrBytes = reinterpret_cast<uint8_t*>(&addr);
 
-				for (uint8_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
+				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
 				{
 					addrBytes[i] ^= StunPacket::MagicCookie[i];
 				}
@@ -492,17 +494,17 @@ namespace RTC
 				addr6->sin6_family = AF_INET6;
 				addr6->sin6_port   = htons(port);
 
-				const auto transactionId = GetTransactionId();
+				const auto* transactionId = GetTransactionId();
 
 				// XOR with first 4 bytes with each byte of the Magic Cookie.
-				for (uint8_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
+				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie); ++i)
 				{
 					addr6->sin6_addr.s6_addr[i] =
 					  attributeValue[sizeof(StunPacket::MagicCookie) + i] ^ StunPacket::MagicCookie[i];
 				}
 
 				// XOR other bytes with each byte of the Transaction id.
-				for (uint8_t i{ 0 }; i < sizeof(StunPacket::MagicCookie) + StunPacket::TransactionIdLength;
+				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie) + StunPacket::TransactionIdLength;
 				     ++i)
 				{
 					addr6->sin6_addr.s6_addr[i] = attributeValue[sizeof(StunPacket::MagicCookie) + i] ^
@@ -644,7 +646,7 @@ namespace RTC
 				case StunPacket::Class::INDICATION:
 				{
 					// usernameFragment1 must not be empty.
-					if (usernameFragment1.length() == 0)
+					if (usernameFragment1.empty())
 					{
 						MS_WARN_TAG(
 						  ice, "cannot authenticate request or indication, empty usernameFragment1 given");
@@ -729,7 +731,7 @@ namespace RTC
 			// rules, this is, by checking the bytes from 0 to the beginning of the
 			// MESSAGE-INTEGRITY Attribute.
 			const uint8_t* computedMessageIntegrity = Utils::Crypto::GetHmacSha1(
-			  password.data(), fixedHeader, (messageIntegrity - 4) - fixedHeader);
+			  password.data(), password.length(), fixedHeader, (messageIntegrity - 4) - fixedHeader);
 
 			StunPacket::AuthenticationResult result;
 
@@ -789,7 +791,7 @@ namespace RTC
 				// Calculate the HMAC-SHA1 of the STUN Packet according to
 				// MESSAGE-INTEGRITY rules.
 				const uint8_t* computedMessageIntegrity =
-				  Utils::Crypto::GetHmacSha1(password.data(), GetBuffer(), currentLength);
+				  Utils::Crypto::GetHmacSha1(password.data(), password.length(), GetBuffer(), currentLength);
 
 				StoreNewAttribute(
 				  StunPacket::AttributeType::MESSAGE_INTEGRITY,
@@ -916,7 +918,7 @@ namespace RTC
 
 			const uint8_t* attributesStart = GetAttributesPointer();
 			const uint8_t* attributesEnd   = attributesStart + GetAttributesLength();
-			uint8_t* ptr                   = const_cast<uint8_t*>(attributesStart);
+			auto* ptr                      = const_cast<uint8_t*>(attributesStart);
 
 			// Ensure there are at least 4 remaining bytes (Attribute with 0 length).
 			while (ptr + 4 <= attributesEnd)
@@ -928,7 +930,7 @@ namespace RTC
 				  static_cast<StunPacket::AttributeType>(ntohs(static_cast<uint16_t>(attribute->type)));
 
 				// Get the Attribute length.
-				const auto attrLen = static_cast<uint16_t>(ntohs(attribute->len));
+				const uint16_t attrLen = ntohs(attribute->len);
 
 				// Offset of the Attribute from the start of the attributes.
 				const auto attrOffset = static_cast<size_t>((ptr - attributesStart));

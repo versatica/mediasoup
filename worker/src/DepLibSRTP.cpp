@@ -16,7 +16,7 @@ static size_t GlobalInstances = 0;
 //   https://github.com/cisco/libsrtp/blob/main/include/srtp.h
 //
 // clang-format off
-std::unordered_map<srtp_err_status_t, std::string> DepLibSRTP::mapErrorCodeString =
+const std::unordered_map<srtp_err_status_t, std::string> DepLibSRTP::ErrorCode2String =
 {
 	{ srtp_err_status_ok,            "nothing to report" },
 	{ srtp_err_status_fail,          "unspecified failure" },
@@ -97,9 +97,9 @@ const std::string& DepLibSRTP::GetErrorString(srtp_err_status_t code)
 
 	static const std::string UnknownError("unknown libsrtp error");
 
-	auto it = DepLibSRTP::mapErrorCodeString.find(code);
+	auto it = DepLibSRTP::ErrorCode2String.find(code);
 
-	if (it == DepLibSRTP::mapErrorCodeString.end())
+	if (it == DepLibSRTP::ErrorCode2String.end())
 	{
 		return UnknownError;
 	}

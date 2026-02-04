@@ -31,12 +31,9 @@ namespace RTC
 
 			constexpr size_t Offset = Packet::CommonHeaderSize + FeedbackPacket::HeaderSize;
 
-			// clang-format off
 			if (
-				len >= Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 4 &&
-				Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::UniqueIdentifier
-			)
-			// clang-format on
+			  len >= Packet::CommonHeaderSize + FeedbackPacket::HeaderSize + 4 &&
+			  Utils::Byte::Get4Bytes(data, Offset) == FeedbackPsRembPacket::UniqueIdentifier)
 			{
 				packet.reset(FeedbackPsRembPacket::Parse(data, len));
 			}

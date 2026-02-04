@@ -470,12 +470,10 @@ namespace RTC
 
 		this->bufferedAmount = bufferedAmount;
 
-		// clang-format off
 		if (
-				(this->forceTriggerBufferedAmountLow || previousBufferedAmount > this->bufferedAmountLowThreshold) &&
-				this->bufferedAmount <= this->bufferedAmountLowThreshold
-		)
-		// clang-format on
+		  (this->forceTriggerBufferedAmountLow ||
+		   previousBufferedAmount > this->bufferedAmountLowThreshold) &&
+		  this->bufferedAmount <= this->bufferedAmountLowThreshold)
 		{
 			this->forceTriggerBufferedAmountLow = false;
 

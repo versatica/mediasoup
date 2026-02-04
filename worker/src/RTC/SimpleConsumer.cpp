@@ -312,7 +312,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	// NOLINTNEXTLINE (misc-no-recursion)
+	// NOLINTNEXTLINE(misc-no-recursion)
 	void SimpleConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();

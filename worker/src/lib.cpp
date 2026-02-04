@@ -35,7 +35,7 @@ static void ignoreSignals();
  * - 134 when any other uncaught C++ exception happens (only in non executable
  *   mode).
  */
-// NOLINTNEXTLINE
+// NOLINTNEXTLINE(readability-identifier-naming)
 extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],
@@ -121,7 +121,7 @@ extern "C" int mediasoup_worker_run(
 
 	MS_DEBUG_TAG(info, "starting mediasoup-worker process [version:%s]", version);
 
-#if defined(MS_LITTLE_ENDIAN)
+#ifdef MS_LITTLE_ENDIAN
 	MS_DEBUG_TAG(info, "little-endian CPU detected");
 #elif defined(MS_BIG_ENDIAN)
 	MS_DEBUG_TAG(info, "big-endian CPU detected");

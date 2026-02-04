@@ -314,12 +314,7 @@ namespace RTC
 		if (RTC::Consumer::IsActive())
 		{
 			// Just check target layers if the stream has died or reborned.
-			// clang-format off
-			if (
-				!this->externallyManagedBitrate ||
-				(score == 0u || previousScore == 0u)
-			)
-			// clang-format on
+			if (!this->externallyManagedBitrate || (score == 0u || previousScore == 0u))
 			{
 				MayChangeLayers();
 			}
@@ -424,12 +419,9 @@ namespace RTC
 			{
 				// Ignore temporal layers lower than the one we already have (taking into account
 				// the spatial layer too).
-				// clang-format off
 				if (
-					spatialLayer == this->provisionalTargetLayers.spatial &&
-					temporalLayer <= this->provisionalTargetLayers.temporal
-				)
-				// clang-format on
+				  spatialLayer == this->provisionalTargetLayers.spatial &&
+				  temporalLayer <= this->provisionalTargetLayers.temporal)
 				{
 					continue;
 				}
@@ -440,15 +432,10 @@ namespace RTC
 				// When using K-SVC we must subtract the bitrate of the current used layer
 				// if the new layer is the temporal layer 0 of an higher spatial layer.
 				//
-				// clang-format off
 				if (
-					this->encodingContext->IsKSvc() &&
-					requiredBitrate &&
-					temporalLayer == 0 &&
-					this->provisionalTargetLayers.spatial > -1 &&
-					spatialLayer > this->provisionalTargetLayers.spatial
-				)
-				// clang-format on
+				  this->encodingContext->IsKSvc() && requiredBitrate && temporalLayer == 0 &&
+				  this->provisionalTargetLayers.spatial > -1 &&
+				  spatialLayer > this->provisionalTargetLayers.spatial)
 				{
 					auto provisionalRequiredBitrate = this->producerRtpStream->GetSpatialLayerBitrate(
 					  nowMs, this->provisionalTargetLayers.spatial);
@@ -546,13 +533,11 @@ namespace RTC
 			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
 
 			// If this looks like a spatial layer downgrade due to BWE limitations, set member.
-			// clang-format off
 			if (
-				this->rtpStream->GetActiveMs() > BweDowngradeMinActiveMs &&
-				this->encodingContext->GetTargetSpatialLayer() < this->encodingContext->GetCurrentSpatialLayer() &&
-				this->encodingContext->GetCurrentSpatialLayer() <= this->preferredLayers.spatial
-			)
-			// clang-format on
+			  this->rtpStream->GetActiveMs() > BweDowngradeMinActiveMs &&
+			  this->encodingContext->GetTargetSpatialLayer() <
+			    this->encodingContext->GetCurrentSpatialLayer() &&
+			  this->encodingContext->GetCurrentSpatialLayer() <= this->preferredLayers.spatial)
 			{
 				MS_DEBUG_DEV(
 				  "possible target spatial layer downgrade (from %" PRIi16 " to %" PRIi16
@@ -610,7 +595,7 @@ namespace RTC
 		return desiredBitrate;
 	}
 
-	// NOLINTNEXTLINE (misc-no-recursion)
+	// NOLINTNEXTLINE(misc-no-recursion)
 	void SvcConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
@@ -630,12 +615,7 @@ namespace RTC
 			return;
 		}
 
-		// clang-format off
-		if (
-			this->encodingContext->GetTargetSpatialLayer() == -1 ||
-			this->encodingContext->GetTargetTemporalLayer() == -1
-		)
-		// clang-format on
+		if (this->encodingContext->GetTargetSpatialLayer() == -1 || this->encodingContext->GetTargetTemporalLayer() == -1)
 		{
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);

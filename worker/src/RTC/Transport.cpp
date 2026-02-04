@@ -725,20 +725,18 @@ namespace RTC
 					// - there is transport-wide-cc-01 RTP header extension, and
 					// - there is "transport-cc" in codecs RTCP feedback.
 					//
-					// clang-format off
 					if (
-						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "transport-cc";
-									});
-							})
-					)
-					// clang-format on
+					  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+					  std::any_of(
+					    codecs.begin(),
+					    codecs.end(),
+					    [](const RTC::RtpCodecParameters& codec)
+					    {
+						    return std::any_of(
+						      codec.rtcpFeedback.begin(),
+						      codec.rtcpFeedback.end(),
+						      [](const RTC::RtcpFeedback& fb) { return fb.type == "transport-cc"; });
+					    }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
 
@@ -749,20 +747,18 @@ namespace RTC
 					// - there is abs-send-time RTP header extension, and
 					// - there is "remb" in codecs RTCP feedback.
 					//
-					// clang-format off
 					else if (
-						rtpHeaderExtensionIds.absSendTime != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "goog-remb";
-									});
-							})
-					)
-					// clang-format on
+					  rtpHeaderExtensionIds.absSendTime != 0u && std::any_of(
+					                                               codecs.begin(),
+					                                               codecs.end(),
+					                                               [](const RTC::RtpCodecParameters& codec)
+					                                               {
+						                                               return std::any_of(
+						                                                 codec.rtcpFeedback.begin(),
+						                                                 codec.rtcpFeedback.end(),
+						                                                 [](const RTC::RtcpFeedback& fb)
+						                                                 { return fb.type == "goog-remb"; });
+					                                               }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
 
@@ -904,21 +900,19 @@ namespace RTC
 					// - there is transport-wide-cc-01 RTP header extension, and
 					// - there is "transport-cc" in codecs RTCP feedback.
 					//
-					// clang-format off
-						if (
-								consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-								rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-								std::any_of(
-									codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-									{
-									return std::any_of(
-											codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-											{
-											return fb.type == "transport-cc";
-											});
-									})
-							 )
-					// clang-format on
+					if (
+					  consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+					  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+					  std::any_of(
+					    codecs.begin(),
+					    codecs.end(),
+					    [](const RTC::RtpCodecParameters& codec)
+					    {
+						    return std::any_of(
+						      codec.rtcpFeedback.begin(),
+						      codec.rtcpFeedback.end(),
+						      [](const RTC::RtcpFeedback& fb) { return fb.type == "transport-cc"; });
+					    }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
 
@@ -930,21 +924,19 @@ namespace RTC
 					// - there is abs-send-time RTP header extension, and
 					// - there is "remb" in codecs RTCP feedback.
 					//
-					// clang-format off
-						else if (
-								consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-								rtpHeaderExtensionIds.absSendTime != 0u &&
-								std::any_of(
-									codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-									{
-									return std::any_of(
-											codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-											{
-											return fb.type == "goog-remb";
-											});
-									})
-								)
-					// clang-format on
+					else if (
+					  consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+					  rtpHeaderExtensionIds.absSendTime != 0u &&
+					  std::any_of(
+					    codecs.begin(),
+					    codecs.end(),
+					    [](const RTC::RtpCodecParameters& codec)
+					    {
+						    return std::any_of(
+						      codec.rtcpFeedback.begin(),
+						      codec.rtcpFeedback.end(),
+						      [](const RTC::RtcpFeedback& fb) { return fb.type == "goog-remb"; });
+					    }))
 					{
 						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
 
@@ -990,22 +982,19 @@ namespace RTC
 				// - there is transport-wide-cc-01 RTP header extension, and
 				// - there is "transport-cc" in codecs RTCP feedback.
 				//
-				// clang-format off
-					if (
-							!this->senderBwe &&
-							consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-							rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-							std::any_of(
-								codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-								{
-								return std::any_of(
-										codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-										{
-										return fb.type == "transport-cc";
-										});
-								})
-						 )
-				// clang-format on
+				if (
+				  !this->senderBwe && consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+				  rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+				  std::any_of(
+				    codecs.begin(),
+				    codecs.end(),
+				    [](const RTC::RtpCodecParameters& codec)
+				    {
+					    return std::any_of(
+					      codec.rtcpFeedback.begin(),
+					      codec.rtcpFeedback.end(),
+					      [](const RTC::RtcpFeedback& fb) { return fb.type == "transport-cc"; });
+				    }))
 				{
 					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
 
@@ -1925,12 +1914,7 @@ namespace RTC
 							auto* remb = static_cast<RTC::RTCP::FeedbackPsRembPacket*>(afb);
 
 							// Pass it to the TCC client.
-							// clang-format off
-							if (
-								this->tccClient &&
-								this->tccClient->GetBweType() == RTC::BweType::REMB
-							)
-							// clang-format on
+							if (this->tccClient && this->tccClient->GetBweType() == RTC::BweType::REMB)
 							{
 								this->tccClient->ReceiveEstimatedBitrate(remb->GetBitrate());
 							}
@@ -1973,17 +1957,10 @@ namespace RTC
 
 				// If no Consumer is found and this is not a Transport Feedback for the
 				// probation SSRC or any Consumer RTX SSRC, ignore it.
-				//
-				// clang-format off
 				if (
-					!consumer &&
-					feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
-					(
-						feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
-						!GetConsumerByRtxSsrc(feedback->GetMediaSsrc())
-					)
-				)
-				// clang-format on
+				  !consumer && feedback->GetMessageType() != RTC::RTCP::FeedbackRtp::MessageType::TCC &&
+				  (feedback->GetMediaSsrc() != RTC::RTP::ProbationGenerator::Ssrc ||
+				   !GetConsumerByRtxSsrc(feedback->GetMediaSsrc())))
 				{
 					MS_DEBUG_TAG(
 					  rtcp,
@@ -2481,13 +2458,9 @@ namespace RTC
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
 		// Update transport wide sequence number if present.
-		// clang-format off
 		if (
-			this->tccClient &&
-			this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC &&
-			packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1)
-		)
-		// clang-format on
+		  this->tccClient && this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC &&
+		  packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
 			this->transportWideCcSeq++;
 
@@ -2575,13 +2548,9 @@ namespace RTC
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
 		// Update transport wide sequence number if present.
-		// clang-format off
 		if (
-			this->tccClient &&
-			this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC &&
-			packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1)
-		)
-		// clang-format on
+		  this->tccClient && this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC &&
+		  packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
 			this->transportWideCcSeq++;
 
@@ -2976,12 +2945,9 @@ namespace RTC
 		packet->UpdateAbsSendTime(DepLibUV::GetTimeMs());
 
 		// Update transport wide sequence number if present.
-		// clang-format off
 		if (
-			this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC &&
-			packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1)
-		)
-		// clang-format on
+		  this->tccClient->GetBweType() == RTC::BweType::TRANSPORT_CC &&
+		  packet->UpdateTransportWideCc01(this->transportWideCcSeq + 1))
 		{
 			this->transportWideCcSeq++;
 

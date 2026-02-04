@@ -121,13 +121,7 @@ namespace RTC
 
 			uint32_t rate{ 0u };
 
-			// clang-format off
-		for (
-			size_t tIdx{ 0u };
-			tIdx < this->spatialLayerCounters[spatialLayer].size();
-			++tIdx
-		)
-			// clang-format on
+			for (size_t tIdx{ 0u }; tIdx < this->spatialLayerCounters[spatialLayer].size(); ++tIdx)
 			{
 				auto& temporalLayerCounter = this->spatialLayerCounters[spatialLayer][tIdx];
 

@@ -327,12 +327,9 @@ namespace RTC
 			// NOTE: Read it as int 64 to detect long elapsed times.
 			const int64_t delta64 = (timestamp - this->latestTimestamp) * 4;
 
-			// clang-format off
 			if (
-				delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
-				delta64 < -1 * static_cast<int64_t>(FeedbackRtpTransportPacket::maxPacketDelta)
-			)
-			// clang-format on
+			  delta64 > FeedbackRtpTransportPacket::maxPacketDelta ||
+			  delta64 < -1 * static_cast<int64_t>(FeedbackRtpTransportPacket::maxPacketDelta))
 			{
 				MS_WARN_DEV(
 				  "RTP packet delta exceeded [latestTimestamp:%" PRIu64 ", timestamp:%" PRIu64 "]",
@@ -400,7 +397,7 @@ namespace RTC
 			}
 
 			size_t deltaIdx{ 0u };
-			// NOLINTNEXTLINE (bugprone-misplaced-widening-cast)
+			// NOLINTNEXTLINE(bugprone-misplaced-widening-cast)
 			auto currentReceivedAtMs = static_cast<int64_t>(this->referenceTime * 64);
 
 			for (size_t idx{ 0u }; idx < packetResults.size(); ++idx)
@@ -511,13 +508,9 @@ namespace RTC
 			}
 
 			// Create a long run chunk before processing this packet, if needed.
-			// clang-format off
 			if (
-				this->context.statuses.size() >= 7 &&
-				this->context.allSameStatus &&
-				status != this->context.currentStatus
-			)
-			// clang-format on
+			  this->context.statuses.size() >= 7 && this->context.allSameStatus &&
+			  status != this->context.currentStatus)
 			{
 				CreateRunLengthChunk(this->context.currentStatus, this->context.statuses.size());
 
@@ -530,12 +523,9 @@ namespace RTC
 
 			// Update context info.
 
-			// clang-format off
 			if (
-				this->context.currentStatus == Status::None ||
-				(this->context.allSameStatus && this->context.currentStatus == status)
-			)
-			// clang-format on
+			  this->context.currentStatus == Status::None ||
+			  (this->context.allSameStatus && this->context.currentStatus == status))
 			{
 				this->context.allSameStatus = true;
 			}

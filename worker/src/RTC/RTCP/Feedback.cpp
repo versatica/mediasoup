@@ -128,7 +128,7 @@ namespace RTC
 			}
 
 			auto* commonHeader = const_cast<CommonHeader*>(reinterpret_cast<const CommonHeader*>(data));
-			FeedbackPsPacket* packet{ nullptr };
+			FeedbackPsPacket* packet{ nullptr }; // NOLINT(misc-const-correctness)
 
 			switch (FeedbackPs::MessageType(commonHeader->count))
 			{

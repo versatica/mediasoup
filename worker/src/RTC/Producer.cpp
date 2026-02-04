@@ -86,26 +86,17 @@ namespace RTC
 
 			// rid is optional.
 			// However ssrc or rid must be present (if more than 1 encoding).
-			// clang-format off
 			if (
-				encodings->size() > 1 &&
-				!encoding->ssrc().has_value() &&
-				!flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID)
-			)
-			// clang-format on
+			  encodings->size() > 1 && !encoding->ssrc().has_value() &&
+			  !flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID))
 			{
 				MS_THROW_TYPE_ERROR("wrong entry in rtpMapping.encodings (missing ssrc or rid)");
 			}
 
 			// If there is no mid and a single encoding, ssrc or rid must be present.
-			// clang-format off
 			if (
-				this->rtpParameters.mid.empty() &&
-				encodings->size() == 1 &&
-				!encoding->ssrc().has_value() &&
-				!flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID)
-			)
-			// clang-format on
+			  this->rtpParameters.mid.empty() && encodings->size() == 1 && !encoding->ssrc().has_value() &&
+			  !flatbuffers::IsFieldPresent(encoding, FBS::RtpParameters::EncodingMapping::VT_RID))
 			{
 				MS_THROW_TYPE_ERROR(
 				  "wrong entry in rtpMapping.encodings (missing ssrc or rid, or rtpParameters.mid)");
@@ -819,14 +810,9 @@ namespace RTC
 		//
 		// NOTE: We know that this may only happen before calling MangleRtpPacket()
 		// so the SSRC of the packet is still the original one and not the mapped one.
-		//
-		// clang-format off
 		if (
-			this->currentRtpPacket &&
-			this->currentRtpPacket->GetSsrc() == ssrc &&
-			this->currentRtpPacket->IsKeyFrame()
-		)
-		// clang-format on
+		  this->currentRtpPacket && this->currentRtpPacket->GetSsrc() == ssrc &&
+		  this->currentRtpPacket->IsKeyFrame())
 		{
 			return;
 		}
@@ -993,14 +979,9 @@ namespace RTC
 
 		// If not found, and there is a single encoding without ssrc and RID, this
 		// may be the media or RTX stream.
-		//
-		// clang-format off
 		if (
-			this->rtpParameters.encodings.size() == 1 &&
-			!this->rtpParameters.encodings[0].ssrc &&
-			this->rtpParameters.encodings[0].rid.empty()
-		)
-		// clang-format on
+		  this->rtpParameters.encodings.size() == 1 && !this->rtpParameters.encodings[0].ssrc &&
+		  this->rtpParameters.encodings[0].rid.empty())
 		{
 			auto& encoding           = this->rtpParameters.encodings[0];
 			const auto* mediaCodec   = this->rtpParameters.GetCodecForEncoding(encoding);
@@ -1442,14 +1423,9 @@ namespace RTC
 			{
 				// If video orientation was not yet detected or any value has changed,
 				// emit event.
-				// clang-format off
 				if (
-					!this->videoOrientationDetected ||
-					camera != this->videoOrientation.camera ||
-					flip != this->videoOrientation.flip ||
-					rotation != this->videoOrientation.rotation
-				)
-				// clang-format on
+				  !this->videoOrientationDetected || camera != this->videoOrientation.camera ||
+				  flip != this->videoOrientation.flip || rotation != this->videoOrientation.rotation)
 				{
 					this->videoOrientationDetected  = true;
 					this->videoOrientation.camera   = camera;

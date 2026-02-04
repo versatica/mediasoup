@@ -114,15 +114,11 @@ namespace RTC
 					payloadDescriptor->keyIndex   = byte & 0x1F;
 				}
 
-				// clang-format off
-			if (
-				// NOLINTNEXTLINE (bugprone-inc-dec-in-conditions)
-				(len >= ++offset + 1) &&
-				payloadDescriptor->start &&
-				payloadDescriptor->partitionIndex == 0 &&
-				(!(data[offset] & 0x01)) // Inverse Keyframe bit.
-			)
-				// clang-format on
+				if (
+				  // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
+				  (len >= ++offset + 1) && payloadDescriptor->start &&
+				  payloadDescriptor->partitionIndex == 0 && (!(data[offset] & 0x01)) // Inverse Keyframe bit.
+				)
 				{
 					payloadDescriptor->isKeyFrame = true;
 				}
@@ -259,12 +255,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				// clang-format off
-			if (
-				this->hasPictureId &&
-				this->hasTl0PictureIndex
-			)
-				// clang-format on
+				if (this->hasPictureId && this->hasTl0PictureIndex)
 				{
 					Encode(data, this->pictureId, this->tl0PictureIndex);
 				}
@@ -300,13 +291,9 @@ namespace RTC
 				}
 
 				// Check whether pictureId and tl0PictureIndex sync is required.
-				// clang-format off
-			if (
-				context->syncRequired &&
-				this->payloadDescriptor->hasPictureId &&
-				this->payloadDescriptor->hasTl0PictureIndex
-			)
-				// clang-format on
+				if (
+				  context->syncRequired && this->payloadDescriptor->hasPictureId &&
+				  this->payloadDescriptor->hasTl0PictureIndex)
 				{
 					context->pictureIdManager.Sync(this->payloadDescriptor->pictureId - 1);
 					context->tl0PictureIndexManager.Sync(this->payloadDescriptor->tl0PictureIndex - 1);
@@ -315,27 +302,19 @@ namespace RTC
 				}
 
 				// Incremental pictureId. Check the temporal layer.
-				// clang-format off
-			if (
-				this->payloadDescriptor->hasPictureId &&
-				this->payloadDescriptor->hasTlIndex &&
-				this->payloadDescriptor->hasTl0PictureIndex &&
-				!RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
-					this->payloadDescriptor->pictureId,
-					context->pictureIdManager.GetMaxInput())
-			)
-				// clang-format on
+				if (
+				  this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTlIndex &&
+				  this->payloadDescriptor->hasTl0PictureIndex &&
+				  !RTC::SeqManager<uint16_t, 15>::IsSeqLowerThan(
+				    this->payloadDescriptor->pictureId, context->pictureIdManager.GetMaxInput()))
 				{
 					// Drop if:
 					// - Temporal layer is higher than target.
 					// - Temporal layer is higher than current and sync flag is not set.
-					// clang-format off
-				if (
-				  this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer() ||
-				  (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
-				   !this->payloadDescriptor->y)
-				)
-					// clang-format on
+					if (
+					  this->payloadDescriptor->tlIndex > context->GetTargetTemporalLayer() ||
+					  (this->payloadDescriptor->tlIndex > context->GetCurrentTemporalLayer() &&
+					   !this->payloadDescriptor->y))
 					{
 						context->pictureIdManager.Drop(this->payloadDescriptor->pictureId);
 
@@ -353,35 +332,24 @@ namespace RTC
 				uint8_t tl0PictureIndex;
 
 				// Do not send a dropped pictureId.
-				// clang-format off
-			if (
-				this->payloadDescriptor->hasPictureId &&
-				!context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId)
-			)
-				// clang-format on
+				if (
+				  this->payloadDescriptor->hasPictureId &&
+				  !context->pictureIdManager.Input(this->payloadDescriptor->pictureId, pictureId))
 				{
 					return false;
 				}
 
 				// Do not send a dropped tl0PictureIndex.
-				// clang-format off
-			if (
-				this->payloadDescriptor->hasTl0PictureIndex &&
-				!context->tl0PictureIndexManager.Input(
-					this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex)
-			)
-				// clang-format on
+				if (
+				  this->payloadDescriptor->hasTl0PictureIndex &&
+				  !context->tl0PictureIndexManager.Input(
+				    this->payloadDescriptor->tl0PictureIndex, tl0PictureIndex))
 				{
 					return false;
 				}
 
 				// Update/fix current temporal layer.
-				// clang-format off
-			if (
-				this->payloadDescriptor->hasTlIndex &&
-				this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer()
-			)
-				// clang-format on
+				if (this->payloadDescriptor->hasTlIndex && this->payloadDescriptor->tlIndex == context->GetTargetTemporalLayer())
 				{
 					context->SetCurrentTemporalLayer(this->payloadDescriptor->tlIndex);
 				}
@@ -401,12 +369,7 @@ namespace RTC
 					return false;
 				}
 
-				// clang-format off
-			if (
-				this->payloadDescriptor->hasPictureId &&
-				this->payloadDescriptor->hasTl0PictureIndex
-			)
-				// clang-format on
+				if (this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTl0PictureIndex)
 				{
 					// Store the encoding data for retransmissions.
 					this->payloadDescriptor->CreateEncoder({ pictureId, tl0PictureIndex });
@@ -430,12 +393,7 @@ namespace RTC
 			{
 				MS_TRACE();
 
-				// clang-format off
-			if (
-				this->payloadDescriptor->hasPictureId &&
-				this->payloadDescriptor->hasTl0PictureIndex
-			)
-				// clang-format on
+				if (this->payloadDescriptor->hasPictureId && this->payloadDescriptor->hasTl0PictureIndex)
 				{
 					this->payloadDescriptor->Restore(packet->GetPayload());
 				}

@@ -6,7 +6,7 @@
 
 namespace Utils
 {
-	//NOLINTNEXTLINE (cppcoreguidelines-pro-type-member-init)
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 	BitStream::BitStream(uint8_t* data, size_t len) : len(len)
 	{
 		MS_TRACE();
