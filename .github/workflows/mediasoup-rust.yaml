@@ -6,10 +6,12 @@ on:
     paths:
       - 'rust/**'
       - 'worker/**'
+      - '.github/workflows/mediasoup-rust.yaml'
   pull_request:
     paths:
       - 'rust/**'
       - 'worker/**'
+      - '.github/workflows/mediasoup-rust.yaml'
   workflow_dispatch:
 
 concurrency:

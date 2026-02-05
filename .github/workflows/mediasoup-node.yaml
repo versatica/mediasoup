@@ -6,10 +6,12 @@ on:
     paths:
       - 'node/**'
       - 'worker/**'
+      - '.github/workflows/mediasoup-node.yaml'
   pull_request:
     paths:
       - 'node/**'
       - 'worker/**'
+      - '.github/workflows/mediasoup-node.yaml'
   workflow_dispatch:
 
 concurrency:
