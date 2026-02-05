@@ -60,6 +60,10 @@ Runs [clang-tidy](http://clang.llvm.org/extra/clang-tidy) and performs C++ code 
 
 See [Install clang-tidy](#install-clang-tidy) for requirements.
 
+### `npm run tidy:worker:fix`
+
+Same as `npm run tidy:worker` but it also applies fixes.
+
 ### `npm run flatc`
 
 Runs both `flatc:node` and `flatc:worker` tasks.
@@ -246,6 +250,10 @@ It may happens that `clang-tidy` doesn't know where C++ standard libraries are s
 ```bash
 PATH="/opt/homebrew/opt/llvm/bin/:$PATH" CPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 invoke tidy
 ```
+
+### `invoke tidy-fix`
+
+Same as `invoke tidy` but it also applies fixes.
 
 ### `invoke test`
 

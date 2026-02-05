@@ -44,7 +44,6 @@ Checks: "*,\
   -google-build-using-namespace,\
   -google-default-arguments,\
   -google-readability-*,\
-  -google-runtime-references,\
   -google-runtime-int,\
   -google-upgrade-googletest-case,\
   -hicpp-avoid-c-arrays,\
@@ -68,7 +67,6 @@ Checks: "*,\
   -modernize-make-unique,\
   -modernize-pass-by-value,\
   -modernize-use-nodiscard, \
-  -modernize-use-static, \
   -modernize-use-trailing-return-type,\
   -performance-no-int-to-ptr,\
   -portability-template-virtual-member-function,\
@@ -76,7 +74,6 @@ Checks: "*,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
   -readability-identifier-length,\
-  -readability-implicit-bool-cast,\
   -readability-implicit-bool-conversion,\
   -readability-magic-numbers,\
   -readability-redundant-access-specifiers, \
@@ -93,10 +90,6 @@ CheckOptions:
     value: '0'
   - key: cppcoreguidelines-macro-usage.AllowedRegexp
     value: ^MS_*
-  - key: misc-assert-side-effect.AssertMacros
-    value: assert
-  - key: misc-assert-side-effect.CheckFunctionCalls
-    value: '0'
   - key: misc-throw-by-value-catch-by-reference.CheckThrowTemporaries
     value: '1'
   - key: modernize-loop-convert.MaxCopySize

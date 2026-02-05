@@ -32,6 +32,7 @@ endif
 	lint \
 	format \
 	tidy \
+	tidy-fix \
 	test \
 	test-asan-address \
 	test-asan-undefined \
@@ -97,6 +98,9 @@ format: invoke
 
 tidy: invoke
 	"$(PYTHON)" -m invoke tidy
+
+tidy-fix: invoke
+	"$(PYTHON)" -m invoke tidy-fix
 
 test: invoke
 	"$(PYTHON)" -m invoke test

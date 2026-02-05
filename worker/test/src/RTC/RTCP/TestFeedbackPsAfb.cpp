@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsAfb
+SCENARIO("RTCP Feedback PS AFB parsing", "[parser][rtcp][feedback-ps][afb]")
 {
 	// RTCP AFB packet.
 
@@ -20,25 +20,18 @@ namespace TestFeedbackPsAfb
 	// clang-format on
 
 	// AFB values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	size_t dataSize{ 4 };
-	uint8_t dataBitmask{ 1 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
 
-	void verify(FeedbackPsAfbPacket* packet)
+	auto verify = [](FeedbackPsAfbPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::Application::UNKNOWN);
-	}
-} // namespace TestFeedbackPsAfb
+	};
 
-SCENARIO("RTCP Feedback PS AFB parsing", "[parser][rtcp][feedback-ps][afb]")
-{
 	SECTION("parse FeedbackPsAfbPacket")
 	{
-		using namespace TestFeedbackPsAfb;
-
 		std::unique_ptr<FeedbackPsAfbPacket> packet{ FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);

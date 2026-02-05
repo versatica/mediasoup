@@ -383,6 +383,21 @@ def tidy(ctx):
         );
 
 
+@task
+def tidy_fix(ctx):
+    """
+    Performs C++ code checks according to `worker/.clang-tidy` rules and applies
+    fixes
+    """
+    with cd_worker():
+        ctx.run(
+            f'"{NPM}" run tidy:fix --prefix scripts/',
+            echo=True,
+            pty=PTY_SUPPORTED,
+            shell=SHELL
+        );
+
+
 @task(pre=[setup, flatc])
 def test(ctx):
     """

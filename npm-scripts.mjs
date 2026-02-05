@@ -193,7 +193,13 @@ async function run() {
 		}
 
 		case 'tidy:worker': {
-			tidyWorker();
+			tidyWorker({ fix: false });
+
+			break;
+		}
+
+		case 'tidy:worker:fix': {
+			tidyWorker({ true: false });
 
 			break;
 		}
@@ -313,7 +319,7 @@ function buildTypescript({ force }) {
 		return;
 	}
 
-	logInfo('buildTypescript()');
+	logInfo(`buildTypescript() [force:${force}]`);
 
 	deleteNodeLib();
 
@@ -389,12 +395,16 @@ function formatWorker() {
 	executeCmd(`"${PYTHON}" -m invoke -r worker format`);
 }
 
-function tidyWorker() {
-	logInfo('tidyWorker()');
+function tidyWorker({ fix }) {
+	logInfo(`tidyWorker() [fix:${fix}]`);
 
 	installInvoke();
 
-	executeCmd(`"${PYTHON}" -m invoke -r worker tidy`);
+	if (fix) {
+		executeCmd(`"${PYTHON}" -m invoke -r worker tidy-fix`);
+	} else {
+		executeCmd(`"${PYTHON}" -m invoke -r worker tidy`);
+	}
 }
 
 async function flatcNode() {

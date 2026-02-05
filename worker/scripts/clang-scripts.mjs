@@ -44,7 +44,13 @@ async function run() {
 		}
 
 		case 'tidy': {
-			tidy();
+			tidy({ fix: false });
+
+			break;
+		}
+
+		case 'tidy:fix': {
+			tidy({ fix: true });
 
 			break;
 		}
@@ -85,8 +91,8 @@ function format() {
 	executeCmd(`"${clangFormat}" --Werror -i ${files}`);
 }
 
-function tidy() {
-	logInfo('tidy()');
+function tidy({ fix }) {
+	logInfo(`tidy() [fix:${fix}]`);
 
 	const clangTidy = getClangToolBinary({
 		clangToolName: 'clang-tidy',
@@ -114,8 +120,13 @@ function tidy() {
 
 	const files = process.env.MEDIASOUP_TIDY_FILES ?? CLANG_TIDY_PATHS.join(' ');
 
+	const fixArg = fix ? '-fix' : '';
+
+	// Check .clang-tidy config file and fail if some option is invalid/unknown.
+	executeCmd(`"${clangTidy}" --verify-config`);
+
 	executeCmd(
-		`"${PYTHON}" "${runClangTidy}" -clang-tidy-binary="${clangTidy}" -clang-apply-replacements-binary="${clangApplyReplacements}" -p="${BUILD_DIR}" -j=${NUM_CORES} -quiet -fix -format -checks=${tidyChecks} ${files}`
+		`"${PYTHON}" "${runClangTidy}" -clang-tidy-binary="${clangTidy}" -clang-apply-replacements-binary="${clangApplyReplacements}" -p="${BUILD_DIR}" -j=${NUM_CORES} -quiet ${fixArg} -format -checks=${tidyChecks} ${files}`
 	);
 }
 
