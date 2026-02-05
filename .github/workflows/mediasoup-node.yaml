@@ -3,7 +3,15 @@ name: mediasoup-node
 on:
   push:
     branches: [v3]
+    paths:
+      - 'node/**'
+      - 'worker/**'
+      - '.github/workflows/mediasoup-node.yaml'
   pull_request:
+    paths:
+      - 'node/**'
+      - 'worker/**'
+      - '.github/workflows/mediasoup-node.yaml'
   workflow_dispatch:
 
 concurrency:

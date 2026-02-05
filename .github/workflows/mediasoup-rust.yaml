@@ -3,7 +3,15 @@ name: mediasoup-rust
 on:
   push:
     branches: [v3]
+    paths:
+      - 'rust/**'
+      - 'worker/**'
+      - '.github/workflows/mediasoup-rust.yaml'
   pull_request:
+    paths:
+      - 'rust/**'
+      - 'worker/**'
+      - '.github/workflows/mediasoup-rust.yaml'
   workflow_dispatch:
 
 concurrency:
