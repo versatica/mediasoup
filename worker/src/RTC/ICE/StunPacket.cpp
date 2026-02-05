@@ -503,12 +503,12 @@ namespace RTC
 					  attributeValue[sizeof(StunPacket::MagicCookie) + i] ^ StunPacket::MagicCookie[i];
 				}
 
-				// XOR other bytes with each byte of the Transaction id.
-				for (size_t i{ 0 }; i < sizeof(StunPacket::MagicCookie) + StunPacket::TransactionIdLength;
-				     ++i)
+				// XOR remaining 12 bytes with each byte of the Transaction id.
+				for (size_t i{ 0 }; i < StunPacket::TransactionIdLength; ++i)
 				{
-					addr6->sin6_addr.s6_addr[i] = attributeValue[sizeof(StunPacket::MagicCookie) + i] ^
-					                              transactionId[i - sizeof(StunPacket::MagicCookie)];
+					addr6->sin6_addr.s6_addr[sizeof(StunPacket::MagicCookie) + i] =
+					  attributeValue[(sizeof(StunPacket::MagicCookie) + sizeof(StunPacket::MagicCookie)) + i] ^
+					  transactionId[i];
 				}
 
 				return true;
