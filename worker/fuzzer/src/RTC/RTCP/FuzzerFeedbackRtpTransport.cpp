@@ -17,5 +17,5 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	packet->GetLatestTimestamp();
 	packet->GetPacketResults();
 	packet->GetPacketFractionLost();
-	packet->Serialize(::RTC::RTCP::Buffer);
+	packet->Serialize(::RTC::RTCP::SerializationBuffer);
 }

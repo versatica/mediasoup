@@ -3,7 +3,7 @@
 void Fuzzer::RTC::RTCP::FeedbackRtpTmmbn::Fuzz(::RTC::RTCP::FeedbackRtpTmmbnPacket* packet)
 {
 	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::Buffer);
+	packet->Serialize(::RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 
@@ -15,7 +15,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTmmbn::Fuzz(::RTC::RTCP::FeedbackRtpTmmbnPack
 		auto& item = (*it);
 
 		// item->Dump();
-		item->Serialize(::RTC::RTCP::Buffer);
+		item->Serialize(::RTC::RTCP::SerializationBuffer);
 		item->GetSize();
 		item->GetSsrc();
 		item->SetSsrc(1111);
@@ -29,7 +29,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTmmbn::Fuzz(::RTC::RTCP::FeedbackRtpTmmbnPack
 void Fuzzer::RTC::RTCP::FeedbackRtpTmmbr::Fuzz(::RTC::RTCP::FeedbackRtpTmmbrPacket* packet)
 {
 	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::Buffer);
+	packet->Serialize(::RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 
@@ -41,7 +41,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTmmbr::Fuzz(::RTC::RTCP::FeedbackRtpTmmbrPack
 		auto& item = (*it);
 
 		// item->Dump();
-		item->Serialize(::RTC::RTCP::Buffer);
+		item->Serialize(::RTC::RTCP::SerializationBuffer);
 		item->GetSize();
 		item->GetSsrc();
 		item->SetSsrc(1111);

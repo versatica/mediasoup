@@ -6,7 +6,7 @@ void Fuzzer::RTC::RTCP::SenderReport::Fuzz(::RTC::RTCP::SenderReportPacket* pack
 	// A well formed packet must have a single report.
 	if (packet->GetCount() == 1)
 	{
-		packet->Serialize(::RTC::RTCP::Buffer);
+		packet->Serialize(::RTC::RTCP::SerializationBuffer);
 	}
 
 	// packet->Dump();
@@ -21,7 +21,7 @@ void Fuzzer::RTC::RTCP::SenderReport::Fuzz(::RTC::RTCP::SenderReportPacket* pack
 		auto& report = (*it);
 
 		// report->Dump();
-		report->Serialize(::RTC::RTCP::Buffer);
+		report->Serialize(::RTC::RTCP::SerializationBuffer);
 		report->GetSize();
 		report->GetSsrc();
 		report->SetSsrc(1111);

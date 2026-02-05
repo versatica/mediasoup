@@ -5,7 +5,7 @@ void Fuzzer::RTC::RTCP::FeedbackPsVbcm::Fuzz(::RTC::RTCP::FeedbackPsVbcmPacket* 
 	// packet->Dump();
 	// Triggers a crash in fuzzer.
 	// TODO: Verify that there is buffer enough for the announce length.
-	// packet->Serialize(::RTC::RTCP::Buffer);
+	// packet->Serialize(::RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 
@@ -18,7 +18,7 @@ void Fuzzer::RTC::RTCP::FeedbackPsVbcm::Fuzz(::RTC::RTCP::FeedbackPsVbcmPacket* 
 
 		// item->Dump();
 		// Triggers a crash in fuzzer.
-		// item->Serialize(::RTC::RTCP::Buffer);
+		// item->Serialize(::RTC::RTCP::SerializationBuffer);
 		item->GetSize();
 		item->GetSsrc();
 		item->GetSequenceNumber();

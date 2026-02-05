@@ -3,7 +3,7 @@
 void Fuzzer::RTC::RTCP::Bye::Fuzz(::RTC::RTCP::ByePacket* packet)
 {
 	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::Buffer);
+	packet->Serialize(::RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 	packet->AddSsrc(1111);

@@ -107,7 +107,10 @@ namespace RTC
 			SetVariableLengthValueLength(valueLength);
 
 			// Copy the given value into the buffer.
-			std::memmove(GetVariableLengthValuePointer(), value, valueLength);
+			if (value)
+			{
+				std::memmove(GetVariableLengthValuePointer(), value, valueLength);
+			}
 		}
 
 		void TLV::SetVariableLengthValueLength(size_t valueLength)
