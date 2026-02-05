@@ -1,5 +1,4 @@
 ---
-HeaderFilterRegex: '.*/worker/(include|src)/.*'
 Checks: "*,\
   -altera*,\
   -android*,\
@@ -84,6 +83,7 @@ Checks: "*,\
   -readability-simplify-boolean-expr,\
   -readability-uppercase-literal-suffix,\
   "
+HeaderFilterRegex: '.*/worker/(include|src|test|fuzzer)/.*'
 FormatStyle: 'file'
 User: mediasoup
 CheckOptions:
