@@ -18,9 +18,11 @@ const CLANG_FORMAT_PATHS = [
 	'../fuzzer/include/**/*.hpp',
 ];
 
-// TODO: Enable test/ and fuzzer/ source files.
 const CLANG_TIDY_PATHS = [
 	'../src/**/*.cpp',
+	// TODO: Temporal until all tests are included.
+	'../test/src/RTC/RTCP/*.cpp',
+	// TODO: Enable test/ and fuzzer/ source files.
 	// '../test/src/**/*.cpp',
 	// '../fuzzer/src/**/*.cpp',
 ];

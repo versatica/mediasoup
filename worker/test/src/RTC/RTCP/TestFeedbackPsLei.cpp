@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsLei
+SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
 {
 	// RTCP LEI packet.
 
@@ -20,24 +20,20 @@ namespace TestFeedbackPsLei
 	// clang-format on
 
 	// LEI values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint32_t ssrc{ 0x02d03702 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint32_t ssrc{ 0x02d03702 };
 
-	void verify(FeedbackPsLeiPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackPsLeiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsLeiItem* item = *(packet->Begin());
+		const FeedbackPsLeiItem* item = *(packet->Begin());
 
 		REQUIRE(item->GetSsrc() == ssrc);
-	}
-} // namespace TestFeedbackPsLei
-
-SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
-{
-	using namespace TestFeedbackPsLei;
+	};
 
 	SECTION("parse FeedbackPsLeiPacket")
 	{

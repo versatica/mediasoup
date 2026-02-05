@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackRtpTmmbr
+SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
 {
 	// RTCP TMMBR packet.
 
@@ -21,30 +21,26 @@ namespace TestFeedbackRtpTmmbr
 	// clang-format on
 
 	// TMMBR values.
-	uint32_t senderSsrc{ 0x00000001 };
-	uint32_t mediaSsrc{ 0x0330bdee };
-	uint32_t ssrc{ 0x02d03702 };
-	uint64_t bitrate{ 365504 };
-	uint16_t overhead{ 0 };
+	const uint32_t senderSsrc{ 0x00000001 };
+	const uint32_t mediaSsrc{ 0x0330bdee };
+	const uint32_t ssrc{ 0x02d03702 };
+	const uint64_t bitrate{ 365504 };
+	const uint16_t overhead{ 0 };
 
-	void verify(FeedbackRtpTmmbrPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackRtpTmmbrPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		auto it   = packet->Begin();
-		auto item = *it;
+		auto it          = packet->Begin();
+		const auto* item = *it;
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetBitrate() == bitrate);
 		REQUIRE(item->GetOverhead() == overhead);
-	}
-} // namespace TestFeedbackRtpTmmbr
-
-SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
-{
-	using namespace TestFeedbackRtpTmmbr;
+	};
 
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
@@ -65,7 +61,7 @@ SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
 			// represent the same content.
 			SECTION("create a packet out of the serialized buffer")
 			{
-				std::unique_ptr<FeedbackRtpTmmbrPacket> packet{ FeedbackRtpTmmbrPacket::Parse(
+				const std::unique_ptr<FeedbackRtpTmmbrPacket> packet{ FeedbackRtpTmmbrPacket::Parse(
 					buffer, sizeof(buffer)) };
 
 				verify(packet.get());

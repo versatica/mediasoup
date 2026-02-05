@@ -5,10 +5,8 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackRtpEcn
+SCENARIO("RTCP Feeback RTP ECN parsing", "[parser][rtcp][feedback-rtp][ecn]")
 {
-	// RTCP ECN packet.
-
 	// clang-format off
 	uint8_t buffer[] =
 	{
@@ -26,23 +24,24 @@ namespace TestFeedbackRtpEcn
 	// clang-format on
 
 	// ECN values.
-	uint32_t senderSsrc{ 0x00000001 };
-	uint32_t mediaSsrc{ 0x0330bdee };
-	uint32_t sequenceNumber{ 1 };
-	uint32_t ect0Counter{ 1 };
-	uint32_t ect1Counter{ 1 };
-	uint16_t ecnCeCounter{ 1 };
-	uint16_t notEctCounter{ 1 };
-	uint16_t lostPackets{ 1 };
-	uint16_t duplicatedPackets{ 1 };
+	const uint32_t senderSsrc{ 0x00000001 };
+	const uint32_t mediaSsrc{ 0x0330bdee };
+	const uint32_t sequenceNumber{ 1 };
+	const uint32_t ect0Counter{ 1 };
+	const uint32_t ect1Counter{ 1 };
+	const uint16_t ecnCeCounter{ 1 };
+	const uint16_t notEctCounter{ 1 };
+	const uint16_t lostPackets{ 1 };
+	const uint16_t duplicatedPackets{ 1 };
 
-	void verify(FeedbackRtpEcnPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackRtpEcnPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		auto it   = packet->Begin();
-		auto item = *it;
+		auto it          = packet->Begin();
+		const auto* item = *it;
 
 		REQUIRE(item);
 		REQUIRE(item->GetSequenceNumber() == sequenceNumber);
@@ -52,15 +51,10 @@ namespace TestFeedbackRtpEcn
 		REQUIRE(item->GetNotEctCounter() == notEctCounter);
 		REQUIRE(item->GetLostPackets() == lostPackets);
 		REQUIRE(item->GetDuplicatedPackets() == duplicatedPackets);
-	}
-} // namespace TestFeedbackRtpEcn
+	};
 
-SCENARIO("RTCP Feeback RTP ECN parsing", "[parser][rtcp][feedback-rtp][ecn]")
-{
 	SECTION("parse FeedbackRtpEcnPacket")
 	{
-		using namespace TestFeedbackRtpEcn;
-
 		std::unique_ptr<FeedbackRtpEcnPacket> packet{ FeedbackRtpEcnPacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);

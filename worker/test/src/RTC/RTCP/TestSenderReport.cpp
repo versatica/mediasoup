@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestSenderReport
+SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 {
 	// RTCP Packet. Sender Report and Receiver Report.
 
@@ -23,17 +23,18 @@ namespace TestSenderReport
 	// clang-format on
 
 	// Sender Report buffer start point.
-	uint8_t* srBuffer = buffer + Packet::CommonHeaderSize;
+	const uint8_t* srBuffer = buffer + Packet::CommonHeaderSize;
 
 	// SR values.
-	uint32_t ssrc{ 0x5d931534 };
-	uint32_t ntpSec{ 3711615412 };
-	uint32_t ntpFrac{ 1985245553 };
-	uint32_t rtpTs{ 577280 };
-	uint32_t packetCount{ 3608 };
-	uint32_t octetCount{ 577280 };
+	const uint32_t ssrc{ 0x5d931534 };
+	const uint32_t ntpSec{ 3711615412 };
+	const uint32_t ntpFrac{ 1985245553 };
+	const uint32_t rtpTs{ 577280 };
+	const uint32_t packetCount{ 3608 };
+	const uint32_t octetCount{ 577280 };
 
-	void verify(SenderReport* report)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](SenderReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetNtpSec() == ntpSec);
@@ -41,13 +42,8 @@ namespace TestSenderReport
 		REQUIRE(report->GetRtpTs() == rtpTs);
 		REQUIRE(report->GetPacketCount() == packetCount);
 		REQUIRE(report->GetOctetCount() == octetCount);
-	}
-} // namespace TestSenderReport
+	};
 
-using namespace TestSenderReport;
-
-SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
-{
 	SECTION("parse SR packet")
 	{
 		std::unique_ptr<SenderReportPacket> packet{ SenderReportPacket::Parse(buffer, sizeof(buffer)) };
@@ -99,7 +95,7 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		for (size_t i = 1; i <= count; ++i)
 		{
 			// Create report and add to packet.
-			SenderReport* report = new SenderReport();
+			auto* report = new SenderReport();
 
 			report->SetSsrc(i);
 			report->SetNtpSec(i);
@@ -116,7 +112,10 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 		// Serialization must contain 3 SR packets.
 		packet.Serialize(buffer);
 
-		SenderReport* reports[count]{ nullptr };
+		// NOTE: clang-tidy says that this could be `const SenderReport* const reports`
+		// but that's absolutely wrong!
+		// NOLINTNEXTLINE(misc-const-correctness)
+		const SenderReport* reports[count]{ nullptr };
 
 		std::unique_ptr<SenderReportPacket> packet2{ static_cast<SenderReportPacket*>(
 			Packet::Parse(buffer, sizeof(buffer))) };
@@ -139,10 +138,9 @@ SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
 
 		for (size_t i = 1; i <= count; ++i)
 		{
-			auto* report = reports[i - 1];
+			const auto* report = reports[i - 1];
 
 			REQUIRE(report != nullptr);
-
 			REQUIRE(report->GetSsrc() == i);
 			REQUIRE(report->GetNtpSec() == i);
 			REQUIRE(report->GetNtpFrac() == i);

@@ -3,8 +3,12 @@ name: mediasoup-worker-clang-tidy
 on:
   pull_request:
     paths:
-      - 'worker/include/**/*.hpp'
       - 'worker/src/**/*.cpp'
+      - 'worker/include/**/*.hpp'
+      - 'worker/test/src/**/*.cpp'
+      - 'worker/test/include/**/*.hpp'
+      - 'worker/fuzzer/src/**/*.cpp'
+      - 'worker/fuzzer/include/**/*.hpp'
       - 'worker/.clang-tidy'
       - '.github/workflows/mediasoup-worker-clang-tidy.yaml'
 
@@ -38,7 +42,7 @@ jobs:
           clang_tidy_version: '21'
           # TMP until this bug is fixes https://github.com/ZedThree/clang-tidy-review/issues/157#issuecomment-3552341821.
           extra_arguments: '--allow-no-checks --quiet'
-          include: 'worker/include/**/*.hpp,worker/src/**/*.cpp'
+          include: 'worker/src/**/*.cpp,worker/test/src/**/*.cpp,worker/fuzzer/src/**/*.cpp'
 
       # Uploads an artifact containing clang_fixes.json.
       - uses: ZedThree/clang-tidy-review/upload@v0.22.1

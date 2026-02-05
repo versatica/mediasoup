@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsTstn
+SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
 {
 	// RTCP TSTN packet.
 
@@ -21,27 +21,24 @@ namespace TestFeedbackPsTstn
 	// clang-format on
 
 	// TSTN values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint32_t ssrc{ 0x02d03702 };
-	uint8_t seq{ 8 };
-	uint8_t index{ 1 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint32_t ssrc{ 0x02d03702 };
+	const uint8_t seq{ 8 };
+	const uint8_t index{ 1 };
 
-	void verify(FeedbackPsTstnPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackPsTstnPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsTstnItem* item = *(packet->Begin());
+		const FeedbackPsTstnItem* item = *(packet->Begin());
 
+		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetSequenceNumber() == seq);
-	}
-} // namespace TestFeedbackPsTstn
-
-SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
-{
-	using namespace TestFeedbackPsTstn;
+	};
 
 	SECTION("parse FeedbackPsTstPacket")
 	{
@@ -68,7 +65,7 @@ SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
 	{
 		FeedbackPsTstnPacket packet(senderSsrc, mediaSsrc);
 
-		auto* item = new FeedbackPsTstnItem(ssrc, seq, TestFeedbackPsTstn::index);
+		auto* item = new FeedbackPsTstnItem(ssrc, seq, index);
 
 		packet.AddItem(item);
 

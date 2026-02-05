@@ -37,6 +37,7 @@ Checks: "*,\
   -cppcoreguidelines-special-member-functions,\
   -hicpp-exception-baseclass,\
   -hicpp-no-malloc,\
+  -hicpp-function-size,\
   -fuchsia-default-arguments-calls,\
   -fuchsia-default-arguments-declarations,\
   -fuchsia-overloaded-operator,\
@@ -109,7 +110,7 @@ CheckOptions:
   - key: readability-function-size.LineThreshold
     value: '4294967295'
   - key: readability-function-size.StatementThreshold
-    value: '800'
+    value: '1500'
   - key: readability-identifier-naming.AbstractClassCase
     value: CamelCase
   - key: readability-identifier-naming.AbstractClassPrefix

@@ -6,65 +6,68 @@
 
 using namespace RTC::RTCP;
 
-struct TestFeedbackRtpTransportInput
+namespace
 {
-	TestFeedbackRtpTransportInput(uint16_t sequenceNumber, uint64_t timestamp, size_t maxPacketSize)
-	  : sequenceNumber(sequenceNumber), timestamp(timestamp), maxPacketSize(maxPacketSize)
+	struct TestFeedbackRtpTransportInput
 	{
-	}
-
-	uint16_t sequenceNumber{ 0u };
-	uint64_t timestamp{ 0u };
-	size_t maxPacketSize{ 0u };
-};
-
-void validate(
-  const std::vector<struct TestFeedbackRtpTransportInput>& inputs,
-  std::vector<struct FeedbackRtpTransportPacket::PacketResult> packetResults)
-{
-	auto inputsIterator        = inputs.begin();
-	auto packetResultsIterator = packetResults.begin();
-	auto lastInput             = *inputsIterator;
-
-	for (++inputsIterator; inputsIterator != inputs.end(); ++inputsIterator, ++packetResultsIterator)
-	{
-		auto& input             = *inputsIterator;
-		auto& packetResult      = *packetResultsIterator;
-		uint16_t missingPackets = input.sequenceNumber - lastInput.sequenceNumber - 1;
-
-		if (missingPackets > 0)
+		TestFeedbackRtpTransportInput(uint16_t sequenceNumber, uint64_t timestamp, size_t maxPacketSize)
+		  : sequenceNumber(sequenceNumber), timestamp(timestamp), maxPacketSize(maxPacketSize)
 		{
-			// All missing packets must be represented in packetResults.
-			for (uint16_t i{ 0u }; i < missingPackets; ++i)
-			{
-				packetResult = *packetResultsIterator;
-
-				REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + i + 1);
-				REQUIRE(packetResult.received == false);
-
-				packetResultsIterator++;
-			}
-		}
-		else
-		{
-			REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + 1);
-			REQUIRE(packetResult.sequenceNumber == input.sequenceNumber);
-			REQUIRE(packetResult.received == true);
-			REQUIRE(
-			  static_cast<int32_t>(packetResult.receivedAtMs & 0x1FFFFFC0) / 64 ==
-			  static_cast<int32_t>(input.timestamp & 0x1FFFFFC0) / 64);
 		}
 
-		lastInput = input;
-	}
-}
+		uint16_t sequenceNumber{ 0u };
+		uint64_t timestamp{ 0u };
+		size_t maxPacketSize{ 0u };
+	};
+} // namespace
 
 SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
 {
 	static constexpr size_t RtcpMtu{ 1200u };
 
-	uint32_t senderSsrc{ 1111u };
-	uint32_t mediaSsrc{ 2222u };
+	const uint32_t senderSsrc{ 1111u };
+	const uint32_t mediaSsrc{ 2222u };
+
+	auto verify = [](
+	                const std::vector<struct TestFeedbackRtpTransportInput>& inputs,
+	                std::vector<struct FeedbackRtpTransportPacket::PacketResult> packetResults)
+	{
+		auto inputsIterator        = inputs.begin();
+		auto packetResultsIterator = packetResults.begin();
+		auto lastInput             = *inputsIterator;
+
+		for (++inputsIterator; inputsIterator != inputs.end(); ++inputsIterator, ++packetResultsIterator)
+		{
+			const auto& input             = *inputsIterator;
+			auto& packetResult            = *packetResultsIterator;
+			const uint16_t missingPackets = input.sequenceNumber - lastInput.sequenceNumber - 1;
+
+			if (missingPackets > 0)
+			{
+				// All missing packets must be represented in packetResults.
+				for (uint16_t i{ 0u }; i < missingPackets; ++i)
+				{
+					packetResult = *packetResultsIterator;
+
+					REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + i + 1);
+					REQUIRE(packetResult.received == false);
+
+					packetResultsIterator++;
+				}
+			}
+			else
+			{
+				REQUIRE(packetResult.sequenceNumber == lastInput.sequenceNumber + 1);
+				REQUIRE(packetResult.sequenceNumber == input.sequenceNumber);
+				REQUIRE(packetResult.received == true);
+				REQUIRE(
+				  static_cast<int32_t>(packetResult.receivedAtMs & 0x1FFFFFC0) / 64 ==
+				  static_cast<int32_t>(input.timestamp & 0x1FFFFFC0) / 64);
+			}
+
+			lastInput = input;
+		}
+	};
 
 	SECTION(
 	  "create FeedbackRtpTransportPacket, small delta run length chunk and single large delta status packet")
@@ -125,7 +128,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(packet->GetLatestTimestamp() == 1000000015);
 
 		packet->Finish();
-		validate(inputs, packet->GetPacketResults());
+		verify(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 16);
@@ -188,7 +191,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		}
 
 		packet->Finish();
-		validate(inputs, packet->GetPacketResults());
+		verify(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 51);
@@ -257,7 +260,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		}
 
 		packet->Finish();
-		validate(inputs, packet->GetPacketResults());
+		verify(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 18);
@@ -319,7 +322,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		}
 
 		packet->Finish();
-		validate(inputs, packet->GetPacketResults());
+		verify(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 2);
@@ -390,7 +393,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		}
 
 		packet->Finish();
-		validate(inputs, packet->GetPacketResults());
+		verify(inputs, packet->GetPacketResults());
 
 		REQUIRE(packet->GetBaseSequenceNumber() == 1000);
 		REQUIRE(packet->GetPacketStatusCount() == 8);
@@ -457,7 +460,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		}
 
 		packet2->Finish();
-		validate(inputs2, packet2->GetPacketResults());
+		verify(inputs2, packet2->GetPacketResults());
 
 		REQUIRE(packet2->GetBaseSequenceNumber() == 1008);
 		REQUIRE(packet2->GetPacketStatusCount() == 7);
@@ -517,7 +520,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
 		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    static_cast<int64_t>(6275825) * FeedbackRtpTransportPacket::BaseTimeTick);
+		    (static_cast<int64_t>(6275825) * FeedbackRtpTransportPacket::BaseTimeTick));
 		REQUIRE(packet->GetFeedbackPacketCount() == 3);
 
 		SECTION("serialize packet")
@@ -554,7 +557,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
 		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    static_cast<int64_t>(-2) * FeedbackRtpTransportPacket::BaseTimeTick);
+		    (static_cast<int64_t>(-2) * FeedbackRtpTransportPacket::BaseTimeTick));
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("serialize packet")
@@ -592,7 +595,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
 		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    static_cast<int64_t>(-4368470) * FeedbackRtpTransportPacket::BaseTimeTick);
+		    (static_cast<int64_t>(-4368470) * FeedbackRtpTransportPacket::BaseTimeTick));
 
 		REQUIRE(packet->GetFeedbackPacketCount() == 0);
 
@@ -620,7 +623,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 		// Metadata collected by parsing buffers with libwebrtc, buffers itself.
 		// were generated by chrome in direction of mediasoup.
-		std::vector<FeedbackPacketsMeta> feedbackPacketsMeta = {
+		const std::vector<FeedbackPacketsMeta> feedbackPacketsMeta = {
 			{ .baseTimeRaw       = 35504,
 			  .baseTimeMs        = 1076014080,
 			  .baseSequence      = 13,
@@ -770,8 +773,9 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 
 	SECTION("Check GetBaseDelta Wraparound")
 	{
-		auto MaxBaseTime =
+		static const auto MaxBaseTime =
 		  FeedbackRtpTransportPacket::TimeWrapPeriod - FeedbackRtpTransportPacket::BaseTimeTick;
+
 		auto packet1 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 		auto packet2 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 		auto packet3 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);

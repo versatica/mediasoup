@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackRtpNack
+SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
 {
 	// RTCP NACK packet.
 
@@ -20,28 +20,24 @@ namespace TestFeedbackRtpNack
 	// clang-format on
 
 	// NACK values.
-	uint32_t senderSsrc{ 0x00000001 };
-	uint32_t mediaSsrc{ 0x0330bdee };
-	uint16_t pid{ 2959 };
-	uint16_t lostPacketBitmask{ 0x0003 };
+	const uint32_t senderSsrc{ 0x00000001 };
+	const uint32_t mediaSsrc{ 0x0330bdee };
+	const uint16_t pid{ 2959 };
+	const uint16_t lostPacketBitmask{ 0x0003 };
 
-	void verify(FeedbackRtpNackPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackRtpNackPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		auto it   = packet->Begin();
-		auto item = *it;
+		auto it          = packet->Begin();
+		const auto* item = *it;
 
 		REQUIRE(item->GetPacketId() == pid);
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 		REQUIRE(item->CountRequestedPackets() == 3);
-	}
-} // namespace TestFeedbackRtpNack
-
-SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
-{
-	using namespace TestFeedbackRtpNack;
+	};
 
 	SECTION("parse FeedbackRtpNackItem")
 	{

@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestReceiverReport
+SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 {
 	// RTCP Receiver Report Packet.
 
@@ -25,17 +25,18 @@ namespace TestReceiverReport
 	// clang-format on
 
 	// Receiver Report buffer start point.
-	uint8_t* rrBuffer = buffer + Packet::CommonHeaderSize + sizeof(uint32_t) /*Sender SSRC*/;
+	const uint8_t* rrBuffer = buffer + Packet::CommonHeaderSize + sizeof(uint32_t); // Sender SSRC.
 
-	uint32_t ssrc{ 0x01932db4 };
-	uint8_t fractionLost{ 0 };
-	int32_t totalLost{ -1 };
-	uint32_t lastSeq{ 0 };
-	uint32_t jitter{ 0 };
-	uint32_t lastSenderReport{ 0 };
-	uint32_t delaySinceLastSenderReport{ 5 };
+	const uint32_t ssrc{ 0x01932db4 };
+	const uint8_t fractionLost{ 0 };
+	const int32_t totalLost{ -1 };
+	const uint32_t lastSeq{ 0 };
+	const uint32_t jitter{ 0 };
+	const uint32_t lastSenderReport{ 0 };
+	const uint32_t delaySinceLastSenderReport{ 5 };
 
-	void verify(ReceiverReport* report)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](ReceiverReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetFractionLost() == fractionLost);
@@ -44,13 +45,8 @@ namespace TestReceiverReport
 		REQUIRE(report->GetJitter() == jitter);
 		REQUIRE(report->GetLastSenderReport() == lastSenderReport);
 		REQUIRE(report->GetDelaySinceLastSenderReport() == delaySinceLastSenderReport);
-	}
-} // namespace TestReceiverReport
+	};
 
-using namespace TestReceiverReport;
-
-SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
-{
 	SECTION("parse RR packet with a single report")
 	{
 		std::unique_ptr<ReceiverReportPacket> packet{ ReceiverReportPacket::Parse(buffer, sizeof(buffer)) };
@@ -108,7 +104,7 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 		for (size_t i = 1; i <= count; i++)
 		{
 			// Create report and add to packet.
-			ReceiverReport* report = new ReceiverReport();
+			auto* report = new ReceiverReport();
 
 			report->SetSsrc(i);
 			report->SetFractionLost(i);
@@ -149,7 +145,7 @@ SCENARIO("RTCP RR parsing", "[parser][rtcp][rr]")
 			REQUIRE(report->GetDelaySinceLastSenderReport() == i);
 		}
 
-		ReceiverReportPacket* packet3 = static_cast<ReceiverReportPacket*>(packet2->GetNext());
+		auto* packet3 = static_cast<ReceiverReportPacket*>(packet2->GetNext());
 
 		REQUIRE(packet3 != nullptr);
 		REQUIRE(packet3->GetCount() == 2);

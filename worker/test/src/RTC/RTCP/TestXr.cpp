@@ -44,6 +44,7 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 		{
 			auto* block = *it;
 
+			// NOLINTNEXTLINE(hicpp-multiway-paths-covered)
 			switch (blockIdx)
 			{
 				case 0:
@@ -76,6 +77,8 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 
 								break;
 							}
+
+							default:;
 						}
 					}
 
@@ -84,6 +87,8 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 
 					break;
 				}
+
+				default:;
 			}
 		}
 
@@ -149,7 +154,8 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		// Create a new report out of the external buffer.
 		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
 		// managed by the packet.
-		auto report2 = ReceiverReferenceTime::Parse(bufferReport1, report1->GetSize());
+		// NOLINTNEXTLINE(llvm-qualified-auto,readability-qualified-auto)
+		auto* report2 = ReceiverReferenceTime::Parse(bufferReport1, report1->GetSize());
 
 		REQUIRE(report1->GetType() == report2->GetType());
 		REQUIRE(report1->GetNtpSec() == report2->GetNtpSec());
@@ -222,7 +228,8 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		// Create a new report out of the external buffer.
 		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
 		// managed by the packet.
-		auto report2 = DelaySinceLastRr::Parse(bufferReport1, report1->GetSize());
+		// NOLINTNEXTLINE(llvm-qualified-auto,readability-qualified-auto)
+		auto* report2 = DelaySinceLastRr::Parse(bufferReport1, report1->GetSize());
 
 		REQUIRE(report1->GetType() == report2->GetType());
 

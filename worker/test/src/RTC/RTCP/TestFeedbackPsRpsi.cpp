@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsRpsi
+SCENARIO("RTCP Feedback PS RPSI parsing", "[parser][rtcp][feedback-ps][rpsi]")
 {
 	// RTCP RPSI packet.
 
@@ -23,29 +23,25 @@ namespace TestFeedbackPsRpsi
 	// clang-format on
 
 	// RPSI values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint8_t payloadType{ 2 };
-	uint8_t payloadMask{ 1 };
-	size_t length{ 5 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint8_t payloadType{ 2 };
+	const uint8_t payloadMask{ 1 };
+	const size_t length{ 5 };
 
-	void verify(FeedbackPsRpsiPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackPsRpsiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsRpsiItem* item = *(packet->Begin());
+		const FeedbackPsRpsiItem* item = *(packet->Begin());
 
 		REQUIRE(item);
 		REQUIRE(item->GetPayloadType() == payloadType);
 		REQUIRE(item->GetLength() == length);
 		REQUIRE((item->GetBitString()[item->GetLength() - 1] & 1) == payloadMask);
-	}
-} // namespace TestFeedbackPsRpsi
-
-SCENARIO("RTCP Feedback PS RPSI parsing", "[parser][rtcp][feedback-ps][rpsi]")
-{
-	using namespace TestFeedbackPsRpsi;
+	};
 
 	SECTION("parse FeedbackPsRpsiPacket")
 	{

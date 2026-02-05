@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsSli
+SCENARIO("RTCP Feedback PS SLI parsing", "[parser][rtcp][feedback-ps][sli]")
 {
 	// RTCP SLI packet.
 
@@ -20,29 +20,25 @@ namespace TestFeedbackPsSli
 	// clang-format on
 
 	// SLI values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint16_t first{ 1 };
-	uint16_t number{ 4 };
-	uint8_t pictureId{ 1 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint16_t first{ 1 };
+	const uint16_t number{ 4 };
+	const uint8_t pictureId{ 1 };
 
-	void verify(FeedbackPsSliPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackPsSliPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsSliItem* item = *(packet->Begin());
+		const FeedbackPsSliItem* item = *(packet->Begin());
 
 		REQUIRE(item);
 		REQUIRE(item->GetFirst() == first);
 		REQUIRE(item->GetNumber() == number);
 		REQUIRE(item->GetPictureId() == pictureId);
-	}
-} // namespace TestFeedbackPsSli
-
-SCENARIO("RTCP Feedback PS SLI parsing", "[parser][rtcp][feedback-ps][sli]")
-{
-	using namespace TestFeedbackPsSli;
+	};
 
 	SECTION("parse FeedbackPsSliPacket")
 	{

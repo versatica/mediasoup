@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsFir
+SCENARIO("RTCP Feedback PS FIR parsing", "[parser][rtcp][feedback-ps][fir]")
 {
 	// RTCP FIR packet.
 
@@ -21,26 +21,22 @@ namespace TestFeedbackPsFir
 	// clang-format on
 
 	// FIR values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint32_t ssrc{ 0x02d03702 };
-	uint8_t seq{ 4 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint32_t ssrc{ 0x02d03702 };
+	const uint8_t seq{ 4 };
 
-	void verify(FeedbackPsFirPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackPsFirPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsFirItem* item = *(packet->Begin());
+		const FeedbackPsFirItem* item = *(packet->Begin());
 
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetSequenceNumber() == seq);
-	}
-} // namespace TestFeedbackPsFir
-
-SCENARIO("RTCP Feedback PS FIR parsing", "[parser][rtcp][feedback-ps][fir]")
-{
-	using namespace TestFeedbackPsFir;
+	};
 
 	SECTION("parse FeedbackPsFirPacket")
 	{

@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackRtpSrReq
+SCENARIO("RTCP Feeback RTP SR-REQ parsing", "[parser][rtcp][feedback-rtp][sr-req]")
 {
 	// RTCP SR-REQ packet.
 
@@ -19,19 +19,15 @@ namespace TestFeedbackRtpSrReq
 	// clang-format on
 
 	// SR-REQ values.
-	uint32_t senderSsrc{ 0x00000001 };
-	uint32_t mediaSsrc{ 0x0330bdee };
+	const uint32_t senderSsrc{ 0x00000001 };
+	const uint32_t mediaSsrc{ 0x0330bdee };
 
-	void verify(FeedbackRtpSrReqPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackRtpSrReqPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
-	}
-} // namespace TestFeedbackRtpSrReq
-
-SCENARIO("RTCP Feeback RTP SR-REQ parsing", "[parser][rtcp][feedback-rtp][sr-req]")
-{
-	using namespace TestFeedbackRtpSrReq;
+	};
 
 	SECTION("parse FeedbackRtpSrReqPacket")
 	{

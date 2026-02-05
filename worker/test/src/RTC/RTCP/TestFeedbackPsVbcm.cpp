@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-namespace TestFeedbackPsVbcm
+SCENARIO("RTCP Feedback PS VBCM parsing", "[parser][rtcp][feedback-ps][vbcm]")
 {
 	// RTCP VBCM packet.
 
@@ -25,20 +25,21 @@ namespace TestFeedbackPsVbcm
 	// clang-format on
 
 	// VBCM values.
-	uint32_t senderSsrc{ 0xfa17fa17 };
-	uint32_t mediaSsrc{ 0 };
-	uint32_t ssrc{ 0x02d03702 };
-	uint8_t seq{ 8 };
-	uint8_t payloadType{ 2 };
-	uint16_t length{ 1 };
-	uint8_t valueMask{ 1 };
+	const uint32_t senderSsrc{ 0xfa17fa17 };
+	const uint32_t mediaSsrc{ 0 };
+	const uint32_t ssrc{ 0x02d03702 };
+	const uint8_t seq{ 8 };
+	const uint8_t payloadType{ 2 };
+	const uint16_t length{ 1 };
+	const uint8_t valueMask{ 1 };
 
-	void verify(FeedbackPsVbcmPacket* packet)
+	// NOTE: No need to pass const integers to the lambda.
+	auto verify = [](FeedbackPsVbcmPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		FeedbackPsVbcmItem* item = *(packet->Begin());
+		const FeedbackPsVbcmItem* item = *(packet->Begin());
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
@@ -46,12 +47,7 @@ namespace TestFeedbackPsVbcm
 		REQUIRE(item->GetPayloadType() == payloadType);
 		REQUIRE(item->GetLength() == length);
 		REQUIRE((item->GetValue()[item->GetLength() - 1] & 1) == valueMask);
-	}
-} // namespace TestFeedbackPsVbcm
-
-SCENARIO("RTCP Feedback PS VBCM parsing", "[parser][rtcp][feedback-ps][vbcm]")
-{
-	using namespace TestFeedbackPsVbcm;
+	};
 
 	SECTION("parse FeedbackPsVbcmPacket")
 	{
