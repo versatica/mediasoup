@@ -1,4 +1,5 @@
 ---
+HeaderFilterRegex: '.*/worker/(include|src)/.*'
 Checks: "*,\
   -altera*,\
   -android*,\
