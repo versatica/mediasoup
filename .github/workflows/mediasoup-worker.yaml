@@ -3,7 +3,11 @@ name: mediasoup-worker
 on:
   push:
     branches: [v3]
+    paths:
+      - 'worker/**'
   pull_request:
+    paths:
+      - 'worker/**'
   workflow_dispatch:
 
 concurrency:

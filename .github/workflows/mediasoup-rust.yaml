@@ -3,7 +3,13 @@ name: mediasoup-rust
 on:
   push:
     branches: [v3]
+    paths:
+      - 'rust/**'
+      - 'worker/**'
   pull_request:
+    paths:
+      - 'rust/**'
+      - 'worker/**'
   workflow_dispatch:
 
 concurrency:
