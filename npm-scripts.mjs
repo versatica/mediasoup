@@ -199,7 +199,7 @@ async function run() {
 		}
 
 		case 'tidy:worker:fix': {
-			tidyWorker({ true: false });
+			tidyWorker({ fix: true });
 
 			break;
 		}
