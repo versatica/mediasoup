@@ -1,7 +1,7 @@
 #include "RTC/ICE/iceCommon.hpp" // in worker/test/include/
 #include <cstring>               // std::memset
 
-namespace ICE_COMMON
+namespace iceCommon
 {
 	thread_local uint8_t FactoryBuffer[];
 	thread_local uint8_t ResponseFactoryBuffer[];
@@ -24,4 +24,4 @@ namespace ICE_COMMON
 			DataBuffer[i] = static_cast<uint8_t>(i);
 		}
 	}
-} // namespace ICE_COMMON
+} // namespace iceCommon

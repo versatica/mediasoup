@@ -8,12 +8,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("AbortAssociationChunk::Parse() succeeds")
 	{
@@ -32,16 +29,16 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = AbortAssociationChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = RTC::SCTP::AbortAssociationChunk::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -50,80 +47,83 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 		REQUIRE(chunk->GetT() == true);
 
-		auto* errorCause1 = reinterpret_cast<const StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
+		auto* errorCause1 =
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownType*/ false);
 
 		REQUIRE(errorCause1->GetMeasureOfStaleness() == 0x12345678);
 
 		/* Serialize it. */
 
-		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		chunk->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ true,
 		  /*errorCausesCount*/ 1);
 
-		errorCause1 = reinterpret_cast<const StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
+		errorCause1 =
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownType*/ false);
 
 		REQUIRE(errorCause1->GetMeasureOfStaleness() == 0x12345678);
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ true,
 		  /*errorCausesCount*/ 1);
 
-		errorCause1 = reinterpret_cast<const StaleCookieErrorCause*>(clonedChunk->GetErrorCauseAt(0));
+		errorCause1 =
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(clonedChunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownType*/ false);
 
 		REQUIRE(errorCause1->GetMeasureOfStaleness() == 0x12345678);
@@ -133,16 +133,17 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 	SECTION("AbortAssociationChunk::Factory() succeeds")
 	{
-		auto* chunk = AbortAssociationChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk = RTC::SCTP::AbortAssociationChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -155,19 +156,19 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 		chunk->SetT(true);
 
-		auto* errorCause1 = chunk->BuildErrorCauseInPlace<StaleCookieErrorCause>();
+		auto* errorCause1 = chunk->BuildErrorCauseInPlace<RTC::SCTP::StaleCookieErrorCause>();
 
 		errorCause1->SetMeasureOfStaleness(666);
 		errorCause1->Consolidate();
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4 + (4 + 4),
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -177,32 +178,33 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		REQUIRE(chunk->GetT() == true);
 
 		const auto* addedErrorCause1 =
-		  reinterpret_cast<const StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ addedErrorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause1->GetMeasureOfStaleness() == 666);
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = AbortAssociationChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk =
+		  RTC::SCTP::AbortAssociationChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4 + (4 + 4),
 		  /*length*/ 4 + (4 + 4),
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -212,14 +214,14 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		REQUIRE(parsedChunk->GetT() == true);
 
 		const auto* parsedErrorCause1 =
-		  reinterpret_cast<const StaleCookieErrorCause*>(parsedChunk->GetErrorCauseAt(0));
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(parsedChunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause1->GetMeasureOfStaleness() == 666);
@@ -229,12 +231,14 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 	SECTION("AbortAssociationChunk::Factory() with AddErrorCause() succeeds")
 	{
-		auto* chunk = AbortAssociationChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk = RTC::SCTP::AbortAssociationChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		chunk->SetT(true);
 
 		// 8 bytes Error Cause.
-		auto* errorCause1 = StaleCookieErrorCause::Factory(FactoryBuffer + 1000, sizeof(FactoryBuffer));
+		auto* errorCause1 = RTC::SCTP::StaleCookieErrorCause::Factory(
+		  sctpCommon::FactoryBuffer + 1000, sizeof(sctpCommon::FactoryBuffer));
 
 		errorCause1->SetMeasureOfStaleness(666666);
 
@@ -250,12 +254,12 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -265,32 +269,33 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		REQUIRE(chunk->GetT() == true);
 
 		auto* obtainedErrorCause1 =
-		  reinterpret_cast<const StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(chunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ obtainedErrorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
 		REQUIRE(obtainedErrorCause1->GetMeasureOfStaleness() == 666666);
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = AbortAssociationChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk =
+		  RTC::SCTP::AbortAssociationChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::ABORT,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::ABORT,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -300,14 +305,14 @@ SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
 		REQUIRE(parsedChunk->GetT() == true);
 
 		obtainedErrorCause1 =
-		  reinterpret_cast<const StaleCookieErrorCause*>(parsedChunk->GetErrorCauseAt(0));
+		  reinterpret_cast<const RTC::SCTP::StaleCookieErrorCause*>(parsedChunk->GetErrorCauseAt(0));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ obtainedErrorCause1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::STALE_COOKIE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::STALE_COOKIE,
 		  /*unknownCode*/ false);
 
 		REQUIRE(obtainedErrorCause1->GetMeasureOfStaleness() == 666666);

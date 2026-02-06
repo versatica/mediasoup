@@ -5,12 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("UnknownChunk::Parse() succeeds")
 	{
@@ -26,7 +23,7 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = UnknownChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = RTC::SCTP::UnknownChunk::Parse(buffer, sizeof(buffer));
 
 		// NOTE: Chunk Type is 0xEE (0b11101110) so first 2 bits are 11, meaning
 		// that the action to take if we receive this Chunk Type is SKIP_AND_REPORT.
@@ -36,9 +33,9 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
+		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -53,18 +50,18 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		chunk->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
-		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
+		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -79,20 +76,20 @@ SCENARIO("SCTP Unknown Chunk", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
-		  /*chunkType*/ static_cast<Chunk::ChunkType>(0xEE),
+		  /*chunkType*/ static_cast<RTC::SCTP::Chunk::ChunkType>(0xEE),
 		  /*unknownType*/ true,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::SKIP_AND_REPORT,
 		  /*flags*/ 0b10001100,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,

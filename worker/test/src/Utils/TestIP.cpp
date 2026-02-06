@@ -4,8 +4,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace Utils;
-
 SCENARIO("Utils::IP", "[utils][ip]")
 {
 	SECTION("GetFamily()")
@@ -13,58 +11,58 @@ SCENARIO("Utils::IP", "[utils][ip]")
 		std::string ip;
 
 		ip = "1.2.3.4";
-		REQUIRE(IP::GetFamily(ip) == AF_INET);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_INET);
 
 		ip = "127.0.0.1";
-		REQUIRE(IP::GetFamily(ip) == AF_INET);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_INET);
 
 		ip = "255.255.255.255";
-		REQUIRE(IP::GetFamily(ip) == AF_INET);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_INET);
 
 		ip = "1::1";
-		REQUIRE(IP::GetFamily(ip) == AF_INET6);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_INET6);
 
 		ip = "a:b:c:D::0";
-		REQUIRE(IP::GetFamily(ip) == AF_INET6);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_INET6);
 
 		ip = "0000:0000:0000:0000:0000:ffff:192.168.100.228";
-		REQUIRE(IP::GetFamily(ip) == AF_INET6);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_INET6);
 
 		ip = "::0:";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "3::3:1:";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "chicken";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "1.2.3.256";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "1.2.3.1111";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "1.2.3.01";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "1::abcde";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "1:::";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "1.2.3.4 ";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = " ::1";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 
 		ip = "0000:0000:0000:0000:0000:ffff:192.168.100.228.4567";
-		REQUIRE(IP::GetFamily(ip) == AF_UNSPEC);
+		REQUIRE(Utils::IP::GetFamily(ip) == AF_UNSPEC);
 	}
 
 	SECTION("NormalizeIp()")
@@ -72,44 +70,44 @@ SCENARIO("Utils::IP", "[utils][ip]")
 		std::string ip;
 
 		ip = "1.2.3.4";
-		IP::NormalizeIp(ip);
+		Utils::IP::NormalizeIp(ip);
 		REQUIRE(ip == "1.2.3.4");
 
 		ip = "255.255.255.255";
-		IP::NormalizeIp(ip);
+		Utils::IP::NormalizeIp(ip);
 		REQUIRE(ip == "255.255.255.255");
 
 		ip = "aA::8";
-		IP::NormalizeIp(ip);
+		Utils::IP::NormalizeIp(ip);
 		REQUIRE(ip == "aa::8");
 
 		ip = "aA::0:0008";
-		IP::NormalizeIp(ip);
+		Utils::IP::NormalizeIp(ip);
 		REQUIRE(ip == "aa::8");
 
 		ip = "001.2.3.4";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "0255.255.255.255";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "1::2::3";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "::1 ";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "0.0.0.";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "::0:";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "3::3:1:";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 
 		ip = "";
-		REQUIRE_THROWS_AS(IP::NormalizeIp(ip), MediaSoupTypeError);
+		REQUIRE_THROWS_AS(Utils::IP::NormalizeIp(ip), MediaSoupTypeError);
 	}
 
 	SECTION("GetAddressInfo()")
@@ -127,7 +125,7 @@ SCENARIO("Utils::IP", "[utils][ip]")
 		std::string ip;
 		uint16_t port;
 
-		IP::GetAddressInfo(addr, family, ip, port);
+		Utils::IP::GetAddressInfo(addr, family, ip, port);
 
 		REQUIRE(family == AF_INET);
 		REQUIRE(ip == "82.99.219.114");

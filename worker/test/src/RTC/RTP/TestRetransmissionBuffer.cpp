@@ -5,13 +5,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-using namespace RTC;
-
 SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 {
 	// Class inheriting from RtpRetransmissionBuffer so we can access its protected
 	// buffer member.
-	class RtpMyRetransmissionBuffer : public RTP::RetransmissionBuffer
+	class RtpMyRetransmissionBuffer : public RTC::RTP::RetransmissionBuffer
 	{
 	public:
 		struct VerificationItem
@@ -23,7 +21,7 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 
 	public:
 		RtpMyRetransmissionBuffer(uint16_t maxItems, uint32_t maxRetransmissionDelayMs, uint32_t clockRate)
-		  : RTP::RetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
+		  : RTC::RTP::RetransmissionBuffer(maxItems, maxRetransmissionDelayMs, clockRate)
 		{
 		}
 
@@ -39,14 +37,14 @@ SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 		};
 			// clang-format on
 
-			std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(rtpBuffer, sizeof(rtpBuffer)) };
+			std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(rtpBuffer, sizeof(rtpBuffer)) };
 
 			packet->SetSequenceNumber(seq);
 			packet->SetTimestamp(timestamp);
 
-			const RTP::SharedPacket sharedPacket;
+			const RTC::RTP::SharedPacket sharedPacket;
 
-			RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket);
+			RTC::RTP::RetransmissionBuffer::Insert(packet.get(), sharedPacket);
 		}
 
 		void AssertBuffer(std::vector<VerificationItem> verificationBuffer)

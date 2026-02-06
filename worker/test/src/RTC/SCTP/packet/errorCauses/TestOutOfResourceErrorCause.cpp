@@ -5,12 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("OutOfResourceErrorCause::Parse() succeeds")
 	{
@@ -25,44 +22,45 @@ SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* errorCause = OutOfResourceErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause = RTC::SCTP::OutOfResourceErrorCause::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
 		delete clonedErrorCause;
@@ -79,7 +77,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!OutOfResourceErrorCause::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::OutOfResourceErrorCause::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -91,7 +89,7 @@ SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!OutOfResourceErrorCause::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::OutOfResourceErrorCause::Parse(buffer2, sizeof(buffer2)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -102,34 +100,35 @@ SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!OutOfResourceErrorCause::Parse(buffer3, sizeof(buffer3)));
+		REQUIRE(!RTC::SCTP::OutOfResourceErrorCause::Parse(buffer3, sizeof(buffer3)));
 	}
 
 	SECTION("OutOfResourceErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = OutOfResourceErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::OutOfResourceErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
 		/* Parse itself and compare. */
 
 		auto* parsedErrorCause =
-		  OutOfResourceErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
+		  RTC::SCTP::OutOfResourceErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::OUT_OF_RESOURCE,
 		  /*unknownCode*/ false);
 
 		delete parsedErrorCause;

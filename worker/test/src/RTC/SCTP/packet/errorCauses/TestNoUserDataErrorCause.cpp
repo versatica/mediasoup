@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("NoUserDataErrorCause::Parse() succeeds")
 	{
@@ -29,48 +26,49 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* errorCause = NoUserDataErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause = RTC::SCTP::NoUserDataErrorCause::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetTsn() == 987654321);
 
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetTsn() == 987654321);
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->GetTsn() == 987654321);
@@ -91,7 +89,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!NoUserDataErrorCause::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::NoUserDataErrorCause::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -104,7 +102,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!NoUserDataErrorCause::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::NoUserDataErrorCause::Parse(buffer2, sizeof(buffer2)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -118,7 +116,7 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!NoUserDataErrorCause::Parse(buffer3, sizeof(buffer3)));
+		REQUIRE(!RTC::SCTP::NoUserDataErrorCause::Parse(buffer3, sizeof(buffer3)));
 
 		// Wrong buffer length.
 		// clang-format off
@@ -131,19 +129,20 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!NoUserDataErrorCause::Parse(buffer4, sizeof(buffer4)));
+		REQUIRE(!RTC::SCTP::NoUserDataErrorCause::Parse(buffer4, sizeof(buffer4)));
 	}
 
 	SECTION("NoUserDataErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = NoUserDataErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::NoUserDataErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetTsn() == 0);
@@ -154,10 +153,10 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetTsn() == 666666);
@@ -165,16 +164,16 @@ SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
 		/* Parse itself and compare. */
 
 		auto* parsedErrorCause =
-		  NoUserDataErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
+		  RTC::SCTP::NoUserDataErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::NO_USER_DATA,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::NO_USER_DATA,
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->GetTsn() == 666666);

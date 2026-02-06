@@ -5,12 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("InvalidMandatoryParameterErrorCause::Parse() succeeds")
 	{
@@ -24,44 +21,45 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* errorCause = InvalidMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause = RTC::SCTP::InvalidMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		delete clonedErrorCause;
@@ -69,30 +67,30 @@ SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
 
 	SECTION("InvalidMandatoryParameterErrorCause::Factory() succeeds")
 	{
-		auto* errorCause =
-		  InvalidMandatoryParameterErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::InvalidMandatoryParameterErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause =
-		  InvalidMandatoryParameterErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
+		auto* parsedErrorCause = RTC::SCTP::InvalidMandatoryParameterErrorCause::Parse(
+		  errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::INVALID_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		delete parsedErrorCause;

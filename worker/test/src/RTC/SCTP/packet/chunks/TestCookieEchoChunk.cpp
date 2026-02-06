@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("CookieEchoChunk::Parse() succeeds")
 	{
@@ -32,16 +29,16 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = CookieEchoChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = RTC::SCTP::CookieEchoChunk::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -62,18 +59,18 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		chunk->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -94,20 +91,20 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -131,16 +128,17 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 	SECTION("CookieEchoChunk::Factory() succeeds")
 	{
-		auto* chunk = CookieEchoChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk = RTC::SCTP::CookieEchoChunk::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -153,7 +151,7 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		/* Modify it. */
 
 		// Verify that replacing the value works.
-		chunk->SetCookie(DataBuffer + 1000, 2999);
+		chunk->SetCookie(sctpCommon::DataBuffer + 1000, 2999);
 
 		REQUIRE(chunk->GetLength() == 3004);
 		REQUIRE(chunk->HasCookie() == true);
@@ -166,16 +164,16 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 		REQUIRE(chunk->GetCookieLength() == 0);
 
 		// 3 bytes + 1 byte of padding.
-		chunk->SetCookie(DataBuffer, 3);
+		chunk->SetCookie(sctpCommon::DataBuffer, 3);
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -192,18 +190,18 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = CookieEchoChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk = RTC::SCTP::CookieEchoChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -223,32 +221,33 @@ SCENARIO("SCTP Cookie Echo Chunk (10)", "[sctp][serializable]")
 
 	SECTION("CookieEchoChunk::SetCookie() throws if userDataLength is too big")
 	{
-		auto* chunk = CookieEchoChunk::Factory(ThrowBuffer, sizeof(ThrowBuffer));
+		auto* chunk =
+		  RTC::SCTP::CookieEchoChunk::Factory(sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ ThrowBuffer,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 4,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE_THROWS_AS(chunk->SetCookie(ThrowBuffer, 65535), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->SetCookie(sctpCommon::ThrowBuffer, 65535), MediaSoupError);
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ ThrowBuffer,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 4,
-		  /*chunkType*/ Chunk::ChunkType::COOKIE_ECHO,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::COOKIE_ECHO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,

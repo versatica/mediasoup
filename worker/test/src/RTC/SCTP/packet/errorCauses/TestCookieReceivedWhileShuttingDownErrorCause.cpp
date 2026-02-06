@@ -5,12 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("CookieReceivedWhileShuttingDownErrorCause::Parse() succeeds")
 	{
@@ -25,44 +22,46 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 		};
 		// clang-format on
 
-		auto* errorCause = CookieReceivedWhileShuttingDownErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause =
+		  RTC::SCTP::CookieReceivedWhileShuttingDownErrorCause::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
 		delete clonedErrorCause;
@@ -70,30 +69,30 @@ SCENARIO("Cookie Received While Shutting Down Error Cause (10)", "[sctp][seriali
 
 	SECTION("CookieReceivedWhileShuttingDownErrorCause::Factory() succeeds")
 	{
-		auto* errorCause =
-		  CookieReceivedWhileShuttingDownErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::CookieReceivedWhileShuttingDownErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = CookieReceivedWhileShuttingDownErrorCause::Parse(
+		auto* parsedErrorCause = RTC::SCTP::CookieReceivedWhileShuttingDownErrorCause::Parse(
 		  errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 4,
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::COOKIE_RECEIVED_WHILE_SHUTTING_DOWN,
 		  /*unknownCode*/ false);
 
 		delete parsedErrorCause;

@@ -8,13 +8,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 // NOTE: Simplified since it's similar to InitChunk.
 SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("InitAckChunk::Parse() succeeds")
 	{
@@ -42,16 +39,16 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = InitAckChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = RTC::SCTP::InitAckChunk::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 28,
-		  /*chunkType*/ Chunk::ChunkType::INIT_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::INIT_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 1,
@@ -64,16 +61,17 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		REQUIRE(chunk->GetNumberOfInboundStreams() == 22136);
 		REQUIRE(chunk->GetInitialTsn() == 2882339074);
 
-		auto* parameter1 = reinterpret_cast<const IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		auto* parameter1 =
+		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter1->GetIPv4Address()[0] == 0x02);
 		REQUIRE(parameter1->GetIPv4Address()[1] == 0x03);
@@ -85,16 +83,17 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 
 	SECTION("InitAckChunk::Factory() succeeds")
 	{
-		auto* chunk = InitAckChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk =
+		  RTC::SCTP::InitAckChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 20,
-		  /*chunkType*/ Chunk::ChunkType::INIT_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::INIT_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 0,
@@ -115,7 +114,7 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		chunk->SetNumberOfInboundStreams(5678);
 		chunk->SetInitialTsn(3333333330);
 
-		auto* parameter1 = chunk->BuildParameterInPlace<IPv4AddressParameter>();
+		auto* parameter1 = chunk->BuildParameterInPlace<RTC::SCTP::IPv4AddressParameter>();
 
 		// 11.22.33.44 IPv4 in network order.
 		uint8_t ipBuffer1[] = { 0x0B, 0x16, 0x21, 0x2C };
@@ -125,12 +124,12 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 28,
-		  /*chunkType*/ Chunk::ChunkType::INIT_ACK,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::INIT_ACK,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ true,
 		  /*parametersCount*/ 1,
@@ -144,16 +143,16 @@ SCENARIO("SCTP Init Acknowledgement (2)", "[sctp][serializable]")
 		REQUIRE(chunk->GetInitialTsn() == 3333333330);
 
 		const auto* addedParameter1 =
-		  reinterpret_cast<const IPv4AddressParameter*>(chunk->GetParameterAt(0));
+		  reinterpret_cast<const RTC::SCTP::IPv4AddressParameter*>(chunk->GetParameterAt(0));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ addedParameter1,
 		  /*buffer*/ nullptr,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*parameterType*/ Parameter::ParameterType::IPV4_ADDRESS,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(addedParameter1->GetIPv4Address()[0] == 0x0B);
 		REQUIRE(addedParameter1->GetIPv4Address()[1] == 0x16);

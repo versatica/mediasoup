@@ -2,8 +2,6 @@
 #include "RTC/RTP/Codecs/H264.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-using namespace RTC;
-
 SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 {
 	SECTION("parse payload descriptor")
@@ -20,10 +18,11 @@ SCENARIO("H264 payload descriptor", "[rtp][codecs][h264]")
 
 		std::memcpy(buffer, originalBuffer, sizeof(buffer));
 
-		RTP::Codecs::DependencyDescriptor* dependencyDescriptor{ nullptr };
+		RTC::RTP::Codecs::DependencyDescriptor* dependencyDescriptor{ nullptr };
 
-		std::unique_ptr<RTP::Codecs::H264::PayloadDescriptor> payloadDescriptor{ RTP::Codecs::H264::Parse(
-			buffer, sizeof(buffer), dependencyDescriptor) };
+		std::unique_ptr<RTC::RTP::Codecs::H264::PayloadDescriptor> payloadDescriptor{
+			RTC::RTP::Codecs::H264::Parse(buffer, sizeof(buffer), dependencyDescriptor)
+		};
 
 		REQUIRE(payloadDescriptor);
 	}

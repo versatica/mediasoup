@@ -1,15 +1,13 @@
 #include "common.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/association/StateCookie.hpp"
 #include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("StateCookie::Parse() succeeds")
 	{
@@ -43,12 +41,12 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		};
 		// clang-format on
 
-		auto* stateCookie = StateCookie::Parse(buffer, sizeof(buffer));
+		auto* stateCookie = RTC::SCTP::StateCookie::Parse(buffer, sizeof(buffer));
 
 		REQUIRE(stateCookie);
 		REQUIRE(stateCookie->GetBuffer() == buffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetMyVerificationTag() == 11223344);
 		REQUIRE(stateCookie->GetPeerVerificationTag() == 55667788);
 		REQUIRE(stateCookie->GetMyInitialTsn() == 12345678);
@@ -67,14 +65,14 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Serialize it. */
 
-		stateCookie->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		stateCookie->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		REQUIRE(stateCookie);
-		REQUIRE(stateCookie->GetBuffer() == SerializeBuffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == sizeof(SerializeBuffer));
+		REQUIRE(stateCookie->GetBuffer() == sctpCommon::SerializeBuffer);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == sizeof(sctpCommon::SerializeBuffer));
 		REQUIRE(stateCookie->GetMyVerificationTag() == 11223344);
 		REQUIRE(stateCookie->GetPeerVerificationTag() == 55667788);
 		REQUIRE(stateCookie->GetMyInitialTsn() == 12345678);
@@ -93,16 +91,17 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Clone it. */
 
-		auto* clonedStateCookie = stateCookie->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedStateCookie =
+		  stateCookie->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete stateCookie;
 
 		REQUIRE(clonedStateCookie);
-		REQUIRE(clonedStateCookie->GetBuffer() == CloneBuffer);
-		REQUIRE(clonedStateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(CloneBuffer));
+		REQUIRE(clonedStateCookie->GetBuffer() == sctpCommon::CloneBuffer);
+		REQUIRE(clonedStateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(clonedStateCookie->GetBufferLength() == sizeof(sctpCommon::CloneBuffer));
 		REQUIRE(clonedStateCookie->GetMyVerificationTag() == 11223344);
 		REQUIRE(clonedStateCookie->GetPeerVerificationTag() == 55667788);
 		REQUIRE(clonedStateCookie->GetMyInitialTsn() == 12345678);
@@ -155,7 +154,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		};
 		// clang-format on
 
-		REQUIRE(!StateCookie::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Magic Value 2.
 		// clang-format off
@@ -188,7 +187,7 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		};
 		// clang-format on
 
-		REQUIRE(!StateCookie::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer2, sizeof(buffer2)));
 
 		// Buffer too big.
 		// clang-format off
@@ -223,21 +222,21 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		};
 		// clang-format on
 
-		REQUIRE(!StateCookie::Parse(buffer3, sizeof(buffer3)));
+		REQUIRE(!RTC::SCTP::StateCookie::Parse(buffer3, sizeof(buffer3)));
 	}
 
 	SECTION("StateCookie::Factory() succeeds")
 	{
-		NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
-			                                                .maxInboundStreams   = 55555,
-			                                                .partialReliability  = true,
-			                                                .messageInterleaving = true,
-			                                                .reconfig            = true,
-			                                                .zeroChecksum        = false };
+		RTC::SCTP::NegotiatedCapabilities negotiatedCapabilities = { .maxOutboundStreams  = 62000,
+			                                                           .maxInboundStreams   = 55555,
+			                                                           .partialReliability  = true,
+			                                                           .messageInterleaving = true,
+			                                                           .reconfig            = true,
+			                                                           .zeroChecksum        = false };
 
-		auto* stateCookie = StateCookie::Factory(
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		auto* stateCookie = RTC::SCTP::StateCookie::Factory(
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*myVerificationTag*/ 6660666,
 		  /*peerVerificationTag*/ 9990999,
 		  /*myInitialTsn*/ 1110111,
@@ -252,9 +251,9 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 		negotiatedCapabilities.maxOutboundStreams = 1024;
 
 		REQUIRE(stateCookie);
-		REQUIRE(stateCookie->GetBuffer() == FactoryBuffer);
-		REQUIRE(stateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(stateCookie->GetBufferLength() == StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
+		REQUIRE(stateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(stateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(stateCookie->GetMyVerificationTag() == 6660666);
 		REQUIRE(stateCookie->GetPeerVerificationTag() == 9990999);
 		REQUIRE(stateCookie->GetMyInitialTsn() == 1110111);
@@ -273,14 +272,15 @@ SCENARIO("SCTP State Cookie", "[sctp][statecookie]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedStateCookie = StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength());
+		auto* parsedStateCookie =
+		  RTC::SCTP::StateCookie::Parse(stateCookie->GetBuffer(), stateCookie->GetLength());
 
 		delete stateCookie;
 
 		REQUIRE(parsedStateCookie);
-		REQUIRE(parsedStateCookie->GetBuffer() == FactoryBuffer);
-		REQUIRE(parsedStateCookie->GetLength() == StateCookie::StateCookieLength);
-		REQUIRE(parsedStateCookie->GetBufferLength() == StateCookie::StateCookieLength);
+		REQUIRE(parsedStateCookie->GetBuffer() == sctpCommon::FactoryBuffer);
+		REQUIRE(parsedStateCookie->GetLength() == RTC::SCTP::StateCookie::StateCookieLength);
+		REQUIRE(parsedStateCookie->GetBufferLength() == RTC::SCTP::StateCookie::StateCookieLength);
 		REQUIRE(parsedStateCookie->GetMyVerificationTag() == 6660666);
 		REQUIRE(parsedStateCookie->GetPeerVerificationTag() == 9990999);
 		REQUIRE(parsedStateCookie->GetMyInitialTsn() == 1110111);

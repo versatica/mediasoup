@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <limits> // std::numeric_limits
 
-using namespace Utils;
-
 SCENARIO("Utils::Number", "[utils][number]")
 {
 	SECTION("IsEqualThan()")

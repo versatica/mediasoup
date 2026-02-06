@@ -8,12 +8,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("DataChunk::Parse() succeeds")
 	{
@@ -39,16 +36,16 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* chunk = DataChunk::Parse(buffer, sizeof(buffer));
+		auto* chunk = RTC::SCTP::DataChunk::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 20,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -73,18 +70,18 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		chunk->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		chunk->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 20,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -109,20 +106,20 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedChunk = chunk->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedChunk = chunk->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ clonedChunk,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 20,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001011,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -150,16 +147,17 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 	SECTION("DataChunk::Factory() succeeds")
 	{
-		auto* chunk = DataChunk::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* chunk =
+		  RTC::SCTP::DataChunk::Factory(sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -187,7 +185,7 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		chunk->SetPayloadProtocolIdentifier(987654321);
 
 		// Verify that replacing the value works.
-		chunk->SetUserData(DataBuffer + 1000, 3000);
+		chunk->SetUserData(sctpCommon::DataBuffer + 1000, 3000);
 
 		REQUIRE(chunk->GetLength() == 3016);
 		REQUIRE(chunk->HasUserData() == true);
@@ -200,16 +198,16 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 		REQUIRE(chunk->GetUserDataLength() == 0);
 
 		// 3 bytes + 1 byte of padding.
-		chunk->SetUserData(DataBuffer, 3);
+		chunk->SetUserData(sctpCommon::DataBuffer, 3);
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16 + 3 + 1,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -234,18 +232,18 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedChunk = DataChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
+		auto* parsedChunk = RTC::SCTP::DataChunk::Parse(chunk->GetBuffer(), chunk->GetLength());
 
 		delete chunk;
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ parsedChunk,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 16 + 3 + 1,
 		  /*length*/ 16 + 3 + 1,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00001001,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
@@ -273,32 +271,33 @@ SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 
 	SECTION("DataChunk::SetUserData() throws if userDataLength is too big")
 	{
-		auto* chunk = DataChunk::Factory(ThrowBuffer, sizeof(ThrowBuffer));
+		auto* chunk =
+		  RTC::SCTP::DataChunk::Factory(sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer));
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ ThrowBuffer,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 16,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,
 		  /*canHaveErrorCauses*/ false,
 		  /*errorCausesCount*/ 0);
 
-		REQUIRE_THROWS_AS(chunk->SetUserData(DataBuffer, 65535), MediaSoupError);
+		REQUIRE_THROWS_AS(chunk->SetUserData(sctpCommon::DataBuffer, 65535), MediaSoupError);
 
 		CHECK_SCTP_CHUNK(
 		  /*chunk*/ chunk,
-		  /*buffer*/ ThrowBuffer,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 16,
-		  /*chunkType*/ Chunk::ChunkType::DATA,
+		  /*chunkType*/ RTC::SCTP::Chunk::ChunkType::DATA,
 		  /*unknownType*/ false,
-		  /*actionForUnknownChunkType*/ Chunk::ActionForUnknownChunkType::STOP,
+		  /*actionForUnknownChunkType*/ RTC::SCTP::Chunk::ActionForUnknownChunkType::STOP,
 		  /*flags*/ 0b00000000,
 		  /*canHaveParameters*/ false,
 		  /*parametersCount*/ 0,

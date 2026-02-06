@@ -5,12 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Unknown Parameter", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("UnknownParameter::Parse() succeeds")
 	{
@@ -28,7 +25,7 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = UnknownParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::UnknownParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
@@ -36,9 +33,9 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
+		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter->HasUnknownValue() == true);
 		REQUIRE(parameter->GetUnknownValueLength() == 7);
@@ -55,19 +52,19 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
+		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(parameter->HasUnknownValue() == true);
 		REQUIRE(parameter->GetUnknownValueLength() == 7);
@@ -83,21 +80,22 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
 		  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-		  /*parameterType*/ static_cast<Parameter::ParameterType>(49159),
+		  /*parameterType*/ static_cast<RTC::SCTP::Parameter::ParameterType>(49159),
 		  /*unknownType*/ true,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::SKIP_AND_REPORT);
 
 		REQUIRE(clonedParameter->HasUnknownValue() == true);
 		REQUIRE(clonedParameter->GetUnknownValueLength() == 7);
@@ -129,7 +127,7 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!UnknownParameter::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::UnknownParameter::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong buffer length.
 		// clang-format off
@@ -144,6 +142,6 @@ SCENARIO("Unknown Parameter", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!UnknownParameter::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::UnknownParameter::Parse(buffer2, sizeof(buffer2)));
 	}
 }

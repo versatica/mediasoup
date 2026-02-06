@@ -5,12 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC;
-using namespace RTP_COMMON;
-
 namespace
 {
-	RTP::Codecs::VP9::PayloadDescriptor* createVP9PayloadDescriptor(
+	RTC::RTP::Codecs::VP9::PayloadDescriptor* createVP9PayloadDescriptor(
 	  uint8_t* buffer, size_t bufferLen, uint16_t pictureId, uint8_t tlIndex)
 	{
 		buffer[0]             = 0xAD; // I, L, B, E bits
@@ -19,15 +16,15 @@ namespace
 		buffer[1] |= 0x80;
 		buffer[3] = (tlIndex << 5) | (1 << 4); // tlIndex, switchingUpPoint
 
-		auto* payloadDescriptor = RTP::Codecs::VP9::Parse(buffer, bufferLen);
+		auto* payloadDescriptor = RTC::RTP::Codecs::VP9::Parse(buffer, bufferLen);
 
 		REQUIRE(payloadDescriptor);
 
 		return payloadDescriptor;
 	}
 
-	std::unique_ptr<RTP::Codecs::VP9::PayloadDescriptor> processVP9Packet(
-	  RTP::Codecs::VP9::EncodingContext& context, uint16_t pictureId, uint8_t tlIndex)
+	std::unique_ptr<RTC::RTP::Codecs::VP9::PayloadDescriptor> processVP9Packet(
+	  RTC::RTP::Codecs::VP9::EncodingContext& context, uint16_t pictureId, uint8_t tlIndex)
 	{
 		// clang-format off
 		uint8_t payload[] =
@@ -38,17 +35,18 @@ namespace
 		bool marker;
 		auto* payloadDescriptor =
 		  createVP9PayloadDescriptor(payload, sizeof(payload), pictureId, tlIndex);
-		std::unique_ptr<RTP::Codecs::VP9::PayloadDescriptorHandler> payloadDescriptorHandler(
-		  new RTP::Codecs::VP9::PayloadDescriptorHandler(payloadDescriptor));
+		std::unique_ptr<RTC::RTP::Codecs::VP9::PayloadDescriptorHandler> payloadDescriptorHandler(
+		  new RTC::RTP::Codecs::VP9::PayloadDescriptorHandler(payloadDescriptor));
 
-		std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Factory(FactoryBuffer, sizeof(FactoryBuffer)) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Factory(
+			rtpCommon::FactoryBuffer, sizeof(rtpCommon::FactoryBuffer)) };
 
 		packet->SetPayload(payload, sizeof(payload));
 
 		if (payloadDescriptorHandler->Process(&context, packet.get(), marker))
 		{
-			return std::unique_ptr<RTP::Codecs::VP9::PayloadDescriptor>(
-			  RTP::Codecs::VP9::Parse(payload, sizeof(payload)));
+			return std::unique_ptr<RTC::RTP::Codecs::VP9::PayloadDescriptor>(
+			  RTC::RTP::Codecs::VP9::Parse(payload, sizeof(payload)));
 		}
 
 		return nullptr;
@@ -61,11 +59,11 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 	SECTION("drop packets that belong to other temporal layers after rolling over pictureID")
 	{
-		RTP::Codecs::EncodingContext::Params params;
+		RTC::RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 1;
 		params.temporalLayers = 3;
 
-		RTP::Codecs::VP9::EncodingContext context(params);
+		RTC::RTP::Codecs::VP9::EncodingContext context(params);
 		context.SyncRequired();
 		context.SetCurrentTemporalLayer(0);
 		context.SetTargetTemporalLayer(0);
@@ -90,11 +88,11 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 	SECTION("PayloadDescriptorHandler")
 	{
-		RTP::Codecs::EncodingContext::Params params;
+		RTC::RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 1;
 		params.temporalLayers = 3;
 
-		RTP::Codecs::VP9::EncodingContext context(params);
+		RTC::RTP::Codecs::VP9::EncodingContext context(params);
 
 		const uint16_t start = MaxPictureId - 2000;
 
@@ -124,11 +122,11 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 
 	SECTION("drop packets that belong to other temporal layers with unordered pictureID")
 	{
-		RTP::Codecs::EncodingContext::Params params;
+		RTC::RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 1;
 		params.temporalLayers = 3;
 
-		RTP::Codecs::VP9::EncodingContext context(params);
+		RTC::RTP::Codecs::VP9::EncodingContext context(params);
 		context.SyncRequired();
 		context.SetCurrentSpatialLayer(0, 0);
 		context.SetTargetSpatialLayer(0);

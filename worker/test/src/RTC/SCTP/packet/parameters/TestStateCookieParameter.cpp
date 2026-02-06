@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("StateCookieParameter::Parse() succeeds")
 	{
@@ -28,16 +25,16 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = StateCookieParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::StateCookieParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 8,
-		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->HasCookie() == true);
 		REQUIRE(parameter->GetCookieLength() == 3);
@@ -49,18 +46,18 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 8,
-		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->HasCookie() == true);
 		REQUIRE(parameter->GetCookieLength() == 3);
@@ -72,20 +69,21 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 8,
-		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(clonedParameter->HasCookie() == true);
 		REQUIRE(clonedParameter->GetCookieLength() == 3);
@@ -100,21 +98,22 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 
 	SECTION("StateCookieParameter::Factory() succeeds")
 	{
-		auto* parameter = StateCookieParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* parameter = RTC::SCTP::StateCookieParameter::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		/* Modify it. */
 
 		// Verify that replacing the cookie works.
-		parameter->SetCookie(DataBuffer + 1000, 3000);
+		parameter->SetCookie(sctpCommon::DataBuffer + 1000, 3000);
 
 		REQUIRE(parameter->GetLength() == 3004);
 		REQUIRE(parameter->HasCookie() == true);
@@ -127,24 +126,24 @@ SCENARIO("State Cookie Parameter (7)", "[sctp][serializable]")
 		REQUIRE(parameter->GetCookieLength() == 0);
 
 		// 1 bytes + 3 bytes of padding. Note that first (and unique byte) is
-		// DataBuffer + 1 which is initialized to 0x0A.
-		parameter->SetCookie(DataBuffer + 10, 1);
+		// sctpCommon::DataBuffer + 1 which is initialized to 0x0A.
+		parameter->SetCookie(sctpCommon::DataBuffer + 10, 1);
 
 		/* Parse itself and compare. */
 
 		auto* parsedParameter =
-		  StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		  RTC::SCTP::StateCookieParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 8,
 		  /*length*/ 8,
-		  /*parameterType*/ Parameter::ParameterType::STATE_COOKIE,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::STATE_COOKIE,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter->HasCookie() == true);
 		REQUIRE(parsedParameter->GetCookieLength() == 1);

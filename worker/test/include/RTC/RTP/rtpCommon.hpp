@@ -9,9 +9,7 @@
 #include <cstdlib>                      // std::malloc(), std::free()
 #include <cstring>                      // std::memcpy()
 
-using namespace RTC::RTP;
-
-namespace RTP_COMMON
+namespace rtpCommon
 {
 	// NOTE: We need to declare them here with `extern` and then define them in
 	// rtpCommon.cpp.
@@ -23,10 +21,10 @@ namespace RTP_COMMON
 	extern thread_local uint8_t ThrowBuffer[66665];
 
 	void ResetBuffers();
-} // namespace RTP_COMMON
+} // namespace rtpCommon
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
-#define CHECK_RTP_PACKET(/*const Packet**/ packet,                                                   \
+#define CHECK_RTP_PACKET(/*const RTC::RTP::Packet**/ packet,                                         \
                          /*const uint8_t**/ buffer,                                                  \
                          /*size_t*/ bufferLength,                                                    \
                          /*size_t*/ length,                                                          \
@@ -48,7 +46,7 @@ namespace RTP_COMMON
 	{                                                                                                  \
 		uint8_t* originalBuffer = static_cast<uint8_t*>(std::malloc(bufferLength));                      \
 		std::memcpy(originalBuffer, buffer, bufferLength);                                               \
-		REQUIRE(Packet::IsRtp(buffer, bufferLength) == true);                                            \
+		REQUIRE(RTC::RTP::Packet::IsRtp(buffer, bufferLength) == true);                                  \
 		REQUIRE(packet);                                                                                 \
 		REQUIRE(packet->GetBuffer() != nullptr);                                                         \
 		REQUIRE(packet->GetBuffer() == buffer);                                                          \
@@ -111,7 +109,8 @@ namespace RTP_COMMON
 			REQUIRE_NOTHROW(packet->SetPayloadLength(packet->GetPayloadLength()));                         \
 			REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
 		}                                                                                                \
-		REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, packet->GetBufferLength()), MediaSoupError);    \
+		REQUIRE_THROWS_AS(                                                                               \
+		  packet->SetPayload(rtpCommon::DataBuffer, packet->GetBufferLength()), MediaSoupError);         \
 		REQUIRE_THROWS_AS(packet->SetPayloadLength(packet->GetBufferLength()), MediaSoupError);          \
 		REQUIRE_NOTHROW(packet->SetPaddingLength(packet->GetPaddingLength()));                           \
 		if (packet->IsPaddedTo4Bytes() && packet->GetPaddingLength() < 4)                                \
@@ -121,8 +120,9 @@ namespace RTP_COMMON
 		}                                                                                                \
 		REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);   \
 		REQUIRE_THROWS_AS(                                                                               \
-		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);              \
-		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                       \
+		  const_cast<RTC::RTP::Packet*>(packet)->Serialize(rtpCommon::ThrowBuffer, length - 1),          \
+		  MediaSoupError);                                                                               \
+		REQUIRE_THROWS_AS(packet->Clone(rtpCommon::ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE(packet->Validate(/*storeExtensions*/ false));                                            \
 		std::free(originalBuffer);                                                                       \
 	} while (false)

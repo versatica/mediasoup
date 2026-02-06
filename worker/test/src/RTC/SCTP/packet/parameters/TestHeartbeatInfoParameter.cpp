@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("HeartbeatInfoParameter::Parse() succeeds")
 	{
@@ -32,16 +29,16 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = HeartbeatInfoParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::HeartbeatInfoParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 7);
@@ -57,18 +54,18 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 7);
@@ -84,20 +81,21 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(clonedParameter->HasInfo() == true);
 		REQUIRE(clonedParameter->GetInfoLength() == 7);
@@ -129,7 +127,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!HeartbeatInfoParameter::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::HeartbeatInfoParameter::Parse(buffer1, sizeof(buffer1)));
 
 		// Wrong Length field.
 		// clang-format off
@@ -144,7 +142,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!HeartbeatInfoParameter::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::HeartbeatInfoParameter::Parse(buffer2, sizeof(buffer2)));
 
 		// Wrong buffer length.
 		// clang-format off
@@ -159,21 +157,22 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!HeartbeatInfoParameter::Parse(buffer4, sizeof(buffer4)));
+		REQUIRE(!RTC::SCTP::HeartbeatInfoParameter::Parse(buffer4, sizeof(buffer4)));
 	}
 
 	SECTION("HeartbeatInfoParameter::Factory() succeeds")
 	{
-		auto* parameter = HeartbeatInfoParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* parameter = RTC::SCTP::HeartbeatInfoParameter::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == false);
 		REQUIRE(parameter->GetInfoLength() == 0);
@@ -181,7 +180,7 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		/* Modify it. */
 
 		// Verify that replacing the value works.
-		parameter->SetInfo(DataBuffer + 1000, 3000);
+		parameter->SetInfo(sctpCommon::DataBuffer + 1000, 3000);
 
 		REQUIRE(parameter->GetLength() == 3004);
 		REQUIRE(parameter->HasInfo() == true);
@@ -193,29 +192,29 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		REQUIRE(parameter->HasInfo() == false);
 		REQUIRE(parameter->GetInfoLength() == 0);
 
-		parameter->SetInfo(DataBuffer, 2);
+		parameter->SetInfo(sctpCommon::DataBuffer, 2);
 
 		REQUIRE(parameter->GetLength() == 8);
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 2);
 
-		parameter->SetInfo(DataBuffer + 2000, 2000);
+		parameter->SetInfo(sctpCommon::DataBuffer + 2000, 2000);
 
 		REQUIRE(parameter->GetLength() == 2004);
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 2000);
 
 		// Info length is 5 so 3 bytes of padding will be added.
-		parameter->SetInfo(DataBuffer, 5);
+		parameter->SetInfo(sctpCommon::DataBuffer, 5);
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->HasInfo() == true);
 		REQUIRE(parameter->GetInfoLength() == 5);
@@ -232,18 +231,18 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 		/* Parse itself and compare. */
 
 		auto* parsedParameter =
-		  HeartbeatInfoParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		  RTC::SCTP::HeartbeatInfoParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter->HasInfo() == true);
 		REQUIRE(parsedParameter->GetInfoLength() == 5);
@@ -262,27 +261,28 @@ SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 
 	SECTION("HeartbeatInfoParameter::SetInfo() throws if infoLength is too big")
 	{
-		auto* parameter = HeartbeatInfoParameter::Factory(ThrowBuffer, sizeof(ThrowBuffer));
+		auto* parameter = RTC::SCTP::HeartbeatInfoParameter::Factory(
+		  sctpCommon::ThrowBuffer, sizeof(sctpCommon::ThrowBuffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ ThrowBuffer,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 4,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
-		REQUIRE_THROWS_AS(parameter->SetInfo(ThrowBuffer, 65535), MediaSoupError);
+		REQUIRE_THROWS_AS(parameter->SetInfo(sctpCommon::ThrowBuffer, 65535), MediaSoupError);
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ ThrowBuffer,
-		  /*bufferLength*/ sizeof(ThrowBuffer),
+		  /*buffer*/ sctpCommon::ThrowBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::ThrowBuffer),
 		  /*length*/ 4,
-		  /*parameterType*/ Parameter::ParameterType::HEARTBEAT_INFO,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::HEARTBEAT_INFO,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		delete parameter;
 	}

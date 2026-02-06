@@ -8,12 +8,9 @@
 #include <cstring> // std::memset()
 #include <string>
 
-using namespace RTC::ICE;
-using namespace ICE_COMMON;
-
 SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 {
-	ResetBuffers();
+	iceCommon::ResetBuffers();
 
 	SECTION("StunPacket::Parse() a STUN request with message integrity and fingerprint succeeds")
 	{
@@ -65,14 +62,15 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<StunPacket> request{ StunPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
 		                  /*buffert*/ buffer,
 		                  /*bufferLength*/ sizeof(buffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg",
 		                  /*hasPriority*/ true,
@@ -98,7 +96,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
-		  StunPacket::AuthenticationResult::OK);
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
@@ -106,16 +104,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Serialize it. */
 
-		request->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		request->Serialize(iceCommon::SerializeBuffer, sizeof(iceCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ SerializeBuffer,
-		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*buffer*/ iceCommon::SerializeBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::SerializeBuffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg",
 		                  /*hasPriority*/ true,
@@ -138,7 +136,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
-		  StunPacket::AuthenticationResult::OK);
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
@@ -146,16 +144,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Clone it. */
 
-		request.reset(request->Clone(CloneBuffer, sizeof(CloneBuffer)));
+		request.reset(request->Clone(iceCommon::CloneBuffer, sizeof(iceCommon::CloneBuffer)));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(iceCommon::SerializeBuffer, 0x00, sizeof(iceCommon::SerializeBuffer));
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ CloneBuffer,
-		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*buffer*/ iceCommon::CloneBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::CloneBuffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ "78tal5pc6dkyv1rpg56vuay5je13cewm:s3Jg",
 		                  /*hasPriority*/ true,
@@ -178,7 +176,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
-		  StunPacket::AuthenticationResult::OK);
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
@@ -210,14 +208,15 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<StunPacket> successResponse{ StunPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::ICE::StunPacket> successResponse{ RTC::ICE::StunPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
 		                  /*buffert*/ buffer,
 		                  /*bufferLength*/ sizeof(buffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -256,16 +255,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Serialize it. */
 
-		successResponse->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		successResponse->Serialize(iceCommon::SerializeBuffer, sizeof(iceCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ SerializeBuffer,
-		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*buffer*/ iceCommon::SerializeBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::SerializeBuffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -288,16 +287,17 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Clone it. */
 
-		successResponse.reset(successResponse->Clone(CloneBuffer, sizeof(CloneBuffer)));
+		successResponse.reset(
+		  successResponse->Clone(iceCommon::CloneBuffer, sizeof(iceCommon::CloneBuffer)));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(iceCommon::SerializeBuffer, 0x00, sizeof(iceCommon::SerializeBuffer));
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ CloneBuffer,
-		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*buffer*/ iceCommon::CloneBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::CloneBuffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -363,14 +363,15 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		};
 		// clang-format on
 
-		std::unique_ptr<StunPacket> errorResponse{ StunPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ RTC::ICE::StunPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
 		                  /*buffert*/ buffer,
 		                  /*bufferLength*/ sizeof(buffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ "œæ€å∫∂",
 		                  /*hasPriority*/ false,
@@ -393,16 +394,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Serialize it. */
 
-		errorResponse->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorResponse->Serialize(iceCommon::SerializeBuffer, sizeof(iceCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ SerializeBuffer,
-		                  /*bufferLength*/ sizeof(SerializeBuffer),
+		                  /*buffer*/ iceCommon::SerializeBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::SerializeBuffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ "œæ€å∫∂",
 		                  /*hasPriority*/ false,
@@ -425,16 +426,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		/* Clone it. */
 
-		errorResponse.reset(errorResponse->Clone(CloneBuffer, sizeof(CloneBuffer)));
+		errorResponse.reset(errorResponse->Clone(iceCommon::CloneBuffer, sizeof(iceCommon::CloneBuffer)));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(iceCommon::SerializeBuffer, 0x00, sizeof(iceCommon::SerializeBuffer));
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ CloneBuffer,
-		                  /*bufferLength*/ sizeof(CloneBuffer),
+		                  /*buffer*/ iceCommon::CloneBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::CloneBuffer),
 		                  /*length*/ sizeof(buffer),
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ "œæ€å∫∂",
 		                  /*hasPriority*/ false,
@@ -459,26 +460,26 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 	SECTION("StunPacket::Factory() creating a request succeeds")
 	{
 		// clang-format off
-		uint8_t transactionId[StunPacket::TransactionIdLength] =
+		uint8_t transactionId[RTC::ICE::StunPacket::TransactionIdLength] =
 		{
 			0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
 			0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC
 		};
 		// clang-format on
 
-		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
-			FactoryBuffer,
-			sizeof(FactoryBuffer),
-			StunPacket::Class::REQUEST,
-			StunPacket::Method::BINDING,
+		std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::REQUEST,
+			RTC::ICE::StunPacket::Method::BINDING,
 			transactionId) };
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength,
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -537,11 +538,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE_THROWS_AS(request->AddErrorCode(errorCode, errorReasonPhrase), MediaSoupError);
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ username,
 		                  /*hasPriority*/ true,
@@ -565,20 +566,20 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  helpers::areBuffersEqual(
 		    request->GetTransactionId(),
-		    StunPacket::TransactionIdLength,
+		    RTC::ICE::StunPacket::TransactionIdLength,
 		    transactionId,
-		    StunPacket::TransactionIdLength));
+		    RTC::ICE::StunPacket::TransactionIdLength));
 
 		/* Serialize it. */
 
-		request->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		request->Serialize(iceCommon::SerializeBuffer, sizeof(iceCommon::SerializeBuffer));
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ SerializeBuffer,
-		                  /*bufferLength*/ sizeof(SerializeBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::SerializeBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::SerializeBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ username,
 		                  /*hasPriority*/ true,
@@ -602,22 +603,22 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  helpers::areBuffersEqual(
 		    request->GetTransactionId(),
-		    StunPacket::TransactionIdLength,
+		    RTC::ICE::StunPacket::TransactionIdLength,
 		    transactionId,
-		    StunPacket::TransactionIdLength));
+		    RTC::ICE::StunPacket::TransactionIdLength));
 
 		/* Clone it. */
 
-		request.reset(request->Clone(CloneBuffer, sizeof(CloneBuffer)));
+		request.reset(request->Clone(iceCommon::CloneBuffer, sizeof(iceCommon::CloneBuffer)));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(iceCommon::SerializeBuffer, 0x00, sizeof(iceCommon::SerializeBuffer));
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ CloneBuffer,
-		                  /*bufferLength*/ sizeof(CloneBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::CloneBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::CloneBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ username,
 		                  /*hasPriority*/ true,
@@ -641,9 +642,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  helpers::areBuffersEqual(
 		    request->GetTransactionId(),
-		    StunPacket::TransactionIdLength,
+		    RTC::ICE::StunPacket::TransactionIdLength,
 		    transactionId,
-		    StunPacket::TransactionIdLength));
+		    RTC::ICE::StunPacket::TransactionIdLength));
 
 		/* Protect the STUN Packet. */
 
@@ -652,12 +653,12 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		request->Protect(password);
 
 		CHECK_STUN_PACKET(/*packet*/ request.get(),
-		                  /*buffer*/ CloneBuffer,
-		                  /*bufferLength*/ sizeof(CloneBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
-		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
-		                  /*klass*/ StunPacket::Class::REQUEST,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::CloneBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::CloneBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    RTC::ICE::StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::REQUEST,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ true,
 		                  /*username*/ username,
 		                  /*hasPriority*/ true,
@@ -680,7 +681,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		REQUIRE(
 		  request->CheckAuthentication(usernameFragment1, password) ==
-		  StunPacket::AuthenticationResult::OK);
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(request->Protect("qweqwe"), MediaSoupError);
@@ -689,18 +690,18 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::Factory() creating a success response succeeds")
 	{
-		std::unique_ptr<StunPacket> successResponse{ StunPacket::Factory(
-			FactoryBuffer,
-			sizeof(FactoryBuffer),
-			StunPacket::Class::SUCCESS_RESPONSE,
-			StunPacket::Method::BINDING) };
+		std::unique_ptr<RTC::ICE::StunPacket> successResponse{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+			RTC::ICE::StunPacket::Method::BINDING) };
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength,
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -737,11 +738,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		successResponse->AddXorMappedAddress(xorMappedAddress);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -778,16 +779,16 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(ip == Utils::IP::NormalizeIp(expectedIp));
 		REQUIRE(port == 5678);
 
-		std::memset(FactoryBuffer, 0x00, sizeof(FactoryBuffer));
+		std::memset(iceCommon::FactoryBuffer, 0x00, sizeof(iceCommon::FactoryBuffer));
 
 		/* Create a new fresh success response. */
 
 		successResponse.reset(
-		  StunPacket::Factory(
-		    FactoryBuffer,
-		    sizeof(FactoryBuffer),
-		    StunPacket::Class::SUCCESS_RESPONSE,
-		    StunPacket::Method::BINDING));
+		  RTC::ICE::StunPacket::Factory(
+		    iceCommon::FactoryBuffer,
+		    sizeof(iceCommon::FactoryBuffer),
+		    RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		    RTC::ICE::StunPacket::Method::BINDING));
 
 		// Byte length: 20.
 		auto* xorMappedAddressIn6 =
@@ -802,11 +803,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		successResponse->AddXorMappedAddress(xorMappedAddress);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -844,12 +845,12 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		successResponse->Protect(password);
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
-		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    RTC::ICE::StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -870,7 +871,9 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
 
-		REQUIRE(successResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::OK);
+		REQUIRE(
+		  successResponse->CheckAuthentication(password) ==
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(successResponse->Protect("qweqwe"), MediaSoupError);
@@ -879,18 +882,18 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::Factory() creating an error response succeeds")
 	{
-		std::unique_ptr<StunPacket> errorResponse{ StunPacket::Factory(
-			FactoryBuffer,
-			sizeof(FactoryBuffer),
-			StunPacket::Class::ERROR_RESPONSE,
-			StunPacket::Method::BINDING) };
+		std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+			RTC::ICE::StunPacket::Method::BINDING) };
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -921,11 +924,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		errorResponse->AddErrorCode(errorCode, errorReasonPhrase);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -953,12 +956,12 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		errorResponse->Protect(password);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
-		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    RTC::ICE::StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -979,7 +982,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasMessageIntegrity*/ true,
 		                  /*hasFingerprint*/ true);
 
-		REQUIRE(errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::OK);
+		REQUIRE(
+		  errorResponse->CheckAuthentication(password) == RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
@@ -988,11 +992,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		/* Create a new fresh error response. */
 
 		errorResponse.reset(
-		  StunPacket::Factory(
-		    FactoryBuffer,
-		    sizeof(FactoryBuffer),
-		    StunPacket::Class::ERROR_RESPONSE,
-		    StunPacket::Method::BINDING));
+		  RTC::ICE::StunPacket::Factory(
+		    iceCommon::FactoryBuffer,
+		    sizeof(iceCommon::FactoryBuffer),
+		    RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		    RTC::ICE::StunPacket::Method::BINDING));
 
 		// Byte length: 4 + 11 (1 byte of padding needed).
 		errorCode         = 400;
@@ -1004,11 +1008,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		errorResponse->AddErrorCode(errorCode, errorReasonPhrase);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -1035,11 +1039,11 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		errorResponse->Protect();
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ FactoryBuffer,
-		                  /*bufferLength*/ sizeof(FactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 + 4,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::FactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::FactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen + 4 + 4,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -1062,7 +1066,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 		// Cannot check authentication in a STUN Packet without MESSAGE-INTEGRITY.
 		REQUIRE(
-		  errorResponse->CheckAuthentication(password) == StunPacket::AuthenticationResult::BAD_MESSAGE);
+		  errorResponse->CheckAuthentication(password) ==
+		  RTC::ICE::StunPacket::AuthenticationResult::BAD_MESSAGE);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);
@@ -1071,18 +1076,21 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::CreateSuccessResponse() succeeds")
 	{
-		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
-			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
+		std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::REQUEST,
+			RTC::ICE::StunPacket::Method::BINDING) };
 
-		std::unique_ptr<StunPacket> successResponse{ request->CreateSuccessResponse(
-			ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer)) };
+		std::unique_ptr<RTC::ICE::StunPacket> successResponse{ request->CreateSuccessResponse(
+			iceCommon::ResponseFactoryBuffer, sizeof(iceCommon::ResponseFactoryBuffer)) };
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ ResponseFactoryBuffer,
-		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength,
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::ResponseFactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -1106,19 +1114,19 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  helpers::areBuffersEqual(
 		    successResponse->GetTransactionId(),
-		    StunPacket::TransactionIdLength,
+		    RTC::ICE::StunPacket::TransactionIdLength,
 		    request->GetTransactionId(),
-		    StunPacket::TransactionIdLength) == true);
+		    RTC::ICE::StunPacket::TransactionIdLength) == true);
 
 		successResponse->Protect("qwekqjhwekjahsd");
 
 		CHECK_STUN_PACKET(/*packet*/ successResponse.get(),
-		                  /*buffer*/ ResponseFactoryBuffer,
-		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + 4 +
-		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
-		                  /*klass*/ StunPacket::Class::SUCCESS_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::ResponseFactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + 4 +
+		                    RTC::ICE::StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::SUCCESS_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -1140,7 +1148,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ true);
 
 		REQUIRE(
-		  successResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
+		  successResponse->CheckAuthentication("qwekqjhwekjahsd") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(successResponse->Protect("qweqwe"), MediaSoupError);
@@ -1149,21 +1158,24 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 
 	SECTION("StunPacket::CreateErrorResponse() succeeds")
 	{
-		std::unique_ptr<StunPacket> request{ StunPacket::Factory(
-			FactoryBuffer, sizeof(FactoryBuffer), StunPacket::Class::REQUEST, StunPacket::Method::BINDING) };
+		std::unique_ptr<RTC::ICE::StunPacket> request{ RTC::ICE::StunPacket::Factory(
+			iceCommon::FactoryBuffer,
+			sizeof(iceCommon::FactoryBuffer),
+			RTC::ICE::StunPacket::Class::REQUEST,
+			RTC::ICE::StunPacket::Method::BINDING) };
 
-		std::unique_ptr<StunPacket> errorResponse{ request->CreateErrorResponse(
-			ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer), 666, "BAD STUFF") };
+		std::unique_ptr<RTC::ICE::StunPacket> errorResponse{ request->CreateErrorResponse(
+			iceCommon::ResponseFactoryBuffer, sizeof(iceCommon::ResponseFactoryBuffer), 666, "BAD STUFF") };
 
 		// Total length of the Attributes (ERROR-CODE).
 		const size_t attributesLen = (4 + 4 + 9 + 3);
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ ResponseFactoryBuffer,
-		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::ResponseFactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -1187,19 +1199,19 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		REQUIRE(
 		  helpers::areBuffersEqual(
 		    errorResponse->GetTransactionId(),
-		    StunPacket::TransactionIdLength,
+		    RTC::ICE::StunPacket::TransactionIdLength,
 		    request->GetTransactionId(),
-		    StunPacket::TransactionIdLength) == true);
+		    RTC::ICE::StunPacket::TransactionIdLength) == true);
 
 		errorResponse->Protect("qwekqjhwekjahsd");
 
 		CHECK_STUN_PACKET(/*packet*/ errorResponse.get(),
-		                  /*buffer*/ ResponseFactoryBuffer,
-		                  /*bufferLength*/ sizeof(ResponseFactoryBuffer),
-		                  /*length*/ StunPacket::FixedHeaderLength + attributesLen + 4 +
-		                    StunPacket::MessageIntegrityAttributeLength + 4 + 4,
-		                  /*klass*/ StunPacket::Class::ERROR_RESPONSE,
-		                  /*method*/ StunPacket::Method::BINDING,
+		                  /*buffer*/ iceCommon::ResponseFactoryBuffer,
+		                  /*bufferLength*/ sizeof(iceCommon::ResponseFactoryBuffer),
+		                  /*length*/ RTC::ICE::StunPacket::FixedHeaderLength + attributesLen + 4 +
+		                    RTC::ICE::StunPacket::MessageIntegrityAttributeLength + 4 + 4,
+		                  /*klass*/ RTC::ICE::StunPacket::Class::ERROR_RESPONSE,
+		                  /*method*/ RTC::ICE::StunPacket::Method::BINDING,
 		                  /*hasUsername*/ false,
 		                  /*username*/ "",
 		                  /*hasPriority*/ false,
@@ -1221,7 +1233,8 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ true);
 
 		REQUIRE(
-		  errorResponse->CheckAuthentication("qwekqjhwekjahsd") == StunPacket::AuthenticationResult::OK);
+		  errorResponse->CheckAuthentication("qwekqjhwekjahsd") ==
+		  RTC::ICE::StunPacket::AuthenticationResult::OK);
 
 		// Trying to modify a STUN Packet once protected must throw.
 		REQUIRE_THROWS_AS(errorResponse->Protect("qweqwe"), MediaSoupError);

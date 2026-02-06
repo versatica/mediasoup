@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("OutgoingSsnResetRequestParameter::Parse() succeeds")
 	{
@@ -35,16 +32,16 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = OutgoingSsnResetRequestParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::OutgoingSsnResetRequestParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 24,
-		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 0x55667788);
@@ -56,18 +53,18 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 24,
-		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 0x55667788);
@@ -79,20 +76,21 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 24,
-		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(clonedParameter->GetReconfigurationRequestSequenceNumber() == 0x11223344);
 		REQUIRE(clonedParameter->GetReconfigurationResponseSequenceNumber() == 0x55667788);
@@ -107,16 +105,17 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 
 	SECTION("OutgoingSsnResetRequestParameter::Factory() succeeds")
 	{
-		auto* parameter = OutgoingSsnResetRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* parameter = RTC::SCTP::OutgoingSsnResetRequestParameter::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
-		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 0);
@@ -136,12 +135,12 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 28,
-		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 111000);
 		REQUIRE(parameter->GetReconfigurationResponseSequenceNumber() == 222000);
@@ -155,19 +154,19 @@ SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter =
-		  OutgoingSsnResetRequestParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		auto* parsedParameter = RTC::SCTP::OutgoingSsnResetRequestParameter::Parse(
+		  parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 28,
 		  /*length*/ 28,
-		  /*parameterType*/ Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::OUTGOING_SSN_RESET_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetReconfigurationRequestSequenceNumber() == 111000);
 		REQUIRE(parsedParameter->GetReconfigurationResponseSequenceNumber() == 222000);

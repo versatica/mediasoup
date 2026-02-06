@@ -7,12 +7,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("MissingMandatoryParameterErrorCause::Parse() succeeds")
 	{
@@ -34,67 +31,81 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* errorCause = MissingMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer));
+		auto* errorCause = RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 16,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(0) == RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(1) == RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(2) ==
+		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
 
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 16,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(0) == RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(1) == RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(2) ==
+		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
 
 		// /* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 16,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(clonedErrorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
-		REQUIRE(clonedErrorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
 		REQUIRE(
-		  clonedErrorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
+		  clonedErrorCause->GetMissingParameterTypeAt(0) ==
+		  RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(
+		  clonedErrorCause->GetMissingParameterTypeAt(1) ==
+		  RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(
+		  clonedErrorCause->GetMissingParameterTypeAt(2) ==
+		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(clonedErrorCause->GetBuffer()[14] == 0);
 		REQUIRE(clonedErrorCause->GetBuffer()[15] == 0);
@@ -119,7 +130,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!MissingMandatoryParameterErrorCause::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer1, sizeof(buffer1)));
 
 		// Length field doesn't match Number of missing parameters.
 		// clang-format off
@@ -137,7 +148,7 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!MissingMandatoryParameterErrorCause::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer2, sizeof(buffer2)));
 
 		// Wrong Length field (smaller than buffer).
 		// clang-format off
@@ -152,66 +163,75 @@ SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		REQUIRE(!MissingMandatoryParameterErrorCause::Parse(buffer3, sizeof(buffer3)));
+		REQUIRE(!RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(buffer3, sizeof(buffer3)));
 	}
 
 	SECTION("MissingMandatoryParameterErrorCause::Factory() succeeds")
 	{
-		auto* errorCause =
-		  MissingMandatoryParameterErrorCause::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::MissingMandatoryParameterErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 8,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 0);
 
 		/* Modify it. */
 
-		errorCause->AddMissingParameterType(Parameter::ParameterType::IPV4_ADDRESS);
-		errorCause->AddMissingParameterType(Parameter::ParameterType::IPV6_ADDRESS);
-		errorCause->AddMissingParameterType(Parameter::ParameterType::COOKIE_PRESERVATIVE);
+		errorCause->AddMissingParameterType(RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		errorCause->AddMissingParameterType(RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		errorCause->AddMissingParameterType(RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 16,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
-		REQUIRE(errorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(0) == RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(1) == RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(
+		  errorCause->GetMissingParameterTypeAt(2) ==
+		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(errorCause->GetBuffer()[14] == 0);
 		REQUIRE(errorCause->GetBuffer()[15] == 0);
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause =
-		  MissingMandatoryParameterErrorCause::Parse(errorCause->GetBuffer(), errorCause->GetLength());
+		auto* parsedErrorCause = RTC::SCTP::MissingMandatoryParameterErrorCause::Parse(
+		  errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 16,
 		  /*length*/ 16,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::MISSING_MANDATORY_PARAMETER,
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->GetNumberOfMissingParameters() == 3);
-		REQUIRE(parsedErrorCause->GetMissingParameterTypeAt(0) == Parameter::ParameterType::IPV4_ADDRESS);
-		REQUIRE(parsedErrorCause->GetMissingParameterTypeAt(1) == Parameter::ParameterType::IPV6_ADDRESS);
 		REQUIRE(
-		  parsedErrorCause->GetMissingParameterTypeAt(2) == Parameter::ParameterType::COOKIE_PRESERVATIVE);
+		  parsedErrorCause->GetMissingParameterTypeAt(0) ==
+		  RTC::SCTP::Parameter::ParameterType::IPV4_ADDRESS);
+		REQUIRE(
+		  parsedErrorCause->GetMissingParameterTypeAt(1) ==
+		  RTC::SCTP::Parameter::ParameterType::IPV6_ADDRESS);
+		REQUIRE(
+		  parsedErrorCause->GetMissingParameterTypeAt(2) ==
+		  RTC::SCTP::Parameter::ParameterType::COOKIE_PRESERVATIVE);
 		// These should be padding.
 		REQUIRE(parsedErrorCause->GetBuffer()[14] == 0);
 		REQUIRE(parsedErrorCause->GetBuffer()[15] == 0);

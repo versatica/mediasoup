@@ -1,7 +1,7 @@
 #include "RTC/RTP/rtpCommon.hpp" // in worker/test/include/
 #include <cstring>               // std::memset
 
-namespace RTP_COMMON
+namespace rtpCommon
 {
 	thread_local uint8_t FactoryBuffer[];
 	thread_local uint8_t SerializeBuffer[];
@@ -22,4 +22,4 @@ namespace RTP_COMMON
 			DataBuffer[i] = static_cast<uint8_t>(i);
 		}
 	}
-} // namespace RTP_COMMON
+} // namespace rtpCommon

@@ -1,7 +1,7 @@
 #include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
 #include <cstring>                 // std::memset
 
-namespace SCTP_COMMON
+namespace sctpCommon
 {
 	thread_local uint8_t FactoryBuffer[];
 	thread_local uint8_t SerializeBuffer[];
@@ -19,7 +19,7 @@ namespace SCTP_COMMON
 
 		for (size_t i = 0; i < 256; ++i)
 		{
-			DataBuffer[i] = static_cast<uint8_t>(i);
+			sctpCommon::DataBuffer[i] = static_cast<uint8_t>(i);
 		}
 	}
-} // namespace SCTP_COMMON
+} // namespace sctpCommon

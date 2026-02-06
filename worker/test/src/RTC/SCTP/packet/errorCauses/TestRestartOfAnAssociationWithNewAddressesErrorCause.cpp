@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("RestartOfAnAssociationWithNewAddressesErrorCause::Parse() succeeds")
 	{
@@ -31,14 +28,14 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		// clang-format on
 
 		auto* errorCause =
-		  RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer, sizeof(buffer));
+		  RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasNewAddressTlvs() == true);
@@ -55,16 +52,16 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 
 		/* Serialize it. */
 
-		errorCause->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		errorCause->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasNewAddressTlvs() == true);
@@ -81,18 +78,19 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 
 		/* Clone it. */
 
-		auto* clonedErrorCause = errorCause->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedErrorCause =
+		  errorCause->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ clonedErrorCause,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
 		REQUIRE(clonedErrorCause->HasNewAddressTlvs() == true);
@@ -123,7 +121,8 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		};
 		// clang-format on
 
-		REQUIRE(!RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer1, sizeof(buffer1)));
+		REQUIRE(!RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(
+		  buffer1, sizeof(buffer1)));
 
 		// Wrong buffer length.
 		// clang-format off
@@ -136,20 +135,21 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		};
 		// clang-format on
 
-		REQUIRE(!RestartOfAnAssociationWithNewAddressesErrorCause::Parse(buffer2, sizeof(buffer2)));
+		REQUIRE(!RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(
+		  buffer2, sizeof(buffer2)));
 	}
 
 	SECTION("RestartOfAnAssociationWithNewAddressesErrorCause::Factory() succeeds")
 	{
-		auto* errorCause = RestartOfAnAssociationWithNewAddressesErrorCause::Factory(
-		  FactoryBuffer, sizeof(FactoryBuffer));
+		auto* errorCause = RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 4,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasNewAddressTlvs() == false);
@@ -158,7 +158,7 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		/* Modify it. */
 
 		// Verify that replacing the value works.
-		errorCause->SetNewAddressTlvs(DataBuffer + 1000, 3000);
+		errorCause->SetNewAddressTlvs(sctpCommon::DataBuffer + 1000, 3000);
 
 		REQUIRE(errorCause->GetLength() == 3004);
 		REQUIRE(errorCause->HasNewAddressTlvs() == true);
@@ -171,14 +171,14 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 		REQUIRE(errorCause->GetNewAddressTlvsLength() == 0);
 
 		// 6 bytes + 2 bytes of padding.
-		errorCause->SetNewAddressTlvs(DataBuffer, 6);
+		errorCause->SetNewAddressTlvs(sctpCommon::DataBuffer, 6);
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ errorCause,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
 		REQUIRE(errorCause->HasNewAddressTlvs() == true);
@@ -195,17 +195,17 @@ SCENARIO("Restart of an Association with New Addresses Error Cause (11)", "[sctp
 
 		/* Parse itself and compare. */
 
-		auto* parsedErrorCause = RestartOfAnAssociationWithNewAddressesErrorCause::Parse(
+		auto* parsedErrorCause = RTC::SCTP::RestartOfAnAssociationWithNewAddressesErrorCause::Parse(
 		  errorCause->GetBuffer(), errorCause->GetLength());
 
 		delete errorCause;
 
 		CHECK_SCTP_ERROR_CAUSE(
 		  /*errorCause*/ parsedErrorCause,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*causeCode*/ ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
+		  /*causeCode*/ RTC::SCTP::ErrorCause::ErrorCauseCode::RESTART_OF_AN_ASSOCIATION_WITH_NEW_ADDRESSES,
 		  /*unknownCode*/ false);
 
 		REQUIRE(parsedErrorCause->HasNewAddressTlvs() == true);

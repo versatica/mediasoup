@@ -6,12 +6,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-using namespace RTC::SCTP;
-using namespace SCTP_COMMON;
-
 SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 {
-	ResetBuffers();
+	sctpCommon::ResetBuffers();
 
 	SECTION("AddOutgoingStreamsRequestParameter::Parse() succeeds")
 	{
@@ -30,54 +27,55 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 		};
 		// clang-format on
 
-		auto* parameter = AddOutgoingStreamsRequestParameter::Parse(buffer, sizeof(buffer));
+		auto* parameter = RTC::SCTP::AddOutgoingStreamsRequestParameter::Parse(buffer, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
 		  /*buffer*/ buffer,
 		  /*bufferLength*/ sizeof(buffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 666777888);
 		REQUIRE(parameter->GetNumberOfNewStreams() == 1024);
 
 		/* Serialize it. */
 
-		parameter->Serialize(SerializeBuffer, sizeof(SerializeBuffer));
+		parameter->Serialize(sctpCommon::SerializeBuffer, sizeof(sctpCommon::SerializeBuffer));
 
 		std::memset(buffer, 0x00, sizeof(buffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ SerializeBuffer,
-		  /*bufferLength*/ sizeof(SerializeBuffer),
+		  /*buffer*/ sctpCommon::SerializeBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::SerializeBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 666777888);
 		REQUIRE(parameter->GetNumberOfNewStreams() == 1024);
 
 		/* Clone it. */
 
-		auto* clonedParameter = parameter->Clone(CloneBuffer, sizeof(CloneBuffer));
+		auto* clonedParameter =
+		  parameter->Clone(sctpCommon::CloneBuffer, sizeof(sctpCommon::CloneBuffer));
 
-		std::memset(SerializeBuffer, 0x00, sizeof(SerializeBuffer));
+		std::memset(sctpCommon::SerializeBuffer, 0x00, sizeof(sctpCommon::SerializeBuffer));
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ clonedParameter,
-		  /*buffer*/ CloneBuffer,
-		  /*bufferLength*/ sizeof(CloneBuffer),
+		  /*buffer*/ sctpCommon::CloneBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::CloneBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(clonedParameter->GetReconfigurationRequestSequenceNumber() == 666777888);
 		REQUIRE(clonedParameter->GetNumberOfNewStreams() == 1024);
@@ -87,17 +85,17 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 
 	SECTION("AddOutgoingStreamsRequestParameter::Factory() succeeds")
 	{
-		auto* parameter =
-		  AddOutgoingStreamsRequestParameter::Factory(FactoryBuffer, sizeof(FactoryBuffer));
+		auto* parameter = RTC::SCTP::AddOutgoingStreamsRequestParameter::Factory(
+		  sctpCommon::FactoryBuffer, sizeof(sctpCommon::FactoryBuffer));
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 0);
 		REQUIRE(parameter->GetNumberOfNewStreams() == 0);
@@ -109,31 +107,31 @@ SCENARIO("Add Outgoing Streams Request Parameter (17)", "[sctp][serializable]")
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parameter,
-		  /*buffer*/ FactoryBuffer,
-		  /*bufferLength*/ sizeof(FactoryBuffer),
+		  /*buffer*/ sctpCommon::FactoryBuffer,
+		  /*bufferLength*/ sizeof(sctpCommon::FactoryBuffer),
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parameter->GetReconfigurationRequestSequenceNumber() == 12345678);
 		REQUIRE(parameter->GetNumberOfNewStreams() == 2048);
 
 		/* Parse itself and compare. */
 
-		auto* parsedParameter =
-		  AddOutgoingStreamsRequestParameter::Parse(parameter->GetBuffer(), parameter->GetLength());
+		auto* parsedParameter = RTC::SCTP::AddOutgoingStreamsRequestParameter::Parse(
+		  parameter->GetBuffer(), parameter->GetLength());
 
 		delete parameter;
 
 		CHECK_SCTP_PARAMETER(
 		  /*parameter*/ parsedParameter,
-		  /*buffer*/ FactoryBuffer,
+		  /*buffer*/ sctpCommon::FactoryBuffer,
 		  /*bufferLength*/ 12,
 		  /*length*/ 12,
-		  /*parameterType*/ Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
+		  /*parameterType*/ RTC::SCTP::Parameter::ParameterType::ADD_OUTGOING_STREAMS_REQUEST,
 		  /*unknownType*/ false,
-		  /*actionForUnknownParameterType*/ Parameter::ActionForUnknownParameterType::STOP);
+		  /*actionForUnknownParameterType*/ RTC::SCTP::Parameter::ActionForUnknownParameterType::STOP);
 
 		REQUIRE(parsedParameter->GetReconfigurationRequestSequenceNumber() == 12345678);
 		REQUIRE(parsedParameter->GetNumberOfNewStreams() == 2048);

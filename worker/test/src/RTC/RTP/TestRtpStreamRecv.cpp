@@ -6,8 +6,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-using namespace RTC;
-
 // 17: 16 bit mask + the initial sequence number.
 static constexpr size_t MaxRequestedPackets{ 17 };
 static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
@@ -15,22 +13,23 @@ static const bool UseRtpInactivityCheck{ false };
 
 SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 {
-	class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
+	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener
 	{
 	public:
-		void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+		void OnRtpStreamScore(
+		  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 		{
 		}
 
-		void OnRtpStreamSendRtcpPacket(RTP::RtpStreamRecv* /*rtpStream*/, RTCP::Packet* packet) override
+		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* /*rtpStream*/, RTC::RTCP::Packet* packet) override
 		{
 			switch (packet->GetType())
 			{
-				case RTCP::Type::PSFB:
+				case RTC::RTCP::Type::PSFB:
 				{
-					switch (dynamic_cast<RTCP::FeedbackPsPacket*>(packet)->GetMessageType())
+					switch (dynamic_cast<RTC::RTCP::FeedbackPsPacket*>(packet)->GetMessageType())
 					{
-						case RTCP::FeedbackPs::MessageType::PLI:
+						case RTC::RTCP::FeedbackPs::MessageType::PLI:
 						{
 							INFO("PLI required");
 
@@ -42,7 +41,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 							break;
 						}
 
-						case RTCP::FeedbackPs::MessageType::FIR:
+						case RTC::RTCP::FeedbackPs::MessageType::FIR:
 						{
 							INFO("FIR required");
 
@@ -60,11 +59,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 					break;
 				}
 
-				case RTCP::Type::RTPFB:
+				case RTC::RTCP::Type::RTPFB:
 				{
-					switch (dynamic_cast<RTCP::FeedbackRtpPacket*>(packet)->GetMessageType())
+					switch (dynamic_cast<RTC::RTCP::FeedbackRtpPacket*>(packet)->GetMessageType())
 					{
-						case RTCP::FeedbackRtp::MessageType::NACK:
+						case RTC::RTCP::FeedbackRtp::MessageType::NACK:
 						{
 							INFO("NACK required");
 
@@ -72,11 +71,11 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 
 							this->shouldTriggerNack = false;
 
-							auto* nackPacket = dynamic_cast<RTCP::FeedbackRtpNackPacket*>(packet);
+							auto* nackPacket = dynamic_cast<RTC::RTCP::FeedbackRtpNackPacket*>(packet);
 
 							for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 							{
-								const RTCP::FeedbackRtpNackItem* item = *it;
+								const RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
 								const uint16_t firstSeq = item->GetPacketId();
 								uint16_t bitmask        = item->GetLostPacketBitmask();
@@ -108,7 +107,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 		}
 
 		void OnRtpStreamNeedWorstRemoteFractionLost(
-		  RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
 		{
 		}
 
@@ -129,14 +128,14 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	};
 	// clang-format on
 
-	std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(buffer, 12, 12 + 4) };
+	std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, 12, 12 + 4) };
 
 	if (!packet)
 	{
 		FAIL("not a RTP packet");
 	}
 
-	RTP::RtpStream::Params params;
+	RTC::RTP::RtpStream::Params params;
 
 	params.ssrc           = packet->GetSsrc();
 	params.rtxSsrc        = 1234;
@@ -149,7 +148,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("NACK one packet")
 	{
 		RtpStreamRecvListener listener;
-		RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet.get());
@@ -178,7 +177,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("receive RTX before corresponding RTP")
 	{
 		RtpStreamRecvListener listener;
-		RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet.get());
@@ -211,7 +210,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("wrapping sequence numbers")
 	{
 		RtpStreamRecvListener listener;
-		RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(0xfffe);
 		rtpStream.ReceivePacket(packet.get());
@@ -231,7 +230,7 @@ SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 	SECTION("require key frame")
 	{
 		RtpStreamRecvListener listener;
-		RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
+		RTC::RTP::RtpStreamRecv rtpStream(&listener, params, SendNackDelay, UseRtpInactivityCheck);
 
 		packet->SetSequenceNumber(1);
 		rtpStream.ReceivePacket(packet.get());
