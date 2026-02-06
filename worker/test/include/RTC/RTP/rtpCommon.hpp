@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "MediaSoupErrors.hpp"          // IWYU pragma: export
-#include "testHelpers.hpp"              // IWYU pragma: export in worker/test/include/
+#include "testHelpers.hpp"              // IWYU pragma: export
 #include "RTC/RTP/Packet.hpp"           // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp> // IWYU pragma: export
 #include <cstdlib>                      // std::malloc(), std::free()
@@ -107,9 +107,9 @@ namespace RTP_COMMON
 		if (!hasPadding)                                                                                 \
 		{                                                                                                \
 			REQUIRE_NOTHROW(packet->SetPayload(packet->GetPayload(), packet->GetPayloadLength()));         \
-			REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
+			REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
 			REQUIRE_NOTHROW(packet->SetPayloadLength(packet->GetPayloadLength()));                         \
-			REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
+			REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
 		}                                                                                                \
 		REQUIRE_THROWS_AS(packet->SetPayload(DataBuffer, packet->GetBufferLength()), MediaSoupError);    \
 		REQUIRE_THROWS_AS(packet->SetPayloadLength(packet->GetBufferLength()), MediaSoupError);          \
@@ -117,9 +117,9 @@ namespace RTP_COMMON
 		if (packet->IsPaddedTo4Bytes() && packet->GetPaddingLength() < 4)                                \
 		{                                                                                                \
 			REQUIRE_NOTHROW(packet->PadTo4Bytes());                                                        \
-			REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
+			REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true); \
 		}                                                                                                \
-		REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);   \
+		REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);   \
 		REQUIRE_THROWS_AS(                                                                               \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);              \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                       \

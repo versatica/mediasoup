@@ -7,11 +7,13 @@
 #include "RTC/SCTP/packet/errorCauses/OutOfResourceErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnknownErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/UnrecognizedChunkTypeErrorCause.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-// NOLINTNEXTLINE (readability-function-size)
+using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
+
 SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
 {
 	ResetBuffers();

@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS AFB parsing", "[parser][rtcp][feedback-ps][afb]")
+SCENARIO("RTCP Feedback PS AFB", "[rtcp][feedback-ps][afb]")
 {
 	// RTCP AFB packet.
 

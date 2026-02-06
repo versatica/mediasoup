@@ -7,46 +7,47 @@
 
 using namespace RTC;
 
-struct TestRateCalculatorData
+SCENARIO("RateCalculator", "[rate-calculator]")
 {
-	int64_t offset;
-	uint32_t size;
-	uint32_t rate;
-};
-
-void validate(RateCalculator& rate, uint64_t timeBase, std::vector<TestRateCalculatorData>& input)
-{
-	for (auto& item : input)
+	struct TestRateCalculatorData
 	{
-		rate.Update(item.size, timeBase + item.offset);
+		int64_t offset;
+		uint32_t size;
+		uint32_t rate;
+	};
 
-		REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
-	}
-
-	// Repeat forcing nowMs to be 0.
-	rate.Reset();
-
-	for (auto& item : input)
+	auto validate =
+	  [](RateCalculator& rate, uint64_t timeBase, std::vector<TestRateCalculatorData>& input)
 	{
-		rate.Update(item.size, timeBase + item.offset);
+		for (auto& item : input)
+		{
+			rate.Update(item.size, timeBase + item.offset);
 
-		REQUIRE(rate.GetRate(0 + item.offset) == item.rate);
-	}
+			REQUIRE(rate.GetRate(timeBase + item.offset) == item.rate);
+		}
 
-	// Repeat forcing nowMs to be std::numeric_limits<uint64_t>::max() - 100.
-	rate.Reset();
+		// Repeat forcing nowMs to be 0.
+		rate.Reset();
 
-	for (auto& item : input)
-	{
-		rate.Update(item.size, timeBase + item.offset);
+		for (auto& item : input)
+		{
+			rate.Update(item.size, timeBase + item.offset);
 
-		REQUIRE(rate.GetRate(std::numeric_limits<uint64_t>::max() - 100 + item.offset) == item.rate);
-	}
-}
+			REQUIRE(rate.GetRate(0 + item.offset) == item.rate);
+		}
 
-SCENARIO("Rate calculator", "[rtp][RateCalculator]")
-{
-	uint64_t nowMs = DepLibUV::GetTimeMs();
+		// Repeat forcing nowMs to be std::numeric_limits<uint64_t>::max() - 100.
+		rate.Reset();
+
+		for (auto& item : input)
+		{
+			rate.Update(item.size, timeBase + item.offset);
+
+			REQUIRE(rate.GetRate(std::numeric_limits<uint64_t>::max() - 100 + item.offset) == item.rate);
+		}
+	};
+
+	const auto nowMs = DepLibUV::GetTimeMs();
 
 	SECTION("receive single item per 1000 ms")
 	{

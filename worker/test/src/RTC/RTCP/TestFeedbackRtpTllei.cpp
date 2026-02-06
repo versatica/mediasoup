@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feeback RTP TLLEI parsing", "[parser][rtcp][feedback-rtp][tllei]")
+SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 {
 	// RTCP TLLEI packet.
 

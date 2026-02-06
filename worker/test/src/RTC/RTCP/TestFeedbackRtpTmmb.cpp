@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feeback RTP TMMBR parsing", "[parser][rtcp][feedback-rtp][tmmb]")
+SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 {
 	// RTCP TMMBR packet.
 

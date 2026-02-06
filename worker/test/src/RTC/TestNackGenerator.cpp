@@ -11,7 +11,7 @@
 using namespace RTC;
 using namespace RTP_COMMON;
 
-SCENARIO("NACK generator", "[rtp][rtcp]")
+SCENARIO("NACK generator", "[rtp][rtcp][nack]")
 {
 	constexpr unsigned int SendNackDelay{ 0u }; // In ms.
 

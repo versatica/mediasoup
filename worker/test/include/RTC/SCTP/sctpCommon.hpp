@@ -2,34 +2,32 @@
 #define MS_TEST_RTC_SCTP_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"            // IWYU pragma: export
-#include "Utils.hpp"                      // IWYU pragma: export
-#include "testHelpers.hpp"                // IWYU pragma: export in worker/test/include/
-#include "RTC/SCTP/packet/Chunk.hpp"      // IWYU pragma: export
-#include "RTC/SCTP/packet/ErrorCause.hpp" // IWYU pragma: export
-#include "RTC/SCTP/packet/Packet.hpp"     // IWYU pragma: export
-#include "RTC/SCTP/packet/Parameter.hpp"  // IWYU pragma: export
+#include "MediaSoupErrors.hpp"                                               // IWYU pragma: export
+#include "Utils.hpp"                                                         // IWYU pragma: export
+#include "testHelpers.hpp"                                                   // IWYU pragma: export
+#include "RTC/SCTP/packet/Chunk.hpp"                                         // IWYU pragma: export
+#include "RTC/SCTP/packet/ErrorCause.hpp"                                    // IWYU pragma: export
+#include "RTC/SCTP/packet/Packet.hpp"                                        // IWYU pragma: export
+#include "RTC/SCTP/packet/Parameter.hpp"                                     // IWYU pragma: export
 #include "RTC/SCTP/packet/errorCauses/InvalidStreamIdentifierErrorCause.hpp" // IWYU pragma: export
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"             // IWYU pragma: export
 #include <catch2/catch_test_macros.hpp>                                      // IWYU pragma: export
 
 using namespace RTC::SCTP;
 
-namespace RTC
+namespace SCTP_COMMON
 {
-	namespace SCTP
-	{
-		// NOTE: We need to declare them here with `extern` and then define them in
-		// common.cpp.
-		extern thread_local uint8_t FactoryBuffer[66661];
-		extern thread_local uint8_t SerializeBuffer[66662];
-		extern thread_local uint8_t CloneBuffer[66663];
-		extern thread_local uint8_t DataBuffer[66664];
-		extern thread_local uint8_t ThrowBuffer[66665];
+	// NOTE: We need to declare them here with `extern` and then define them in
+	// common.cpp.
+	// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
+	extern thread_local uint8_t FactoryBuffer[66661];
+	extern thread_local uint8_t SerializeBuffer[66662];
+	extern thread_local uint8_t CloneBuffer[66663];
+	extern thread_local uint8_t DataBuffer[66664];
+	extern thread_local uint8_t ThrowBuffer[66665];
 
-		void ResetBuffers();
-	} // namespace SCTP
-} // namespace RTC
+	void ResetBuffers();
+} // namespace SCTP_COMMON
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_SCTP_PACKET(/*const Packet**/ packet,                                                \
@@ -61,7 +59,7 @@ namespace RTC
 		REQUIRE(packet->HasChunks() == (chunksCount > 0));                                             \
 		REQUIRE(packet->GetChunkAt(chunksCount) == nullptr);                                           \
 		REQUIRE(                                                                                       \
-		  helpers::AreBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
+		  helpers::areBuffersEqual(packet->GetBuffer(), packet->GetLength(), buffer, length) == true); \
 		REQUIRE_THROWS_AS(                                                                             \
 		  const_cast<Packet*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);            \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                     \
@@ -122,7 +120,7 @@ namespace RTC
 		if (buffer)                                                                                      \
 		{                                                                                                \
 			REQUIRE(                                                                                       \
-			  helpers::AreBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);   \
+			  helpers::areBuffersEqual(chunk->GetBuffer(), chunk->GetLength(), buffer, length) == true);   \
 		}                                                                                                \
 		REQUIRE_THROWS_AS(                                                                               \
 		  const_cast<Chunk*>(reinterpret_cast<const Chunk*>(chunk))->Serialize(ThrowBuffer, length - 1), \
@@ -158,7 +156,7 @@ namespace RTC
 		if (buffer)                                                                                     \
 		{                                                                                               \
 			REQUIRE(                                                                                      \
-			  helpers::AreBuffersEqual(parameter->GetBuffer(), parameter->GetLength(), buffer, length) == \
+			  helpers::areBuffersEqual(parameter->GetBuffer(), parameter->GetLength(), buffer, length) == \
 			  true);                                                                                      \
 		}                                                                                               \
 		REQUIRE_THROWS_AS(                                                                              \
@@ -193,7 +191,7 @@ namespace RTC
 		if (buffer)                                                                                    \
 		{                                                                                              \
 			REQUIRE(                                                                                     \
-			  helpers::AreBuffersEqual(                                                                  \
+			  helpers::areBuffersEqual(                                                                  \
 			    errorCause->GetBuffer(), errorCause->GetLength(), buffer, length) == true);              \
 		}                                                                                              \
 		REQUIRE_THROWS_AS(                                                                             \

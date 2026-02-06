@@ -70,7 +70,7 @@ namespace
 	}
 } // namespace
 
-SCENARIO("parse VP8 payload descriptor", "[rtp][codecs][vp8]")
+SCENARIO("VP8 payload descriptor", "[rtp][codecs][vp8]")
 {
 	SECTION("parse payload descriptor")
 	{
@@ -137,7 +137,7 @@ SCENARIO("parse VP8 payload descriptor", "[rtp][codecs][vp8]")
 			payloadDescriptor->Encode(
 			  buffer, payloadDescriptor->pictureId, payloadDescriptor->tl0PictureIndex);
 
-			SECTION("compare encoded payloadDescriptor with original buffer")
+			SECTION("compare encoded payload descriptor with original buffer")
 			{
 				REQUIRE(std::memcmp(buffer, originalBuffer, sizeof(buffer)) == 0);
 			}
@@ -281,7 +281,7 @@ SCENARIO("parse VP8 payload descriptor", "[rtp][codecs][vp8]")
 		}
 	}
 
-	SECTION("parse payload descriptor. I flag set but no space for pictureId")
+	SECTION("parse payload descriptor, I flag set but no space for pictureId")
 	{
 		/**
 		 * VP8 Payload Descriptor
@@ -310,7 +310,7 @@ SCENARIO("parse VP8 payload descriptor", "[rtp][codecs][vp8]")
 		REQUIRE(!payloadDescriptor);
 	}
 
-	SECTION("parse payload descriptor. X flag is not set, no keyframe")
+	SECTION("parse payload descriptor, X flag is not set, no keyframe")
 	{
 		/**
 		 * VP8 Payload Descriptor
@@ -363,7 +363,7 @@ SCENARIO("parse VP8 payload descriptor", "[rtp][codecs][vp8]")
 		delete payloadDescriptor;
 	}
 
-	SECTION("parse payload descriptor. X flag is not set, keyframe")
+	SECTION("parse payload descriptor, X flag is not set, keyframe")
 	{
 		/**
 		 * VP8 Payload Descriptor

@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS VBCM parsing", "[parser][rtcp][feedback-ps][vbcm]")
+SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 {
 	// RTCP VBCM packet.
 

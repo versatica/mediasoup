@@ -7,7 +7,7 @@
 
 using namespace RTC;
 
-namespace
+SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
 {
 	// Class inheriting from RtpRetransmissionBuffer so we can access its protected
 	// buffer member.
@@ -68,10 +68,7 @@ namespace
 			}
 		}
 	};
-} // namespace
 
-SCENARIO("RTP RetransmissionBuffer", "[rtp][rtx]")
-{
 	SECTION("proper packets received in order")
 	{
 		const uint16_t maxItems{ 4 };

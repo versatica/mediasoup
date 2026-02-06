@@ -6,7 +6,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
+SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 {
 	struct TestFeedbackRtpTransportInput
 	{

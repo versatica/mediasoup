@@ -88,7 +88,7 @@ SCENARIO("process VP9 payload descriptor", "[rtp][codecs][vp9]")
 		REQUIRE(!forwarded);
 	}
 
-	SECTION("test PayloadDescriptorHandler")
+	SECTION("PayloadDescriptorHandler")
 	{
 		RTP::Codecs::EncodingContext::Params params;
 		params.spatialLayers  = 1;

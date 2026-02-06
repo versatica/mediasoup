@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS SLI parsing", "[parser][rtcp][feedback-ps][sli]")
+SCENARIO("RTCP Feedback PS SLI", "[rtcp][feedback-ps][sli]")
 {
 	// RTCP SLI packet.
 

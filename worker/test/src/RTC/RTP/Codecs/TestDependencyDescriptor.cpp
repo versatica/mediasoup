@@ -4,7 +4,7 @@
 
 using namespace RTC;
 
-SCENARIO("parse Dependency Descriptor", "[rtp][codecs][DD]")
+SCENARIO("Dependency Descriptor", "[rtp][codecs][dependency-descriptor]")
 {
 	class Listener : public ::RTC::RTP::Codecs::DependencyDescriptor::Listener
 	{
@@ -14,7 +14,7 @@ SCENARIO("parse Dependency Descriptor", "[rtp][codecs][DD]")
 		}
 	};
 
-	SECTION("parse Dependency Descriptor")
+	SECTION("parse")
 	{
 		/**
 		 * Taken from https://issues.webrtc.org/issues/42225660.

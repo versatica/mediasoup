@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feeback RTP ECN parsing", "[parser][rtcp][feedback-rtp][ecn]")
+SCENARIO("RTCP Feedback RTP ECN", "[rtcp][feedback-rtp][ecn]")
 {
 	// clang-format off
 	uint8_t buffer[] =

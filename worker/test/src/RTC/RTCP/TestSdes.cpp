@@ -7,7 +7,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP SDES parsing", "[parser][rtcp][sdes]")
+SCENARIO("RTCP SDES", "[rtcp][sdes]")
 {
 	// RTCP Sdes Packet.
 

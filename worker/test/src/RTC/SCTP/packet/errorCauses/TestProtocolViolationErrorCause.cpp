@@ -2,9 +2,12 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/ErrorCause.hpp"
 #include "RTC/SCTP/packet/errorCauses/ProtocolViolationErrorCause.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+
+using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
 
 // NOLINTNEXTLINE (readability-function-size)
 SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")

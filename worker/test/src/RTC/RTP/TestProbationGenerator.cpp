@@ -4,7 +4,7 @@
 
 using namespace RTC;
 
-SCENARIO("RTP ProbationGenerator", "[rtp][probationgenerator]")
+SCENARIO("RTP ProbationGenerator", "[rtp][probation-generator]")
 {
 	SECTION("ProbationGenerator generates RTP Packets of the requested length")
 	{

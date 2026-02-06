@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feeback RTP NACK parsing", "[parser][rtcp][feedback-rtp][nack]")
+SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 {
 	// RTCP NACK packet.
 

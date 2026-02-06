@@ -7,12 +7,12 @@ using namespace Utils;
 
 SCENARIO("Utils::Time", "[utils][time]")
 {
-	SECTION("Utils::Time::Ntp2TimeMs()")
+	SECTION("Ntp2TimeMs()")
 	{
-		auto nowMs  = DepLibUV::GetTimeMs();
-		auto ntp    = Time::TimeMs2Ntp(nowMs);
-		auto nowMs2 = Time::Ntp2TimeMs(ntp);
-		auto ntp2   = Time::TimeMs2Ntp(nowMs2);
+		const auto nowMs  = DepLibUV::GetTimeMs();
+		const auto ntp    = Time::TimeMs2Ntp(nowMs);
+		const auto nowMs2 = Time::Ntp2TimeMs(ntp);
+		const auto ntp2   = Time::TimeMs2Ntp(nowMs2);
 
 		REQUIRE(nowMs2 == nowMs);
 		REQUIRE(ntp2.seconds == ntp.seconds);

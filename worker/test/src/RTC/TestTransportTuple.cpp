@@ -7,67 +7,67 @@
 
 using namespace RTC;
 
-class UdpSocketListener : public UdpSocket::Listener
+SCENARIO("TransportTuple", "[transport-tuple]")
 {
-public:
-	void OnUdpSocketPacketReceived(
-	  UdpSocket* /*socket*/,
-	  const uint8_t* /*data*/,
-	  size_t /*len*/,
-	  size_t /*bufferLen*/,
-	  const struct sockaddr* /*remoteAddr*/) override
+	class UdpSocketListener : public UdpSocket::Listener
 	{
-	}
-};
-
-static std::unique_ptr<UdpSocket> makeUdpSocket(const std::string& ip, uint16_t minPort, uint16_t maxPort)
-{
-	UdpSocketListener listener;
-	auto flags = Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
-	uint64_t portRangeHash{ 0u };
-	auto* udpSocket = new UdpSocket(
-	  std::addressof(listener), const_cast<std::string&>(ip), minPort, maxPort, flags, portRangeHash);
-
-	return std::unique_ptr<UdpSocket>(udpSocket);
-}
-
-static std::unique_ptr<sockaddr> makeUdpSockAddr(int family, const std::string& ip, uint16_t port)
-{
-	if (family == AF_INET)
-	{
-		auto addr = std::make_unique<sockaddr_in>();
-
-		addr->sin_family = AF_INET;
-		addr->sin_port   = htons(port);
-
-		if (uv_inet_pton(AF_INET, ip.c_str(), std::addressof(addr->sin_addr)) != 0)
+	public:
+		void OnUdpSocketPacketReceived(
+		  UdpSocket* /*socket*/,
+		  const uint8_t* /*data*/,
+		  size_t /*len*/,
+		  size_t /*bufferLen*/,
+		  const struct sockaddr* /*remoteAddr*/) override
 		{
-			throw std::runtime_error("invalid IPv4 address");
 		}
+	};
 
-		return std::unique_ptr<sockaddr>(reinterpret_cast<sockaddr*>(addr.release()));
-	}
-	else if (family == AF_INET6)
+	auto makeUdpSocket = [](const std::string& ip, uint16_t minPort, uint16_t maxPort)
 	{
-		auto addr6         = std::make_unique<sockaddr_in6>();
-		addr6->sin6_family = AF_INET6;
-		addr6->sin6_port   = htons(port);
+		UdpSocketListener listener;
+		auto flags = Transport::SocketFlags{ .ipv6Only = false, .udpReusePort = false };
+		uint64_t portRangeHash{ 0u };
+		auto* udpSocket = new UdpSocket(
+		  std::addressof(listener), const_cast<std::string&>(ip), minPort, maxPort, flags, portRangeHash);
 
-		if (uv_inet_pton(AF_INET6, ip.c_str(), std::addressof(addr6->sin6_addr)) != 0)
+		return std::unique_ptr<UdpSocket>(udpSocket);
+	};
+
+	auto makeUdpSockAddr = [](int family, const std::string& ip, uint16_t port)
+	{
+		if (family == AF_INET)
 		{
-			throw std::runtime_error("invalid IPv6 address");
+			auto addr = std::make_unique<sockaddr_in>();
+
+			addr->sin_family = AF_INET;
+			addr->sin_port   = htons(port);
+
+			if (uv_inet_pton(AF_INET, ip.c_str(), std::addressof(addr->sin_addr)) != 0)
+			{
+				throw std::runtime_error("invalid IPv4 address");
+			}
+
+			return std::unique_ptr<sockaddr>(reinterpret_cast<sockaddr*>(addr.release()));
 		}
+		else if (family == AF_INET6)
+		{
+			auto addr6         = std::make_unique<sockaddr_in6>();
+			addr6->sin6_family = AF_INET6;
+			addr6->sin6_port   = htons(port);
 
-		return std::unique_ptr<sockaddr>(reinterpret_cast<sockaddr*>(addr6.release()));
-	}
-	else
-	{
-		throw std::runtime_error("invalid network family");
-	}
-}
+			if (uv_inet_pton(AF_INET6, ip.c_str(), std::addressof(addr6->sin6_addr)) != 0)
+			{
+				throw std::runtime_error("invalid IPv6 address");
+			}
 
-SCENARIO("TransportTuples have unique hashes", "[transporttuple]")
-{
+			return std::unique_ptr<sockaddr>(reinterpret_cast<sockaddr*>(addr6.release()));
+		}
+		else
+		{
+			throw std::runtime_error("invalid network family");
+		}
+	};
+
 	SECTION("2 tuples with same local and remote IP:port have the same hash")
 	{
 		auto udpSocket      = makeUdpSocket("0.0.0.0", 10000, 50000);

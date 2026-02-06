@@ -2,34 +2,31 @@
 #define MS_TEST_RTC_ICE_COMMON_HPP
 
 #include "common.hpp"
-#include "MediaSoupErrors.hpp"
-#include "Utils.hpp"
-#include "testHelpers.hpp"
-#include "RTC/ICE/StunPacket.hpp"
-#include <catch2/catch_test_macros.hpp>
-#include <cstdlib> // std::malloc(), std::free()
-#include <cstring> // std::memcpy()
+#include "MediaSoupErrors.hpp"          // IWYU pragma: export
+#include "Utils.hpp"                    // IWYU pragma: export
+#include "testHelpers.hpp"              // IWYU pragma: export
+#include "RTC/ICE/StunPacket.hpp"       // IWYU pragma: export
+#include <catch2/catch_test_macros.hpp> // IWYU pragma: export
+#include <cstdlib>                      // std::malloc(), std::free()
+#include <cstring>                      // std::memcpy()
 #include <string_view>
 
 using namespace RTC::ICE;
 
-namespace RTC
+namespace ICE_COMMON
 {
-	namespace ICE
-	{
-		// NOTE: We need to declare them here with `extern` and then define them in
-		// iceCommon.cpp.
-		// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
-		extern thread_local uint8_t FactoryBuffer[66661];
-		extern thread_local uint8_t ResponseFactoryBuffer[66661];
-		extern thread_local uint8_t SerializeBuffer[66662];
-		extern thread_local uint8_t CloneBuffer[66663];
-		extern thread_local uint8_t DataBuffer[66664];
-		extern thread_local uint8_t ThrowBuffer[66665];
+	// NOTE: We need to declare them here with `extern` and then define them in
+	// iceCommon.cpp.
+	// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
+	extern thread_local uint8_t FactoryBuffer[66661];
+	extern thread_local uint8_t ResponseFactoryBuffer[66661];
+	extern thread_local uint8_t SerializeBuffer[66662];
+	extern thread_local uint8_t CloneBuffer[66663];
+	extern thread_local uint8_t DataBuffer[66664];
+	extern thread_local uint8_t ThrowBuffer[66665];
 
-		void ResetBuffers();
-	} // namespace ICE
-} // namespace RTC
+	void ResetBuffers();
+} // namespace ICE_COMMON
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_STUN_PACKET(/*const StunPacket**/ packet,                                             \
@@ -116,7 +113,7 @@ namespace RTC
 			REQUIRE_THROWS_AS(packet->Protect("isoiulkajdlkja"), MediaSoupError);                         \
 			REQUIRE_THROWS_AS(packet->Protect(), MediaSoupError);                                         \
 		}                                                                                               \
-		REQUIRE(helpers::AreBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);  \
+		REQUIRE(helpers::areBuffersEqual(buffer, bufferLength, originalBuffer, bufferLength) == true);  \
 		REQUIRE_THROWS_AS(                                                                              \
 		  const_cast<StunPacket*>(packet)->Serialize(ThrowBuffer, length - 1), MediaSoupError);         \
 		REQUIRE_THROWS_AS(packet->Clone(ThrowBuffer, length - 1), MediaSoupError);                      \

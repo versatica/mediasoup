@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS parsing", "[parser][rtcp][feedback-ps][remb]")
+SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 {
 	// RTCP REMB packet.
 

@@ -5,10 +5,13 @@
 #include "RTC/SCTP/packet/chunks/HeartbeatRequestChunk.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
 #include "RTC/SCTP/packet/parameters/UnknownParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
-// NOLINTNEXTLINE (readability-function-size)
+
+using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
+
 SCENARIO("SCTP Hearbeat Request Chunk (4)", "[sctp][serializable]")
 {
 	ResetBuffers();

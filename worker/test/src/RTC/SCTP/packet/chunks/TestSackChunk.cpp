@@ -2,11 +2,13 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Chunk.hpp"
 #include "RTC/SCTP/packet/chunks/SackChunk.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-// NOLINTNEXTLINE (readability-function-size)
+using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
+
 SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
 {
 	ResetBuffers();

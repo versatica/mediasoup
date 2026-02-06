@@ -19,19 +19,19 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 	};
 	// clang-format on
 
-	SECTION("Utils::Byte::Get3Bytes()")
+	SECTION("Get3Bytes()")
 	{
 		// Bytes 4,5 and 6 in the array are number 8405024.
 		REQUIRE(Utils::Byte::Get3Bytes(buffer, 4) == 8405024);
 	}
 
-	SECTION("Utils::Byte::Set3Bytes()")
+	SECTION("Set3Bytes()")
 	{
 		Utils::Byte::Set3Bytes(buffer, 4, 5666777);
 		REQUIRE(Utils::Byte::Get3Bytes(buffer, 4) == 5666777);
 	}
 
-	SECTION("Utils::Byte::Get3BytesSigned()")
+	SECTION("Get3BytesSigned()")
 	{
 		// Bytes 8, 9 and 10 in the array are number 8388607 since first bit is 0 and
 		// all other bits are 1, so it must be maximum positive 24 bits signed integer,
@@ -47,7 +47,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 16) == -8388608);
 	}
 
-	SECTION("Utils::Byte::Set3BytesSigned()")
+	SECTION("Set3BytesSigned()")
 	{
 		Utils::Byte::Set3BytesSigned(buffer, 0, 8388607);
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 0) == 8388607);
@@ -59,7 +59,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		REQUIRE(Utils::Byte::Get3BytesSigned(buffer, 0) == -8388608);
 	}
 
-	SECTION("Utils::Byte::IsPaddedTo4Bytes()")
+	SECTION("IsPaddedTo4Bytes()")
 	{
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint8_t{ 0u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo4Bytes(uint8_t{ 1u }) == false);
@@ -149,7 +149,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		}
 	}
 
-	SECTION("Utils::Byte::IsPaddedTo8Bytes()")
+	SECTION("IsPaddedTo8Bytes()")
 	{
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 0u }) == true);
 		REQUIRE(Utils::Byte::IsPaddedTo8Bytes(uint8_t{ 1u }) == false);
@@ -239,7 +239,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		}
 	}
 
-	SECTION("Utils::Byte::PadTo4Bytes()")
+	SECTION("PadTo4Bytes()")
 	{
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 0u }) == 0u);
 		REQUIRE(Utils::Byte::PadTo4Bytes(uint8_t{ 1u }) == 4u);
@@ -338,7 +338,7 @@ SCENARIO("Utils::Byte", "[utils][byte]")
 		}
 	}
 
-	SECTION("Utils::Byte::PadTo8Bytes()")
+	SECTION("PadTo8Bytes()")
 	{
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 0u }) == 0u);
 		REQUIRE(Utils::Byte::PadTo8Bytes(uint8_t{ 1u }) == 8u);

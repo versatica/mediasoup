@@ -6,9 +6,12 @@
 #include "RTC/SCTP/packet/parameters/IncomingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/OutgoingSsnResetRequestParameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
+
+using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
 
 SCENARIO("SCTP Re-Config Chunk (130)", "[sctp][serializable]")
 {

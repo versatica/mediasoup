@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS FIR parsing", "[parser][rtcp][feedback-ps][fir]")
+SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 {
 	// RTCP FIR packet.
 

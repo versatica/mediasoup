@@ -14,166 +14,169 @@
 
 using namespace RTC;
 
-const uint8_t PayloadType       = 111;
-auto* channelMessageRegistrator = new ChannelMessageRegistrator();
-auto* channelSocket             = new Channel::ChannelSocket();
-auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
-auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
-
-class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
+namespace
 {
-public:
-	void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
-	{
-	}
+	const uint8_t payloadType       = 111;
+	auto* channelMessageRegistrator = new ChannelMessageRegistrator();
+	auto* channelSocket             = new Channel::ChannelSocket();
+	auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
+	auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
 
-	void OnRtpStreamSendRtcpPacket(RTP::RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
+	class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
 	{
-	}
+	public:
+		void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+		{
+		}
 
-	void OnRtpStreamNeedWorstRemoteFractionLost(
-	  RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
-	{
-	}
-};
+		void OnRtpStreamSendRtcpPacket(RTP::RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
+		{
+		}
 
-class ConsumerListener : public Consumer::Listener
-{
-	void OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet) final
-	{
-		this->sent.push_back(packet->GetSequenceNumber());
+		void OnRtpStreamNeedWorstRemoteFractionLost(
+		  RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
+		{
+		}
 	};
-	void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) final
-	{
-	}
-	void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final {};
-	void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) final {};
-	void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) final {};
-	void OnConsumerProducerClosed(RTC::Consumer* consumer) final {};
 
-public:
-	// Verifies that the given number of packets have been sent,
-	// and that the sequence numbers are consecutive.
-	void Verify(size_t size)
+	class ConsumerListener : public Consumer::Listener
 	{
-		REQUIRE(this->sent.size() == size);
-
-		if (this->sent.size() <= 1)
+		void OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet) final
 		{
-			return;
+			this->sent.push_back(packet->GetSequenceNumber());
+		};
+		void OnConsumerRetransmitRtpPacket(RTC::Consumer* consumer, RTC::RTP::Packet* packet) final
+		{
+		}
+		void OnConsumerKeyFrameRequested(RTC::Consumer* consumer, uint32_t mappedSsrc) final {};
+		void OnConsumerNeedBitrateChange(RTC::Consumer* consumer) final {};
+		void OnConsumerNeedZeroBitrate(RTC::Consumer* consumer) final {};
+		void OnConsumerProducerClosed(RTC::Consumer* consumer) final {};
+
+	public:
+		// Verifies that the given number of packets have been sent,
+		// and that the sequence numbers are consecutive.
+		void Verify(size_t size)
+		{
+			REQUIRE(this->sent.size() == size);
+
+			if (this->sent.size() <= 1)
+			{
+				return;
+			}
+
+			auto currentSeq = this->sent[0];
+
+			for (auto it = std::next(this->sent.begin()); it != this->sent.end(); ++it)
+			{
+				REQUIRE(*it == currentSeq + 1);
+				currentSeq = *it;
+			}
 		}
 
-		auto currentSeq = this->sent[0];
+	private:
+		std::vector<uint16_t> sent;
+	};
 
-		for (auto it = std::next(this->sent.begin()); it != this->sent.end(); ++it)
-		{
-			REQUIRE(*it == currentSeq + 1);
-			currentSeq = *it;
-		}
-	}
-
-private:
-	std::vector<uint16_t> sent;
-};
-
-flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> CreateRtpEncodingParameters(
-  flatbuffers::FlatBufferBuilder& builder)
-{
-	std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings;
-
-	auto encoding = RTC::RtpEncodingParameters();
-
-	encoding.ssrc = 1234567890;
-
-	encodings.emplace_back(encoding.FillBuffer(builder));
-
-	return builder.CreateVector(encodings);
-};
-
-flatbuffers::Offset<FBS::RtpParameters::RtpParameters> CreateRtpParameters(
-  flatbuffers::FlatBufferBuilder& builder)
-{
-	auto rtpParameters = RTC::RtpParameters();
-	auto codec         = RTC::RtpCodecParameters();
-	auto encoding      = RTC::RtpEncodingParameters();
-
-	codec.mimeType.SetMimeType("audio/opus");
-	codec.payloadType = PayloadType;
-
-	encoding.ssrc = 1234567890;
-
-	rtpParameters.mid = "mid";
-	rtpParameters.codecs.emplace_back(codec);
-	rtpParameters.encodings.emplace_back(encoding);
-	rtpParameters.headerExtensions = std::vector<RtpHeaderExtensionParameters>();
-
-	return rtpParameters.FillBuffer(builder);
-};
-
-static std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* listener)
-{
-	flatbuffers::FlatBufferBuilder bufferBuilder;
-
-	auto consumerId          = bufferBuilder.CreateString("consumerId");
-	auto producerId          = bufferBuilder.CreateString("producerId");
-	auto rtpParameters       = CreateRtpParameters(bufferBuilder);
-	auto consumableEncodings = CreateRtpEncodingParameters(bufferBuilder);
-
-	auto consumeRequestBuilder = FBS::Transport::ConsumeRequestBuilder(bufferBuilder);
-
-	consumeRequestBuilder.add_consumerId(consumerId);
-	consumeRequestBuilder.add_producerId(producerId);
-	consumeRequestBuilder.add_kind(FBS::RtpParameters::MediaKind::AUDIO);
-	consumeRequestBuilder.add_rtpParameters(rtpParameters);
-	consumeRequestBuilder.add_type(FBS::RtpParameters::Type::SIMPLE);
-	consumeRequestBuilder.add_consumableRtpEncodings(consumableEncodings);
-	consumeRequestBuilder.add_paused(false);
-	consumeRequestBuilder.add_preferredLayers(0);
-	consumeRequestBuilder.add_ignoreDtx(false);
-
-	auto offset = consumeRequestBuilder.Finish();
-	bufferBuilder.Finish(offset);
-
-	auto* buf = bufferBuilder.GetBufferPointer();
-
-	const auto* consumeRequest = flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
-
-	return std::make_unique<SimpleConsumer>(
-	  &shared,
-	  consumeRequest->consumerId()->str(),
-	  consumeRequest->producerId()->str(),
-	  listener,
-	  consumeRequest);
-}
-
-static std::unique_ptr<RTP::RtpStreamRecv> createRtpStreamRecv()
-{
-	RtpStreamRecvListener streamRecvListener;
-	RTP::RtpStream::Params params;
-
-	return std::make_unique<RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
-}
-
-/**
- * Centralize common setup and helper methods.
- */
-class Fixture
-{
-public:
-	Fixture()
-	  : listener(std::make_unique<ConsumerListener>()), consumer(createConsumer(listener.get())),
-	    rtpStream(createRtpStreamRecv())
+	flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>>> createRtpEncodingParameters(
+	  flatbuffers::FlatBufferBuilder& builder)
 	{
-		// Set producer scores and producer stream.
-		std::vector<uint8_t> scores{ 10 };
-		consumer->ProducerRtpStreamScores(&scores);
-		consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
+		std::vector<flatbuffers::Offset<FBS::RtpParameters::RtpEncodingParameters>> encodings;
+
+		auto encoding = RTC::RtpEncodingParameters();
+
+		encoding.ssrc = 1234567890;
+
+		encodings.emplace_back(encoding.FillBuffer(builder));
+
+		return builder.CreateVector(encodings);
+	};
+
+	flatbuffers::Offset<FBS::RtpParameters::RtpParameters> createRtpParameters(
+	  flatbuffers::FlatBufferBuilder& builder)
+	{
+		auto rtpParameters = RTC::RtpParameters();
+		auto codec         = RTC::RtpCodecParameters();
+		auto encoding      = RTC::RtpEncodingParameters();
+
+		codec.mimeType.SetMimeType("audio/opus");
+		codec.payloadType = payloadType;
+
+		encoding.ssrc = 1234567890;
+
+		rtpParameters.mid = "mid";
+		rtpParameters.codecs.emplace_back(codec);
+		rtpParameters.encodings.emplace_back(encoding);
+		rtpParameters.headerExtensions = std::vector<RtpHeaderExtensionParameters>();
+
+		return rtpParameters.FillBuffer(builder);
+	};
+
+	static std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* listener)
+	{
+		flatbuffers::FlatBufferBuilder bufferBuilder;
+
+		auto consumerId          = bufferBuilder.CreateString("consumerId");
+		auto producerId          = bufferBuilder.CreateString("producerId");
+		auto rtpParameters       = createRtpParameters(bufferBuilder);
+		auto consumableEncodings = createRtpEncodingParameters(bufferBuilder);
+
+		auto consumeRequestBuilder = FBS::Transport::ConsumeRequestBuilder(bufferBuilder);
+
+		consumeRequestBuilder.add_consumerId(consumerId);
+		consumeRequestBuilder.add_producerId(producerId);
+		consumeRequestBuilder.add_kind(FBS::RtpParameters::MediaKind::AUDIO);
+		consumeRequestBuilder.add_rtpParameters(rtpParameters);
+		consumeRequestBuilder.add_type(FBS::RtpParameters::Type::SIMPLE);
+		consumeRequestBuilder.add_consumableRtpEncodings(consumableEncodings);
+		consumeRequestBuilder.add_paused(false);
+		consumeRequestBuilder.add_preferredLayers(0);
+		consumeRequestBuilder.add_ignoreDtx(false);
+
+		auto offset = consumeRequestBuilder.Finish();
+		bufferBuilder.Finish(offset);
+
+		auto* buf = bufferBuilder.GetBufferPointer();
+
+		const auto* consumeRequest = flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
+
+		return std::make_unique<SimpleConsumer>(
+		  &shared,
+		  consumeRequest->consumerId()->str(),
+		  consumeRequest->producerId()->str(),
+		  listener,
+		  consumeRequest);
 	}
 
-	std::unique_ptr<ConsumerListener> listener;
-	std::unique_ptr<SimpleConsumer> consumer;
-	std::unique_ptr<RTP::RtpStreamRecv> rtpStream;
-};
+	static std::unique_ptr<RTP::RtpStreamRecv> createRtpStreamRecv()
+	{
+		RtpStreamRecvListener streamRecvListener;
+		RTP::RtpStream::Params params;
+
+		return std::make_unique<RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
+	}
+
+	/**
+	 * Centralize common setup and helper methods.
+	 */
+	class Fixture
+	{
+	public:
+		Fixture()
+		  : listener(std::make_unique<ConsumerListener>()), consumer(createConsumer(listener.get())),
+		    rtpStream(createRtpStreamRecv())
+		{
+			// Set producer scores and producer stream.
+			std::vector<uint8_t> scores{ 10 };
+			consumer->ProducerRtpStreamScores(&scores);
+			consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
+		}
+
+		std::unique_ptr<ConsumerListener> listener;
+		std::unique_ptr<SimpleConsumer> consumer;
+		std::unique_ptr<RTP::RtpStreamRecv> rtpStream;
+	};
+} // namespace
 
 SCENARIO("SimpleConsumer", "[rtp][consumer]")
 {
@@ -230,7 +233,7 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
 		RTP::SharedPacket sharedPacket(packet);
 
-		packet->SetPayloadType(PayloadType);
+		packet->SetPayloadType(payloadType);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
@@ -249,7 +252,7 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
 		RTP::SharedPacket sharedPacket(packet);
 
-		packet->SetPayloadType(PayloadType + 1);
+		packet->SetPayloadType(payloadType + 1);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 		fixture.listener->Verify(0);
@@ -267,7 +270,7 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 0);
 		RTP::SharedPacket sharedPacket(packet);
 
-		packet->SetPayloadType(PayloadType + 1);
+		packet->SetPayloadType(payloadType + 1);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 		fixture.listener->Verify(0);
@@ -288,7 +291,7 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		uint16_t seq{ 1 };
 
 		packet->SetSequenceNumber(seq++);
-		packet->SetPayloadType(PayloadType);
+		packet->SetPayloadType(payloadType);
 		sharedPacket.Assign(packet);
 
 		fixture.consumer->SendRtpPacket(packet, sharedPacket);

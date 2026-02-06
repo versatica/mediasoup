@@ -2,11 +2,12 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/HeartbeatInfoParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
 
 SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
 {

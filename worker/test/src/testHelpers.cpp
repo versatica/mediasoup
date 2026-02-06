@@ -8,10 +8,11 @@
 
 namespace helpers
 {
-	bool ReadBinaryFile(const char* file, uint8_t* buffer, size_t* len)
+	bool readBinaryFile(const char* file, uint8_t* buffer, size_t* len)
 	{
 		MS_TRACE();
 
+		// NOLINTNEXTLINE(misc-const-correctness)
 		std::string filePath = "test/" + std::string(file);
 
 #ifdef _WIN32
@@ -34,62 +35,7 @@ namespace helpers
 		return true;
 	}
 
-	bool AddToBuffer(uint8_t* buf, size_t* size, const uint8_t* data, size_t len)
-	{
-		MS_TRACE();
-
-		static size_t bufferSize{ 65536 };
-
-		if (*size + len > bufferSize)
-		{
-			return false;
-		}
-
-		size_t i{ 0 };
-
-		if (len == 1)
-		{
-			buf[*size] = *data;
-		}
-		else
-		{
-			for (i = 0; i < len; ++i)
-			{
-				buf[*size + i] = data[i];
-			}
-		}
-
-		*size += len;
-
-		return true;
-	}
-
-	bool ReadPayloadData(const char* file, int pos, int bytes, uint8_t* payload)
-	{
-		MS_TRACE();
-
-		std::string filePath = "test/" + std::string(file);
-
-#ifdef _WIN32
-		std::replace(filePath.begin(), filePath.end(), '/', '\\');
-#endif
-
-		std::ifstream in(filePath, std::ios::ate | std::ios::binary);
-
-		if (!in)
-		{
-			return false;
-		}
-
-		in.seekg(pos, std::ios::beg);
-		in.read(reinterpret_cast<char*>(payload), bytes);
-
-		in.close();
-
-		return true;
-	}
-
-	bool AreBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
+	bool areBuffersEqual(const uint8_t* data1, size_t size1, const uint8_t* data2, size_t size2)
 	{
 		MS_TRACE();
 

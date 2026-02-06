@@ -2,9 +2,11 @@
 #include "Utils.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-SCENARIO("Utils::Crypto::GetCRC32()", "[utils][crypto]")
+SCENARIO("Utils::Crypto", "[utils][crypto]")
 {
-	// clang-format off
+	SECTION("GetCRC32()")
+	{
+		// clang-format off
 	uint8_t dataEmpty[]  = {};
 	uint8_t dataZero[]   = { 0 };
 	uint8_t dataRandom[] =
@@ -12,19 +14,19 @@ SCENARIO("Utils::Crypto::GetCRC32()", "[utils][crypto]")
 		0xFF, 0x00, 0xAB, 0xCD, 0x12, 0x39, 0x54, 0xBB, 0xDD,
 		0xEE, 0x01, 0x01, 0x01, 0x01, 0x88, 0x88, 0xAA
 	};
-	// clang-format on
+		// clang-format on
 
-	REQUIRE(Utils::Crypto::GetCRC32(dataEmpty, sizeof(dataEmpty)) == 0U);
-	REQUIRE(Utils::Crypto::GetCRC32(dataZero, sizeof(dataZero)) == 0xD202EF8D);
-	REQUIRE(Utils::Crypto::GetCRC32(dataRandom, sizeof(dataRandom)) == 0xEEE31378);
-}
+		REQUIRE(Utils::Crypto::GetCRC32(dataEmpty, sizeof(dataEmpty)) == 0U);
+		REQUIRE(Utils::Crypto::GetCRC32(dataZero, sizeof(dataZero)) == 0xD202EF8D);
+		REQUIRE(Utils::Crypto::GetCRC32(dataRandom, sizeof(dataRandom)) == 0xEEE31378);
+	}
 
-SCENARIO("Utils::Crypto::GetCRC32c()", "[utils][crypto]")
-{
-	// Tests copied from dcSCTP code in libwebrtc:
-	// https://webrtc.googlesource.com/src//+/refs/heads/main/net/dcsctp/packet/crc32c_test.cc
+	SECTION("GetCRC32c()")
+	{
+		// Tests copied from dcSCTP code in libwebrtc:
+		// https://webrtc.googlesource.com/src//+/refs/heads/main/net/dcsctp/packet/crc32c_test.cc
 
-	// clang-format off
+		// clang-format off
 	uint8_t dataEmpty[]     = {};
 	uint8_t dataZero[]      = { 0 };
 	uint8_t dataManyZeros[] = { 0, 0, 0, 0 };
@@ -57,17 +59,18 @@ SCENARIO("Utils::Crypto::GetCRC32c()", "[utils][crypto]")
 		0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x18, 0x28, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
-	// clang-format on
+		// clang-format on
 
-	REQUIRE(Utils::Crypto::GetCRC32c(dataEmpty, sizeof(dataEmpty)) == 0);
-	REQUIRE(Utils::Crypto::GetCRC32c(dataZero, sizeof(dataZero)) == 0x51537d52);
-	REQUIRE(Utils::Crypto::GetCRC32c(dataManyZeros, sizeof(dataManyZeros)) == 0xC74B6748);
-	REQUIRE(Utils::Crypto::GetCRC32c(dataShort, sizeof(dataShort)) == 0xF48C3029);
-	REQUIRE(Utils::Crypto::GetCRC32c(dataLong, sizeof(dataLong)) == 0x811F8946);
-	// https://tools.ietf.org/html/rfc3720#appendix-B.4
-	REQUIRE(Utils::Crypto::GetCRC32c(data32Zeros, sizeof(data32Zeros)) == 0xAA36918A);
-	REQUIRE(Utils::Crypto::GetCRC32c(data32Ones, sizeof(data32Ones)) == 0x43ABA862);
-	REQUIRE(Utils::Crypto::GetCRC32c(data32Incrementing, sizeof(data32Incrementing)) == 0x4E79DD46);
-	REQUIRE(Utils::Crypto::GetCRC32c(data32Decrementing, sizeof(data32Decrementing)) == 0x5CDB3F11);
-	REQUIRE(Utils::Crypto::GetCRC32c(dataSCSICommandPDU, sizeof(dataSCSICommandPDU)) == 0x563A96D9);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataEmpty, sizeof(dataEmpty)) == 0);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataZero, sizeof(dataZero)) == 0x51537d52);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataManyZeros, sizeof(dataManyZeros)) == 0xC74B6748);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataShort, sizeof(dataShort)) == 0xF48C3029);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataLong, sizeof(dataLong)) == 0x811F8946);
+		// https://tools.ietf.org/html/rfc3720#appendix-B.4
+		REQUIRE(Utils::Crypto::GetCRC32c(data32Zeros, sizeof(data32Zeros)) == 0xAA36918A);
+		REQUIRE(Utils::Crypto::GetCRC32c(data32Ones, sizeof(data32Ones)) == 0x43ABA862);
+		REQUIRE(Utils::Crypto::GetCRC32c(data32Incrementing, sizeof(data32Incrementing)) == 0x4E79DD46);
+		REQUIRE(Utils::Crypto::GetCRC32c(data32Decrementing, sizeof(data32Decrementing)) == 0x5CDB3F11);
+		REQUIRE(Utils::Crypto::GetCRC32c(dataSCSICommandPDU, sizeof(dataSCSICommandPDU)) == 0x563A96D9);
+	}
 }

@@ -13,7 +13,7 @@ static constexpr size_t MaxRequestedPackets{ 17 };
 static constexpr unsigned int SendNackDelay{ 0u }; // In ms.
 static const bool UseRtpInactivityCheck{ false };
 
-SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream][rtpstreamrecv]")
+SCENARIO("RtpStreamRecv", "[rtp][rtpstream][rtpstreamrecv]")
 {
 	class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
 	{

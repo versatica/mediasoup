@@ -7,7 +7,7 @@ using namespace Utils;
 
 SCENARIO("Utils::Number", "[utils][number]")
 {
-	SECTION("Utils::Number::IsEqualThan()")
+	SECTION("IsEqualThan()")
 	{
 		// 0 is not equal than 16.
 		REQUIRE(Utils::Number<uint16_t>::IsEqualThan(0, 16) == false);
@@ -25,7 +25,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number<uint64_t, 7>::IsEqualThan(0, 128) == true);
 	}
 
-	SECTION("Utils::Number::IsHigherThan()")
+	SECTION("IsHigherThan()")
 	{
 		// 10 is higher than std::numeric_limits<uint8_t>::max().
 		REQUIRE(Utils::Number<uint8_t>::IsHigherThan(10, std::numeric_limits<uint8_t>::max()) == true);
@@ -58,7 +58,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number<uint64_t, 6>::IsHigherThan(0, 64) == false);
 	}
 
-	SECTION("Utils::Number::IsLowerThan()")
+	SECTION("IsLowerThan()")
 	{
 		// 1 is lower than 2.
 		REQUIRE(Utils::Number<uint8_t>::IsLowerThan(1, 2) == true);
@@ -97,7 +97,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number<uint64_t, 2>::IsLowerThan(3, 1) == true);
 	}
 
-	SECTION("Utils::Number::IsHigherOrEqualThan()")
+	SECTION("IsHigherOrEqualThan()")
 	{
 		// 0 is greater or equal than std::numeric_limits<uint64_t>::max().
 		REQUIRE(
@@ -110,7 +110,7 @@ SCENARIO("Utils::Number", "[utils][number]")
 		REQUIRE(Utils::Number<uint64_t, 5>::IsHigherOrEqualThan(0, 32) == true);
 	}
 
-	SECTION("Utils::Number::IsLowerOrEqualThan()")
+	SECTION("IsLowerOrEqualThan()")
 	{
 		// std::numeric_limits<uint64_t>::max() is lower or equal than 0.
 		REQUIRE(

@@ -9,6 +9,7 @@
 #include <string>
 
 using namespace RTC::ICE;
+using namespace ICE_COMMON;
 
 SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 {
@@ -562,7 +563,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::AreBuffersEqual(
+		  helpers::areBuffersEqual(
 		    request->GetTransactionId(),
 		    StunPacket::TransactionIdLength,
 		    transactionId,
@@ -599,7 +600,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::AreBuffersEqual(
+		  helpers::areBuffersEqual(
 		    request->GetTransactionId(),
 		    StunPacket::TransactionIdLength,
 		    transactionId,
@@ -638,7 +639,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::AreBuffersEqual(
+		  helpers::areBuffersEqual(
 		    request->GetTransactionId(),
 		    StunPacket::TransactionIdLength,
 		    transactionId,
@@ -1103,7 +1104,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::AreBuffersEqual(
+		  helpers::areBuffersEqual(
 		    successResponse->GetTransactionId(),
 		    StunPacket::TransactionIdLength,
 		    request->GetTransactionId(),
@@ -1184,7 +1185,7 @@ SCENARIO("ICE StunPacket", "[serializable][ice][stunpacket]")
 		                  /*hasFingerprint*/ false);
 
 		REQUIRE(
-		  helpers::AreBuffersEqual(
+		  helpers::areBuffersEqual(
 		    errorResponse->GetTransactionId(),
 		    StunPacket::TransactionIdLength,
 		    request->GetTransactionId(),

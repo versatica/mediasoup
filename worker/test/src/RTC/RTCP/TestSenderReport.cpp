@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP SR parsing", "[parser][rtcp][sr]")
+SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 {
 	// RTCP Packet. Sender Report and Receiver Report.
 

@@ -16,10 +16,25 @@
 
 using namespace RTC;
 
-namespace
+SCENARIO("RtpStreamSend", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
 {
-	std::unique_ptr<RTP::Packet> createRtpPacket(
-	  uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
+	class TestRtpStreamListener : public RTP::RtpStreamSend::Listener
+	{
+	public:
+		void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+		{
+		}
+
+		void OnRtpStreamRetransmitRtpPacket(RTP::RtpStreamSend* /*rtpStream*/, RTP::Packet* packet) override
+		{
+			this->retransmittedPackets.push_back(packet);
+		}
+
+	public:
+		std::vector<RTP::Packet*> retransmittedPackets;
+	};
+
+	auto createRtpPacket = [](uint8_t* buffer, size_t len, uint16_t seq, uint32_t timestamp)
 	{
 		auto* packet = RTP::Packet::Parse(buffer, len);
 
@@ -30,14 +45,14 @@ namespace
 		packet->SetTimestamp(timestamp);
 
 		return std::unique_ptr<RTP::Packet>(packet);
-	}
+	};
 
-	void sendRtpPacket(
-	  // NOTE: clang-tidy suggests passing `streams` by reference but that's wrong
-	  // because we create `streams` in place when calling this function.
-	  // NOLINTNEXTLINE(performance-unnecessary-value-param)
-	  std::vector<std::pair<RTP::RtpStreamSend*, uint32_t>> streams,
-	  RTP::Packet* packet)
+	auto sendRtpPacket = [](
+	                       // NOTE: clang-tidy suggests passing `streams` by reference but that's
+	                       // wrong because we create `streams` in place when calling this function.
+	                       // NOLINTNEXTLINE(performance-unnecessary-value-param)
+	                       std::vector<std::pair<RTP::RtpStreamSend*, uint32_t>> streams,
+	                       RTP::Packet* packet)
 	{
 		RTP::SharedPacket sharedPacket;
 
@@ -61,20 +76,21 @@ namespace
 				sharedPacket.Assign(packet);
 			}
 		}
-	}
+	};
 
-	void checkRtxPacket(RTP::Packet* rtxPacket, RTP::Packet* origPacket)
+	auto checkRtxPacket = [](RTP::Packet* rtxPacket, RTP::Packet* origPacket)
 	{
 		REQUIRE(rtxPacket);
 		REQUIRE(rtxPacket->GetSequenceNumber() == origPacket->GetSequenceNumber());
 		REQUIRE(rtxPacket->GetTimestamp() == origPacket->GetTimestamp());
 		REQUIRE(rtxPacket->HasMarker() == origPacket->HasMarker());
-	}
+	};
 
-	void parseAV1RtpPacket(
-	  RTP::Packet* packet,
-	  std::unique_ptr<RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
-	    templateDependencyStructure)
+	auto parseAV1RtpPacket =
+	  [](
+	    RTP::Packet* packet,
+	    std::unique_ptr<RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>&
+	      templateDependencyStructure)
 	{
 		std::unique_ptr<RTP::Codecs::DependencyDescriptor> dependencyDescriptor;
 		packet->ReadDependencyDescriptor(dependencyDescriptor, templateDependencyStructure);
@@ -84,25 +100,6 @@ namespace
 		auto* payloadDescriptorHandler =
 		  new RTP::Codecs::AV1::PayloadDescriptorHandler(payloadDescriptor);
 		packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
-	}
-} // namespace
-
-SCENARIO("NACK and RTP packets retransmission", "[rtp][rtcp][nack][rtpstream][rtpstreamsend]")
-{
-	class TestRtpStreamListener : public RTP::RtpStreamSend::Listener
-	{
-	public:
-		void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
-		{
-		}
-
-		void OnRtpStreamRetransmitRtpPacket(RTP::RtpStreamSend* /*rtpStream*/, RTP::Packet* packet) override
-		{
-			this->retransmittedPackets.push_back(packet);
-		}
-
-	public:
-		std::vector<RTP::Packet*> retransmittedPackets;
 	};
 
 	// clang-format off

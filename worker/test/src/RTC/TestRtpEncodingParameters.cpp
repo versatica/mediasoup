@@ -1,42 +1,43 @@
 #include "common.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <regex>
+#include <string>
 
-static const std::regex ScalabilityModeRegex(
-  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);
-
-struct scalabilityMode
+SCENARIO("parseScalabilityMode()", "[rtc]")
 {
-	uint8_t spatialLayers  = 1;
-	uint8_t temporalLayers = 1;
-	bool ksvc              = false;
-};
+	static const std::regex ScalabilityModeRegex(
+	  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);
 
-static struct scalabilityMode parseScalabilityMode(const std::string& scalabilityMode)
-{
-	struct scalabilityMode result;
-	std::smatch match;
-
-	std::regex_match(scalabilityMode, match, ScalabilityModeRegex);
-
-	if (!match.empty())
+	struct ScalabilityMode
 	{
-		try
-		{
-			result.spatialLayers  = std::stoul(match[1].str());
-			result.temporalLayers = std::stoul(match[2].str());
-			result.ksvc           = match.size() >= 4 && match[3].str() == "_KEY";
-		}
-		catch (std::exception& e)
-		{
-		}
-	}
+		uint8_t spatialLayers  = 1;
+		uint8_t temporalLayers = 1;
+		bool ksvc              = false;
+	};
 
-	return result;
-}
+	auto parseScalabilityMode = [](const std::string& scalabilityMode)
+	{
+		struct ScalabilityMode result;
+		std::smatch match;
 
-SCENARIO("parseScalabilityMode", "[rtc]")
-{
+		std::regex_match(scalabilityMode, match, ScalabilityModeRegex);
+
+		if (!match.empty())
+		{
+			try
+			{
+				result.spatialLayers  = std::stoul(match[1].str());
+				result.temporalLayers = std::stoul(match[2].str());
+				result.ksvc           = match.size() >= 4 && match[3].str() == "_KEY";
+			}
+			catch (std::exception& error) // NOLINT(bugprone-empty-catch)
+			{
+			}
+		}
+
+		return result;
+	};
+
 	SECTION("parse L1T3")
 	{
 		const auto scalabilityMode = parseScalabilityMode("L1T3");

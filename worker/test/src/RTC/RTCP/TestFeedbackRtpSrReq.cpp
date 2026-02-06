@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feeback RTP SR-REQ parsing", "[parser][rtcp][feedback-rtp][sr-req]")
+SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 {
 	// RTCP SR-REQ packet.
 

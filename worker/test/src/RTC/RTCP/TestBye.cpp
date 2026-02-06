@@ -6,7 +6,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP BYE parsing", "[parser][rtcp][bye]")
+SCENARIO("RTCP BYE", "[rtcp][bye]")
 {
 	// RCTP BYE packet.
 

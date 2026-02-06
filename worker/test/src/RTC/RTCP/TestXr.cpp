@@ -7,7 +7,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
+SCENARIO("RTCP XR", "[rtcp][xr]")
 {
 	// clang-format off
 	uint8_t buffer[] =
@@ -130,7 +130,7 @@ SCENARIO("RTCP XR parsing", "[parser][rtcp][xr]")
 	}
 }
 
-SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
+SCENARIO("RTCP XrDelaySinceLastRt", "[rtcp][xr]")
 {
 	SECTION("create RRT")
 	{
@@ -154,7 +154,6 @@ SCENARIO("RTCP XrDelaySinceLastRt parsing", "[parser][rtcp][xr-dlrr]")
 		// Create a new report out of the external buffer.
 		// NOTE: We cannot use unique_ptr here since the instance lifecycle will be
 		// managed by the packet.
-		// NOLINTNEXTLINE(llvm-qualified-auto,readability-qualified-auto)
 		auto* report2 = ReceiverReferenceTime::Parse(bufferReport1, report1->GetSize());
 
 		REQUIRE(report1->GetType() == report2->GetType());

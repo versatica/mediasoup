@@ -8,130 +8,132 @@
 
 using namespace RTC;
 
-struct TestTransportCongestionControlServerInput
-{
-	uint16_t wideSeqNumber;
-	uint64_t nowMs;
-};
-
-struct TestTransportCongestionControlServerResult
-{
-	uint16_t wideSeqNumber;
-	bool received;
-	uint64_t timestamp;
-};
-
-using TestResults = std::deque<std::vector<TestTransportCongestionControlServerResult>>;
-
-class TestTransportCongestionControlServerListener : public TransportCongestionControlServer::Listener
-{
-public:
-	virtual void OnTransportCongestionControlServerSendRtcpPacket(
-	  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override
-	{
-		auto* tccPacket = dynamic_cast<RTCP::FeedbackRtpTransportPacket*>(packet);
-
-		if (!tccPacket)
-		{
-			return;
-		}
-
-		auto packetResults = tccPacket->GetPacketResults();
-
-		REQUIRE(!this->results.empty());
-
-		auto testResults = this->results.front();
-		this->results.pop_front();
-
-		REQUIRE(testResults.size() == packetResults.size());
-
-		auto packetResultIt = packetResults.begin();
-		auto testResultIt   = testResults.begin();
-
-		for (; packetResultIt != packetResults.end() && testResultIt != testResults.end();
-		     ++packetResultIt, ++testResultIt)
-		{
-			REQUIRE(packetResultIt->sequenceNumber == testResultIt->wideSeqNumber);
-			REQUIRE(packetResultIt->received == testResultIt->received);
-
-			if (packetResultIt->received)
-			{
-				REQUIRE(packetResultIt->receivedAtMs == static_cast<int64_t>(testResultIt->timestamp));
-			}
-		}
-	}
-
-public:
-	void SetResults(TestResults& results)
-	{
-		this->results = results;
-	}
-
-	void Check()
-	{
-		REQUIRE(this->results.empty());
-	}
-
-private:
-	TestResults results;
-};
-
-// clang-format off
-uint8_t buffer[] =
-{
-	0x90, 0x01, 0x00, 0x01,
-	0x00, 0x00, 0x00, 0x04,
-	0x00, 0x00, 0x00, 0x05,
-	0xbe, 0xde, 0x00, 0x01,	// Header Extensions
-	0x51, 0x60, 0xee, 0x00  // TCC Feedback
-};
-// clang-format on
-
-void validate(std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
-{
-	TestTransportCongestionControlServerListener listener;
-	auto tccServer =
-	  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
-
-	tccServer.SetMaxIncomingBitrate(150000);
-	tccServer.TransportConnected();
-
-	std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(buffer, sizeof(buffer)) };
-
-	RTP::HeaderExtensionIds headerExtensionIds{};
-
-	headerExtensionIds.transportWideCc01 = 5;
-
-	packet->AssignExtensionIds(headerExtensionIds);
-	packet->SetSequenceNumber(1);
-
-	// Save results.
-	listener.SetResults(results);
-
-	uint64_t startTs = inputs[0].nowMs;
-	uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
-
-	for (auto input : inputs)
-	{
-		// Periodic sending TCC packets.
-		uint64_t diffTs = input.nowMs - startTs;
-
-		if (diffTs >= TransportCcFeedbackSendInterval)
-		{
-			tccServer.FillAndSendTransportCcFeedback();
-			startTs = input.nowMs;
-		}
-
-		packet->UpdateTransportWideCc01(input.wideSeqNumber);
-		tccServer.IncomingPacket(input.nowMs, packet.get());
-	}
-
-	tccServer.FillAndSendTransportCcFeedback();
-	listener.Check();
-};
-
 SCENARIO("TransportCongestionControlServer", "[rtp]")
 {
+	struct TestTransportCongestionControlServerInput
+	{
+		uint16_t wideSeqNumber;
+		uint64_t nowMs;
+	};
+
+	struct TestTransportCongestionControlServerResult
+	{
+		uint16_t wideSeqNumber;
+		bool received;
+		uint64_t timestamp;
+	};
+
+	using TestResults = std::deque<std::vector<TestTransportCongestionControlServerResult>>;
+
+	class TestTransportCongestionControlServerListener
+	  : public TransportCongestionControlServer::Listener
+	{
+	public:
+		virtual void OnTransportCongestionControlServerSendRtcpPacket(
+		  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override
+		{
+			auto* tccPacket = dynamic_cast<RTCP::FeedbackRtpTransportPacket*>(packet);
+
+			if (!tccPacket)
+			{
+				return;
+			}
+
+			auto packetResults = tccPacket->GetPacketResults();
+
+			REQUIRE(!this->results.empty());
+
+			auto testResults = this->results.front();
+			this->results.pop_front();
+
+			REQUIRE(testResults.size() == packetResults.size());
+
+			auto packetResultIt = packetResults.begin();
+			auto testResultIt   = testResults.begin();
+
+			for (; packetResultIt != packetResults.end() && testResultIt != testResults.end();
+			     ++packetResultIt, ++testResultIt)
+			{
+				REQUIRE(packetResultIt->sequenceNumber == testResultIt->wideSeqNumber);
+				REQUIRE(packetResultIt->received == testResultIt->received);
+
+				if (packetResultIt->received)
+				{
+					REQUIRE(packetResultIt->receivedAtMs == static_cast<int64_t>(testResultIt->timestamp));
+				}
+			}
+		}
+
+	public:
+		void SetResults(TestResults& results)
+		{
+			this->results = results;
+		}
+
+		void Check()
+		{
+			REQUIRE(this->results.empty());
+		}
+
+	private:
+		TestResults results;
+	};
+
+	// clang-format off
+	uint8_t buffer[] =
+	{
+		0x90, 0x01, 0x00, 0x01,
+		0x00, 0x00, 0x00, 0x04,
+		0x00, 0x00, 0x00, 0x05,
+		0xbe, 0xde, 0x00, 0x01,	// Header Extensions
+		0x51, 0x60, 0xee, 0x00  // TCC Feedback
+	};
+	// clang-format on
+
+	auto validate =
+	  [&buffer](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
+	{
+		TestTransportCongestionControlServerListener listener;
+		auto tccServer =
+		  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
+
+		tccServer.SetMaxIncomingBitrate(150000);
+		tccServer.TransportConnected();
+
+		std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(buffer, sizeof(buffer)) };
+
+		RTP::HeaderExtensionIds headerExtensionIds{};
+
+		headerExtensionIds.transportWideCc01 = 5;
+
+		packet->AssignExtensionIds(headerExtensionIds);
+		packet->SetSequenceNumber(1);
+
+		// Save results.
+		listener.SetResults(results);
+
+		uint64_t startTs = inputs[0].nowMs;
+		uint64_t TransportCcFeedbackSendInterval{ 100u }; // In ms.
+
+		for (auto input : inputs)
+		{
+			// Periodic sending TCC packets.
+			uint64_t diffTs = input.nowMs - startTs;
+
+			if (diffTs >= TransportCcFeedbackSendInterval)
+			{
+				tccServer.FillAndSendTransportCcFeedback();
+				startTs = input.nowMs;
+			}
+
+			packet->UpdateTransportWideCc01(input.wideSeqNumber);
+			tccServer.IncomingPacket(input.nowMs, packet.get());
+		}
+
+		tccServer.FillAndSendTransportCcFeedback();
+		listener.Check();
+	};
+
 	SECTION("normal time and sequence")
 	{
 		// clang-format off

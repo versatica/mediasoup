@@ -4,7 +4,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP parsing", "[parser][rtcp][packet]")
+SCENARIO("RTCP Packet", "[rtcp][packet]")
 {
 	// RTCP common header
 	// Version:2, Padding:false, Count:0, Type:200(SR), Lengh:0

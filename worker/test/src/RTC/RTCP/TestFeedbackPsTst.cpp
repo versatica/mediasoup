@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS TSTN parsing", "[parser][rtcp][feedback-ps][tstn]")
+SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 {
 	// RTCP TSTN packet.
 

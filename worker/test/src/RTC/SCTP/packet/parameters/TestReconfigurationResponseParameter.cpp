@@ -2,11 +2,12 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 #include "RTC/SCTP/packet/parameters/ReconfigurationResponseParameter.hpp"
-#include "RTC/SCTP/sctpCommon.hpp" // in worker/test/include/
+#include "RTC/SCTP/sctpCommon.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
 using namespace RTC::SCTP;
+using namespace SCTP_COMMON;
 
 SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
 {

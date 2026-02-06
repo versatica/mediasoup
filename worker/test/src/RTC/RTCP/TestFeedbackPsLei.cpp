@@ -5,7 +5,7 @@
 
 using namespace RTC::RTCP;
 
-SCENARIO("RTCP Feedback PS LEI parsing", "[parser][rtcp][feedback-ps][lei]")
+SCENARIO("RTCP Feedback PS LEI", "[rtcp][feedback-ps][lei]")
 {
 	// RTCP LEI packet.
 
