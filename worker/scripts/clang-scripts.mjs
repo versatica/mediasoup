@@ -6,6 +6,7 @@ import { execSync } from 'node:child_process';
 import { globSync } from 'glob';
 
 const PYTHON = getPython();
+const ROOT_DIR = getRootDir();
 const BUILD_DIR = getBuildDir();
 const NUM_CORES = getNumCores();
 const CLANG_FORMAT_VERSION = 21;
@@ -152,7 +153,6 @@ function tidy({ fix }) {
 function normalizeCompileCommands() {
 	logInfo('normalizeCompileCommands()');
 
-	const rootDir = path.resolve(path.join('../../'));
 	const compileCommandsFile = `${BUILD_DIR}/compile_commands.json`;
 
 	try {
@@ -164,7 +164,7 @@ function normalizeCompileCommands() {
 				const absolutePath = path.resolve(entry.directory, entry.file);
 
 				// Convert to relative path from repo root.
-				entry.file = path.relative(rootDir, absolutePath);
+				entry.file = path.relative(ROOT_DIR, absolutePath);
 			}
 		}
 
@@ -281,10 +281,14 @@ function getPython() {
 	return python;
 }
 
+function getRootDir() {
+	return path.resolve(path.join('../../'));
+}
+
 function getBuildDir() {
-	const mediasoupBuildtype = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
-	const workerDir = path.resolve(path.join('../'));
+	const workerDir = path.join(ROOT_DIR, 'worker/');
 	const workerOutDir = process.env.MEDIASOUP_OUT_DIR ?? `${workerDir}/out`;
+	const mediasoupBuildtype = process.env.MEDIASOUP_BUILDTYPE ?? 'Release';
 	const workerInstallDir =
 		process.env.MEDIASOUP_INSTALL_DIR ??
 		`${workerOutDir}/${mediasoupBuildtype}`;
