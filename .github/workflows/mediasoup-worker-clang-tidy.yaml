@@ -30,6 +30,9 @@ jobs:
         working-directory: worker
         run: invoke flatc
 
+      - name: Install NPM development dependencies for worker
+        run: npm ci --prefix worker/scripts --foreground-scripts
+
       - name: Normalize compile_commands.json paths
         run: npm run normalize-compile-commands --prefix worker/scripts --foreground-scripts
 
