@@ -114,7 +114,7 @@ SCENARIO("Utils::IP", "[utils][ip]")
 
 	SECTION("GetAddressInfo()")
 	{
-		struct sockaddr_in sin;
+		struct sockaddr_in sin{};
 
 		std::memset(&sin, 0, sizeof(sin));
 
