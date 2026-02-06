@@ -76,10 +76,10 @@ SCENARIO("receive RTP packets and trigger NACK", "[rtp][rtpstream][rtpstreamrecv
 
 							for (auto it = nackPacket->Begin(); it != nackPacket->End(); ++it)
 							{
-								RTCP::FeedbackRtpNackItem* item = *it;
+								const RTCP::FeedbackRtpNackItem* item = *it;
 
-								uint16_t firstSeq = item->GetPacketId();
-								uint16_t bitmask  = item->GetLostPacketBitmask();
+								const uint16_t firstSeq = item->GetPacketId();
+								uint16_t bitmask        = item->GetLostPacketBitmask();
 
 								this->nackedSeqNumbers.push_back(firstSeq);
 

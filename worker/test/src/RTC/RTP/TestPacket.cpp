@@ -10,6 +10,7 @@
 #include <string>
 
 using namespace RTC;
+using namespace RTP_COMMON;
 
 // NOLINTNEXTLINE (clang-tidy readability-function-size)
 SCENARIO("RTP Packet", "[serializable][rtp][packet]")

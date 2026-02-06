@@ -58,6 +58,7 @@ Checks: "*,\
   -llvm-include-order,\
   -llvm-header-guard,\
   -llvm-else-after-return,\
+  -llvm-prefer-static-over-anonymous-namespace,\
   -llvmlibc-*,\
   -misc-confusable-identifiers,\
   -misc-include-cleaner,\

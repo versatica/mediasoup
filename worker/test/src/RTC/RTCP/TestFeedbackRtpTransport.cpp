@@ -6,7 +6,7 @@
 
 using namespace RTC::RTCP;
 
-namespace
+SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
 {
 	struct TestFeedbackRtpTransportInput
 	{
@@ -19,10 +19,7 @@ namespace
 		uint64_t timestamp{ 0u };
 		size_t maxPacketSize{ 0u };
 	};
-} // namespace
 
-SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]")
-{
 	static constexpr size_t RtcpMtu{ 1200u };
 
 	const uint32_t senderSsrc{ 1111u };
@@ -771,7 +768,7 @@ SCENARIO("RTCP Feeback RTP transport", "[parser][rtcp][feedback-rtp][transport]"
 		}
 	}
 
-	SECTION("Check GetBaseDelta Wraparound")
+	SECTION("check GetBaseDelta() wraparound")
 	{
 		static const auto MaxBaseTime =
 		  FeedbackRtpTransportPacket::TimeWrapPeriod - FeedbackRtpTransportPacket::BaseTimeTick;

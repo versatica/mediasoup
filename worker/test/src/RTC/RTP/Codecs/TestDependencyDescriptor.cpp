@@ -4,16 +4,16 @@
 
 using namespace RTC;
 
-class Listener : public ::RTC::RTP::Codecs::DependencyDescriptor::Listener
-{
-public:
-	void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
-	{
-	}
-};
-
 SCENARIO("parse Dependency Descriptor", "[rtp][codecs][DD]")
 {
+	class Listener : public ::RTC::RTP::Codecs::DependencyDescriptor::Listener
+	{
+	public:
+		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
+		{
+		}
+	};
+
 	SECTION("parse Dependency Descriptor")
 	{
 		/**

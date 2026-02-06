@@ -10,8 +10,8 @@ SCENARIO("RTP ProbationGenerator", "[rtp][probationgenerator]")
 	{
 		RTP::ProbationGenerator probationGenerator;
 
-		auto* packet = probationGenerator.GetNextPacket(1000);
-		auto seq     = packet->GetSequenceNumber();
+		const auto* packet = probationGenerator.GetNextPacket(1000);
+		const auto seq     = packet->GetSequenceNumber();
 
 		REQUIRE(packet->GetSsrc() == RTP::ProbationGenerator::Ssrc);
 		REQUIRE(packet->GetPayloadType() == RTP::ProbationGenerator::PayloadType);

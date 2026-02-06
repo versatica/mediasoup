@@ -11,22 +11,19 @@
 
 using namespace RTC::RTP;
 
-namespace RTC
+namespace RTP_COMMON
 {
-	namespace RTP
-	{
-		// NOTE: We need to declare them here with `extern` and then define them in
-		// rtpCommon.cpp.
-		// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
-		extern thread_local uint8_t FactoryBuffer[66661];
-		extern thread_local uint8_t SerializeBuffer[66662];
-		extern thread_local uint8_t CloneBuffer[66663];
-		extern thread_local uint8_t DataBuffer[66664];
-		extern thread_local uint8_t ThrowBuffer[66665];
+	// NOTE: We need to declare them here with `extern` and then define them in
+	// rtpCommon.cpp.
+	// NOTE: Random size buffers because anyway we use sizeof(XxxxBuffer).
+	extern thread_local uint8_t FactoryBuffer[66661];
+	extern thread_local uint8_t SerializeBuffer[66662];
+	extern thread_local uint8_t CloneBuffer[66663];
+	extern thread_local uint8_t DataBuffer[66664];
+	extern thread_local uint8_t ThrowBuffer[66665];
 
-		void ResetBuffers();
-	} // namespace RTP
-} // namespace RTC
+	void ResetBuffers();
+} // namespace RTP_COMMON
 
 // NOLINTNEXTLINE (cppcoreguidelines-macro-usage)
 #define CHECK_RTP_PACKET(/*const Packet**/ packet,                                                   \
