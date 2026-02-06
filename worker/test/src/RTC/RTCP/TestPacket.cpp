@@ -2,8 +2,6 @@
 #include "RTC/RTCP/Packet.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Packet", "[rtcp][packet]")
 {
 	// RTCP common header
@@ -18,7 +16,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 
 	SECTION("a RTCP packet may only contain the RTCP common header")
 	{
-		const std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::Packet> packet{ RTC::RTCP::Packet::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 	}
@@ -28,7 +26,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 		// Provide a wrong packet length.
 		const size_t length = sizeof(buffer) - 1;
 
-		const std::unique_ptr<Packet> packet{ Packet::Parse(buffer, length) };
+		const std::unique_ptr<RTC::RTCP::Packet> packet{ RTC::RTCP::Packet::Parse(buffer, length) };
 
 		REQUIRE(!packet);
 	}
@@ -38,7 +36,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 		// Set an incorrect version value (0).
 		buffer[0] &= 0b00111111;
 
-		const std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::Packet> packet{ RTC::RTCP::Packet::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(!packet);
 	}
@@ -48,7 +46,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 		// Set the packet length to zero.
 		buffer[3] = 1;
 
-		const std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::Packet> packet{ RTC::RTCP::Packet::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(!packet);
 	}
@@ -58,7 +56,7 @@ SCENARIO("RTCP Packet", "[rtcp][packet]")
 		// Set and unknown packet type (0).
 		buffer[1] = 0;
 
-		const std::unique_ptr<Packet> packet{ Packet::Parse(buffer, sizeof(buffer)) };
+		const std::unique_ptr<RTC::RTCP::Packet> packet{ RTC::RTCP::Packet::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(!packet);
 	}

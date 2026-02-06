@@ -1126,7 +1126,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		VideoLayers newTargetLayers;
+		RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
 		if (RecalculateTargetLayers(newTargetLayers))
 		{
@@ -1149,7 +1149,7 @@ namespace RTC
 		}
 	}
 
-	bool SvcConsumer::RecalculateTargetLayers(VideoLayers& newTargetLayers) const
+	bool SvcConsumer::RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const
 	{
 		MS_TRACE();
 

@@ -3,14 +3,12 @@
 #include "RTC/KeyFrameRequestManager.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-using namespace RTC;
-
 SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 {
-	class TestKeyFrameRequestManagerListener : public KeyFrameRequestManager::Listener
+	class TestKeyFrameRequestManagerListener : public RTC::KeyFrameRequestManager::Listener
 	{
 	public:
-		void OnKeyFrameNeeded(KeyFrameRequestManager* /*keyFrameRequestManager */, uint32_t /*ssrc*/) override
+		void OnKeyFrameNeeded(RTC::KeyFrameRequestManager* /*keyFrameRequestManager */, uint32_t /*ssrc*/) override
 		{
 			this->onKeyFrameNeededTimesCalled++;
 		}
@@ -29,7 +27,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	SECTION("key frame requested once, not received on time")
 	{
 		listener.Reset();
-		KeyFrameRequestManager keyFrameRequestManager(&listener, 1000);
+		RTC::KeyFrameRequestManager keyFrameRequestManager(&listener, 1000);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 
@@ -42,7 +40,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	SECTION("key frame requested many times, not received on time")
 	{
 		listener.Reset();
-		KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
+		RTC::KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameNeeded(1111);
@@ -58,7 +56,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	SECTION("key frame is received on time")
 	{
 		listener.Reset();
-		KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
+		RTC::KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.KeyFrameReceived(1111);
@@ -72,7 +70,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	SECTION("key frame is forced, no received on time")
 	{
 		listener.Reset();
-		KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
+		RTC::KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.ForceKeyFrameNeeded(1111);
@@ -86,7 +84,7 @@ SCENARIO("KeyFrameRequestManager", "[rtp][keyframe]")
 	SECTION("key frame is forced, received on time")
 	{
 		listener.Reset();
-		KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
+		RTC::KeyFrameRequestManager keyFrameRequestManager(&listener, 500);
 
 		keyFrameRequestManager.KeyFrameNeeded(1111);
 		keyFrameRequestManager.ForceKeyFrameNeeded(1111);

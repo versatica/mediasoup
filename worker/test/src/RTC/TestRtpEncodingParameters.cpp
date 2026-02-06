@@ -3,7 +3,7 @@
 #include <regex>
 #include <string>
 
-SCENARIO("parseScalabilityMode()", "[rtc]")
+SCENARIO("parseScalabilityMode()")
 {
 	static const std::regex ScalabilityModeRegex(
 	  "^[LS]([1-9]\\d{0,1})T([1-9]\\d{0,1})(_KEY)?.*", std::regex_constants::ECMAScript);

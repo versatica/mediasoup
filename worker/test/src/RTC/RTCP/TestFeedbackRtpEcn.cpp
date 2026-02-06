@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback RTP ECN", "[rtcp][feedback-rtp][ecn]")
 {
 	// clang-format off
@@ -35,7 +33,7 @@ SCENARIO("RTCP Feedback RTP ECN", "[rtcp][feedback-rtp][ecn]")
 	const uint16_t duplicatedPackets{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackRtpEcnPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackRtpEcnPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -55,7 +53,8 @@ SCENARIO("RTCP Feedback RTP ECN", "[rtcp][feedback-rtp][ecn]")
 
 	SECTION("parse FeedbackRtpEcnPacket")
 	{
-		std::unique_ptr<FeedbackRtpEcnPacket> packet{ FeedbackRtpEcnPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpEcnPacket> packet{ RTC::RTCP::FeedbackRtpEcnPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 

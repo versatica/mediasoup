@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 {
 	// RTCP NACK packet.
@@ -26,7 +24,7 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 	const uint16_t lostPacketBitmask{ 0x0003 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackRtpNackPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackRtpNackPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -41,7 +39,7 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 
 	SECTION("parse FeedbackRtpNackItem")
 	{
-		std::unique_ptr<FeedbackRtpNackPacket> packet{ FeedbackRtpNackPacket::Parse(
+		std::unique_ptr<RTC::RTCP::FeedbackRtpNackPacket> packet{ RTC::RTCP::FeedbackRtpNackPacket::Parse(
 			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
@@ -63,8 +61,8 @@ SCENARIO("RTCP Feedback RTP NACK", "[rtcp][feedback-rtp][nack]")
 
 	SECTION("create FeedbackRtpNackPacket")
 	{
-		FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
-		auto* item = new FeedbackRtpNackItem(pid, lostPacketBitmask);
+		RTC::RTCP::FeedbackRtpNackPacket packet(senderSsrc, mediaSsrc);
+		auto* item = new RTC::RTCP::FeedbackRtpNackItem(pid, lostPacketBitmask);
 
 		packet.AddItem(item);
 

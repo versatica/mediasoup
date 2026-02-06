@@ -12,8 +12,6 @@
 #include "RTC/SimpleConsumer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-using namespace RTC;
-
 namespace
 {
 	// NOLINTBEGIN(readability-identifier-naming)
@@ -21,27 +19,28 @@ namespace
 	auto* channelMessageRegistrator = new ChannelMessageRegistrator();
 	auto* channelSocket             = new Channel::ChannelSocket();
 	auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
-	auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
+	auto shared                     = RTC::Shared(channelMessageRegistrator, channelNotifier);
 	// NOLINTEND(readability-identifier-naming)
 
-	class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
+	class RtpStreamRecvListener : public RTC::RTP::RtpStreamRecv::Listener
 	{
 	public:
-		void OnRtpStreamScore(RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
+		void OnRtpStreamScore(
+		  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 		{
 		}
 
-		void OnRtpStreamSendRtcpPacket(RTP::RtpStreamRecv* rtpStream, RTCP::Packet* packet) override
+		void OnRtpStreamSendRtcpPacket(RTC::RTP::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override
 		{
 		}
 
 		void OnRtpStreamNeedWorstRemoteFractionLost(
-		  RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
+		  RTC::RTP::RtpStreamRecv* /*rtpStream*/, uint8_t& /*worstRemoteFractionLost*/) override
 		{
 		}
 	};
 
-	class ConsumerListener : public Consumer::Listener
+	class ConsumerListener : public RTC::Consumer::Listener
 	{
 		void OnConsumerSendRtpPacket(RTC::Consumer* /*consumer*/, RTC::RTP::Packet* packet) final
 		{
@@ -109,7 +108,7 @@ namespace
 		rtpParameters.mid = "mid";
 		rtpParameters.codecs.emplace_back(codec);
 		rtpParameters.encodings.emplace_back(encoding);
-		rtpParameters.headerExtensions = std::vector<RtpHeaderExtensionParameters>();
+		rtpParameters.headerExtensions = std::vector<RTC::RtpHeaderExtensionParameters>();
 
 		return rtpParameters.FillBuffer(builder);
 	};
@@ -142,7 +141,7 @@ namespace
 
 		const auto* consumeRequest = flatbuffers::GetRoot<FBS::Transport::ConsumeRequest>(buf);
 
-		return std::make_unique<SimpleConsumer>(
+		return std::make_unique<RTC::SimpleConsumer>(
 		  &shared,
 		  consumeRequest->consumerId()->str(),
 		  consumeRequest->producerId()->str(),
@@ -150,12 +149,12 @@ namespace
 		  consumeRequest);
 	}
 
-	std::unique_ptr<RTP::RtpStreamRecv> createRtpStreamRecv()
+	std::unique_ptr<RTC::RTP::RtpStreamRecv> createRtpStreamRecv()
 	{
 		RtpStreamRecvListener streamRecvListener;
-		RTP::RtpStream::Params params;
+		RTC::RTP::RtpStream::Params params;
 
-		return std::make_unique<RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
+		return std::make_unique<RTC::RTP::RtpStreamRecv>(&streamRecvListener, params, 0u, false);
 	}
 
 	/**
@@ -176,8 +175,8 @@ namespace
 		}
 
 		std::unique_ptr<ConsumerListener> listener;
-		std::unique_ptr<SimpleConsumer> consumer;
-		std::unique_ptr<RTP::RtpStreamRecv> rtpStream;
+		std::unique_ptr<RTC::SimpleConsumer> consumer;
+		std::unique_ptr<RTC::RTP::RtpStreamRecv> rtpStream;
 	};
 } // namespace
 
@@ -233,8 +232,8 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 	SECTION("RTP packets are not forwarded when the consumer is not active")
 	{
 		Fixture fixture;
-		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
 		packet->SetPayloadType(payloadType);
 
@@ -250,10 +249,10 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		Fixture fixture;
 
 		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
-		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
 		packet->SetPayloadType(payloadType + 1);
 
@@ -268,10 +267,10 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		Fixture fixture;
 
 		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
-		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 0);
-		RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 0);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
 		packet->SetPayloadType(payloadType + 1);
 
@@ -286,10 +285,10 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 		Fixture fixture;
 
 		// Indicate that the transport is connected in order to activate the consumer.
-		dynamic_cast<Consumer*>(fixture.consumer.get())->TransportConnected();
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
-		auto* packet = RTP::Packet::Parse(buffer, originalPacketLength + 64);
-		RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
 		uint16_t seq{ 1 };
 

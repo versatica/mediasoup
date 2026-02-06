@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 {
 	// RTCP TSTN packet.
@@ -28,21 +26,22 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 	const uint8_t index{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackPsTstnPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackPsTstnPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		const FeedbackPsTstnItem* item = *(packet->Begin());
+		const RTC::RTCP::FeedbackPsTstnItem* item = *(packet->Begin());
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetSequenceNumber() == seq);
 	};
 
-	SECTION("parse FeedbackPsTstPacket")
+	SECTION("parse FeedbackPsTstnPacket")
 	{
-		std::unique_ptr<FeedbackPsTstnPacket> packet{ FeedbackPsTstnPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsTstnPacket> packet{ RTC::RTCP::FeedbackPsTstnPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -61,11 +60,11 @@ SCENARIO("RTCP Feedback PS TSTN", "[rtcp][feedback-ps][tstn]")
 		}
 	}
 
-	SECTION("create FeedbackPsTstPacket")
+	SECTION("create FeedbackPsTstnPacket")
 	{
-		FeedbackPsTstnPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackPsTstnPacket packet(senderSsrc, mediaSsrc);
 
-		auto* item = new FeedbackPsTstnItem(ssrc, seq, index);
+		auto* item = new RTC::RTCP::FeedbackPsTstnItem(ssrc, seq, index);
 
 		packet.AddItem(item);
 

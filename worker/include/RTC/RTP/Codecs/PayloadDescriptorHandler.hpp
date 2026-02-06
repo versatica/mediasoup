@@ -9,8 +9,6 @@
 
 namespace RTC
 {
-	using namespace ConsumerTypes;
-
 	namespace RTP
 	{
 		class Packet;
@@ -127,7 +125,7 @@ namespace RTC
 				{
 					return this->targetLayers.temporal;
 				}
-				const VideoLayers& GetTargetLayers() const
+				const RTC::ConsumerTypes::VideoLayers& GetTargetLayers() const
 				{
 					return this->targetLayers;
 				}
@@ -139,7 +137,7 @@ namespace RTC
 				{
 					return this->currentLayers.temporal;
 				}
-				const VideoLayers& GetCurrentLayers() const
+				const RTC::ConsumerTypes::VideoLayers& GetCurrentLayers() const
 				{
 					return this->currentLayers;
 				}
@@ -213,8 +211,8 @@ namespace RTC
 
 			private:
 				Params params;
-				VideoLayers targetLayers;
-				VideoLayers currentLayers;
+				RTC::ConsumerTypes::VideoLayers targetLayers;
+				RTC::ConsumerTypes::VideoLayers currentLayers;
 				bool ignoreDtx{ false };
 
 			private:

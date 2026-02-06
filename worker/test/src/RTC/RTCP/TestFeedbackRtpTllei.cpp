@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 {
 	// RTCP TLLEI packet.
@@ -26,7 +24,7 @@ SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 	const uint16_t lostPacketBitmask{ 0b1010101001010101 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackRtpTlleiPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackRtpTlleiPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -39,10 +37,11 @@ SCENARIO("RTCP Feedback RTP TLLEI", "[rtcp][feedback-rtp][tllei]")
 		REQUIRE(item->GetLostPacketBitmask() == lostPacketBitmask);
 	};
 
-	SECTION("parse FeedbackRtpTlleiPacket")
+	SECTION("parse RTC::RTCP::FeedbackRtpTlleiPacket")
 	{
-		std::unique_ptr<FeedbackRtpTlleiPacket> packet{ FeedbackRtpTlleiPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTlleiPacket> packet{
+			RTC::RTCP::FeedbackRtpTlleiPacket::Parse(buffer, sizeof(buffer))
+		};
 
 		REQUIRE(packet);
 

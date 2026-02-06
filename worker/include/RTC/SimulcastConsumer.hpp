@@ -28,9 +28,9 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
-		VideoLayers GetPreferredLayers() const override
+		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const override
 		{
-			VideoLayers layers;
+			RTC::ConsumerTypes::VideoLayers layers;
 
 			layers.spatial  = this->preferredLayers.spatial;
 			layers.temporal = this->preferredLayers.temporal;
@@ -92,7 +92,7 @@ namespace RTC
 		void RequestKeyFrameForTargetSpatialLayer();
 		void RequestKeyFrameForCurrentSpatialLayer();
 		void MayChangeLayers(bool force = false);
-		bool RecalculateTargetLayers(VideoLayers& newTargetLayers) const;
+		bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
 		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
 		void EmitScore() const;
@@ -120,9 +120,9 @@ namespace RTC
 		int16_t spatialLayerToSync{ -1 };
 		bool lastSentPacketHasMarker{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
-		VideoLayers preferredLayers;
-		VideoLayers provisionalTargetLayers;
-		VideoLayers targetLayers;
+		RTC::ConsumerTypes::VideoLayers preferredLayers;
+		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
+		RTC::ConsumerTypes::VideoLayers targetLayers;
 		int16_t currentSpatialLayer{ -1 };
 		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
 		uint16_t snReferenceSpatialLayer{ 0 };

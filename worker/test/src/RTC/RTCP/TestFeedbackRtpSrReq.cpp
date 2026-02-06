@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 {
 	// RTCP SR-REQ packet.
@@ -23,7 +21,7 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 	const uint32_t mediaSsrc{ 0x0330bdee };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackRtpSrReqPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackRtpSrReqPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -31,8 +29,9 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 
 	SECTION("parse FeedbackRtpSrReqPacket")
 	{
-		std::unique_ptr<FeedbackRtpSrReqPacket> packet{ FeedbackRtpSrReqPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpSrReqPacket> packet{
+			RTC::RTCP::FeedbackRtpSrReqPacket::Parse(buffer, sizeof(buffer))
+		};
 
 		REQUIRE(packet);
 
@@ -53,7 +52,7 @@ SCENARIO("RTCP Feedback RTP SR-REQ", "[rtcp][feedback-rtp][sr-req]")
 
 	SECTION("create FeedbackRtpSrReqPacket")
 	{
-		FeedbackRtpSrReqPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackRtpSrReqPacket packet(senderSsrc, mediaSsrc);
 
 		verify(&packet);
 	}

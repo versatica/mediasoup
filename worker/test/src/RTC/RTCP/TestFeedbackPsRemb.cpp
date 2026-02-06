@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 {
 	// RTCP REMB packet.
@@ -29,7 +27,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 	const std::vector<uint32_t> ssrcs{ 0x02d03702, 0x04a76747 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [&ssrcs](FeedbackPsRembPacket* packet)
+	auto verify = [&ssrcs](RTC::RTCP::FeedbackPsRembPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -39,7 +37,8 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 
 	SECTION("parse FeedbackPsRembPacket")
 	{
-		std::unique_ptr<FeedbackPsRembPacket> packet{ FeedbackPsRembPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsRembPacket> packet{ RTC::RTCP::FeedbackPsRembPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -60,7 +59,7 @@ SCENARIO("RTCP Feedback PS REMB", "[rtcp][feedback-ps][remb]")
 
 	SECTION("create FeedbackPsRembPacket")
 	{
-		FeedbackPsRembPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackPsRembPacket packet(senderSsrc, mediaSsrc);
 
 		packet.SetSsrcs(ssrcs);
 		packet.SetBitrate(bitrate);

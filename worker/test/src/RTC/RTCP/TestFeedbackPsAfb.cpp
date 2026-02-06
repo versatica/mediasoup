@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback PS AFB", "[rtcp][feedback-ps][afb]")
 {
 	// RTCP AFB packet.
@@ -23,16 +21,17 @@ SCENARIO("RTCP Feedback PS AFB", "[rtcp][feedback-ps][afb]")
 	const uint32_t senderSsrc{ 0xfa17fa17 };
 	const uint32_t mediaSsrc{ 0 };
 
-	auto verify = [](FeedbackPsAfbPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackPsAfbPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
-		REQUIRE(packet->GetApplication() == FeedbackPsAfbPacket::Application::UNKNOWN);
+		REQUIRE(packet->GetApplication() == RTC::RTCP::FeedbackPsAfbPacket::Application::UNKNOWN);
 	};
 
 	SECTION("parse FeedbackPsAfbPacket")
 	{
-		std::unique_ptr<FeedbackPsAfbPacket> packet{ FeedbackPsAfbPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsAfbPacket> packet{ RTC::RTCP::FeedbackPsAfbPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 

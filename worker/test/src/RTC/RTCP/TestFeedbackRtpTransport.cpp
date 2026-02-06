@@ -4,8 +4,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 {
 	struct TestFeedbackRtpTransportInput
@@ -25,9 +23,10 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 	const uint32_t senderSsrc{ 1111u };
 	const uint32_t mediaSsrc{ 2222u };
 
-	auto verify = [](
-	                const std::vector<struct TestFeedbackRtpTransportInput>& inputs,
-	                std::vector<struct FeedbackRtpTransportPacket::PacketResult> packetResults)
+	auto verify =
+	  [](
+	    const std::vector<struct TestFeedbackRtpTransportInput>& inputs,
+	    std::vector<struct RTC::RTCP::FeedbackRtpTransportPacket::PacketResult> packetResults)
 	{
 		auto inputsIterator        = inputs.begin();
 		auto packetResultsIterator = packetResults.begin();
@@ -69,7 +68,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 	SECTION(
 	  "create FeedbackRtpTransportPacket, small delta run length chunk and single large delta status packet")
 	{
-		auto packet = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		REQUIRE(packet);
 
@@ -141,8 +140,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 			SECTION("parse serialized buffer")
 			{
-				std::unique_ptr<FeedbackRtpTransportPacket> packet2{ FeedbackRtpTransportPacket::Parse(
-					buffer, len) };
+				std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet2{
+					RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer, len)
+				};
 
 				REQUIRE(packet2);
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
@@ -162,7 +162,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 	SECTION("create FeedbackRtpTransportPacket, run length chunk (2)")
 	{
-		auto packet = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		/* clang-format off */
 		std::vector<TestFeedbackRtpTransportInput> inputs =
@@ -206,8 +206,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 			SECTION("parse serialized buffer")
 			{
-				std::unique_ptr<FeedbackRtpTransportPacket> packet2{ FeedbackRtpTransportPacket::Parse(
-					buffer, len) };
+				std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet2{
+					RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer, len)
+				};
 
 				REQUIRE(packet2);
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
@@ -240,7 +241,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		};
 		/* clang-format on */
 
-		auto packet = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
 
@@ -275,8 +276,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 			SECTION("parse serialized buffer")
 			{
-				std::unique_ptr<FeedbackRtpTransportPacket> packet2{ FeedbackRtpTransportPacket::Parse(
-					buffer, len) };
+				std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet2{
+					RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer, len)
+				};
 
 				REQUIRE(packet2);
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
@@ -302,7 +304,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 			{ 1001, 1000000700, RtcpMtu },
 		};
 
-		auto packet = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
 
@@ -337,8 +339,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 			SECTION("parse serialized buffer")
 			{
-				std::unique_ptr<FeedbackRtpTransportPacket> packet2{ FeedbackRtpTransportPacket::Parse(
-					buffer, len) };
+				std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet2{
+					RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer, len)
+				};
 
 				REQUIRE(packet2);
 				REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
@@ -373,7 +376,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		};
 		/* clang-format on */
 
-		auto packet = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		packet->SetFeedbackPacketCount(1);
 
@@ -406,8 +409,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 		SECTION("parse serialized buffer")
 		{
-			std::unique_ptr<FeedbackRtpTransportPacket> packet2{ FeedbackRtpTransportPacket::Parse(
-				buffer, len) };
+			std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet2{
+				RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer, len)
+			};
 
 			REQUIRE(packet2);
 			REQUIRE(packet2->GetBaseSequenceNumber() == 1000);
@@ -440,7 +444,7 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		};
 		/* clang-format on */
 
-		auto packet2 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet2 = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		packet2->SetFeedbackPacketCount(2);
 
@@ -472,8 +476,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 		SECTION("parse serialized buffer")
 		{
-			std::unique_ptr<FeedbackRtpTransportPacket> packet3{ FeedbackRtpTransportPacket::Parse(
-				buffer, len) };
+			std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet3{
+				RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer, len)
+			};
 
 			REQUIRE(packet3);
 			REQUIRE(packet3->GetBaseSequenceNumber() == 1008);
@@ -506,8 +511,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		};
 		// clang-format on
 
-		std::unique_ptr<FeedbackRtpTransportPacket> packet{ FeedbackRtpTransportPacket::Parse(
-			data, sizeof(data)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet{
+			RTC::RTCP::FeedbackRtpTransportPacket::Parse(data, sizeof(data))
+		};
 
 		REQUIRE(packet);
 		REQUIRE(packet->GetSize() == sizeof(data));
@@ -516,8 +522,8 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		REQUIRE(packet->GetReferenceTime() == 6275825); // 0x5FC2F1 (signed 24 bits)
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
-		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    (static_cast<int64_t>(6275825) * FeedbackRtpTransportPacket::BaseTimeTick));
+		  RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriod +
+		    (static_cast<int64_t>(6275825) * RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick));
 		REQUIRE(packet->GetFeedbackPacketCount() == 3);
 
 		SECTION("serialize packet")
@@ -543,8 +549,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		};
 		// clang-format on
 
-		std::unique_ptr<FeedbackRtpTransportPacket> packet{ FeedbackRtpTransportPacket::Parse(
-			data, sizeof(data)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet{
+			RTC::RTCP::FeedbackRtpTransportPacket::Parse(data, sizeof(data))
+		};
 
 		REQUIRE(packet);
 		REQUIRE(packet->GetSize() == sizeof(data));
@@ -553,8 +560,8 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		REQUIRE(packet->GetReferenceTime() == -2); // 0xFFFFFE = -2 (signed 24 bits)
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
-		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    (static_cast<int64_t>(-2) * FeedbackRtpTransportPacket::BaseTimeTick));
+		  RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriod +
+		    (static_cast<int64_t>(-2) * RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick));
 		REQUIRE(packet->GetFeedbackPacketCount() == 1);
 
 		SECTION("serialize packet")
@@ -581,8 +588,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		};
 		// clang-format on
 
-		std::unique_ptr<FeedbackRtpTransportPacket> packet{ FeedbackRtpTransportPacket::Parse(
-			data, sizeof(data)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> packet{
+			RTC::RTCP::FeedbackRtpTransportPacket::Parse(data, sizeof(data))
+		};
 
 		REQUIRE(packet);
 		REQUIRE(packet->GetSize() == sizeof(data));
@@ -591,8 +599,8 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		REQUIRE(packet->GetReferenceTime() == -4368470);
 		REQUIRE(
 		  packet->GetReferenceTimestamp() ==
-		  FeedbackRtpTransportPacket::TimeWrapPeriod +
-		    (static_cast<int64_t>(-4368470) * FeedbackRtpTransportPacket::BaseTimeTick));
+		  RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriod +
+		    (static_cast<int64_t>(-4368470) * RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick));
 
 		REQUIRE(packet->GetFeedbackPacketCount() == 0);
 
@@ -748,8 +756,9 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 		{
 			auto buffer = packetMeta.buffer;
 
-			std::unique_ptr<FeedbackRtpTransportPacket> feedback{ FeedbackRtpTransportPacket::Parse(
-				buffer.data(), buffer.size()) };
+			std::unique_ptr<RTC::RTCP::FeedbackRtpTransportPacket> feedback{
+				RTC::RTCP::FeedbackRtpTransportPacket::Parse(buffer.data(), buffer.size())
+			};
 
 			REQUIRE(feedback->GetReferenceTime() == packetMeta.baseTimeRaw);
 			REQUIRE(feedback->GetReferenceTimestamp() == packetMeta.baseTimeMs);
@@ -770,18 +779,18 @@ SCENARIO("RTCP Feedback RTP Transport", "[rtcp][feedback-rtp][transport]")
 
 	SECTION("check GetBaseDelta() wraparound")
 	{
-		static const auto MaxBaseTime =
-		  FeedbackRtpTransportPacket::TimeWrapPeriod - FeedbackRtpTransportPacket::BaseTimeTick;
+		static const auto MaxBaseTime = RTC::RTCP::FeedbackRtpTransportPacket::TimeWrapPeriod -
+		                                RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick;
 
-		auto packet1 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
-		auto packet2 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
-		auto packet3 = std::make_unique<FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet1 = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet2 = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
+		auto packet3 = std::make_unique<RTC::RTCP::FeedbackRtpTransportPacket>(senderSsrc, mediaSsrc);
 
 		packet1->SetReferenceTime(MaxBaseTime);
-		packet2->SetReferenceTime(MaxBaseTime + FeedbackRtpTransportPacket::BaseTimeTick);
+		packet2->SetReferenceTime(MaxBaseTime + RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick);
 		packet3->SetReferenceTime(
-		  MaxBaseTime + FeedbackRtpTransportPacket::BaseTimeTick +
-		  FeedbackRtpTransportPacket::BaseTimeTick);
+		  MaxBaseTime + RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick +
+		  RTC::RTCP::FeedbackRtpTransportPacket::BaseTimeTick);
 
 		REQUIRE(packet1->GetReferenceTime() == 16777215);
 		REQUIRE(packet2->GetReferenceTime() == 0);

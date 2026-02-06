@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 {
 	// RTCP FIR packet.
@@ -27,12 +25,12 @@ SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 	const uint8_t seq{ 4 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackPsFirPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackPsFirPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		const FeedbackPsFirItem* item = *(packet->Begin());
+		const RTC::RTCP::FeedbackPsFirItem* item = *(packet->Begin());
 
 		REQUIRE(item->GetSsrc() == ssrc);
 		REQUIRE(item->GetSequenceNumber() == seq);
@@ -40,7 +38,8 @@ SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 
 	SECTION("parse FeedbackPsFirPacket")
 	{
-		std::unique_ptr<FeedbackPsFirPacket> packet{ FeedbackPsFirPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsFirPacket> packet{ RTC::RTCP::FeedbackPsFirPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -61,9 +60,9 @@ SCENARIO("RTCP Feedback PS FIR", "[rtcp][feedback-ps][fir]")
 
 	SECTION("create FeedbackPsFirPacket")
 	{
-		FeedbackPsFirPacket packet(senderSsrc, mediaSsrc);
+		RTC::RTCP::FeedbackPsFirPacket packet(senderSsrc, mediaSsrc);
 
-		auto* item = new FeedbackPsFirItem(ssrc, seq);
+		auto* item = new RTC::RTCP::FeedbackPsFirItem(ssrc, seq);
 
 		packet.AddItem(item);
 

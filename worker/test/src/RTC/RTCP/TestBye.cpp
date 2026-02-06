@@ -4,8 +4,6 @@
 #include <cstring> // std::memcmp()
 #include <string>
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP BYE", "[rtcp][bye]")
 {
 	// RCTP BYE packet.
@@ -30,7 +28,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 	// NOTE: No need to pass const integers to the lambda.
 	// NOTE: If we pass const integers then clang-tidy complains with
 	// 'clang-diagnostic-unused-lambda-capture'.
-	auto verify = [&reason](ByePacket* packet)
+	auto verify = [&reason](RTC::RTCP::ByePacket* packet)
 	{
 		REQUIRE(packet->GetReason() == reason);
 
@@ -43,9 +41,9 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 		REQUIRE(*it == ssrc2);
 	};
 
-	SECTION("parse BYE packet")
+	SECTION("parse ByePacket")
 	{
-		std::unique_ptr<ByePacket> packet{ ByePacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::ByePacket> packet{ RTC::RTCP::ByePacket::Parse(buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 
@@ -67,7 +65,7 @@ SCENARIO("RTCP BYE", "[rtcp][bye]")
 	SECTION("create ByePacket")
 	{
 		// Create local Bye packet and check content.
-		ByePacket packet;
+		RTC::RTCP::ByePacket packet;
 
 		packet.AddSsrc(ssrc1);
 		packet.AddSsrc(ssrc2);

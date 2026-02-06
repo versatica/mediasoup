@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 {
 	// RTCP Packet. Sender Report and Receiver Report.
@@ -23,7 +21,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 	// clang-format on
 
 	// Sender Report buffer start point.
-	const uint8_t* srBuffer = buffer + Packet::CommonHeaderSize;
+	const uint8_t* srBuffer = buffer + RTC::RTCP::Packet::CommonHeaderSize;
 
 	// SR values.
 	const uint32_t ssrc{ 0x5d931534 };
@@ -34,7 +32,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 	const uint32_t octetCount{ 577280 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](SenderReport* report)
+	auto verify = [](RTC::RTCP::SenderReport* report)
 	{
 		REQUIRE(report->GetSsrc() == ssrc);
 		REQUIRE(report->GetNtpSec() == ntpSec);
@@ -46,7 +44,8 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 
 	SECTION("parse SR packet")
 	{
-		std::unique_ptr<SenderReportPacket> packet{ SenderReportPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet{ RTC::RTCP::SenderReportPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		auto* report = *(packet->Begin());
 
@@ -67,7 +66,8 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 
 	SECTION("parse SR")
 	{
-		std::unique_ptr<SenderReport> report{ SenderReport::Parse(srBuffer, SenderReport::HeaderSize) };
+		std::unique_ptr<RTC::RTCP::SenderReport> report{ RTC::RTCP::SenderReport::Parse(
+			srBuffer, RTC::RTCP::SenderReport::HeaderSize) };
 
 		REQUIRE(report);
 
@@ -75,13 +75,13 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 
 		SECTION("serialize SenderReport instance")
 		{
-			uint8_t serialized[SenderReport::HeaderSize] = { 0 };
+			uint8_t serialized[RTC::RTCP::SenderReport::HeaderSize] = { 0 };
 
 			report->Serialize(serialized);
 
 			SECTION("compare serialized SenderReport with original buffer")
 			{
-				REQUIRE(std::memcmp(srBuffer, serialized, SenderReport::HeaderSize) == 0);
+				REQUIRE(std::memcmp(srBuffer, serialized, RTC::RTCP::SenderReport::HeaderSize) == 0);
 			}
 		}
 	}
@@ -90,12 +90,12 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 	{
 		const size_t count = 3;
 
-		SenderReportPacket packet;
+		RTC::RTCP::SenderReportPacket packet;
 
 		for (size_t i = 1; i <= count; ++i)
 		{
 			// Create report and add to packet.
-			auto* report = new SenderReport();
+			auto* report = new RTC::RTCP::SenderReport();
 
 			report->SetSsrc(i);
 			report->SetNtpSec(i);
@@ -115,22 +115,23 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 		// NOTE: clang-tidy says that this could be `const SenderReport* const reports`
 		// but that's absolutely wrong!
 		// NOLINTNEXTLINE(misc-const-correctness)
-		const SenderReport* reports[count]{ nullptr };
+		const RTC::RTCP::SenderReport* reports[count]{ nullptr };
 
-		std::unique_ptr<SenderReportPacket> packet2{ static_cast<SenderReportPacket*>(
-			Packet::Parse(buffer, sizeof(buffer))) };
+		std::unique_ptr<RTC::RTCP::SenderReportPacket> packet2{
+			static_cast<RTC::RTCP::SenderReportPacket*>(RTC::RTCP::Packet::Parse(buffer, sizeof(buffer)))
+		};
 
 		REQUIRE(packet2 != nullptr);
 
 		reports[0] = *(packet2->Begin());
 
-		auto* packet3 = static_cast<SenderReportPacket*>(packet2->GetNext());
+		auto* packet3 = static_cast<RTC::RTCP::SenderReportPacket*>(packet2->GetNext());
 
 		REQUIRE(packet3 != nullptr);
 
 		reports[1] = *(packet3->Begin());
 
-		auto* packet4 = static_cast<SenderReportPacket*>(packet3->GetNext());
+		auto* packet4 = static_cast<RTC::RTCP::SenderReportPacket*>(packet3->GetNext());
 
 		REQUIRE(packet4 != nullptr);
 
@@ -156,7 +157,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 	SECTION("create SR")
 	{
 		// Create local report and check content.
-		SenderReport report1;
+		RTC::RTCP::SenderReport report1;
 
 		report1.SetSsrc(ssrc);
 		report1.SetNtpSec(ntpSec);
@@ -169,7 +170,7 @@ SCENARIO("RTCP SenderReport", "[rtcp][sender-report]")
 
 		SECTION("create a report out of the existing one")
 		{
-			SenderReport report2(&report1);
+			RTC::RTCP::SenderReport report2(&report1);
 
 			verify(&report2);
 		}

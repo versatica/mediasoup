@@ -6,8 +6,6 @@
 #include "RTC/TransportCongestionControlServer.hpp"
 #include <catch2/catch_test_macros.hpp>
 
-using namespace RTC;
-
 SCENARIO("TransportCongestionControlServer", "[rtp]")
 {
 	struct TestTransportCongestionControlServerInput
@@ -26,13 +24,13 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	using TestResults = std::deque<std::vector<TestTransportCongestionControlServerResult>>;
 
 	class TestTransportCongestionControlServerListener
-	  : public TransportCongestionControlServer::Listener
+	  : public RTC::TransportCongestionControlServer::Listener
 	{
 	public:
 		virtual void OnTransportCongestionControlServerSendRtcpPacket(
 		  RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet) override
 		{
-			auto* tccPacket = dynamic_cast<RTCP::FeedbackRtpTransportPacket*>(packet);
+			auto* tccPacket = dynamic_cast<RTC::RTCP::FeedbackRtpTransportPacket*>(packet);
 
 			if (!tccPacket)
 			{
@@ -94,15 +92,15 @@ SCENARIO("TransportCongestionControlServer", "[rtp]")
 	  [&buffer](std::vector<TestTransportCongestionControlServerInput>& inputs, TestResults& results)
 	{
 		TestTransportCongestionControlServerListener listener;
-		auto tccServer =
-		  TransportCongestionControlServer(&listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
+		auto tccServer = RTC::TransportCongestionControlServer(
+		  &listener, RTC::BweType::TRANSPORT_CC, RTC::Consts::MtuSize);
 
 		tccServer.SetMaxIncomingBitrate(150000);
 		tccServer.TransportConnected();
 
-		std::unique_ptr<RTP::Packet> packet{ RTP::Packet::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(buffer, sizeof(buffer)) };
 
-		RTP::HeaderExtensionIds headerExtensionIds{};
+		RTC::RTP::HeaderExtensionIds headerExtensionIds{};
 
 		headerExtensionIds.transportWideCc01 = 5;
 

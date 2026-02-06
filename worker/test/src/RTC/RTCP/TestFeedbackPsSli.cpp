@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback PS SLI", "[rtcp][feedback-ps][sli]")
 {
 	// RTCP SLI packet.
@@ -27,12 +25,12 @@ SCENARIO("RTCP Feedback PS SLI", "[rtcp][feedback-ps][sli]")
 	const uint8_t pictureId{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackPsSliPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackPsSliPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		const FeedbackPsSliItem* item = *(packet->Begin());
+		const RTC::RTCP::FeedbackPsSliItem* item = *(packet->Begin());
 
 		REQUIRE(item);
 		REQUIRE(item->GetFirst() == first);
@@ -42,7 +40,8 @@ SCENARIO("RTCP Feedback PS SLI", "[rtcp][feedback-ps][sli]")
 
 	SECTION("parse FeedbackPsSliPacket")
 	{
-		std::unique_ptr<FeedbackPsSliPacket> packet{ FeedbackPsSliPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsSliPacket> packet{ RTC::RTCP::FeedbackPsSliPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 

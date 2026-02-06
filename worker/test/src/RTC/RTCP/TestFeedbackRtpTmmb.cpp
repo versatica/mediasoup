@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 {
 	// RTCP TMMBR packet.
@@ -28,7 +26,7 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 	const uint16_t overhead{ 0 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackRtpTmmbrPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackRtpTmmbrPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
@@ -44,8 +42,9 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 
 	SECTION("parse FeedbackRtpTmmbrPacket")
 	{
-		std::unique_ptr<FeedbackRtpTmmbrPacket> packet{ FeedbackRtpTmmbrPacket::Parse(
-			buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackRtpTmmbrPacket> packet{
+			RTC::RTCP::FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer))
+		};
 
 		REQUIRE(packet);
 
@@ -61,8 +60,9 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 			// represent the same content.
 			SECTION("create a packet out of the serialized buffer")
 			{
-				const std::unique_ptr<FeedbackRtpTmmbrPacket> packet{ FeedbackRtpTmmbrPacket::Parse(
-					buffer, sizeof(buffer)) };
+				const std::unique_ptr<RTC::RTCP::FeedbackRtpTmmbrPacket> packet{
+					RTC::RTCP::FeedbackRtpTmmbrPacket::Parse(buffer, sizeof(buffer))
+				};
 
 				verify(packet.get());
 			}
@@ -71,8 +71,8 @@ SCENARIO("RTCP Feedback RTP TMMBR", "[rtcp][feedback-rtp][tmmb]")
 
 	SECTION("create FeedbackRtpTmmbrPacket")
 	{
-		FeedbackRtpTmmbrPacket packet(senderSsrc, mediaSsrc);
-		auto* item = new FeedbackRtpTmmbrItem();
+		RTC::RTCP::FeedbackRtpTmmbrPacket packet(senderSsrc, mediaSsrc);
+		auto* item = new RTC::RTCP::FeedbackRtpTmmbrItem();
 
 		item->SetSsrc(ssrc);
 		item->SetBitrate(bitrate);

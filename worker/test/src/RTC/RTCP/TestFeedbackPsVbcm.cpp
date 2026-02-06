@@ -3,8 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memcmp()
 
-using namespace RTC::RTCP;
-
 SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 {
 	// RTCP VBCM packet.
@@ -34,12 +32,12 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 	const uint8_t valueMask{ 1 };
 
 	// NOTE: No need to pass const integers to the lambda.
-	auto verify = [](FeedbackPsVbcmPacket* packet)
+	auto verify = [](RTC::RTCP::FeedbackPsVbcmPacket* packet)
 	{
 		REQUIRE(packet->GetSenderSsrc() == senderSsrc);
 		REQUIRE(packet->GetMediaSsrc() == mediaSsrc);
 
-		const FeedbackPsVbcmItem* item = *(packet->Begin());
+		const RTC::RTCP::FeedbackPsVbcmItem* item = *(packet->Begin());
 
 		REQUIRE(item);
 		REQUIRE(item->GetSsrc() == ssrc);
@@ -51,7 +49,8 @@ SCENARIO("RTCP Feedback PS VBCM", "[rtcp][feedback-ps][vbcm]")
 
 	SECTION("parse FeedbackPsVbcmPacket")
 	{
-		std::unique_ptr<FeedbackPsVbcmPacket> packet{ FeedbackPsVbcmPacket::Parse(buffer, sizeof(buffer)) };
+		std::unique_ptr<RTC::RTCP::FeedbackPsVbcmPacket> packet{ RTC::RTCP::FeedbackPsVbcmPacket::Parse(
+			buffer, sizeof(buffer)) };
 
 		REQUIRE(packet);
 

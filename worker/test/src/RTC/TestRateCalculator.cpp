@@ -5,8 +5,6 @@
 #include <limits> // std::numeric_limits
 #include <vector>
 
-using namespace RTC;
-
 SCENARIO("RateCalculator", "[rate-calculator]")
 {
 	struct TestRateCalculatorData
@@ -17,7 +15,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	};
 
 	auto validate =
-	  [](RateCalculator& rate, uint64_t timeBase, std::vector<TestRateCalculatorData>& input)
+	  [](RTC::RateCalculator& rate, uint64_t timeBase, std::vector<TestRateCalculatorData>& input)
 	{
 		for (auto& item : input)
 		{
@@ -51,7 +49,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	SECTION("receive single item per 1000 ms")
 	{
-		RateCalculator rate;
+		RTC::RateCalculator rate;
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =
@@ -65,7 +63,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	SECTION("receive multiple items per 1000 ms")
 	{
-		RateCalculator rate;
+		RTC::RateCalculator rate;
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =
@@ -82,7 +80,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	SECTION("receive item every 1000 ms")
 	{
-		RateCalculator rate(1000, 8000, 100);
+		RTC::RateCalculator rate(1000, 8000, 100);
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =
@@ -98,7 +96,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	SECTION("slide")
 	{
-		RateCalculator rate(1000, 8000, 1000);
+		RTC::RateCalculator rate(1000, 8000, 1000);
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =
@@ -118,7 +116,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 
 	SECTION("slide with 100 items")
 	{
-		RateCalculator rate(1000, 8000, 100);
+		RTC::RateCalculator rate(1000, 8000, 100);
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =
@@ -141,7 +139,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	SECTION("wrap")
 	{
 		// window: 1000ms, items: 5 (granularity: 200ms)
-		RateCalculator rate(1000, 8000, 5);
+		RTC::RateCalculator rate(1000, 8000, 5);
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =
@@ -167,7 +165,7 @@ SCENARIO("RateCalculator", "[rate-calculator]")
 	SECTION("buffer overflow should not crash")
 	{
 		// window: 1000ms, items: 3 (granularity: 333ms)
-		RateCalculator rate(1000, 8000, 3);
+		RTC::RateCalculator rate(1000, 8000, 3);
 
 		// clang-format off
 		std::vector<TestRateCalculatorData> input =

@@ -22,8 +22,6 @@
 
 namespace RTC
 {
-	using namespace ConsumerTypes;
-
 	class Consumer : public Channel::ChannelSocket::RequestHandler
 	{
 	public:
@@ -87,10 +85,10 @@ namespace RTC
 		{
 			return this->type;
 		}
-		virtual VideoLayers GetPreferredLayers() const
+		virtual RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
 		{
 			// By default return 1:1.
-			VideoLayers layers;
+			RTC::ConsumerTypes::VideoLayers layers;
 
 			return layers;
 		}
