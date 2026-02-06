@@ -6,7 +6,8 @@
 		"lint": "node clang-scripts.mjs lint",
 		"format": "node clang-scripts.mjs format",
 		"tidy": "node clang-scripts.mjs tidy",
-		"tidy:fix": "node clang-scripts.mjs tidy:fix"
+		"tidy:fix": "node clang-scripts.mjs tidy:fix",
+		"normalize-compile-commands": "node clang-scripts.mjs normalize-compile-commands"
 	},
 	"dependencies": {
 		"glob": "^13.0.0"

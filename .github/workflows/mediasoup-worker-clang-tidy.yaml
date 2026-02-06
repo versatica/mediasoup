@@ -31,7 +31,7 @@ jobs:
         run: invoke flatc
 
       - name: Normalize compile_commands.json paths
-        run: node worker/scripts/normalize-compile-commands.mjs worker/out/Release/build/compile_commands.json
+        run: npm run normalize-compile-commands --prefix worker/scripts --foreground-scripts
 
       - uses: ZedThree/clang-tidy-review@v0.22.1
         id: review
