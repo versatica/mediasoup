@@ -21,8 +21,7 @@ const CLANG_FORMAT_PATHS = [
 const CLANG_TIDY_PATHS = [
 	'../src/**/*.cpp',
 	'../test/src/**/*.cpp',
-	// TODO
-	// '../fuzzer/src/**/*.cpp',
+	'../fuzzer/src/**/*.cpp',
 ];
 
 const task = process.argv.slice(2).join(' ');

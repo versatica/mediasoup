@@ -1,8 +1,7 @@
 #include "RTC/RTCP/FuzzerFeedbackRtpTransport.hpp"
 
-void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTransportPacket* packet)
+void FuzzerRtcRtcpFeedbackRtpTransport::Fuzz(RTC::RTCP::FeedbackRtpTransportPacket* packet)
 {
-	// packet->Dump();
 	packet->GetCount();
 	packet->GetSize();
 	packet->IsFull();
@@ -17,5 +16,5 @@ void Fuzzer::RTC::RTCP::FeedbackRtpTransport::Fuzz(::RTC::RTCP::FeedbackRtpTrans
 	packet->GetLatestTimestamp();
 	packet->GetPacketResults();
 	packet->GetPacketFractionLost();
-	packet->Serialize(::RTC::RTCP::SerializationBuffer);
+	packet->Serialize(RTC::RTCP::SerializationBuffer);
 }

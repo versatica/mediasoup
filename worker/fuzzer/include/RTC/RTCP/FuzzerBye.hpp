@@ -4,18 +4,9 @@
 #include "common.hpp"
 #include "RTC/RTCP/Bye.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtcpBye
 {
-	namespace RTC
-	{
-		namespace RTCP
-		{
-			namespace Bye
-			{
-				void Fuzz(::RTC::RTCP::ByePacket* packet);
-			}
-		} // namespace RTCP
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(RTC::RTCP::ByePacket* packet);
+}
 
 #endif

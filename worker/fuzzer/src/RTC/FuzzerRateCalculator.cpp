@@ -4,17 +4,26 @@
 #include "RTC/Consts.hpp"
 #include "RTC/RateCalculator.hpp"
 
-static ::RTC::RateCalculator rateCalculator;
-static uint64_t nowMs;
+namespace
+{
+	// NOLINTBEGIN(readability-identifier-naming)
+	RTC::RateCalculator rateCalculator;
+	uint64_t nowMs;
+	// NOLINTEND(readability-identifier-naming)
 
-// This Init() function must be declared static, otherwise linking will fail if
-// another source file defines same non static Init() function.
-static int Init();
+	int init()
+	{
+		nowMs = DepLibUV::GetTimeMs();
 
-void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
+		return 0;
+	}
+} // namespace
+
+void FuzzerRtcRateCalculator::Fuzz(const uint8_t* data, size_t len)
 {
 	// Trick to initialize our stuff just once.
-	static int unused = Init();
+	// NOLINTNEXTLINE(readability-identifier-naming)
+	thread_local const int unused = init();
 
 	// Avoid [-Wunused-variable].
 	(void)unused;
@@ -26,7 +35,7 @@ void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
 	}
 
 	auto size = static_cast<size_t>(
-	  Utils::Crypto::GetRandomUInt(0u, static_cast<uint32_t>(::RTC::Consts::MtuSize)));
+	  Utils::Crypto::GetRandomUInt(0u, static_cast<uint32_t>(RTC::Consts::MtuSize)));
 
 	nowMs += Utils::Crypto::GetRandomUInt(0u, 1000u);
 
@@ -37,11 +46,4 @@ void Fuzzer::RTC::RateCalculator::Fuzz(const uint8_t* data, size_t len)
 	{
 		rateCalculator.GetRate(nowMs);
 	}
-}
-
-int Init()
-{
-	nowMs = DepLibUV::GetTimeMs();
-
-	return 0;
 }

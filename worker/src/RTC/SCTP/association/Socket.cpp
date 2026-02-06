@@ -8,11 +8,6 @@ namespace RTC
 {
 	namespace SCTP
 	{
-		/* Static. */
-
-		// static constexpr size_t FactoryBufferLength{ 65536 };
-		// thread_local static uint8_t FactoryBuffer[FactoryBufferLength];
-
 		/* Instance methods. */
 
 		Socket::Socket(Socket::SocketOptions options) : options(options)

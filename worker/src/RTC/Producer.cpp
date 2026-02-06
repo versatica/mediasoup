@@ -21,7 +21,7 @@ namespace RTC
 	/* Static */
 
 	static constexpr size_t ProducerSendBufferSize{ 65536 };
-	thread_local static uint8_t ProducerSendBuffer[ProducerSendBufferSize];
+	thread_local uint8_t ProducerSendBuffer[ProducerSendBufferSize];
 	static constexpr unsigned int SendNackDelay{ 10u }; // In ms.
 
 	/* Instance methods. */
@@ -1194,8 +1194,8 @@ namespace RTC
 
 		// Mangle RTP header extensions.
 		{
-			thread_local static uint8_t buffer[4096];
-			thread_local static std::vector<RTC::RTP::Packet::Extension> extensions;
+			thread_local uint8_t buffer[4096];
+			thread_local std::vector<RTC::RTP::Packet::Extension> extensions;
 
 			// This happens just once.
 			if (extensions.capacity() != 24)

@@ -43,7 +43,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
 		REQUIRE(parameter->GetChunkTypeAt(1) == Chunk::ChunkType::ECNE);
-		REQUIRE(parameter->GetChunkTypeAt(2) == static_cast<Chunk::ChunkType>(0x42));
+		REQUIRE(static_cast<uint8_t>(parameter->GetChunkTypeAt(2)) == 0x42);
 
 		/* Serialize it. */
 
@@ -63,7 +63,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(parameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(parameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
 		REQUIRE(parameter->GetChunkTypeAt(1) == Chunk::ChunkType::ECNE);
-		REQUIRE(parameter->GetChunkTypeAt(2) == static_cast<Chunk::ChunkType>(0x42));
+		REQUIRE(static_cast<uint8_t>(parameter->GetChunkTypeAt(2)) == 0x42);
 
 		/* Clone it. */
 
@@ -85,7 +85,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(clonedParameter->GetNumberOfChunkTypes() == 3);
 		REQUIRE(clonedParameter->GetChunkTypeAt(0) == Chunk::ChunkType::RE_CONFIG);
 		REQUIRE(clonedParameter->GetChunkTypeAt(1) == Chunk::ChunkType::ECNE);
-		REQUIRE(clonedParameter->GetChunkTypeAt(2) == static_cast<Chunk::ChunkType>(0x42));
+		REQUIRE(static_cast<uint8_t>(clonedParameter->GetChunkTypeAt(2)) == 0x42);
 
 		delete clonedParameter;
 	}
@@ -125,6 +125,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 
 		parameter->AddChunkType(Chunk::ChunkType::OPERATION_ERROR);
 		parameter->AddChunkType(Chunk::ChunkType::COOKIE_ACK);
+		// NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
 		parameter->AddChunkType(static_cast<Chunk::ChunkType>(99));
 
 		CHECK_SCTP_PARAMETER(
@@ -141,7 +142,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(parameter->GetChunkTypeAt(1) == Chunk::ChunkType::CWR);
 		REQUIRE(parameter->GetChunkTypeAt(2) == Chunk::ChunkType::OPERATION_ERROR);
 		REQUIRE(parameter->GetChunkTypeAt(3) == Chunk::ChunkType::COOKIE_ACK);
-		REQUIRE(parameter->GetChunkTypeAt(4) == static_cast<Chunk::ChunkType>(99));
+		REQUIRE(static_cast<uint8_t>(parameter->GetChunkTypeAt(4)) == 99);
 
 		/* Parse itself and compare. */
 
@@ -164,7 +165,7 @@ SCENARIO("Supported Extensions Parameter (32776)", "[sctp][serializable]")
 		REQUIRE(parsedParameter->GetChunkTypeAt(1) == Chunk::ChunkType::CWR);
 		REQUIRE(parsedParameter->GetChunkTypeAt(2) == Chunk::ChunkType::OPERATION_ERROR);
 		REQUIRE(parsedParameter->GetChunkTypeAt(3) == Chunk::ChunkType::COOKIE_ACK);
-		REQUIRE(parsedParameter->GetChunkTypeAt(4) == static_cast<Chunk::ChunkType>(99));
+		REQUIRE(static_cast<uint8_t>(parsedParameter->GetChunkTypeAt(4)) == 99);
 
 		delete parsedParameter;
 	}

@@ -3,15 +3,15 @@
 #include "Utils.hpp"
 #include "RTC/TrendCalculator.hpp"
 
-void Fuzzer::RTC::TrendCalculator::Fuzz(const uint8_t* data, size_t len)
+void FuzzerRtcTrendCalculator::Fuzz(const uint8_t* data, size_t len)
 {
-	::RTC::TrendCalculator trend;
+	RTC::TrendCalculator trend;
 	auto now = DepLibUV::GetTimeMs();
 	size_t offset{ 0u };
 
 	while (len >= 4u)
 	{
-		auto value = Utils::Byte::Get4Bytes(data, offset);
+		const auto value = Utils::Byte::Get4Bytes(data, offset);
 
 		trend.Update(value, now);
 		trend.GetValue();

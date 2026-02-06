@@ -3,20 +3,20 @@
 #include <string_view>
 
 static constexpr size_t ResponseFactoryBufferLength{ 65536 };
-thread_local static uint8_t ResponseFactoryBuffer[ResponseFactoryBufferLength];
+thread_local uint8_t ResponseFactoryBuffer[ResponseFactoryBufferLength];
 static constexpr size_t SerializeBufferLength{ 65536 };
-thread_local static uint8_t SerializeBuffer[SerializeBufferLength];
+thread_local uint8_t SerializeBuffer[SerializeBufferLength];
 static constexpr size_t CloneBufferLength{ 65536 };
-thread_local static uint8_t CloneBuffer[CloneBufferLength];
+thread_local uint8_t CloneBuffer[CloneBufferLength];
 
-void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
+void FuzzerRtcIceStunPacket::Fuzz(const uint8_t* data, size_t len)
 {
-	if (!::RTC::ICE::StunPacket::IsStun(data, len))
+	if (!RTC::ICE::StunPacket::IsStun(data, len))
 	{
 		return;
 	}
 
-	auto* packet = ::RTC::ICE::StunPacket::Parse(data, len);
+	auto* packet = RTC::ICE::StunPacket::Parse(data, len);
 
 	if (!packet)
 	{
@@ -30,7 +30,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	packet->GetClass();
 	packet->GetMethod();
 	packet->GetTransactionId();
-	packet->HasAttribute(::RTC::ICE::StunPacket::AttributeType::USERNAME);
+	packet->HasAttribute(RTC::ICE::StunPacket::AttributeType::USERNAME);
 	packet->GetUsername();
 	packet->GetPriority();
 	packet->GetIceControlling();
@@ -46,7 +46,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddUsername("foo");
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -54,7 +54,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddPriority(123456);
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -62,7 +62,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddIceControlling(98989232u);
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -70,7 +70,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddIceControlled(87823823u);
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -78,7 +78,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddUseCandidate();
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -86,7 +86,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddNomination(7623547u);
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -95,7 +95,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 		packet->AddXorMappedAddress(
 		  reinterpret_cast<struct sockaddr*>(std::addressof(xorMappedAddressStorage)));
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -103,7 +103,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->AddErrorCode(555, "ERROR å∫∂æ®€å∂ƒ∫");
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -111,7 +111,7 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->Protect("askjhdakjsd");
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
@@ -119,11 +119,11 @@ void Fuzzer::RTC::ICE::StunPacket::Fuzz(const uint8_t* data, size_t len)
 	{
 		packet->Protect();
 	}
-	catch (...)
+	catch (...) // NOLINT(bugprone-empty-catch)
 	{
 	}
 
-	if (packet->GetClass() == ::RTC::ICE::StunPacket::Class::REQUEST)
+	if (packet->GetClass() == RTC::ICE::StunPacket::Class::REQUEST)
 	{
 		auto* successResponse =
 		  packet->CreateSuccessResponse(ResponseFactoryBuffer, sizeof(ResponseFactoryBuffer));

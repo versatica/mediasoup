@@ -1,9 +1,8 @@
 #include "RTC/RTCP/FuzzerFeedbackRtpNack.hpp"
 
-void Fuzzer::RTC::RTCP::FeedbackRtpNack::Fuzz(::RTC::RTCP::FeedbackRtpNackPacket* packet)
+void FuzzerRtcRtcpFeedbackRtpNack::Fuzz(RTC::RTCP::FeedbackRtpNackPacket* packet)
 {
-	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::SerializationBuffer);
+	packet->Serialize(RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 
@@ -14,8 +13,7 @@ void Fuzzer::RTC::RTCP::FeedbackRtpNack::Fuzz(::RTC::RTCP::FeedbackRtpNackPacket
 	{
 		auto& item = (*it);
 
-		// item->Dump();
-		item->Serialize(::RTC::RTCP::SerializationBuffer);
+		item->Serialize(RTC::RTCP::SerializationBuffer);
 		item->GetSize();
 		item->GetPacketId();
 		item->GetLostPacketBitmask();

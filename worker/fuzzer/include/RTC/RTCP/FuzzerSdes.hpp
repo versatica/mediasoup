@@ -4,18 +4,9 @@
 #include "common.hpp"
 #include "RTC/RTCP/Sdes.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtcpSdes
 {
-	namespace RTC
-	{
-		namespace RTCP
-		{
-			namespace Sdes
-			{
-				void Fuzz(::RTC::RTCP::SdesPacket* packet);
-			}
-		} // namespace RTCP
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(RTC::RTCP::SdesPacket* packet);
+}
 
 #endif

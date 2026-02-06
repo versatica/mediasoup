@@ -16,11 +16,13 @@ using namespace RTC;
 
 namespace
 {
+	// NOLINTBEGIN(readability-identifier-naming)
 	const uint8_t payloadType       = 111;
 	auto* channelMessageRegistrator = new ChannelMessageRegistrator();
 	auto* channelSocket             = new Channel::ChannelSocket();
 	auto* channelNotifier           = new Channel::ChannelNotifier(channelSocket);
 	auto shared                     = Shared(channelMessageRegistrator, channelNotifier);
+	// NOLINTEND(readability-identifier-naming)
 
 	class RtpStreamRecvListener : public RTP::RtpStreamRecv::Listener
 	{
@@ -112,7 +114,7 @@ namespace
 		return rtpParameters.FillBuffer(builder);
 	};
 
-	static std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* listener)
+	std::unique_ptr<RTC::SimpleConsumer> createConsumer(ConsumerListener* listener)
 	{
 		flatbuffers::FlatBufferBuilder bufferBuilder;
 
@@ -148,7 +150,7 @@ namespace
 		  consumeRequest);
 	}
 
-	static std::unique_ptr<RTP::RtpStreamRecv> createRtpStreamRecv()
+	std::unique_ptr<RTP::RtpStreamRecv> createRtpStreamRecv()
 	{
 		RtpStreamRecvListener streamRecvListener;
 		RTP::RtpStream::Params params;
@@ -167,7 +169,8 @@ namespace
 		    rtpStream(createRtpStreamRecv())
 		{
 			// Set producer scores and producer stream.
-			std::vector<uint8_t> scores{ 10 };
+			const std::vector<uint8_t> scores{ 10 };
+
 			consumer->ProducerRtpStreamScores(&scores);
 			consumer->ProducerNewRtpStream(rtpStream.get(), 1234);
 		}
@@ -225,7 +228,7 @@ SCENARIO("SimpleConsumer", "[rtp][consumer]")
 	// clang-format on
 
 	// This is the size of the original packet.
-	size_t originalPacketLength{ 16 };
+	const size_t originalPacketLength{ 16 };
 
 	SECTION("RTP packets are not forwarded when the consumer is not active")
 	{

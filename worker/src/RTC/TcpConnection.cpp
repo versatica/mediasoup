@@ -11,7 +11,7 @@ namespace RTC
 	/* Static. */
 
 	static constexpr size_t ReadBufferSize{ 65536 };
-	thread_local static uint8_t ReadBuffer[ReadBufferSize];
+	thread_local uint8_t ReadBuffer[ReadBufferSize];
 
 	/* Instance methods. */
 

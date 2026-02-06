@@ -1,22 +1,13 @@
 #include "RTC/RTP/Codecs/FuzzerDependencyDescriptor.hpp"
-#include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 
-class Listener : public ::RTC::RTP::Codecs::DependencyDescriptor::Listener
+void FuzzerRtcRtpCodecsDependencyDescriptor::Fuzz(const uint8_t* data, size_t len)
 {
-public:
-	void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
-	{
-	}
-};
-
-void Fuzzer::RTC::RTP::Codecs::DependencyDescriptor::Fuzz(const uint8_t* data, size_t len)
-{
-	std::unique_ptr<::RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
+	std::unique_ptr<RTC::RTP::Codecs::DependencyDescriptor::TemplateDependencyStructure>
 	  templateDependencyStructure;
 
-	Listener listener;
+	DependencyDescriptorListener listener;
 
-	auto* descriptor = ::RTC::RTP::Codecs::DependencyDescriptor::Parse(
+	auto* descriptor = RTC::RTP::Codecs::DependencyDescriptor::Parse(
 	  data, len, std::addressof(listener), templateDependencyStructure);
 
 	if (!descriptor)

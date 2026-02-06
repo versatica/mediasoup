@@ -1,9 +1,8 @@
 #include "RTC/RTCP/FuzzerFeedbackPsLei.hpp"
 
-void Fuzzer::RTC::RTCP::FeedbackPsLei::Fuzz(::RTC::RTCP::FeedbackPsLeiPacket* packet)
+void FuzzerRtcRtcpFeedbackPsLei::Fuzz(RTC::RTCP::FeedbackPsLeiPacket* packet)
 {
-	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::SerializationBuffer);
+	packet->Serialize(RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 
@@ -14,8 +13,7 @@ void Fuzzer::RTC::RTCP::FeedbackPsLei::Fuzz(::RTC::RTCP::FeedbackPsLeiPacket* pa
 	{
 		auto& item = (*it);
 
-		// item->Dump();
-		item->Serialize(::RTC::RTCP::SerializationBuffer);
+		item->Serialize(RTC::RTCP::SerializationBuffer);
 		item->GetSize();
 		item->GetSsrc();
 	}

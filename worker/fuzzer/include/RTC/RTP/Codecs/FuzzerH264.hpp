@@ -3,21 +3,9 @@
 
 #include "common.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtpCodecsH264
 {
-	namespace RTC
-	{
-		namespace RTP
-		{
-			namespace Codecs
-			{
-				namespace H264
-				{
-					void Fuzz(const uint8_t* data, size_t len);
-				}
-			} // namespace Codecs
-		} // namespace RTP
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(const uint8_t* data, size_t len);
+}
 
 #endif

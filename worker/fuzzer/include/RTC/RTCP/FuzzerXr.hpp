@@ -4,18 +4,9 @@
 #include "common.hpp"
 #include "RTC/RTCP/XR.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtcpExtendedReport
 {
-	namespace RTC
-	{
-		namespace RTCP
-		{
-			namespace ExtendedReport
-			{
-				void Fuzz(::RTC::RTCP::ExtendedReportPacket* packet);
-			}
-		} // namespace RTCP
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(RTC::RTCP::ExtendedReportPacket* packet);
+}
 
 #endif

@@ -3,12 +3,9 @@
 
 #include "common.hpp"
 
-namespace Fuzzer
+namespace FuzzerUtils
 {
-	namespace Utils
-	{
-		void Fuzz(const uint8_t* data, size_t len);
-	} // namespace Utils
-} // namespace Fuzzer
+	void Fuzz(const uint8_t* data, size_t len);
+} // namespace FuzzerUtils
 
 #endif

@@ -2,19 +2,26 @@
 #define MS_FUZZER_RTC_RTP_STREAM_SEND_HPP
 
 #include "common.hpp"
+#include "RTC/RTP/Packet.hpp"
+#include "RTC/RTP/RtpStreamSend.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtpStreamSend
 {
-	namespace RTC
+	class TestRtpStreamListener : public RTC::RTP::RtpStreamSend::Listener
 	{
-		namespace RTP
+	public:
+		void OnRtpStreamScore(
+		  RTC::RTP::RtpStream* /*rtpStream*/, uint8_t /*score*/, uint8_t /*previousScore*/) override
 		{
-			namespace RtpStreamSend
-			{
-				void Fuzz(const uint8_t* data, size_t len);
-			}
-		} // namespace RTP
-	} // namespace RTC
-} // namespace Fuzzer
+		}
+
+		void OnRtpStreamRetransmitRtpPacket(
+		  RTC::RTP::RtpStreamSend* /*rtpStream*/, RTC::RTP::Packet* packet) override
+		{
+		}
+	};
+
+	void Fuzz(const uint8_t* data, size_t len);
+} // namespace FuzzerRtcRtpStreamSend
 
 #endif

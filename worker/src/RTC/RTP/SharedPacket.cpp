@@ -16,7 +16,7 @@ namespace RTC
 		static constexpr size_t PacketBufferLengthIncrement{ 100 };
 		// Callback to pass to every cloned RTP Packet to deallocate its buffer once
 		// the Packet releases its buffer (for example when the Packet is destroyed).
-		static thread_local Serializable::BufferReleasedListener PacketBufferReleasedListener =
+		thread_local Serializable::BufferReleasedListener PacketBufferReleasedListener =
 		  // NOLINTNEXTLINE(misc-unused-parameters, readability-non-const-parameter)
 		  [](const Serializable* packet, uint8_t* buffer)
 		{

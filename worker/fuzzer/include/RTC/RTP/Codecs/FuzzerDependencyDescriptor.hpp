@@ -2,22 +2,19 @@
 #define MS_FUZZER_RTC_RTP_CODECS_DEPENDENCY_DESCRIPTOR_HPP
 
 #include "common.hpp"
+#include "RTC/RTP/Codecs/DependencyDescriptor.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtpCodecsDependencyDescriptor
 {
-	namespace RTC
+	class DependencyDescriptorListener : public RTC::RTP::Codecs::DependencyDescriptor::Listener
 	{
-		namespace RTP
+	public:
+		void OnDependencyDescriptorUpdated(const uint8_t* data, size_t len) override
 		{
-			namespace Codecs
-			{
-				namespace DependencyDescriptor
-				{
-					void Fuzz(const uint8_t* data, size_t len);
-				} // namespace DependencyDescriptor
-			} // namespace Codecs
-		} // namespace RTP
-	} // namespace RTC
-} // namespace Fuzzer
+		}
+	};
+
+	void Fuzz(const uint8_t* data, size_t len);
+} // namespace FuzzerRtcRtpCodecsDependencyDescriptor
 
 #endif

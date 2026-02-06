@@ -1,9 +1,8 @@
 #include "RTC/RTCP/FuzzerBye.hpp"
 
-void Fuzzer::RTC::RTCP::Bye::Fuzz(::RTC::RTCP::ByePacket* packet)
+void FuzzerRtcRtcpBye::Fuzz(RTC::RTCP::ByePacket* packet)
 {
-	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::SerializationBuffer);
+	packet->Serialize(RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 	packet->AddSsrc(1111);

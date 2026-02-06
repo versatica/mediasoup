@@ -1,10 +1,9 @@
 #include "RTC/RTCP/FuzzerReceiverReport.hpp"
 #include "RTC/RTCP/Packet.hpp"
 
-void Fuzzer::RTC::RTCP::ReceiverReport::Fuzz(::RTC::RTCP::ReceiverReportPacket* packet)
+void FuzzerRtcRtcpReceiverReport::Fuzz(RTC::RTCP::ReceiverReportPacket* packet)
 {
-	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::SerializationBuffer);
+	packet->Serialize(RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 
@@ -18,8 +17,7 @@ void Fuzzer::RTC::RTCP::ReceiverReport::Fuzz(::RTC::RTCP::ReceiverReportPacket* 
 	{
 		auto& report = (*it);
 
-		// report->Dump();
-		report->Serialize(::RTC::RTCP::SerializationBuffer);
+		report->Serialize(RTC::RTCP::SerializationBuffer);
 		report->GetSize();
 		report->GetSsrc();
 		report->SetSsrc(1111);

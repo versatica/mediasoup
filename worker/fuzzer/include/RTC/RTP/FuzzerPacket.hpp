@@ -3,18 +3,9 @@
 
 #include "common.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtcPacket
 {
-	namespace RTC
-	{
-		namespace RTP
-		{
-			namespace Packet
-			{
-				void Fuzz(const uint8_t* data, size_t len);
-			}
-		} // namespace RTP
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(const uint8_t* data, size_t len);
+}
 
 #endif

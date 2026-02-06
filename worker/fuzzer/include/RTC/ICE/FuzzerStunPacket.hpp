@@ -3,18 +3,9 @@
 
 #include "common.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcIceStunPacket
 {
-	namespace RTC
-	{
-		namespace ICE
-		{
-			namespace StunPacket
-			{
-				void Fuzz(const uint8_t* data, size_t len);
-			}
-		} // namespace ICE
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(const uint8_t* data, size_t len);
+}
 
 #endif

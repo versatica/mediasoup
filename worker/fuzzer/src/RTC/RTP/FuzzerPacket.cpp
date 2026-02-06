@@ -5,14 +5,14 @@
 #include <string>
 #include <vector>
 
-void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
+void FuzzerRtcRtcPacket::Fuzz(const uint8_t* data, size_t len)
 {
-	if (!::RTC::RTP::Packet::IsRtp(data, len))
+	if (!RTC::RTP::Packet::IsRtp(data, len))
 	{
 		return;
 	}
 
-	std::unique_ptr<::RTC::RTP::Packet> packet{ ::RTC::RTP::Packet::Parse(data, len, len) };
+	std::unique_ptr<RTC::RTP::Packet> packet{ RTC::RTP::Packet::Parse(data, len, len) };
 
 	if (!packet)
 	{
@@ -23,11 +23,11 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	// below will try to write into packet memory.
 	//
 	// NOTE: Let's make the buffer bigger to test API that increases packet size.
-	std::unique_ptr<uint8_t[]> buffer(new uint8_t[len + 512]);
+	const std::unique_ptr<uint8_t[]> buffer(new uint8_t[len + 512]);
 
 	packet->Serialize(buffer.get(), len + 512);
 
-	std::vector<::RTC::RTP::Packet::Extension> extensions;
+	std::vector<RTC::RTP::Packet::Extension> extensions;
 	uint8_t extenLen;
 	bool voice;
 	uint8_t volume;
@@ -67,7 +67,7 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	packet->HasOneByteExtensions();
 	packet->HasTwoBytesExtensions();
 
-	::RTC::RTP::HeaderExtensionIds headerExtensionIds{};
+	RTC::RTP::HeaderExtensionIds headerExtensionIds{};
 
 	headerExtensionIds.mid               = 5;
 	headerExtensionIds.rid               = 6;
@@ -124,67 +124,67 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	uint8_t value1[] = { 0x01, 0x02, 0x03, 0x04 };
 
 	extensions.emplace_back(
-	  ::RTC::RtpHeaderExtensionUri::Type::MID, // type
-	  1,                                       // id
-	  4,                                       // len
-	  value1                                   // value
+	  RTC::RtpHeaderExtensionUri::Type::MID, // type
+	  1,                                     // id
+	  4,                                     // len
+	  value1                                 // value
 	);
 
 	uint8_t value2[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11 };
 
 	extensions.emplace_back(
-	  ::RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, // type
-	  2,                                                 // id
-	  11,                                                // len
-	  value2                                             // value
+	  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, // type
+	  2,                                               // id
+	  11,                                              // len
+	  value2                                           // value
 	);
 
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 
 	extensions.clear();
 
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 
 	uint8_t value3[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
 		                   0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
 
 	extensions.emplace_back(
-	  ::RTC::RtpHeaderExtensionUri::Type::MID, // type
-	  14,                                      // id
-	  24,                                      // len
-	  value3                                   // value
+	  RTC::RtpHeaderExtensionUri::Type::MID, // type
+	  14,                                    // id
+	  24,                                    // len
+	  value3                                 // value
 	);
 
 	extensions.emplace_back(
-	  ::RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, // type
-	  15,                                                // id
-	  24,                                                // len
-	  value3                                             // value
+	  RTC::RtpHeaderExtensionUri::Type::RTP_STREAM_ID, // type
+	  15,                                              // id
+	  24,                                              // len
+	  value3                                           // value
 	);
 
 	extensions.emplace_back(
-	  ::RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, // type
-	  22,                                                         // id
-	  24,                                                         // len
-	  value3                                                      // value
+	  RTC::RtpHeaderExtensionUri::Type::REPAIRED_RTP_STREAM_ID, // type
+	  22,                                                       // id
+	  24,                                                       // len
+	  value3                                                    // value
 	);
 
 	extensions.emplace_back(
-	  ::RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, // type
-	  100,                                                       // id
-	  24,                                                        // len
-	  value3                                                     // value
+	  RTC::RtpHeaderExtensionUri::Type::DEPENDENCY_DESCRIPTOR, // type
+	  100,                                                     // id
+	  24,                                                      // len
+	  value3                                                   // value
 	);
 
 	// NOTE: Cannot use One-Byte Extensions because we are using big ids and
 	// lengths.
-	// packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
-	packet->SetExtensions(::RTC::RTP::Packet::ExtensionsType::Auto, extensions);
+	// packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::OneByte, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::TwoBytes, extensions);
+	packet->SetExtensions(RTC::RTP::Packet::ExtensionsType::Auto, extensions);
 
 	packet->HasExtension(13);
 	packet->GetExtensionValue(13, extenLen);
@@ -247,7 +247,7 @@ void Fuzzer::RTC::RTP::Packet::Fuzz(const uint8_t* data, size_t len)
 	// packet->GetSpatialLayer();
 	// packet->GetTemporalLayer();
 
-	std::unique_ptr<uint8_t[]> buffer2(new uint8_t[len + 512]);
+	const std::unique_ptr<uint8_t[]> buffer2(new uint8_t[len + 512]);
 
 	packet.reset(packet->Clone(buffer2.get(), len + 512));
 

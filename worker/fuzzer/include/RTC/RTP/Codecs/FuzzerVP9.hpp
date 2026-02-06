@@ -3,21 +3,10 @@
 
 #include "common.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtpCodecsVP9
 {
-	namespace RTC
-	{
-		namespace RTP
-		{
-			namespace Codecs
-			{
-				namespace VP9
-				{
-					void Fuzz(const uint8_t* data, size_t len);
-				}
-			} // namespace Codecs
-		} // namespace RTP
-	} // namespace RTC
-} // namespace Fuzzer
+
+	void Fuzz(const uint8_t* data, size_t len);
+}
 
 #endif

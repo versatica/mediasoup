@@ -12,7 +12,7 @@ namespace RTC
 		/* Static. */
 
 		static constexpr size_t StunResponseFactoryBufferLength{ 65536 };
-		thread_local static uint8_t StunResponseFactoryBuffer[StunResponseFactoryBufferLength];
+		thread_local uint8_t StunResponseFactoryBuffer[StunResponseFactoryBufferLength];
 		static constexpr size_t MaxTuples{ 8 };
 		static constexpr uint8_t ConsentCheckMinTimeoutSec{ 10u };
 		static constexpr uint8_t ConsentCheckMaxTimeoutSec{ 60u };
@@ -559,7 +559,7 @@ namespace RTC
 			}
 			else
 			{
-				thread_local static std::string_view errorReasonPhrase;
+				thread_local std::string_view errorReasonPhrase;
 
 				response->GetErrorCode(errorReasonPhrase);
 

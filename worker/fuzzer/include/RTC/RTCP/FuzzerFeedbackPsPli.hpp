@@ -4,18 +4,9 @@
 #include "common.hpp"
 #include "RTC/RTCP/FeedbackPsPli.hpp"
 
-namespace Fuzzer
+namespace FuzzerRtcRtcpFeedbackPsPli
 {
-	namespace RTC
-	{
-		namespace RTCP
-		{
-			namespace FeedbackPsPli
-			{
-				void Fuzz(::RTC::RTCP::FeedbackPsPliPacket* packet);
-			}
-		} // namespace RTCP
-	} // namespace RTC
-} // namespace Fuzzer
+	void Fuzz(RTC::RTCP::FeedbackPsPliPacket* packet);
+}
 
 #endif

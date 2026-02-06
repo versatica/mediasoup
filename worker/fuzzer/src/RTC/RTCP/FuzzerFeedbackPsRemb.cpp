@@ -1,9 +1,8 @@
 #include "RTC/RTCP/FuzzerFeedbackPsRemb.hpp"
 
-void Fuzzer::RTC::RTCP::FeedbackPsRemb::Fuzz(::RTC::RTCP::FeedbackPsRembPacket* packet)
+void FuzzerRtcRtcpFeedbackPsRemb::Fuzz(RTC::RTCP::FeedbackPsRembPacket* packet)
 {
-	// packet->Dump();
-	packet->Serialize(::RTC::RTCP::SerializationBuffer);
+	packet->Serialize(RTC::RTCP::SerializationBuffer);
 	packet->GetCount();
 	packet->GetSize();
 	packet->IsCorrect();

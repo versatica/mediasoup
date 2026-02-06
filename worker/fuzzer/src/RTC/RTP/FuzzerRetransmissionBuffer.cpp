@@ -4,14 +4,14 @@
 #include "RTC/RTP/RetransmissionBuffer.hpp"
 #include "RTC/RTP/SharedPacket.hpp"
 
-void Fuzzer::RTC::RTP::RetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
+void FuzzerRtcRtpRetransmissionBuffer::Fuzz(const uint8_t* data, size_t len)
 {
-	uint16_t maxItems{ 2500u };
-	uint32_t maxRetransmissionDelayMs{ 2000u };
-	uint32_t clockRate{ 90000 };
+	const uint16_t maxItems{ 2500u };
+	const uint32_t maxRetransmissionDelayMs{ 2000u };
+	const uint32_t clockRate{ 90000 };
 
 	// Trick to initialize our stuff just once (use static).
-	static ::RTC::RTP::RetransmissionBuffer retransmissionBuffer(
+	static RTC::RTP::RetransmissionBuffer retransmissionBuffer(
 	  maxItems, maxRetransmissionDelayMs, clockRate);
 
 	// clang-format off
@@ -24,12 +24,12 @@ void Fuzzer::RTC::RTP::RetransmissionBuffer::Fuzz(const uint8_t* data, size_t le
 	// clang-format on
 
 	// Create base RtpPacket instance.
-	auto* packet = ::RTC::RTP::Packet::Parse(buffer, 12);
+	auto* packet = RTC::RTP::Packet::Parse(buffer, 12);
 	size_t offset{ 0u };
 
 	while (len >= 4u)
 	{
-		::RTC::RTP::SharedPacket sharedPacket;
+		const RTC::RTP::SharedPacket sharedPacket;
 
 		// Set 'random' sequence number and timestamp.
 		packet->SetSequenceNumber(Utils::Byte::Get2Bytes(data, offset));
