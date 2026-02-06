@@ -75,6 +75,7 @@ Checks: "*,\
   -readability-convert-member-functions-to-static,\
   -readability-else-after-return,\
   -readability-function-cognitive-complexity,\
+  -readability-function-size,\
   -readability-identifier-length,\
   -readability-implicit-bool-conversion,\
   -readability-magic-numbers,\
@@ -106,12 +107,6 @@ CheckOptions:
     value: 'NULL'
   - key: readability-braces-around-statements.ShortStatementLines
     value: '3'
-  - key: readability-function-size.BranchThreshold
-    value: '4294967295'
-  - key: readability-function-size.LineThreshold
-    value: '4294967295'
-  - key: readability-function-size.StatementThreshold
-    value: '1500'
   - key: readability-identifier-naming.AbstractClassCase
     value: CamelCase
   - key: readability-identifier-naming.AbstractClassPrefix

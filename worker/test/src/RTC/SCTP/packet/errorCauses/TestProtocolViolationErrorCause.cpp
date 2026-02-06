@@ -9,7 +9,6 @@
 using namespace RTC::SCTP;
 using namespace SCTP_COMMON;
 
-// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
 {
 	ResetBuffers();

@@ -19,7 +19,6 @@
 using namespace RTC::SCTP;
 using namespace SCTP_COMMON;
 
-// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Packet", "[sctp][serializable]")
 {
 	ResetBuffers();

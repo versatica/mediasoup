@@ -11,7 +11,6 @@
 using namespace RTC::SCTP;
 using namespace SCTP_COMMON;
 
-// NOLINTNEXTLINE (readability-function-size)
 SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
 {
 	ResetBuffers();
