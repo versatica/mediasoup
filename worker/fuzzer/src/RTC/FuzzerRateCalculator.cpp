@@ -34,10 +34,9 @@ void FuzzerRtcRateCalculator::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	auto size = static_cast<size_t>(
-	  Utils::Crypto::GetRandomUInt(0u, static_cast<uint32_t>(RTC::Consts::MtuSize)));
+	auto size = Utils::Crypto::GetRandomUInt<size_t>(0u, static_cast<uint32_t>(RTC::Consts::MtuSize));
 
-	nowMs += Utils::Crypto::GetRandomUInt(0u, 1000u);
+	nowMs += Utils::Crypto::GetRandomUInt<uint64_t>(0u, 1000u);
 
 	rateCalculator.Update(size, nowMs);
 

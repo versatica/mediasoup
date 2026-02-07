@@ -50,11 +50,11 @@ void FuzzerRtcDtlsTransport::Fuzz(const uint8_t* data, size_t len)
 		// Remote DTLS fingerprint random generation.
 		// NOTE: Use a random integer in range 1..5 since FingerprintAlgorithm enum
 		// has 5 possible values starting with value 1.
-		dtlsRemoteFingerprint.algorithm =
-		  static_cast<RTC::DtlsTransport::FingerprintAlgorithm>(Utils::Crypto::GetRandomUInt(1u, 5u));
+		dtlsRemoteFingerprint.algorithm = static_cast<RTC::DtlsTransport::FingerprintAlgorithm>(
+		  Utils::Crypto::GetRandomUInt<uint8_t>(1u, 5u));
 
 		dtlsRemoteFingerprint.value =
-		  Utils::Crypto::GetRandomString(Utils::Crypto::GetRandomUInt(3u, 20u));
+		  Utils::Crypto::GetRandomString(Utils::Crypto::GetRandomUInt<uint8_t>(3u, 20u));
 
 		dtlsTransportSingleton->Run(localRole);
 		dtlsTransportSingleton->SetRemoteFingerprint(dtlsRemoteFingerprint);

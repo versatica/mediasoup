@@ -47,11 +47,10 @@ namespace RTC
 			this->probationPacket->SetSsrc(ProbationGenerator::Ssrc);
 
 			// Set random initial RTP seq number.
-			this->probationPacket->SetSequenceNumber(
-			  static_cast<uint16_t>(Utils::Crypto::GetRandomUInt(0, 65535)));
+			this->probationPacket->SetSequenceNumber(Utils::Crypto::GetRandomUInt<uint16_t>(0, 65535));
 
 			// Set random initial RTP timestamp.
-			this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt(0, 4294967295));
+			this->probationPacket->SetTimestamp(Utils::Crypto::GetRandomUInt<uint32_t>(0, 4294967295));
 
 			// Add BWE related RTP header extensions.
 			std::vector<RTP::Packet::Extension> extensions;

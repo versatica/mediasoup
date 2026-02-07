@@ -10,7 +10,7 @@ namespace Utils
 {
 	/* Static variables. */
 
-	thread_local uint32_t Crypto::seed;
+	thread_local std::mt19937_64 Crypto::rng;
 	thread_local EVP_MAC* Crypto::mac{ nullptr };
 	thread_local EVP_MAC_CTX* Crypto::hmacSha1Ctx{ nullptr };
 	thread_local uint8_t Crypto::hmacSha1Buffer[SHA_DIGEST_LENGTH];
@@ -95,9 +95,11 @@ namespace Utils
 	{
 		MS_TRACE();
 
-		// Init the crypto seed with a random number taken from the address
-		// of the seed variable itself (which is random).
-		Crypto::seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(std::addressof(Crypto::seed)));
+		std::random_device rd;
+
+		const uint64_t seed = (uint64_t(rd()) << 32) | uint64_t(rd());
+
+		Crypto::rng.seed(seed);
 
 		// Create an OpenSSL HMAC_CTX context for HMAC SHA1 calculation.
 		Crypto::mac         = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
@@ -119,28 +121,6 @@ namespace Utils
 		}
 	}
 
-	uint32_t Crypto::GetRandomUInt(uint32_t min, uint32_t max)
-	{
-		MS_TRACE();
-
-		// NOTE: This is the original, but produces very small values.
-		// Crypto::seed = (214013 * Crypto::seed) + 2531011;
-		// return (((Crypto::seed>>16)&0x7FFF) % (max - min + 1)) + min;
-
-		// This seems to produce better results.
-		Crypto::seed = uint32_t{ ((214013 * Crypto::seed) + 2531011) };
-
-		// Special case.
-		if (max == 4294967295)
-		{
-			--max;
-		}
-
-		min = std::min(min, max);
-
-		return (((Crypto::seed >> 4) & 0x7FFF7FFF) % (max - min + 1)) + min;
-	}
-
 	std::string Crypto::GetRandomString(size_t len)
 	{
 		MS_TRACE();
@@ -154,7 +134,7 @@ namespace Utils
 
 		for (size_t i{ 0 }; i < len; ++i)
 		{
-			buffer[i] = Chars[GetRandomUInt(0, sizeof(Chars) - 1)];
+			buffer[i] = Chars[GetRandomUInt<size_t>(0, sizeof(Chars) - 1)];
 		}
 
 		return { buffer, len };

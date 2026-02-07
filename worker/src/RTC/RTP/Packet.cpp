@@ -18,7 +18,7 @@ namespace RTC
 	{
 		/* Class variables. */
 
-		thread_local uint32_t Packet::nextMediasoupPacketId{ Utils::Crypto::GetRandomUInt(
+		thread_local uint32_t Packet::nextMediasoupPacketId{ Utils::Crypto::GetRandomUInt<uint32_t>(
 			0, std::numeric_limits<uint32_t>::max() / 2) };
 
 		/* Class methods. */

@@ -3082,7 +3082,7 @@ namespace RTC
 			 * [1.0, 1.5] times the calculated interval to avoid unintended
 			 * synchronization of all participants.
 			 */
-			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt(10, 15)) / 10;
+			interval *= static_cast<float>(Utils::Crypto::GetRandomUInt<uint8_t>(10, 15)) / 10;
 
 			this->rtcpTimer->Start(interval);
 		}

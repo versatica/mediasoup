@@ -98,7 +98,7 @@ namespace RTC
 
 			RTP::RtpStream::SetRtx(payloadType, ssrc);
 
-			this->rtxSeq = Utils::Crypto::GetRandomUInt(0u, 0xFFFF);
+			this->rtxSeq = Utils::Crypto::GetRandomUInt<uint16_t>(0u, 0xFFFF);
 		}
 
 		RtpStreamSend::ReceivePacketResult RtpStreamSend::ReceivePacket(

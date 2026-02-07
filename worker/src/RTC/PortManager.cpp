@@ -330,8 +330,8 @@ namespace RTC
 		const uint8_t bitFlags = ConvertSocketFlags(flags, protocol, family);
 
 		// Choose a random port index to start from.
-		portIdx = static_cast<size_t>(
-		  Utils::Crypto::GetRandomUInt(static_cast<uint32_t>(0), static_cast<uint32_t>(numPorts - 1)));
+		portIdx = Utils::Crypto::GetRandomUInt<size_t>(
+		  static_cast<uint32_t>(0), static_cast<uint32_t>(numPorts - 1));
 
 		// Iterate all ports until getting one available. Fail if none found and also
 		// if bind() fails N times in theoretically available ports.
