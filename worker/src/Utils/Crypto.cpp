@@ -96,7 +96,6 @@ namespace Utils
 		MS_TRACE();
 
 		std::random_device rd;
-
 		const uint64_t seed = (uint64_t(rd()) << 32) | uint64_t(rd());
 
 		Crypto::rng.seed(seed);
