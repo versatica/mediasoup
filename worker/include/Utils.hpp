@@ -238,9 +238,9 @@ namespace Utils
 		static T GetRandomUInt(T min, T max)
 		{
 			static_assert(
-			  std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t> ||
-			    std::is_same_v<T, size_t>,
-			  "T must be uint16_t, uint32_t, uint64_t, size_t");
+			  std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> ||
+			    std::is_same_v<T, uint64_t> || std::is_same_v<T, size_t>,
+			  "T must be uint8_t, uint16_t, uint32_t, uint64_t, size_t");
 
 			std::uniform_int_distribution<T> dist(min, max);
 
