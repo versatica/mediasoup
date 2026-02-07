@@ -2,6 +2,8 @@
 
 ### NEXT
 
+- Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725).
+
 ### 3.19.17
 
 - `ICE::StunPacket`: Fix wrong memory access in `GetXorMappedAddress()` method ([08c1ec9](https://github.com/versatica/mediasoup/commit/ea464d40ef77247c3ff7acd10e4a0118665fdd14)).
