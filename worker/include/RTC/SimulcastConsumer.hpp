@@ -1,7 +1,6 @@
 #ifndef MS_RTC_SIMULCAST_CONSUMER_HPP
 #define MS_RTC_SIMULCAST_CONSUMER_HPP
 
-#include "FBS/consumer.h"
 #include "RTC/Consumer.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"

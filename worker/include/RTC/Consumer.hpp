@@ -5,6 +5,7 @@
 #include "Channel/ChannelRequest.hpp"
 #include "Channel/ChannelSocket.hpp"
 #include "FBS/consumer.h"
+#include "FBS/transport.h"
 #include "RTC/ConsumerTypes.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/FeedbackRtpNack.hpp"

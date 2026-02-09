@@ -1,23 +1,26 @@
-#ifndef MS_RTC_SIMPLE_CONSUMER_HPP
-#define MS_RTC_SIMPLE_CONSUMER_HPP
+#ifndef MS_RTC_MULTI_STREAM_CONSUMER_HPP
+#define MS_RTC_MULTI_STREAM_CONSUMER_HPP
 
+#include "FBS/consumer.h"
 #include "RTC/Consumer.hpp"
+#include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 #include <map>
 
 namespace RTC
 {
-	class SimpleConsumer : public RTC::Consumer, public RTC::RTP::RtpStreamSend::Listener
+	class MultiStreamConsumer : public RTC::Consumer, public RTC::RTP::RtpStreamSend::Listener
 	{
 	public:
-		SimpleConsumer(
+		MultiStreamConsumer(
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& producerId,
+		  RTC::RtpParameters::Type type,
 		  RTC::Consumer::Listener* listener,
 		  const FBS::Transport::ConsumeRequest* data);
-		~SimpleConsumer() override;
+		~MultiStreamConsumer() override;
 
 	public:
 		flatbuffers::Offset<FBS::Consumer::DumpResponse> FillBuffer(
@@ -26,15 +29,30 @@ namespace RTC
 		  flatbuffers::FlatBufferBuilder& builder) override;
 		flatbuffers::Offset<FBS::Consumer::ConsumerScore> FillBufferScore(
 		  flatbuffers::FlatBufferBuilder& builder) const override;
+		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const override
+		{
+			RTC::ConsumerTypes::VideoLayers layers;
+
+			layers.spatial  = this->preferredLayers.spatial;
+			layers.temporal = this->preferredLayers.temporal;
+
+			return layers;
+		}
 		bool IsActive() const override
 		{
 			// clang-format off
 			return (
 				RTC::Consumer::IsActive() &&
-				this->producerRtpStream &&
-				// If there is no RTP inactivity check do not consider the stream
-				// inactive despite it has score 0.
-				(this->producerRtpStream->GetScore() > 0u || !this->producerRtpStream->HasRtpInactivityCheckEnabled())
+				std::any_of(
+					this->producerRtpStreams.begin(),
+					this->producerRtpStreams.end(),
+					[](const RTC::RTP::RtpStreamRecv* rtpStream)
+					{
+						// If there is no RTP inactivity check do not consider the stream
+						// inactive despite it has score 0.
+						return (rtpStream != nullptr && (rtpStream->GetScore() > 0u || !rtpStream->HasRtpInactivityCheckEnabled()));
+					}
+				)
 			);
 			// clang-format on
 		}
@@ -48,11 +66,11 @@ namespace RTC
 		void ApplyLayers() override;
 		uint32_t GetDesiredBitrate() const override;
 		void SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket) override;
+		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		const std::vector<RTC::RTP::RtpStreamSend*>& GetRtpStreams() const override
 		{
 			return this->rtpStreams;
 		}
-		bool GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) override;
 		void NeedWorstRemoteFractionLost(uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 		void ReceiveNack(RTC::RTCP::FeedbackRtpNackPacket* nackPacket) override;
 		void ReceiveKeyFrameRequest(RTC::RTCP::FeedbackPs::MessageType messageType, uint32_t ssrc) override;
@@ -71,10 +89,20 @@ namespace RTC
 		void UserOnPaused() override;
 		void UserOnResumed() override;
 		void CreateRtpStream();
-		void RequestKeyFrame();
+		void RequestKeyFrames();
+		void RequestKeyFrameForTargetSpatialLayer();
+		void RequestKeyFrameForCurrentSpatialLayer();
+		void MayChangeLayers(bool force = false);
+		bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const;
+		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer);
+		bool CanSwitchToSpatialLayer(int16_t spatialLayer) const;
+		void EmitScore() const;
 		void StorePacketInTargetLayerRetransmissionBuffer(
 		  RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket);
-		void EmitScore() const;
+		void EmitLayersChange() const;
+		RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const;
+		RTC::RTP::RtpStreamRecv* GetProducerTargetRtpStream() const;
+		RTC::RTP::RtpStreamRecv* GetProducerTsReferenceRtpStream() const;
 
 		/* Pure virtual methods inherited from RtpStreamSend::Listener. */
 	public:
@@ -86,13 +114,26 @@ namespace RTC
 		// Allocated by this.
 		RTC::RTP::RtpStreamSend* rtpStream{ nullptr };
 		// Others.
+		absl::flat_hash_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
 		std::vector<RTC::RTP::RtpStreamSend*> rtpStreams;
-		RTC::RTP::RtpStreamRecv* producerRtpStream{ nullptr };
+		std::vector<RTC::RTP::RtpStreamRecv*> producerRtpStreams; // Indexed by spatial layer.
 		bool keyFrameSupported{ false };
 		bool syncRequired{ false };
+		int16_t spatialLayerToSync{ -1 };
+		bool lastSentPacketHasMarker{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
-		bool managingBitrate{ false };
+		RTC::ConsumerTypes::VideoLayers preferredLayers;
+		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
+		RTC::ConsumerTypes::VideoLayers targetLayers;
+		int16_t currentSpatialLayer{ -1 };
+		int16_t tsReferenceSpatialLayer{ -1 }; // Used for RTP TS sync.
+		uint16_t snReferenceSpatialLayer{ 0 };
+		bool checkingForOldPacketsInSpatialLayer{ false };
 		std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext;
+		uint32_t tsOffset{ 0u }; // RTP Timestamp offset.
+		bool keyFrameForTsOffsetRequested{ false };
+		// Last time we moved to lower spatial layer due to BWE.
+		uint64_t lastBweDowngradeAtMs{ 0u };
 		// Buffer to store packets that arrive earlier than the first packet of the
 		// video key frame.
 		std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>

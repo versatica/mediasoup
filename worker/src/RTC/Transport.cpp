@@ -12,6 +12,7 @@
 #include "FBS/transport.h"
 #include "RTC/BweType.hpp"
 #include "RTC/Consts.hpp"
+#include "RTC/MultiStreamConsumer.hpp"
 #include "RTC/PipeConsumer.hpp"
 #include "RTC/RTCP/FeedbackPs.hpp"
 #include "RTC/RTCP/FeedbackPsAfb.hpp"
@@ -20,8 +21,6 @@
 #include "RTC/RTCP/FeedbackRtpTransport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
 #include "RTC/RtpDictionaries.hpp"
-#include "RTC/SimpleConsumer.hpp"
-#include "RTC/SimulcastConsumer.hpp"
 #include "RTC/SvcConsumer.hpp"
 #ifdef MS_RTC_LOGGER_RTP
 #include "RTC/RtcLogger.hpp"
@@ -806,7 +805,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMPLE:
 					{
 						// This may throw.
-						consumer = new RTC::SimpleConsumer(this->shared, consumerId, producerId, this, body);
+						consumer = new RTC::MultiStreamConsumer(
+						  this->shared, consumerId, producerId, RTC::RtpParameters::Type::SIMPLE, this, body);
 
 						break;
 					}
@@ -814,7 +814,8 @@ namespace RTC
 					case RTC::RtpParameters::Type::SIMULCAST:
 					{
 						// This may throw.
-						consumer = new RTC::SimulcastConsumer(this->shared, consumerId, producerId, this, body);
+						consumer = new RTC::MultiStreamConsumer(
+						  this->shared, consumerId, producerId, RTC::RtpParameters::Type::SIMULCAST, this, body);
 
 						break;
 					}
