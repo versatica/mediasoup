@@ -789,9 +789,6 @@ namespace RTC
 
 		auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
 
-		// TODO
-		MS_DUMP("----- 5.2 OK!!!");
-
 		if (!IsActive())
 		{
 			// Only drop the packet in the RTP sequence manager if it belongs to the

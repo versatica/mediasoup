@@ -187,7 +187,7 @@ SCENARIO("MultiStreamConsumer", "[rtp][consumer]")
 	{
 		0x80, 0x01, 0x00, 0x08,
 		0x00, 0x00, 0x00, 0x04,
-		0x00, 0x00, 0x00, 0x05,
+		0x49, 0x96, 0x02, 0xD2, // SSRC: 1234567890
 		// Payload (4 bytes).
 		0xFF, 0xFF, 0xFF, 0xFF,
 		// From here this is just buffer enough for the variable length payload so
@@ -244,79 +244,79 @@ SCENARIO("MultiStreamConsumer", "[rtp][consumer]")
 		delete packet;
 	}
 
-	// SECTION("RTP packets are not forwarded for unsupported payload types")
-	// {
-	// 	Fixture fixture;
+	SECTION("RTP packets are not forwarded for unsupported payload types")
+	{
+		Fixture fixture;
 
-	// 	// Indicate that the transport is connected in order to activate the consumer.
-	// 	dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
+		// Indicate that the transport is connected in order to activate the consumer.
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
-	// 	auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-	// 	RTC::RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
-	// 	packet->SetPayloadType(payloadType + 1);
+		packet->SetPayloadType(payloadType + 1);
 
-	// 	fixture.consumer->SendRtpPacket(packet, sharedPacket);
-	// 	fixture.listener->Verify(0);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.listener->Verify(0);
 
-	// 	delete packet;
-	// }
+		delete packet;
+	}
 
-	// SECTION("RTP packets with empty payload are not forwarded")
-	// {
-	// 	Fixture fixture;
+	SECTION("RTP packets with empty payload are not forwarded")
+	{
+		Fixture fixture;
 
-	// 	// Indicate that the transport is connected in order to activate the consumer.
-	// 	dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
+		// Indicate that the transport is connected in order to activate the consumer.
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
-	// 	auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 0);
-	// 	RTC::RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 0);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
-	// 	packet->SetPayloadType(payloadType + 1);
+		packet->SetPayloadType(payloadType + 1);
 
-	// 	fixture.consumer->SendRtpPacket(packet, sharedPacket);
-	// 	fixture.listener->Verify(0);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.listener->Verify(0);
 
-	// 	delete packet;
-	// }
+		delete packet;
+	}
 
-	// SECTION("outgoing RTP packets are forwarded with increased sequence number")
-	// {
-	// 	Fixture fixture;
+	SECTION("outgoing RTP packets are forwarded with increased sequence number")
+	{
+		Fixture fixture;
 
-	// 	// Indicate that the transport is connected in order to activate the consumer.
-	// 	dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
+		// Indicate that the transport is connected in order to activate the consumer.
+		dynamic_cast<RTC::Consumer*>(fixture.consumer.get())->TransportConnected();
 
-	// 	auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
-	// 	RTC::RTP::SharedPacket sharedPacket(packet);
+		auto* packet = RTC::RTP::Packet::Parse(buffer, originalPacketLength + 64);
+		RTC::RTP::SharedPacket sharedPacket(packet);
 
-	// 	uint16_t seq{ 1 };
+		uint16_t seq{ 1 };
 
-	// 	packet->SetSequenceNumber(seq++);
-	// 	packet->SetPayloadType(payloadType);
-	// 	sharedPacket.Assign(packet);
+		packet->SetSequenceNumber(seq++);
+		packet->SetPayloadType(payloadType);
+		sharedPacket.Assign(packet);
 
-	// 	fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
-	// 	packet->SetSequenceNumber(seq++);
-	// 	sharedPacket.Assign(packet);
+		packet->SetSequenceNumber(seq++);
+		sharedPacket.Assign(packet);
 
-	// 	fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
-	// 	packet->SetSequenceNumber(seq++);
-	// 	sharedPacket.Assign(packet);
+		packet->SetSequenceNumber(seq++);
+		sharedPacket.Assign(packet);
 
-	// 	fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
-	// 	packet->SetSequenceNumber(seq++);
-	// 	// Remove the payload so it won't be sent.
-	// 	packet->RemovePayload();
-	// 	sharedPacket.Assign(packet);
+		packet->SetSequenceNumber(seq++);
+		// Remove the payload so it won't be sent.
+		packet->RemovePayload();
+		sharedPacket.Assign(packet);
 
-	// 	fixture.consumer->SendRtpPacket(packet, sharedPacket);
+		fixture.consumer->SendRtpPacket(packet, sharedPacket);
 
-	// 	fixture.listener->Verify(3);
+		fixture.listener->Verify(3);
 
-	// 	delete packet;
-	// }
+		delete packet;
+	}
 }
