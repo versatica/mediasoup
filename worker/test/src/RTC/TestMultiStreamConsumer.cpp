@@ -182,12 +182,14 @@ namespace
 
 SCENARIO("MultiStreamConsumer", "[rtp][consumer]")
 {
+	// TODO: We should NOT parse RTP packets for tests anymore. We should use
+	// RTC::RTP::Packet::Factory() instead.
 	// clang-format off
 	uint8_t buffer[] =
 	{
 		0x80, 0x01, 0x00, 0x08,
 		0x00, 0x00, 0x00, 0x04,
-		0x49, 0x96, 0x02, 0xD2, // SSRC: 1234567890
+		0x49, 0x96, 0x02, 0xD2, // SSRC: 1234567890 (must be this exact value).
 		// Payload (4 bytes).
 		0xFF, 0xFF, 0xFF, 0xFF,
 		// From here this is just buffer enough for the variable length payload so
