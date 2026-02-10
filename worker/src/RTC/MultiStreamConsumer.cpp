@@ -1810,7 +1810,7 @@ namespace RTC
 		if (newTargetSpatialLayer == -1)
 		{
 			// TODO: REMOVE
-			MS_DUMP("------ setting this->currentSpatialLayer = -1");
+			MS_DUMP("------ setting this->targetLayers.spatial = -1, this->targetLayers.temporal = -1, this->currentSpatialLayer = -1");
 
 			// Unset current and target layers.
 			this->targetLayers.spatial  = -1;
@@ -1830,6 +1830,9 @@ namespace RTC
 
 			return;
 		}
+
+		// TODO
+		MS_DUMP("---- setting this->targetLayers.spatial = %d, this->targetLayers.temporal = %d", this->targetLayers.spatial, this->targetLayers.temporal);
 
 		this->targetLayers.spatial  = newTargetSpatialLayer;
 		this->targetLayers.temporal = newTargetTemporalLayer;
