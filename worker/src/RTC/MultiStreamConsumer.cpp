@@ -1,5 +1,6 @@
 #define MS_CLASS "RTC::MultiStreamConsumer"
-// #define MS_LOG_DEV_LEVEL 3
+// TODO
+#define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/MultiStreamConsumer.hpp"
 #include "DepLibUV.hpp"
@@ -366,6 +367,9 @@ namespace RTC
 			// All Producer streams are dead.
 			if (!IsActive())
 			{
+				// TODO: REMOVE
+				MS_DUMP("------ calling UpdateTargetLayers(-1, -1)");
+
 				UpdateTargetLayers(-1, -1);
 			}
 			// Just check target layers if the stream has died or reborned.
@@ -662,6 +666,9 @@ namespace RTC
 
 		if (provisionalTargetLayers != this->targetLayers)
 		{
+			// TODO: REMOVE
+			MS_DUMP("------ calling UpdateTargetLayers(%d, %d)", provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
+
 			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
 
 			// If this looks like a spatial layer downgrade due to BWE limitations, set
@@ -735,6 +742,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 1 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
 #endif
@@ -743,6 +756,9 @@ namespace RTC
 
 		if (!IsActive())
 		{
+			// TODO: REMOVE
+			MS_DUMP("----------- NOT ACTIVE !!!!");
+
 			// Only drop the packet in the RTP sequence manager if it belongs to the
 			// current spatial layer.
 			if (spatialLayer == this->currentSpatialLayer)
@@ -757,12 +773,20 @@ namespace RTC
 			return;
 		}
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 2 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 		if (this->targetLayers.temporal == -1)
 		{
 			// Only drop the packet in the RTP sequence manager if it belongs to the
 			// current spatial layer.
 			if (spatialLayer == this->currentSpatialLayer)
 			{
+				MS_DUMP("----- INVALID_TARGET_LAYER audio packet | spatialLayer (%u) == this->currentSpatialLayer (%u)", spatialLayer, this->currentSpatialLayer);
+
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
@@ -770,7 +794,19 @@ namespace RTC
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP("----- DROPPED audio packet | this->targetLayers.temporal == -1");
+			}
+
 			return;
+		}
+
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 3 audio packet | ssrc:%u", packet->GetSsrc());
 		}
 
 		auto payloadType = packet->GetPayloadType();
@@ -793,6 +829,12 @@ namespace RTC
 			}
 
 			return;
+		}
+
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 4 audio packet | ssrc:%u", packet->GetSsrc());
 		}
 
 		bool shouldSwitchCurrentSpatialLayer{ false };
@@ -836,6 +878,12 @@ namespace RTC
 			return;
 		}
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 5 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 		// If we need to sync and this is not a key frame, ignore the packet.
 		// NOTE: syncRequired is true if packet is a key frame of the target spatial
 		// layer or if transport just connected or consumer resumed.
@@ -856,6 +904,12 @@ namespace RTC
 			return;
 		}
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 6 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 		// Packets with only padding are not forwarded.
 		if (packet->GetPayloadLength() == 0)
 		{
@@ -871,6 +925,12 @@ namespace RTC
 			}
 
 			return;
+		}
+
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 7 audio packet | ssrc:%u", packet->GetSsrc());
 		}
 
 		// Whether this is the first packet after re-sync.
@@ -1035,6 +1095,12 @@ namespace RTC
 			this->keyFrameForTsOffsetRequested = false;
 		}
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 8 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 		if (!shouldSwitchCurrentSpatialLayer && this->checkingForOldPacketsInSpatialLayer)
 		{
 			// If this is a packet previous to the spatial layer switch, ignore the
@@ -1060,10 +1126,19 @@ namespace RTC
 			}
 		}
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 9 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 		bool marker{ false };
 
 		if (shouldSwitchCurrentSpatialLayer)
 		{
+			// TODO: REMOVE
+			MS_DUMP("------ setting this->currentSpatialLayer = %d [previous value:%d]", this->targetLayers.spatial, this->currentSpatialLayer);
+
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetLayers.spatial;
 
@@ -1116,6 +1191,12 @@ namespace RTC
 			}
 		}
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("----- 10 audio packet | ssrc:%u", packet->GetSsrc());
+		}
+
 		// Update RTP seq number and timestamp based on NTP offset.
 		uint16_t seq;
 		const uint32_t timestamp = packet->GetTimestamp() - this->tsOffset;
@@ -1159,6 +1240,12 @@ namespace RTC
 			if (this->rtpSeqManager.GetMaxOutput() == packet->GetSequenceNumber())
 			{
 				this->lastSentPacketHasMarker = packet->HasMarker();
+			}
+
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP("----- SENT! audio packet | ssrc:%u", packet->GetSsrc());
 			}
 
 			// Send the packet.
@@ -1398,6 +1485,9 @@ namespace RTC
 		this->rtpStream->Pause();
 		this->targetLayerRetransmissionBuffer.clear();
 
+		// TODO: REMOVE
+		MS_DUMP("------ calling UpdateTargetLayers(-1, -1) [current this->currentSpatialLayer:%d]", this->currentSpatialLayer);
+
 		UpdateTargetLayers(-1, -1);
 	}
 
@@ -1409,6 +1499,9 @@ namespace RTC
 
 		this->rtpStream->Pause();
 		this->targetLayerRetransmissionBuffer.clear();
+
+		// TODO: REMOVE
+		MS_DUMP("------ calling UpdateTargetLayers(-1, -1) [current this->currentSpatialLayer:%d]", this->currentSpatialLayer);
 
 		UpdateTargetLayers(-1, -1);
 
@@ -1608,6 +1701,9 @@ namespace RTC
 			}
 			else
 			{
+				// TODO: REMOVE
+				MS_DUMP("------ calling UpdateTargetLayers(%d, %d)", newTargetLayers.spatial, newTargetLayers.temporal);
+
 				UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
 			}
 		}
@@ -1713,6 +1809,9 @@ namespace RTC
 
 		if (newTargetSpatialLayer == -1)
 		{
+			// TODO: REMOVE
+			MS_DUMP("------ setting this->currentSpatialLayer = -1");
+
 			// Unset current and target layers.
 			this->targetLayers.spatial  = -1;
 			this->targetLayers.temporal = -1;
@@ -1863,6 +1962,8 @@ namespace RTC
 
 		if (this->currentSpatialLayer == -1)
 		{
+			// TODO: Remove
+			MS_DUMP("------ this->currentSpatialLayer == -1 => nullptr");
 			return nullptr;
 		}
 
