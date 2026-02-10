@@ -307,7 +307,10 @@ test('transport.consume() succeeds', async () => {
 		producerScore: 0,
 		producerScores: [0],
 	});
-	expect(audioConsumer.preferredLayers).toBeUndefined();
+	expect(audioConsumer.preferredLayers).toEqual({
+		spatialLayer: 0,
+		temporalLayer: 0,
+	});
 	expect(audioConsumer.currentLayers).toBeUndefined();
 	expect(audioConsumer.appData).toEqual({ baz: 'LOL' });
 
@@ -879,7 +882,10 @@ test('consumer.setPreferredLayers() succeed', async () => {
 
 	await audioConsumer.setPreferredLayers({ spatialLayer: 1, temporalLayer: 1 });
 
-	expect(audioConsumer.preferredLayers).toBeUndefined();
+	expect(audioConsumer.preferredLayers).toEqual({
+		spatialLayer: 0,
+		temporalLayer: 0,
+	});
 
 	await videoConsumer.setPreferredLayers({ spatialLayer: 2, temporalLayer: 3 });
 

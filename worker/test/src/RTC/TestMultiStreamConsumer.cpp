@@ -169,9 +169,15 @@ namespace
 		    rtpStream(createRtpStreamRecv())
 		{
 			// Set producer scores and producer stream.
-			const std::vector<uint8_t> scores{ 10 };
+			// NOTE: This must be static because the Consumer stores the given vector
+			// pointer which is supposed to exist in the associated Producer (but here
+			// there is no associated Producer).
+			static const std::vector<uint8_t> scores{ 10 };
 
 			consumer->ProducerRtpStreamScores(&scores);
+			// NOTE: mappedSsrc here MUST be 1234567890 (otherwise Consumer will crash).
+			// This is guaranteed by Producer class, however here we must do it manually.
+			consumer->ProducerNewRtpStream(rtpStream.get(), 1234567890);
 		}
 
 		std::unique_ptr<ConsumerListener> listener;

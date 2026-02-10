@@ -1,6 +1,5 @@
 #define MS_CLASS "RTC::MultiStreamConsumer"
-// TODO: COmment
-#define MS_LOG_DEV_LEVEL 3
+// #define MS_LOG_DEV_LEVEL 3
 
 #include "RTC/MultiStreamConsumer.hpp"
 #include "DepLibUV.hpp"
@@ -65,9 +64,6 @@ namespace RTC
 		for (size_t idx{ 0u }; idx < this->consumableRtpEncodings.size(); ++idx)
 		{
 			auto& encoding = this->consumableRtpEncodings[idx];
-
-			// TODO
-			MS_DUMP("------ encoding.ssrc:%" PRIu32, encoding.ssrc);
 
 			this->mapMappedSsrcSpatialLayer[encoding.ssrc] = static_cast<int16_t>(idx);
 		}
@@ -327,9 +323,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
-		MS_DUMP("------ mappedSsrc:%" PRIu32, mappedSsrc);
-
 		auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
 
 		MS_ASSERT(it != this->mapMappedSsrcSpatialLayer.end(), "unknown mappedSsrc");
@@ -342,9 +335,6 @@ namespace RTC
 	void MultiStreamConsumer::ProducerNewRtpStream(RTC::RTP::RtpStreamRecv* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
-
-		// TODO
-		MS_DUMP("------ mappedSsrc:%" PRIu32, mappedSsrc);
 
 		auto it = this->mapMappedSsrcSpatialLayer.find(mappedSsrc);
 
@@ -513,12 +503,6 @@ namespace RTC
 				goto done;
 			}
 
-			// TODO
-			MS_DUMP(
-			  "---- 1 spatialLayer:%" PRIi16 ", producerRtpStreams.size():%zu",
-			  spatialLayer,
-			  this->producerRtpStreams.size());
-
 			// This can be null.
 			auto* producerRtpStream = this->producerRtpStreams.at(spatialLayer);
 
@@ -541,12 +525,6 @@ namespace RTC
 			  this->provisionalTargetLayers.spatial != -1 &&
 			  producerRtpStream->GetActiveMs() < StreamMinActiveMs)
 			{
-				// TODO
-				MS_DUMP(
-				  "---- 2 this->provisionalTargetLayers.spatial:%" PRIi16 ", producerRtpStreams.size():%zu",
-				  this->provisionalTargetLayers.spatial,
-				  this->producerRtpStreams.size());
-
 				const auto* provisionalProducerRtpStream =
 				  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
 
@@ -587,12 +565,6 @@ namespace RTC
 				  requiredBitrate && temporalLayer == 0 && this->provisionalTargetLayers.spatial > -1 &&
 				  spatialLayer > this->provisionalTargetLayers.spatial)
 				{
-					// TODO
-					MS_DUMP(
-					  "---- 3 this->provisionalTargetLayers.spatial:%" PRIi16 ", producerRtpStreams.size():%zu",
-					  this->provisionalTargetLayers.spatial,
-					  this->producerRtpStreams.size());
-
 					auto* provisionalProducerRtpStream =
 					  this->producerRtpStreams.at(this->provisionalTargetLayers.spatial);
 					auto provisionalRequiredBitrate = provisionalProducerRtpStream->GetBitrate(
@@ -737,12 +709,6 @@ namespace RTC
 		// iterate all streams here anyway.
 		for (auto sIdx{ static_cast<int16_t>(this->producerRtpStreams.size() - 1) }; sIdx >= 0; --sIdx)
 		{
-			// TODO
-			MS_DUMP(
-			  "---- 4 sIdx:%" PRIi16 ", producerRtpStreams.size():%zu",
-			  sIdx,
-			  this->producerRtpStreams.size());
-
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 
 			if (!producerRtpStream)
@@ -772,20 +738,6 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
 #endif
-
-		// TODO
-		MS_DUMP(
-		  "---- 5 packet->GetSsrc():%" PRIu32 ", mapMappedSsrcSpatialLayer.size():%zu",
-		  packet->GetSsrc(),
-		  this->mapMappedSsrcSpatialLayer.size());
-
-		// TODO
-		MS_DUMP("------ 5.1 <this->mapMappedSsrcSpatialLayer>");
-		for (const auto& kv : this->mapMappedSsrcSpatialLayer)
-		{
-			MS_DUMP("------------ mappeSsrc:%" PRIu32 ", spatialLayer:%" PRIi16, kv.first, kv.second);
-		}
-		MS_DUMP("------ 5.1 </this->mapMappedSsrcSpatialLayer>");
 
 		auto spatialLayer = this->mapMappedSsrcSpatialLayer.at(packet->GetSsrc());
 
@@ -1672,11 +1624,7 @@ namespace RTC
 
 		for (size_t sIdx{ 0u }; sIdx < this->producerRtpStreams.size(); ++sIdx)
 		{
-			auto spatialLayer = static_cast<int16_t>(sIdx);
-
-			// TODO
-			MS_DUMP("---- 6 sIdx:%zu, producerRtpStreams.size():%zu", sIdx, this->producerRtpStreams.size());
-
+			auto spatialLayer       = static_cast<int16_t>(sIdx);
 			auto* producerRtpStream = this->producerRtpStreams.at(sIdx);
 			auto producerScore      = producerRtpStream ? producerRtpStream->GetScore() : 0u;
 
@@ -1813,12 +1761,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// TODO
-		MS_DUMP(
-		  "---- 7 spatialLayer:%" PRIi16 ", producerRtpStreams.size():%zu",
-		  spatialLayer,
-		  this->producerRtpStreams.size());
-
 		// This method assumes that the caller has verified that there is a valid
 		// Producer RtpStream for the given spatial layer.
 		MS_ASSERT(
@@ -1924,12 +1866,6 @@ namespace RTC
 			return nullptr;
 		}
 
-		// TODO
-		MS_DUMP(
-		  "---- 8 this->currentSpatialLayer:%" PRIi16 ", producerRtpStreams.size():%zu",
-		  this->currentSpatialLayer,
-		  this->producerRtpStreams.size());
-
 		// This may return nullptr.
 		return this->producerRtpStreams.at(this->currentSpatialLayer);
 	}
@@ -1943,12 +1879,6 @@ namespace RTC
 			return nullptr;
 		}
 
-		// TODO
-		MS_DUMP(
-		  "---- 9 this->targetLayers.spatial:%" PRIi16 ", producerRtpStreams.size():%zu",
-		  this->targetLayers.spatial,
-		  this->producerRtpStreams.size());
-
 		// This may return nullptr.
 		return this->producerRtpStreams.at(this->targetLayers.spatial);
 	}
@@ -1961,12 +1891,6 @@ namespace RTC
 		{
 			return nullptr;
 		}
-
-		// TODO
-		MS_DUMP(
-		  "---- 10 this->tsReferenceSpatialLayer:%" PRIi16 ", producerRtpStreams.size():%zu",
-		  this->tsReferenceSpatialLayer,
-		  this->producerRtpStreams.size());
 
 		// This may return nullptr.
 		return this->producerRtpStreams.at(this->tsReferenceSpatialLayer);
