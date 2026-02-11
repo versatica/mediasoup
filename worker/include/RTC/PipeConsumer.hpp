@@ -1,14 +1,14 @@
 #ifndef MS_RTC_PIPECONSUMER_HPP
 #define MS_RTC_PIPECONSUMER_HPP
 
-#include "RTC/Consumer.hpp"
+#include "RTC/OldConsumer.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
 #include <map>
 
 namespace RTC
 {
-	class PipeConsumer : public RTC::Consumer, public RTC::RTP::RtpStreamSend::Listener
+	class PipeConsumer : public RTC::OldConsumer, public RTC::RTP::RtpStreamSend::Listener
 	{
 	private:
 		static void StorePacketInTargetLayerRetransmissionBuffer(
@@ -22,7 +22,7 @@ namespace RTC
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& producerId,
-		  RTC::Consumer::Listener* listener,
+		  RTC::OldConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeRequest* data);
 		~PipeConsumer() override;
 

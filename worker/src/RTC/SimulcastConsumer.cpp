@@ -28,9 +28,9 @@ namespace RTC
 	  RTC::Shared* shared,
 	  const std::string& id,
 	  const std::string& producerId,
-	  RTC::Consumer::Listener* listener,
+	  RTC::OldConsumer::Listener* listener,
 	  const FBS::Transport::ConsumeRequest* data)
-	  : RTC::Consumer::Consumer(
+	  : RTC::OldConsumer::OldConsumer(
 	      shared, id, producerId, listener, data, RTC::RtpParameters::Type::SIMULCAST)
 	{
 		MS_TRACE();
@@ -149,7 +149,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		auto base = RTC::Consumer::FillBuffer(builder);
+		auto base = RTC::OldConsumer::FillBuffer(builder);
 		// Add rtpStream.
 		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
 		rtpStreams.emplace_back(this->rtpStream->FillBuffer(builder));
@@ -300,7 +300,7 @@ namespace RTC
 			default:
 			{
 				// Pass it to the parent class.
-				RTC::Consumer::HandleRequest(request);
+				RTC::OldConsumer::HandleRequest(request);
 			}
 		}
 	}
@@ -347,7 +347,7 @@ namespace RTC
 		// Emit the score event.
 		EmitScore();
 
-		if (RTC::Consumer::IsActive())
+		if (RTC::OldConsumer::IsActive())
 		{
 			// All Producer streams are dead.
 			if (!IsActive())

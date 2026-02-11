@@ -61,9 +61,10 @@ namespace RTC
 	  RTC::Shared* shared,
 	  const std::string& id,
 	  const std::string& producerId,
-	  RTC::Consumer::Listener* listener,
+	  RTC::OldConsumer::Listener* listener,
 	  const FBS::Transport::ConsumeRequest* data)
-	  : RTC::Consumer::Consumer(shared, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
+	  : RTC::OldConsumer::OldConsumer(
+	      shared, id, producerId, listener, data, RTC::RtpParameters::Type::PIPE)
 	{
 		MS_TRACE();
 
@@ -113,7 +114,7 @@ namespace RTC
 		MS_TRACE();
 
 		// Call the parent method.
-		auto base = RTC::Consumer::FillBuffer(builder);
+		auto base = RTC::OldConsumer::FillBuffer(builder);
 
 		// Add rtpStreams.
 		std::vector<flatbuffers::Offset<FBS::RtpStream::Dump>> rtpStreams;
@@ -199,7 +200,7 @@ namespace RTC
 			default:
 			{
 				// Pass it to the parent class.
-				RTC::Consumer::HandleRequest(request);
+				RTC::OldConsumer::HandleRequest(request);
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 #ifndef MS_RTC_SVC_CONSUMER_HPP
 #define MS_RTC_SVC_CONSUMER_HPP
 
-#include "RTC/Consumer.hpp"
+#include "RTC/OldConsumer.hpp"
 #include "RTC/RTP/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/SeqManager.hpp"
 #include "RTC/Shared.hpp"
@@ -9,14 +9,14 @@
 
 namespace RTC
 {
-	class SvcConsumer : public RTC::Consumer, public RTC::RTP::RtpStreamSend::Listener
+	class SvcConsumer : public RTC::OldConsumer, public RTC::RTP::RtpStreamSend::Listener
 	{
 	public:
 		SvcConsumer(
 		  RTC::Shared* shared,
 		  const std::string& id,
 		  const std::string& producerId,
-		  RTC::Consumer::Listener* listener,
+		  RTC::OldConsumer::Listener* listener,
 		  const FBS::Transport::ConsumeRequest* data);
 		~SvcConsumer() override;
 
@@ -40,7 +40,7 @@ namespace RTC
 		{
 			// clang-format off
 			return (
-				RTC::Consumer::IsActive() &&
+				RTC::OldConsumer::IsActive() &&
 				this->producerRtpStream &&
 				// If there is no RTP inactivity check do not consider the stream
 				// inactive despite it has score 0.
