@@ -61,6 +61,14 @@ namespace RTC
 		void ProducerRtpStreamScore(
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) override;
+		void SetExternallyManagedBitrate() override
+		{
+			// Only allow externally managed bitrate video.
+			if (this->kind == RTC::Media::Kind::VIDEO)
+			{
+				this->externallyManagedBitrate = true;
+			}
+		}
 		uint8_t GetBitratePriority() const override;
 		uint32_t IncreaseLayer(uint32_t bitrate, bool considerLoss) override;
 		void ApplyLayers() override;

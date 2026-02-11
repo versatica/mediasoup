@@ -414,10 +414,16 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Only for video.
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			return 0u;
+		}
+
 		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		// Audio SimpleConsumer does not play the BWE game.
-		if (this->kind != RTC::Media::Kind::VIDEO)
+		if (this->kind == RTC::Media::Kind::AUDIO && this->type == RTC::RtpParameters::Type::SIMPLE)
 		{
 			return 0u;
 		}
@@ -702,13 +708,13 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
-
-		// Audio SimpleConsumer does not play the BWE game.
-		if (this->kind != RTC::Media::Kind::VIDEO)
+		// Only for video.
+		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
 			return 0u;
 		}
+
+		MS_ASSERT(this->externallyManagedBitrate, "bitrate is not externally managed");
 
 		if (!IsActive())
 		{
@@ -750,18 +756,6 @@ namespace RTC
 	void MultiStreamConsumer::SendRtpPacket(RTC::RTP::Packet* packet, RTC::RTP::SharedPacket& sharedPacket)
 	{
 		MS_TRACE();
-
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("***** BEGIN audio packet | seq:%u", packet->GetSequenceNumber());
-			MS_DUMP("---- this->targetLayers:");
-			this->targetLayers.Dump(6);
-			MS_DUMP("---- this->provisionalTargetLayers:");
-			this->provisionalTargetLayers.Dump(6);
-			MS_DUMP("---- this->targetLayers:");
-			this->targetLayers.Dump(6);
-		}
 
 #ifdef MS_RTC_LOGGER_RTP
 		packet->logger.consumerId = this->id;
@@ -1310,18 +1304,6 @@ namespace RTC
 				this->lastSentPacketHasMarker = packet->HasMarker();
 			}
 
-			// TODO: REMOVE
-			if (this->kind == RTC::Media::Kind::AUDIO)
-			{
-				MS_DUMP("+++++ AUDIO PACKET SENT :) | seq:%u", origSeq);
-				MS_DUMP("---- this->targetLayers:");
-				this->targetLayers.Dump(6);
-				MS_DUMP("---- this->provisionalTargetLayers:");
-				this->provisionalTargetLayers.Dump(6);
-				MS_DUMP("---- this->targetLayers:");
-				this->targetLayers.Dump(6);
-			}
-
 			// Send the packet.
 			this->listener->OnConsumerSendRtpPacket(this, packet);
 
@@ -1773,6 +1755,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("***** MayChangeLayers(force:%s)", force ? "true" : "false");
+		}
+
 		RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
 		if (RecalculateTargetLayers(newTargetLayers))
@@ -1784,8 +1772,21 @@ namespace RTC
 			// will let us change it when it considers.
 			if (this->externallyManagedBitrate)
 			{
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP("----- this->externallyManagedBitrate == true");
+				}
+
 				if (newTargetLayers.spatial != this->targetLayers.spatial || force)
 				{
+					// TODO: REMOVE
+					if (this->kind == RTC::Media::Kind::AUDIO)
+					{
+						MS_DUMP(
+						  "----- this->externallyManagedBitrate == true => calling listener->OnConsumerNeedBitrateChange()");
+					}
+
 					this->listener->OnConsumerNeedBitrateChange(this);
 				}
 			}
@@ -1885,6 +1886,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// TODO: REMOVE
 		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
 			MS_DUMP("***** UpdateTargetLayers(%d, %d)", newTargetSpatialLayer, newTargetTemporalLayer);

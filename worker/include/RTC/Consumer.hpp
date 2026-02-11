@@ -133,7 +133,7 @@ namespace RTC
 		  RTC::RTP::RtpStreamRecv* rtpStream, uint8_t score, uint8_t previousScore)           = 0;
 		virtual void ProducerRtcpSenderReport(RTC::RTP::RtpStreamRecv* rtpStream, bool first) = 0;
 		void ProducerClosed();
-		void SetExternallyManagedBitrate()
+		virtual void SetExternallyManagedBitrate()
 		{
 			this->externallyManagedBitrate = true;
 		}
