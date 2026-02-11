@@ -8,7 +8,7 @@
 
 namespace Channel
 {
-	class ConsumerSocket : public ::UnixStreamSocketHandle
+	class ConsumerSocket : public UnixStreamSocketHandle
 	{
 	public:
 		class Listener
@@ -26,7 +26,7 @@ namespace Channel
 		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
 		~ConsumerSocket() override;
 
-		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
+		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override;
 		void UserOnUnixStreamSocketClosed() override;
@@ -36,12 +36,12 @@ namespace Channel
 		Listener* listener{ nullptr };
 	};
 
-	class ProducerSocket : public ::UnixStreamSocketHandle
+	class ProducerSocket : public UnixStreamSocketHandle
 	{
 	public:
 		ProducerSocket(int fd, size_t bufferSize);
 
-		/* Pure virtual methods inherited from ::UnixStreamSocketHandle. */
+		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
 	public:
 		void UserOnUnixStreamRead() override
 		{
@@ -82,6 +82,9 @@ namespace Channel
 		};
 
 	public:
+		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
+
+	public:
 #ifdef MS_TEST
 		explicit ChannelSocket();
 #endif
@@ -120,7 +123,6 @@ namespace Channel
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
-		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};
 } // namespace Channel
 

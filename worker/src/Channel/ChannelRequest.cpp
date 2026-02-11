@@ -7,11 +7,9 @@
 
 namespace Channel
 {
-	/* Static variables. */
+	/* Class variables. */
 
 	thread_local flatbuffers::FlatBufferBuilder ChannelRequest::bufferBuilder{};
-
-	/* Class variables. */
 
 	// clang-format off
 	const absl::flat_hash_map<FBS::Request::Method, const char*> ChannelRequest::Method2String =
@@ -102,7 +100,7 @@ namespace Channel
 		this->id     = request->id();
 		this->method = request->method();
 
-		auto methodCStrIt = ChannelRequest::Method2String.find(this->method);
+		const auto methodCStrIt = ChannelRequest::Method2String.find(this->method);
 
 		if (methodCStrIt == ChannelRequest::Method2String.end())
 		{
@@ -140,7 +138,7 @@ namespace Channel
 
 		auto& builder = ChannelRequest::bufferBuilder;
 		auto response = FBS::Response::CreateResponseDirect(
-		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "Error" /*Error*/, reason);
+		  builder, this->id, /*accepted*/ false, FBS::Response::Body::NONE, 0, /*error*/ "Error", reason);
 
 		SendResponse(response);
 	}
@@ -155,7 +153,7 @@ namespace Channel
 
 		auto& builder = ChannelRequest::bufferBuilder;
 		auto response = FBS::Response::CreateResponseDirect(
-		  builder, this->id, false /*accepted*/, FBS::Response::Body::NONE, 0, "TypeError" /*Error*/, reason);
+		  builder, this->id, /*accepted*/ false, FBS::Response::Body::NONE, 0, /*error*/ "TypeError", reason);
 
 		SendResponse(response);
 	}
@@ -165,8 +163,10 @@ namespace Channel
 		this->channel->Send(buffer, size);
 	}
 
-	void ChannelRequest::SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response)
+	void ChannelRequest::SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response) const
 	{
+		MS_TRACE();
+
 		auto& builder = ChannelRequest::bufferBuilder;
 		auto message =
 		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());

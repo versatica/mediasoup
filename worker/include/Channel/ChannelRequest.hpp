@@ -21,18 +21,21 @@ namespace Channel
 		using Method = FBS::Request::Method;
 
 	public:
-		static const absl::flat_hash_map<FBS::Request::Method, const char*> Method2String;
 		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
+		static const absl::flat_hash_map<FBS::Request::Method, const char*> Method2String;
 
 	public:
 		ChannelRequest(Channel::ChannelSocket* channel, const FBS::Request::Request* request);
+
 		~ChannelRequest() = default;
 
-		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder() const
 		{
 			return ChannelRequest::bufferBuilder;
 		}
+
 		void Accept();
+
 		template<class Body>
 		void Accept(FBS::Response::Body type, flatbuffers::Offset<Body>& body)
 		{
@@ -42,7 +45,6 @@ namespace Channel
 
 			auto& builder = ChannelRequest::bufferBuilder;
 			auto response = FBS::Response::CreateResponse(builder, this->id, true, type, body.Union());
-
 			auto message =
 			  FBS::Message::CreateMessage(builder, FBS::Message::Body::Response, response.Union());
 
@@ -50,12 +52,15 @@ namespace Channel
 			this->Send(builder.GetBufferPointer(), builder.GetSize());
 			builder.Clear();
 		}
+
 		void Error(const char* reason = nullptr);
+
 		void TypeError(const char* reason = nullptr);
 
 	private:
 		void Send(const uint8_t* buffer, size_t size) const;
-		void SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response);
+
+		void SendResponse(const flatbuffers::Offset<FBS::Response::Response>& response) const;
 
 	public:
 		// Passed by argument.

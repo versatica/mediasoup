@@ -13,6 +13,10 @@ namespace Channel
 	static constexpr size_t MessageMaxLen{ 4194308 };
 	static constexpr size_t PayloadMaxLen{ 4194304 };
 
+	/* Class variables. */
+
+	thread_local flatbuffers::FlatBufferBuilder ChannelSocket::bufferBuilder{};
+
 	/* Static methods for UV callbacks. */
 
 	inline static void onAsync(uv_handle_t* handle)
@@ -163,13 +167,13 @@ namespace Channel
 			return;
 		}
 
-		auto log = FBS::Log::CreateLogDirect(this->bufferBuilder, data);
-		auto message =
-		  FBS::Message::CreateMessage(this->bufferBuilder, FBS::Message::Body::Log, log.Union());
+		auto& builder = ChannelSocket::bufferBuilder;
+		auto log      = FBS::Log::CreateLogDirect(builder, data);
+		auto message  = FBS::Message::CreateMessage(builder, FBS::Message::Body::Log, log.Union());
 
-		this->bufferBuilder.FinishSizePrefixed(message);
-		this->Send(this->bufferBuilder.GetBufferPointer(), this->bufferBuilder.GetSize());
-		this->bufferBuilder.Clear();
+		builder.FinishSizePrefixed(message);
+		this->Send(builder.GetBufferPointer(), builder.GetSize());
+		builder.Clear();
 	}
 
 	bool ChannelSocket::CallbackRead()
@@ -185,12 +189,17 @@ namespace Channel
 		uint32_t msgLen;
 		size_t msgCtx;
 
-		// Try to read next message using `channelReadFn`, message, its length and context will be
-		// stored in provided arguments.
-		auto free = this->channelReadFn(&msg, &msgLen, &msgCtx, this->uvReadHandle, this->channelReadCtx);
+		// Try to read next message using `channelReadFn`, message, its length and
+		// context will be stored in provided arguments.
+		auto free = this->channelReadFn(
+		  std::addressof(msg),
+		  std::addressof(msgLen),
+		  std::addressof(msgCtx),
+		  this->uvReadHandle,
+		  this->channelReadCtx);
 
-		// Non-null free function pointer means message was successfully read above and will need to be
-		// freed later.
+		// Non-null free function pointer means message was successfully read above
+		// and will need to be freed later.
 		if (free)
 		{
 			const auto* message = FBS::Message::GetMessage(msg);
@@ -372,8 +381,9 @@ namespace Channel
 			}
 
 			uint32_t msgLen;
+
 			// Read message length.
-			std::memcpy(&msgLen, this->buffer + msgStart, sizeof(uint32_t));
+			std::memcpy(std::addressof(msgLen), this->buffer + msgStart, sizeof(uint32_t));
 
 			if (readLen < sizeof(uint32_t) + static_cast<size_t>(msgLen))
 			{
