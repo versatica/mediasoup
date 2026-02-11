@@ -474,7 +474,13 @@ fn consume_succeeds() {
                     producer_scores: vec![0]
                 }
             );
-            assert_eq!(audio_consumer.preferred_layers(), None);
+            assert_eq!(
+                audio_consumer.preferred_layers(),
+                Some(ConsumerLayers {
+                    spatial_layer: 0,
+                    temporal_layer: Some(0)
+                })
+            );
             assert_eq!(audio_consumer.current_layers(), None);
             assert_eq!(
                 audio_consumer
@@ -1320,7 +1326,13 @@ fn set_preferred_layers_succeeds() {
                 .await
                 .expect("Failed to set preferred layers consumer");
 
-            assert_eq!(audio_consumer.preferred_layers(), None);
+            assert_eq!(
+                audio_consumer.preferred_layers(),
+                Some(ConsumerLayers {
+                    spatial_layer: 0,
+                    temporal_layer: Some(0)
+                })
+            );
         }
 
         {
