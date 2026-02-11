@@ -368,7 +368,10 @@ namespace RTC
 			if (!IsActive())
 			{
 				// TODO: REMOVE
-				MS_DUMP("------ calling UpdateTargetLayers(-1, -1)");
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP("----- all Producers are inactive, calling UpdateTargetLayers(-1, -1)");
+				}
 
 				UpdateTargetLayers(-1, -1);
 			}
@@ -667,7 +670,13 @@ namespace RTC
 		if (provisionalTargetLayers != this->targetLayers)
 		{
 			// TODO: REMOVE
-			MS_DUMP("------ calling UpdateTargetLayers(%d, %d)", provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP(
+				  "----- calling UpdateTargetLayers(%d, %d)",
+				  provisionalTargetLayers.spatial,
+				  provisionalTargetLayers.temporal);
+			}
 
 			UpdateTargetLayers(provisionalTargetLayers.spatial, provisionalTargetLayers.temporal);
 
@@ -745,7 +754,7 @@ namespace RTC
 		// TODO: REMOVE
 		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
-			MS_DUMP("----- 1 audio packet | ssrc:%u", packet->GetSsrc());
+			MS_DUMP("***** BEGIN audio packet | seq:%u", packet->GetSequenceNumber());
 		}
 
 #ifdef MS_RTC_LOGGER_RTP
@@ -756,9 +765,6 @@ namespace RTC
 
 		if (!IsActive())
 		{
-			// TODO: REMOVE
-			MS_DUMP("----------- NOT ACTIVE !!!!");
-
 			// Only drop the packet in the RTP sequence manager if it belongs to the
 			// current spatial layer.
 			if (spatialLayer == this->currentSpatialLayer)
@@ -767,16 +773,27 @@ namespace RTC
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::CONSUMER_INACTIVE);
 #endif
 
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP(
+					  "----- audio packet dropped CONSUMER_INACTIVE | seq:%u", packet->GetSequenceNumber());
+				}
+
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
-			return;
-		}
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO && spatialLayer != this->currentSpatialLayer)
+			{
+				MS_DUMP(
+				  "----- !IsActive() => audio packet ignored because spatialLayer %d != this->currentSpatialLayer %d | seq:%u",
+				  spatialLayer,
+				  this->currentSpatialLayer,
+				  packet->GetSequenceNumber());
+			}
 
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 2 audio packet | ssrc:%u", packet->GetSsrc());
+			return;
 		}
 
 		if (this->targetLayers.temporal == -1)
@@ -785,28 +802,31 @@ namespace RTC
 			// current spatial layer.
 			if (spatialLayer == this->currentSpatialLayer)
 			{
-				MS_DUMP("----- INVALID_TARGET_LAYER audio packet | spatialLayer (%u) == this->currentSpatialLayer (%u)", spatialLayer, this->currentSpatialLayer);
-
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
 #endif
+
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP(
+					  "----- audio packet dropped INVALID_TARGET_LAYER | seq:%u", packet->GetSequenceNumber());
+				}
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
 			// TODO: REMOVE
-			if (this->kind == RTC::Media::Kind::AUDIO)
+			if (this->kind == RTC::Media::Kind::AUDIO && spatialLayer != this->currentSpatialLayer)
 			{
-				MS_DUMP("----- DROPPED audio packet | this->targetLayers.temporal == -1");
+				MS_DUMP(
+				  "----- this->targetLayers.temporal == -1 => audio packet ignored because spatialLayer %d != this->currentSpatialLayer %d | seq:%u",
+				  spatialLayer,
+				  this->currentSpatialLayer,
+				  packet->GetSequenceNumber());
 			}
 
 			return;
-		}
-
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 3 audio packet | ssrc:%u", packet->GetSsrc());
 		}
 
 		auto payloadType = packet->GetPayloadType();
@@ -825,16 +845,28 @@ namespace RTC
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::UNSUPPORTED_PAYLOAD_TYPE);
 #endif
 
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP(
+					  "----- audio packet dropped UNSUPPORTED_PAYLOAD_TYPE | seq:%u",
+					  packet->GetSequenceNumber());
+				}
+
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
-			return;
-		}
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO && spatialLayer != this->currentSpatialLayer)
+			{
+				MS_DUMP(
+				  "----- unsupported codec => audio packet ignored because spatialLayer %d != this->currentSpatialLayer %d | seq:%u",
+				  spatialLayer,
+				  this->currentSpatialLayer,
+				  packet->GetSequenceNumber());
+			}
 
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 4 audio packet | ssrc:%u", packet->GetSsrc());
+			return;
 		}
 
 		bool shouldSwitchCurrentSpatialLayer{ false };
@@ -851,6 +883,12 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
 #endif
+
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP("----- audio packet dropped NOT_A_KEYFRAME | seq:%u", packet->GetSequenceNumber());
+				}
 
 				// NOTE: Don't drop the packet in the RTP sequence manager since this
 				// packet doesn't belong to the current spatial layer.
@@ -875,13 +913,17 @@ namespace RTC
 			// NOTE: Don't drop the packet in the RTP sequence manager since this
 			// packet doesn't belong to the current spatial layer.
 
-			return;
-		}
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP(
+				  "----- audio packet ignored (spatialLayer %d != this->currentSpatialLayer %d) | seq:%u",
+				  spatialLayer,
+				  this->currentSpatialLayer,
+				  packet->GetSequenceNumber());
+			}
 
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 5 audio packet | ssrc:%u", packet->GetSsrc());
+			return;
 		}
 
 		// If we need to sync and this is not a key frame, ignore the packet.
@@ -893,6 +935,12 @@ namespace RTC
 			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
 #endif
 
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP("----- audio packet dropped NOT_A_KEYFRAME | seq:%u", packet->GetSequenceNumber());
+			}
+
 			// NOTE: No need to drop the packet in the RTP sequence manager since here
 			// we are blocking all packets but the key frame that would trigger sync
 			// below.
@@ -902,12 +950,6 @@ namespace RTC
 			StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 			return;
-		}
-
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 6 audio packet | ssrc:%u", packet->GetSsrc());
 		}
 
 		// Packets with only padding are not forwarded.
@@ -921,16 +963,26 @@ namespace RTC
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
 #endif
 
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP("----- audio packet dropped EMPTY_PAYLOAD | seq:%u", packet->GetSequenceNumber());
+				}
+
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 			}
 
-			return;
-		}
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO && spatialLayer != this->currentSpatialLayer)
+			{
+				MS_DUMP(
+				  "----- unsupported codec => audio packet ignored because spatialLayer %d != this->currentSpatialLayer %d | seq:%u",
+				  spatialLayer,
+				  this->currentSpatialLayer,
+				  packet->GetSequenceNumber());
+			}
 
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 7 audio packet | ssrc:%u", packet->GetSsrc());
+			return;
 		}
 
 		// Whether this is the first packet after re-sync.
@@ -1055,6 +1107,14 @@ namespace RTC
 					  RTC::RtcLogger::RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED);
 #endif
 
+					// TODO: REMOVE
+					if (this->kind == RTC::Media::Kind::AUDIO)
+					{
+						MS_DUMP(
+						  "----- audio packet dropped TOO_HIGH_TIMESTAMP_EXTRA_NEEDED | seq:%u",
+						  packet->GetSequenceNumber());
+					}
+
 					// NOTE: Don't drop the packet in the RTP sequence manager since this
 					// packet doesn't belong to the current spatial layer.
 
@@ -1095,12 +1155,6 @@ namespace RTC
 			this->keyFrameForTsOffsetRequested = false;
 		}
 
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 8 audio packet | ssrc:%u", packet->GetSsrc());
-		}
-
 		if (!shouldSwitchCurrentSpatialLayer && this->checkingForOldPacketsInSpatialLayer)
 		{
 			// If this is a packet previous to the spatial layer switch, ignore the
@@ -1115,6 +1169,14 @@ namespace RTC
 				  RTC::RtcLogger::RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
 #endif
 
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP(
+					  "----- audio packet dropped PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH | seq:%u",
+					  packet->GetSequenceNumber());
+				}
+
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 				return;
@@ -1126,18 +1188,19 @@ namespace RTC
 			}
 		}
 
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 9 audio packet | ssrc:%u", packet->GetSsrc());
-		}
-
 		bool marker{ false };
 
 		if (shouldSwitchCurrentSpatialLayer)
 		{
 			// TODO: REMOVE
-			MS_DUMP("------ setting this->currentSpatialLayer = %d [previous value:%d]", this->targetLayers.spatial, this->currentSpatialLayer);
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP(
+				  "----- setting this->currentSpatialLayer = %d [previous value:%d] | seq:%u",
+				  this->targetLayers.spatial,
+				  this->currentSpatialLayer,
+				  packet->GetSequenceNumber());
+			}
 
 			// Update current spatial layer.
 			this->currentSpatialLayer = this->targetLayers.spatial;
@@ -1179,6 +1242,11 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
 #endif
+				// TODO: REMOVE
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP("----- audio packet dropped DROPPED_BY_CODEC | seq:%u", packet->GetSequenceNumber());
+				}
 
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
@@ -1189,12 +1257,6 @@ namespace RTC
 			{
 				EmitLayersChange();
 			}
-		}
-
-		// TODO: REMOVE
-		if (this->kind == RTC::Media::Kind::AUDIO)
-		{
-			MS_DUMP("----- 10 audio packet | ssrc:%u", packet->GetSsrc());
 		}
 
 		// Update RTP seq number and timestamp based on NTP offset.
@@ -1245,7 +1307,7 @@ namespace RTC
 			// TODO: REMOVE
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
-				MS_DUMP("----- SENT! audio packet | ssrc:%u", packet->GetSsrc());
+				MS_DUMP("+++++ AUDIO PACKET SENT :) | seq:%u", origSeq);
 			}
 
 			// Send the packet.
@@ -1270,6 +1332,12 @@ namespace RTC
 #ifdef MS_RTC_LOGGER_RTP
 			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::SEND_RTP_STREAM_DISCARDED);
 #endif
+
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP("----- audio packet dropped SEND_RTP_STREAM_DISCARDED | seq:%u", origSeq);
+			}
 		}
 
 		// Restore packet fields.
@@ -1486,7 +1554,12 @@ namespace RTC
 		this->targetLayerRetransmissionBuffer.clear();
 
 		// TODO: REMOVE
-		MS_DUMP("------ calling UpdateTargetLayers(-1, -1) [current this->currentSpatialLayer:%d]", this->currentSpatialLayer);
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP(
+			  "----- calling UpdateTargetLayers(-1, -1) [current this->currentSpatialLayer:%d]",
+			  this->currentSpatialLayer);
+		}
 
 		UpdateTargetLayers(-1, -1);
 	}
@@ -1501,7 +1574,12 @@ namespace RTC
 		this->targetLayerRetransmissionBuffer.clear();
 
 		// TODO: REMOVE
-		MS_DUMP("------ calling UpdateTargetLayers(-1, -1) [current this->currentSpatialLayer:%d]", this->currentSpatialLayer);
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP(
+			  "----- calling UpdateTargetLayers(-1, -1) [current this->currentSpatialLayer:%d]",
+			  this->currentSpatialLayer);
+		}
 
 		UpdateTargetLayers(-1, -1);
 
@@ -1702,7 +1780,13 @@ namespace RTC
 			else
 			{
 				// TODO: REMOVE
-				MS_DUMP("------ calling UpdateTargetLayers(%d, %d)", newTargetLayers.spatial, newTargetLayers.temporal);
+				if (this->kind == RTC::Media::Kind::AUDIO)
+				{
+					MS_DUMP(
+					  "----- calling UpdateTargetLayers(%d, %d)",
+					  newTargetLayers.spatial,
+					  newTargetLayers.temporal);
+				}
 
 				UpdateTargetLayers(newTargetLayers.spatial, newTargetLayers.temporal);
 			}
@@ -1789,6 +1873,11 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP("***** UpdateTargetLayers(%d, %d)", newTargetSpatialLayer, newTargetTemporalLayer);
+		}
+
 		// If we don't have yet a RTP timestamp reference, set it now.
 		if (
 		  newTargetSpatialLayer != -1 && (this->tsReferenceSpatialLayer == -1 ||
@@ -1810,7 +1899,11 @@ namespace RTC
 		if (newTargetSpatialLayer == -1)
 		{
 			// TODO: REMOVE
-			MS_DUMP("------ setting this->targetLayers.spatial = -1, this->targetLayers.temporal = -1, this->currentSpatialLayer = -1");
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP(
+				  "----- newTargetSpatialLayer == -1 => setting this->targetLayers.spatial = -1, this->targetLayers.temporal = -1, this->currentSpatialLayer = -1");
+			}
 
 			// Unset current and target layers.
 			this->targetLayers.spatial  = -1;
@@ -1831,8 +1924,14 @@ namespace RTC
 			return;
 		}
 
-		// TODO
-		MS_DUMP("---- setting this->targetLayers.spatial = %d, this->targetLayers.temporal = %d", this->targetLayers.spatial, this->targetLayers.temporal);
+		// TODO: REMOVE
+		if (this->kind == RTC::Media::Kind::AUDIO)
+		{
+			MS_DUMP(
+			  "----- setting this->targetLayers.spatial = %d, this->targetLayers.temporal = %d",
+			  newTargetSpatialLayer,
+			  newTargetTemporalLayer);
+		}
 
 		this->targetLayers.spatial  = newTargetSpatialLayer;
 		this->targetLayers.temporal = newTargetTemporalLayer;
@@ -1965,8 +2064,12 @@ namespace RTC
 
 		if (this->currentSpatialLayer == -1)
 		{
-			// TODO: Remove
-			MS_DUMP("------ this->currentSpatialLayer == -1 => nullptr");
+			// TODO: REMOVE
+			if (this->kind == RTC::Media::Kind::AUDIO)
+			{
+				MS_DUMP("----- this->currentSpatialLayer == -1 => nullptr");
+			}
+
 			return nullptr;
 		}
 
