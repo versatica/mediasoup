@@ -104,6 +104,7 @@ common_sources = [
   'src/RTC/ActiveSpeakerObserver.cpp',
   'src/RTC/AudioLevelObserver.cpp',
   'src/RTC/Consumer.cpp',
+  'src/RTC/ConsumerTypes.cpp',
   'src/RTC/DataConsumer.cpp',
   'src/RTC/DataProducer.cpp',
   'src/RTC/DirectTransport.cpp',

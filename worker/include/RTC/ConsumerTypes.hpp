@@ -19,6 +19,7 @@ namespace RTC
 			}
 
 			VideoLayers(const VideoLayers& other) = default;
+
 			bool operator==(const VideoLayers& other) const
 			{
 				return spatial == other.spatial && temporal == other.temporal;
@@ -28,6 +29,8 @@ namespace RTC
 			{
 				return !(*this == other);
 			}
+
+			void Dump(int indentation) const;
 
 			void Reset()
 			{

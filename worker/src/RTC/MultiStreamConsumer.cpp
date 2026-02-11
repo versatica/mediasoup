@@ -755,6 +755,12 @@ namespace RTC
 		if (this->kind == RTC::Media::Kind::AUDIO)
 		{
 			MS_DUMP("***** BEGIN audio packet | seq:%u", packet->GetSequenceNumber());
+			MS_DUMP("---- this->targetLayers:");
+			this->targetLayers.Dump(6);
+			MS_DUMP("---- this->provisionalTargetLayers:");
+			this->provisionalTargetLayers.Dump(6);
+			MS_DUMP("---- this->targetLayers:");
+			this->targetLayers.Dump(6);
 		}
 
 #ifdef MS_RTC_LOGGER_RTP
@@ -1308,6 +1314,12 @@ namespace RTC
 			if (this->kind == RTC::Media::Kind::AUDIO)
 			{
 				MS_DUMP("+++++ AUDIO PACKET SENT :) | seq:%u", origSeq);
+				MS_DUMP("---- this->targetLayers:");
+				this->targetLayers.Dump(6);
+				MS_DUMP("---- this->provisionalTargetLayers:");
+				this->provisionalTargetLayers.Dump(6);
+				MS_DUMP("---- this->targetLayers:");
+				this->targetLayers.Dump(6);
 			}
 
 			// Send the packet.
