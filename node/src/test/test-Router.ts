@@ -2,8 +2,7 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerImpl } from '../Worker';
 import type { WorkerEvents, RouterEvents } from '../types';
-// import { InvalidStateError, UnsupportedError } from '../errors';
-import { UnsupportedError } from '../errors';
+import { InvalidStateError, UnsupportedError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
@@ -141,6 +140,14 @@ test('worker.createRouter() with wrong arguments rejects with TypeError', async 
 		// @ts-expect-error --- Testing purposes.
 		ctx.worker!.createRouter({ appData: 'NOT-AN-OBJECT' })
 	).rejects.toThrow(TypeError);
+}, 2000);
+
+test('worker.createRouter() rejects with InvalidStateError if Worker is closed', async () => {
+	ctx.worker!.close();
+
+	await expect(
+		ctx.worker!.createRouter({ mediaCodecs: ctx.mediaCodecs })
+	).rejects.toThrow(InvalidStateError);
 }, 2000);
 
 test('router.updateMediaCodecs() succeeds', async () => {

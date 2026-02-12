@@ -5,7 +5,7 @@ import type { WorkerImpl } from '../Worker';
 import type { WorkerEvents, WebRtcServerEvents } from '../types';
 import type { WebRtcServerImpl } from '../WebRtcServer';
 import type { RouterImpl } from '../Router';
-// import { InvalidStateError } from '../errors';
+import { InvalidStateError } from '../errors';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;
@@ -313,6 +313,22 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 	).rejects.toThrow(Error);
 
 	worker2.close();
+}, 2000);
+
+test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () => {
+	ctx.worker!.close();
+
+	const port = await pickPort({
+		type: 'udp',
+		ip: '127.0.0.1',
+		reserveTimeout: 0,
+	});
+
+	await expect(
+		ctx.worker!.createWebRtcServer({
+			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', port }],
+		})
+	).rejects.toThrow(InvalidStateError);
 }, 2000);
 
 test('webRtcServer.close() succeeds', async () => {

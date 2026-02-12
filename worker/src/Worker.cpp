@@ -292,12 +292,9 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 			MS_DEBUG_DEV("closing Worker");
 
-			MS_DUMP_STD("------ accepting WORKER_CLOSE request...");
 			request->Accept();
-			MS_DUMP_STD("------ WORKER_CLOSE request accepted, closing...");
 
 			Close();
-			MS_DUMP_STD("------ WORKER_CLOSE request accepted, closed");
 
 			break;
 		}
