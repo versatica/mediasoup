@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725).
+- Convert `WORKER_CLOSE` into a notification ([PR #1729](https://github.com/versatica/mediasoup/pull/1729).
 
 ### 3.19.17
 
