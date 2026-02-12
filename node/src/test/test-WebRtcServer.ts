@@ -5,7 +5,7 @@ import type { WorkerImpl } from '../Worker';
 import type { WorkerEvents, WebRtcServerEvents } from '../types';
 import type { WebRtcServerImpl } from '../WebRtcServer';
 import type { RouterImpl } from '../Router';
-import { InvalidStateError } from '../errors';
+// import { InvalidStateError } from '../errors';
 
 type TestContext = {
 	worker?: mediasoup.types.Worker;

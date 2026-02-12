@@ -2,7 +2,8 @@ import * as mediasoup from '../';
 import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerImpl } from '../Worker';
 import type { WorkerEvents, RouterEvents } from '../types';
-import { InvalidStateError, UnsupportedError } from '../errors';
+// import { InvalidStateError, UnsupportedError } from '../errors';
+import { UnsupportedError } from '../errors';
 import * as utils from '../utils';
 
 type TestContext = {
