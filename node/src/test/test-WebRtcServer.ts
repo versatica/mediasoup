@@ -315,23 +315,6 @@ test('worker.createWebRtcServer() with unavailable listenInfos rejects with Erro
 	worker2.close();
 }, 2000);
 
-// TODO: Temporarily disabled.
-// test('worker.createWebRtcServer() rejects with InvalidStateError if Worker is closed', async () => {
-// 	ctx.worker!.close();
-
-// 	const port = await pickPort({
-// 		type: 'udp',
-// 		ip: '127.0.0.1',
-// 		reserveTimeout: 0,
-// 	});
-
-// 	await expect(
-// 		ctx.worker!.createWebRtcServer({
-// 			listenInfos: [{ protocol: 'udp', ip: '127.0.0.1', port }],
-// 		})
-// 	).rejects.toThrow(InvalidStateError);
-// }, 2000);
-
 test('webRtcServer.close() succeeds', async () => {
 	const port = await pickPort({
 		type: 'udp',
