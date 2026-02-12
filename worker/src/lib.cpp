@@ -18,7 +18,6 @@
 #include "Channel/ChannelSocket.hpp"
 #include "RTC/DtlsTransport.hpp"
 #include "RTC/SrtpSession.hpp"
-#include <uv.h>
 #include <absl/container/flat_hash_map.h>
 #include <csignal> // sigaction()
 #include <string>
@@ -172,12 +171,6 @@ extern "C" int mediasoup_worker_run(
 		RTC::DtlsTransport::ClassDestroy();
 		DepUsrSCTP::ClassDestroy();
 		DepLibUV::ClassDestroy();
-
-#ifdef MS_EXECUTABLE
-		// Wait a bit so pending messages to stdout/Channel arrive to the Node
-		// process.
-		uv_sleep(200);
-#endif
 
 		return 0;
 #ifndef MS_EXECUTABLE

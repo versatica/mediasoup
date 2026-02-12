@@ -79,37 +79,6 @@ pub(crate) trait Notification: Debug {
 }
 
 #[derive(Debug)]
-pub(crate) struct WorkerCloseRequest {}
-
-impl Request for WorkerCloseRequest {
-    const METHOD: request::Method = request::Method::WorkerClose;
-    type HandlerId = &'static str;
-    type Response = ();
-
-    fn into_bytes(self, id: u32, handler_id: Self::HandlerId) -> Vec<u8> {
-        let mut builder = Builder::new();
-
-        let request = request::Request::create(
-            &mut builder,
-            id,
-            Self::METHOD,
-            handler_id.to_string(),
-            None::<request::Body>,
-        );
-        let message_body = message::Body::create_request(&mut builder, request);
-        let message = message::Message::create(&mut builder, message_body);
-
-        builder.finish(message, None).to_vec()
-    }
-
-    fn convert_response(
-        _response: Option<response::BodyRef<'_>>,
-    ) -> Result<Self::Response, Box<dyn Error + Send + Sync>> {
-        Ok(())
-    }
-}
-
-#[derive(Debug)]
 pub(crate) struct WorkerDumpRequest {}
 
 impl Request for WorkerDumpRequest {
@@ -259,6 +228,29 @@ impl Request for WorkerCreateWebRtcServerRequest {
         _response: Option<response::BodyRef<'_>>,
     ) -> Result<Self::Response, Box<dyn Error + Send + Sync>> {
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct WorkerCloseNotification {}
+
+impl Notification for WorkerCloseNotification {
+    const EVENT: notification::Event = notification::Event::WorkerClose;
+    type HandlerId = &'static str;
+
+    fn into_bytes(self, handler_id: Self::HandlerId) -> Vec<u8> {
+        let mut builder = Builder::new();
+
+        let notification = notification::Notification::create(
+            &mut builder,
+            handler_id.to_string(),
+            Self::EVENT,
+            None::<notification::Body>,
+        );
+        let message_body = message::Body::create_notification(&mut builder, notification);
+        let message = message::Message::create(&mut builder, message_body);
+
+        builder.finish(message, None).to_vec()
     }
 }
 

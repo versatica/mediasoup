@@ -283,22 +283,6 @@ void Worker::HandleRequest(Channel::ChannelRequest* request)
 
 	switch (request->method)
 	{
-		case Channel::ChannelRequest::Method::WORKER_CLOSE:
-		{
-			if (this->closed)
-			{
-				return;
-			}
-
-			MS_DEBUG_DEV("closing Worker");
-
-			request->Accept();
-
-			Close();
-
-			break;
-		}
-
 		case Channel::ChannelRequest::Method::WORKER_DUMP:
 		{
 			auto dumpOffset = FillBuffer(request->GetBufferBuilder());
@@ -473,26 +457,46 @@ void Worker::HandleNotification(Channel::ChannelNotification* notification)
 
 	MS_DEBUG_DEV("Channel notification received [event:%s]", notification->eventCStr);
 
-	try
+	switch (notification->event)
 	{
-		auto* handler =
-		  this->shared->channelMessageRegistrator->GetChannelNotificationHandler(notification->handlerId);
-
-		if (handler == nullptr)
+		case Channel::ChannelNotification::Event::WORKER_CLOSE:
 		{
-			MS_THROW_ERROR(
-			  "Channel notification handler with ID %s not found", notification->handlerId.c_str());
+			if (this->closed)
+			{
+				return;
+			}
+
+			MS_DEBUG_DEV("closing Worker");
+
+			Close();
+
+			break;
 		}
 
-		handler->HandleNotification(notification);
-	}
-	catch (const MediaSoupTypeError& error)
-	{
-		MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->eventCStr);
-	}
-	catch (const MediaSoupError& error)
-	{
-		MS_THROW_ERROR("%s [method:%s]", error.what(), notification->eventCStr);
+		default:
+		{
+			try
+			{
+				auto* handler = this->shared->channelMessageRegistrator->GetChannelNotificationHandler(
+				  notification->handlerId);
+
+				if (handler == nullptr)
+				{
+					MS_THROW_ERROR(
+					  "Channel notification handler with ID %s not found", notification->handlerId.c_str());
+				}
+
+				handler->HandleNotification(notification);
+			}
+			catch (const MediaSoupTypeError& error)
+			{
+				MS_THROW_TYPE_ERROR("%s [event:%s]", error.what(), notification->eventCStr);
+			}
+			catch (const MediaSoupError& error)
+			{
+				MS_THROW_ERROR("%s [event:%s]", error.what(), notification->eventCStr);
+			}
+		}
 	}
 }
 

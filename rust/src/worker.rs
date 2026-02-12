@@ -6,7 +6,7 @@ mod common;
 mod utils;
 
 use crate::messages::{
-    WorkerCloseRequest, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
+    WorkerCloseNotification, WorkerCreateRouterRequest, WorkerCreateWebRtcServerRequest,
     WorkerDumpRequest, WorkerUpdateSettingsRequest,
 };
 pub use crate::ortc::RtpCapabilitiesError;
@@ -565,16 +565,7 @@ impl Inner {
         let already_closed = self.closed.swap(true, Ordering::SeqCst);
 
         if !already_closed {
-            let channel = self.channel.clone();
-
-            self.executor
-                .spawn(async move {
-                    let _ = channel.request("", WorkerCloseRequest {}).await;
-
-                    // Drop channels in here after response from worker
-                    drop(channel);
-                })
-                .detach();
+            let _ = self.channel.notify("", WorkerCloseNotification {});
 
             self.handlers.close.call_simple();
         }
