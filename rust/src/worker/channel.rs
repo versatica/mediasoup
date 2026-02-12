@@ -484,8 +484,11 @@ impl Channel {
                 .push_back(Arc::clone(&message));
             if let Some(handle) = outgoing_message_buffer.handle {
                 if self.inner.worker_closed.load(Ordering::Acquire) {
-                    // Forbid all notifications after worker closing
-                    return Err(NotificationError::ChannelClosed);
+                    // Forbid all notifications after worker closing except one
+                    // worker closing request
+                    if N::EVENT != notification::Event::WorkerClose {
+                        return Err(NotificationError::ChannelClosed);
+                    }
                 }
                 unsafe {
                     // Notify worker that there is something to read
