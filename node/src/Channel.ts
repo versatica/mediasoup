@@ -257,14 +257,14 @@ export class Channel extends EnhancedEventEmitter {
 		this.#bufferBuilder.clear();
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
-			throw new Error(`notification too big [event:${Event[event]}]`);
+			logger.error(`notify() | notification too big [event:${Event[event]}]`);
 		}
 
 		try {
 			// This may throw if closed or remote side ended.
 			this.#socket.write(buffer, 'binary');
 		} catch (error) {
-			logger.warn(`notify() | sending notification failed: ${error}`);
+			logger.error(`notify() | sending notification failed: ${error}`);
 
 			return;
 		}
@@ -338,13 +338,6 @@ export class Channel extends EnhancedEventEmitter {
 
 		// This may throw if closed or remote side ended.
 		this.#socket.write(buffer, 'binary');
-
-		// NOTE: Do not store WORKER_CLOSE request since we don't expect a response
-		// for it.
-		if (method === Method.WORKER_CLOSE) {
-			// @ts-expect-error --- We are not returning a Response on purpose.
-			return;
-		}
 
 		return new Promise((pResolve, pReject) => {
 			const sent: Sent = {

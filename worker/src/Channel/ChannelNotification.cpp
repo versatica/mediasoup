@@ -12,6 +12,7 @@ namespace Channel
 	// clang-format off
 	const absl::flat_hash_map<FBS::Notification::Event, const char*> ChannelNotification::Event2String =
 	{
+		{ FBS::Notification::Event::WORKER_CLOSE,        "worker.close"       },
 		{ FBS::Notification::Event::TRANSPORT_SEND_RTCP, "transport.sendRtcp" },
 		{ FBS::Notification::Event::PRODUCER_SEND,       "producer.send"      },
 		{ FBS::Notification::Event::DATAPRODUCER_SEND,   "dataProducer.send"  },

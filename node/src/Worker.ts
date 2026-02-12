@@ -28,6 +28,7 @@ import * as fbsUtils from './fbsUtils';
 import type { AppData } from './types';
 import { Event } from './fbs/notification';
 import * as FbsRequest from './fbs/request';
+import * as FbsNotification from './fbs/notification';
 import * as FbsWorker from './fbs/worker';
 import * as FbsTransport from './fbs/transport';
 import { Protocol as FbsTransportProtocol } from './fbs/transport/protocol';
@@ -349,22 +350,11 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		}
 		this.#webRtcServers.clear();
 
-		/* Send Request. */
-		this.#channel
-			.request(FbsRequest.Method.WORKER_CLOSE)
-			.then(() => {
-				// Close the Channel instance now.
-				this.#channel.close();
-			})
-			.catch(error => {
-				logger.error(
-					'close() | worker process failed to process the close request:',
-					error
-				);
+		/* Send notification. */
+		this.#channel.notify(FbsNotification.Event.WORKER_CLOSE);
 
-				// Close the Channel instance anyway.
-				this.#channel.close();
-			});
+		// Close the Channel instance now.
+		this.#channel.close();
 
 		// Emit observer event.
 		this.#observer.safeEmit('close');
