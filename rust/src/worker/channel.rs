@@ -500,6 +500,7 @@ impl Channel {
 
         Ok(())
     }
+
     pub(crate) fn subscribe_to_notifications<F>(
         &self,
         target_id: SubscriptionTarget,
