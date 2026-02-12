@@ -3,6 +3,7 @@
 ### NEXT
 
 - Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725).
+- Worker: Merge `Channel::ProducerSocket` and `Channel::ConsumerSocket` into a single bidirectional `Channel::Socket` ([PR #1728](https://github.com/versatica/mediasoup/pull/1728).
 
 ### 3.19.17
 

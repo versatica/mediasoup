@@ -40,8 +40,7 @@ extern "C" int mediasoup_worker_run(
   int argc,
   char* argv[],
   const char* version,
-  int consumerChannelFd,
-  int producerChannelFd,
+  int channelFd,
   ChannelReadFn channelReadFn,
   ChannelReadCtx channelReadCtx,
   ChannelWriteFn channelWriteFn,
@@ -66,7 +65,7 @@ extern "C" int mediasoup_worker_run(
 		}
 		else
 		{
-			channel.reset(new Channel::ChannelSocket(consumerChannelFd, producerChannelFd));
+			channel.reset(new Channel::ChannelSocket(channelFd));
 		}
 #ifndef MS_EXECUTABLE
 	}

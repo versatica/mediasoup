@@ -161,9 +161,8 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 				// fd 0 (stdin)   : Just ignore it.
 				// fd 1 (stdout)  : Pipe it for 3rd libraries that log their own stuff.
 				// fd 2 (stderr)  : Same as stdout.
-				// fd 3 (channel) : Producer Channel fd.
-				// fd 4 (channel) : Consumer Channel fd.
-				stdio: ['ignore', 'pipe', 'pipe', 'pipe', 'pipe'],
+				// fd 3 (channel) : Channel fd.
+				stdio: ['ignore', 'pipe', 'pipe', 'pipe'],
 				windowsHide: true,
 			}
 		);
@@ -171,8 +170,7 @@ export class WorkerImpl<WorkerAppData extends AppData = AppData>
 		this.#pid = this.#child.pid!;
 
 		this.#channel = new Channel({
-			producerSocket: this.#child.stdio[3] as Duplex,
-			consumerSocket: this.#child.stdio[4] as Duplex,
+			socket: this.#child.stdio[3] as Duplex,
 			pid: this.#pid,
 		});
 

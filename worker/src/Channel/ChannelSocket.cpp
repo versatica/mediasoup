@@ -37,9 +37,7 @@ namespace Channel
 	}
 #endif
 
-	ChannelSocket::ChannelSocket(int consumerFd, int producerFd)
-	  : consumerSocket(new ConsumerSocket(consumerFd, MessageMaxLen, this)),
-	    producerSocket(new ProducerSocket(producerFd, MessageMaxLen))
+	ChannelSocket::ChannelSocket(int channelFd) : socket(new Socket(channelFd, MessageMaxLen, this))
 	{
 		MS_TRACE_STD();
 	}
@@ -89,8 +87,7 @@ namespace Channel
 			Close();
 		}
 
-		delete this->consumerSocket;
-		delete this->producerSocket;
+		delete this->socket;
 	}
 
 	void ChannelSocket::Close()
@@ -110,14 +107,9 @@ namespace Channel
 			  reinterpret_cast<uv_handle_t*>(this->uvReadHandle), static_cast<uv_close_cb>(onCloseAsync));
 		}
 
-		if (this->consumerSocket)
+		if (this->socket)
 		{
-			this->consumerSocket->Close();
-		}
-
-		if (this->producerSocket)
-		{
-			this->producerSocket->Close();
+			this->socket->Close();
 		}
 	}
 
@@ -268,14 +260,13 @@ namespace Channel
 		{
 			this->channelWriteFn(payload, payloadLen, this->channelWriteCtx);
 		}
-		else if (this->producerSocket)
+		else if (this->socket)
 		{
-			this->producerSocket->Write(payload, payloadLen);
+			this->socket->Write(payload, payloadLen);
 		}
 	}
 
-	void ChannelSocket::OnConsumerSocketMessage(
-	  const ConsumerSocket* /*consumerSocket*/, char* msg, size_t /*msgLen*/)
+	void ChannelSocket::OnSocketMessage(const Socket* /*socket*/, char* msg, size_t /*msgLen*/)
 	{
 		MS_TRACE();
 
@@ -333,7 +324,7 @@ namespace Channel
 		}
 	}
 
-	void ChannelSocket::OnConsumerSocketClosed(const ConsumerSocket* /*consumerSocket*/)
+	void ChannelSocket::OnSocketClosed(const Socket* /*socket*/)
 	{
 		MS_TRACE_STD();
 
@@ -342,19 +333,18 @@ namespace Channel
 
 	/* Instance methods. */
 
-	ConsumerSocket::ConsumerSocket(int fd, size_t bufferSize, Listener* listener)
-	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::CONSUMER),
-	    listener(listener)
+	Socket::Socket(int fd, size_t bufferSize, Listener* listener)
+	  : ::UnixStreamSocketHandle(fd, bufferSize), listener(listener)
 	{
 		MS_TRACE_STD();
 	}
 
-	ConsumerSocket::~ConsumerSocket()
+	Socket::~Socket()
 	{
 		MS_TRACE_STD();
 	}
 
-	void ConsumerSocket::UserOnUnixStreamRead()
+	void Socket::UserOnUnixStreamRead()
 	{
 		MS_TRACE_STD();
 
@@ -387,7 +377,7 @@ namespace Channel
 				break;
 			}
 
-			this->listener->OnConsumerSocketMessage(
+			this->listener->OnSocketMessage(
 			  this,
 			  reinterpret_cast<char*>(this->buffer + msgStart + sizeof(uint32_t)),
 			  static_cast<size_t>(msgLen));
@@ -406,19 +396,11 @@ namespace Channel
 		}
 	}
 
-	void ConsumerSocket::UserOnUnixStreamSocketClosed()
+	void Socket::UserOnUnixStreamSocketClosed()
 	{
 		MS_TRACE_STD();
 
 		// Notify the listener.
-		this->listener->OnConsumerSocketClosed(this);
-	}
-
-	/* Instance methods. */
-
-	ProducerSocket::ProducerSocket(int fd, size_t bufferSize)
-	  : ::UnixStreamSocketHandle(fd, bufferSize, ::UnixStreamSocketHandle::Role::PRODUCER)
-	{
-		MS_TRACE_STD();
+		this->listener->OnSocketClosed(this);
 	}
 } // namespace Channel

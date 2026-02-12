@@ -69,9 +69,8 @@ inline static void onShutdown(uv_shutdown_t* req, int /*status*/)
 
 /* Instance methods. */
 
-UnixStreamSocketHandle::UnixStreamSocketHandle(
-  int fd, size_t bufferSize, UnixStreamSocketHandle::Role role)
-  : uvHandle(new uv_pipe_t), bufferSize(bufferSize), role(role)
+UnixStreamSocketHandle::UnixStreamSocketHandle(int fd, size_t bufferSize)
+  : uvHandle(new uv_pipe_t), bufferSize(bufferSize)
 {
 	MS_TRACE_STD();
 
@@ -98,20 +97,17 @@ UnixStreamSocketHandle::UnixStreamSocketHandle(
 		MS_THROW_ERROR_STD("uv_pipe_open() failed: %s", uv_strerror(err));
 	}
 
-	if (this->role == UnixStreamSocketHandle::Role::CONSUMER)
+	// Start reading.
+	err = uv_read_start(
+	  reinterpret_cast<uv_stream_t*>(this->uvHandle),
+	  static_cast<uv_alloc_cb>(onAlloc),
+	  static_cast<uv_read_cb>(onRead));
+
+	if (err != 0)
 	{
-		// Start reading.
-		err = uv_read_start(
-		  reinterpret_cast<uv_stream_t*>(this->uvHandle),
-		  static_cast<uv_alloc_cb>(onAlloc),
-		  static_cast<uv_read_cb>(onRead));
+		uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClosePipe));
 
-		if (err != 0)
-		{
-			uv_close(reinterpret_cast<uv_handle_t*>(this->uvHandle), static_cast<uv_close_cb>(onClosePipe));
-
-			MS_THROW_ERROR_STD("uv_read_start() failed: %s", uv_strerror(err));
-		}
+		MS_THROW_ERROR_STD("uv_read_start() failed: %s", uv_strerror(err));
 	}
 
 	// NOTE: Don't allocate the buffer here. Instead wait for the first uv_alloc_cb().
@@ -147,26 +143,23 @@ void UnixStreamSocketHandle::Close()
 	// Tell the UV handle that the UnixStreamSocketHandle has been closed.
 	this->uvHandle->data = nullptr;
 
-	if (this->role == UnixStreamSocketHandle::Role::CONSUMER)
-	{
-		// Don't read more.
-		err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
+	// Don't read more.
+	err = uv_read_stop(reinterpret_cast<uv_stream_t*>(this->uvHandle));
 
-		if (err != 0)
+	if (err != 0)
+	{
+		try
 		{
-			try
-			{
-				MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
-			}
-			catch (const std::exception& e)
-			{
-				MS_ERROR("%s", e.what());
-			}
+			MS_ABORT("uv_read_stop() failed: %s", uv_strerror(err));
+		}
+		catch (const std::exception& e)
+		{
+			MS_ERROR("%s", e.what());
 		}
 	}
 
 	// If there is no error and the peer didn't close its pipe side then close gracefully.
-	if (this->role == UnixStreamSocketHandle::Role::PRODUCER && !this->hasError && !this->isClosedByPeer)
+	if (!this->hasError && !this->isClosedByPeer)
 	{
 		// Use uv_shutdown() so pending data to be written will be sent to the peer before closing.
 		auto* req = new uv_shutdown_t;

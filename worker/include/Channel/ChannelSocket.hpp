@@ -8,7 +8,7 @@
 
 namespace Channel
 {
-	class ConsumerSocket : public UnixStreamSocketHandle
+	class Socket : public UnixStreamSocketHandle
 	{
 	public:
 		class Listener
@@ -17,14 +17,13 @@ namespace Channel
 			virtual ~Listener() = default;
 
 		public:
-			virtual void OnConsumerSocketMessage(
-			  const ConsumerSocket* consumerSocket, char* msg, size_t msgLen)         = 0;
-			virtual void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) = 0;
+			virtual void OnSocketMessage(const Socket* socket, char* msg, size_t msgLen) = 0;
+			virtual void OnSocketClosed(const Socket* socket)                            = 0;
 		};
 
 	public:
-		ConsumerSocket(int fd, size_t bufferSize, Listener* listener);
-		~ConsumerSocket() override;
+		Socket(int fd, size_t bufferSize, Listener* listener);
+		~Socket() override;
 
 		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
 	public:
@@ -36,22 +35,7 @@ namespace Channel
 		Listener* listener{ nullptr };
 	};
 
-	class ProducerSocket : public UnixStreamSocketHandle
-	{
-	public:
-		ProducerSocket(int fd, size_t bufferSize);
-
-		/* Pure virtual methods inherited from UnixStreamSocketHandle. */
-	public:
-		void UserOnUnixStreamRead() override
-		{
-		}
-		void UserOnUnixStreamSocketClosed() override
-		{
-		}
-	};
-
-	class ChannelSocket : public ConsumerSocket::Listener
+	class ChannelSocket : public Socket::Listener
 	{
 	public:
 		class RequestHandler
@@ -85,7 +69,7 @@ namespace Channel
 #ifdef MS_TEST
 		explicit ChannelSocket();
 #endif
-		explicit ChannelSocket(int consumerFd, int producerFd);
+		explicit ChannelSocket(int channelFd);
 		explicit ChannelSocket(
 		  ChannelReadFn channelReadFn,
 		  ChannelReadCtx channelReadCtx,
@@ -103,18 +87,17 @@ namespace Channel
 	private:
 		void SendImpl(const uint8_t* payload, uint32_t payloadLen);
 
-		/* Pure virtual methods inherited from ConsumerSocket::Listener. */
+		/* Pure virtual methods inherited from Socket::Listener. */
 	public:
-		void OnConsumerSocketMessage(const ConsumerSocket* consumerSocket, char* msg, size_t msgLen) override;
-		void OnConsumerSocketClosed(const ConsumerSocket* consumerSocket) override;
+		void OnSocketMessage(const Socket* socket, char* msg, size_t msgLen) override;
+		void OnSocketClosed(const Socket* socket) override;
 
 	private:
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Others.
 		bool closed{ false };
-		ConsumerSocket* consumerSocket{ nullptr };
-		ProducerSocket* producerSocket{ nullptr };
+		Socket* socket{ nullptr };
 		ChannelReadFn channelReadFn{ nullptr };
 		ChannelReadCtx channelReadCtx{ nullptr };
 		ChannelWriteFn channelWriteFn{ nullptr };

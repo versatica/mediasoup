@@ -7,8 +7,7 @@
 #include <cstdlib> // std::_Exit()
 #include <string>
 
-static constexpr int ConsumerChannelFd{ 3 };
-static constexpr int ProducerChannelFd{ 4 };
+static constexpr int ChannelFd{ 3 };
 
 int main(int argc, char* argv[])
 {
@@ -29,8 +28,7 @@ int main(int argc, char* argv[])
 	  /*argc*/ argc,
 	  /*argv*/ argv,
 	  /*version*/ version.c_str(),
-	  /*consumerChannelFd*/ ConsumerChannelFd,
-	  /*producerChannelFd*/ ProducerChannelFd,
+	  /*channelFd*/ ChannelFd,
 	  /*channelReadFn*/ nullptr,
 	  /*channelReadCtx*/ nullptr,
 	  /*channelWriteFn*/ nullptr,

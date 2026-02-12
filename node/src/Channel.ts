@@ -35,11 +35,9 @@ export class Channel extends EnhancedEventEmitter {
 	// Closed flag.
 	#closed = false;
 
-	// Unix Socket instance for sending messages to the worker process.
-	readonly #producerSocket: Duplex;
-
-	// Unix Socket instance for receiving messages to the worker process.
-	readonly #consumerSocket: Duplex;
+	// Unix Socket instance for sending and receiving messages to/from the worker
+	// process.
+	readonly #socket: Duplex;
 
 	// Next id for messages sent to the worker process.
 	#nextId = 0;
@@ -53,24 +51,15 @@ export class Channel extends EnhancedEventEmitter {
 	// flatbuffers builder.
 	#bufferBuilder: flatbuffers.Builder = new flatbuffers.Builder(1024);
 
-	constructor({
-		producerSocket,
-		consumerSocket,
-		pid,
-	}: {
-		producerSocket: Duplex;
-		consumerSocket: Duplex;
-		pid: number;
-	}) {
+	constructor({ socket, pid }: { socket: Duplex; pid: number }) {
 		super();
 
 		logger.debug('constructor()');
 
-		this.#producerSocket = producerSocket;
-		this.#consumerSocket = consumerSocket;
+		this.#socket = socket;
 
 		// Read Channel responses/notifications from the worker.
-		this.#consumerSocket.on('data', (buffer: Buffer) => {
+		this.#socket.on('data', (buffer: Buffer) => {
 			if (!this.#recvBuffer.length) {
 				this.#recvBuffer = buffer;
 			} else {
@@ -173,21 +162,11 @@ export class Channel extends EnhancedEventEmitter {
 			}
 		});
 
-		this.#consumerSocket.on('end', () =>
-			logger.debug('Consumer Channel ended by the worker process')
+		this.#socket.on('end', () =>
+			logger.debug('Channel ended by the worker process')
 		);
 
-		this.#consumerSocket.on('error', error =>
-			logger.error(`Consumer Channel error: ${error}`)
-		);
-
-		this.#producerSocket.on('end', () =>
-			logger.debug('Producer Channel ended by the worker process')
-		);
-
-		this.#producerSocket.on('error', error =>
-			logger.error(`Producer Channel error: ${error}`)
-		);
+		this.#socket.on('error', error => logger.error(`Channel error: ${error}`));
 	}
 
 	/**
@@ -213,20 +192,13 @@ export class Channel extends EnhancedEventEmitter {
 
 		// Remove event listeners but leave a fake 'error' hander to avoid
 		// propagation.
-		this.#consumerSocket.removeAllListeners('end');
-		this.#consumerSocket.removeAllListeners('error');
-		this.#consumerSocket.on('error', () => {});
+		this.#socket.removeAllListeners('end');
+		this.#socket.removeAllListeners('error');
+		this.#socket.on('error', () => {});
 
-		this.#producerSocket.removeAllListeners('end');
-		this.#producerSocket.removeAllListeners('error');
-		this.#producerSocket.on('error', () => {});
-
-		// Destroy the sockets.
+		// Destroy the socket.
 		try {
-			this.#producerSocket.destroy();
-		} catch (error) {}
-		try {
-			this.#consumerSocket.destroy();
+			this.#socket.destroy();
 		} catch (error) {}
 	}
 
@@ -288,7 +260,7 @@ export class Channel extends EnhancedEventEmitter {
 
 		try {
 			// This may throw if closed or remote side ended.
-			this.#producerSocket.write(buffer, 'binary');
+			this.#socket.write(buffer, 'binary');
 		} catch (error) {
 			logger.warn(`notify() | sending notification failed: ${error}`);
 
@@ -363,7 +335,7 @@ export class Channel extends EnhancedEventEmitter {
 		}
 
 		// This may throw if closed or remote side ended.
-		this.#producerSocket.write(buffer, 'binary');
+		this.#socket.write(buffer, 'binary');
 
 		return new Promise((pResolve, pReject) => {
 			const sent: Sent = {
