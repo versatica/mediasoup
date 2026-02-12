@@ -565,7 +565,16 @@ impl Inner {
         let already_closed = self.closed.swap(true, Ordering::SeqCst);
 
         if !already_closed {
-            let _ = self.channel.notify("", WorkerCloseNotification {});
+            let channel = self.channel.clone();
+
+            self.executor
+                .spawn(async move {
+                    let _ = channel.notify("", WorkerCloseNotification {});
+
+                    // Drop channels in here after response from worker
+                    drop(channel);
+                })
+                .detach();
 
             self.handlers.close.call_simple();
         }
