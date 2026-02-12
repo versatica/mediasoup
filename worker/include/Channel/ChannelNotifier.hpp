@@ -9,15 +9,12 @@ namespace Channel
 	class ChannelNotifier
 	{
 	public:
-		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
-
-	public:
 		explicit ChannelNotifier(Channel::ChannelSocket* channel);
 
 	public:
-		flatbuffers::FlatBufferBuilder& GetBufferBuilder() const
+		flatbuffers::FlatBufferBuilder& GetBufferBuilder()
 		{
-			return ChannelNotifier::bufferBuilder;
+			return this->bufferBuilder;
 		}
 
 		template<class Body>
@@ -27,7 +24,7 @@ namespace Channel
 		  FBS::Notification::Body type,
 		  flatbuffers::Offset<Body>& body)
 		{
-			auto& builder     = ChannelNotifier::bufferBuilder;
+			auto& builder     = this->bufferBuilder;
 			auto notification = FBS::Notification::CreateNotificationDirect(
 			  builder, targetId.c_str(), event, type, body.Union());
 			auto message =
@@ -43,6 +40,8 @@ namespace Channel
 	private:
 		// Passed by argument.
 		Channel::ChannelSocket* channel{ nullptr };
+		// Others.
+		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};
 } // namespace Channel
 

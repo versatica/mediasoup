@@ -6,10 +6,6 @@
 
 namespace Channel
 {
-	/* Class variables. */
-
-	thread_local flatbuffers::FlatBufferBuilder ChannelNotifier::bufferBuilder{};
-
 	/* Instance methods. */
 
 	ChannelNotifier::ChannelNotifier(Channel::ChannelSocket* channel) : channel(channel)
@@ -21,7 +17,7 @@ namespace Channel
 	{
 		MS_TRACE();
 
-		auto& builder = ChannelNotifier::bufferBuilder;
+		auto& builder = this->bufferBuilder;
 		auto notification = FBS::Notification::CreateNotificationDirect(builder, targetId.c_str(), event);
 		auto message =
 		  FBS::Message::CreateMessage(builder, FBS::Message::Body::Notification, notification.Union());

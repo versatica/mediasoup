@@ -82,9 +82,6 @@ namespace Channel
 		};
 
 	public:
-		thread_local static flatbuffers::FlatBufferBuilder bufferBuilder;
-
-	public:
 #ifdef MS_TEST
 		explicit ChannelSocket();
 #endif
@@ -123,6 +120,7 @@ namespace Channel
 		ChannelWriteFn channelWriteFn{ nullptr };
 		ChannelWriteCtx channelWriteCtx{ nullptr };
 		uv_async_t* uvReadHandle{ nullptr };
+		flatbuffers::FlatBufferBuilder bufferBuilder;
 	};
 } // namespace Channel
 

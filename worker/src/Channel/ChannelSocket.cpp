@@ -13,10 +13,6 @@ namespace Channel
 	static constexpr size_t MessageMaxLen{ 4194308 };
 	static constexpr size_t PayloadMaxLen{ 4194304 };
 
-	/* Class variables. */
-
-	thread_local flatbuffers::FlatBufferBuilder ChannelSocket::bufferBuilder{};
-
 	/* Static methods for UV callbacks. */
 
 	inline static void onAsync(uv_handle_t* handle)
@@ -167,7 +163,7 @@ namespace Channel
 			return;
 		}
 
-		auto& builder = ChannelSocket::bufferBuilder;
+		auto& builder = this->bufferBuilder;
 		auto log      = FBS::Log::CreateLogDirect(builder, data);
 		auto message  = FBS::Message::CreateMessage(builder, FBS::Message::Body::Log, log.Union());
 
