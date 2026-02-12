@@ -162,11 +162,13 @@ export class Channel extends EnhancedEventEmitter {
 			}
 		});
 
-		this.#socket.on('end', () =>
-			logger.debug('Channel ended by the worker process')
-		);
+		this.#socket.on('end', () => {
+			logger.debug('Channel ended by the worker process');
+		});
 
-		this.#socket.on('error', error => logger.error(`Channel error: ${error}`));
+		this.#socket.on('error', error => {
+			logger.error(`Channel error: ${error}`);
+		});
 	}
 
 	/**
@@ -336,6 +338,13 @@ export class Channel extends EnhancedEventEmitter {
 
 		// This may throw if closed or remote side ended.
 		this.#socket.write(buffer, 'binary');
+
+		// NOTE: Do not store WORKER_CLOSE request since we don't expect a response
+		// for it.
+		if (method === Method.WORKER_CLOSE) {
+			// @ts-expect-error --- We are not returning a Response on purpose.
+			return;
+		}
 
 		return new Promise((pResolve, pReject) => {
 			const sent: Sent = {
