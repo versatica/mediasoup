@@ -571,7 +571,7 @@ impl Inner {
                 .spawn(async move {
                     let _ = channel.notify("", WorkerCloseNotification {});
 
-                    // Drop channels in here after response from worker
+                    // Drop channels in here after having sent the notification
                     drop(channel);
                 })
                 .detach();
