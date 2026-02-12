@@ -135,4 +135,3 @@ table DtlsStateChangeNotification {
     dtls_state: DtlsState;
     remote_cert: string;
 }
-

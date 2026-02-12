@@ -7,4 +7,3 @@ enum SctpState: uint8 {
     FAILED,
     CLOSED,
 }
-

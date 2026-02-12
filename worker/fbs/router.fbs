@@ -57,4 +57,3 @@ table CloseTransportRequest {
 table CloseRtpObserverRequest {
     rtp_observer_id: string (required);
 }
-

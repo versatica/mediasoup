@@ -97,4 +97,3 @@ table TraceNotification {
     direction: FBS.Common.TraceDirection;
     info: TraceInfo;
 }
-

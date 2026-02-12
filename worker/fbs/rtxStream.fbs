@@ -13,4 +13,3 @@ table Params {
 table RtxDump {
     params: Params (required);
 }
-

@@ -25,4 +25,3 @@ table DumpResponse {
     local_ice_username_fragments: [IceUserNameFragment] (required);
     tuple_hashes: [TupleHash] (required);
 }
-

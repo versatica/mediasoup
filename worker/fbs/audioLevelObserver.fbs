@@ -16,4 +16,3 @@ table Volume {
 table VolumesNotification {
     volumes: [Volume] (required);
 }
-

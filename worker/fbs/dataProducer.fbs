@@ -31,4 +31,3 @@ table SendNotification {
     subchannels: [uint16];
     required_subchannel: uint16 = null;
 }
-

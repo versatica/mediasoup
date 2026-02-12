@@ -7,4 +7,3 @@ table AddProducerRequest {
 table RemoveProducerRequest {
     producer_id: string (required);
 }
-

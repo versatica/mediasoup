@@ -51,4 +51,3 @@ table Response {
     error: string;
     reason: string;
 }
-

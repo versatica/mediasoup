@@ -9,4 +9,3 @@ table ActiveSpeakerObserverOptions {
 table DominantSpeakerNotification {
     producer_id: string (required);
 }
-

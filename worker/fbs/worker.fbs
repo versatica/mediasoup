@@ -56,4 +56,3 @@ table CreateRouterRequest {
 table CloseRouterRequest {
     router_id: string (required);
 }
-

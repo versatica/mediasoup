@@ -11,4 +11,3 @@ table SrtpParameters {
     crypto_suite: FBS.SrtpParameters.SrtpCryptoSuite;
     key_base64: string (required);
 }
-

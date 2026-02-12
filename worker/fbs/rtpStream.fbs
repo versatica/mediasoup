@@ -79,4 +79,3 @@ table SendStats {
     byte_count: uint64;
     bitrate: uint32;
 }
-

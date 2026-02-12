@@ -218,7 +218,7 @@ export class Channel extends EnhancedEventEmitter {
 			);
 		}
 
-		const handlerIdOffset = this.#bufferBuilder.createString(handlerId);
+		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let notificationOffset: number;
 
@@ -258,13 +258,15 @@ export class Channel extends EnhancedEventEmitter {
 
 		if (buffer.byteLength > MESSAGE_MAX_LEN) {
 			logger.error(`notify() | notification too big [event:${Event[event]}]`);
+
+			return;
 		}
 
 		try {
 			// This may throw if closed or remote side ended.
 			this.#socket.write(buffer, 'binary');
 		} catch (error) {
-			logger.error(`notify() | sending notification failed: ${error}`);
+			logger.error(`notify() | sending failed: ${error}`);
 
 			return;
 		}
@@ -291,7 +293,6 @@ export class Channel extends EnhancedEventEmitter {
 		}
 
 		const id = this.#nextId;
-
 		const handlerIdOffset = this.#bufferBuilder.createString(handlerId ?? '');
 
 		let requestOffset: number;

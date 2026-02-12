@@ -5,4 +5,3 @@ table Dump {
     sqe_miss_count: uint64;
     user_data_miss_count: uint64;
 }
-
