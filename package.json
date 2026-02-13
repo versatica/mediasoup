@@ -126,6 +126,7 @@
 		"sctp": "^1.0.0",
 		"ts-jest": "^29.4.6",
 		"typescript": "^5.9.3",
-		"typescript-eslint": "^8.55.0"
+		"typescript-eslint": "^8.55.0",
+		"werift-sctp": "^0.0.6"
 	}
 }
