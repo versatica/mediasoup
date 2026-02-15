@@ -4,10 +4,9 @@ import {
 	SCTP_STATE,
 	WEBRTC_PPID,
 	createUdpTransport as createSctpUdpTransport,
-	type Transport,
 } from 'werift-sctp';
 import * as mediasoup from '../';
-import { EnhancedEventEmitter, enhancedOnce } from '../enhancedEvents';
+import { enhancedOnce } from '../enhancedEvents';
 import type { WorkerEvents } from '../types';
 
 type TestContext = {
@@ -52,8 +51,7 @@ beforeEach(async () => {
 		),
 	]);
 
-	// Create an explicit SCTP outgoing stream with id 123 (id 0 is already used
-	// by the implicit SCTP outgoing stream built-in the SCTP socket).
+	// Create an explicit SCTP outgoing stream id.
 	ctx.sctpSendStreamId = 123;
 
 	// Create a DataProducer with the corresponding SCTP stream id.
@@ -74,14 +72,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-	// @ts-expect-error
-	const upd = ctx.sctpClient?.transport.upd;
-
-	console.log('---- upd:', upd);
-
 	await ctx.sctpClient?.stop();
-	// NOTE: SCTP.stop() does not invoke close() on its Transport so
-	// `udpSocket.close()` is not called.
 	ctx.sctpClient?.transport.close();
 	ctx.worker?.close();
 
@@ -90,13 +81,12 @@ afterEach(async () => {
 	}
 });
 
-test('SCTP state is connected', async () => {
-	expect(ctx.plainTransport!.sctpState == 'connected');
-	expect(ctx.sctpClient!.associationState == SCTP_STATE.ESTABLISHED);
-}, 2000);
+test('SCTP state is connected', () => {
+	expect(ctx.plainTransport!.sctpState).toBe('connected');
+	expect(ctx.sctpClient!.associationState).toBe(SCTP_STATE.ESTABLISHED);
+}, 20000);
 
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
-	const onStream = jest.fn();
 	const numMessages = 200;
 	let sentMessageBytes = 0;
 	let recvMessageBytes = 0;
@@ -123,7 +113,7 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 				ppid = WEBRTC_PPID.BINARY;
 			}
 
-			ctx.sctpClient!.send(ctx.sctpSendStreamId!, ppid, data);
+			void ctx.sctpClient!.send(ctx.sctpSendStreamId!, ppid, data);
 
 			sentMessageBytes += data.byteLength;
 
@@ -132,29 +122,20 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 			}
 		}
 
-		ctx.sctpClient!.onReceive = (_, __, data) => {
-			console.log(data.toString());
-		};
+		ctx.sctpClient!.onReceive.subscribe(
+			(streamId: number, ppid: WEBRTC_PPID, data: Buffer) => {
+				// `streamId`  must be zero because it's the first SCTP incoming stream
+				// (so first DataConsumer).
+				if (streamId !== 0) {
+					reject(new Error(`streamId should be 0 but it is ${streamId}`));
 
-		ctx.sctpSocket!.on('stream', onStream);
+					return;
+				}
 
-		// Handle the generated SCTP incoming stream and SCTP messages receives on it.
-		ctx.sctpSocket!.on('stream', (stream, streamId) => {
-			// It must be zero because it's the first SCTP incoming stream (so first
-			// DataConsumer).
-			if (streamId !== 0) {
-				reject(new Error(`streamId should be 0 but it is ${streamId}`));
-
-				return;
-			}
-
-			stream.on('data', (data: Buffer) => {
 				++numReceivedMessages;
 				recvMessageBytes += data.byteLength;
 
 				const id = Number(data.toString('utf8'));
-				// @ts-expect-errors --- sctp library uses `ppid` field.
-				const ppid = data.ppid;
 
 				if (id !== numReceivedMessages) {
 					reject(
@@ -164,26 +145,25 @@ test('ordered DataProducer delivers all SCTP messages to the DataConsumer', asyn
 					);
 				} else if (id === numMessages) {
 					resolve();
-				} else if (id < numMessages / 2 && ppid !== sctp.PPID.WEBRTC_STRING) {
+				} else if (id < numMessages / 2 && ppid !== WEBRTC_PPID.STRING) {
 					reject(
 						new Error(
-							`ppid in message with id ${id} should be ${sctp.PPID.WEBRTC_STRING} but it is ${ppid}`
+							`ppid in message with id ${id} should be ${WEBRTC_PPID.STRING} but it is ${ppid}`
 						)
 					);
-				} else if (id > numMessages / 2 && ppid !== sctp.PPID.WEBRTC_BINARY) {
+				} else if (id > numMessages / 2 && ppid !== WEBRTC_PPID.BINARY) {
 					reject(
 						new Error(
-							`ppid in message with id ${id} should be ${sctp.PPID.WEBRTC_BINARY} but it is ${ppid}`
+							`ppid in message with id ${id} should be ${WEBRTC_PPID.BINARY} but it is ${ppid}`
 						)
 					);
 
 					return;
 				}
-			});
-		});
+			}
+		);
 	});
 
-	expect(onStream).toHaveBeenCalledTimes(1);
 	expect(numSentMessages).toBe(numMessages);
 	expect(numReceivedMessages).toBe(numMessages);
 	expect(recvMessageBytes).toBe(sentMessageBytes);
