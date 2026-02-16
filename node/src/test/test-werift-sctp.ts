@@ -1,35 +1,3 @@
-const origSetTimeout = global.setTimeout;
-const origClearTimeout = global.clearTimeout;
-
-// const timerMaps: Map<number, NodeJS.Timeout>
-
-// @ts-expect-error --- asd
-global.setTimeout = function (callback: () => void, delay: number | undefined) {
-	const timeout = origSetTimeout(callback, delay);
-	const id = timeout[Symbol.toPrimitive]();
-
-	console.log('**** test | setTimeout() called | id:%o, delay:%o', id, delay);
-
-	return timeout;
-};
-
-global.clearTimeout = function (
-	timeout: NodeJS.Timeout | string | number | undefined
-) {
-	if (timeout === undefined) {
-		return;
-	}
-
-	const id =
-		typeof timeout !== 'number' && typeof timeout !== 'string'
-			? timeout[Symbol.toPrimitive]()
-			: Number(timeout);
-
-	console.log('**** test | clearTimeout() called | id:%o', id);
-
-	return origClearTimeout(timeout);
-};
-
 import { createSocket } from 'node:dgram';
 import {
 	SCTP,
@@ -76,12 +44,19 @@ beforeEach(async () => {
 
 	await ctx.sctpClient.start(5000);
 
+	let connectionTimeoutTimer: NodeJS.Timeout | undefined;
+
 	await Promise.race([
 		ctx.sctpClient.stateChanged.connected.asPromise(),
-		new Promise<void>((resolve, reject) =>
-			setTimeout(() => reject(new Error('SCTP connection timeout')), 3000)
-		),
+		new Promise<void>((resolve, reject) => {
+			connectionTimeoutTimer = setTimeout(
+				() => reject(new Error('SCTP connection timeout')),
+				3000
+			);
+		}),
 	]);
+
+	clearTimeout(connectionTimeoutTimer);
 
 	// Create an explicit SCTP outgoing stream id.
 	ctx.sctpSendStreamId = 123;
@@ -111,8 +86,6 @@ afterEach(async () => {
 	if (ctx.worker?.subprocessClosed === false) {
 		await enhancedOnce<WorkerEvents>(ctx.worker, 'subprocessclose');
 	}
-
-	// await new Promise(resolve => setTimeout(resolve, 1979));
 });
 
 test('SCTP state is connected', () => {
@@ -120,105 +93,105 @@ test('SCTP state is connected', () => {
 	expect(ctx.sctpClient!.associationState).toBe(SCTP_STATE.ESTABLISHED);
 });
 
-// test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
-// 	const numMessages = 200;
-// 	let sentMessageBytes = 0;
-// 	let recvMessageBytes = 0;
-// 	let numSentMessages = 0;
-// 	let numReceivedMessages = 0;
+test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
+	const numMessages = 200;
+	let sentMessageBytes = 0;
+	let recvMessageBytes = 0;
+	let numSentMessages = 0;
+	let numReceivedMessages = 0;
 
-// 	// It must be zero because it's the first DataConsumer on the plainTransport.
-// 	expect(ctx.dataConsumer!.sctpStreamParameters?.streamId).toBe(0);
+	// It must be zero because it's the first DataConsumer on the plainTransport.
+	expect(ctx.dataConsumer!.sctpStreamParameters?.streamId).toBe(0);
 
-// 	await new Promise<void>((resolve, reject) => {
-// 		sendNextMessage();
+	await new Promise<void>((resolve, reject) => {
+		sendNextMessage();
 
-// 		function sendNextMessage(): void {
-// 			const id = ++numSentMessages;
-// 			const data = Buffer.from(String(id));
-// 			let ppid: WEBRTC_PPID;
+		function sendNextMessage(): void {
+			const id = ++numSentMessages;
+			const data = Buffer.from(String(id));
+			let ppid: WEBRTC_PPID;
 
-// 			// Set ppid of type WebRTC DataChannel string.
-// 			if (id < numMessages / 2) {
-// 				ppid = WEBRTC_PPID.STRING;
-// 			}
-// 			// Set ppid of type WebRTC DataChannel binary.
-// 			else {
-// 				ppid = WEBRTC_PPID.BINARY;
-// 			}
+			// Set ppid of type WebRTC DataChannel string.
+			if (id < numMessages / 2) {
+				ppid = WEBRTC_PPID.STRING;
+			}
+			// Set ppid of type WebRTC DataChannel binary.
+			else {
+				ppid = WEBRTC_PPID.BINARY;
+			}
 
-// 			void ctx.sctpClient!.send(ctx.sctpSendStreamId!, ppid, data);
+			void ctx.sctpClient!.send(ctx.sctpSendStreamId!, ppid, data);
 
-// 			sentMessageBytes += data.byteLength;
+			sentMessageBytes += data.byteLength;
 
-// 			if (id < numMessages) {
-// 				sendNextMessage();
-// 			}
-// 		}
+			if (id < numMessages) {
+				sendNextMessage();
+			}
+		}
 
-// 		ctx.sctpClient!.onReceive.subscribe(
-// 			(streamId: number, ppid: WEBRTC_PPID, data: Buffer) => {
-// 				// `streamId`  must be zero because it's the first SCTP incoming stream
-// 				// (so first DataConsumer).
-// 				if (streamId !== 0) {
-// 					reject(new Error(`streamId should be 0 but it is ${streamId}`));
+		ctx.sctpClient!.onReceive.subscribe(
+			(streamId: number, ppid: WEBRTC_PPID, data: Buffer) => {
+				// `streamId`  must be zero because it's the first SCTP incoming stream
+				// (so first DataConsumer).
+				if (streamId !== 0) {
+					reject(new Error(`streamId should be 0 but it is ${streamId}`));
 
-// 					return;
-// 				}
+					return;
+				}
 
-// 				++numReceivedMessages;
-// 				recvMessageBytes += data.byteLength;
+				++numReceivedMessages;
+				recvMessageBytes += data.byteLength;
 
-// 				const id = Number(data.toString('utf8'));
+				const id = Number(data.toString('utf8'));
 
-// 				if (id !== numReceivedMessages) {
-// 					reject(
-// 						new Error(
-// 							`id ${id} in message should match numReceivedMessages ${numReceivedMessages}`
-// 						)
-// 					);
-// 				} else if (id === numMessages) {
-// 					resolve();
-// 				} else if (id < numMessages / 2 && ppid !== WEBRTC_PPID.STRING) {
-// 					reject(
-// 						new Error(
-// 							`ppid in message with id ${id} should be ${WEBRTC_PPID.STRING} but it is ${ppid}`
-// 						)
-// 					);
-// 				} else if (id > numMessages / 2 && ppid !== WEBRTC_PPID.BINARY) {
-// 					reject(
-// 						new Error(
-// 							`ppid in message with id ${id} should be ${WEBRTC_PPID.BINARY} but it is ${ppid}`
-// 						)
-// 					);
+				if (id !== numReceivedMessages) {
+					reject(
+						new Error(
+							`id ${id} in message should match numReceivedMessages ${numReceivedMessages}`
+						)
+					);
+				} else if (id === numMessages) {
+					resolve();
+				} else if (id < numMessages / 2 && ppid !== WEBRTC_PPID.STRING) {
+					reject(
+						new Error(
+							`ppid in message with id ${id} should be ${WEBRTC_PPID.STRING} but it is ${ppid}`
+						)
+					);
+				} else if (id > numMessages / 2 && ppid !== WEBRTC_PPID.BINARY) {
+					reject(
+						new Error(
+							`ppid in message with id ${id} should be ${WEBRTC_PPID.BINARY} but it is ${ppid}`
+						)
+					);
 
-// 					return;
-// 				}
-// 			}
-// 		);
-// 	});
+					return;
+				}
+			}
+		);
+	});
 
-// 	expect(numSentMessages).toBe(numMessages);
-// 	expect(numReceivedMessages).toBe(numMessages);
-// 	expect(recvMessageBytes).toBe(sentMessageBytes);
+	expect(numSentMessages).toBe(numMessages);
+	expect(numReceivedMessages).toBe(numMessages);
+	expect(recvMessageBytes).toBe(sentMessageBytes);
 
-// 	await expect(ctx.dataProducer!.getStats()).resolves.toMatchObject([
-// 		{
-// 			type: 'data-producer',
-// 			label: ctx.dataProducer!.label,
-// 			protocol: ctx.dataProducer!.protocol,
-// 			messagesReceived: numMessages,
-// 			bytesReceived: sentMessageBytes,
-// 		},
-// 	]);
+	await expect(ctx.dataProducer!.getStats()).resolves.toMatchObject([
+		{
+			type: 'data-producer',
+			label: ctx.dataProducer!.label,
+			protocol: ctx.dataProducer!.protocol,
+			messagesReceived: numMessages,
+			bytesReceived: sentMessageBytes,
+		},
+	]);
 
-// 	await expect(ctx.dataConsumer!.getStats()).resolves.toMatchObject([
-// 		{
-// 			type: 'data-consumer',
-// 			label: ctx.dataConsumer!.label,
-// 			protocol: ctx.dataConsumer!.protocol,
-// 			messagesSent: numMessages,
-// 			bytesSent: recvMessageBytes,
-// 		},
-// 	]);
-// }, 10000);
+	await expect(ctx.dataConsumer!.getStats()).resolves.toMatchObject([
+		{
+			type: 'data-consumer',
+			label: ctx.dataConsumer!.label,
+			protocol: ctx.dataConsumer!.protocol,
+			messagesSent: numMessages,
+			bytesSent: recvMessageBytes,
+		},
+	]);
+}, 10000);

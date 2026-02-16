@@ -4,6 +4,7 @@
 
 - Worker: Improve `Utils::Crypto::GetRandomUInt()` ([PR #1725](https://github.com/versatica/mediasoup/pull/1725).
 - Convert `WORKER_CLOSE` into a notification ([PR #1729](https://github.com/versatica/mediasoup/pull/1729).
+- Node tests: Replace `sctp` unmaintained library with `werift-sctp` ([PR #1729](https://github.com/versatica/mediasoup/pull/1729), thanks to @shinyoshiaki for his help with `werift-sctp`.
 
 ### 3.19.17
 

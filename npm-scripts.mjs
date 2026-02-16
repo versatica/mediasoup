@@ -506,9 +506,9 @@ function installNodeDeps() {
 	// Update package-lock.json.
 	executeCmd('npm install --package-lock-only --ignore-scripts');
 
-	// Check vulnerabilities in deps (exclude dev deps).
-	executeCmd('npm audit --omit=dev');
-	executeCmd('npm audit --omit=dev --prefix worker/scripts');
+	// Check vulnerabilities in deps.
+	executeCmd('npm audit');
+	executeCmd('npm audit --prefix worker/scripts');
 }
 
 async function checkRelease() {
