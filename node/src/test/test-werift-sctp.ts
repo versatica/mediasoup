@@ -84,7 +84,7 @@ afterEach(async () => {
 test('SCTP state is connected', () => {
 	expect(ctx.plainTransport!.sctpState).toBe('connected');
 	expect(ctx.sctpClient!.associationState).toBe(SCTP_STATE.ESTABLISHED);
-}, 20000);
+});
 
 test('ordered DataProducer delivers all SCTP messages to the DataConsumer', async () => {
 	const numMessages = 200;

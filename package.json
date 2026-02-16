@@ -127,6 +127,6 @@
 		"ts-jest": "^29.4.6",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.55.0",
-		"werift-sctp": "file:../../../Users/ibc/src/forks/werift-webrtc/packages/sctp"
+		"werift-sctp": "^0.0.11"
 	}
 }
