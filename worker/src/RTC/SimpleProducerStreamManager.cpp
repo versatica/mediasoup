@@ -10,7 +10,7 @@ namespace RTC
 
 	SimpleProducerStreamManager::SimpleProducerStreamManager(
 	  const std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings,
-	  const VideoLayers& preferredLayers,
+	  const RTC::ConsumerTypes::VideoLayers& preferredLayers,
 	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 	  RTC::Media::Kind kind,
 	  bool keyFrameSupported,
@@ -274,7 +274,8 @@ namespace RTC
 		MS_TRACE();
 	}
 
-	bool SimpleProducerStreamManager::RecalculateTargetLayers(VideoLayers& /*newTargetLayers*/) const
+	bool SimpleProducerStreamManager::RecalculateTargetLayers(
+	  RTC::ConsumerTypes::VideoLayers& /*newTargetLayers*/) const
 	{
 		MS_TRACE();
 

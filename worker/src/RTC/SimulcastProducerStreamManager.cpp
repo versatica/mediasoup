@@ -17,7 +17,7 @@ namespace RTC
 
 	SimulcastProducerStreamManager::SimulcastProducerStreamManager(
 	  const std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings,
-	  const VideoLayers& preferredLayers,
+	  const RTC::ConsumerTypes::VideoLayers& preferredLayers,
 	  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 	  RTC::Media::Kind kind,
 	  bool keyFrameSupported,
@@ -851,7 +851,8 @@ namespace RTC
 		}
 	}
 
-	bool SimulcastProducerStreamManager::RecalculateTargetLayers(VideoLayers& newTargetLayers) const
+	bool SimulcastProducerStreamManager::RecalculateTargetLayers(
+	  RTC::ConsumerTypes::VideoLayers& newTargetLayers) const
 	{
 		MS_TRACE();
 

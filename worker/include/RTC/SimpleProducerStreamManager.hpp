@@ -10,14 +10,14 @@ namespace RTC
 	public:
 		SimpleProducerStreamManager(
 		  const std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings,
-		  const VideoLayers& preferredLayers,
+		  const RTC::ConsumerTypes::VideoLayers& preferredLayers,
 		  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
 		  Listener* listener);
 
 	public:
-		VideoLayers GetTargetLayers() const override
+		RTC::ConsumerTypes::VideoLayers GetTargetLayers() const override
 		{
 			return {};
 		}
@@ -50,7 +50,7 @@ namespace RTC
 		void RequestKeyFrameForTargetSpatialLayer() override;
 		void RequestKeyFrameForCurrentSpatialLayer() override;
 		void UpdateTargetLayers(int16_t spatial, int16_t temporal) override;
-		bool RecalculateTargetLayers(VideoLayers& newTargetLayers) const override;
+		bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const override;
 		void OnTransportConnected() override;
 		void OnTransportDisconnected() override;
 		void OnPaused() override;

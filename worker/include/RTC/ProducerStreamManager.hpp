@@ -13,8 +13,6 @@
 
 namespace RTC
 {
-	using namespace ConsumerTypes;
-
 	class ProducerStreamManager
 	{
 	public:
@@ -58,7 +56,7 @@ namespace RTC
 	public:
 		ProducerStreamManager(
 		  const std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings,
-		  const VideoLayers& preferredLayers,
+		  const RTC::ConsumerTypes::VideoLayers& preferredLayers,
 		  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
@@ -72,7 +70,7 @@ namespace RTC
 		virtual ~ProducerStreamManager() = default;
 
 	public:
-		virtual VideoLayers GetTargetLayers() const                          = 0;
+		virtual RTC::ConsumerTypes::VideoLayers GetTargetLayers() const      = 0;
 		virtual int16_t GetCurrentSpatialLayer() const                       = 0;
 		virtual int16_t GetCurrentTemporalLayer() const                      = 0;
 		virtual RTC::RTP::RtpStreamRecv* GetProducerCurrentRtpStream() const = 0;
@@ -81,11 +79,11 @@ namespace RTC
 		{
 			return this->encodingContext.get();
 		}
-		const VideoLayers& GetPreferredLayers() const
+		const RTC::ConsumerTypes::VideoLayers& GetPreferredLayers() const
 		{
 			return this->preferredLayers;
 		}
-		void SetPreferredLayers(const VideoLayers& layers)
+		void SetPreferredLayers(const RTC::ConsumerTypes::VideoLayers& layers)
 		{
 			this->preferredLayers = layers;
 		}
@@ -119,13 +117,13 @@ namespace RTC
 		virtual void RequestKeyFrameForCurrentSpatialLayer() = 0;
 
 		virtual void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer) = 0;
-		virtual bool RecalculateTargetLayers(VideoLayers& newTargetLayers) const = 0;
+		virtual bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const = 0;
 
 		void MayChangeLayers(bool force)
 		{
 			MS_TRACE();
 
-			VideoLayers newTargetLayers;
+			RTC::ConsumerTypes::VideoLayers newTargetLayers;
 
 			if (RecalculateTargetLayers(newTargetLayers))
 			{
@@ -172,8 +170,8 @@ namespace RTC
 		bool externallyManagedBitrate{ false };
 
 		// Layer preferences.
-		VideoLayers preferredLayers;
-		VideoLayers provisionalTargetLayers;
+		RTC::ConsumerTypes::VideoLayers preferredLayers;
+		RTC::ConsumerTypes::VideoLayers provisionalTargetLayers;
 
 		// Sync state.
 		bool syncRequired{ false };

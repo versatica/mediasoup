@@ -27,8 +27,6 @@
 
 namespace RTC
 {
-	using namespace ConsumerTypes;
-
 	class Consumer : public Channel::ChannelSocket::RequestHandler,
 	                 public RTC::RTP::RtpStreamSend::Listener,
 	                 public RTC::ProducerStreamManager::Listener
@@ -92,7 +90,7 @@ namespace RTC
 		{
 			return this->type;
 		}
-		VideoLayers GetPreferredLayers() const
+		RTC::ConsumerTypes::VideoLayers GetPreferredLayers() const
 		{
 			return this->producerStreamManager->GetPreferredLayers();
 		}
@@ -233,7 +231,7 @@ namespace RTC
 		bool producerClosed{ false };
 		bool lastSentPacketHasMarker{ false };
 		RTC::SeqManager<uint16_t> rtpSeqManager;
-		std::unique_ptr<ProducerStreamManager> producerStreamManager;
+		std::unique_ptr<RTC::ProducerStreamManager> producerStreamManager;
 		std::map<uint16_t, RTC::RTP::SharedPacket, RTC::SeqManager<uint16_t>::SeqLowerThan>
 		  targetLayerRetransmissionBuffer;
 	};

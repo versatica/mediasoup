@@ -11,14 +11,14 @@ namespace RTC
 	public:
 		SimulcastProducerStreamManager(
 		  const std::vector<RTC::RtpEncodingParameters>& consumableRtpEncodings,
-		  const VideoLayers& preferredLayers,
+		  const RTC::ConsumerTypes::VideoLayers& preferredLayers,
 		  std::unique_ptr<RTC::RTP::Codecs::EncodingContext> encodingContext,
 		  RTC::Media::Kind kind,
 		  bool keyFrameSupported,
 		  Listener* listener);
 
 	public:
-		VideoLayers GetTargetLayers() const override
+		RTC::ConsumerTypes::VideoLayers GetTargetLayers() const override
 		{
 			return this->targetLayers;
 		}
@@ -51,7 +51,7 @@ namespace RTC
 		void RequestKeyFrameForTargetSpatialLayer() override;
 		void RequestKeyFrameForCurrentSpatialLayer() override;
 		void UpdateTargetLayers(int16_t newTargetSpatialLayer, int16_t newTargetTemporalLayer) override;
-		bool RecalculateTargetLayers(VideoLayers& newTargetLayers) const override;
+		bool RecalculateTargetLayers(RTC::ConsumerTypes::VideoLayers& newTargetLayers) const override;
 		void OnTransportConnected() override;
 		void OnTransportDisconnected() override;
 		void OnPaused() override;
@@ -65,7 +65,7 @@ namespace RTC
 		// Producer RTP streams (multiple for Simulcast).
 		std::vector<RTC::RTP::RtpStreamRecv*> producerRtpStreams;
 		absl::flat_hash_map<uint32_t, int16_t> mapMappedSsrcSpatialLayer;
-		VideoLayers targetLayers;
+		RTC::ConsumerTypes::VideoLayers targetLayers;
 		int16_t currentSpatialLayer{ -1 };
 		int16_t spatialLayerToSync{ -1 };
 		// Timestamp synchronization.

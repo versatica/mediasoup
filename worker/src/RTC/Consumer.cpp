@@ -189,7 +189,7 @@ namespace RTC
 		bool keyFrameSupported = RTC::RTP::Codecs::Tools::CanBeKeyFrame(mediaCodec->mimeType);
 
 		// Build preferred layers from FBS data.
-		VideoLayers preferredLayers;
+		RTC::ConsumerTypes::VideoLayers preferredLayers;
 
 		// Let's choose an initial output seq number between 1000 and 32768 to avoid
 		// libsrtp bug:
@@ -597,7 +597,7 @@ namespace RTC
 				const auto* body = request->data->body_as<FBS::Consumer::SetPreferredLayersRequest>();
 				const auto* preferredLayers = body->preferredLayers();
 
-				VideoLayers newPreferredLayers;
+				RTC::ConsumerTypes::VideoLayers newPreferredLayers;
 
 				// Spatial layer.
 				newPreferredLayers.spatial = preferredLayers->spatialLayer();
