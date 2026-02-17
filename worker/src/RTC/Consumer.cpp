@@ -1040,10 +1040,6 @@ namespace RTC
 		{
 			case ProducerStreamManager::RtpPacketProcessResult::Type::DROP:
 			{
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
-#endif
-
 				this->rtpSeqManager.Drop(packet->GetSequenceNumber());
 
 				return;
@@ -1057,10 +1053,6 @@ namespace RTC
 
 			case ProducerStreamManager::RtpPacketProcessResult::Type::BUFFER:
 			{
-#ifdef MS_RTC_LOGGER_RTP
-				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
-#endif
-
 				StorePacketInTargetLayerRetransmissionBuffer(packet, sharedPacket);
 
 				return;

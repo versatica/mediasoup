@@ -40,7 +40,7 @@ namespace RTC
 				BUFFER
 			};
 
-			Type type{ Type::SILENT_DROP };
+			Type type{ Type::FORWARD };
 
 			// Valid when type == FORWARD:
 			uint32_t tsOffset{ 0u };

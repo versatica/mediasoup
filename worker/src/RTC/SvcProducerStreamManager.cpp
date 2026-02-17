@@ -367,6 +367,10 @@ namespace RTC
 		{
 			result.type = RtpPacketProcessResult::Type::DROP;
 
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
+#endif
+
 			return result;
 		}
 
@@ -381,6 +385,10 @@ namespace RTC
 			// key frame and it arrived before the first packet of the key frame.
 			result.type = RtpPacketProcessResult::Type::BUFFER;
 
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+#endif
+
 			return result;
 		}
 
@@ -388,6 +396,10 @@ namespace RTC
 		if (packet->GetPayloadLength() == 0)
 		{
 			result.type = RtpPacketProcessResult::Type::DROP;
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
+#endif
 
 			return result;
 		}
@@ -428,6 +440,10 @@ namespace RTC
 		if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 		{
 			result.type = RtpPacketProcessResult::Type::DROP;
+
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
+#endif
 
 			return result;
 		}

@@ -460,6 +460,10 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
+
+#ifdef MS_RTC_LOGGER_RTP
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::INVALID_TARGET_LAYER);
+#endif
 			}
 			else
 			{
@@ -481,6 +485,10 @@ namespace RTC
 			if (this->keyFrameSupported && !packet->IsKeyFrame())
 			{
 				result.type = RtpPacketProcessResult::Type::BUFFER;
+
+#ifdef MS_RTC_LOGGER_RTP
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+#endif
 
 				return result;
 			}
@@ -505,6 +513,10 @@ namespace RTC
 		{
 			result.type = RtpPacketProcessResult::Type::BUFFER;
 
+#ifdef MS_RTC_LOGGER_RTP
+			packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::NOT_A_KEYFRAME);
+#endif
+
 			return result;
 		}
 
@@ -514,6 +526,10 @@ namespace RTC
 			if (spatialLayer == this->currentSpatialLayer)
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
+
+#ifdef MS_RTC_LOGGER_RTP
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::EMPTY_PAYLOAD);
+#endif
 			}
 			else
 			{
@@ -638,6 +654,11 @@ namespace RTC
 
 					result.type = RtpPacketProcessResult::Type::SILENT_DROP;
 
+#ifdef MS_RTC_LOGGER_RTP
+					packet->logger.Discarded(
+					  RTC::RtcLogger::RtpPacket::DiscardReason::TOO_HIGH_TIMESTAMP_EXTRA_NEEDED);
+#endif
+
 					return result;
 				}
 
@@ -678,6 +699,11 @@ namespace RTC
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
 
+#ifdef MS_RTC_LOGGER_RTP
+				packet->logger.Discarded(
+				  RTC::RtcLogger::RtpPacket::DiscardReason::PACKET_PREVIOUS_TO_SPATIAL_LAYER_SWITCH);
+#endif
+
 				return result;
 			}
 			else if (SeqManager<uint16_t>::IsSeqHigherThan(
@@ -715,6 +741,10 @@ namespace RTC
 			if (!packet->ProcessPayload(this->encodingContext.get(), marker))
 			{
 				result.type = RtpPacketProcessResult::Type::DROP;
+
+#ifdef MS_RTC_LOGGER_RTP
+				packet->logger.Discarded(RTC::RtcLogger::RtpPacket::DiscardReason::DROPPED_BY_CODEC);
+#endif
 
 				return result;
 			}
