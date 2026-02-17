@@ -45,7 +45,7 @@ jobs:
           clang_tidy_version: '21'
           lgtm_comment_body: ''
           # TMP until this bug is fixes https://github.com/ZedThree/clang-tidy-review/issues/157#issuecomment-3552341821.
-          extra_arguments: --allow-no-checks --quiet
+          extra_arguments: --allow-no-checks
           include: 'worker/src/**/*.cpp,worker/test/src/**/*.cpp,worker/fuzzer/src/**/*.cpp'
 
       # Uploads an artifact containing clang_fixes.json.
