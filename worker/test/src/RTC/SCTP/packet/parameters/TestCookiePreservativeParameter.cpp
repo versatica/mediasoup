@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Cookie Preservative Parameter (9)", "[sctp][serializable]")
+SCENARIO("Cookie Preservative Parameter (9)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

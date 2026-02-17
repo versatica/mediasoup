@@ -11,7 +11,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Operation Error Chunk (9)", "[sctp][serializable]")
+SCENARIO("SCTP Operation Error Chunk (9)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

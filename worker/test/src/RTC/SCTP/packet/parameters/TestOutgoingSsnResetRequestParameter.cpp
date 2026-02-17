@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[sctp][serializable]")
+SCENARIO("Outgoing SSN Reset Request Parameter (13)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

@@ -8,7 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Abort Association Chunk (6)", "[sctp][serializable]")
+SCENARIO("SCTP Abort Association Chunk (6)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

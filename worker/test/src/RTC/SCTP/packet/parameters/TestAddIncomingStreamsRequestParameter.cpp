@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Add Incoming Streams Request Parameter (18)", "[sctp][serializable]")
+SCENARIO("Add Incoming Streams Request Parameter (18)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

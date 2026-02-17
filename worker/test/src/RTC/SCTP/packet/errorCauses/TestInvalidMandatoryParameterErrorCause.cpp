@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[sctp][serializable]")
+SCENARIO("Invalid Mandatory Parameter Error Cause (7)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Re-configuration Response Parameter (16)", "[sctp][serializable]")
+SCENARIO("Re-configuration Response Parameter (16)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

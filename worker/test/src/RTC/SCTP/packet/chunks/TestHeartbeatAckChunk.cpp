@@ -9,7 +9,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[sctp][serializable]")
+SCENARIO("SCTP Hearbeat Acknowledgement Chunk (5)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

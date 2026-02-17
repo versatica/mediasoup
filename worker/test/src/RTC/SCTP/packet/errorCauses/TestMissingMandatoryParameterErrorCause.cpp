@@ -7,7 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Invalid Stream Identifier Error Cause (2)", "[sctp][serializable]")
+SCENARIO("Invalid Stream Identifier Error Cause (2)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

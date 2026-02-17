@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Protocol Violation Error Cause (13)", "[sctp][serializable]")
+SCENARIO("Protocol Violation Error Cause (13)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

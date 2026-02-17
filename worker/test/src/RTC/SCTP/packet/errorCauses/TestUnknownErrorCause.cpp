@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Unknown Error Cause", "[sctp][serializable]")
+SCENARIO("Unknown Error Cause", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

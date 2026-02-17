@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Stale Cookie Error Cause (3)", "[sctp][serializable]")
+SCENARIO("Stale Cookie Error Cause (3)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

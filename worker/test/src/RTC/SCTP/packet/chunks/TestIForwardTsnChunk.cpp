@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[sctp][serializable]")
+SCENARIO("I-Forward Cumulative TSN Chunk (194)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

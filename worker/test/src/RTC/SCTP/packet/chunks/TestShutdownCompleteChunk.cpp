@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Shutdown Complete Chunk (14)", "[sctp][serializable]")
+SCENARIO("SCTP Shutdown Complete Chunk (14)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 
