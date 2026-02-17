@@ -12,7 +12,6 @@ static constexpr int ProducerChannelFd{ 4 };
 
 int main(int argc, char* argv[])
 {
-	int foo;
 	const char* envVersion = std::getenv("MEDIASOUP_VERSION");
 
 	// Ensure we are called by our Node library.
