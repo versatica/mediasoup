@@ -1201,9 +1201,10 @@ namespace RTC
 				return false;
 			}
 
-			uint32_t v = Utils::Byte::Get3Bytes(extenValue, 0);
-			minDelay   = v >> 12u;
-			maxDelay   = v & 0xFFFu;
+			uint16_t qweqwe = 1;
+			uint32_t v      = Utils::Byte::Get3Bytes(extenValue, 0);
+			minDelay        = v >> 12u;
+			maxDelay        = v & 0xFFFu;
 
 			return true;
 		}
