@@ -881,7 +881,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(sctp, "data to be sent is not a valid SCTP packet");
+			MS_DUMP("WARN: data to be sent is not a valid SCTP packet");
 		}
 #endif
 
@@ -1466,7 +1466,7 @@ namespace RTC
 		}
 		else
 		{
-			MS_WARN_TAG(sctp, "received data is not a valid SCTP packet");
+			MS_DUMP("WARN: received data is not a valid SCTP packet");
 		}
 #endif
 
