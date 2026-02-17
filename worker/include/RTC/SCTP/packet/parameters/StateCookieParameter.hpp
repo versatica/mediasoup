@@ -2,6 +2,7 @@
 #define MS_RTC_SCTP_STATE_COOKIE_PARAMETER_HPP
 
 #include "common.hpp"
+#include "RTC/SCTP/association/NegotiatedCapabilities.hpp"
 #include "RTC/SCTP/packet/Parameter.hpp"
 
 namespace RTC
@@ -87,6 +88,23 @@ namespace RTC
 			}
 
 			void SetCookie(const uint8_t* cookie, uint16_t cookieLength);
+
+			/**
+			 * Write a locally generated StateCookie in place within the Cookie
+			 * field.
+			 *
+			 * This method is more performant than SetCookie() since it doesn't
+			 * require neither the allocation of a StateCookie class instance nor a
+			 * copy of its buffer to the StateCookieParameter.
+			 */
+			void WriteStateCookieInPlace(
+			  uint32_t localVerificationTag,
+			  uint32_t remoteVerificationTag,
+			  uint32_t localInitialTsn,
+			  uint32_t remoteInitialTsn,
+			  uint32_t remoteAdvertisedReceiverWindowCredit,
+			  uint64_t tieTag,
+			  const NegotiatedCapabilities& negotiatedCapabilities);
 
 		protected:
 			StateCookieParameter* SoftClone(const uint8_t* buffer) const final;

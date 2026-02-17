@@ -106,6 +106,8 @@ namespace RTC
 				return MissingMandatoryParameterErrorCause::MissingMandatoryParameterErrorCauseHeaderLength;
 			}
 
+			virtual const std::string ContentToString() const override final;
+
 		private:
 			void SetNumberOfMissingParameters(uint32_t value);
 		};

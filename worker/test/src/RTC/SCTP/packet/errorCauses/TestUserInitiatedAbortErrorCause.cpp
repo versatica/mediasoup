@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("User-Initiated Abort Error Cause (12)", "[sctp][serializable]")
+SCENARIO("User-Initiated Abort Error Cause (12)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

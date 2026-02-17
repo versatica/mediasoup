@@ -138,6 +138,23 @@ namespace RTC
 				return false;
 			}
 
+			virtual const std::string ToString() const final
+			{
+				// Get the custom content from the subclass.
+				const auto contentToString = ContentToString();
+
+				if (contentToString.size() > 0)
+				{
+					return ErrorCause::ErrorCauseCodeToString(GetCode()) + " (" +
+					       std::to_string(static_cast<uint16_t>(GetCode())) + ") " + contentToString;
+				}
+				else
+				{
+					return ErrorCause::ErrorCauseCodeToString(GetCode()) + " (" +
+					       std::to_string(static_cast<uint16_t>(GetCode())) + ")";
+				}
+			}
+
 		protected:
 			/**
 			 * Subclasses must invoke this method within their Dump() method.
@@ -176,6 +193,14 @@ namespace RTC
 			{
 				GetHeaderPointer()->code =
 				  static_cast<ErrorCauseCode>(htons(static_cast<uint16_t>(causeCode)));
+			}
+
+			/**
+			 * Subclasses can override this method.
+			 */
+			virtual const std::string ContentToString() const
+			{
+				return "";
 			}
 		};
 	} // namespace SCTP

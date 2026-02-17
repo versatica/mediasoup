@@ -11,16 +11,16 @@ namespace RTC
 		/* Instance methods. */
 
 		TransmissionControlBlock::TransmissionControlBlock(
-		  uint32_t myVerificationTag,
-		  uint32_t peerVerificationTag,
-		  uint32_t myInitialTsn,
-		  uint32_t peerInitialTsn,
-		  uint32_t myAdvertisedReceiverWindowCredit,
+		  uint32_t localVerificationTag,
+		  uint32_t remoteVerificationTag,
+		  uint32_t localInitialTsn,
+		  uint32_t remoteInitialTsn,
+		  uint32_t remoteAdvertisedReceiverWindowCredit,
 		  uint64_t tieTag,
 		  const NegotiatedCapabilities& negotiatedCapabilities)
-		  : myVerificationTag(myVerificationTag), peerVerificationTag(peerVerificationTag),
-		    myInitialTsn(myInitialTsn), peerInitialTsn(peerInitialTsn),
-		    myAdvertisedReceiverWindowCredit(myAdvertisedReceiverWindowCredit), tieTag(tieTag),
+		  : localVerificationTag(localVerificationTag), remoteVerificationTag(remoteVerificationTag),
+		    localInitialTsn(localInitialTsn), remoteInitialTsn(remoteInitialTsn),
+		    remoteAdvertisedReceiverWindowCredit(remoteAdvertisedReceiverWindowCredit), tieTag(tieTag),
 		    negotiatedCapabilities(negotiatedCapabilities)
 		{
 			MS_TRACE();
@@ -36,14 +36,14 @@ namespace RTC
 			MS_TRACE();
 
 			MS_DUMP_CLEAN(indentation, "<SCTP::TransmissionControlBlock>");
-			MS_DUMP_CLEAN(indentation, "  my verification tag: %" PRIu32, this->myVerificationTag);
-			MS_DUMP_CLEAN(indentation, "  peer verification tag: %" PRIu32, this->peerVerificationTag);
-			MS_DUMP_CLEAN(indentation, "  my initial tsn: %" PRIu32, this->myInitialTsn);
-			MS_DUMP_CLEAN(indentation, "  peer initial tsn: %" PRIu32, this->peerInitialTsn);
+			MS_DUMP_CLEAN(indentation, "  local verification tag: %" PRIu32, this->localVerificationTag);
+			MS_DUMP_CLEAN(indentation, "  remote verification tag: %" PRIu32, this->remoteVerificationTag);
+			MS_DUMP_CLEAN(indentation, "  local initial tsn: %" PRIu32, this->localInitialTsn);
+			MS_DUMP_CLEAN(indentation, "  remote initial tsn: %" PRIu32, this->remoteInitialTsn);
 			MS_DUMP_CLEAN(
 			  indentation,
-			  "  my advertised receiver window credit: %" PRIu32,
-			  this->myAdvertisedReceiverWindowCredit);
+			  "  remote advertised receiver window credit: %" PRIu32,
+			  this->remoteAdvertisedReceiverWindowCredit);
 			MS_DUMP_CLEAN(indentation, "  tie-tag: %" PRIu64, this->tieTag);
 			this->negotiatedCapabilities.Dump(indentation + 1);
 			MS_DUMP_CLEAN(indentation, "</SCTP::TransmissionControlBlock>");

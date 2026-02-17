@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Out of Resource Error Cause (4)", "[sctp][serializable]")
+SCENARIO("Out of Resource Error Cause (4)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

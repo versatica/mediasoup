@@ -8,7 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Payload Data Chunk (0)", "[sctp][serializable]")
+SCENARIO("SCTP Payload Data Chunk (0)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Selective Acknowledgement Chunk (3)", "[sctp][serializable]")
+SCENARIO("Selective Acknowledgement Chunk (3)", "[serializable][sctp][chunk]")
 {
 	sctpCommon::ResetBuffers();
 

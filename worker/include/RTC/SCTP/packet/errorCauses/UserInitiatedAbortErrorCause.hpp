@@ -90,6 +90,8 @@ namespace RTC
 
 		protected:
 			UserInitiatedAbortErrorCause* SoftClone(const uint8_t* buffer) const final;
+
+			virtual const std::string ContentToString() const override final;
 		};
 	} // namespace SCTP
 } // namespace RTC

@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Heartbeat Info Parameter (1)", "[sctp][serializable]")
+SCENARIO("Heartbeat Info Parameter (1)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

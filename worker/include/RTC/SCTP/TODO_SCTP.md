@@ -12,9 +12,3 @@ Here some notes about our future SCTP implementation.
 However, in step 4 `WebRtcTransport::OnDtlsTransportApplicationDataReceived()` should instead call `RTC::SCTP::Packet::parse()` and `Transport::ReceiveSctpPacket()` with a `SCTP::Packet` instance instead than `data` and `len`. In fact it should be named `Transport::ReceiveSctpPacket()` instead of the current `Transport::ReceiveSctpData()`.
 
 Same in `PipeTransport` and `PlainTransport`.
-
-## TODO
-
-- Try to remove all `friend class`.
-
-- In `HeartbeatChunk` the `HeartbeatInfoParameter` should be mandatory when parsing. Or should we add some `Validate()` method?

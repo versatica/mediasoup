@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Forward-TSN-Supported Parameter (32769)", "[sctp][serializable]")
+SCENARIO("Forward-TSN-Supported Parameter (32769)", "[serializable][sctp][parameter]")
 {
 	sctpCommon::ResetBuffers();
 

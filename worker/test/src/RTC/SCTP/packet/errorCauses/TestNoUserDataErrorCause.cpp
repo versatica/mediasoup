@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("No User Data Error Cause (9)", "[sctp][serializable]")
+SCENARIO("No User Data Error Cause (9)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

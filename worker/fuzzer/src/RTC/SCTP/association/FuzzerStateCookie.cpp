@@ -22,8 +22,11 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 
 		if (len < RTC::SCTP::StateCookie::StateCookieLength + 5)
 		{
-			Utils::Byte::Set4Bytes(clonedData, 0, RTC::SCTP::StateCookie::MagicValue1);
-			Utils::Byte::Set2Bytes(clonedData, 34, RTC::SCTP::StateCookie::MagicValue2);
+			Utils::Byte::Set4Bytes(clonedData, 0, RTC::SCTP::StateCookie::Magic1);
+			Utils::Byte::Set2Bytes(
+			  clonedData,
+			  RTC::SCTP::StateCookie::NegotiatedCapabilitiesOffset,
+			  RTC::SCTP::StateCookie::Magic2);
 		}
 	}
 
@@ -36,21 +39,21 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 		return;
 	}
 
-	stateCookie->GetMyVerificationTag();
-	stateCookie->GetPeerVerificationTag();
-	stateCookie->GetMyInitialTsn();
-	stateCookie->GetPeerInitialTsn();
-	stateCookie->GetMyAdvertisedReceiverWindowCredit();
+	stateCookie->GetLocalVerificationTag();
+	stateCookie->GetRemoteVerificationTag();
+	stateCookie->GetLocalInitialTsn();
+	stateCookie->GetRemoteInitialTsn();
+	stateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
 	stateCookie->GetNegotiatedCapabilities();
 
 	stateCookie->Serialize(StateCookieSerializeBuffer, len);
 
-	stateCookie->GetMyVerificationTag();
-	stateCookie->GetPeerVerificationTag();
-	stateCookie->GetMyInitialTsn();
-	stateCookie->GetPeerInitialTsn();
-	stateCookie->GetMyAdvertisedReceiverWindowCredit();
+	stateCookie->GetLocalVerificationTag();
+	stateCookie->GetRemoteVerificationTag();
+	stateCookie->GetLocalInitialTsn();
+	stateCookie->GetRemoteInitialTsn();
+	stateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	stateCookie->GetTieTag();
 	stateCookie->GetNegotiatedCapabilities();
 
@@ -58,11 +61,11 @@ void FuzzerRtcSctpStateCookie::Fuzz(const uint8_t* data, size_t len)
 
 	delete stateCookie;
 
-	clonedStateCookie->GetMyVerificationTag();
-	clonedStateCookie->GetPeerVerificationTag();
-	clonedStateCookie->GetMyInitialTsn();
-	clonedStateCookie->GetPeerInitialTsn();
-	clonedStateCookie->GetMyAdvertisedReceiverWindowCredit();
+	clonedStateCookie->GetLocalVerificationTag();
+	clonedStateCookie->GetRemoteVerificationTag();
+	clonedStateCookie->GetLocalInitialTsn();
+	clonedStateCookie->GetRemoteInitialTsn();
+	clonedStateCookie->GetRemoteAdvertisedReceiverWindowCredit();
 	clonedStateCookie->GetTieTag();
 	clonedStateCookie->GetNegotiatedCapabilities();
 

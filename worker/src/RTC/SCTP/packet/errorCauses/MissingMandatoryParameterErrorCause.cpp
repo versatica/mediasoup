@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/errorCauses/MissingMandatoryParameterErrorCause.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include <sstream> // std::ostringstream
 
 namespace RTC
 {
@@ -123,11 +124,14 @@ namespace RTC
 			  indentation, "  number of missing parameters: %" PRIu32, GetNumberOfMissingParameters());
 			for (uint32_t idx{ 0 }; idx < GetNumberOfMissingParameters(); ++idx)
 			{
+				const auto parameterType = GetMissingParameterTypeAt(idx);
+
 				MS_DUMP_CLEAN(
 				  indentation,
-				  "  - idx: %" PRIu32 ", parameter type: %" PRIu16,
+				  "  - idx: %" PRIu32 ", parameter type: %s (%" PRIu16 ")",
 				  idx,
-				  static_cast<uint16_t>(GetMissingParameterTypeAt(idx)));
+				  Parameter::ParameterTypeToString(parameterType).c_str(),
+				  static_cast<uint16_t>(parameterType));
 			}
 			MS_DUMP_CLEAN(indentation, "</SCTP::MissingMandatoryParameterErrorCause>");
 		}
@@ -173,6 +177,28 @@ namespace RTC
 			SoftCloneInto(softClonedErrorCause);
 
 			return softClonedErrorCause;
+		}
+
+		const std::string MissingMandatoryParameterErrorCause::ContentToString() const
+		{
+			MS_TRACE();
+
+			std::ostringstream missingParameterTypesOss;
+			bool firstParameterType = true;
+
+			for (uint32_t idx{ 0 }; idx < GetNumberOfMissingParameters(); ++idx)
+			{
+				const auto parameterType = GetMissingParameterTypeAt(idx);
+
+				missingParameterTypesOss << (firstParameterType ? "" : ", ")
+				                         << RTC::SCTP::Parameter::ParameterTypeToString(parameterType).c_str()
+				                         << " (" << std::to_string(static_cast<uint16_t>(parameterType))
+				                         << ")";
+
+				firstParameterType = false;
+			}
+
+			return "types:[" + missingParameterTypesOss.str() + "]";
 		}
 
 		void MissingMandatoryParameterErrorCause::SetNumberOfMissingParameters(uint32_t value)

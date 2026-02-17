@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[sctp][serializable]")
+SCENARIO("Unrecognized Chunk Type Error Cause (6)", "[serializable][sctp][errorcause]")
 {
 	sctpCommon::ResetBuffers();
 

@@ -232,6 +232,7 @@ namespace Utils
 	{
 	public:
 		static void ClassInit();
+
 		static void ClassDestroy();
 
 		template<typename T>

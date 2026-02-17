@@ -392,7 +392,7 @@ namespace RTC
 			this->chunks.push_back(clonedChunk);
 		}
 
-		void Packet::SetCRC32cChecksum()
+		void Packet::WriteCRC32cChecksum()
 		{
 			MS_TRACE();
 

@@ -16,7 +16,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstring> // std::memset()
 
-SCENARIO("SCTP Packet", "[sctp][serializable]")
+SCENARIO("SCTP Packet", "[serializable][sctp][packet]")
 {
 	sctpCommon::ResetBuffers();
 
@@ -589,7 +589,7 @@ SCENARIO("SCTP Packet", "[sctp][serializable]")
 		REQUIRE(packet->GetFirstChunkOfType<RTC::SCTP::HeartbeatRequestChunk>() == chunk2);
 
 		// Insert CRC32C checksum.
-		packet->SetCRC32cChecksum();
+		packet->WriteCRC32cChecksum();
 
 		auto crc32cChecksum = packet->GetChecksum();
 

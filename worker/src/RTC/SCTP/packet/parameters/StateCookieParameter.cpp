@@ -4,6 +4,7 @@
 #include "RTC/SCTP/packet/parameters/StateCookieParameter.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/SCTP/association/StateCookie.hpp"
 
 namespace RTC
 {
@@ -112,6 +113,40 @@ namespace RTC
 			MS_TRACE();
 
 			SetVariableLengthValue(cookie, cookieLength);
+		}
+
+		void StateCookieParameter::WriteStateCookieInPlace(
+		  uint32_t localVerificationTag,
+		  uint32_t remoteVerificationTag,
+		  uint32_t localInitialTsn,
+		  uint32_t remoteInitialTsn,
+		  uint32_t remoteAdvertisedReceiverWindowCredit,
+		  uint64_t tieTag,
+		  const NegotiatedCapabilities& negotiatedCapabilities)
+		{
+			MS_TRACE();
+
+			// The buffer in which the StateCookie will be written starts at the
+			// position of the Cookie field in the StateCookieParameter.
+			auto* buffer = GetVariableLengthValuePointer();
+			// The available buffer length is the total buffer length of the
+			// StateCookieParameter minus its fixed header length (no matter there
+			// was a Cookie already in the Parameter since we are overriding it
+			// anyway).
+			size_t bufferLength = GetBufferLength() - Parameter::ParameterHeaderLength;
+
+			StateCookie::Write(
+			  buffer,
+			  bufferLength,
+			  localVerificationTag,
+			  remoteVerificationTag,
+			  localInitialTsn,
+			  remoteInitialTsn,
+			  remoteAdvertisedReceiverWindowCredit,
+			  tieTag,
+			  negotiatedCapabilities);
+
+			SetVariableLengthValueLength(StateCookie::StateCookieLength);
 		}
 
 		StateCookieParameter* StateCookieParameter::SoftClone(const uint8_t* buffer) const

@@ -93,6 +93,8 @@ namespace RTC
 			{
 				return NoUserDataErrorCause::NoUserDataErrorCauseHeaderLength;
 			}
+
+			virtual const std::string ContentToString() const override final;
 		};
 	} // namespace SCTP
 } // namespace RTC
